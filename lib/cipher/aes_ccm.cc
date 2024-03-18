@@ -754,39 +754,53 @@ Ccm::Ccm(const Uint8* pKey, const Uint32 keyLen)
 {}
 
 alc_error_t
-Ccm::decrypt(const Uint8 pInput[], Uint8 pOutput[], Uint64 len) const
+Ccm::decrypt(alc_cipher_data_t* ctx,
+             const Uint8        pInput[],
+             Uint8              pOutput[],
+             Uint64             len)
 {
     Status s = StatusOk();
-    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, false);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, false);
     return s.code();
 }
 
 alc_error_t
-Ccm::encrypt(const Uint8 pInput[], Uint8 pOutput[], Uint64 len) const
+Ccm::encrypt(alc_cipher_data_t* ctx,
+             const Uint8        pInput[],
+             Uint8              pOutput[],
+             Uint64             len)
 {
     Status s = StatusOk();
-    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, true);
+    // FIXME: ctx to be passed to cryptUpdate
+    s = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, true);
     return s.code();
 }
 
 alc_error_t
-Ccm::decryptUpdate(const Uint8 pInput[], Uint8 pOutput[], Uint64 len)
+Ccm::decryptUpdate(alc_cipher_data_t* ctx,
+                   const Uint8        pInput[],
+                   Uint8              pOutput[],
+                   Uint64             len)
 {
     Status s = StatusOk();
-    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, false);
+    // FIXME: ctx to be passed to cryptUpdate
+    s = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, false);
     return s.code();
 }
 
 alc_error_t
-Ccm::encryptUpdate(const Uint8 pInput[], Uint8 pOutput[], Uint64 len)
+Ccm::encryptUpdate(alc_cipher_data_t* ctx,
+                   const Uint8        pInput[],
+                   Uint8              pOutput[],
+                   Uint64             len)
 {
     Status s = StatusOk();
-    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, true);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, true);
     return s.code();
 }
 
 alc_error_t
-Ccm::getTag(Uint8 pOutput[], Uint64 len)
+Ccm::getTag(alc_cipher_data_t* ctx, Uint8 pOutput[], Uint64 len)
 {
     Status s = StatusOk();
     s        = pImpl->getTag(pOutput, len);
@@ -794,7 +808,7 @@ Ccm::getTag(Uint8 pOutput[], Uint64 len)
 }
 
 alc_error_t
-Ccm::setIv(const Uint8 pIv[], Uint64 ivLen)
+Ccm::setIv(alc_cipher_data_t* ctx, const Uint8 pIv[], Uint64 ivLen)
 {
     Status s = StatusOk();
     s        = pImpl->setIv(pIv, ivLen);
@@ -802,7 +816,7 @@ Ccm::setIv(const Uint8 pIv[], Uint64 ivLen)
 }
 
 alc_error_t
-Ccm::setTagLength(Uint64 len)
+Ccm::setTagLength(alc_cipher_data_t* ctx, Uint64 len)
 {
     Status s = StatusOk();
     s        = pImpl->setTagLength(len);
@@ -810,7 +824,7 @@ Ccm::setTagLength(Uint64 len)
 }
 
 alc_error_t
-Ccm::setAad(const Uint8 pInput[], Uint64 len)
+Ccm::setAad(alc_cipher_data_t* ctx, const Uint8 pInput[], Uint64 len)
 {
     Status s = StatusOk();
     s        = pImpl->setAad(pInput, len);

@@ -35,57 +35,59 @@
 
 namespace alcp::cipher {
 
-struct Context
+typedef struct Context
 {
-    void* m_cipher = nullptr;
+    void*             m_cipher = nullptr;
+    alc_cipher_data_t m_cipher_data;
 
-    alc_error_t (*decrypt)(const void*  rCipher,
+    // sw methods
+    alc_error_t (*decrypt)(void*        ctx,
                            const Uint8* pSrc,
                            Uint8*       pDst,
                            Uint64       len);
 
-    alc_error_t (*encrypt)(const void*  rCipher,
+    alc_error_t (*encrypt)(void*        ctx,
                            const Uint8* pSrt,
                            Uint8*       pDrc,
                            Uint64       len);
 
-    alc_error_t (*encryptBlocksXts)(const void*  rCipher,
+    alc_error_t (*encryptBlocksXts)(void*        ctx,
                                     const Uint8* pSrt,
                                     Uint8*       pDrc,
                                     Uint64       currPlainTextLen,
                                     Uint64       startBlockNum);
 
-    alc_error_t (*decryptBlocksXts)(const void*  rCipher,
+    alc_error_t (*decryptBlocksXts)(void*        ctx,
                                     const Uint8* pSrt,
                                     Uint8*       pDrc,
                                     Uint64       currCipherTextLen,
                                     Uint64       startBlockNum);
 
-    alc_error_t (*decryptUpdate)(void*        rCipher,
+    alc_error_t (*decryptUpdate)(void*        ctx,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
                                  Uint64       len);
 
-    alc_error_t (*encryptUpdate)(void*        rCipher,
+    alc_error_t (*encryptUpdate)(void*        ctx,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
                                  Uint64       len);
 
-    alc_error_t (*init)(void*        rCipher,
+    alc_error_t (*init)(void*        ctx,
                         const Uint8* pKey,
                         Uint64       keyLen,
                         const Uint8* pIv,
                         Uint64       ivLen);
 
-    alc_error_t (*setAad)(void* rCipher, const Uint8* pAad, Uint64 aadLen);
+    alc_error_t (*setAad)(void* ctx, const Uint8* pAad, Uint64 aadLen);
 
-    alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 tagLen);
+    alc_error_t (*getTag)(void* ctx, Uint8* pTag, Uint64 tagLen);
 
-    alc_error_t (*setTagLength)(void* rCipher, Uint64 tagLen);
+    alc_error_t (*setTagLength)(void* ctx, Uint64 tagLen);
 
     alc_error_t (*finish)(const void*);
 
     Status status{ StatusOk() };
-};
+} alcp_cipher_ctx_t;
 
 } // namespace alcp::cipher

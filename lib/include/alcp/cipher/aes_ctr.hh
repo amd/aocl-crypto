@@ -44,28 +44,32 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Ctr : public Aes
 {
   public:
-    Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
+    Ctr(alc_cipher_data_t* ctx)
+        : Aes(ctx)
+    {
+        setMode(ALC_AES_MODE_CTR);
+    };
     ~Ctr() {}
 };
 
 namespace vaes512 {
-    AES_CLASS_GEN(Ctr128, public Ctr)
-    AES_CLASS_GEN(Ctr192, public Ctr)
-    AES_CLASS_GEN(Ctr256, public Ctr)
+    AES_CLASS_GEN(Ctr128, Ctr)
+    AES_CLASS_GEN(Ctr192, Ctr)
+    AES_CLASS_GEN(Ctr256, Ctr)
 } // namespace vaes512
 
 // duplicate of vaes512 namespace, to be removed
 namespace vaes {
-    AES_CLASS_GEN(Ctr128, public Ctr)
-    AES_CLASS_GEN(Ctr192, public Ctr)
-    AES_CLASS_GEN(Ctr256, public Ctr)
+    AES_CLASS_GEN(Ctr128, Ctr)
+    AES_CLASS_GEN(Ctr192, Ctr)
+    AES_CLASS_GEN(Ctr256, Ctr)
 } // namespace vaes
 
 // duplicate of vaes512 namespace, to be removed
 namespace aesni {
-    AES_CLASS_GEN(Ctr128, public Ctr)
-    AES_CLASS_GEN(Ctr192, public Ctr)
-    AES_CLASS_GEN(Ctr256, public Ctr)
+    AES_CLASS_GEN(Ctr128, Ctr)
+    AES_CLASS_GEN(Ctr192, Ctr)
+    AES_CLASS_GEN(Ctr256, Ctr)
 } // namespace aesni
 
 namespace aes {

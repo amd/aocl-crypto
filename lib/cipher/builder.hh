@@ -39,23 +39,24 @@ using namespace alcp::base;
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper(const void* rCipher, const Uint8* pSrc, Uint8* pDest, Uint64 len)
+__aes_wrapper(void* ctx, const Uint8* pSrc, Uint8* pDest, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if (encrypt)
-        e = ap->encrypt(pSrc, pDest, len);
+        e = ap->encrypt(&(ctxp->m_cipher_data), pSrc, pDest, len);
     else
-        e = ap->decrypt(pSrc, pDest, len);
+        e = ap->decrypt(&(ctxp->m_cipher_data), pSrc, pDest, len);
 
     return e;
 }
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper_crypt_block_xts(const void*  rCipher,
+__aes_wrapper_crypt_block_xts(void*        ctx,
                               const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       currSrcLen,
@@ -63,48 +64,53 @@ __aes_wrapper_crypt_block_xts(const void*  rCipher,
 {
     Status e = StatusOk();
 
-    auto ap = static_cast<CIPHERMODE*>(const_cast<void*>(rCipher));
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e.update(ap->encryptBlocksXts(pSrc, pDest, currSrcLen, startBlockNum));
+        e.update(ap->encryptBlocksXts(
+            &(ctxp->m_cipher_data), pSrc, pDest, currSrcLen, startBlockNum));
     else
-        e.update(ap->decryptBlocksXts(pSrc, pDest, currSrcLen, startBlockNum));
+        e.update(ap->decryptBlocksXts(
+            &(ctxp->m_cipher_data), pSrc, pDest, currSrcLen, startBlockNum));
 
     return !(e.ok() == 1);
 }
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapperUpdate(void* rCipher, const Uint8* pSrc, Uint8* pDest, Uint64 len)
+__aes_wrapperUpdate(void* ctx, const Uint8* pSrc, Uint8* pDest, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e = ap->encryptUpdate(pSrc, pDest, len);
+        e = ap->encryptUpdate(&(ctxp->m_cipher_data), pSrc, pDest, len);
     else
-        e = ap->decryptUpdate(pSrc, pDest, len);
+        e = ap->decryptUpdate(&(ctxp->m_cipher_data), pSrc, pDest, len);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperSetIv(void* rCipher, const Uint8* pIv, Uint64 ivLen)
+__aes_wrapperSetIv(void* ctx, const Uint8* pIv, Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setIv(pIv, ivLen);
+    e = ap->setIv(&(ctxp->m_cipher_data), pIv, ivLen);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperInit(void*        rCipher,
+__aes_wrapperInit(void*        ctx,
                   const Uint8* pKey,
                   const Uint64 keyLen,
                   const Uint8* pIv,
@@ -112,71 +118,77 @@ __aes_wrapperInit(void*        rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->init(pKey, keyLen, pIv, ivLen);
+    e = ap->init(&(ctxp->m_cipher_data), pKey, keyLen, pIv, ivLen);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperGetTag(void* rCipher, Uint8* pTag, Uint64 len)
+__aes_wrapperGetTag(void* ctx, Uint8* pTag, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->getTag(pTag, len);
+    e = ap->getTag(&(ctxp->m_cipher_data), pTag, len);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperSetTKey(void* rCipher, const Uint8* pTag, Uint64 len)
+__aes_wrapperSetTKey(void* ctx, const Uint8* pTag, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    ap->setTweakKey(pTag, len);
+    ap->setTweakKey(&(ctxp->m_cipher_data), pTag, len);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperSetTagLength(void* rCipher, Uint64 len)
+__aes_wrapperSetTagLength(void* ctx, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setTagLength(len);
+    e = ap->setTagLength(&(ctxp->m_cipher_data), len);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperSetAad(void* rCipher, const Uint8* pAad, Uint64 len)
+__aes_wrapperSetAad(void* ctx, const Uint8* pAad, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setAad(pAad, len);
+    e = ap->setAad(&(ctxp->m_cipher_data), pAad, len);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_dtor(const void* rCipher)
+__aes_dtor(const void* ctx)
 {
-    alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<const CIPHERMODE*>(rCipher);
+    alc_error_t e    = ALC_ERROR_NONE;
+    auto        ctxp = static_cast<const cipher::Context*>(ctx);
+    auto        ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
     delete ap;
     return e;
 }

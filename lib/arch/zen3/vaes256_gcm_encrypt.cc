@@ -75,10 +75,10 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
                              const __m128i* pkey128,
                              int            nRounds,
                              // gcm specific params
-                             alc_gcm_local_data_t*            gcmLocalData,
-                             alcp::cipher::alc_cipher_data_t* cipherData,
-                             int                              remBytes,
-                             Uint64* pGcmCtxHashSubkeyTable)
+                             alc_gcm_local_data_t* gcmLocalData,
+                             alc_cipher_data_t*    cipherData,
+                             int                   remBytes,
+                             Uint64*               pGcmCtxHashSubkeyTable)
 {
     __m256i c1;
 
@@ -572,15 +572,15 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
 }
 
 alc_error_t
-encryptGcm128(const Uint8*                     pInputText,  // ptr to inputText
-              Uint8*                           pOutputText, // ptr to outputtext
-              Uint64                           len, // message length in bytes
-              bool                             isFirstUpdate,
-              const Uint8*                     pKey,    // ptr to Key
-              const int                        nRounds, // No. of rounds
-              alc_gcm_local_data_t*            gcmLocalData,
-              alcp::cipher::alc_cipher_data_t* cipherData,
-              Uint64*                          pGcmCtxHashSubkeyTable)
+encryptGcm128(const Uint8*          pInputText,  // ptr to inputText
+              Uint8*                pOutputText, // ptr to outputtext
+              Uint64                len,         // message length in bytes
+              bool                  isFirstUpdate,
+              const Uint8*          pKey,    // ptr to Key
+              const int             nRounds, // No. of rounds
+              alc_gcm_local_data_t* gcmLocalData,
+              alc_cipher_data_t*    cipherData,
+              Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -611,15 +611,15 @@ encryptGcm128(const Uint8*                     pInputText,  // ptr to inputText
 }
 
 alc_error_t
-encryptGcm192(const Uint8*                     pInputText,  // ptr to inputText
-              Uint8*                           pOutputText, // ptr to outputtext
-              Uint64                           len, // message length in bytes
-              bool                             isFirstUpdate,
-              const Uint8*                     pKey,    // ptr to Key
-              const int                        nRounds, // No. of rounds
-              alc_gcm_local_data_t*            gcmLocalData,
-              alcp::cipher::alc_cipher_data_t* cipherData,
-              Uint64*                          pGcmCtxHashSubkeyTable)
+encryptGcm192(const Uint8*          pInputText,  // ptr to inputText
+              Uint8*                pOutputText, // ptr to outputtext
+              Uint64                len,         // message length in bytes
+              bool                  isFirstUpdate,
+              const Uint8*          pKey,    // ptr to Key
+              const int             nRounds, // No. of rounds
+              alc_gcm_local_data_t* gcmLocalData,
+              alc_cipher_data_t*    cipherData,
+              Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -650,15 +650,15 @@ encryptGcm192(const Uint8*                     pInputText,  // ptr to inputText
 }
 
 alc_error_t
-encryptGcm256(const Uint8*                     pInputText,  // ptr to inputText
-              Uint8*                           pOutputText, // ptr to outputtext
-              Uint64                           len, // message length in bytes
-              bool                             isFirstUpdate,
-              const Uint8*                     pKey,    // ptr to Key
-              const int                        nRounds, // No. of rounds
-              alc_gcm_local_data_t*            gcmLocalData,
-              alcp::cipher::alc_cipher_data_t* cipherData,
-              Uint64*                          pGcmCtxHashSubkeyTable)
+encryptGcm256(const Uint8*          pInputText,  // ptr to inputText
+              Uint8*                pOutputText, // ptr to outputtext
+              Uint64                len,         // message length in bytes
+              bool                  isFirstUpdate,
+              const Uint8*          pKey,    // ptr to Key
+              const int             nRounds, // No. of rounds
+              alc_gcm_local_data_t* gcmLocalData,
+              alc_cipher_data_t*    cipherData,
+              Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
 

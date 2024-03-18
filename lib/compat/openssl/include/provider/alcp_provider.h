@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +37,35 @@
 #include <alcp/digest.h>
 
 #include "debug.h"
+
+#include "cipher/alcp_cipher_prov.h"
+#include "provider/alcp_names.h"
+
+#define GCM_IV_DEFAULT_SIZE 12
+#define GCM_IV_MAX_SIZE     (1024 / 8)
+#define GCM_TAG_MAX_SIZE    16
+
+#define AES_MAXNR 14
+
+typedef struct alcp_aes_key_st
+{
+    Uint64 rd_key[4 * (AES_MAXNR + 1)];
+    Int32  rounds;
+} ALCP_AES_KEY;
+
+typedef struct prov_aes_ctx_st
+{
+    alc_cipher_handle_t handle;
+    alc_cipher_data_t*  prov_cipher_data; /* cipher params */
+    OSSL_LIB_CTX*       libctx;           /* needed for rand calls */
+} ALCP_PROV_AES_CTX;
+
+typedef struct alcp_prov_cipher_ctx_st
+{
+    ALCP_PROV_AES_CTX base; /* must be first entry in struct */
+    // key memory to be aligned
+    ALCP_AES_KEY ks;
+} ALCP_PROV_CIPHER_CTX;
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];

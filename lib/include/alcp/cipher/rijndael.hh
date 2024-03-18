@@ -92,14 +92,16 @@ class ALCP_API_EXPORT Rijndael
     virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
 
     // this should move to aes
-    virtual alc_error_t encrypt(const Uint8* pSrc,
-                                Uint8*       pDst,
-                                Uint64       len) const;
+    virtual alc_error_t encrypt(alc_cipher_data_t* ctx,
+                                const Uint8*       pSrc,
+                                Uint8*             pDst,
+                                Uint64             len);
 
     // this should move to aes
-    virtual alc_error_t decrypt(const Uint8* pSrc,
-                                Uint8*       pDst,
-                                Uint64       len) const;
+    virtual alc_error_t decrypt(alc_cipher_data_t* ctx,
+                                const Uint8*       pSrc,
+                                Uint8*             pDst,
+                                Uint64             len);
 
     void encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const;
 

@@ -66,7 +66,7 @@ class Cmac::Impl : public cipher::Aes
 
   public:
     Impl()
-        : Aes()
+    //: Aes() FIXME: Aes(ctx) to be added
     {
         setMode(ALC_AES_MODE_NONE);
     }
@@ -74,7 +74,7 @@ class Cmac::Impl : public cipher::Aes
     Status setKey(const Uint8 key[], Uint64 len)
     {
         Status s{ StatusOk() };
-        Aes::setKey(key, len);
+        // Aes::setKey(key, len); // FIXME: add setKey with ctx
         // no error checks needed at this stage, since key and keyLength are
         // validated.
 

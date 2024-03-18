@@ -30,6 +30,8 @@
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
 
+#if 0 // code rewriten
+
 // FIXME: init should be split to individual algorithm and further cleanup
 // required.
 static inline int
@@ -124,7 +126,7 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
 
 #ifdef DEBUG
     alc_cipher_info_t* cinfo = &cctx->pc_cipher_info;
-    printf("Provider: %d keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, key);
+    printf("Provider: %ld keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, key);
 #endif
 
     // Manually allocate context
@@ -171,52 +173,6 @@ ALCP_prov_cipher_gcm_encrypt_init(void*                vctx,
     int ret = ALCP_prov_cipher_aead_encrypt_init(
         vctx, key, keylen, iv, ivlen, params);
 
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_ccm_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CCM\n");
-    int ret = ALCP_prov_cipher_aead_encrypt_init(
-        vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_siv_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: SIV\n");
-
-    // For SIV, Authentication Key assumed to be same length as Decryption
-    // Key Hence not modifying cinfo->ci_key or
-    // cinfo->ci_keyLen
-    // For openSSL SIV encryption and authentication key needs to be in
-    // continous memory location. Second part of the key is
-    // authentication key
-    alc_prov_cipher_ctx_t* cctx                = vctx;
-    alc_cipher_aead_info_p c_aeadinfo          = &cctx->pc_cipher_aead_info;
-    alc_key_info_p         kinfo_siv_ctr_key   = &cctx->kinfo_siv_ctr_key;
-    kinfo_siv_ctr_key->len                     = keylen;
-    kinfo_siv_ctr_key->key                     = key + (keylen / 8);
-    c_aeadinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-
-    int ret = ALCP_prov_cipher_aead_encrypt_init(
-        vctx, key, keylen, iv, ivlen, params);
     EXIT();
     return ret;
 }
@@ -319,7 +275,7 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
 
 #ifdef DEBUG
     alc_cipher_info_t* cinfo = &cctx->pc_cipher_info;
-    printf("Provider: %d keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, iv);
+    printf("Provider: %ld keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, iv);
 #endif
 
     // Manually allocate context
@@ -347,22 +303,6 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
 }
 
 int
-ALCP_prov_cipher_ccm_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CCM\n");
-    int ret = ALCP_prov_cipher_aead_decrypt_init(
-        vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
 ALCP_prov_cipher_gcm_decrypt_init(void*                vctx,
                                   const unsigned char* key,
                                   size_t               keylen,
@@ -386,36 +326,6 @@ ALCP_prov_cipher_gcm_decrypt_init(void*                vctx,
         return 0;
     }
 
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_siv_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: SIV\n");
-    alc_prov_cipher_ctx_t* cctx              = vctx;
-    alc_key_info_p         kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
-    alc_cipher_aead_info_p c_aeadinfo        = &cctx->pc_cipher_aead_info;
-
-    // For SIV, Authentication Key assumed to be same length as Encryption
-    // Key Hence not modifying cinfo->ci_key or
-    // cinfo->ci_keyLen
-    // For openSSL SIV encryption and authentication key need to be in
-    // continous memory location. Second part of the key is
-    // authentication key
-    kinfo_siv_ctr_key->len                     = keylen;
-    kinfo_siv_ctr_key->key                     = key + (keylen / 8);
-    c_aeadinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-
-    int ret = ALCP_prov_cipher_aead_decrypt_init(
-        vctx, key, keylen, iv, ivlen, params);
     EXIT();
     return ret;
 }
@@ -483,6 +393,8 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
     *outl = inl;
     return 1;
 }
+
+
 
 int
 ALCP_prov_cipher_ccm_update(void*                vctx,
@@ -613,3 +525,5 @@ ALCP_prov_cipher_siv_update(void*                vctx,
     *outl = inl;
     return 1;
 }
+
+#endif

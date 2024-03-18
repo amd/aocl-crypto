@@ -93,6 +93,8 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
 
     new (ctx) cipher::Context;
 
+    pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
+
     err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
 
     return err;
@@ -141,7 +143,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify Encrypt to return Status and assign to context status
-    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len);
+    err = ctx->encrypt(ctx, pPlainText, pCipherText, len);
 
     return err;
 }
@@ -164,11 +166,8 @@ alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    err = ctx->encryptBlocksXts(ctx->m_cipher,
-                                pPlainText,
-                                pCipherText,
-                                currPlainTextLen,
-                                startBlockNum);
+    err = ctx->encryptBlocksXts(
+        ctx, pPlainText, pCipherText, currPlainTextLen, startBlockNum);
 
     return err;
 }
@@ -190,7 +189,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify decrypt to return Status and assign to context status
-    err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len);
+    err = ctx->decrypt(ctx, pCipherText, pPlainText, len);
 
     return err;
 }
@@ -213,11 +212,8 @@ alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    err = ctx->decryptBlocksXts(ctx->m_cipher,
-                                pCipherText,
-                                pPlainText,
-                                currCipherTextLen,
-                                startBlockNum);
+    err = ctx->decryptBlocksXts(
+        ctx, pCipherText, pPlainText, currCipherTextLen, startBlockNum);
 
     return err;
 }
@@ -238,7 +234,7 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
 
     // init can be called to setKey or setIv or both
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {
-        err = ctx->init(ctx->m_cipher, pKey, keyLen, pIv, ivLen);
+        err = ctx->init(ctx, pKey, keyLen, pIv, ivLen);
     } else {
         err = ALC_ERROR_INVALID_ARG;
     }
@@ -254,7 +250,7 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
     cipher::Context* ctx =
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    ctx->finish(ctx->m_cipher);
+    ctx->finish(ctx);
 
     ctx->~Context();
 }

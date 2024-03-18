@@ -50,7 +50,7 @@ template<typename AEADMODE>
 void
 _build_aead_wrapper(Context& ctx)
 {
-    auto algo = new AEADMODE();
+    auto algo = new AEADMODE(&(ctx.m_cipher_data));
 
     ctx.m_cipher      = static_cast<void*>(algo);
     ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
@@ -463,6 +463,10 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
     if (!Aes::isSupported(keyLen)) {
         return ALC_ERROR_INVALID_SIZE; // FIXME set appropriate sts
     }
+
+    ctx.m_cipher_data.m_keyLen_in_bytes =
+        keyLen / 8; // m_keyLen_in_bytes is used to verify keyLen during setKey
+                    // call in init
 
     switch (cipherMode) {
         case ALC_AES_MODE_GCM:

@@ -44,6 +44,8 @@
 #include "debug.h"
 #include "provider/alcp_provider.h"
 
+#if 0
+
 typedef struct _alc_prov_cipher_ctx
 {
     /* Must be first */
@@ -85,8 +87,12 @@ typedef struct _alc_prov_cipher_ctx
     OSSL_LIB_CTX* pc_libctx;
 } alc_prov_cipher_ctx_t;
 
-EVP_CIPHER*
-ALCP_prov_init_cipher(alc_prov_cipher_ctx_t* c);
+#endif
+
+// EVP_CIPHER*
+// ALCP_prov_init_cipher(ALCP_PROV_CIPHER_CTX* c);
+
+#if 0
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 
@@ -152,6 +158,7 @@ OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
         .ci_mode   = alcp_mode,                                                \
         .ci_keyLen = 128,                                                      \
     }
+
 
 // Macro for OpenSSL Dispatcher Creation
 #define CREATE_CIPHER_DISPATCHERS(name, grp, mode, key_size, is_aead)          \
@@ -220,11 +227,15 @@ OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
         { OSSL_FUNC_CIPHER_UPDATE, (fptr_t)ALCP_prov_cipher_##name##_update }, \
         { OSSL_FUNC_CIPHER_FINAL, (fptr_t)ALCP_prov_cipher_final },            \
     }
+#endif
+
 
 /*
  * Dispatchers are created by alcp_cipher_aes.c using macro
  * defined above
  */
+
+#if 0
 extern const OSSL_DISPATCH cfb_functions_128[];
 extern const OSSL_DISPATCH cfb_functions_192[];
 extern const OSSL_DISPATCH cfb_functions_256[];
@@ -237,19 +248,25 @@ extern const OSSL_DISPATCH ofb_functions_256[];
 extern const OSSL_DISPATCH ctr_functions_128[];
 extern const OSSL_DISPATCH ctr_functions_192[];
 extern const OSSL_DISPATCH ctr_functions_256[];
-// extern const OSSL_DISPATCH ecb_functions_128[];
-// extern const OSSL_DISPATCH ecb_functions_192[];
-// extern const OSSL_DISPATCH ecb_functions_256[];
-// extern const OSSL_DISPATCH xts_functions_128[];
-// extern const OSSL_DISPATCH xts_functions_256[];
+extern const OSSL_DISPATCH xts_functions_128[];
+extern const OSSL_DISPATCH xts_functions_256[];
+#endif
+
 extern const OSSL_DISPATCH gcm_functions_128[];
 extern const OSSL_DISPATCH gcm_functions_192[];
 extern const OSSL_DISPATCH gcm_functions_256[];
-// extern const OSSL_DISPATCH ccm_functions_128[];
-// extern const OSSL_DISPATCH ccm_functions_192[];
-// extern const OSSL_DISPATCH ccm_functions_256[];
-// extern const OSSL_DISPATCH siv_functions_128[];
-// extern const OSSL_DISPATCH siv_functions_192[];
-// extern const OSSL_DISPATCH siv_functions_256[];
+
+extern const OSSL_DISPATCH ALCP_prov_aes128gcm_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes192gcm_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes256gcm_functions[];
+
+#if 0
+ extern const OSSL_DISPATCH ccm_functions_128[];
+ extern const OSSL_DISPATCH ccm_functions_192[];
+ extern const OSSL_DISPATCH ccm_functions_256[];
+ extern const OSSL_DISPATCH siv_functions_128[];
+ extern const OSSL_DISPATCH siv_functions_192[];
+ extern const OSSL_DISPATCH siv_functions_256[];
+#endif
 
 #endif /* _OPENSSL_ALCP_prov_CIPHER_PROV_H */

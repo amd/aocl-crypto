@@ -45,26 +45,30 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Cfb : public Aes
 {
   public:
-    Cfb() { Aes::setMode(ALC_AES_MODE_CFB); };
+    Cfb(alc_cipher_data_t* ctx)
+        : Aes(ctx)
+    {
+        setMode(ALC_AES_MODE_CFB);
+    };
     ~Cfb() {}
 };
 
 namespace vaes512 {
-    AES_CLASS_GEN(Cfb128, public Cfb)
-    AES_CLASS_GEN(Cfb192, public Cfb)
-    AES_CLASS_GEN(Cfb256, public Cfb)
+    AES_CLASS_GEN(Cfb128, Cfb)
+    AES_CLASS_GEN(Cfb192, Cfb)
+    AES_CLASS_GEN(Cfb256, Cfb)
 } // namespace vaes512
 
 namespace vaes {
-    AES_CLASS_GEN(Cfb128, public Cfb)
-    AES_CLASS_GEN(Cfb192, public Cfb)
-    AES_CLASS_GEN(Cfb256, public Cfb)
+    AES_CLASS_GEN(Cfb128, Cfb)
+    AES_CLASS_GEN(Cfb192, Cfb)
+    AES_CLASS_GEN(Cfb256, Cfb)
 } // namespace vaes
 
 namespace aesni {
-    AES_CLASS_GEN(Cfb128, public Cfb)
-    AES_CLASS_GEN(Cfb192, public Cfb)
-    AES_CLASS_GEN(Cfb256, public Cfb)
+    AES_CLASS_GEN(Cfb128, Cfb)
+    AES_CLASS_GEN(Cfb192, Cfb)
+    AES_CLASS_GEN(Cfb256, Cfb)
 } // namespace aesni
 
 } // namespace alcp::cipher

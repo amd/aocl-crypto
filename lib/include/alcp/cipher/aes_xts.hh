@@ -49,39 +49,48 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Xts : public Aes
 {
   public:
-    Xts()
+    Uint8* m_pIv_xts;
+    Uint32 m_iv_xts_size          = 0;
+    Uint8* m_ptweak_round_key     = NULL;
+    Uint32 m_tweak_round_key_size = 0;
+
+    Xts(alc_cipher_data_t* ctx)
+        : Aes(ctx)
     {
+        m_pIv_xts     = ctx->m_xts.m_iv_xts;
+        m_iv_xts_size = sizeof(ctx->m_xts.m_iv_xts);
+
+        m_ptweak_round_key     = ctx->m_xts.m_tweak_round_key;
+        m_tweak_round_key_size = sizeof(ctx->m_xts.m_tweak_round_key);
+
         Aes::setMode(ALC_AES_MODE_XTS);
-        m_cipherData.m_xts.m_aes_block_id = -1;
-        memset(m_cipherData.m_xts.m_iv_xts,
-               0,
-               sizeof(m_cipherData.m_xts.m_iv_xts));
-        memset(m_cipherData.m_xts.m_tweak_round_key,
-               0,
-               sizeof(m_cipherData.m_xts.m_tweak_round_key));
+        ctx->m_xts.m_aes_block_id = -1;
+        memset(ctx->m_xts.m_iv_xts, 0, m_iv_xts_size);
+        memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
     };
     ~Xts()
     {
         // clear keys
-        memset(m_cipherData.m_xts.m_iv_xts,
-               0,
-               sizeof(m_cipherData.m_xts.m_iv_xts));
-        memset(m_cipherData.m_xts.m_tweak_round_key,
-               0,
-               sizeof(m_cipherData.m_xts.m_tweak_round_key));
+        memset(m_pIv_xts, 0, m_iv_xts_size);
+        memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
     };
 
     // functions unique to Xts class
-    void expandTweakKeys(const Uint8* pUserKey, int len);
-    void tweakBlockSet(Uint64 aesBlockId);
+    void expandTweakKeys(alc_cipher_data_t* ctx,
+                         const Uint8*       pUserKey,
+                         int                len);
+    void tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId);
 
     // overriden functions
-    alc_error_t init(const Uint8* pKey,
-                     const Uint64 keyLen,
-                     const Uint8* pIv,
-                     const Uint64 ivLen);
+    alc_error_t init(alc_cipher_data_t* ctx,
+                     const Uint8*       pKey,
+                     const Uint64       keyLen,
+                     const Uint8*       pIv,
+                     const Uint64       ivLen);
 
-    alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
+    alc_error_t setIv(alc_cipher_data_t* ctx,
+                      const Uint8*       pIv,
+                      const Uint64       ivLen);
 };
 
 static inline Uint8
@@ -91,45 +100,50 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
 }
 
 #define AES_XTS_CLASS_GEN(CHILD_NEW, PARENT)                                   \
-    class ALCP_API_EXPORT CHILD_NEW : PARENT                                   \
+    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \
       public:                                                                  \
-        CHILD_NEW(){};                                                         \
+        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
+            : PARENT(ctx){};                                                   \
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(const Uint8* pPlainText,                           \
-                            Uint8*       pCipherText,                          \
-                            Uint64       len) const;                                 \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pPlainText,                     \
+                            Uint8*             pCipherText,                    \
+                            Uint64             len);                                       \
                                                                                \
-        alc_error_t decrypt(const Uint8* pCipherText,                          \
-                            Uint8*       pPlainText,                           \
-                            Uint64       len) const;                                 \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len);                                       \
                                                                                \
-        Status encryptBlocksXts(const Uint8* pSrc,                             \
-                                Uint8*       pDest,                            \
-                                Uint64       currSrcLen,                       \
-                                Uint64       startBlockNum);                         \
+        Status encryptBlocksXts(alc_cipher_data_t* ctx,                        \
+                                const Uint8*       pSrc,                       \
+                                Uint8*             pDest,                      \
+                                Uint64             currSrcLen,                 \
+                                Uint64             startBlockNum);                         \
                                                                                \
-        Status decryptBlocksXts(const Uint8* pSrc,                             \
-                                Uint8*       pDest,                            \
-                                Uint64       currSrcLen,                       \
-                                Uint64       startBlockNum);                         \
+        Status decryptBlocksXts(alc_cipher_data_t* ctx,                        \
+                                const Uint8*       pSrc,                       \
+                                Uint8*             pDest,                      \
+                                Uint64             currSrcLen,                 \
+                                Uint64             startBlockNum);                         \
     };
 
 namespace vaes512 {
-    AES_XTS_CLASS_GEN(Xts128, public Xts)
-    AES_XTS_CLASS_GEN(Xts256, public Xts)
+    AES_XTS_CLASS_GEN(Xts128, Xts)
+    AES_XTS_CLASS_GEN(Xts256, Xts)
 } // namespace vaes512
 
 namespace vaes {
-    AES_XTS_CLASS_GEN(Xts128, public Xts)
-    AES_XTS_CLASS_GEN(Xts256, public Xts)
+    AES_XTS_CLASS_GEN(Xts128, Xts)
+    AES_XTS_CLASS_GEN(Xts256, Xts)
 } // namespace vaes
 
 namespace aesni {
-    AES_XTS_CLASS_GEN(Xts128, public Xts)
-    AES_XTS_CLASS_GEN(Xts256, public Xts)
+    AES_XTS_CLASS_GEN(Xts128, Xts)
+    AES_XTS_CLASS_GEN(Xts256, Xts)
 } // namespace aesni
 
 } // namespace alcp::cipher

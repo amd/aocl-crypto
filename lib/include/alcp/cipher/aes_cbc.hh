@@ -48,25 +48,29 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Cbc : public Aes
 {
   public:
-    Cbc() { Aes::setMode(ALC_AES_MODE_CBC); };
+    Cbc(alc_cipher_data_t* ctx)
+        : Aes(ctx)
+    {
+        setMode(ALC_AES_MODE_CBC);
+    };
     ~Cbc() {}
 };
 
 namespace vaes512 {
-    AES_CLASS_GEN(Cbc128, public Cbc)
-    AES_CLASS_GEN(Cbc192, public Cbc)
-    AES_CLASS_GEN(Cbc256, public Cbc)
+    AES_CLASS_GEN(Cbc128, Cbc)
+    AES_CLASS_GEN(Cbc192, Cbc)
+    AES_CLASS_GEN(Cbc256, Cbc)
 } // namespace vaes512
 
 namespace vaes {
-    AES_CLASS_GEN(Cbc128, public Cbc)
-    AES_CLASS_GEN(Cbc192, public Cbc)
-    AES_CLASS_GEN(Cbc256, public Cbc)
+    AES_CLASS_GEN(Cbc128, Cbc)
+    AES_CLASS_GEN(Cbc192, Cbc)
+    AES_CLASS_GEN(Cbc256, Cbc)
 } // namespace vaes
 
 namespace aesni {
-    AES_CLASS_GEN(Cbc128, public Cbc)
-    AES_CLASS_GEN(Cbc192, public Cbc)
-    AES_CLASS_GEN(Cbc256, public Cbc)
+    AES_CLASS_GEN(Cbc128, Cbc)
+    AES_CLASS_GEN(Cbc192, Cbc)
+    AES_CLASS_GEN(Cbc256, Cbc)
 } // namespace aesni
 } // namespace alcp::cipher

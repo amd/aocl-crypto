@@ -30,6 +30,810 @@
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
 
+#include "alcp_cipher_prov_common.h"
+
+/*-
+ * Generic cipher functions for OSSL_PARAM gettables and settables
+ */
+static const OSSL_PARAM alcp_prov_cipher_known_gettable_params[] = {
+    OSSL_PARAM_uint(OSSL_CIPHER_PARAM_MODE, NULL),
+    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
+    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_IVLEN, NULL),
+    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_BLOCK_SIZE, NULL),
+    OSSL_PARAM_int(OSSL_CIPHER_PARAM_AEAD, NULL),
+    OSSL_PARAM_int(OSSL_CIPHER_PARAM_CUSTOM_IV, NULL),
+    OSSL_PARAM_int(OSSL_CIPHER_PARAM_CTS, NULL),
+    OSSL_PARAM_int(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK, NULL),
+    OSSL_PARAM_int(OSSL_CIPHER_PARAM_HAS_RAND_KEY, NULL),
+    OSSL_PARAM_END
+};
+const OSSL_PARAM*
+ALCP_prov_cipher_generic_gettable_params(ossl_unused void* provctx)
+{
+    printf("\n generic gettable ctx params ");
+    return alcp_prov_cipher_known_gettable_params;
+}
+
+int
+ALCP_prov_cipher_generic_get_params(OSSL_PARAM   params[],
+                                    unsigned int md,
+                                    uint64_t     flags,
+                                    size_t       kbits,
+                                    size_t       blkbits,
+                                    size_t       ivbits)
+{
+    OSSL_PARAM* p;
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_MODE);
+    if (p != NULL && !OSSL_PARAM_set_uint(p, md)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_AEAD);
+    if (p != NULL
+        && !OSSL_PARAM_set_int(p, (flags & PROV_CIPHER_FLAG_AEAD) != 0)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_CUSTOM_IV);
+    if (p != NULL
+        && !OSSL_PARAM_set_int(p, (flags & PROV_CIPHER_FLAG_CUSTOM_IV) != 0)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_CTS);
+    if (p != NULL
+        && !OSSL_PARAM_set_int(p, (flags & PROV_CIPHER_FLAG_CTS) != 0)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK);
+    if (p != NULL
+        && !OSSL_PARAM_set_int(
+            p, (flags & PROV_CIPHER_FLAG_TLS1_MULTIBLOCK) != 0)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_HAS_RAND_KEY);
+    if (p != NULL
+        && !OSSL_PARAM_set_int(p, (flags & PROV_CIPHER_FLAG_RAND_KEY) != 0)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_KEYLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, kbits / 8)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_BLOCK_SIZE);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, blkbits / 8)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_IVLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, ivbits / 8)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    return 1;
+}
+
+// clang-format off
+
+CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_START(ALCP_prov_cipher_generic)
+{ OSSL_CIPHER_PARAM_TLS_MAC, OSSL_PARAM_OCTET_PTR, NULL, 0, OSSL_PARAM_UNMODIFIED },
+CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_END(ALCP_prov_cipher_generic)
+
+CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_START(ALCP_prov_cipher_generic)
+OSSL_PARAM_uint(OSSL_CIPHER_PARAM_USE_BITS, NULL),
+OSSL_PARAM_uint(OSSL_CIPHER_PARAM_TLS_VERSION, NULL),
+OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_TLS_MAC_SIZE, NULL),
+CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_END(ALCP_prov_cipher_generic)
+
+// clang-format on
+
+#if 0
+    /*
+     * Variable key length cipher functions for OSSL_PARAM settables
+     */
+    int ALCP_prov_cipher_var_keylen_set_ctx_params(void*            vctx,
+                                              const OSSL_PARAM params[])
+{
+    ALCP_PROV_CIPHER_CTX*  ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
+    const OSSL_PARAM* p;
+
+    if (params == NULL)
+        return 1;
+
+    if (!ALCP_prov_cipher_generic_set_ctx_params(vctx, params))
+        return 0;
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_KEYLEN);
+    if (p != NULL) {
+        size_t keylen;
+
+        if (!OSSL_PARAM_get_size_t(p, &keylen)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            return 0;
+        }
+        if (cipherctx->m_keyLen_in_bytes != keylen) {
+            cipherctx->m_keyLen_in_bytes  = keylen;
+            cipherctx->m_isKeySet = 0;
+        }
+    }
+    return 1;
+}
+#endif
+
+    // clang-format off
+CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_START(ALCP_prov_cipher_var_keylen)
+OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
+CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_END(ALCP_prov_cipher_var_keylen)
+    // clang-format on
+
+    /*-
+     * AEAD cipher functions for OSSL_PARAM gettables and settables
+     */
+
+    static const OSSL_PARAM
+    alcp_prov_cipher_aead_known_gettable_ctx_params[] = {
+        OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
+        OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_IVLEN, NULL),
+        OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_AEAD_TAGLEN, NULL),
+        OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_IV, NULL, 0),
+        OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_UPDATED_IV, NULL, 0),
+        OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, NULL, 0),
+        OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD, NULL),
+        OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_GET_IV_GEN,
+                                NULL,
+                                0),
+        OSSL_PARAM_END
+    };
+
+const OSSL_PARAM*
+ALCP_prov_cipher_aead_gettable_ctx_params(ossl_unused void* cctx,
+                                          ossl_unused void* provctx)
+{
+    ENTER();
+
+    return alcp_prov_cipher_aead_known_gettable_ctx_params;
+}
+
+static const OSSL_PARAM cipher_aead_known_settable_ctx_params[] = {
+    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_AEAD_IVLEN, NULL),
+    OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, NULL, 0),
+    OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD, NULL, 0),
+    OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_IV_FIXED, NULL, 0),
+    OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_SET_IV_INV, NULL, 0),
+    OSSL_PARAM_END
+};
+const OSSL_PARAM*
+ALCP_prov_cipher_aead_settable_ctx_params(ossl_unused void* cctx,
+                                          ossl_unused void* provctx)
+{
+    ENTER();
+    return cipher_aead_known_settable_ctx_params;
+}
+
+// to do:
+
+#if 0
+void
+ossl_cipher_generic_reset_ctx(ALCP_PROV_CIPHER_CTX* ctx)
+{
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    if (ctx != NULL && genCipherctx->m_alloced) {
+        OPENSSL_free(genCipherctx->m_tlsmac);
+        genCipherctx->m_alloced = 0;
+        genCipherctx->m_tlsmac  = NULL;
+    }
+}
+
+static int
+cipher_generic_init_internal(ALCP_PROV_CIPHER_CTX* ctx,
+                             const unsigned char*  key,
+                             size_t                keylen,
+                             const unsigned char*  iv,
+                             size_t                ivlen,
+                             const OSSL_PARAM      params[],
+                             int                   enc)
+{
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    genCipherctx->m_num     = 0;
+    genCipherctx->m_bufsz   = 0;
+    genCipherctx->m_updated = 0;
+    cipherctx->enc          = enc ? 1 : 0;
+
+    if (!ossl_prov_is_running())
+        return 0;
+
+    if (iv != NULL && cipherctx->m_mode != EVP_CIPH_ECB_MODE) {
+        if (!ossl_cipher_generic_initiv(ctx, iv, ivlen))
+            return 0;
+    }
+    if (iv == NULL && cipherctx->m_ivState
+        && (cipherctx->m_mode == EVP_CIPH_CBC_MODE
+            || cipherctx->m_mode == EVP_CIPH_CFB_MODE
+            || cipherctx->m_mode == EVP_CIPH_OFB_MODE))
+        /* reset IV for these modes to keep compatibility with 1.1.1 */
+        memcpy(
+            cipherctx->m_iv_buff, genCipherctx->m_oiv_buff, cipherctx->m_ivLen);
+
+    if (key != NULL) {
+        if (genCipherctx->m_variable_keylength == 0) {
+            if (keylen != cipherctx->m_keyLen_in_bytes) {
+                ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH);
+                return 0;
+            }
+        } else {
+            cipherctx->m_keyLen_in_bytes = keylen;
+        }
+        if (!cipherctx->hw->init(ctx, key, cipherctx->m_keyLen_in_bytes))
+            return 0;
+        cipherctx->m_isKeySet = 1;
+    }
+    return ossl_cipher_generic_set_ctx_params(ctx, params);
+}
+
+int
+ossl_cipher_generic_einit(void*                vctx,
+                          const unsigned char* key,
+                          size_t               keylen,
+                          const unsigned char* iv,
+                          size_t               ivlen,
+                          const OSSL_PARAM     params[])
+{
+    return cipher_generic_init_internal(
+        (ALCP_PROV_CIPHER_CTX*)vctx, key, keylen, iv, ivlen, params, 1);
+}
+
+int
+ossl_cipher_generic_dinit(void*                vctx,
+                          const unsigned char* key,
+                          size_t               keylen,
+                          const unsigned char* iv,
+                          size_t               ivlen,
+                          const OSSL_PARAM     params[])
+{
+    return cipher_generic_init_internal(
+        (ALCP_PROV_CIPHER_CTX*)vctx, key, keylen, iv, ivlen, params, 0);
+}
+
+/* Max padding including padding length byte */
+#define MAX_PADDING 256
+
+int
+ossl_cipher_generic_block_update(void*                vctx,
+                                 unsigned char*       out,
+                                 size_t*              outl,
+                                 size_t               outsize,
+                                 const unsigned char* in,
+                                 size_t               inl)
+{
+    size_t                      outlint      = 0;
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    size_t blksz = genCipherctx->m_blocksize;
+    size_t nextblocks;
+
+    if (!cipherctx->m_isKeySet) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+        return 0;
+    }
+
+    if (genCipherctx->m_tlsversion > 0) {
+        /*
+         * Each update call corresponds to a TLS record and is individually
+         * padded
+         */
+
+        /* Sanity check inputs */
+        if (in == NULL || in != out || outsize < inl || !cipherctx->pad) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+
+        if (cipherctx->enc) {
+            unsigned char padval;
+            size_t        padnum, loop;
+
+            /* Add padding */
+
+            padnum = blksz - (inl % blksz);
+
+            if (outsize < inl + padnum) {
+                ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+                return 0;
+            }
+
+            if (padnum > MAX_PADDING) {
+                ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+                return 0;
+            }
+            padval = (unsigned char)(padnum - 1);
+            if (genCipherctx->m_tlsversion == SSL3_VERSION) {
+                if (padnum > 1)
+                    memset(out + inl, 0, padnum - 1);
+                *(out + inl + padnum - 1) = padval;
+            } else {
+                /* we need to add 'padnum' padding bytes of value padval */
+                for (loop = inl; loop < inl + padnum; loop++)
+                    out[loop] = padval;
+            }
+            inl += padnum;
+        }
+
+        if ((inl % blksz) != 0) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+
+        /* Shouldn't normally fail */
+        if (!cipherctx->hw->cipher(ctx, out, in, inl)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+
+        if (genCipherctx->m_alloced) {
+            OPENSSL_free(genCipherctx->m_tlsmac);
+            genCipherctx->m_alloced = 0;
+            genCipherctx->m_tlsmac  = NULL;
+        }
+
+        /* This only fails if padding is publicly invalid */
+        *outl = inl;
+        if (!cipherctx->enc
+            && !ossl_cipher_tlsunpadblock(ctx->base.libctx,
+                                          genCipherctx->m_tlsversion,
+                                          out,
+                                          outl,
+                                          blksz,
+                                          &genCipherctx->m_tlsmac,
+                                          &genCipherctx->m_alloced,
+                                          genCipherctx->m_tlsmacsize,
+                                          0)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+        return 1;
+    }
+
+    if (genCipherctx->m_bufsz != 0)
+        nextblocks = ossl_cipher_fillblock(
+            cipherctx->buf, &genCipherctx->m_bufsz, blksz, &in, &inl);
+    else
+        nextblocks = inl & ~(blksz - 1);
+
+    /*
+     * If we're decrypting and we end an update on a block boundary we hold
+     * the last block back in case this is the last update call and the last
+     * block is padded.
+     */
+    if (genCipherctx->m_bufsz == blksz
+        && (cipherctx->enc || inl > 0 || !cipherctx->pad)) {
+        if (outsize < blksz) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+            return 0;
+        }
+        if (!cipherctx->hw->cipher(ctx, out, cipherctx->buf, blksz)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+        genCipherctx->m_bufsz = 0;
+        outlint               = blksz;
+        out += blksz;
+    }
+    if (nextblocks > 0) {
+        if (!cipherctx->enc && cipherctx->pad && nextblocks == inl) {
+            if (!ossl_assert(inl >= blksz)) {
+                ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+                return 0;
+            }
+            nextblocks -= blksz;
+        }
+        outlint += nextblocks;
+        if (outsize < outlint) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+            return 0;
+        }
+    }
+    if (nextblocks > 0) {
+        if (!cipherctx->hw->cipher(ctx, out, in, nextblocks)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+        in += nextblocks;
+        inl -= nextblocks;
+    }
+    if (inl != 0
+        && !ossl_cipher_trailingdata(
+            cipherctx->buf, &genCipherctx->m_bufsz, blksz, &in, &inl)) {
+        /* ERR_raise already called */
+        return 0;
+    }
+
+    *outl = outlint;
+    return inl == 0;
+}
+
+int
+ossl_cipher_generic_block_final(void*          vctx,
+                                unsigned char* out,
+                                size_t*        outl,
+                                size_t         outsize)
+{
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    size_t blksz = genCipherctx->m_blocksize;
+
+    if (!ossl_prov_is_running())
+        return 0;
+
+    if (!cipherctx->m_isKeySet) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+        return 0;
+    }
+
+    if (genCipherctx->m_tlsversion > 0) {
+        /* We never finalize TLS, so this is an error */
+        ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+        return 0;
+    }
+
+    if (cipherctx->enc) {
+        if (cipherctx->pad) {
+            ossl_cipher_padblock(cipherctx->buf, &genCipherctx->m_bufsz, blksz);
+        } else if (genCipherctx->m_bufsz == 0) {
+            *outl = 0;
+            return 1;
+        } else if (genCipherctx->m_bufsz != blksz) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_WRONG_FINAL_BLOCK_LENGTH);
+            return 0;
+        }
+
+        if (outsize < blksz) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+            return 0;
+        }
+        if (!cipherctx->hw->cipher(ctx, out, cipherctx->buf, blksz)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+            return 0;
+        }
+        genCipherctx->m_bufsz = 0;
+        *outl                 = blksz;
+        return 1;
+    }
+
+    /* Decrypting */
+    if (genCipherctx->m_bufsz != blksz) {
+        if (genCipherctx->m_bufsz == 0 && !cipherctx->pad) {
+            *outl = 0;
+            return 1;
+        }
+        ERR_raise(ERR_LIB_PROV, PROV_R_WRONG_FINAL_BLOCK_LENGTH);
+        return 0;
+    }
+
+    if (!cipherctx->hw->cipher(ctx, cipherctx->buf, cipherctx->buf, blksz)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+        return 0;
+    }
+
+    if (cipherctx->pad
+        && !ossl_cipher_unpadblock(
+            cipherctx->buf, &genCipherctx->m_bufsz, blksz)) {
+        /* ERR_raise already called */
+        return 0;
+    }
+
+    if (outsize < genCipherctx->m_bufsz) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+        return 0;
+    }
+    memcpy(out, cipherctx->buf, genCipherctx->m_bufsz);
+    *outl                 = genCipherctx->m_bufsz;
+    genCipherctx->m_bufsz = 0;
+    return 1;
+}
+
+int
+ossl_cipher_generic_stream_update(void*                vctx,
+                                  unsigned char*       out,
+                                  size_t*              outl,
+                                  size_t               outsize,
+                                  const unsigned char* in,
+                                  size_t               inl)
+{
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    if (!cipherctx->m_isKeySet) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+        return 0;
+    }
+
+    if (inl == 0) {
+        *outl = 0;
+        return 1;
+    }
+
+    if (outsize < inl) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+        return 0;
+    }
+
+    if (!cipherctx->hw->cipher(ctx, out, in, inl)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+        return 0;
+    }
+
+    *outl = inl;
+    if (!cipherctx->enc && genCipherctx->m_tlsversion > 0) {
+        /*
+         * Remove any TLS padding. Only used by cipher_aes_cbc_hmac_sha1_hw.c
+         * and cipher_aes_cbc_hmac_sha256_hw.c
+         */
+        if (genCipherctx->m_removetlspad) {
+            /*
+             * We should have already failed in the cipher() call above if this
+             * isn't true.
+             */
+            if (!ossl_assert(*outl >= (size_t)(out[inl - 1] + 1)))
+                return 0;
+            /* The actual padding length */
+            *outl -= out[inl - 1] + 1;
+        }
+
+        /* TLS MAC and explicit IV if relevant. We should have already failed
+         * in the cipher() call above if *outl is too short.
+         */
+        if (!ossl_assert(*outl >= genCipherctx->m_removetlsfixed))
+            return 0;
+        *outl -= genCipherctx->m_removetlsfixed;
+
+        /* Extract the MAC if there is one */
+        if (genCipherctx->m_tlsmacsize > 0) {
+            if (*outl < genCipherctx->m_tlsmacsize)
+                return 0;
+
+            genCipherctx->m_tlsmac = out + *outl - genCipherctx->m_tlsmacsize;
+            *outl -= genCipherctx->m_tlsmacsize;
+        }
+    }
+
+    return 1;
+}
+int
+ossl_cipher_generic_stream_final(void*          vctx,
+                                 unsigned char* out,
+                                 size_t*        outl,
+                                 size_t         outsize)
+{
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    if (!ossl_prov_is_running())
+        return 0;
+
+    if (!cipherctx->m_isKeySet) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+        return 0;
+    }
+
+    *outl = 0;
+    return 1;
+}
+
+int
+ossl_cipher_generic_cipher(void*                vctx,
+                           unsigned char*       out,
+                           size_t*              outl,
+                           size_t               outsize,
+                           const unsigned char* in,
+                           size_t               inl)
+{
+    ALCP_PROV_CIPHER_CTX* ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*    cipherctx = ctx->base.prov_cipher_data;
+
+    if (!ossl_prov_is_running())
+        return 0;
+
+    if (!cipherctx->m_isKeySet) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+        return 0;
+    }
+
+    if (outsize < inl) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+        return 0;
+    }
+
+    if (!cipherctx->hw->cipher(ctx, out, in, inl)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
+        return 0;
+    }
+
+    *outl = inl;
+    return 1;
+}
+
+int
+ossl_cipher_generic_get_ctx_params(void* vctx, OSSL_PARAM params[])
+{
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    OSSL_PARAM* p;
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_IVLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, cipherctx->m_ivLen)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_PADDING);
+    if (p != NULL && !OSSL_PARAM_set_uint(p, cipherctx->pad)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_IV);
+    if (p != NULL
+        && !OSSL_PARAM_set_octet_ptr(
+            p, &genCipherctx->m_oiv_buff, cipherctx->m_ivLen)
+        && !OSSL_PARAM_set_octet_string(
+            p, &genCipherctx->m_oiv_buff, cipherctx->m_ivLen)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_UPDATED_IV);
+    if (p != NULL
+        && !OSSL_PARAM_set_octet_ptr(
+            p, &cipherctx->m_iv_buff, cipherctx->m_ivLen)
+        && !OSSL_PARAM_set_octet_string(
+            p, &cipherctx->m_iv_buff, cipherctx->m_ivLen)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_NUM);
+    if (p != NULL && !OSSL_PARAM_set_uint(p, cipherctx->num)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_KEYLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, cipherctx->m_keyLen_in_bytes)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_TLS_MAC);
+    if (p != NULL
+        && !OSSL_PARAM_set_octet_ptr(
+            p, genCipherctx->m_tlsmac, genCipherctx->m_tlsmacsize)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+    return 1;
+}
+
+int
+ossl_cipher_generic_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+{
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    const OSSL_PARAM* p;
+
+    if (params == NULL)
+        return 1;
+
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_PADDING);
+    if (p != NULL) {
+        unsigned int pad;
+
+        if (!OSSL_PARAM_get_uint(p, &pad)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            return 0;
+        }
+        cipherctx->pad = pad ? 1 : 0;
+    }
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_USE_BITS);
+    if (p != NULL) {
+        unsigned int bits;
+
+        if (!OSSL_PARAM_get_uint(p, &bits)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            return 0;
+        }
+        genCipherctx->m_use_bits = bits ? 1 : 0;
+    }
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_TLS_VERSION);
+    if (p != NULL) {
+        if (!OSSL_PARAM_get_uint(p, &genCipherctx->m_tlsversion)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            return 0;
+        }
+    }
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_TLS_MAC_SIZE);
+    if (p != NULL) {
+        if (!OSSL_PARAM_get_size_t(p, &genCipherctx->m_tlsmacsize)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            return 0;
+        }
+    }
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_NUM);
+    if (p != NULL) {
+        unsigned int num;
+
+        if (!OSSL_PARAM_get_uint(p, &num)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            return 0;
+        }
+        cipherctx->num = num;
+    }
+    return 1;
+}
+
+int
+ossl_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
+                           const unsigned char*  iv,
+                           size_t                ivlen)
+{
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    if (ivlen != cipherctx->m_ivLen || ivlen > sizeof(cipherctx->m_iv_buff)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_IV_LENGTH);
+        return 0;
+    }
+    cipherctx->m_ivState = 1;
+    memcpy(cipherctx->m_iv_buff, iv, ivlen);
+    memcpy(genCipherctx->m_oiv_buff, iv, ivlen);
+    return 1;
+}
+
+void
+ossl_cipher_generic_initkey(void*        vctx,
+                            size_t       kbits,
+                            size_t       blkbits,
+                            size_t       ivbits,
+                            unsigned int m_mode,
+                            uint64_t     flags,
+                            void*        provctx)
+{
+    ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_cipher_data_t*          cipherctx    = ctx->base.prov_cipher_data;
+    _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->m_generic);
+
+    if ((flags & PROV_CIPHER_FLAG_INVERSE_CIPHER) != 0)
+        cipherctx->inverse_cipher = 1;
+    if ((flags & PROV_CIPHER_FLAG_VARIABLE_LENGTH) != 0)
+        cipherctx->variable_keylength = 1;
+
+    cipherctx->pad               = 1;
+    cipherctx->m_keyLen_in_bytes = ((kbits) / 8);
+    cipherctx->m_ivLen           = ((ivbits) / 8);
+    // cipherctx->hw        = hw;
+    cipherctx->m_mode         = m_mode;
+    genCipherctx->m_blocksize = blkbits / 8;
+    if (provctx != NULL)
+        ctx->base.libctx = PROV_LIBCTX_OF(provctx); /* used for rand */
+}
+
+#endif
+
+///////////// to be removed below code
+
+#if 0
+
 void
 ALCP_prov_cipher_freectx(void* vctx)
 {
@@ -324,6 +1128,7 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     return 1;
 }
 
+
 static inline int
 ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                                   const unsigned char* key,
@@ -449,86 +1254,6 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     return 1;
 }
 
-int
-ALCP_prov_cipher_cfb_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CFB\n");
-    int err =
-        ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-
-    return err;
-}
-
-int
-ALCP_prov_cipher_cbc_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CBC\n");
-    int ret =
-        ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_ofb_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: OFB\n");
-    int ret =
-        ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_ctr_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CTR\n");
-    int ret =
-        ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_xts_encrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: XTS\n");
-    int ret =
-        ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
 
 static inline int
 ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
@@ -674,71 +1399,7 @@ ALCP_prov_cipher_cfb_decrypt_init(void*                vctx,
     return ret;
 }
 
-int
-ALCP_prov_cipher_ofb_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: OFB\n");
-    int ret =
-        ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
 
-int
-ALCP_prov_cipher_cbc_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CBC\n");
-    int ret =
-        ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_ctr_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: CTR\n");
-    int ret =
-        ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_xts_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
-{
-    ENTER();
-    PRINT("Provider: XTS \n");
-
-    int ret =
-        ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
-
-    EXIT();
-    return ret;
-}
 
 static inline int
 ALCP_prov_cipher_update(void*                vctx,
@@ -791,65 +1452,8 @@ ALCP_prov_cipher_cfb_update(void*                vctx,
     return ret;
 }
 
-int
-ALCP_prov_cipher_cbc_update(void*                vctx,
-                            unsigned char*       out,
-                            size_t*              outl,
-                            size_t               outsize,
-                            const unsigned char* in,
-                            size_t               inl)
-{
-    ENTER();
-    PRINT("Provider: CBC\n");
-    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
-    EXIT();
-    return ret;
-}
 
-int
-ALCP_prov_cipher_ofb_update(void*                vctx,
-                            unsigned char*       out,
-                            size_t*              outl,
-                            size_t               outsize,
-                            const unsigned char* in,
-                            size_t               inl)
-{
-    ENTER();
-    PRINT("Provider: OFB\n");
-    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
-    EXIT();
-    return ret;
-}
 
-int
-ALCP_prov_cipher_ctr_update(void*                vctx,
-                            unsigned char*       out,
-                            size_t*              outl,
-                            size_t               outsize,
-                            const unsigned char* in,
-                            size_t               inl)
-{
-    ENTER();
-    PRINT("Provider: CTR\n");
-    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
-    EXIT();
-    return ret;
-}
-
-int
-ALCP_prov_cipher_xts_update(void*                vctx,
-                            unsigned char*       out,
-                            size_t*              outl,
-                            size_t               outsize,
-                            const unsigned char* in,
-                            size_t               inl)
-{
-    ENTER();
-    PRINT("Provider: XTS\n");
-    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
-    EXIT();
-    return ret;
-}
 
 int
 ALCP_prov_cipher_final(void*          vctx,
@@ -884,9 +1488,12 @@ ALCP_prov_cipher_final(void*          vctx,
     cctx->finalized = true;
     return ret;
 }
+#endif
+///////////// to be removed above code
 
 static const char    CIPHER_DEF_PROP[]  = "provider=alcp,fips=no";
 const OSSL_ALGORITHM ALC_prov_ciphers[] = {
+#if 0
     // CFB
     { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions_192 },
@@ -900,7 +1507,7 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
 
 // FIXME: Enable CBC and CTR after adding multi update APIs as enabling them
 // is causing TLS Handshake failure in OpenSSL
-#if 0
+
 // CTR
     // Enabling CTR does not cause any failures but since OpenSSL is calling ALCP
     // CTR for CTR-DRBG its not proper to enable CTR without multi update API
@@ -911,28 +1518,29 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     // { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions_256 },
     // { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions_192 },
     // { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions_128 },
-#endif
-    // OFB
+// OFB
     { ALCP_PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions_128 },
 
-/* ECB is disabled since ALCP does not support it. So all ECB calls will \
-fall back to OpenSSL default provider */
-
-#if 0
-    { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
-    { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions_192 },
-    { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
 
     // XTS
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions_256 },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions_128 },
 #endif
     // GCM
-    { ALCP_PROV_NAMES_AES_128_GCM, CIPHER_DEF_PROP, gcm_functions_128 },
-    { ALCP_PROV_NAMES_AES_192_GCM, CIPHER_DEF_PROP, gcm_functions_192 },
-    { ALCP_PROV_NAMES_AES_256_GCM, CIPHER_DEF_PROP, gcm_functions_256 },
+    { ALCP_PROV_NAMES_AES_128_GCM,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes128gcm_functions },
+    // gcm_functions_128 },
+    { ALCP_PROV_NAMES_AES_192_GCM,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes192gcm_functions },
+    // gcm_functions_192 },
+    { ALCP_PROV_NAMES_AES_256_GCM,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes256gcm_functions },
+// gcm_functions_256 },
 
 #if 0
     // CCM
@@ -948,6 +1556,7 @@ fall back to OpenSSL default provider */
     { NULL, NULL, NULL },
 };
 
+#if 0
 // FIXME: Refactor, offload some functionality to this function
 EVP_CIPHER*
 ALCP_prov_cipher_init(alc_prov_ctx_p cc)
@@ -971,3 +1580,4 @@ ALCP_prov_cipher_init(alc_prov_ctx_p cc)
     EVP_CIPHER* tmp = NULL;
     return tmp;
 }
+#endif

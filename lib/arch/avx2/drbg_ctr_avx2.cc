@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -90,7 +90,7 @@ CtrDrbgUpdate(const Uint8  pProvidedData[],
     Uint64 temp_size = 0;
 
     EncryptAes aes;
-    aes.setKey(&pKey[0], cKeyLen * 8);
+    // aes.setKey(&pKey[0], cKeyLen * 8); // FIXME: add ctx
     const Uint32   cAesRounds = aes.getRounds();
     const __m128i* p_key =
         reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
@@ -183,7 +183,7 @@ DrbgCtrGenerate(const Uint8  pcAdditionalInput[],
     const __m128i cOneReg128 =
         _mm_setr_epi8(0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     EncryptAes aes;
-    aes.setKey(&pKey[0], cKeyLen * 8);
+    // aes.setKey(&pKey[0], cKeyLen * 8);//// FIXME: add ctx
     const Uint32 cAesRounds = aes.getRounds();
     auto         p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
@@ -232,7 +232,7 @@ BCC(const Uint8* pcKey,
     // n do
     __m128i    data_reg;
     EncryptAes aes;
-    aes.setKey(&pcKey[0], cKeyLength * 8);
+    // aes.setKey(&pcKey[0], cKeyLength * 8);// FIXME: add ctx
     const Uint32   cAesRounds = aes.getRounds();
     const __m128i* p_key =
         reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
@@ -328,7 +328,7 @@ BlockCipherDf(const Uint8* pcInputString,
 
     EncryptAes aes;
     // K = leftmost (temp, keylen).
-    aes.setKey(&temp[0], cKeyLen * 8);
+    // aes.setKey(&temp[0], cKeyLen * 8);// FIXME: add ctx
     const Uint32   cAesRounds = aes.getRounds();
     const __m128i* p_key =
         reinterpret_cast<const __m128i*>(aes.getEncryptKeys());

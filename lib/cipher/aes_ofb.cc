@@ -34,7 +34,10 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 alc_error_t
-Ofb::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len) const
+Ofb::decrypt(alc_cipher_data_t* ctx,
+             const Uint8*       pCipherText,
+             Uint8*             pPlainText,
+             Uint64             len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -44,7 +47,7 @@ Ofb::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len) const
                                 len,
                                 getEncryptKeys(),
                                 getRounds(),
-                                m_cipherData.m_iv);
+                                ctx->m_pIv);
 
         return err;
     }
@@ -52,7 +55,10 @@ Ofb::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len) const
 }
 
 alc_error_t
-Ofb::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len) const
+Ofb::encrypt(alc_cipher_data_t* ctx,
+             const Uint8*       pPlainText,
+             Uint8*             pCipherText,
+             Uint64             len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -62,7 +68,7 @@ Ofb::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len) const
                                 len,
                                 getEncryptKeys(),
                                 getRounds(),
-                                m_cipherData.m_iv);
+                                ctx->m_pIv);
 
         return err;
     }

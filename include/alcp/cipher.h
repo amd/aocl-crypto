@@ -32,6 +32,10 @@
 #include "alcp/key.h"
 #include "alcp/macros.h"
 
+// FIXME: to be removed, after using u128
+#include <immintrin.h>
+#include <wmmintrin.h>
+
 EXTERN_C_BEGIN
 
 /**
@@ -109,20 +113,111 @@ typedef enum _alc_aes_ctrl
     ALC_AES_CTRL_MAX,
 } alc_aes_ctrl_t;
 
-/**
- *
- * @brief  Stores algorithm specific info for cipher.
- * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
- * @param ai_iv Initialization Vector
- * @param ai_xts optional param for Some Specific Mode of AES only one param can
- * be present at a time
- * @param alc_cipher_algo_info_t cipher algo
- * @param alc_cipher_mode_t cipher mode
- */
-typedef struct _alc_cipher_algo_info
+// FIXME: _alc_cipher_xts_data structure needs further refinement.
+
+#define IV_STATE_UNINITIALISED 0 /* initial state is not initialized */
+#define IV_STATE_BUFFERED      1 /* iv has been copied to the iv buffer */
+#define IV_STATE_COPIED        2 /* iv has been copied from the iv buffer */
+#define IV_STATE_FINISHED      3 /* the iv has been used - so don't reuse it */
+
+#define MAX_NUM_512_BLKS 8
+typedef struct
 {
-    Uint64 dummy;
-} alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
+    Uint64 hi, lo;
+} u128;
+
+typedef struct _alc_cipher_gcm_data
+{
+    // gcm specific params
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+
+} _alc_cipher_gcm_data_t;
+
+#define __RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+
+typedef struct _alc_cipher_xts_data
+{
+    __attribute__((aligned(64))) Uint8 m_iv_xts[16];
+    __attribute__((aligned(64))) Uint8 m_tweak_block[16];
+    Uint8  m_tweak_round_key[(__RIJ_SIZE_ALIGNED(32) * (16))];
+    Uint8* m_pTweak_key; // this pointer can be removed.
+    Int64  m_aes_block_id;
+
+} _alc_cipher_xts_data_t;
+
+#define AES_BLOCK_SIZE 16
+
+typedef struct _alc_cipher_generic_data
+{
+    // generic cipher params
+    Uint8 m_oiv_buff[AES_BLOCK_SIZE];
+
+    Uint32 m_updated : 1; /* Set to 1 during update for one shot ciphers */
+    Uint32 m_variable_keylength : 1;
+    Uint32 m_inverse_cipher     : 1; /* set to 1 to use inverse cipher */
+    Uint32 m_use_bits : 1; /* Set to 0 for cfb1 to use bits instead of bytes */
+    Uint32 m_tlsversion;   /* If TLS padding is in use the TLS version number */
+    Uint8* m_tlsmac;       /* tls MAC extracted from the last record */
+    Int32  m_alloced;      /*
+                            * Whether the tlsmac data has been allocated or
+                            * points into the user buffer.
+                            */
+    size_t m_tlsmacsize;   /* Size of the TLS MAC */
+    Int32  m_removetlspad; /* Whether TLS padding should be removed or not */
+    size_t m_removetlsfixed; /*
+                              * Length of the fixed size data to remove when
+                              * processing TLS data (equals mac size plus
+                              * IV size if applicable)
+                              */
+
+    size_t m_blocksize;
+    size_t m_bufsz; /* Number of bytes in buf */
+
+} _alc_cipher_generic_data_t;
+
+#define MAX_CIPHER_IV_SIZE (1024 / 8)
+typedef struct _alc_cipher_data
+{
+    alc_cipher_mode_t m_mode;
+
+    // iv info
+    const Uint8* m_pIv;
+    Uint8        m_iv_buff[MAX_CIPHER_IV_SIZE];
+    Uint64       m_ivLen;
+
+    // key info
+    const Uint8* m_pKey;
+    Uint32       m_keyLen_in_bytes;
+
+    // state
+    Uint32 m_ivState;
+    Uint32 m_isKeySet;
+
+    Uint32 enc : 1; /* Set to 1 if we are encrypting or 0 otherwise */
+    Uint32 pad : 1; /* Whether padding should be used or not */
+
+    Uint64 m_dataLen;
+    Uint64 tls_enc_records; /* Number of TLS records encrypted */
+    unsigned int
+        iv_gen_rand     : 1; /* No IV was specified, so generate a rand IV */
+    unsigned int iv_gen : 1; /* It is OK to generate IVs */
+
+    // aead params
+    Uint64 tagLength;
+    Uint64 tls_aad_len;
+    Uint32 tls_aad_pad_sz;
+
+    Uint8 buf[AES_BLOCK_SIZE]; /* Buffer of partial blocks processed via
+                                      update calls */
+
+    // below can be made union
+    _alc_cipher_gcm_data_t m_gcm;
+    _alc_cipher_xts_data_t m_xts;
+
+    // generic cipher
+    _alc_cipher_generic_data_t m_generic;
+
+} alc_cipher_data_t;
 
 /**
  *
@@ -150,10 +245,7 @@ typedef struct _alc_cipher_info
     const Uint8* ci_iv;    /*! Initialization Vector */
     Uint64       ci_ivLen; /*! Initialization Vector length */
 
-    // algo params
-    // alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
-
-} alc_cipher_info_t, *alc_cipher_info_p;
+} alc_cipher_info_t;
 
 /**
  * @brief  Opaque type of a cipher context, comes from the library.
@@ -176,7 +268,8 @@ typedef alc_cipher_context_t* alc_cipher_context_p;
 typedef struct _alc_cipher_handle
 {
     alc_cipher_context_p ch_context;
-} alc_cipher_handle_t, *alc_cipher_handle_p, AlcCipherHandle;
+    void*                alc_cipher_data;
+} alc_cipher_handle_t, *alc_cipher_handle_p;
 
 /**
  * @brief       Gets the size of the context for a session described by

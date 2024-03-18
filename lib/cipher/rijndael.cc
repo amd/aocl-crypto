@@ -711,6 +711,7 @@ Rijndael::Rijndael()
 void
 Rijndael::initRijndael(const Uint8* pKey, const Uint64 keyLen)
 {
+    // Impl to be removed.
     pImpl()->setKeyLen(keyLen);
     pImpl()->setKey(pKey);
     pImpl()->setUp();
@@ -809,7 +810,10 @@ struct ArrayRef
 #endif
 
 alc_error_t
-Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
+Rijndael::encrypt(alc_cipher_data_t* ctx,
+                  const Uint8*       pPlaintxt,
+                  Uint8*             pCiphertxt,
+                  Uint64             len)
 {
     auto n_words = len / Rijndael::cBlockSizeWord;
 
@@ -843,9 +847,12 @@ Rijndael::AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 }
 
 alc_error_t
-Rijndael::decrypt(const Uint8* pCihpertxt, Uint8* pPlaintxt, Uint64 len) const
+Rijndael::decrypt(alc_cipher_data_t* ctx,
+                  const Uint8*       pCiphertxt,
+                  Uint8*             pPlaintxt,
+                  Uint64             len)
 {
-    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len);
+    return pImpl()->decrypt(pCiphertxt, pPlaintxt, len);
 }
 
 #if 0

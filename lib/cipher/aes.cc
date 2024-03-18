@@ -33,25 +33,29 @@
 
 namespace alcp::cipher {
 
-// FIXME: need to choose a better name for setKey and setKey
 alc_error_t
-Aes::setKey(const Uint8* pKey, const Uint64 keyLen)
+Aes::setKey(alc_cipher_data_t* ctx, const Uint8* pKey, const Uint64 keyLen)
 {
-    alc_error_t e       = ALC_ERROR_NONE;
-    m_cipherData.m_pKey = pKey;
-    m_cipherData.m_keyLen = keyLen;
+    alc_error_t e = ALC_ERROR_NONE;
+    ctx->m_pKey   = pKey;
+
+    // keyLen should be checked if its same as keyLen used during create call
+    if (ctx->m_keyLen_in_bytes != keyLen / 8) {
+        printf("\n setKey failed, keySize invalid");
+        return ALC_ERROR_INVALID_SIZE;
+    }
 
     Rijndael::initRijndael(pKey, keyLen);
     getKey();
-    m_cipherData.m_isKeyset = true;
+    ctx->m_isKeySet = 1; // FIXME: use enum instead
     return e;
 }
 
 alc_error_t
-Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
+Aes::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
-    if (ivLen <= 0) {
+    if ((ivLen == 0) && (ivLen > sizeof(ctx->m_iv_buff))) {
         return ALC_ERROR_INVALID_SIZE;
     }
 
@@ -59,29 +63,32 @@ Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
         return ALC_ERROR_INVALID_ARG;
     }
 
-    // set IV and IvLen
-    m_cipherData.m_iv      = pIv;
-    m_cipherData.m_ivLen   = ivLen;
-    m_cipherData.m_isIvset = true;
+    // copy IV and set IvLen
+    memcpy(ctx->m_iv_buff, pIv, ivLen);
+    ctx->m_pIv = ctx->m_iv_buff;
+
+    ctx->m_ivLen   = ivLen;
+    ctx->m_ivState = true;
 
     return e;
 }
 
 alc_error_t
-Aes::init(const Uint8* pKey,
-          const Uint64 keyLen,
-          const Uint8* pIv,
-          const Uint64 ivLen)
+Aes::init(alc_cipher_data_t* ctx,
+          const Uint8*       pKey,
+          const Uint64       keyLen,
+          const Uint8*       pIv,
+          const Uint64       ivLen)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(pKey, keyLen);
+        err = setKey(ctx, pKey, keyLen);
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err = setIv(pIv, ivLen);
+        err = setIv(ctx, pIv, ivLen);
     }
 
     return err;

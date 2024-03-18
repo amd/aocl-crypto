@@ -53,6 +53,11 @@ typedef struct _alc_gcm_local_data
 
     __m128i m_reverse_mask_128;
 
+    Uint64* m_pHashSubkeyTable_global;
+
+    __m128i m_tag_128;
+    Uint64  m_additionalDataLen;
+
 } alc_gcm_local_data_t;
 
 /*
@@ -66,14 +71,14 @@ class ALCP_API_EXPORT Gcm : public Aes
     alc_gcm_local_data_t m_gcm_local_data;
 
   public:
-    Gcm()
-        : Aes()
+    Gcm(alc_cipher_data_t* ctx)
+        : Aes(ctx)
     {
         // default ivLength is 12 bytes or 96bits
-        m_cipherData.m_ivLen = 12;
+        ctx->m_ivLen = 12;
 
         // cipher ctx
-        m_cipherData.m_tag_128 = _mm_setzero_si128();
+        m_gcm_local_data.m_tag_128 = _mm_setzero_si128();
 
         // gcm local ctx
         m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
@@ -85,11 +90,16 @@ class ALCP_API_EXPORT Gcm : public Aes
 
         m_gcm_local_data.m_reverse_mask_128 =
             _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+        // global precomputed hashtable pointer
+        m_gcm_local_data.m_pHashSubkeyTable_global =
+            ctx->m_gcm.m_hashSubkeyTable;
     }
 
     ~Gcm()
     {
-        memset(m_cipherData.m_gcm.m_hashSubkeyTable,
+        // clear precomputed hashtable
+        memset(m_gcm_local_data.m_pHashSubkeyTable_global,
                0,
                sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
     }
@@ -98,21 +108,21 @@ class ALCP_API_EXPORT Gcm : public Aes
 AEAD_AUTH_CLASS_GEN(GcmGhash, Gcm)
 
 namespace vaes512 {
-    AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)
-    AEAD_CLASS_GEN(GcmAEAD192, public GcmGhash)
-    AEAD_CLASS_GEN(GcmAEAD256, public GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD128, GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD192, GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD256, GcmGhash)
 } // namespace vaes512
 
 namespace vaes {
-    AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)
-    AEAD_CLASS_GEN(GcmAEAD192, public GcmGhash)
-    AEAD_CLASS_GEN(GcmAEAD256, public GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD128, GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD192, GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD256, GcmGhash)
 } // namespace vaes
 
 namespace aesni {
-    AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)
-    AEAD_CLASS_GEN(GcmAEAD192, public GcmGhash)
-    AEAD_CLASS_GEN(GcmAEAD256, public GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD128, GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD192, GcmGhash)
+    AEAD_CLASS_GEN(GcmAEAD256, GcmGhash)
 } // namespace aesni
 
 } // namespace alcp::cipher

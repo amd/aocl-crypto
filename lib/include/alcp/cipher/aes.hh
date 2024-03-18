@@ -40,61 +40,14 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
-#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
-
 namespace alcp::cipher {
 
-#define MAX_NUM_512_BLKS 8
-
-// this structure needs to broken to generic cipher params and aead params
-// separately
-
-typedef struct ALCP_API_EXPORT _alc_cipher_gcm_data
+typedef struct alc_cipher_key_data
 {
-    // gcm specific params
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
-
-} _alc_cipher_gcm_data_t;
-
-typedef struct _alc_cipher_xts_data
-{
-    alignas(64) mutable Uint8 m_iv_xts[16];
-    __attribute__((aligned(64))) mutable Uint8 m_tweak_block[16];
-    Uint8         m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
-    Uint8*        m_pTweak_key; // this pointer can be removed.
-    mutable Int64 m_aes_block_id;
-
-} _alc_cipher_xts_data_t;
-
-typedef struct ALCP_API_EXPORT _alc_cipher_data
-{
-    // iv info
-    const Uint8* m_iv;
-    Uint64       m_ivLen;
-
-    // key info
-    const Uint8* m_pKey   = NULL;
-    Uint32       m_keyLen = 0;
-
     // key expanded
     const Uint8* m_enc_key;
     const Uint8* m_dec_key;
-
-    // state
-    bool m_isIvset;
-    bool m_isKeyset;
-
-    Uint64 m_dataLen;
-
-    // aead params
-    __m128i m_tag_128;
-    Uint64  m_tagLen;
-    Uint64  m_additionalDataLen;
-
-    _alc_cipher_gcm_data_t m_gcm;
-    _alc_cipher_xts_data_t m_xts;
-
-} alc_cipher_data_t;
+} alc_cipher_key_data_t;
 
 using Status = alcp::base::Status;
 
@@ -114,33 +67,36 @@ class Aes : public Rijndael
     // rounds based on keysize
     Uint32 m_nrounds = 0;
 
-    // global ctx
-    alc_cipher_data_t m_cipherData; // global ctx
+    alc_cipher_key_data_t m_cipher_key_data;
 
+    Aes(alc_cipher_data_t* ctx)
+        : Rijndael()
+    {
+
+#if 0 // reset keyLen =0 here, overrides keyLen set in create call. below init
+      // should be revisited.
+      
+      // key info for all modes
+        ctx->m_pKey   = NULL;
+        ctx->m_keyLen = 0;
+
+        // iv info for all modes
+        ctx->m_pIv   = NULL;
+        ctx->m_ivLen = 16; // default size
+
+        // state of iv and key
+        ctx->m_ivState  = IV_STATE_UNINITIALISED;
+        ctx->m_isKeySet = 0;
+
+        ctx->m_dataLen = 0;
+#endif
+    }
+
+    // this constructor to be removed.
     Aes()
         : Rijndael()
     {
-        // key info for all modes
-        m_cipherData.m_pKey   = NULL;
-        m_cipherData.m_keyLen = 0;
-
-        // iv info for all modes
-        m_cipherData.m_iv    = NULL;
-        m_cipherData.m_ivLen = 16; // default size
-
-        // expanded keys
-        m_cipherData.m_enc_key = NULL;
-        m_cipherData.m_dec_key = NULL;
-
-        // state of iv and key
-        m_cipherData.m_isIvset  = false;
-        m_cipherData.m_isKeyset = false;
-
-        m_cipherData.m_dataLen = 0;
-
-        // aead secific params, to be moved to split as aead struct
-        m_cipherData.m_tagLen            = 0;
-        m_cipherData.m_additionalDataLen = 0;
+        printf("\n this constructor to be removed");
     }
 
   protected:
@@ -150,10 +106,11 @@ class Aes : public Rijndael
     // Without CMAC-SIV extending AES, we cannot access it with protected,
     // Please change to protected if needed in future
   public:
-    alc_error_t init(const Uint8* pKey,
-                     const Uint64 keyLen,
-                     const Uint8* pIv,
-                     const Uint64 ivLen);
+    alc_error_t init(alc_cipher_data_t* ctx,
+                     const Uint8*       pKey,
+                     const Uint64       keyLen,
+                     const Uint8*       pIv,
+                     const Uint64       ivLen);
 
     static bool isSupported(const Uint32 keyLen)
     {
@@ -164,13 +121,18 @@ class Aes : public Rijndael
         return false;
     }
 
-    alc_error_t setKey(const Uint8* pKey, const Uint64 keyLen);
-    alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
+    alc_error_t setKey(alc_cipher_data_t* ctx,
+                       const Uint8*       pKey,
+                       const Uint64       keyLen);
+
+    alc_error_t setIv(alc_cipher_data_t* ctx,
+                      const Uint8*       pIv,
+                      const Uint64       ivLen);
     void        getKey()
     {
-        m_cipherData.m_enc_key = getEncryptKeys();
-        m_cipherData.m_dec_key = getDecryptKeys();
-        m_nrounds              = getRounds();
+        m_cipher_key_data.m_enc_key = getEncryptKeys();
+        m_cipher_key_data.m_dec_key = getDecryptKeys();
+        m_nrounds                   = getRounds();
     }
 
   protected:
@@ -183,70 +145,83 @@ class Aes : public Rijndael
 
 // class  for all AES cipher modes
 #define AES_CLASS_GEN(CHILD_NEW, PARENT)                                       \
-    class ALCP_API_EXPORT CHILD_NEW : PARENT                                   \
+    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
                                                                                \
     {                                                                          \
       public:                                                                  \
-        CHILD_NEW(){};                                                         \
+        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
+            : PARENT(ctx){};                                                   \
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(const Uint8* pPlainText,                           \
-                            Uint8*       pCipherText,                          \
-                            Uint64       len) const;                                 \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pPlainText,                     \
+                            Uint8*             pCipherText,                    \
+                            Uint64             len);                                       \
                                                                                \
-        alc_error_t decrypt(const Uint8* pCipherText,                          \
-                            Uint8*       pPlainText,                           \
-                            Uint64       len) const;                                 \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len);                                       \
     };
 
-AES_CLASS_GEN(Ofb, public Aes)
+AES_CLASS_GEN(Ofb, Aes)
 
 // class  for all AEAD cipher modes
 #define AEAD_CLASS_GEN(CHILD_NEW, PARENT)                                      \
-    class ALCP_API_EXPORT CHILD_NEW : PARENT                                   \
+    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \
       public:                                                                  \
-        CHILD_NEW() {}                                                         \
+        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
+            : PARENT(ctx){};                                                   \
         ~CHILD_NEW() {}                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encryptUpdate(const Uint8* pInput,                         \
-                                  Uint8*       pOutput,                        \
-                                  Uint64       len);                                 \
-        alc_error_t decryptUpdate(const Uint8* pCipherText,                    \
-                                  Uint8*       pPlainText,                     \
-                                  Uint64       len);                                 \
+        alc_error_t encryptUpdate(alc_cipher_data_t* ctx,                      \
+                                  const Uint8*       pInput,                   \
+                                  Uint8*             pOutput,                  \
+                                  Uint64             len);                                 \
+        alc_error_t decryptUpdate(alc_cipher_data_t* ctx,                      \
+                                  const Uint8*       pCipherText,              \
+                                  Uint8*             pPlainText,               \
+                                  Uint64             len);                                 \
     };
 
 // Macro to generate authentication class, first is used for gcm and to be
 // extended to other AEAD classes
 #define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                                 \
-    class ALCP_API_EXPORT GcmGhash : public PARENT                             \
+    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \
       public:                                                                  \
-        CHILD_NEW(){};                                                         \
+        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
+            : PARENT(ctx){};                                                   \
         ~CHILD_NEW() {}                                                        \
                                                                                \
-        alc_error_t getTag(Uint8* pOutput, Uint64 tagLen);                     \
-        alc_error_t init(const Uint8* pKey,                                    \
-                         Uint64       keyLen,                                  \
-                         const Uint8* pIv,                                     \
-                         Uint64       ivLen);                                        \
-        alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);                \
+        alc_error_t getTag(alc_cipher_data_t* ctx,                             \
+                           Uint8*             pOutput,                         \
+                           Uint64             tagLen);                                     \
+        alc_error_t init(alc_cipher_data_t* ctx,                               \
+                         const Uint8*       pKey,                              \
+                         Uint64             keyLen,                            \
+                         const Uint8*       pIv,                               \
+                         Uint64             ivLen);                                        \
+        alc_error_t setAad(alc_cipher_data_t* ctx,                             \
+                           const Uint8*       pInput,                          \
+                           Uint64             aadLen);                                     \
     };
 
 } // namespace alcp::cipher
 
-#define CRYPT_WRAPPER_FUNC(                                                         \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                          \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(                                           \
-        const Uint8* pinput, Uint8* pOutput, Uint64 len) const                      \
-    {                                                                               \
-        alc_error_t err = ALC_ERROR_NONE;                                           \
-        err             = FUNC_NAME(                                                \
-            pinput, pOutput, len, PKEY, NUM_ROUNDS, m_cipherData.m_iv); \
-        return err;                                                                 \
+#define CRYPT_WRAPPER_FUNC(                                                    \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
+                                         const Uint8*       pinput,            \
+                                         Uint8*             pOutput,           \
+                                         Uint64             len)               \
+    {                                                                          \
+        alc_error_t err = ALC_ERROR_NONE;                                      \
+        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, ctx->m_pIv);   \
+        return err;                                                            \
     }
 
 #endif /* _CIPHER_AES_HH_ */

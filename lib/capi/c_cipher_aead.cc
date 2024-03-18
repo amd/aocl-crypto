@@ -51,6 +51,7 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
                          alc_cipher_handle_p     pCipherHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
+    // printf("\n alcp_cipher_aead_request");
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_ZERO_LEN_ERR_RET(keyLen, err);
@@ -60,8 +61,23 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
 
     new (ctx) cipher::Context;
 
+    // printf("\n aead_request keyLen mem allocation %d ",
+    // ctx->m_cipher_data.m_keyLen_in_bytes);
+
     err = cipher::CipherAeadBuilder::Build(cipherMode, keyLen, *ctx);
 
+    // assign ctx cipher_data to handle.
+    pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
+
+    // printf("\n aead_request post build keyLen %d ",
+    // ctx->m_cipher_data.m_keyLen_in_bytes);
+
+#if 1 // check
+    // alc_cipher_data_t* dat =
+    // (alc_cipher_data_t*)pCipherHandle->alc_cipher_data;
+    // printf("\n aead_request post build2 keyLen %d ",
+    // dat->m_keyLen_in_bytes);
+#endif
     return err;
 }
 
@@ -82,7 +98,7 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify Encrypt to return Status and assign to context status
-    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len);
+    err = ctx->encrypt(ctx, pPlainText, pCipherText, len);
 
     return err;
 }
@@ -106,7 +122,7 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     // FIXME: Modify encryptUpdate to return Status and assign to context
     // status
-    err = ctx->encryptUpdate(ctx->m_cipher, pInput, pOutput, len);
+    err = ctx->encryptUpdate(ctx, pInput, pOutput, len);
 
     return err;
 }
@@ -128,7 +144,7 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify decrypt to return Status and assign to context status
-    err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len);
+    err = ctx->decrypt(ctx, pCipherText, pPlainText, len);
 
     return err;
 }
@@ -150,7 +166,7 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    err = ctx->decryptUpdate(ctx->m_cipher, pInput, pOutput, len);
+    err = ctx->decryptUpdate(ctx, pInput, pOutput, len);
 
     return err;
 }
@@ -169,10 +185,13 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
+#if DEBUG_X
+    printf("\n aead_init enc value %d \n", ctx->m_cipher_data.enc);
+#endif
     // init can be called to setKey or setIv or both
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {
-        err = ctx->init(ctx->m_cipher, pKey, keyLen, pIv, ivLen);
+        // printf("\n ctx->init key %p keyLen %ld ", pKey, keyLen);
+        err = ctx->init(ctx, pKey, keyLen, pIv, ivLen);
     }
 
     return err;
@@ -194,7 +213,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify setAad to return Status and assign to context status
-    err = ctx->setAad(ctx->m_cipher, pInput, aadLen);
+    err = ctx->setAad(ctx, pInput, aadLen);
 
     return err;
 }
@@ -216,7 +235,7 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify getTag to return Status and assign to context status
-    err = ctx->getTag(ctx->m_cipher, pOutput, tagLen);
+    err = ctx->getTag(ctx, pOutput, tagLen);
 
     return err;
 }
@@ -236,7 +255,7 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
 
     // FIXME: Modify setTagLength to return Status and assign to context
     // status
-    err = ctx->setTagLength(ctx->m_cipher, tagLen);
+    err = ctx->setTagLength(ctx, tagLen);
 
     return err;
 }
@@ -253,7 +272,7 @@ alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
     cipher::Context* ctx =
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    ctx->finish(ctx->m_cipher);
+    ctx->finish(ctx);
 
     ctx->~Context();
 }

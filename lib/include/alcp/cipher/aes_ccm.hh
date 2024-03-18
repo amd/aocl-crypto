@@ -98,13 +98,19 @@ class ALCP_API_EXPORT Ccm final : public Aes
         }
     }
 
-    virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
+    virtual alc_error_t getTag(alc_cipher_data_t* ctx,
+                               Uint8*             pOutput,
+                               Uint64             len);
 
-    virtual alc_error_t setIv(const Uint8* pIv, Uint64 len);
+    virtual alc_error_t setIv(alc_cipher_data_t* ctx,
+                              const Uint8*       pIv,
+                              Uint64             len);
 
-    virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
+    virtual alc_error_t setAad(alc_cipher_data_t* ctx,
+                               const Uint8*       pInput,
+                               Uint64             len);
 
-    virtual alc_error_t setTagLength(Uint64 len);
+    virtual alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 len);
 
     void setAad(ccm_data_t* pccm_data, const Uint8* paad, size_t alen);
 
@@ -130,13 +136,15 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @param   pIv             Pointer to Initialization Vector @return
      * alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const Uint8* pInput,
-                                Uint8*       pOutput,
-                                Uint64       len) const final;
+    virtual alc_error_t encrypt(alc_cipher_data_t* ctx,
+                                const Uint8*       pInput,
+                                Uint8*             pOutput,
+                                Uint64             len);
 
-    virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                      Uint8*       pOutput,
-                                      Uint64       len);
+    virtual alc_error_t encryptUpdate(alc_cipher_data_t* ctx,
+                                      const Uint8*       pInput,
+                                      Uint8*             pOutput,
+                                      Uint64             len);
 
     /**
      * @brief   CCM Decrypt Operation
@@ -147,13 +155,15 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @param   pIv             Pointer to Initialization Vector
      * @return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len) const final;
+    virtual alc_error_t decrypt(alc_cipher_data_t* ctx,
+                                const Uint8*       pCipherText,
+                                Uint8*             pPlainText,
+                                Uint64             len);
 
-    virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                      Uint8*       pPlainText,
-                                      Uint64       len);
+    virtual alc_error_t decryptUpdate(alc_cipher_data_t* ctx,
+                                      const Uint8*       pCipherText,
+                                      Uint8*             pPlainText,
+                                      Uint64             len);
 
   private:
     class Impl;

@@ -28,14 +28,16 @@
 
 #include "cipher/alcp_cipher_aes.h"
 
-CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
-CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
-CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
-CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
+// CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
+// CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
+// CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
+// CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
 // CIPHER_CONTEXT(xts, ALC_AES_MODE_XTS);
-CIPHER_AEAD_CONTEXT(gcm, ALC_AES_MODE_GCM);
+// CIPHER_AEAD_CONTEXT(gcm, ALC_AES_MODE_GCM);
 // CIPHER_AEAD_CONTEXT(ccm, ALC_AES_MODE_CCM);
 // CIPHER_AEAD_CONTEXT(siv, ALC_AES_MODE_SIV);
+
+#if 0
 
 int
 ALCP_prov_aes_get_ctx_params(void* vctx, OSSL_PARAM params[])
@@ -75,7 +77,9 @@ out:
 
     return NULL;
 }
+#endif
 
+#if 0
 CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE, 128, false);
 CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE, 192, false);
 CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE, 256, false);
@@ -89,16 +93,71 @@ CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 128, false);
 CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 192, false);
 CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 256, false);
 
-// CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 128, false);
-// CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 256, false);
+CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 128, false);
+CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 256, false);
+#endif
+#if 0
+static OSSL_FUNC_cipher_get_params_fn ALCP_prov_gcm_get_params_128;
+static int
+ALCP_prov_gcm_get_params_128(OSSL_PARAM* params)
+{
+    ;
+    return ALCP_prov_cipher_get_params(params, 0x6, 128, true);
+}
+static OSSL_FUNC_cipher_newctx_fn ALCP_prov_gcm_newctx_128;
+static void*
+ALCP_prov_gcm_newctx_128(void* provctx)
+{
+    ;
+    return ALCP_prov_aes_newctx(provctx, &s_cipher_gcm_info, true);
+}
+static OSSL_FUNC_cipher_decrypt_init_fn ALCP_prov_gcm_decrypt_init_128;
+static int
+ALCP_prov_gcm_decrypt_init_128(void*                vctx,
+                               const unsigned char* key,
+                               size_t               keylen,
+                               const unsigned char* iv,
+                               size_t               ivlen,
+                               const OSSL_PARAM     params[])
+{
+    ;
+    return ALCP_prov_cipher_gcm_decrypt_init(vctx, key, 128, iv, ivlen, params);
+}
+static int
+ALCP_prov_gcm_encrypt_init_128(void*                vctx,
+                               const unsigned char* key,
+                               size_t               keylen,
+                               const unsigned char* iv,
+                               size_t               ivlen,
+                               const OSSL_PARAM     params[])
+{
+    ;
+    return ALCP_prov_cipher_gcm_encrypt_init(vctx, key, 128, iv, ivlen, params);
+}
+const OSSL_DISPATCH gcm_functions_128[] = { { 9, (fptr_t)ALCP_prov_gcm_get_params_128 },
+                                             { 1, (fptr_t)ALCP_prov_gcm_newctx_128 },
+                                              { 8, (fptr_t)ALCP_prov_cipher_dupctx }, 
+                                              { 7, (fptr_t)ALCP_prov_cipher_freectx }, 
+                                              { 12, (fptr_t)ALCP_prov_cipher_gettable_params }, 
+                                              { 13, (fptr_t)ALCP_prov_cipher_gettable_params }, 
+                                              { 10, (fptr_t)ALCP_prov_aes_get_ctx_params }, 
+                                              { 14, (fptr_t)ALCP_prov_cipher_settable_ctx_params }, 
+                                              { 11, (fptr_t)ALCP_prov_aes_set_ctx_params }, 
+                                              { 2, (fptr_t)ALCP_prov_gcm_encrypt_init_128 }, 
+                                              { 3, (fptr_t)ALCP_prov_gcm_decrypt_init_128 },
+                                               { 4, (fptr_t)ALCP_prov_cipher_gcm_update },
+                                                { 5, (fptr_t)ALCP_prov_cipher_final }, }
+#else
+// CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 128, true);
+#endif
+// CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 192, true);
+// CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 256, true);
 
-CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 128, true);
-CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 192, true);
-CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 256, true);
-
-// CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 128, true);
-// CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 192, true);
-// CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 256, true);
-// CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 128, true);
-// CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 192, true);
-// CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 256, true);
+#if 0
+CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 128, true);
+CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 192, true);
+CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 256, true);
+CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 128, true);
+CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 192, true);
+CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 256, true);
+#endif

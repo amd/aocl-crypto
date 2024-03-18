@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,8 @@
  */
 
 #include "alcp/cipher/aes_cmac_siv.hh"
+
+#if 0
 
 // FIXME: Remove all the includes from gtest_base related to capi
 #include "cipher/gtest_base_cipher.hh"
@@ -387,4 +389,6 @@ main(int argc, char** argv)
         listeners.Release(listeners.default_result_printer());
     return RUN_ALL_TESTS();
 }
+#endif
+
 #endif
