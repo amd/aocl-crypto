@@ -263,6 +263,8 @@ Rsa_KAT(int                     padding_mode,
                 input_data.resize(KeySize, 0);
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data, input_data, input_data.size()));
+                data.m_msg_len = KeySize;
+                data.m_msg     = &(input_data[0]);
             } else {
                 EXPECT_TRUE(ArraysMatch(
                     decrypted_data, input_data, csv, std::string("RSA")));
