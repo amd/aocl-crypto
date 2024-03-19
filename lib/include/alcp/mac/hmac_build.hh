@@ -207,6 +207,12 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
             status = __build_hmac<digest::Sha3_512, Hmac>(macInfo, ctx);
             break;
         }
+        case ALC_SHA2_512_224: {
+            status = __build_hmac<digest::Sha512_224, Hmac>(macInfo, ctx);
+        }
+        case ALC_SHA2_512_256: {
+            status = __build_hmac<digest::Sha512_256, Hmac>(macInfo, ctx);
+        }
         default: {
             status.update(InternalError("Digest algorithm Unknown"));
             break;

@@ -775,6 +775,61 @@ demo_Hmac_Sha3_384_Reset()
                    sizeof(expectedMac));
     return 0;
 }
+int
+demo_Hmac_Sha512_224()
+{
+
+    alc_error_t err;
+    Uint8       key[]        = { 0x8b, 0x1d, 0x42, 0xaa, 0xd7, 0x89, 0x0b, 0xd4,
+                    0x82, 0x40, 0x59, 0x2a, 0xd7, 0x88, 0x45, 0x17 };
+    Uint8       cipherText[] = { 0x47, 0xb7, 0x76, 0xb5, 0x2c, 0x13, 0x9a, 0x65,
+                           0xbf, 0x98, 0xac, 0x2e, 0xda, 0xcc, 0xfb, 0x26 };
+
+    Uint8 expectedMac[] = { 0xd7, 0xb7, 0x4d, 0xfb, 0x00, 0x70, 0xe0,
+                            0x3f, 0x62, 0xcd, 0x01, 0x9b, 0x33, 0xe2,
+                            0xb5, 0xf5, 0x08, 0x41, 0x0c, 0x69, 0x76,
+                            0x51, 0x2b, 0x24, 0x10, 0x35, 0x70, 0x9a };
+
+    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                   .fmt  = ALC_KEY_FMT_RAW,
+                                   .algo = ALC_KEY_ALG_MAC,
+                                   .len  = sizeof(key) * 8,
+                                   .key  = key };
+
+    alc_mac_info_t macinfo = {
+        .mi_type = ALC_MAC_HMAC,
+        .mi_algoinfo={
+            .hmac={
+                .hmac_digest = {
+                    .dt_type = ALC_DIGEST_TYPE_SHA2,
+                    .dt_len = ALC_DIGEST_LEN_224,
+                    .dt_mode = { ALC_SHA2_512,},
+                }
+            }
+        },
+        .mi_keyinfo = kinfo
+    };
+
+    Uint64 mac_size = ALC_DIGEST_LEN_224 / 8;
+    Uint8  mac[mac_size];
+    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA2-512_224\n");
+        return -1;
+    } else {
+
+        displayResults("HMAC SHA2-512_224",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
+    return 0;
+}
 
 int
 main(int argc, char const* argv[])
@@ -797,6 +852,8 @@ main(int argc, char const* argv[])
     if (demo_Hmac_Sha3_512() != 0)
         goto out;
     if (demo_Hmac_Sha3_384_Reset() != 0)
+        goto out;
+    if (demo_Hmac_Sha512_224() != 0)
         goto out;
 
     return 0;
