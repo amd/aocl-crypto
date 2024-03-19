@@ -265,50 +265,86 @@ Chacha20ParallelBlocks4(__m512i&       s_1_0_3_2,
     s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, s_13_12_15_14_prev);
 }
 
-alc_error_t
-ProcessInput(const Uint8  key[],
-             Uint64       keylen,
-             Uint8        iv[],
-             Uint64       ivlen,
-             const Uint8* plaintext,
-             Uint64       plaintextLength,
-             Uint8*       ciphertext)
+inline void
+SetChacha2016BlockParallelConstants(__m512i& s1,
+                                    __m512i& s2,
+                                    __m512i& s3,
+                                    __m512i& s4)
 {
+    constexpr Uint32 chacha20_constants1 = 0x61707865;
+    constexpr Uint32 chacha20_constants2 = 0x3320646e;
+    constexpr Uint32 chacha20_constants3 = 0x79622d32;
+    constexpr Uint32 chacha20_constants4 = 0x6b206574;
+    s1 = _mm512_set1_epi32(chacha20_constants1);
+    s2 = _mm512_set1_epi32(chacha20_constants2);
+    s3 = _mm512_set1_epi32(chacha20_constants3);
+    s4 = _mm512_set1_epi32(chacha20_constants4);
+}
 
-    Uint64 temp_plaintextlength = plaintextLength;
+inline void
+SetChacha2016BlockParallelKey(const Uint8 key[],
+                              __m512i&    s1,
+                              __m512i&    s2,
+                              __m512i&    s3,
+                              __m512i&    s4,
+                              __m512i&    s5,
+                              __m512i&    s6,
+                              __m512i&    s7,
+                              __m512i&    s8)
+{
+    const Uint32* pKey = reinterpret_cast<const Uint32*>(key);
+    // b
+    s1 = _mm512_set1_epi32(*(pKey));
+    s2 = _mm512_set1_epi32(*(pKey + 1));
+    s3 = _mm512_set1_epi32(*(pKey + 2));
+    s4 = _mm512_set1_epi32(*(pKey + 3));
+    // c
+    s5 = _mm512_set1_epi32(*(pKey + 4));
+    s6 = _mm512_set1_epi32(*(pKey + 5));
+    s7 = _mm512_set1_epi32(*(pKey + 6));
+    s8 = _mm512_set1_epi32(*(pKey + 7));
+}
+
+inline void
+SetChacha2016BlockParallelIv(
+    Uint8 iv[], __m512i& s1, __m512i& s2, __m512i& s3, __m512i& s4)
+{
+    Uint32* pIv = reinterpret_cast<Uint32*>(iv);
+    // d
+    s1 = _mm512_set1_epi32(*(pIv));
+    s2 = _mm512_set1_epi32(*(pIv + 1));
+    s3 = _mm512_set1_epi32(*(pIv + 2));
+    s4 = _mm512_set1_epi32(*(pIv + 3));
+}
+
+inline void
+ProcessChacha20ParallelBlocks16(alcp::Uint64&       plaintextLength,
+                                const alcp::Uint8   key[],
+                                alcp::Uint8         iv[],
+                                const alcp::Uint8*& plaintext,
+                                alcp::Uint8*&       ciphertext)
+{
     if (plaintextLength >= 1024) {
-        constexpr Uint32 chacha20_constants1 = 0x61707865;
-        constexpr Uint32 chacha20_constants2 = 0x3320646e;
-        constexpr Uint32 chacha20_constants3 = 0x79622d32;
-        constexpr Uint32 chacha20_constants4 = 0x6b206574;
-        __m512i          s_prev[16], s[16];
+
+        __m512i s_prev[16], s[16];
 
         // -- Setup Registers for First Row Round Function
         // a
-        s_prev[0] = _mm512_set1_epi32(chacha20_constants1);
-        s_prev[1] = _mm512_set1_epi32(chacha20_constants2);
-        s_prev[2] = _mm512_set1_epi32(chacha20_constants3);
-        s_prev[3] = _mm512_set1_epi32(chacha20_constants4);
+        SetChacha2016BlockParallelConstants(
+            s_prev[0], s_prev[1], s_prev[2], s_prev[3]);
 
-        const Uint32* pKey = reinterpret_cast<const Uint32*>(key);
-        Uint32*       pIv  = reinterpret_cast<Uint32*>(iv);
+        SetChacha2016BlockParallelKey(key,
+                                      s_prev[4],
+                                      s_prev[5],
+                                      s_prev[6],
+                                      s_prev[7],
+                                      s_prev[8],
+                                      s_prev[9],
+                                      s_prev[10],
+                                      s_prev[11]);
 
-        // b
-        s_prev[4] = _mm512_set1_epi32(*(pKey));
-        s_prev[5] = _mm512_set1_epi32(*(pKey + 1));
-        s_prev[6] = _mm512_set1_epi32(*(pKey + 2));
-        s_prev[7] = _mm512_set1_epi32(*(pKey + 3));
-
-        // c
-        s_prev[8]  = _mm512_set1_epi32(*(pKey + 4));
-        s_prev[9]  = _mm512_set1_epi32(*(pKey + 5));
-        s_prev[10] = _mm512_set1_epi32(*(pKey + 6));
-        s_prev[11] = _mm512_set1_epi32(*(pKey + 7));
-        // d
-        s_prev[12] = _mm512_set1_epi32(*(pIv));
-        s_prev[13] = _mm512_set1_epi32(*(pIv + 1));
-        s_prev[14] = _mm512_set1_epi32(*(pIv + 2));
-        s_prev[15] = _mm512_set1_epi32(*(pIv + 3));
+        SetChacha2016BlockParallelIv(
+            iv, s_prev[12], s_prev[13], s_prev[14], s_prev[15]);
 
         const __m512i inc_reg = _mm512_setr_epi32(
             16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
@@ -444,11 +480,15 @@ ProcessInput(const Uint8  key[],
             plaintextLength -= 1024;
         }
     }
+}
 
-    if (temp_plaintextlength > plaintextLength) {
-        auto blocks = (temp_plaintextlength - plaintextLength) / 256;
-        (*(reinterpret_cast<Uint32*>(iv))) += (256 / 64) * blocks;
-    }
+inline void
+ProcessChacha20ParallelBlocks4(alcp::Uint64&       plaintextLength,
+                               const alcp::Uint8   key[],
+                               alcp::Uint8         iv[],
+                               const alcp::Uint8*& plaintext,
+                               alcp::Uint8*&       ciphertext)
+{
     if (plaintextLength > 0) {
         // 4 Block Parallelization
 
@@ -594,6 +634,7 @@ ProcessInput(const Uint8  key[],
             counter_512 = _mm512_add_epi32(counter_512, cInc512);
             plaintextLength -= 256;
         }
+        // Residue calculation for 0< Pending Length <256 Bytes
         if (plaintextLength > 0) {
             // Restoring the registers to last Round State
             s_1_0_3_2     = s_1_0_3_2_prev;
@@ -939,7 +980,28 @@ ProcessInput(const Uint8  key[],
             }
         }
     }
+}
 
+alc_error_t
+ProcessInput(const Uint8  key[],
+             Uint64       keylen,
+             Uint8        iv[],
+             Uint64       ivlen,
+             const Uint8* plaintext,
+             Uint64       plaintextLength,
+             Uint8*       ciphertext)
+{
+
+    Uint64 temp_plaintextlength = plaintextLength;
+    ProcessChacha20ParallelBlocks16(
+        temp_plaintextlength, key, iv, plaintext, ciphertext);
+
+    if (plaintextLength > temp_plaintextlength) {
+        auto blocks = (plaintextLength - temp_plaintextlength) / 256;
+        (*(reinterpret_cast<Uint32*>(iv))) += (256 / 64) * blocks;
+    }
+    ProcessChacha20ParallelBlocks4(
+        temp_plaintextlength, key, iv, plaintext, ciphertext);
     return ALC_ERROR_NONE;
 }
 
