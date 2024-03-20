@@ -44,16 +44,11 @@
 namespace alcp::testing {
 class OpenSSLRsaBase : public RsaBase
 {
-    EVP_PKEY_CTX* m_rsa_handle_keyctx_pub = nullptr;
-    EVP_PKEY_CTX* m_rsa_handle_keyctx_pvt = nullptr;
-
     EVP_PKEY* m_pkey_pub = nullptr;
     EVP_PKEY* m_pkey_pvt = nullptr;
 
     OSSL_PARAM*   m_params = nullptr;
     OSSL_LIB_CTX* m_libctx = nullptr;
-
-    EVP_MD_CTX* m_mdctx = nullptr;
 
     const EVP_MD* m_md_type = nullptr;
 

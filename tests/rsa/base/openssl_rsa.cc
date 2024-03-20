@@ -40,14 +40,6 @@ OpenSSLRsaBase::OpenSSLRsaBase() {}
 
 OpenSSLRsaBase::~OpenSSLRsaBase()
 {
-    if (m_rsa_handle_keyctx_pub != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
-        m_rsa_handle_keyctx_pub = nullptr;
-    }
-    if (m_rsa_handle_keyctx_pvt != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
-        m_rsa_handle_keyctx_pvt = nullptr;
-    }
     if (m_pkey_pub != nullptr) {
         EVP_PKEY_free(m_pkey_pub);
         m_pkey_pub = nullptr;
@@ -60,10 +52,6 @@ OpenSSLRsaBase::~OpenSSLRsaBase()
         OSSL_PARAM_free(m_params);
         m_params = nullptr;
     }
-    if (m_mdctx != nullptr) {
-        EVP_MD_CTX_free(m_mdctx);
-        m_mdctx = nullptr;
-    }
     if (m_libctx != nullptr) {
         OSSL_LIB_CTX_free(m_libctx);
         m_libctx = nullptr;
@@ -73,15 +61,10 @@ OpenSSLRsaBase::~OpenSSLRsaBase()
 bool
 OpenSSLRsaBase::init()
 {
-    if (m_rsa_handle_keyctx_pub != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
-        m_rsa_handle_keyctx_pub = nullptr;
+    /* digest params to be added only for PADDED mode*/
+    if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+        return true;
     }
-    if (m_rsa_handle_keyctx_pvt != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
-        m_rsa_handle_keyctx_pvt = nullptr;
-    }
-
     switch (m_digest_info.dt_len) {
         /* FIXME: add more cases here */
         case ALC_DIGEST_LEN_256:
@@ -163,11 +146,8 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 
     OSSL_PARAM_BLD_free(param_bld);
 
-    if (m_rsa_handle_keyctx_pub != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
-        m_rsa_handle_keyctx_pub = nullptr;
-    }
-    m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+    EVP_PKEY_CTX* m_rsa_handle_keyctx_pub =
+        EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
     if (1 != EVP_PKEY_fromdata_init(m_rsa_handle_keyctx_pub)) {
         std::cout << "EVP_PKEY_fromdata_init failed" << std::endl;
@@ -195,7 +175,6 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
         m_rsa_handle_keyctx_pub = nullptr;
     }
-
     /* free all these Bignums after use */
     BN_free(mod_BN);
     BN_free(pvt_exponent_BN);
@@ -211,12 +190,9 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 bool
 OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
-    int retval;
-    if (m_rsa_handle_keyctx_pvt != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
-        m_rsa_handle_keyctx_pvt = nullptr;
-    }
-    m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+    int           retval;
+    EVP_PKEY_CTX* m_rsa_handle_keyctx_pvt =
+        EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
     if (m_rsa_handle_keyctx_pvt == nullptr) {
         std::cout << "EVP_PKEY_CTX_new_from_name returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
@@ -260,16 +236,18 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     int    ret_val = 0;
     size_t outlen;
 
-    m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey_pub, NULL);
+    EVP_PKEY_CTX* m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey_pub, NULL);
+
     if (m_rsa_handle_keyctx_pub == nullptr) {
         std::cout << "EVP_PKEY_CTX_new returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return 1;
+        ret_val = 1;
+        goto exit;
     }
     if (EVP_PKEY_encrypt_init(m_rsa_handle_keyctx_pub) != 1) {
         std::cout << "EVP_PKEY_encrypt_init failed" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
+        goto exit;
     }
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         if (EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
@@ -277,7 +255,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_padding failed" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            return ret_val;
+            goto exit;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         /* set padding mode parameters */
@@ -286,23 +264,23 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_padding failed" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            return ret_val;
+            goto exit;
         }
         if (EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pub, m_md_type)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed:" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            return ret_val;
+            goto exit;
         }
         if (EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pub, m_md_type)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed:" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            return ret_val;
+            goto exit;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        return 1;
+        goto exit;
     }
 
     /* call encrypt */
@@ -311,7 +289,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         != 1) {
         std::cout << "EVP_PKEY_encrypt failed: Error:" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
+        goto exit;
     }
     if (EVP_PKEY_encrypt(m_rsa_handle_keyctx_pub,
                          data.m_encrypted_data,
@@ -320,9 +298,16 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                          data.m_msg_len)
         != 1) {
         ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
+        goto exit;
     }
-    return 0;
+
+exit:
+    if (m_rsa_handle_keyctx_pub != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
+        m_rsa_handle_keyctx_pub = nullptr;
+    }
+
+    return ret_val;
 }
 
 int
@@ -331,7 +316,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     int    ret_val = 0;
     size_t outlen;
 
-    m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new(m_pkey_pvt, NULL);
+    EVP_PKEY_CTX* m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new(m_pkey_pvt, NULL);
     if (EVP_PKEY_decrypt_init(m_rsa_handle_keyctx_pvt) != 1) {
         std::cout << "EVP_PKEY_decrypt_init failed: Error:" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
@@ -350,7 +335,6 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
-
         if (EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
                                          RSA_PKCS1_OAEP_PADDING)
             != 1) {
@@ -403,6 +387,10 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         std::cout << ret_val << std::endl;
         return ret_val;
     }
+    if (m_rsa_handle_keyctx_pvt != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
+        m_rsa_handle_keyctx_pvt = nullptr;
+    }
     return 0;
 }
 
@@ -410,124 +398,151 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 int
 OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
 {
-    size_t     sig_len = 0;
-    OSSL_PARAM params[2], *p = params;
+    size_t sig_len = 0;
 
-    if (m_mdctx != nullptr) {
-        EVP_MD_CTX_free(m_mdctx);
-        m_mdctx = nullptr;
-    }
-    m_mdctx = EVP_MD_CTX_new();
-    if (m_mdctx == NULL) {
+    /* signing context */
+    EVP_MD_CTX* SignCtx = EVP_MD_CTX_new();
+    if (SignCtx == NULL) {
         std::cout << "EVP_MD_CTX_new failed" << std::endl;
         return 1;
     }
 
     /* update padding mode*/
-    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        *p++ =
-            OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_PAD_MODE,
-                                             (char*)OSSL_PKEY_RSA_PAD_MODE_PSS,
-                                             0);
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-        *p++ = OSSL_PARAM_construct_utf8_string(
-            OSSL_SIGNATURE_PARAM_PAD_MODE,
-            (char*)OSSL_PKEY_RSA_PAD_MODE_PKCSV15,
-            0);
-    } else {
-        std::cout << "Error: invalid padding mode" << std::endl;
-        return 1;
-    }
-    *p = OSSL_PARAM_construct_end();
-    /* Initialize MD context for signing. */
-    if (EVP_DigestSignInit_ex(
-            m_mdctx, NULL, m_digest_str, m_libctx, NULL, m_pkey_pvt, params)
+    EVP_PKEY_CTX* SigningKeyCtx = nullptr;
+
+    if (EVP_DigestSignInit(
+            SignCtx, &SigningKeyCtx, m_md_type, nullptr, m_pkey_pvt)
         != 1) {
         std::cout << "EVP_DigestSignInit returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-    /*
-     * Feed data to be signed into the algorithm. This may
-     * be called multiple times.
-     */
-    if (EVP_DigestSignUpdate(m_mdctx, data.m_msg, data.m_msg_len) != 1) {
+    /* update padding mode*/
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        if (1
+            != EVP_PKEY_CTX_set_rsa_padding(SigningKeyCtx,
+                                            RSA_PKCS1_PSS_PADDING)) {
+            std::cout << "EVP_PKEY_CTX_set_rsa_padding returned null: Error:"
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+        /* set salt len */
+        if (1
+            != EVP_PKEY_CTX_set_rsa_pss_saltlen(SigningKeyCtx,
+                                                data.m_salt_len)) {
+            std::cout
+                << "EVP_PKEY_CTX_set_rsa_pss_saltlen returned null: Error:"
+                << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+        /* update salt */
+        if (1 != EVP_DigestSignUpdate(SignCtx, data.m_salt, data.m_salt_len)) {
+            std::cout << "EVP_DigestSignUpdate salt len returned null: Error:"
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        if (1
+            != EVP_PKEY_CTX_set_rsa_padding(SigningKeyCtx, RSA_PKCS1_PADDING)) {
+            std::cout << "EVP_PKEY_CTX_set_rsa_padding returned null: Error:"
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+    } else {
+        std::cout << "Error: invalid padding mode" << std::endl;
+        return 1;
+    }
+
+    if (1 != EVP_DigestSignUpdate(SignCtx, data.m_msg, data.m_msg_len)) {
         std::cout << "EVP_DigestSignUpdate returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-    /* Determine signature length. */
-    if (EVP_DigestSignFinal(m_mdctx, NULL, &sig_len) != 1) {
+    if (1 != EVP_DigestSignFinal(SignCtx, NULL, &sig_len)) {
         std::cout << "EVP_DigestSignFinal returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-    /* Generate signature. */
-    if (EVP_DigestSignFinal(m_mdctx, data.m_signature, &sig_len) != 1) {
+    if (1 != EVP_DigestSignFinal(SignCtx, data.m_signature, &sig_len)) {
         std::cout << "EVP_DigestSignFinal returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
+    }
+    if (SignCtx != nullptr) {
+        EVP_MD_CTX_free(SignCtx);
+        SignCtx = nullptr;
     }
     return 0;
 }
 int
 OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
 {
-    size_t     sig_len = m_hash_len * 8;
-    OSSL_PARAM params[2], *p = params;
+    size_t sig_len = m_hash_len * 8;
 
-    if (m_mdctx != nullptr) {
-        EVP_MD_CTX_free(m_mdctx);
-        m_mdctx = nullptr;
-    }
-    m_mdctx = EVP_MD_CTX_new();
-    if (m_mdctx == NULL) {
+    EVP_MD_CTX* VerifyCtx = EVP_MD_CTX_new();
+    if (VerifyCtx == NULL) {
         std::cout << "EVP_MD_CTX_new failed" << std::endl;
         return 1;
     }
-
+    EVP_PKEY_CTX* VerifyKeyCtx = nullptr;
     /* update padding mode*/
-    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        *p++ =
-            OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_PAD_MODE,
-                                             (char*)OSSL_PKEY_RSA_PAD_MODE_PSS,
-                                             0);
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-        *p++ = OSSL_PARAM_construct_utf8_string(
-            OSSL_SIGNATURE_PARAM_PAD_MODE,
-            (char*)OSSL_PKEY_RSA_PAD_MODE_PKCSV15,
-            0);
-    } else {
-        std::cout << "Error: invalid padding mode" << std::endl;
-        return 1;
-    }
-    *p = OSSL_PARAM_construct_end();
-
-    /* Initialize MD context for signing. */
-    if (EVP_DigestVerifyInit_ex(
-            m_mdctx, NULL, m_digest_str, m_libctx, NULL, m_pkey_pub, params)
-        != 1) {
+    if (1
+        != EVP_DigestVerifyInit(
+            VerifyCtx, &VerifyKeyCtx, m_md_type, NULL, m_pkey_pub)) {
         std::cout << "EVP_DigestVerifyInit_ex returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-    /*
-     * Feed data to be signed into the algorithm. This may
-     * be called multiple times.
-     */
+    /* set rsa padding mode*/
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        if (1
+            != EVP_PKEY_CTX_set_rsa_padding(VerifyKeyCtx,
+                                            RSA_PKCS1_PSS_PADDING)) {
+            std::cout << "EVP_PKEY_CTX_set_rsa_padding returned null: Error:"
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+        if (1
+            != EVP_PKEY_CTX_set_rsa_pss_saltlen(VerifyKeyCtx,
+                                                data.m_salt_len)) {
+            std::cout
+                << "EVP_PKEY_CTX_set_rsa_pss_saltlen returned null: Error:"
+                << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+        if (1
+            != EVP_DigestVerifyUpdate(
+                VerifyCtx, data.m_salt, data.m_salt_len)) {
+            std::cout << "EVP_DigestVerifyUpdate returned null: Error:"
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        if (1
+            != EVP_PKEY_CTX_set_rsa_padding(VerifyKeyCtx, RSA_PKCS1_PADDING)) {
+            std::cout << "EVP_PKEY_CTX_set_rsa_padding returned null: Error:"
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
+            return 1;
+        }
+    } else {
+        std::cout << "Error: Invalid padding mode for RSA verify" << std::endl;
+        return 1;
+    }
 
-    if (EVP_DigestVerifyUpdate(m_mdctx, data.m_msg, data.m_msg_len) != 1) {
+    if (1 != EVP_DigestVerifyUpdate(VerifyCtx, data.m_msg, data.m_msg_len)) {
         std::cout << "EVP_DigestVerifyUpdate returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-    /* Verify signature. */
-    if (EVP_DigestVerifyFinal(m_mdctx, data.m_signature, sig_len) != 1) {
+    if (1 != EVP_DigestVerifyFinal(VerifyCtx, data.m_signature, sig_len)) {
         std::cout << "EVP_DigestVerifyFinal returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-
+    if (VerifyCtx != nullptr) {
+        EVP_MD_CTX_free(VerifyCtx);
+        VerifyCtx = nullptr;
+    }
     return 0;
 }
 
