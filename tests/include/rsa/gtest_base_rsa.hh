@@ -192,8 +192,11 @@ Rsa_KAT(int                     padding_mode,
             || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
             signature_data   = csv.getVect("SIGNATURE");
             data.m_signature = &(signature[0]);
-            data.m_salt      = &(salt[0]);
-            data.m_salt_len  = 5;
+            // data.m_salt      = &(salt[0]);
+            // data.m_salt_len  = 5;
+            /*FIXME: experimenting with Zero length salt for RSA PSS*/
+            data.m_salt     = nullptr;
+            data.m_salt_len = 0;
         }
         data.m_msg            = &(input_data[0]);
         data.m_pub_key_mod    = &(PubKeyKeyMod[0]);
@@ -458,8 +461,12 @@ Rsa_Cross(int                     padding_mode,
 
         data_main.m_signature = &(signature_data_main[0]);
         data_ext.m_signature  = &(signature_data_ext[0]);
-        data_main.m_salt = data_ext.m_salt = &(salt[0]);
-        data_main.m_salt_len = data_ext.m_salt_len = salt.size();
+
+        /* FIXME: Experimenting with zero length Salt for PSS */
+        data_main.m_salt = data_ext.m_salt = nullptr;
+        data_main.m_salt_len = data_ext.m_salt_len = 0;
+        // data_main.m_salt = data_ext.m_salt = &(salt[0]);
+        // data_main.m_salt_len = data_ext.m_salt_len = salt.size();
 
         data_main.m_pub_key_mod    = &(PubKeyKeyMod_main[0]);
         data_main.m_encrypted_data = &(encrypted_data_main[0]);
