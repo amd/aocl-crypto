@@ -52,7 +52,7 @@ alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
         dig_ctx->pc_prov_ctx    = pctx;
         dig_ctx->pc_libctx      = pctx->ap_libctx;
         dig_ctx->pc_digest_info = *dinfo;
-        Uint64 size             = alcp_digest_context_size(dinfo);
+        Uint64 size             = alcp_digest_context_size();
         dig_ctx->handle.context = OPENSSL_zalloc(size);
     }
 
@@ -71,7 +71,7 @@ alcp_prov_digest_dupctx(void* vctx)
         dest_ctx->pc_prov_ctx    = src_ctx->pc_prov_ctx;
         dest_ctx->pc_libctx      = src_ctx->pc_libctx;
         dest_ctx->pc_digest_info = src_ctx->pc_digest_info;
-        Uint64 size = alcp_digest_context_size(&src_ctx->pc_digest_info);
+        Uint64 size              = alcp_digest_context_size();
         dest_ctx->handle.context = OPENSSL_zalloc(size);
     } else {
         return NULL;

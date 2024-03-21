@@ -37,10 +37,9 @@ using namespace alcp;
 EXTERN_C_BEGIN
 
 Uint64
-alcp_digest_context_size(const alc_digest_info_p pDigestInfo)
+alcp_digest_context_size()
 {
-    Uint64 size =
-        sizeof(digest::Context) + digest::DigestBuilder::getSize(*pDigestInfo);
+    Uint64 size = sizeof(digest::Context);
     return size;
 }
 

@@ -202,47 +202,16 @@ typedef struct _alc_digest_handle
  * memory to be allocated for context </b>
  * @endparblock
  *
- * @note       alcp_digest_supported() should be called first to
- *              know if the given configuration is valid.
  *
- * @param [in]       p_digest_info   Description of the requested digest session
  *
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
-alcp_digest_context_size(const alc_digest_info_p p_digest_info);
-
-/**
- * @brief  Allows to check if a given algorithm is supported or not
- *
- * @parblock <br> &nbsp;
- * <b>This API needs to be called before any other API is called to
- * know if digest that is being request is supported or not </b>
- * @endparblock
- *
- * @note        alcp_digest_supported() is called first to
- *              know if the given configuration is valid.
- *
- * @param [in]      p_digest_info Description of the requested digest session
- *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_digest_supported(const alc_digest_info_p p_digest_info);
+alcp_digest_context_size(void);
 
 /**
  * @brief       Request a handle for digest  for a configuration
  *              as pointed by p_digest_info_p
- *
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_supported is called and at
- * the end of session call @ref alcp_digest_finish </b>
- * @endparblock
- *
- * @note       alcp_digest_supported() should be called first to
- *              know if the given type/digest length configuration is valid.
  *
  * @param [in]      p_digest_info   Description of the requested digest session
  *

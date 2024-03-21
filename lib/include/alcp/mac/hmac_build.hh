@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -108,11 +108,8 @@ __hmac_wrapperFinish(void* hmac, void* digest)
     auto ap       = static_cast<MACALGORITHM*>(hmac);
     auto digest_p = static_cast<DIGESTALGORITHM*>(digest);
     ap->finish();
-    digest_p->finish();
+    delete digest_p;
     ap->~MACALGORITHM();
-    digest_p->~DIGESTALGORITHM();
-
-    // Not Deleting the memory as it is allocated by application
 }
 
 template<typename MACALGORITHM, typename DIGESTALGORITHM>
@@ -134,16 +131,15 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
         return status;
     }
 
-    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-
-    auto digest = new (addr) DIGESTALGORITHM();
+    auto digest = new DIGESTALGORITHM();
     if (digest == nullptr) {
         status.update(InternalError("Out of Memory"));
         return status;
     }
     ctx.m_digest = static_cast<void*>(digest);
 
-    auto hmac_algo = new (addr + sizeof(*digest)) MACALGORITHM();
+    auto addr      = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    auto hmac_algo = new (addr) MACALGORITHM();
     if (hmac_algo == nullptr) {
         status.update(InternalError("Out of Memory"));
         return status;
@@ -184,15 +180,14 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
         return status;
     }
 
-    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-
-    auto p_sha3 = new (addr) digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+    auto p_sha3 = new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
     if (p_sha3 == nullptr) {
         return InternalError("Unable To Allocate Memory for Digest Object");
     }
     ctx.m_digest = static_cast<void*>(p_sha3);
 
-    auto hmac_algo = new (addr + sizeof(*p_sha3)) MACALGORITHM();
+    auto addr      = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    auto hmac_algo = new (addr) MACALGORITHM();
     if (hmac_algo == nullptr) {
         return InternalError("Unable to Allocate Memory for HMAC Object");
     }
@@ -291,9 +286,7 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
 Uint64
 HmacBuilder::getSize(const alc_mac_info_t& macInfo)
 {
-    return sizeof(Hmac)
-           + alcp::digest::DigestBuilder::getSize(
-               macInfo.mi_algoinfo.hmac.hmac_digest);
+    return sizeof(Hmac);
 }
 
 Status

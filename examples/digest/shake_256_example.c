@@ -46,7 +46,7 @@ create_demo_session(Uint32 digest_size)
         .dt_custom_len = digest_size * 8
     };
 
-    Uint64 size         = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ create_demo_session(void)
         .dt_mode = {.dm_sha2 = ALC_SHA2_512,},
     };
 
-    Uint64 size         = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);

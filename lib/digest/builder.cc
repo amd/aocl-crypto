@@ -130,11 +130,7 @@ __sha_dtor(void* pDigest)
 {
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<DIGESTTYPE*>(pDigest);
-    ap->finish();
-    // FIXME: Not a good idea!
-    ap->~DIGESTTYPE();
-    // Memory should not be deleted as its allocated by application developer.
-    // delete ap;
+    delete ap;
     return e;
 }
 
@@ -147,9 +143,7 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
     /* if (!Sha256::isSupported(sha2Info)) */
     /*     err = ALC_ERROR_NOT_SUPPORTED; */
 
-    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-
-    auto algo    = new (addr) ALGONAME(sha2Info);
+    auto algo    = new ALGONAME(sha2Info);
     ctx.m_digest = static_cast<void*>(algo);
     ctx.update   = __sha_update_wrapper<ALGONAME>;
     ctx.copy     = __sha_copy_wrapper<ALGONAME>;
@@ -171,10 +165,7 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    auto addr = reinterpret_cast<Uint8*>(&destCtx) + sizeof(destCtx);
-
-    auto algo = new (addr)
-        ALGONAME(*reinterpret_cast<ALGONAME*>(srcCtx.m_digest));
+    auto algo = new ALGONAME(*reinterpret_cast<ALGONAME*>(srcCtx.m_digest));
     destCtx.m_digest = static_cast<void*>(algo);
 
     destCtx.update         = srcCtx.update;
@@ -273,8 +264,7 @@ class Sha3Builder
                              Context&                 rCtx)
     {
         alc_error_t err  = ALC_ERROR_NONE;
-        auto        addr = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
-        auto        algo = new (addr) Sha3(rDigestInfo);
+        auto        algo = new Sha3(rDigestInfo);
         rCtx.m_digest    = static_cast<void*>(algo);
         rCtx.update      = __sha_update_wrapper<Sha3>;
         rCtx.copy        = __sha_copy_wrapper<Sha3>;
@@ -294,11 +284,9 @@ class Sha3Builder
 
     static alc_error_t BuildWithCopy(Context& srcCtx, Context& destCtx)
     {
-        alc_error_t err  = ALC_ERROR_NONE;
-        auto        addr = reinterpret_cast<Uint8*>(&destCtx) + sizeof(destCtx);
+        alc_error_t err = ALC_ERROR_NONE;
 
-        auto algo = new (addr)
-            Sha3(*(reinterpret_cast<Sha3*>(srcCtx.m_digest)));
+        auto algo = new Sha3(*(reinterpret_cast<Sha3*>(srcCtx.m_digest)));
         destCtx.m_digest       = static_cast<void*>(algo);
         destCtx.update         = srcCtx.update;
         destCtx.copy           = srcCtx.copy;
@@ -309,41 +297,6 @@ class Sha3Builder
         return err;
     }
 };
-
-Uint32
-DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
-{
-    switch (rDigestInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (rDigestInfo.dt_len) {
-                case ALC_DIGEST_LEN_256:
-                    if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
-                        return sizeof(Sha256);
-                    } else {
-                        return sizeof(Sha512);
-                    }
-
-                case ALC_DIGEST_LEN_224:
-                    if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
-                        return sizeof(Sha224);
-                    } else {
-                        return sizeof(Sha512);
-                    }
-                case ALC_DIGEST_LEN_512:
-                    return sizeof(Sha512);
-                case ALC_DIGEST_LEN_384:
-                    return sizeof(Sha384);
-                default:
-                    break;
-            }
-        }
-        case ALC_DIGEST_TYPE_SHA3: {
-            return sizeof(Sha3);
-        }
-        default:
-            return 0;
-    }
-}
 
 alc_error_t
 DigestBuilder::Build(const alc_digest_info_t& rDigestInfo, Context& rCtx)

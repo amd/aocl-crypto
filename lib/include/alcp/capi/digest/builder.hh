@@ -37,8 +37,6 @@ namespace alcp::digest {
 class DigestBuilder
 {
   public:
-    static Uint32 getSize(const alc_digest_info_t& digestInfo);
-
     static alc_error_t Build(const alc_digest_info_t& digestInfo,
                              digest::Context&         ctx);
 

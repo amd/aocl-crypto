@@ -85,9 +85,9 @@ AlcpDigestBase::init()
 
     if (m_handle == nullptr) {
         m_handle          = new alc_digest_handle_t;
-        m_handle->context = malloc(alcp_digest_context_size(&dinfo));
+        m_handle->context = malloc(alcp_digest_context_size());
     } else if (m_handle->context == nullptr) {
-        m_handle->context = malloc(alcp_digest_context_size(&dinfo));
+        m_handle->context = malloc(alcp_digest_context_size());
     } else {
         alcp_digest_finish(m_handle);
     }
