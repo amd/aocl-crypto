@@ -336,198 +336,176 @@ XorKeyStoreCombinedNew(const __m512i* p_in_512,
 }
 
 inline void
-ProcessChacha20ParallelBlocks16(alcp::Uint64&       len,
+ProcessChacha20ParallelBlocks16(Uint64&             blocks,
                                 const alcp::Uint8   key[],
                                 alcp::Uint8         iv[],
                                 const alcp::Uint8*& pInputText,
                                 alcp::Uint8*&       pOutputText)
 {
-    auto blocks_1024 = len / 1024;
-    len -= (blocks_1024 * 1024);
-    if (blocks_1024 >= 1) {
 
-        __m512i s_prev[16], s[16];
+    __m512i s_prev[16], s[16];
 
-        // -- Setup Registers for First Row Round Function
-        // a
-        SetChacha2016BlockParallelConstants(
-            s_prev[0], s_prev[1], s_prev[2], s_prev[3]);
+    // -- Setup Registers for First Row Round Function
+    // a
+    SetChacha2016BlockParallelConstants(
+        s_prev[0], s_prev[1], s_prev[2], s_prev[3]);
 
-        SetChacha2016BlockParallelKey(key,
-                                      s_prev[4],
-                                      s_prev[5],
-                                      s_prev[6],
-                                      s_prev[7],
-                                      s_prev[8],
-                                      s_prev[9],
-                                      s_prev[10],
-                                      s_prev[11]);
+    SetChacha2016BlockParallelKey(key,
+                                  s_prev[4],
+                                  s_prev[5],
+                                  s_prev[6],
+                                  s_prev[7],
+                                  s_prev[8],
+                                  s_prev[9],
+                                  s_prev[10],
+                                  s_prev[11]);
 
-        SetChacha2016BlockParallelIv(
-            iv, s_prev[12], s_prev[13], s_prev[14], s_prev[15]);
+    SetChacha2016BlockParallelIv(
+        iv, s_prev[12], s_prev[13], s_prev[14], s_prev[15]);
 
-        const __m512i inc_512 = _mm512_setr_epi32(
-            16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
-        s_prev[12] = _mm512_add_epi32(
-            s_prev[12],
-            _mm512_setr_epi32(
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
-        // s_prev[16] values will never change inside the loop except for
-        // s_prev[12] which is used to save the counter value
-        // clang-format on
-        while (blocks_1024 >= 1) {
-            // Restoring the registers to last Round State
+    const __m512i inc_512 = _mm512_setr_epi32(
+        16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+    s_prev[12] = _mm512_add_epi32(
+        s_prev[12],
+        _mm512_setr_epi32(
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+    // s_prev[16] values will never change inside the loop except for
+    // s_prev[12] which is used to save the counter value
+    // clang-format on
+    while (blocks >= 16) {
+        // Restoring the registers to last Round State
 
-            for (int i = 0; i < 16; i++) {
-                s[i] = s_prev[i];
-            }
-            for (int i = 0; i < 10; i++) {
-
-                // -- Row Round Register Setup Complete.
-
-                RoundFunction(s[0], s[4], s[8], s[12]);
-                RoundFunction(s[1], s[5], s[9], s[13]);
-                RoundFunction(s[2], s[6], s[10], s[14]);
-                RoundFunction(s[3], s[7], s[11], s[15]);
-
-                // Column Round Function
-
-                RoundFunction(s[0], s[5], s[10], s[15]);
-                RoundFunction(s[1], s[6], s[11], s[12]);
-                RoundFunction(s[2], s[7], s[8], s[13]);
-                RoundFunction(s[3], s[4], s[9], s[14]);
-            }
-
-            for (int i = 0; i < 16; i++) {
-                s[i] = _mm512_add_epi32(s[i], s_prev[i]);
-            }
-
-            __m512i temp[2];
-
-            // Once call is complete, only registers
-            // s[0],s[1],s[3],temp[0] are required.
-            // Registers s[2] and temp[1] can be reused
-            PermuteRegisters1(s[0], s[1], s[2], s[3], temp[0], temp[1]);
-
-            // Registers s[6] and s[2] can be reused
-            PermuteRegisters1(s[4],
-                              s[5],
-                              s[6],
-                              s[7],
-                              s[2], // Reusing s[2] and temp[1]
-                              temp[1]);
-
-            // Registers s[0],s[6] can be reused
-            PermuteRegistersByShuffling2(s[0],
-                                         s[1],
-                                         s[2],
-                                         s[3],
-                                         s[4],
-                                         s[5],
-                                         s[6],
-                                         s[7],
-                                         temp[0],
-                                         temp[1]);
-            // Registers s[10] and s[0] can be reused
-            PermuteRegisters1(s[8], s[9], s[10], s[11], s[6], s[0]);
-
-            // Registers s[14] and s[0] can be reused
-            PermuteRegisters1(s[12], s[13], s[14], s[15], s[10], s[0]);
-            // s[8] and s[14] can be reused
-            PermuteRegistersByShuffling2(s[8],
-                                         s[9],
-                                         s[10],
-                                         s[11],
-                                         s[12],
-                                         s[13],
-                                         s[14],
-                                         s[15],
-                                         s[6],
-                                         s[0]);
-
-            __m512i output_512[2];
-            // temp[1]=block 4 and output_512[0] = Block 0
-            shuffleRegisters2(s[0], temp[1], output_512[0]);
-
-            // s[5]=Block 12 and s[0]= Block 8
-            shuffleRegisters2(s[13], s[5], s[0]);
-
-            // output_512[1] = Block 1 and s[1] = Block 5
-            shuffleRegisters2(s[9], s[1], output_512[1]);
-
-            // s[2] = Block 13 and s[9] = Block 9
-            shuffleRegisters2(s[10], s[2], s[9]);
-
-            // temp[0] = Block 6 and s[14] = Block 2
-            shuffleRegisters2(s[6], temp[0], s[14]);
-
-            // s[7]= Block 14 and s[6] = Block 10
-            shuffleRegisters2(s[15], s[7], s[6]);
-
-            //  s[3] = Block 7 and  s[8] = Block 3
-            shuffleRegisters2(s[11], s[3], s[8]);
-
-            // s[4] = Block 15 and  s[11] = Block 11
-            shuffleRegisters2(s[12], s[4], s[11]);
-
-            auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
-            auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
-
-            // __m512i input_512;
-            XorKeyStoreNew(p_in_512, output_512[0], p_out_512);
-            XorKeyStoreNew(p_in_512, output_512[1], p_out_512);
-            XorKeyStoreNew(p_in_512, s[14], p_out_512);
-            XorKeyStoreNew(p_in_512, s[8], p_out_512);
-            XorKeyStoreNew(p_in_512, temp[1], p_out_512);
-            XorKeyStoreNew(p_in_512, s[1], p_out_512);
-            XorKeyStoreNew(p_in_512, temp[0], p_out_512);
-            XorKeyStoreNew(p_in_512, s[3], p_out_512);
-            XorKeyStoreNew(p_in_512, s[0], p_out_512);
-            XorKeyStoreNew(p_in_512, s[9], p_out_512);
-            XorKeyStoreNew(p_in_512, s[6], p_out_512);
-            XorKeyStoreNew(p_in_512, s[11], p_out_512);
-
-            // Loads 4 512 bits first, XORs with key and then store 4 512 bits
-            // at the end.
-            XorKeyStoreCombinedNew(p_in_512, s[2], s[5], s[7], s[4], p_out_512);
-            pInputText += 1024;
-            pOutputText += 1024;
-            s_prev[12] = _mm512_add_epi32(s_prev[12], inc_512);
-            // len -= 1024;
-            blocks_1024--;
+        for (int i = 0; i < 16; i++) {
+            s[i] = s_prev[i];
         }
+        for (int i = 0; i < 10; i++) {
+
+            // -- Row Round Register Setup Complete.
+
+            RoundFunction(s[0], s[4], s[8], s[12]);
+            RoundFunction(s[1], s[5], s[9], s[13]);
+            RoundFunction(s[2], s[6], s[10], s[14]);
+            RoundFunction(s[3], s[7], s[11], s[15]);
+
+            // Column Round Function
+
+            RoundFunction(s[0], s[5], s[10], s[15]);
+            RoundFunction(s[1], s[6], s[11], s[12]);
+            RoundFunction(s[2], s[7], s[8], s[13]);
+            RoundFunction(s[3], s[4], s[9], s[14]);
+        }
+
+        for (int i = 0; i < 16; i++) {
+            s[i] = _mm512_add_epi32(s[i], s_prev[i]);
+        }
+
+        __m512i temp[2];
+
+        // Once call is complete, only registers
+        // s[0],s[1],s[3],temp[0] are required.
+        // Registers s[2] and temp[1] can be reused
+        PermuteRegisters1(s[0], s[1], s[2], s[3], temp[0], temp[1]);
+
+        // Registers s[6] and s[2] can be reused
+        PermuteRegisters1(s[4],
+                          s[5],
+                          s[6],
+                          s[7],
+                          s[2], // Reusing s[2] and temp[1]
+                          temp[1]);
+
+        // Registers s[0],s[6] can be reused
+        PermuteRegistersByShuffling2(
+            s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], temp[0], temp[1]);
+        // Registers s[10] and s[0] can be reused
+        PermuteRegisters1(s[8], s[9], s[10], s[11], s[6], s[0]);
+
+        // Registers s[14] and s[0] can be reused
+        PermuteRegisters1(s[12], s[13], s[14], s[15], s[10], s[0]);
+        // s[8] and s[14] can be reused
+        PermuteRegistersByShuffling2(
+            s[8], s[9], s[10], s[11], s[12], s[13], s[14], s[15], s[6], s[0]);
+
+        __m512i output_512[2];
+        // temp[1]=block 4 and output_512[0] = Block 0
+        shuffleRegisters2(s[0], temp[1], output_512[0]);
+
+        // s[5]=Block 12 and s[0]= Block 8
+        shuffleRegisters2(s[13], s[5], s[0]);
+
+        // output_512[1] = Block 1 and s[1] = Block 5
+        shuffleRegisters2(s[9], s[1], output_512[1]);
+
+        // s[2] = Block 13 and s[9] = Block 9
+        shuffleRegisters2(s[10], s[2], s[9]);
+
+        // temp[0] = Block 6 and s[14] = Block 2
+        shuffleRegisters2(s[6], temp[0], s[14]);
+
+        // s[7]= Block 14 and s[6] = Block 10
+        shuffleRegisters2(s[15], s[7], s[6]);
+
+        //  s[3] = Block 7 and  s[8] = Block 3
+        shuffleRegisters2(s[11], s[3], s[8]);
+
+        // s[4] = Block 15 and  s[11] = Block 11
+        shuffleRegisters2(s[12], s[4], s[11]);
+
+        auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
+        auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
+
+        // __m512i input_512;
+        XorKeyStoreNew(p_in_512, output_512[0], p_out_512);
+        XorKeyStoreNew(p_in_512, output_512[1], p_out_512);
+        XorKeyStoreNew(p_in_512, s[14], p_out_512);
+        XorKeyStoreNew(p_in_512, s[8], p_out_512);
+        XorKeyStoreNew(p_in_512, temp[1], p_out_512);
+        XorKeyStoreNew(p_in_512, s[1], p_out_512);
+        XorKeyStoreNew(p_in_512, temp[0], p_out_512);
+        XorKeyStoreNew(p_in_512, s[3], p_out_512);
+        XorKeyStoreNew(p_in_512, s[0], p_out_512);
+        XorKeyStoreNew(p_in_512, s[9], p_out_512);
+        XorKeyStoreNew(p_in_512, s[6], p_out_512);
+        XorKeyStoreNew(p_in_512, s[11], p_out_512);
+
+        // Loads 4 512 bits first, XORs with key and then store 4 512 bits
+        // at the end.
+        XorKeyStoreCombinedNew(p_in_512, s[2], s[5], s[7], s[4], p_out_512);
+        pInputText += 1024;
+        pOutputText += 1024;
+        s_prev[12] = _mm512_add_epi32(s_prev[12], inc_512);
+        blocks -= 16;
     }
 }
 
 inline void
-ProcessChacha20ParallelBlocks4(alcp::Uint64&       len,
+ProcessChacha20ParallelBlocks4(Uint64              blocks,
+                               Uint64              remBytes,
                                const alcp::Uint8   key[],
                                alcp::Uint8         iv[],
                                const alcp::Uint8*& pInputText,
                                alcp::Uint8*&       pOutputText)
 {
-    if (len > 0) {
-        Uint64 blocks_256 = len / 256;
-        Uint64 remBytes   = len - (blocks_256)*256;
-        // 4 Block Parallelization
 
-        // -- Setup Registers for First Row Round Function
-        // a
-        __m512i s_1_0_3_2_prev = _mm512_broadcast_i32x4(
-            *reinterpret_cast<const __m128i*>(chacha20::Chacha20Constants));
-        // b
-        __m512i s_5_4_7_6_prev =
-            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
-        // c
-        __m512i s_9_8_11_10_prev =
-            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key + 16));
-        // d
-        __m512i s_13_12_15_14_prev =
-            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(iv));
+    // 4 Block Parallelization
 
-        __m512i s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14, counter_512;
+    // -- Setup Registers for First Row Round Function
+    // a
+    __m512i s_1_0_3_2_prev = _mm512_broadcast_i32x4(
+        *reinterpret_cast<const __m128i*>(chacha20::Chacha20Constants));
+    // b
+    __m512i s_5_4_7_6_prev =
+        _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
+    // c
+    __m512i s_9_8_11_10_prev =
+        _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key + 16));
+    // d
+    __m512i s_13_12_15_14_prev =
+        _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(iv));
 
-        // clang-format off
+    __m512i s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14, counter_512;
+
+    // clang-format off
         counter_512 = _mm512_setr_epi32(0x0 ,0x0,0x0,0x0,
                                         0x1 ,0x0,0x0,0x0,
                                         0x2 ,0x0,0x0,0x0,
@@ -536,301 +514,295 @@ ProcessChacha20ParallelBlocks4(alcp::Uint64&       len,
                                         0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0);
-        // clang-format on
+    // clang-format on
 
-        const __m128i* p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
-        __m128i*       p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
-        __m512i*       s_512[4]  = {
-            &s_1_0_3_2, &s_5_4_7_6, &s_9_8_11_10, &s_13_12_15_14
-        };
+    const __m128i* p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
+    __m128i*       p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
+    __m512i*       s_512[4]  = {
+        &s_1_0_3_2, &s_5_4_7_6, &s_9_8_11_10, &s_13_12_15_14
+    };
 
-        for (Uint64 i = 0; i < blocks_256; i++) {
-            // Restoring the registers to last Round State
-            s_1_0_3_2     = s_1_0_3_2_prev;
-            s_5_4_7_6     = s_5_4_7_6_prev;
-            s_9_8_11_10   = s_9_8_11_10_prev;
-            s_13_12_15_14 = s_13_12_15_14_prev;
+    while (blocks >= 4) {
+        // Restoring the registers to last Round State
+        s_1_0_3_2     = s_1_0_3_2_prev;
+        s_5_4_7_6     = s_5_4_7_6_prev;
+        s_9_8_11_10   = s_9_8_11_10_prev;
+        s_13_12_15_14 = s_13_12_15_14_prev;
 
-            s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, counter_512);
-            auto s_13_12_15_14_prev = s_13_12_15_14;
-            Chacha20ParallelBlocks4(s_1_0_3_2,
-                                    s_5_4_7_6,
-                                    s_9_8_11_10,
-                                    s_13_12_15_14,
-                                    s_1_0_3_2_prev,
-                                    s_5_4_7_6_prev,
-                                    s_9_8_11_10_prev,
-                                    s_13_12_15_14_prev);
+        s_13_12_15_14           = _mm512_add_epi32(s_13_12_15_14, counter_512);
+        auto s_13_12_15_14_prev = s_13_12_15_14;
+        Chacha20ParallelBlocks4(s_1_0_3_2,
+                                s_5_4_7_6,
+                                s_9_8_11_10,
+                                s_13_12_15_14,
+                                s_1_0_3_2_prev,
+                                s_5_4_7_6_prev,
+                                s_9_8_11_10_prev,
+                                s_13_12_15_14_prev);
 
+        XorMessageKeyStreamStore<0>(*s_512[0], p_in_128, p_out_128);
+
+        XorMessageKeyStreamStore<0>(*s_512[1], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<0>(*s_512[2], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<0>(*s_512[3], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<1>(*s_512[0], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<1>(*s_512[1], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<1>(*s_512[2], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<1>(*s_512[3], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<2>(*s_512[0], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<2>(*s_512[1], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<2>(*s_512[2], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<2>(*s_512[3], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<3>(*s_512[0], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<3>(*s_512[1], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<3>(*s_512[2], p_in_128, p_out_128);
+        XorMessageKeyStreamStore<3>(*s_512[3], p_in_128, p_out_128);
+
+        pInputText += 256;
+
+        pOutputText += 256;
+        counter_512 = _mm512_add_epi32(counter_512, cInc512);
+        blocks -= 4;
+    }
+    Uint64 totalbytes = blocks * 64 + remBytes;
+    if (totalbytes > 0) {
+        // Restoring the registers to last Round State
+        s_1_0_3_2     = s_1_0_3_2_prev;
+        s_5_4_7_6     = s_5_4_7_6_prev;
+        s_9_8_11_10   = s_9_8_11_10_prev;
+        s_13_12_15_14 = s_13_12_15_14_prev;
+
+        s_13_12_15_14           = _mm512_add_epi32(s_13_12_15_14, counter_512);
+        auto s_13_12_15_14_prev = s_13_12_15_14;
+        Chacha20ParallelBlocks4(s_1_0_3_2,
+                                s_5_4_7_6,
+                                s_9_8_11_10,
+                                s_13_12_15_14,
+                                s_1_0_3_2_prev,
+                                s_5_4_7_6_prev,
+                                s_9_8_11_10_prev,
+                                s_13_12_15_14_prev);
+        if (totalbytes < 16) {
+            XorMessageKeyStreamStorePartial<0>(*s_512[0],
+                                               p_in_128,
+                                               p_out_128,
+                                               totalbytes,
+                                               pInputText,
+                                               pOutputText);
+        } else {
             XorMessageKeyStreamStore<0>(*s_512[0], p_in_128, p_out_128);
-
-            XorMessageKeyStreamStore<0>(*s_512[1], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<0>(*s_512[2], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<0>(*s_512[3], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<1>(*s_512[0], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<1>(*s_512[1], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<1>(*s_512[2], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<1>(*s_512[3], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<2>(*s_512[0], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<2>(*s_512[1], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<2>(*s_512[2], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<2>(*s_512[3], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<3>(*s_512[0], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<3>(*s_512[1], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<3>(*s_512[2], p_in_128, p_out_128);
-            XorMessageKeyStreamStore<3>(*s_512[3], p_in_128, p_out_128);
-
-            pInputText += 256;
-
-            pOutputText += 256;
-            counter_512 = _mm512_add_epi32(counter_512, cInc512);
-        }
-        // Residue calculation for 0< Pending Length <256 Bytes
-        if (remBytes > 0) {
-            // Restoring the registers to last Round State
-            s_1_0_3_2     = s_1_0_3_2_prev;
-            s_5_4_7_6     = s_5_4_7_6_prev;
-            s_9_8_11_10   = s_9_8_11_10_prev;
-            s_13_12_15_14 = s_13_12_15_14_prev;
-
-            s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, counter_512);
-            auto s_13_12_15_14_prev = s_13_12_15_14;
-            Chacha20ParallelBlocks4(s_1_0_3_2,
-                                    s_5_4_7_6,
-                                    s_9_8_11_10,
-                                    s_13_12_15_14,
-                                    s_1_0_3_2_prev,
-                                    s_5_4_7_6_prev,
-                                    s_9_8_11_10_prev,
-                                    s_13_12_15_14_prev);
-            if (remBytes < 16) {
-                XorMessageKeyStreamStorePartial<0>(*s_512[0],
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<0>(*s_512[1],
                                                    p_in_128,
                                                    p_out_128,
-                                                   remBytes,
+                                                   totalbytes,
                                                    pInputText,
                                                    pOutputText);
-            } else {
-                Uint64 blocks_16 = remBytes / 16;
-                Uint64 i         = 0;
-                XorMessageKeyStreamStore<0>(*s_512[0], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<0>(*s_512[1],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<0>(*s_512[1], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<0>(*s_512[2],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<0>(*s_512[2], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<0>(*s_512[3],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<0>(*s_512[3], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<1>(*s_512[0],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<1>(*s_512[0], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<1>(*s_512[1],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<1>(*s_512[1], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<1>(*s_512[2],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<1>(*s_512[2], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<1>(*s_512[3],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<1>(*s_512[3], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<2>(*s_512[0],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<2>(*s_512[0], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<2>(*s_512[1],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<2>(*s_512[1], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<2>(*s_512[2],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<2>(*s_512[2], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<2>(*s_512[3],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<2>(*s_512[3], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<3>(*s_512[0],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<3>(*s_512[0], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<3>(*s_512[1],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<3>(*s_512[1], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<3>(*s_512[2],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<3>(*s_512[2], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    XorMessageKeyStreamStorePartial<3>(*s_512[3],
-                                                       p_in_128,
-                                                       p_out_128,
-                                                       remBytes,
-                                                       pInputText,
-                                                       pOutputText);
-                    return;
-                }
-                XorMessageKeyStreamStore<3>(*s_512[3], p_in_128, p_out_128);
-                remBytes -= 16;
-                pInputText += 16;
-                pOutputText += 16;
-                i++;
-                if (i == blocks_16) {
-                    return;
-                }
+                return;
+            }
+            XorMessageKeyStreamStore<0>(*s_512[1], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<0>(*s_512[2],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<0>(*s_512[2], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<0>(*s_512[3],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<0>(*s_512[3], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<1>(*s_512[0],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<1>(*s_512[0], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<1>(*s_512[1],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<1>(*s_512[1], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<1>(*s_512[2],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<1>(*s_512[2], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<1>(*s_512[3],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<1>(*s_512[3], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<2>(*s_512[0],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<2>(*s_512[0], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<2>(*s_512[1],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<2>(*s_512[1], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<2>(*s_512[2],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<2>(*s_512[2], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<2>(*s_512[3],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<2>(*s_512[3], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<3>(*s_512[0],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<3>(*s_512[0], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<3>(*s_512[1],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<3>(*s_512[1], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<3>(*s_512[2],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<3>(*s_512[2], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                XorMessageKeyStreamStorePartial<3>(*s_512[3],
+                                                   p_in_128,
+                                                   p_out_128,
+                                                   totalbytes,
+                                                   pInputText,
+                                                   pOutputText);
+                return;
+            }
+            XorMessageKeyStreamStore<3>(*s_512[3], p_in_128, p_out_128);
+            totalbytes -= 16;
+            pInputText += 16;
+            pOutputText += 16;
+
+            if (totalbytes < 16) {
+                return;
             }
         }
     }
@@ -846,14 +818,18 @@ ProcessInput(const Uint8  key[],
              Uint8*       pOutputText)
 {
 
-    Uint64 temp_len = len;
-    ProcessChacha20ParallelBlocks16(temp_len, key, iv, pInputText, pOutputText);
+    Uint64 blocks   = len / 64;
+    Uint64 remBytes = len - (blocks * 64);
 
-    if (len > temp_len) {
-        auto blocks_256 = (len - temp_len) / 256;
-        (*(reinterpret_cast<Uint32*>(iv))) += (256 / 64) * blocks_256;
+    if (blocks >= 16) {
+        ProcessChacha20ParallelBlocks16(
+            blocks, key, iv, pInputText, pOutputText);
+        (*(reinterpret_cast<Uint32*>(iv))) += (len - blocks * 64) / 64;
     }
-    ProcessChacha20ParallelBlocks4(temp_len, key, iv, pInputText, pOutputText);
+    if ((blocks > 0) || (remBytes > 0)) {
+        ProcessChacha20ParallelBlocks4(
+            blocks, remBytes, key, iv, pInputText, pOutputText);
+    }
     return ALC_ERROR_NONE;
 }
 
