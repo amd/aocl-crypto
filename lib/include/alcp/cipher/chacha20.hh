@@ -29,26 +29,8 @@
 #pragma once
 
 #include "alcp/base.hh"
+#include "alcp/error.h"
 #include "alcp/utils/cpuid.hh"
-#include <alcp/error.h>
-
-namespace alcp::cipher::chacha20::zen4 {
-alc_error_t
-ProcessInput(const Uint8 key[],
-             Uint64      keylen,
-             Uint8       iv[],
-             Uint64      ivlen,
-             const Uint8 plaintext[],
-             Uint64      plaintextLength,
-             Uint8       ciphertext[]);
-alc_error_t
-getKeyStream(const Uint8 key[],
-             Uint64      keylen,
-             Uint8       iv[],
-             Uint64      ivlen,
-             Uint8       output_key_stream[],
-             Uint64      key_stream_length);
-} // namespace alcp::cipher::chacha20::zen4
 
 namespace alcp::cipher::chacha20 {
 using utils::CpuCipherFeatures;
@@ -60,26 +42,74 @@ static constexpr Uint32 Chacha20Constants[4] = {
 template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ALCP_API_EXPORT ChaCha20
 {
-
+    // Key Length of Chacha20 is fixed as 256 bits
     static constexpr Uint64 cMKeylen = 256 / 8;
+    // array to store the key
     alignas(16) Uint8 m_key[cMKeylen];
+
     static constexpr Uint64 cMIvlen = (128 / 8);
 
   protected:
     alignas(16) Uint8 m_iv[cMIvlen];
 
   public:
+    /**
+     * @brief Method to set the Chacha20 Key.
+     * @param [in] key Chacha20 key for encryption/decryption
+     * @param [in] keylen keylength of the Chacha20 Key in bytes . It must be 16
+     * bytes.
+     * @return Error code
+     */
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
 
+    /**
+     * @brief Method to set the Chacha20 Iv.
+     * @param [in] iv Chacha20 iv for encryption/decryption
+     * @param [in] ivlen Length of the Chacha20 iv provided in bytes. Iv length
+     * must be 16 bytes.
+     * @return Error code
+     */
     alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);
 
+    /**
+     * @brief Encryption/Decryption function of Chacha20 Algorithm taking
+     * plaintext/ciphertext as input and produces the output. Both Encrypt and
+     * Decrypt uses the same function as Chacha20 encrypt and decrypt path is
+     * same.
+     * @param [in] plaintext Input to the Chacha20 Algorithm
+     * @param [in] plaintext_length Input/Output Length of the provided
+     * plaintext/ciphertext
+     * @param [out] ciphertext Output from the Chacha20 Algorithm
+     * @return
+     */
     alc_error_t processInput(const Uint8 plaintext[],
                              Uint64      plaintext_length,
                              Uint8       ciphertext[]);
 
+    /**
+     * @brief Validates Chacha20 Key and returns an error code for invalid Key.
+     * @param [in] key Chacha20 key for encryption/decryption
+     * @param [in] keylen keylength of the Chacha20 Key in bytes . It must be 16
+     * bytes.
+     * @return Error code
+     */
     static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
+    /**
+     * @brief Validates Chacha20 Iv and returns an error code for invalid Iv.
+     * @param [in] iv Chacha20 iv for encryption/decryption
+     * @param [in] ivlen ivlength of the Chacha20 Iv in bytes . It must be 16
+     * bytes.
+     * @return Error code
+     */
     static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
 
+    /**
+     * @brief Get the Chacha20 Keystream of @ref key_stream_length for the
+     * provided key and iv
+     * @param [out] output_key_stream Buffer for storing the key stream
+     * @param [in] key_stream_length Length of the keystream required.
+     * @return
+     */
     alc_error_t getKeyStream(Uint8  output_key_stream[],
                              Uint64 key_stream_length);
 };

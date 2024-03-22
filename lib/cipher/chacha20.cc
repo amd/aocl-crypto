@@ -27,6 +27,7 @@
  */
 
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/chacha20_zen4.hh"
 #include "chacha20_inplace.cc.inc"
 
 namespace alcp::cipher::chacha20 {

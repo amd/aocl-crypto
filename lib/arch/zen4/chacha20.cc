@@ -36,6 +36,8 @@ namespace alcp::cipher::chacha20::zen4 {
 // Authors: Martin Goll and Shay Gueron
 // https://ieeexplore.ieee.org/document/6822267
 
+#define CHACHA20_BLOCK_SIZE 64
+
 inline void
 RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
 {
@@ -336,11 +338,11 @@ XorKeyStoreCombinedNew(const __m512i* p_in_512,
 }
 
 inline void
-ProcessChacha20ParallelBlocks16(Uint64&             blocks,
-                                const alcp::Uint8   key[],
-                                alcp::Uint8         iv[],
-                                const alcp::Uint8*& pInputText,
-                                alcp::Uint8*&       pOutputText)
+ProcessChacha20ParallelBlocks16(Uint64&       blocks,
+                                const Uint8   key[],
+                                Uint8         iv[],
+                                const Uint8*& pInputText,
+                                Uint8*&       pOutputText)
 {
 
     __m512i s_prev[16], s[16];
@@ -479,12 +481,12 @@ ProcessChacha20ParallelBlocks16(Uint64&             blocks,
 }
 
 inline void
-ProcessChacha20ParallelBlocks4(Uint64              blocks,
-                               Uint64              remBytes,
-                               const alcp::Uint8   key[],
-                               alcp::Uint8         iv[],
-                               const alcp::Uint8*& pInputText,
-                               alcp::Uint8*&       pOutputText)
+ProcessChacha20ParallelBlocks4(Uint64        blocks,
+                               Uint64        remBytes,
+                               const Uint8   key[],
+                               Uint8         iv[],
+                               const Uint8*& pInputText,
+                               Uint8*&       pOutputText)
 {
 
     // 4 Block Parallelization
@@ -564,7 +566,7 @@ ProcessChacha20ParallelBlocks4(Uint64              blocks,
         counter_512 = _mm512_add_epi32(counter_512, cInc512);
         blocks -= 4;
     }
-    Uint64 totalbytes = blocks * 64 + remBytes;
+    Uint64 totalbytes = blocks * CHACHA20_BLOCK_SIZE + remBytes;
     if (totalbytes > 0) {
         // Restoring the registers to last Round State
         s_1_0_3_2     = s_1_0_3_2_prev;
@@ -818,13 +820,14 @@ ProcessInput(const Uint8  key[],
              Uint8*       pOutputText)
 {
 
-    Uint64 blocks   = len / 64;
-    Uint64 remBytes = len - (blocks * 64);
+    Uint64 blocks   = len / CHACHA20_BLOCK_SIZE;
+    Uint64 remBytes = len - (blocks * CHACHA20_BLOCK_SIZE);
 
     if (blocks >= 16) {
         ProcessChacha20ParallelBlocks16(
             blocks, key, iv, pInputText, pOutputText);
-        (*(reinterpret_cast<Uint32*>(iv))) += (len - blocks * 64) / 64;
+        (*(reinterpret_cast<Uint32*>(iv))) +=
+            (len - blocks * CHACHA20_BLOCK_SIZE) / CHACHA20_BLOCK_SIZE;
     }
     if ((blocks > 0) || (remBytes > 0)) {
         ProcessChacha20ParallelBlocks4(
