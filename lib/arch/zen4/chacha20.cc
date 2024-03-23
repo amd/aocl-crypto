@@ -36,8 +36,6 @@ namespace alcp::cipher::chacha20::zen4 {
 // Authors: Martin Goll and Shay Gueron
 // https://ieeexplore.ieee.org/document/6822267
 
-#define CHACHA20_BLOCK_SIZE 64
-
 inline void
 RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
 {
@@ -481,12 +479,12 @@ ProcessChacha20ParallelBlocks16(Uint64&       blocks,
 }
 
 inline void
-ProcessChacha20ParallelBlocks4(Uint64        blocks,
-                               Uint64        remBytes,
-                               const Uint8   key[],
+ProcessChacha20ParallelBlocks4(const Uint8   key[],
                                Uint8         iv[],
                                const Uint8*& pInputText,
-                               Uint8*&       pOutputText)
+                               Uint8*&       pOutputText,
+                               Uint64        blocks,
+                               int           remBytes)
 {
 
     // 4 Block Parallelization
@@ -816,22 +814,22 @@ ProcessInput(const Uint8  key[],
              Uint8        iv[],
              Uint64       ivlen,
              const Uint8* pInputText,
-             Uint64       len,
-             Uint8*       pOutputText)
+             Uint8*       pOutputText,
+             Uint64       blocks,
+             int          remBytes)
 {
-
-    Uint64 blocks   = len / CHACHA20_BLOCK_SIZE;
-    Uint64 remBytes = len - (blocks * CHACHA20_BLOCK_SIZE);
-
+    // Preserving the initial number of blocks to be processed as it maybe
+    // modified in ProcessChacha20ParallelBlocks16 and
+    // ProcessChacha20ParallelBlocks4
+    Uint64 temp_blocks = blocks;
     if (blocks >= 16) {
         ProcessChacha20ParallelBlocks16(
             blocks, key, iv, pInputText, pOutputText);
-        (*(reinterpret_cast<Uint32*>(iv))) +=
-            (len - blocks * CHACHA20_BLOCK_SIZE) / CHACHA20_BLOCK_SIZE;
+        (*(reinterpret_cast<Uint32*>(iv))) += (temp_blocks - blocks);
     }
     if ((blocks > 0) || (remBytes > 0)) {
         ProcessChacha20ParallelBlocks4(
-            blocks, remBytes, key, iv, pInputText, pOutputText);
+            key, iv, pInputText, pOutputText, blocks, remBytes);
     }
     return ALC_ERROR_NONE;
 }
@@ -844,12 +842,15 @@ getKeyStream(const Uint8 key[],
              Uint8       outputKeyStream[],
              Uint64      keyStreamLength)
 {
+    Uint64 blocks   = keyStreamLength / CHACHA20_BLOCK_SIZE;
+    Uint64 remBytes = keyStreamLength - (blocks * CHACHA20_BLOCK_SIZE);
     return ProcessInput(key,
                         keylen,
                         iv,
                         ivlen,
                         outputKeyStream,
-                        keyStreamLength,
-                        outputKeyStream);
+                        outputKeyStream,
+                        blocks,
+                        remBytes);
 }
 } // namespace alcp::cipher::chacha20::zen4

@@ -39,6 +39,8 @@ using utils::CpuId;
 static constexpr Uint32 Chacha20Constants[4] = {
     0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
 };
+#define CHACHA20_BLOCK_SIZE 64
+
 template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ALCP_API_EXPORT ChaCha20
 {
@@ -47,7 +49,8 @@ class ALCP_API_EXPORT ChaCha20
     // array to store the key
     alignas(16) Uint8 m_key[cMKeylen];
 
-    static constexpr Uint64 cMIvlen = (128 / 8);
+    static constexpr Uint64 cMIvlen     = (128 / 8);
+    static constexpr int    cMBlockSize = CHACHA20_BLOCK_SIZE;
 
   protected:
     alignas(16) Uint8 m_iv[cMIvlen];

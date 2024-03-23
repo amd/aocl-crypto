@@ -76,6 +76,8 @@ ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
                                            Uint64      plaintextLength,
                                            Uint8       ciphertext[])
 {
+    Uint64 blocks   = plaintextLength / cMBlockSize;
+    int    remBytes = plaintextLength - (blocks * cMBlockSize);
     if constexpr (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
 
         return zen4::ProcessInput(m_key,
@@ -83,8 +85,9 @@ ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
                                   m_iv,
                                   cMIvlen,
                                   plaintext,
-                                  plaintextLength,
-                                  ciphertext);
+                                  ciphertext,
+                                  blocks,
+                                  remBytes);
     } else if constexpr (cpu_cipher_feature == CpuCipherFeatures::eReference) {
 
         return ProcessInput(m_key,
@@ -105,8 +108,9 @@ ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
                                       m_iv,
                                       cMIvlen,
                                       plaintext,
-                                      plaintextLength,
-                                      ciphertext);
+                                      ciphertext,
+                                      blocks,
+                                      remBytes);
         } else {
 
             return ProcessInput(m_key,

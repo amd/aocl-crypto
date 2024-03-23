@@ -38,8 +38,9 @@ ProcessInput(const Uint8 key[],
              Uint8       iv[],
              Uint64      ivlen,
              const Uint8 plaintext[],
-             Uint64      plaintextLength,
-             Uint8       ciphertext[]);
+             Uint8       ciphertext[],
+             Uint64      blocks,
+             int         remBytes);
 alc_error_t
 getKeyStream(const Uint8 key[],
              Uint64      keylen,
