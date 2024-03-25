@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,6 +44,7 @@ class Context
   public:
     void* m_digest;
 
+    alc_error_t (*init)(void* pDigest);
     alc_error_t (*update)(void* pDigest, const Uint8* pSrc, Uint64 len);
     alc_error_t (*copy)(const void* pDigest, Uint8* pBuf, Uint64 len);
     alc_error_t (*finalize)(void* pDigest, const Uint8* pBuf, Uint64 len);

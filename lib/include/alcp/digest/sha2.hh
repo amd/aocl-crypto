@@ -58,6 +58,15 @@ class Sha256 final : public IDigest
 
   public:
     /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    ALCP_API_EXPORT void init(void) override;
+    /**
      * \brief   Updates hash for given buffer
      *
      * \notes    Can be called repeatedly, if the hashsize is smaller
@@ -145,6 +154,7 @@ class ALCP_API_EXPORT Sha224 final : public IDigest
     Sha224(const alc_digest_info_t& rDInfo);
     Sha224(const Sha224& src);
     ~Sha224();
+    void        init() override;
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
     void        finish() override;
     void        reset() override;

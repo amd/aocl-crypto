@@ -54,6 +54,11 @@ alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
         dig_ctx->pc_digest_info = *dinfo;
         Uint64 size             = alcp_digest_context_size();
         dig_ctx->handle.context = OPENSSL_zalloc(size);
+        alc_error_t err = alcp_digest_request(dinfo, &(dig_ctx->handle));
+        if (alcp_is_error(err)) {
+            printf("Provider: Request failed %lu\n", err);
+            return 0;
+        }
     }
 
     return dig_ctx;

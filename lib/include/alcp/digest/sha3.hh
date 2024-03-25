@@ -62,6 +62,15 @@ class ALCP_API_EXPORT Sha3 : public IDigest
 
   public:
     /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    ALCP_API_EXPORT void init(void) override;
+    /**
      * @brief   Updates hash for given buffer
      *
      * @note    Can be called repeatedly, if the message size is smaller than
@@ -73,7 +82,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      * @param    size    should be valid size > 0
      *
      */
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size);
+    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
      * @brief   Cleans up any resource that was allocated
@@ -83,7 +92,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      *
      * @return  nothing
      */
-    void finish();
+    void finish() override;
 
     /**
      * @brief    Resets the internal state.
@@ -93,7 +102,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      *
      * @return   nothing
      */
-    void reset();
+    void reset() override;
 
     /**
      * @brief    Call for the final chunk
@@ -110,7 +119,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      * @param    size    Either valid size or 0, if @buf is nullptr, size
      *                   is assumed to be zero
      */
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size);
+    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
      * @brief  Copies the has from object to supplied buffer
@@ -123,7 +132,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      *
      * @param    size    hash size to be copied from the object
      */
-    alc_error_t copyHash(Uint8* pHash, Uint64 size) const;
+    alc_error_t copyHash(Uint8* pHash, Uint64 size) const override;
 
     /**
      * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set

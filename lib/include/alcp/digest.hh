@@ -60,6 +60,7 @@ class IDigest
     IDigest() = default;
 
   public:
+    virtual void        init(void)                               = 0;
     virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
     virtual alc_error_t finalize(const Uint8* pBuf, Uint64 size) = 0;
     virtual void        finish()                                 = 0;

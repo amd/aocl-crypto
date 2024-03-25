@@ -122,7 +122,6 @@ Sha256::Sha256()
     m_mode.dm_sha2 = ALC_SHA2_256;
     m_digest_len   = 256 / 8;
     m_block_len    = cChunkSize;
-    utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
 Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
@@ -142,6 +141,23 @@ Sha256::Sha256(const Sha256& src)
 }
 
 Sha256::~Sha256() = default;
+
+void
+Sha256::init(void)
+{
+    m_hash[0]  = 0x6a09e667;
+    m_hash[1]  = 0xbb67ae85;
+    m_hash[2]  = 0x3c6ef372;
+    m_hash[3]  = 0xa54ff53a;
+    m_hash[4]  = 0x510e527f;
+    m_hash[5]  = 0x9b05688c;
+    m_hash[6]  = 0x1f83d9ab;
+    m_hash[7]  = 0x5be0cd19;
+    m_finished = false;
+    m_msg_len  = 0;
+    m_idx      = 0;
+    memset(m_buffer, 0, sizeof(m_buffer));
+}
 
 alc_error_t
 Sha256::setIv(const void* pIv, Uint64 size)

@@ -38,11 +38,9 @@ alcp_prov_sha3_init(void* vctx, const OSSL_PARAM params[])
     ENTER();
     alc_prov_digest_ctx_p cctx = vctx;
     alc_error_t           err;
-
-    alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    err                     = alcp_digest_request(dinfo, &(cctx->handle));
+    err = alcp_digest_init(&(cctx->handle));
     if (alcp_is_error(err)) {
-        printf("Provider: Somehow request failed\n");
+        printf("Provider: Init failed\n");
         return 0;
     }
     EXIT();
@@ -56,10 +54,9 @@ alcp_prov_shake_init(void* vctx, const OSSL_PARAM params[])
     alc_prov_digest_ctx_p cctx = vctx;
     alc_error_t           err;
 
-    alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    err                     = alcp_digest_request(dinfo, &(cctx->handle));
+    err = alcp_digest_init(&(cctx->handle));
     if (alcp_is_error(err)) {
-        printf("Provider: Somehow request failed\n");
+        printf("Provider: Init failed\n");
         return 0;
     }
 

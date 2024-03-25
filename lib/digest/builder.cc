@@ -52,6 +52,18 @@ GetDefaultDigestPool()
 
 template<typename DIGESTTYPE>
 static alc_error_t
+__sha_init_wrapper(void* pDigest)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<DIGESTTYPE*>(pDigest);
+    ap->init();
+
+    return e;
+}
+
+template<typename DIGESTTYPE>
+static alc_error_t
 __sha_update_wrapper(void* pDigest, const Uint8* pSrc, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
@@ -140,11 +152,9 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    /* if (!Sha256::isSupported(sha2Info)) */
-    /*     err = ALC_ERROR_NOT_SUPPORTED; */
-
     auto algo    = new ALGONAME(sha2Info);
     ctx.m_digest = static_cast<void*>(algo);
+    ctx.init     = __sha_init_wrapper<ALGONAME>;
     ctx.update   = __sha_update_wrapper<ALGONAME>;
     ctx.copy     = __sha_copy_wrapper<ALGONAME>;
     ctx.finalize = __sha_finalize_wrapper<ALGONAME>;
@@ -168,6 +178,7 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
     auto algo = new ALGONAME(*reinterpret_cast<ALGONAME*>(srcCtx.m_digest));
     destCtx.m_digest = static_cast<void*>(algo);
 
+    destCtx.init           = srcCtx.init;
     destCtx.update         = srcCtx.update;
     destCtx.copy           = srcCtx.copy;
     destCtx.finalize       = srcCtx.finalize;
@@ -266,6 +277,7 @@ class Sha3Builder
         alc_error_t err  = ALC_ERROR_NONE;
         auto        algo = new Sha3(rDigestInfo);
         rCtx.m_digest    = static_cast<void*>(algo);
+        rCtx.init        = __sha_init_wrapper<Sha3>;
         rCtx.update      = __sha_update_wrapper<Sha3>;
         rCtx.copy        = __sha_copy_wrapper<Sha3>;
         rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
@@ -288,6 +300,7 @@ class Sha3Builder
 
         auto algo = new Sha3(*(reinterpret_cast<Sha3*>(srcCtx.m_digest)));
         destCtx.m_digest       = static_cast<void*>(algo);
+        destCtx.init           = srcCtx.init;
         destCtx.update         = srcCtx.update;
         destCtx.copy           = srcCtx.copy;
         destCtx.finalize       = srcCtx.finalize;

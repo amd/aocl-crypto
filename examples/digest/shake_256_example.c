@@ -55,6 +55,12 @@ create_demo_session(Uint32 digest_size)
         return err;
     }
 
+    err = alcp_digest_init(&s_dg_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+
     return err;
 }
 

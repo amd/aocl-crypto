@@ -42,6 +42,7 @@ class ALCP_API_EXPORT Sha384 final : public IDigest
     Sha384(const alc_digest_info_t& rDInfo);
     Sha384(const Sha384& src);
     virtual ~Sha384();
+    void        init(void) override;
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
     void        finish() override;
     void        reset() override;

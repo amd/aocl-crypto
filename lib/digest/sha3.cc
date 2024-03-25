@@ -224,8 +224,6 @@ Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
 
     m_block_len = chunk_size_bits / 8;
     m_mode      = rDigestInfo.dt_mode;
-
-    memset(m_state, 0, sizeof(m_state));
     m_hash.resize(m_digest_len);
 }
 
@@ -243,6 +241,13 @@ Sha3::Sha3(const Sha3& src)
 
 Sha3::~Sha3() {}
 
+void
+Sha3::init(void)
+{
+    m_idx = 0;
+    memset(m_state, 0, sizeof(m_state));
+    m_finished = false;
+}
 alc_error_t
 Sha3::update(const Uint8* pSrc, Uint64 inputSize)
 {

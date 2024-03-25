@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -78,7 +78,7 @@ TEST_P(Sha384Test, digest_generation_test)
     Sha384            sha384;
     Uint8             hash[DigestSize];
     std::stringstream ss;
-
+    sha384.init();
     ASSERT_EQ(sha384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
     ASSERT_EQ(sha384.finalize(nullptr, 0), ALC_ERROR_NONE);

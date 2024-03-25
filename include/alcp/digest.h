@@ -227,6 +227,18 @@ alcp_digest_request(const alc_digest_info_p p_digest_info,
                     alc_digest_handle_p     p_digest_handle);
 
 /**
+ * @brief       Initializes the digest handle
+ *
+ * @param [in]      p_digest_handle Library populated session handle
+ *
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_digest_init(alc_digest_handle_p p_digest_handle);
+
+/**
  * @brief       Computes digest for the buffer pointed by buf for size as
  *              as mentioned by size in bytes.
  *

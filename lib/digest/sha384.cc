@@ -61,6 +61,13 @@ Sha384::Sha384(const Sha384& src)
 
 Sha384::~Sha384() = default;
 
+void
+Sha384::init(void)
+{
+    m_psha512->init();
+    return;
+}
+
 alc_error_t
 Sha384::update(const Uint8* pBuf, Uint64 size)
 {
@@ -73,6 +80,7 @@ Sha384::finish()
     return m_psha512->finish();
 }
 
+// Todo : Remove reset when init is fully functional
 void
 Sha384::reset()
 {

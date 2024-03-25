@@ -97,6 +97,13 @@ AlcpDigestBase::init()
         std::cout << "Error code in alcp_digest_request:" << err << std::endl;
         return false;
     }
+
+    err = alcp_digest_init(m_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+
     return true;
 }
 

@@ -44,15 +44,6 @@ alcp_digest_context_size()
 }
 
 alc_error_t
-alcp_digest_supported(const alc_digest_info_p pDigestInfo)
-{
-    // FIXME: Implement Digest Support check
-    alc_error_t err = ALC_ERROR_NONE;
-
-    return err;
-}
-
-alc_error_t
 alcp_digest_request(const alc_digest_info_p pDigestInfo,
                     alc_digest_handle_p     pDigestHandle)
 {
@@ -69,6 +60,20 @@ alcp_digest_request(const alc_digest_info_p pDigestInfo,
     // FIMXE: Change Build to return Status and assign it to ctx->status
     err = digest::DigestBuilder::Build(*pDigestInfo, *ctx);
 
+    return err;
+}
+
+alc_error_t
+alcp_digest_init(alc_digest_handle_p pDigestHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
+
+    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+
+    // FIMXE: Change update to return Status and assign it to ctx->status
+    err = ctx->init(ctx->m_digest);
     return err;
 }
 

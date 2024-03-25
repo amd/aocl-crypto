@@ -117,6 +117,16 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
 
   public:
     /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    ALCP_API_EXPORT void init(void) override;
+
+    /**
      * @brief   Updates hash for given buffer
      *
      * @note    Can be called repeatedly, if the hashsize is smaller

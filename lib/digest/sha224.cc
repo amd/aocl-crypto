@@ -71,7 +71,7 @@ Sha224::Sha224()
     m_block_len            = cChunkSize;
     m_mode.dm_sha2         = ALC_SHA2_224;
     m_psha256              = std::make_shared<Sha256>(d_info);
-    m_psha256->setIv(cIv, sizeof(cIv));
+    // m_psha256->setIv(cIv, sizeof(cIv));
 }
 
 Sha224::Sha224(const Sha224& src)
@@ -85,6 +85,15 @@ Sha224::Sha224(const Sha224& src)
 
 Sha224::~Sha224() = default;
 
+// ToDO : change this when the class structures are changed
+void
+Sha224::init(void)
+{
+    m_psha256->init();
+    m_psha256->setIv(cIv, sizeof(cIv));
+    return;
+}
+
 alc_error_t
 Sha224::update(const Uint8* pBuf, Uint64 size)
 {
@@ -97,6 +106,7 @@ Sha224::finish()
     return m_psha256->finish();
 }
 
+// ToDO: retire this API when init is fully funtional
 void
 Sha224::reset()
 {

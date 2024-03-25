@@ -113,6 +113,12 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
     if (alcp_is_error(err)) {
         return ippStsBadArgErr;
     }
+
+    err = alcp_digest_init(&(context->handle));
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
     printMsg("Init End");
     return ippStsNoErr;
 }

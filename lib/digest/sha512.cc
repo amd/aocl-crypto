@@ -145,7 +145,6 @@ Sha512::Sha512(alc_digest_len_t digest_len)
             m_Iv         = cIv_512;
     }
     m_block_len = Sha512::cChunkSize;
-    utils::CopyQWord(&m_hash[0], m_Iv, cIvSizeBytes);
 }
 
 Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
@@ -165,6 +164,15 @@ Sha512::Sha512(const Sha512& src)
     m_digest_len = src.m_digest_len;
     m_block_len  = src.m_block_len;
     m_Iv         = src.m_Iv;
+}
+
+void
+Sha512::init(void)
+{
+    m_msg_len  = 0;
+    m_finished = false;
+    m_idx      = 0;
+    utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
 }
 
 Sha512::~Sha512() = default;

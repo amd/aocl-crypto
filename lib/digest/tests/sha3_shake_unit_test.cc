@@ -100,6 +100,7 @@ TEST_P(Shake, digest_generation_test)
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 
+        sha3_shake.init();
         ASSERT_EQ(sha3_shake.update((const Uint8*)plaintext.c_str(),
                                     plaintext.size()),
                   ALC_ERROR_NONE);
@@ -336,6 +337,7 @@ TEST_P(Shake, setShakeLength_digest_generation_test)
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 
+        sha3_shake.init();
         ASSERT_EQ(sha3_shake.update((const Uint8*)plaintext.c_str(),
                                     plaintext.size()),
                   ALC_ERROR_NONE);

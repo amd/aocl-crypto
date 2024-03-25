@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -117,6 +117,7 @@ class Sha224Kat
         m_message                    = message;
         m_digest                     = digest;
         sha224                       = new Sha224;
+        sha224->init();
     }
 
     void TearDown() override
@@ -133,6 +134,7 @@ TEST_P(Sha224Test, digest_generation_test)
     Uint8             hash[DigestSize];
     std::stringstream ss;
 
+    sha224.init();
     ASSERT_EQ(sha224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
     ASSERT_EQ(sha224.finalize(nullptr, 0), ALC_ERROR_NONE);

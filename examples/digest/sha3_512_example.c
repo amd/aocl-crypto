@@ -56,6 +56,12 @@ create_demo_session(void)
         return err;
     }
 
+    err = alcp_digest_init(&s_dg_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+
     return err;
 }
 
