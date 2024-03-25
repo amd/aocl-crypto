@@ -126,8 +126,8 @@ PermuteRegisters1(__m512i& reg0,
                                  reg1); // combine 32 bits from reg0 and 32 bits
                                         // reg1 for the last 8 32 bit values
     reg2 = _mm512_unpackhi_epi32(reg2,
-                                 reg3); // combine 32 bits from reg0 and 32 bits
-                                        // reg1 for the last 8 32 bit values
+                                 reg3); // combine 32 bits from reg2 and 32 bits
+                                        // reg3 for the last 8 32 bit values
 
     // At this point we have all the values we need as combined 64 bits in reg4,
     // reg5, reg0 and reg2. Hence reg1 can be reused.
@@ -141,7 +141,7 @@ PermuteRegisters1(__m512i& reg0,
     reg4 = _mm512_unpackhi_epi64(
         reg4,
         reg5); // Take alternate high 64 bit from reg4 and 64 bit from reg5 into
-               // reg1.
+               // reg4
                //{reg4[1]reg4[2]reg5[1]reg5[2]},{[reg4[5]reg4[6]reg5[5]reg5[6]}....{reg4[14]reg4[15]reg5[14]reg5[15]}
 
     // Using 64bit unpacking combine high 64 bits of keystream into 128 bits
