@@ -50,6 +50,10 @@ create_demo_session(void)
     Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
+    if (!s_dg_handle.context) {
+        return ALC_ERROR_NO_MEMORY;
+    }
+
     err = alcp_digest_request(&dinfo, &s_dg_handle);
 
     if (alcp_is_error(err)) {

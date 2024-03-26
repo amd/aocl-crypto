@@ -69,7 +69,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      *
      * \return nothing
      */
-    ALCP_API_EXPORT void init(void) override;
+    void init(void) override;
     /**
      * @brief   Updates hash for given buffer
      *

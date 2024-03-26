@@ -34,8 +34,8 @@ alcp_prov_digest_freectx(void* vctx)
 {
     alc_prov_digest_ctx_p pdctx = vctx;
     ENTER();
-
-    OPENSSL_free(pdctx->handle.context);
+    alcp_digest_finish(&pdctx->handle);
+    OPENSSL_clear_free(pdctx->handle.context, alcp_digest_context_size());
     OPENSSL_clear_free(vctx, sizeof(*pdctx));
 }
 
@@ -43,20 +43,19 @@ void*
 alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
 {
     alc_prov_digest_ctx_p dig_ctx;
-    alc_prov_ctx_p        pctx = (alc_prov_ctx_p)vprovctx;
 
     ENTER();
 
     dig_ctx = OPENSSL_zalloc(sizeof(*dig_ctx));
     if (dig_ctx != NULL) {
-        dig_ctx->pc_prov_ctx    = pctx;
-        dig_ctx->pc_libctx      = pctx->ap_libctx;
         dig_ctx->pc_digest_info = *dinfo;
         Uint64 size             = alcp_digest_context_size();
         dig_ctx->handle.context = OPENSSL_zalloc(size);
         alc_error_t err = alcp_digest_request(dinfo, &(dig_ctx->handle));
         if (alcp_is_error(err)) {
-            printf("Provider: Request failed %lu\n", err);
+            printf("Provider: Request failed %llu\n", (unsigned long long)err);
+            OPENSSL_clear_free(dig_ctx->handle.context, size);
+            OPENSSL_clear_free(dig_ctx, sizeof(*dig_ctx));
             return 0;
         }
     }
@@ -70,13 +69,10 @@ alcp_prov_digest_dupctx(void* vctx)
     ENTER();
     alc_prov_digest_ctx_p src_ctx = vctx;
 
-    alc_prov_digest_ctx_p dest_ctx = OPENSSL_zalloc(sizeof(*src_ctx));
-
+    alc_prov_digest_ctx_p dest_ctx = OPENSSL_memdup(src_ctx, sizeof(*src_ctx));
+    Uint64                size;
     if (dest_ctx != NULL) {
-        dest_ctx->pc_prov_ctx    = src_ctx->pc_prov_ctx;
-        dest_ctx->pc_libctx      = src_ctx->pc_libctx;
-        dest_ctx->pc_digest_info = src_ctx->pc_digest_info;
-        Uint64 size              = alcp_digest_context_size();
+        size                     = alcp_digest_context_size();
         dest_ctx->handle.context = OPENSSL_zalloc(size);
     } else {
         return NULL;
@@ -86,6 +82,7 @@ alcp_prov_digest_dupctx(void* vctx)
         src_ctx->pc_digest_info, &src_ctx->handle, &dest_ctx->handle);
     if (err != ALC_ERROR_NONE) {
         printf("Provider: copy failed in dupctx\n");
+        OPENSSL_clear_free(dest_ctx->handle.context, size);
         OPENSSL_clear_free(dest_ctx, sizeof(*dest_ctx));
         return NULL;
     }

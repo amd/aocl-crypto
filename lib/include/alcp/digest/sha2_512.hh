@@ -124,7 +124,7 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
      *
      * \return nothing
      */
-    ALCP_API_EXPORT void init(void) override;
+    void init(void) override;
 
     /**
      * @brief   Updates hash for given buffer
@@ -174,10 +174,10 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
      *                  finalize() is called, only operation that can be
      *                  performed is copyHash()
      *
-     * @param    size    Either valid size or 0, if pMsgBuf is nullptr, size
+     * @param    size    Either valid size or 0, if pSrc is nullptr, size
      *                   is assumed to be zero
      */
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    alc_error_t finalize(const Uint8* pSrc, Uint64 size) override;
 
     /**
      * @brief  Copies the has from context to supplied buffer

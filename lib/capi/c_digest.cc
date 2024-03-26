@@ -189,6 +189,8 @@ alcp_digest_context_copy(const alc_digest_info_t   dInfo,
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pSrcHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDestHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pSrcHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pDestHandle->context, err);
 
     auto src_ctx  = static_cast<digest::Context*>(pSrcHandle->context);
     auto dest_ctx = static_cast<digest::Context*>(pDestHandle->context);

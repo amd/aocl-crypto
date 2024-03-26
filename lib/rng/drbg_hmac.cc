@@ -254,7 +254,6 @@ class HmacDrbg::Impl
     void internalReseed(const std::vector<Uint8>& cEntropyInput,
                         const std::vector<Uint8>& cAdditionalInput);
 
-    // FIXME: Change alcp::digest::IDigest to alcp::digest::IDigest
     /**
      * @brief Set the IDigest object
      *

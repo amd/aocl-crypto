@@ -42,14 +42,12 @@
 
 #include "debug.h"
 
+// ToDo: Check if _alc_prov_digest_ctx can be removed
+// if we remove the pc_digest_info
 struct _alc_prov_digest_ctx
 {
-    /* Must be first */
-    alc_prov_ctx_t*     pc_prov_ctx;
     alc_digest_handle_t handle;
     alc_digest_info_t   pc_digest_info;
-
-    OSSL_LIB_CTX* pc_libctx;
 };
 typedef struct _alc_prov_digest_ctx alc_prov_digest_ctx_t,
     *alc_prov_digest_ctx_p;

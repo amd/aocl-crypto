@@ -370,15 +370,15 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
  * encoding'
  */
 alc_error_t
-Sha512::finalize(const Uint8* pBuf, Uint64 size)
+Sha512::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished)
         return err;
 
-    if (pBuf && size)
-        err = update(pBuf, size);
+    if (pSrc && size)
+        err = update(pSrc, size);
 
     if (err) {
         return err;
