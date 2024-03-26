@@ -27,6 +27,8 @@
  */
 
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/chacha20_zen4.hh"
+
 #include <cstring>
 #include <immintrin.h>
 
