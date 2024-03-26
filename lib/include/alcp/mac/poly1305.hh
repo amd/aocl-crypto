@@ -34,6 +34,8 @@
 #include "alcp/mac/poly1305_state.hh"
 #include "alcp/utils/cpuid.hh"
 
+#define POLY1305_RADIX_26 false
+
 namespace alcp::mac::poly1305 {
 class ALCP_API_EXPORT IPoly1305
 {
@@ -81,7 +83,11 @@ class ALCP_API_EXPORT Poly1305 : public Mac
 {
   private:
     std::unique_ptr<IPoly1305> poly1305_impl;
-    Poly1305State              state;
+#if POLY1305_RADIX_26
+    Poly1305State26 state;
+#else
+    Poly1305State44 state;
+#endif
 
   public:
     /**

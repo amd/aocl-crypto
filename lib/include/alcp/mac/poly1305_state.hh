@@ -32,10 +32,10 @@
 #include <algorithm>
 
 namespace alcp::mac::poly1305 {
-struct Poly1305State
+struct Poly1305State26
 {
   private:
-    static const Uint32 cHornorFactor    = 4;
+    static const Uint32 cHornorFactor    = 5;
     static const Uint32 m_cKeySize_bytes = 32;
     static const Uint32 m_cMsgSize_bytes = 16;
     static const Uint32 cLimbsAligned    = 8; // To create aligned memory
@@ -45,7 +45,6 @@ struct Poly1305State
     alignas(64) Uint64 r[cLimbsAligned][cHornorFactor];
     alignas(64) Uint64 s[cLimbsAligned][cHornorFactor];
     alignas(64) Uint64 a[cLimbsAligned];
-    alignas(64) Uint64 mul_rej[cLimbsAligned][cLimbs];
     alignas(64) Uint64 key[m_cKeySize_bytes / sizeof(Uint64)] = {};
     alignas(64) Uint8 msg_buffer[m_cMsgSize_bytes];
     Uint64 msg_buffer_len;
@@ -59,24 +58,71 @@ struct Poly1305State
         finalized      = false;
     }
 
-    Poly1305State()
+    Poly1305State26()
     {
         std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
         std::fill(&r[0][0], &r[0][0] + (cLimbsAligned * cHornorFactor), 0);
         std::fill(&s[0][0], &s[0][0] + (cLimbsAligned * cHornorFactor), 0);
         std::fill(a, a + cLimbsAligned, 0);
-        std::fill(&mul_rej[0][0], &mul_rej[0][0] + (cLimbsAligned * cLimbs), 0);
         std::fill(msg_buffer, msg_buffer + m_cMsgSize_bytes, 0);
         msg_buffer_len = 0;
         finalized      = false;
     }
 
-    ~Poly1305State()
+    ~Poly1305State26()
     {
         std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
         std::fill(&r[0][0], &r[0][0] + (cLimbsAligned * cHornorFactor), 0);
         std::fill(&s[0][0], &s[0][0] + (cLimbsAligned * cHornorFactor), 0);
-        std::fill(&mul_rej[0][0], &mul_rej[0][0] + (cLimbsAligned * cLimbs), 0);
+        msg_buffer_len = 0;
+        finalized      = false;
+        reset();
+    }
+}; // namespace alcp::mac::poly1305
+
+struct Poly1305State44
+{
+  private:
+    static const Uint32 cHornorFactor    = 5;
+    static const Uint32 m_cKeySize_bytes = 32;
+    static const Uint32 m_cMsgSize_bytes = 16;
+    static const Uint32 cLimbsAligned    = 8; // To create aligned memory
+    static const Uint32 cLimbs           = 5;
+
+  public:
+    alignas(64) Uint64 r[3], r2[3], r3[3], r4[3], r5[3], r6[3], r7[3], r8[3];
+    alignas(64) Uint64 s[3];
+    alignas(64) Uint64 acc0[8], acc1[8], acc2[8];
+    alignas(64) Uint64 key[m_cKeySize_bytes / sizeof(Uint64)] = {};
+    alignas(64) Uint8 msg_buffer[m_cMsgSize_bytes];
+    Uint64 msg_buffer_len;
+    bool   finalized;
+    bool   fold = false; // Everything starts as folded
+
+    void reset()
+    {
+        std::fill(acc0, acc0 + 8, 0);
+        std::fill(acc1, acc1 + 8, 0);
+        std::fill(acc2, acc2 + 8, 0);
+        std::fill(msg_buffer, msg_buffer + m_cMsgSize_bytes, 0);
+        msg_buffer_len = 0;
+        finalized      = false;
+    }
+
+    Poly1305State44()
+    {
+        std::fill(acc0, acc0 + 8, 0);
+        std::fill(acc1, acc1 + 8, 0);
+        std::fill(acc2, acc2 + 8, 0);
+        std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
+        std::fill(msg_buffer, msg_buffer + m_cMsgSize_bytes, 0);
+        msg_buffer_len = 0;
+        finalized      = false;
+    }
+
+    ~Poly1305State44()
+    {
+        std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
         msg_buffer_len = 0;
         finalized      = false;
         reset();

@@ -29,6 +29,8 @@
 #pragma once
 
 #include "alcp/base.hh"
+#include "alcp/mac/poly1305_state.hh"
+
 namespace alcp::mac::poly1305::zen4 {
 
 Status
@@ -64,5 +66,19 @@ finish(Uint64      key[],
 
 Status
 copy(Uint8 digest[], Uint64 len, Uint64 accumulator[], bool m_finalized);
+
+void
+poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32]);
+
+void
+poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len);
+
+void
+poly1305_finalize_radix44(Poly1305State44& state,
+                          const Uint8*     pMsg,
+                          Uint64           len);
+
+void
+poly1305_copy_radix44(Poly1305State44& state, Uint8* digest, Uint64 digest_len);
 
 } // namespace alcp::mac::poly1305::zen4
