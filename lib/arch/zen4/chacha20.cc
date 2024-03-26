@@ -478,6 +478,22 @@ ProcessChacha20ParallelBlocks16(Uint64&       blocks,
     }
 }
 
+#define XOR_STORE_RESIDUE(i1, i2)                                              \
+    XorMessageKeyStreamStore<i1>(*s_512[i2], p_in_128, p_out_128);             \
+    totalbytes -= 16;                                                          \
+    pInputText += 16;                                                          \
+    pOutputText += 16;                                                         \
+    if (totalbytes < 16) {                                                     \
+        XorMessageKeyStreamStorePartial<i2 == 3 ? (i1 + 1) : i1>(              \
+            *s_512[i2 == 3 ? 0 : i2 + 1],                                      \
+            p_in_128,                                                          \
+            p_out_128,                                                         \
+            totalbytes,                                                        \
+            pInputText,                                                        \
+            pOutputText);                                                      \
+        return;                                                                \
+    }
+
 inline void
 ProcessChacha20ParallelBlocks4(const Uint8   key[],
                                Uint8         iv[],
@@ -590,212 +606,22 @@ ProcessChacha20ParallelBlocks4(const Uint8   key[],
                                                pInputText,
                                                pOutputText);
         } else {
-            XorMessageKeyStreamStore<0>(*s_512[0], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<0>(*s_512[1],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<0>(*s_512[1], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
+            XOR_STORE_RESIDUE(0, 0);
+            XOR_STORE_RESIDUE(0, 1);
+            XOR_STORE_RESIDUE(0, 2);
+            XOR_STORE_RESIDUE(0, 3);
+            XOR_STORE_RESIDUE(1, 0);
+            XOR_STORE_RESIDUE(1, 1);
+            XOR_STORE_RESIDUE(1, 2);
+            XOR_STORE_RESIDUE(1, 3);
+            XOR_STORE_RESIDUE(2, 0);
+            XOR_STORE_RESIDUE(2, 1);
+            XOR_STORE_RESIDUE(2, 2);
+            XOR_STORE_RESIDUE(2, 3);
+            XOR_STORE_RESIDUE(3, 0);
+            XOR_STORE_RESIDUE(3, 1);
+            XOR_STORE_RESIDUE(3, 2);
 
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<0>(*s_512[2],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<0>(*s_512[2], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<0>(*s_512[3],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<0>(*s_512[3], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<1>(*s_512[0],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<1>(*s_512[0], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<1>(*s_512[1],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<1>(*s_512[1], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<1>(*s_512[2],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<1>(*s_512[2], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<1>(*s_512[3],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<1>(*s_512[3], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<2>(*s_512[0],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<2>(*s_512[0], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<2>(*s_512[1],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<2>(*s_512[1], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<2>(*s_512[2],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<2>(*s_512[2], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<2>(*s_512[3],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<2>(*s_512[3], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<3>(*s_512[0],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<3>(*s_512[0], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<3>(*s_512[1],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<3>(*s_512[1], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<3>(*s_512[2],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
-            XorMessageKeyStreamStore<3>(*s_512[2], p_in_128, p_out_128);
-            totalbytes -= 16;
-            pInputText += 16;
-            pOutputText += 16;
-
-            if (totalbytes < 16) {
-                XorMessageKeyStreamStorePartial<3>(*s_512[3],
-                                                   p_in_128,
-                                                   p_out_128,
-                                                   totalbytes,
-                                                   pInputText,
-                                                   pOutputText);
-                return;
-            }
             XorMessageKeyStreamStore<3>(*s_512[3], p_in_128, p_out_128);
             totalbytes -= 16;
             pInputText += 16;
