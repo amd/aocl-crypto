@@ -31,7 +31,7 @@
 #include <functional>
 #include <string>
 
-#include "alcp/digest/sha2_512.hh"
+#include "alcp/digest/sha512.hh"
 
 #include "alcp/digest/sha_avx2.hh"
 #include "alcp/digest/sha_avx256.hh"
@@ -433,13 +433,6 @@ Sha512::finalize(const Uint8* pSrc, Uint64 size)
     m_finished = true;
 
     return err;
-}
-
-void
-Sha512::finish()
-{
-    // delete pImpl();
-    // pImpl() = nullptr;
 }
 
 } // namespace alcp::digest

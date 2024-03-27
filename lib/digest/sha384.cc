@@ -26,7 +26,7 @@
  *
  */
 
-#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/sha384.hh"
 #include "alcp/utils/copy.hh"
 
 namespace alcp::digest {
@@ -72,12 +72,6 @@ alc_error_t
 Sha384::update(const Uint8* pBuf, Uint64 size)
 {
     return m_psha512->update(pBuf, size);
-}
-
-void
-Sha384::finish()
-{
-    return m_psha512->finish();
 }
 
 // Todo : Remove reset when init is fully functional

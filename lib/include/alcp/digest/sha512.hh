@@ -140,16 +140,6 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
-     * @brief   Cleans up any resource that was allocated
-     *
-     * @note   `finish()` to be called as a means to cleanup, no operation
-     *           permitted after this call. The context will be unusable.
-     *
-     * @return nothing
-     */
-    void finish() override;
-
-    /**
      * @brief    Resets the internal state.
      *
      * @note   `reset()` to be called as a means to reset the internal
@@ -161,13 +151,6 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
 
     /**
      * @brief    Call for the final chunk
-     *
-     * @note
-     *           - \ref finish() to be called as a means to cleanup, necessary
-     *           actions.
-     *           - Application can also call finalize() with
-     *           empty/null args application must call copyHash before
-     *           calling finish()
      *
      * @param    buf     Either valid pointer to last chunk or nullptr,
      *                   if nullptr then has is not modified, once

@@ -31,8 +31,8 @@
 
 #include "alcp/base.hh"
 #include "alcp/digest/sha2.hh"
-#include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha384.hh"
 #include "alcp/error.h"
 #include "alcp/rsa.hh"
 #include "alcp/types.hh"

@@ -376,10 +376,6 @@ Sha3::copyHash(Uint8* pHash, Uint64 size) const
 }
 
 void
-Sha3::finish()
-{}
-
-void
 Sha3::reset()
 {
     m_idx = 0;

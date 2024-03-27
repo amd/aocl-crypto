@@ -215,7 +215,6 @@ TEST_P(Sha224Kat, KnownAnswerTest2)
     sha224->finalize(nullptr, 0);
     std::vector<Uint8> expected_mac(sha224->getHashSize());
     sha224->copyHash(&expected_mac[0], expected_mac.size());
-    sha224->finish();
 
     EXPECT_EQ(expected_mac, m_digest);
 }

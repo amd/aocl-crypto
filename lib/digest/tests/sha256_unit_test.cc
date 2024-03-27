@@ -131,27 +131,6 @@ TEST(Sha256Test, over_size_hash_copy_test)
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, DigestSize + 1));
 }
 
-TEST(Sha256Test, invalid_iv_test)
-{
-    Sha256 sha256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG,
-              sha256.setIv(nullptr, IvArraySize * IvElementSize));
-}
-
-TEST(Sha256Test, zero_size_iv_test)
-{
-    Sha256 sha256;
-    Uint32 iv[IvArraySize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.setIv(iv, 0));
-}
-
-TEST(Sha256Test, over_size_iv_test)
-{
-    Sha256 sha256;
-    Uint32 iv[IvArraySize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.setIv(iv, sizeof(iv)));
-}
-
 TEST(Sha256Test, call_finalize_twice_test)
 {
     Sha256 sha256;

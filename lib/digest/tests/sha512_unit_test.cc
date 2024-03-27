@@ -26,7 +26,7 @@
  *
  */
 
-#include "alcp/digest/sha2_512.hh"
+#include "alcp/digest/sha512.hh"
 #include "gtest/gtest.h"
 #include <unordered_map>
 

@@ -29,7 +29,7 @@
 #pragma once
 
 #include "alcp/digest.hh"
-#include "sha2_512.hh"
+#include "sha512.hh"
 
 #include <memory>
 
@@ -44,7 +44,6 @@ class ALCP_API_EXPORT Sha384 final : public IDigest
     virtual ~Sha384();
     void        init(void) override;
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
-    void        finish() override;
     void        reset() override;
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;

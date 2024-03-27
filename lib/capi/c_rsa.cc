@@ -32,8 +32,8 @@
 #include "alcp/capi/rsa/ctx.hh"
 
 #include "alcp/digest/sha2.hh"
-#include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha384.hh"
 #include "alcp/rng/drbg_hmac.hh"
 #include "alcp/rsa.h"
 #include "alcp/rsa/rsaerror.hh"

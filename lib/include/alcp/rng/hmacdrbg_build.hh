@@ -30,9 +30,9 @@
 #include "alcp/base.hh"
 #include "alcp/capi/mac/builder.hh"
 #include "alcp/digest/sha2.hh"
-#include "alcp/digest/sha2_384.hh"
-#include "alcp/digest/sha2_512.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha384.hh"
+#include "alcp/digest/sha512.hh"
 #include "drbg_hmac.hh"
 namespace alcp::drbg {
 class HmacDrbgBuilder

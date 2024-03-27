@@ -26,7 +26,7 @@
  *
  */
 
-#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/sha384.hh"
 #include "gtest/gtest.h"
 
 namespace {
