@@ -28,6 +28,7 @@
  */
 
 #include <array>
+#include <cassert>
 #include <immintrin.h>
 #include <tuple>
 
@@ -2191,6 +2192,7 @@ loadx1_message_radix44_avx512(const Uint8* p_msg,
     // Truncate to 42 bits
     hi_shifted_40 =
         _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(0x3ffffffffff));
+
     hi_shifted_40 =
         _mm512_or_epi64(hi_shifted_40, _mm512_set1_epi64(1UL << 40));
 
@@ -2200,44 +2202,7 @@ loadx1_message_radix44_avx512(const Uint8* p_msg,
     return 128;
 }
 
-int
-loadx1_message_radix44_avx512_no_pad(const Uint8* p_msg,
-                                     __m512i&     m0,
-                                     __m512i&     m1,
-                                     __m512i&     m2)
-{
-    // Load 128 bits from p_msg into m0 using _mm512_maskz_loadu_epi64
-    m0 = _mm512_maskz_loadu_epi64(0x03, p_msg);
-    // Unpack 64 bit integers from m0 and m1 and save it to m0 and m1
-    m1 = _mm512_unpackhi_epi64(m0, m0);
-    m0 = _mm512_unpacklo_epi64(m0, m0);
-    // Radix first value calculation
-    // Truncate to 44 bits
-    __m512i lo_masked = _mm512_and_epi64(m0, _mm512_set1_epi64(0xfffffffffff));
-    // Radix second value calculation
-    // Take out 44 bits which has been consumed by 1st part of radix
-    __m512i lo_shifted = _mm512_srlv_epi64(m0, _mm512_set1_epi64(44));
-    // Make space for 20 bits from lo, which combined with 24 bits from hi will
-    // make 44 bits
-    __m512i hi_shifted = _mm512_sllv_epi64(m1, _mm512_set1_epi64(20));
-    // Or lo_shifted and hi_shifted and save it to lo_or
-    __m512i lo_or = _mm512_or_epi64(lo_shifted, hi_shifted);
-    // Truncate to 44 bits
-    lo_or = _mm512_and_epi64(lo_or, _mm512_set1_epi64(0xfffffffffff));
-    // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
-    // of radix
-    __m512i hi_shifted_40 = _mm512_srlv_epi64(m1, _mm512_set1_epi64(24));
-    // Truncate to 42 bits
-    hi_shifted_40 =
-        _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(0x3ffffffffff));
-
-    m0 = lo_masked;
-    m1 = lo_or;
-    m2 = hi_shifted_40;
-    return 128;
-}
-
-int
+inline int
 loadx8_message_radix44_avx512(const Uint8* p_msg,
                               __m512i&     m0,
                               __m512i&     m1,
@@ -2287,7 +2252,7 @@ broadcast_r(const Uint64 r[3], __m512i& reg0, __m512i& reg1, __m512i& reg2)
     reg2 = _mm512_set1_epi64(r[2]);
 }
 
-void
+inline void
 poly1305_calculate_modulo_trick_value(const __m512i reg1,
                                       const __m512i reg2,
                                       __m512i&      sreg1,
@@ -2300,7 +2265,7 @@ poly1305_calculate_modulo_trick_value(const __m512i reg1,
     sreg2 = _mm512_mullo_epi64(reg2, _mm512_set1_epi64(5 * 4));
 }
 
-void
+inline void
 multiplyx8_radix44_avx512(__m512i& a0,
                           __m512i& a1,
                           __m512i& a2,
@@ -2351,7 +2316,15 @@ multiplyx8_radix44_avx512(__m512i& a0,
 
     d1l = _mm512_add_epi64(d0h, d1l);
     d2l = _mm512_add_epi64(d1h, d2l);
+
+// Optimization value *=5 can be writen as value = (value * 4 + value)
+#if 1
+    extra = _mm512_sllv_epi64(d2h, _mm512_set1_epi64(2));
+    d2h   = _mm512_add_epi64(extra, d2h);
+    d0l   = _mm512_add_epi64(d2h, d0l);
+#else
     d0l = _mm512_add_epi64(_mm512_mullo_epi64(d2h, _mm512_set1_epi64(5)), d0l);
+#endif
 
     // Propagrate carry
     extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
@@ -2362,12 +2335,13 @@ multiplyx8_radix44_avx512(__m512i& a0,
     d2l   = _mm512_add_epi64(d2l, extra);
     extra = _mm512_srlv_epi64(d2l, _mm512_set1_epi64(42));
     d2l   = _mm512_and_epi64(d2l, _mm512_set1_epi64(0x3ffffffffff));
-    d0l =
-        _mm512_add_epi64(d0l, _mm512_mullo_epi64(extra, _mm512_set1_epi64(5)));
+    d0h   = _mm512_sllv_epi64(extra, _mm512_set1_epi64(2));
+    extra = _mm512_add_epi64(extra, d0h);
+    d0l   = _mm512_add_epi64(d0l, extra);
 
-    extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
-    d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(0xfffffffffff));
-    d1l   = _mm512_add_epi64(d1l, extra);
+    // extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
+    // d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(0xfffffffffff));
+    // d1l   = _mm512_add_epi64(d1l, extra);
 
     // Store d0l, d1l, d2l to a0, a1, a2
     a0 = d0l;
@@ -2401,7 +2375,7 @@ multiply_radix44_avx512_standalone(const Uint64 a[3],
 }
 
 // Function to broadcast r value to reg0, reg1, reg2 which are 512 bit registers
-void
+inline void
 broadcast_r(Uint64 r[3], __m512i& reg0, __m512i& reg1, __m512i& reg2)
 {
     // Broadcast r[0] to reg0
@@ -2579,8 +2553,10 @@ poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32])
     multiply_radix44_avx512_standalone(state.r7, state.r, state.r8);
 }
 
-void
-poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
+inline void
+poly1305_blocksx8_radix44(Poly1305State44& state,
+                          const Uint8*&    pMsg,
+                          Uint64&          len)
 {
     __m512i reg_msg0, reg_msg1, reg_msg2;
     __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
@@ -2590,8 +2566,9 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     __m512i reg_r0, reg_r1, reg_r2;
     __m512i reg_s1, reg_s2;
 
-    if (len >= 256 && state.fold == false) {
-        // std::cout << "IF" << std::endl;
+    // Length should be >256
+    assert(len > 256);
+    if (state.fold == false) {
         state.fold = true;
         broadcast_r(state.r8, reg_r0, reg_r1, reg_r2);
         poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
@@ -2601,13 +2578,10 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
         reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
         reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
         reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
-
         len -= 128;
         pMsg += 128;
     }
     while ((len >= 128) && state.fold) {
-
-        // std::cout << "While" << std::endl;
         loadx8_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
 
         multiplyx8_radix44_avx512(reg_acc0,
@@ -2626,43 +2600,128 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
         len -= 128;
         pMsg += 128;
     }
-    if ((len != 0)) {
-        if (state.fold) {
-            poly1305_block_finalx8_avx512(reg_acc0,
-                                          reg_acc1,
-                                          reg_acc2,
-                                          state.r,
-                                          state.r2,
-                                          state.r3,
-                                          state.r4,
-                                          state.r5,
-                                          state.r6,
-                                          state.r7,
-                                          state.r8);
-            state.fold = false;
-        }
-        broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
-        poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
 
-        while (len >= 16) {
-            loadx1_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
-            // Add m0, m1, m2 to a0, a1, a2
-            reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
-            reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
-            reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
+    _mm512_store_epi64(state.acc0, reg_acc0);
+    _mm512_store_epi64(state.acc1, reg_acc1);
+    _mm512_store_epi64(state.acc2, reg_acc2);
+}
 
-            pMsg += 16;
-            len -= 16;
+inline void
+poly1305_blocksx1_radix44(Poly1305State44& state,
+                          const Uint8*&    pMsg,
+                          Uint64&          len)
+{
+    __m512i reg_msg0, reg_msg1, reg_msg2;
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
 
-            multiplyx8_radix44_avx512(reg_acc0,
+    __m512i reg_r0, reg_r1, reg_r2;
+    __m512i reg_s1, reg_s2;
+    if (state.fold) {
+        poly1305_block_finalx8_avx512(reg_acc0,
                                       reg_acc1,
                                       reg_acc2,
-                                      reg_r0,
-                                      reg_r1,
-                                      reg_r2,
-                                      reg_s1,
-                                      reg_s2);
-        }
+                                      state.r,
+                                      state.r2,
+                                      state.r3,
+                                      state.r4,
+                                      state.r5,
+                                      state.r6,
+                                      state.r7,
+                                      state.r8);
+        state.fold = false;
+    }
+    broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
+    poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
+
+    while (len >= 16) {
+        loadx1_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+        // Add m0, m1, m2 to a0, a1, a2
+        reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
+        reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
+        reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
+
+        pMsg += 16;
+        len -= 16;
+
+        multiplyx8_radix44_avx512(reg_acc0,
+                                  reg_acc1,
+                                  reg_acc2,
+                                  reg_r0,
+                                  reg_r1,
+                                  reg_r2,
+                                  reg_s1,
+                                  reg_s2);
+    }
+    _mm512_store_epi64(state.acc0, reg_acc0);
+    _mm512_store_epi64(state.acc1, reg_acc1);
+    _mm512_store_epi64(state.acc2, reg_acc2);
+}
+
+void
+poly1305_partial_blocks(Poly1305State44 state, Uint8*& pMsg, Uint64& len)
+{
+    __m512i reg_msg0, reg_msg1, reg_msg2;
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
+
+    __m512i reg_r0, reg_r1, reg_r2;
+    __m512i reg_s1, reg_s2;
+
+    assert(len < 16);
+    if (state.fold == true) {
+        poly1305_block_finalx8_avx512(reg_acc0,
+                                      reg_acc1,
+                                      reg_acc2,
+                                      state.r,
+                                      state.r2,
+                                      state.r3,
+                                      state.r4,
+                                      state.r5,
+                                      state.r6,
+                                      state.r7,
+                                      state.r8);
+        state.fold = false;
+    }
+
+    // Padding
+    pMsg[len] = 0x01;
+    for (int i = len + 1; i < 16; i++) {
+        pMsg[i] = 0x00;
+    }
+
+    loadx1_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+
+    // Setup R and S
+    broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
+    poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
+
+    // Add m0, m1, m2 to a0, a1, a2
+    reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
+    reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
+    reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
+
+    *pMsg += len;
+    len -= len;
+
+    multiplyx8_radix44_avx512(
+        reg_acc0, reg_acc1, reg_acc2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
+
+    _mm512_store_epi64(state.acc0, reg_acc0);
+    _mm512_store_epi64(state.acc1, reg_acc1);
+    _mm512_store_epi64(state.acc2, reg_acc2);
+}
+
+void
+poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
+{
+    if (len > 256) {
+        poly1305_blocksx8_radix44(state, pMsg, len);
+    }
+    if (len >= 16) {
+        poly1305_blocksx1_radix44(state, pMsg, len);
     }
     if (len) {
         std::copy(pMsg, pMsg + len, state.msg_buffer);
@@ -2681,15 +2740,14 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     //     std::cout << std::hex << reg_acc2[i] << " ";
     // }
     // std::cout << std::endl;
-
-    _mm512_store_epi64(state.acc0, reg_acc0);
-    _mm512_store_epi64(state.acc1, reg_acc1);
-    _mm512_store_epi64(state.acc2, reg_acc2);
 }
 
 void
 poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
 {
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
 #if 0
     // Implement Partial Blocks
     if (state.msg_buffer_len != 0) {
@@ -2698,21 +2756,24 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
                       pMsg + (16 - state.msg_buffer_len),
                       state.msg_buffer + state.msg_buffer_len);
             poly1305_update_radix44(state, state.msg_buffer, 16);
-
             state.msg_buffer_len = 0;
             len                  = len + (16 - state.msg_buffer_len);
         } else {
             std::copy(
                 pMsg, pMsg + len, state.msg_buffer + state.msg_buffer_len);
-            poly1305_update_radix44(state, state.msg_buffer, 16);
+            state.msg_buffer_len += (len + state.msg_buffer_len);
+            poly1305_partial_blocks(state,
+                                    reg_acc0,
+                                    reg_acc1,
+                                    reg_acc2,
+                                    &(state.msg_buffer),
+                                    &(state.msg_buffer_len));
         }
     }
 #endif
-    poly1305_update_radix44(state, pMsg, len);
-    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
-            reg_acc1 = _mm512_load_epi64(state.acc1),
-            reg_acc2 = _mm512_load_epi64(state.acc2);
-
+    if (len) {
+        poly1305_update_radix44(state, pMsg, len);
+    }
     if (state.fold) {
         poly1305_block_finalx8_avx512(reg_acc0,
                                       reg_acc1,
