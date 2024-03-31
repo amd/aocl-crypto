@@ -2202,6 +2202,43 @@ loadx1_message_radix44_avx512(const Uint8* p_msg,
     return 128;
 }
 
+int
+loadx1_message_radix44_nopad_avx512(const Uint8* p_msg,
+                                    __m512i&     m0,
+                                    __m512i&     m1,
+                                    __m512i&     m2)
+{
+    // Load 128 bits from p_msg into m0 using _mm512_maskz_loadu_epi64
+    m0 = _mm512_maskz_loadu_epi64(0x03, p_msg);
+    // Unpack 64 bit integers from m0 and m1 and save it to m0 and m1
+    m1 = _mm512_unpackhi_epi64(m0, m0);
+    m0 = _mm512_unpacklo_epi64(m0, m0);
+    // Radix first value calculation
+    // Truncate to 44 bits
+    __m512i lo_masked = _mm512_and_epi64(m0, _mm512_set1_epi64(0xfffffffffff));
+    // Radix second value calculation
+    // Take out 44 bits which has been consumed by 1st part of radix
+    __m512i lo_shifted = _mm512_srlv_epi64(m0, _mm512_set1_epi64(44));
+    // Make space for 20 bits from lo, which combined with 24 bits from hi will
+    // make 44 bits
+    __m512i hi_shifted = _mm512_sllv_epi64(m1, _mm512_set1_epi64(20));
+    // Or lo_shifted and hi_shifted and save it to lo_or
+    __m512i lo_or = _mm512_or_epi64(lo_shifted, hi_shifted);
+    // Truncate to 44 bits
+    lo_or = _mm512_and_epi64(lo_or, _mm512_set1_epi64(0xfffffffffff));
+    // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
+    // of radix
+    __m512i hi_shifted_40 = _mm512_srlv_epi64(m1, _mm512_set1_epi64(24));
+    // Truncate to 42 bits
+    hi_shifted_40 =
+        _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(0x3ffffffffff));
+
+    m0 = lo_masked;
+    m1 = lo_or;
+    m2 = hi_shifted_40;
+    return 128;
+}
+
 inline int
 loadx8_message_radix44_avx512(const Uint8* p_msg,
                               __m512i&     m0,
@@ -2660,7 +2697,7 @@ poly1305_blocksx1_radix44(Poly1305State44& state,
 }
 
 void
-poly1305_partial_blocks(Poly1305State44 state, Uint8*& pMsg, Uint64& len)
+poly1305_partial_blocks(Poly1305State44& state)
 {
     __m512i reg_msg0, reg_msg1, reg_msg2;
     __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
@@ -2670,7 +2707,9 @@ poly1305_partial_blocks(Poly1305State44 state, Uint8*& pMsg, Uint64& len)
     __m512i reg_r0, reg_r1, reg_r2;
     __m512i reg_s1, reg_s2;
 
-    assert(len < 16);
+    Uint8* pMsg = state.msg_buffer;
+
+    assert(state.msg_buffer_len < 16);
     if (state.fold == true) {
         poly1305_block_finalx8_avx512(reg_acc0,
                                       reg_acc1,
@@ -2687,12 +2726,12 @@ poly1305_partial_blocks(Poly1305State44 state, Uint8*& pMsg, Uint64& len)
     }
 
     // Padding
-    pMsg[len] = 0x01;
-    for (int i = len + 1; i < 16; i++) {
+    pMsg[state.msg_buffer_len] = 0x01;
+    for (int i = state.msg_buffer_len + 1; i < 16; i++) {
         pMsg[i] = 0x00;
     }
 
-    loadx1_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+    loadx1_message_radix44_nopad_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
 
     // Setup R and S
     broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
@@ -2703,8 +2742,7 @@ poly1305_partial_blocks(Poly1305State44 state, Uint8*& pMsg, Uint64& len)
     reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
     reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
 
-    *pMsg += len;
-    len -= len;
+    state.msg_buffer_len = 0; // Reset message buffer
 
     multiplyx8_radix44_avx512(
         reg_acc0, reg_acc1, reg_acc2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
@@ -2714,9 +2752,30 @@ poly1305_partial_blocks(Poly1305State44 state, Uint8*& pMsg, Uint64& len)
     _mm512_store_epi64(state.acc2, reg_acc2);
 }
 
-void
+bool
 poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
 {
+    if (state.finalized == true) {
+        return false;
+    }
+    if (state.msg_buffer_len != 0) {
+        Uint64 copyLen = len > (16 - state.msg_buffer_len)
+                             ? (16 - state.msg_buffer_len)
+                             : len;
+        // Handle overhanging data
+        std::copy(
+            pMsg, pMsg + copyLen, state.msg_buffer + state.msg_buffer_len);
+        len -= copyLen;
+        state.msg_buffer_len += copyLen;
+
+        const Uint8* temp_ptr = state.msg_buffer;
+        Uint64       temp_len = 16;
+
+        if (state.msg_buffer_len == 16) {
+            poly1305_blocksx1_radix44(state, temp_ptr, temp_len);
+            state.msg_buffer_len = 0;
+        }
+    }
     if (len > 256) {
         poly1305_blocksx8_radix44(state, pMsg, len);
     }
@@ -2740,15 +2799,16 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     //     std::cout << std::hex << reg_acc2[i] << " ";
     // }
     // std::cout << std::endl;
+    return true;
 }
 
-void
+bool
 poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
 {
-    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
-            reg_acc1 = _mm512_load_epi64(state.acc1),
-            reg_acc2 = _mm512_load_epi64(state.acc2);
-#if 0
+    if (state.finalized == true) {
+        return false;
+    }
+#if 1
     // Implement Partial Blocks
     if (state.msg_buffer_len != 0) {
         if (((len + state.msg_buffer_len) >= 16)) {
@@ -2757,23 +2817,42 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
                       state.msg_buffer + state.msg_buffer_len);
             poly1305_update_radix44(state, state.msg_buffer, 16);
             state.msg_buffer_len = 0;
-            len                  = len + (16 - state.msg_buffer_len);
+            len                  = len - (16 - state.msg_buffer_len);
         } else {
             std::copy(
                 pMsg, pMsg + len, state.msg_buffer + state.msg_buffer_len);
-            state.msg_buffer_len += (len + state.msg_buffer_len);
-            poly1305_partial_blocks(state,
-                                    reg_acc0,
-                                    reg_acc1,
-                                    reg_acc2,
-                                    &(state.msg_buffer),
-                                    &(state.msg_buffer_len));
+            state.msg_buffer_len = (len + state.msg_buffer_len);
+            len                  = 0;
+            poly1305_partial_blocks(state);
         }
     }
 #endif
     if (len) {
         poly1305_update_radix44(state, pMsg, len);
+        len = 0;
     }
+    // FIXME: Fix this code duplication
+#if 1
+    // Implement Partial Blocks
+    if (state.msg_buffer_len != 0) {
+        if (((len + state.msg_buffer_len) >= 16)) {
+            std::copy(pMsg,
+                      pMsg + (16 - state.msg_buffer_len),
+                      state.msg_buffer + state.msg_buffer_len);
+            poly1305_update_radix44(state, state.msg_buffer, 16);
+            state.msg_buffer_len = 0;
+            len                  = len - (16 - state.msg_buffer_len);
+        } else {
+            std::copy(
+                pMsg, pMsg + len, state.msg_buffer + state.msg_buffer_len);
+            state.msg_buffer_len = (len + state.msg_buffer_len);
+            poly1305_partial_blocks(state);
+        }
+    }
+#endif
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
     if (state.fold) {
         poly1305_block_finalx8_avx512(reg_acc0,
                                       reg_acc1,
@@ -2823,11 +2902,17 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     _mm512_store_epi64(state.acc0, reg_acc0);
     _mm512_store_epi64(state.acc1, reg_acc1);
     _mm512_store_epi64(state.acc2, reg_acc2);
+
+    state.finalized = true;
+    return true;
 }
 
-void
+bool
 poly1305_copy_radix44(Poly1305State44& state, Uint8* digest, Uint64 digest_len)
 {
+    if (state.finalized == false) {
+        return false;
+    }
     Uint64 hash[3];
     Uint64 digest_temp[2];
 
@@ -2841,6 +2926,8 @@ poly1305_copy_radix44(Poly1305State44& state, Uint8* digest, Uint64 digest_len)
     std::copy(reinterpret_cast<Uint8*>(digest_temp),
               reinterpret_cast<Uint8*>(digest_temp) + 16,
               digest);
+
+    return true;
 }
 
 } // namespace alcp::mac::poly1305::zen4
