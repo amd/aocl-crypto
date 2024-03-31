@@ -35,6 +35,7 @@
 #include <openssl/bn.h>
 
 #include "alcp/base.hh"
+#include "alcp/mac/macerror.hh"
 #include "alcp/mac/poly1305_zen4.hh"
 #include "alcp/utils/cpuid.hh"
 #include "mac/poly1305-ref.hh"
@@ -94,7 +95,7 @@ Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
             return poly1305_impl->init(key, len);
         }
     }
-    return status::InternalError("Dispatch Failure");
+    return base::status::InternalError("Dispatch Failure");
 }
 
 template<utils::CpuArchFeature feature>
@@ -116,8 +117,11 @@ Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
                             &state.s[0][0],
                             state.finalized);
 #else
-        zen4::poly1305_update_radix44(state, pMsg, msgLen);
-        return StatusOk();
+        if (zen4::poly1305_update_radix44(state, pMsg, msgLen) == true) {
+            return StatusOk();
+        } else {
+            return status::UpdateAfterFinalzeError("");
+        }
 #endif
     } else {
         // Manual dispatch in case we don't know where to dispatch to.
@@ -135,14 +139,17 @@ Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
                                 &state.s[0][0],
                                 state.finalized);
 #else
-            zen4::poly1305_update_radix44(state, pMsg, msgLen);
-            return StatusOk();
+            if (zen4::poly1305_update_radix44(state, pMsg, msgLen) == true) {
+                return StatusOk();
+            } else {
+                return status::UpdateAfterFinalzeError("");
+            }
 #endif
         } else {
             return poly1305_impl->update(pMsg, msgLen);
         }
     }
-    return status::InternalError("Dispatch Failure");
+    return base::status::InternalError("Dispatch Failure");
 }
 
 template<utils::CpuArchFeature feature>
@@ -165,7 +172,7 @@ Poly1305<feature>::reset()
             return poly1305_impl->reset();
         }
     }
-    return status::InternalError("Dispatch Failure");
+    return base::status::InternalError("Dispatch Failure");
 }
 
 template<utils::CpuArchFeature feature>
@@ -187,8 +194,10 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
                             &state.s[0][0],
                             state.finalized);
 #else
-        zen4::poly1305_finalize_radix44(state, pMsg, msgLen);
-        return StatusOk();
+        if (zen4::poly1305_finalize_radix44(state, pMsg, msgLen) == true)
+            return StatusOk();
+        else
+            return status::AlreadyFinalizedError("");
 #endif
 
     } else {
@@ -207,14 +216,16 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
                                 &state.s[0][0],
                                 state.finalized);
 #else
-            zen4::poly1305_finalize_radix44(state, pMsg, msgLen);
-            return StatusOk();
+            if (zen4::poly1305_finalize_radix44(state, pMsg, msgLen) == true)
+                return StatusOk();
+            else
+                return status::AlreadyFinalizedError("");
 #endif
         } else {
             return poly1305_impl->finish(pMsg, msgLen);
         }
     }
-    return status::InternalError("Dispatch Failure");
+    return base::status::InternalError("Dispatch Failure");
 }
 
 template<utils::CpuArchFeature feature>
@@ -233,8 +244,10 @@ Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
 #if POLY1305_RADIX_26
         return zen4::copy(digest, length, state.a, state.finalized);
 #else
-        zen4::poly1305_copy_radix44(state, digest, length);
-        return StatusOk();
+        if (zen4::poly1305_copy_radix44(state, digest, length) == true)
+            return StatusOk();
+        else
+            return status::CopyWithoutFinalizeError("");
 #endif
     } else {
         // Manual dispatch in case we don't know where to dispatch to.
@@ -244,14 +257,16 @@ Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
 #if POLY1305_RADIX_26
             return zen4::copy(digest, length, state.a, state.finalized);
 #else
-            zen4::poly1305_copy_radix44(state, digest, length);
-            return StatusOk();
+            if (zen4::poly1305_copy_radix44(state, digest, length) == true)
+                return StatusOk();
+            else
+                return status::CopyWithoutFinalizeError("");
 #endif
         } else {
             return poly1305_impl->copy(digest, length);
         }
     }
-    return status::InternalError("Dispatch Failure");
+    return base::status::InternalError("Dispatch Failure");
 }
 
 template class Poly1305<utils::CpuArchFeature::eAvx512>;
