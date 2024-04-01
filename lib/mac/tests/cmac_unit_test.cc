@@ -239,6 +239,7 @@ class CMACFuncionalityTest
         m_cmac                                   = std::make_unique<Cmac>();
         m_cmac->setKey(&m_key[0], static_cast<Uint64>(m_key.size()) * 8);
         m_mac = std::vector<Uint8>(m_expected_mac.size());
+        SetReserve(m_plain_text);
     }
 
     void splitToEqualHalves(std::vector<Uint8>& singleblock,
@@ -253,6 +254,11 @@ class CMACFuncionalityTest
                                     singleblock.end());
 
         assert(block1.size() + block2.size() == singleblock.size());
+    }
+
+    inline void SetReserve(std::vector<Uint8>& var) {
+        if (var.size() == 0)
+            var.reserve(1);
     }
 };
 
@@ -300,6 +306,8 @@ TEST_P(CMACFuncionalityTest, CMAC_MULTIPLE_UPDATE)
     assert(block1.size() <= m_plain_text.size());
     assert(block2.size() <= m_plain_text.size());
 
+    SetReserve(block1);
+    SetReserve(block2);
     Status s{ StatusOk() };
     s = m_cmac->update(&block1[0], block1.size());
     ASSERT_TRUE(s.ok());

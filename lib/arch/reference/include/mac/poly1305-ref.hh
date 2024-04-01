@@ -135,7 +135,7 @@ class Poly1305RefState
     {
         // Erase all sensitive buffers
         std::fill(m_r, m_r + m_limbs, 0);
-        std::fill(m_s, m_s + m_limbs - 1, 0);
+        std::fill(m_s, m_s + (m_limbs - 1), 0);
         std::fill(m_key, m_key + m_cKeySize_bytes / sizeof(Uint64), 0);
         resetState();
     }

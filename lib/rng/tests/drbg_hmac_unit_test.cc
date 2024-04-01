@@ -289,7 +289,19 @@ class HmacDrbgKat
                  m_generatedBits) = params.second;
     }
 
-    void SetUp() override { getParams(); }
+    void SetUp() override { 
+        getParams();
+        SetReserve(m_add1);
+        SetReserve(m_add2);
+        SetReserve(m_add_reseed);
+        SetReserve(m_pstr);
+
+    }
+
+    inline void SetReserve(std::vector<Uint8>& var) {
+        if (var.size() == 0)
+            var.reserve(1);
+    }
 };
 
 template<typename SHA_CLASS, alc_digest_len_t len>
@@ -396,7 +408,8 @@ TEST(Instantiate, SHA256)
     const std::vector<Uint8> nonce = { 0x20, 0x21, 0x22, 0x23,
                                        0x24, 0x25, 0x26, 0x27 };
 
-    const std::vector<Uint8> PersonalizationString(0);
+    std::vector<Uint8> PersonalizationString(0);
+    PersonalizationString.reserve(1);
 
     const std::vector<Uint8> AdditionalInput(0);
 
