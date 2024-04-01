@@ -189,38 +189,99 @@ namespace alcp::digest { namespace zen4 {
     static inline void sha512_update_x_avx2(__m256i x[8])
     {
         __m256i temp[4];
-        // Calculation of s0
+        // Calculation of  sigma_0_512(x) = ROTR(x,1)^ROTR(x,8)^SHR(x,7)
+
+        // temp[0]=[ w1 || w2 ](b0)__[ w1 || w2 ](b1)
         temp[0] = _mm256_alignr_epi8(x[1], x[0], 8);
 
+        // temp[1] = [ w3>>1 || [w1>>1 || w2 >>1 ](b0)__[ w1>1 || w2>>1 ](b1)
         temp[1] = _mm256_srli_epi64(temp[0], 1);
+
+        // temp[2] = [w1 <<63 || w2 <<63 ](b0)__[w1 <<63 || w2 <<63 ](b1)
         temp[2] = _mm256_slli_epi64(temp[0], 64 - 1);
+
+        /* temp[1] = [ ROTR(w1,1) || ROTR(w2,1) ](b0)__
+                     [ ROTR(w1,1) || ROTR(w2,1) ](b1) */
         temp[1] |= temp[2];
 
+        // temp[2] = [ w1>>8 || w2>>8 ](b0)__[ w1>>8 || w2>>8 ](b1)
         temp[2] = _mm256_srli_epi64(temp[0], 8);
+
+        // temp[3] = [ w1<<56 || w2<<56 ](b0)__[ w1<<56 || w2<<56 ](b1)
         temp[3] = _mm256_slli_epi64(temp[0], 64 - 8);
+
+        /* temp[2] = [ROTR(w1,8) || ROTR(w2,8)](b0)__[ROTR(w1,8) ||
+         * ROTR(w2,8)](b1). temp[2] is overwritten*/
         temp[2] |= temp[3];
 
+        // temp[3] = [ w1>>7 || w2>>7 ](b0)__[ w1>>7 || w2>>7 ](b1)
         temp[3] = _mm256_srli_epi64(temp[0], 7);
 
+        /* Since sigma_0_512(x) = ROTR(x,1)^ROTR(x,8)^SHR(x,7), After executing
+        below lines temp[0] will contain the below calculated values
+        temp[0] = [ sigma_0_512(w1) || sigma_0_512(w2) ](b0)__
+                  [ sigma_0_512(w1) || sigma_0_512(w2) ](b1) */
         temp[0] = temp[1] ^ temp[2] ^ temp[3];
 
+        // temp[3] = [ w9 || w10 ](b0)__[ w9 || w10 ](b1)
         temp[3] = _mm256_alignr_epi8(x[5], x[4], 8);
+
+        //  temp[3] =  [ w0+w9|| w1+w10 ]
         temp[3] = _mm256_add_epi64(x[0], temp[3]);
 
+        /* temp[0] = [ sigma_0_512(w1)+w0+w9 || sigma_0_512(w2)+w1+10 ](b0)__
+                     [ sigma_0_512(w1)+w0+w9 || sigma_0_512(w2)+w1+10 ](b1)  */
         temp[0] = _mm256_add_epi64(temp[0], temp[3]);
 
-        // Calculation of s1
+        // Calculation of sigma_1_512(x) = ROTR(w14,19) ^ROTR(w14,61)^SHR(w14,6)
+
+        // temp[1] = [w14 >>19 || w15 >>19 ](b0)__[w14 >>19 || w15 >>19 ](b1)
         temp[1] = _mm256_srli_epi64(x[7], 19);
+
+        // [w14 <<45 || w15 <<45 ](b0)__[w14 <<45 || w15 <<45 ](b1)
         temp[2] = _mm256_slli_epi64(x[7], 64 - 19);
+
+        /*temp[1] =
+          [ (w14 >>19 | w14 <<45) || (w15 >>19 | w15 <<45) ](b0)__
+          [ (w14 >>19 | w14 <<45) || (w15 >>19 | w15 <<45) ](b1) =>
+          [ROTR(w14,19) || ROTR(w15,19)](b0)__[ROTR(w14,19) || ROTR(w15,19)](b1)
+
+          */
         temp[1] |= temp[2];
 
+        /* temp[2] = [ (w14 >> 61) ||(w15 >> 61) ](b0)__
+                     [ (w14 >> 61) ||(w15 >> 61) ](b1)
+           => [SHR(w4,61)||SHR(w15,61)](b0)__[SHR(w4,61)||SHR(w15,61)](b1)
+         */
         temp[2] = _mm256_srli_epi64(x[7], 61);
+
+        /* temp[3] = [ (w14 <<61)  || w15 <<61 ](b0)__
+                     [ (w14 <<61)  || w15 <<61 ](b1) =>
+                     [SHL(w14,61 ||SHL(w15,61)](b0)__
+                     [SHL(w14,61)||SHL(w15,61)])*/
         temp[3] = _mm256_slli_epi64(x[7], 64 - 61);
+
+        /*temp[2] = [SHR(w14,61) | SHL(w14,3) || SHR(w15,61) | SHL(w15,3)](b0)__
+                    [SHR(w14,61) | SHL(w14,3) || SHR(w15,61) | SHL(w15,3)](b1)
+           =>           ROTR(w14,61)||ROTR(w15,61)(b0)__
+                        ROTR(w14,61)||ROTR(w15,61)(b1)
+                    */
         temp[2] |= temp[3];
 
+        /* temp[3] = [SHR(w14,6)  || SHR(w15,6)](b0)__
+                     [SHR(w14,6)  || SHR(w15,6)](b1)*/
         temp[3] = _mm256_srli_epi64(x[7], 6);
+        /* temp[3] =
+           [(ROTR(w14,19) ^ ROTR(w14,61) ^ SHR(w14,6)) ||
+           [(ROTR(w15,19) ^ ROTR(w15,61) ^ SHR(w15,6))](b0)__
+           [(ROTR(w14,19) ^ ROTR(w14,61) ^ SHR(w14,6)) ||
+           [(ROTR(w15,19) ^ ROTR(w15,61) ^ SHR(w15,6))](b1) =>
+            [sigma_1_512(w14) || sigma_1_512(w15)](b0)__
+            [sigma_1_512(w14) || sigma_1_512(w15)](b1) */
         temp[3] = temp[1] ^ temp[2] ^ temp[3];
-
+        /* w1 = [(sigma_1_512(w14)+
+         * sigma_0_512(w1)+w0+w9)||sigma_1_512(w15)+sigma_0_512(w2)+w1+10](b0)
+         * => [w16||w17](b0)__[w16||w17](b1) */
         x[0] = _mm256_add_epi64(temp[0], temp[3]);
 
         rotate_x(x);
