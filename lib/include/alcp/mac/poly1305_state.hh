@@ -42,8 +42,9 @@ struct Poly1305State26
     static const Uint32 cLimbs           = 5;
 
   public:
-    alignas(64) Uint64 r[cLimbsAligned][cHornorFactor];
-    alignas(64) Uint64 s[cLimbsAligned][cHornorFactor];
+    // FIXME: Allocation might be overkill, need to revisit
+    alignas(64) Uint64 r[cLimbsAligned * cHornorFactor];
+    alignas(64) Uint64 s[cLimbsAligned * cHornorFactor];
     alignas(64) Uint64 a[cLimbsAligned];
     alignas(64) Uint64 key[m_cKeySize_bytes / sizeof(Uint64)] = {};
     alignas(64) Uint8 msg_buffer[m_cMsgSize_bytes];
@@ -61,8 +62,8 @@ struct Poly1305State26
     Poly1305State26()
     {
         std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
-        std::fill(&r[0][0], &r[0][0] + (cLimbsAligned * cHornorFactor), 0);
-        std::fill(&s[0][0], &s[0][0] + (cLimbsAligned * cHornorFactor), 0);
+        std::fill(&r[0], &r[0] + (cLimbsAligned * cHornorFactor), 0);
+        std::fill(&s[0], &s[0] + (cLimbsAligned * cHornorFactor), 0);
         std::fill(a, a + cLimbsAligned, 0);
         std::fill(msg_buffer, msg_buffer + m_cMsgSize_bytes, 0);
         msg_buffer_len = 0;
@@ -72,8 +73,8 @@ struct Poly1305State26
     ~Poly1305State26()
     {
         std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
-        std::fill(&r[0][0], &r[0][0] + (cLimbsAligned * cHornorFactor), 0);
-        std::fill(&s[0][0], &s[0][0] + (cLimbsAligned * cHornorFactor), 0);
+        std::fill(&r[0], &r[0] + (cLimbsAligned * cHornorFactor), 0);
+        std::fill(&s[0], &s[0] + (cLimbsAligned * cHornorFactor), 0);
         msg_buffer_len = 0;
         finalized      = false;
         reset();
@@ -83,16 +84,16 @@ struct Poly1305State26
 struct Poly1305State44
 {
   private:
-    static const Uint32 cHornorFactor    = 5;
     static const Uint32 m_cKeySize_bytes = 32;
     static const Uint32 m_cMsgSize_bytes = 16;
-    static const Uint32 cLimbsAligned    = 8; // To create aligned memory
-    static const Uint32 cLimbs           = 5;
+    static const Uint32 cLimbs           = 3;
+    static const Uint32 cSize512         = 512 / 8;
 
   public:
-    alignas(64) Uint64 r[3], r2[3], r3[3], r4[3], r5[3], r6[3], r7[3], r8[3];
-    alignas(64) Uint64 s[3];
-    alignas(64) Uint64 acc0[8], acc1[8], acc2[8];
+    alignas(64) Uint64 r[cLimbs], r2[cLimbs], r3[cLimbs], r4[cLimbs],
+        r5[cLimbs], r6[cLimbs], r7[cLimbs], r8[cLimbs];
+    alignas(64) Uint64 s[cLimbs];
+    alignas(64) Uint64 acc0[cSize512], acc1[cSize512], acc2[cSize512];
     alignas(64) Uint64 key[m_cKeySize_bytes / sizeof(Uint64)] = {};
     alignas(64) Uint8 msg_buffer[m_cMsgSize_bytes];
     Uint64 msg_buffer_len;
@@ -123,8 +124,6 @@ struct Poly1305State44
     ~Poly1305State44()
     {
         std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
-        msg_buffer_len = 0;
-        finalized      = false;
         reset();
     }
 }; // namespace alcp::mac::poly1305

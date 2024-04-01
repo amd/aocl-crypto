@@ -63,13 +63,13 @@ Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
         return poly1305_impl->init(key, len);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 #if POLY1305_RADIX_26
-        return zen4::init(key,
-                          len,
-                          state.a,
-                          state.key,
-                          &state.r[0][0],
-                          &state.s[0][0],
-                          state.finalized);
+        return zen4::init_radix26(key,
+                                  len,
+                                  state.a,
+                                  state.key,
+                                  &state.r[0],
+                                  &state.s[0],
+                                  state.finalized);
 #else
         zen4::poly1305_init_radix44(state, key);
         return StatusOk();
@@ -80,13 +80,13 @@ Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
 #if POLY1305_RADIX_26
-            return zen4::init(key,
-                              len,
-                              state.a,
-                              state.key,
-                              &state.r[0][0],
-                              &state.s[0][0],
-                              state.finalized);
+            return zen4::init_radix26(key,
+                                      len,
+                                      state.a,
+                                      state.key,
+                                      &state.r[0],
+                                      &state.s[0],
+                                      state.finalized);
 #else
             zen4::poly1305_init_radix44(state, key);
             return StatusOk();
@@ -107,15 +107,15 @@ Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
         // return poly1305_impl->update(pMsg, msgLen);
 #if POLY1305_RADIX_26
-        return zen4::update(state.key,
-                            pMsg,
-                            msgLen,
-                            state.a,
-                            state.msg_buffer,
-                            state.msg_buffer_len,
-                            &state.r[0][0],
-                            &state.s[0][0],
-                            state.finalized);
+        return zen4::poly1305_update_radix26(state.key,
+                                             pMsg,
+                                             msgLen,
+                                             state.a,
+                                             state.msg_buffer,
+                                             state.msg_buffer_len,
+                                             &state.r[0],
+                                             &state.s[0],
+                                             state.finalized);
 #else
         if (zen4::poly1305_update_radix44(state, pMsg, msgLen) == true) {
             return StatusOk();
@@ -129,15 +129,15 @@ Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
 #if POLY1305_RADIX_26
-            return zen4::update(state.key,
-                                pMsg,
-                                msgLen,
-                                state.a,
-                                state.msg_buffer,
-                                state.msg_buffer_len,
-                                &state.r[0][0],
-                                &state.s[0][0],
-                                state.finalized);
+            return zen4::poly1305_update_radix26(state.key,
+                                                 pMsg,
+                                                 msgLen,
+                                                 state.a,
+                                                 state.msg_buffer,
+                                                 state.msg_buffer_len,
+                                                 &state.r[0],
+                                                 &state.s[0],
+                                                 state.finalized);
 #else
             if (zen4::poly1305_update_radix44(state, pMsg, msgLen) == true) {
                 return StatusOk();
@@ -184,15 +184,15 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 // return poly1305_impl->finish(pMsg, msgLen);
 #if POLY1305_RADIX_26
-        return zen4::finish(state.key,
-                            pMsg,
-                            msgLen,
-                            state.a,
-                            state.msg_buffer,
-                            state.msg_buffer_len,
-                            &state.r[0][0],
-                            &state.s[0][0],
-                            state.finalized);
+        return zen4::poly1305_finish_radix26(state.key,
+                                             pMsg,
+                                             msgLen,
+                                             state.a,
+                                             state.msg_buffer,
+                                             state.msg_buffer_len,
+                                             &state.r[0],
+                                             &state.s[0],
+                                             state.finalized);
 #else
         if (zen4::poly1305_finalize_radix44(state, pMsg, msgLen) == true)
             return StatusOk();
@@ -206,15 +206,15 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
 #if POLY1305_RADIX_26
-            return zen4::finish(state.key,
-                                pMsg,
-                                msgLen,
-                                state.a,
-                                state.msg_buffer,
-                                state.msg_buffer_len,
-                                &state.r[0][0],
-                                &state.s[0][0],
-                                state.finalized);
+            return zen4::poly1305_finish_radix26(state.key,
+                                                 pMsg,
+                                                 msgLen,
+                                                 state.a,
+                                                 state.msg_buffer,
+                                                 state.msg_buffer_len,
+                                                 &state.r[0],
+                                                 &state.s[0],
+                                                 state.finalized);
 #else
             if (zen4::poly1305_finalize_radix44(state, pMsg, msgLen) == true)
                 return StatusOk();
@@ -242,7 +242,8 @@ Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
         return poly1305_impl->copy(digest, length);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 #if POLY1305_RADIX_26
-        return zen4::copy(digest, length, state.a, state.finalized);
+        return zen4::poly1305_copy_radix26(
+            digest, length, state.a, state.finalized);
 #else
         if (zen4::poly1305_copy_radix44(state, digest, length) == true)
             return StatusOk();
@@ -255,7 +256,8 @@ Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
 #if POLY1305_RADIX_26
-            return zen4::copy(digest, length, state.a, state.finalized);
+            return zen4::poly1305_copy_radix26(
+                digest, length, state.a, state.finalized);
 #else
             if (zen4::poly1305_copy_radix44(state, digest, length) == true)
                 return StatusOk();

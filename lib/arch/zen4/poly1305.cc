@@ -39,6 +39,7 @@
 #ifdef DEBUG_PRINT
 #include <iostream>
 #include <string>
+
 void
 debug_print(std::string in)
 {
@@ -51,11 +52,17 @@ debug_print(std::string in)
 {
 }
 #endif
-// #define POLY_AVX512
 
 namespace alcp::mac::poly1305::zen4 {
 
 // Pure C++ Functions
+
+/**
+ * @brief Assemble bytes (128bit) into radix44 (3x64)
+ *
+ * @param msg      Input Bytes
+ * @param output   Output Radix 44 value
+ */
 void
 radix44(Uint8 msg[], Uint64 output[3])
 {
@@ -80,6 +87,11 @@ radix44(Uint8 msg[], Uint64 output[3])
     }
 }
 
+/**
+ * @brief Clamp R value to Poly1305 spec
+ *
+ * @param in - 128bit value as 8x16 array
+ */
 void
 clamp(Uint8 in[16])
 {
@@ -95,15 +107,79 @@ clamp(Uint8 in[16])
     }
 }
 
-// AVX512 functions
+// Begin Radix 26 Implementation
+
+/**
+ * @brief Function to compute a*b%p given s=b[1:5]*5
+ *
+ * @param a Multiplicand
+ * @param b Multiplier
+ * @param s Modulo Trick cached value
+ * @return Uint64
+ */
 inline void
-create_multiplication_matrix(const Uint64 r[5],
-                             const Uint64 s[4],
-                             __m512i&     reg0,
-                             __m512i&     reg1,
-                             __m512i&     reg2,
-                             __m512i&     reg3,
-                             __m512i&     reg4)
+multiply_radix26(Uint64 a[5], Uint64 b[5], Uint64 s[4])
+{
+    // This function is used by init for radix26
+    alignas(64) Uint64 d[5]  = {};
+    Uint64             carry = 0;
+    // a = a * r
+    // clang-format off
+    d[0] = (a[0] * b[0]) + (a[1] * s[3]) + (a[2] * s[2]) + (a[3] * s[1]) + (a[4] * s[0]);
+    d[1] = (a[0] * b[1]) + (a[1] * b[0]) + (a[2] * s[3]) + (a[3] * s[2]) + (a[4] * s[1]);
+    d[2] = (a[0] * b[2]) + (a[1] * b[1]) + (a[2] * b[0]) + (a[3] * s[3]) + (a[4] * s[2]);
+    d[3] = (a[0] * b[3]) + (a[1] * b[2]) + (a[2] * b[1]) + (a[3] * b[0]) + (a[4] * s[3]);
+    d[4] = (a[0] * b[4]) + (a[1] * b[3]) + (a[2] * b[2]) + (a[3] * b[1]) + (a[4] * b[0]);
+    // clang-format on
+
+    // Carry Propagation
+    carry = (d[0] >> 26);
+    a[0]  = d[0] & 0x3ffffff;
+    d[1] += carry;
+    carry = (d[1] >> 26);
+    a[1]  = d[1] & 0x3ffffff;
+    d[2] += carry;
+    carry = (d[2] >> 26);
+    a[2]  = d[2] & 0x3ffffff;
+    d[3] += carry;
+    carry = (d[3] >> 26);
+    a[3]  = d[3] & 0x3ffffff;
+    d[4] += carry;
+    carry = (d[4] >> 26);
+    a[4]  = d[4] & 0x3ffffff;
+    a[0] += carry * 5;
+    carry = (a[0] >> 26);
+    a[0]  = a[0] & 0x3ffffff;
+    a[1] += carry;
+}
+
+// AVX512 functions
+
+/**
+ * @brief Create multiplication matrix in the form
+ *
+ *  reg0 = {r1,r2,r3,r4,r5}
+ *  reg1 = {s4,r1,r2,r3,r4}
+ *  reg2 = {s3,s4,r1,r2,r3}
+ *  reg3 = {s2,s3,s4,r1,r2}
+ *  reg4 = {s1,s2,s3,s4,r1}
+ *
+ * @param r
+ * @param s
+ * @param reg0
+ * @param reg1
+ * @param reg2
+ * @param reg3
+ * @param reg4
+ */
+inline void
+create_mul_mat_radix26(const Uint64 r[5],
+                       const Uint64 s[4],
+                       __m512i&     reg0,
+                       __m512i&     reg1,
+                       __m512i&     reg2,
+                       __m512i&     reg3,
+                       __m512i&     reg4)
 {
     __m512i idx, r_reg, s_reg;
 
@@ -127,12 +203,12 @@ create_multiplication_matrix(const Uint64 r[5],
 }
 
 inline void
-multiply_avx512(Uint64  a[5], // Input and output
-                __m512i reg0, // Used also as temp reg
-                __m512i reg1, // Used also as temp reg
-                __m512i reg2, // Used also as temp reg
-                __m512i reg3, // Used also as temp reg
-                __m512i reg4) // Used also as temp reg
+mult_avx512_radix26(Uint64  a[5], // Input and output
+                    __m512i reg0, // Used also as temp reg
+                    __m512i reg1, // Used also as temp reg
+                    __m512i reg2, // Used also as temp reg
+                    __m512i reg3, // Used also as temp reg
+                    __m512i reg4) // Used also as temp reg
 {
     __m512i            regtemp = {}, regtemp1 = {};
     alignas(64) Uint64 temp[8] = {};
@@ -179,122 +255,41 @@ multiply_avx512(Uint64  a[5], // Input and output
 }
 
 inline void
-multiply_avx512(Uint64 a[5], const Uint64 r[5], const Uint64 s[4])
+mult_avx512_radix26(Uint64 a[5], const Uint64 r[5], const Uint64 s[4])
 {
-    __m512i            reg0, reg1, reg2, reg3, reg4, idx, r_reg, s_reg;
-    __m512i            regtemp = {}, regtemp1 = {};
-    alignas(64) Uint64 temp[8] = {};
+    __m512i reg0, reg1, reg2, reg3, reg4;
 
-    // Load r
-    r_reg = _mm512_maskz_loadu_epi64(0x1f, r);
+    // Create multiplication matrix in the form
+    // reg0 = {r1,r2,r3,r4,r5}
+    // reg1 = {s4,r1,r2,r3,r4}
+    // reg2 = {s3,s4,r1,r2,r3}
+    // reg3 = {s2,s3,s4,r1,r2}
+    // reg4 = {s1,s2,s3,s4,r1}
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4);
 
-    // Load s
-    s_reg = _mm512_maskz_loadu_epi64(0x0f, s);
-    reg0  = r_reg;
-
-    // Create multiplication matrix with modulo trick
-    idx  = _mm512_setr_epi64(1 << 3 | 3, 0, 1, 2, 3, 6, 6, 6);
-    reg1 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
-    idx  = _mm512_setr_epi64(1 << 3 | 2, 1 << 3 | 3, 0, 1, 2, 6, 6, 6);
-    reg2 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
-    idx  = _mm512_setr_epi64(1 << 3 | 1, 1 << 3 | 2, 1 << 3 | 3, 0, 1, 6, 6, 6);
-    reg3 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
-    idx  = _mm512_setr_epi64(
-        1 << 3 | 0, 1 << 3 | 1, 1 << 3 | 2, 1 << 3 | 3, 0, 6, 6, 6);
-    reg4 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
-
-    // a*r
-    regtemp  = _mm512_set1_epi64(a[0]);
-    reg0     = _mm512_mullox_epi64(reg0, regtemp);
-    regtemp1 = _mm512_set1_epi64(a[1]);
-    reg1     = _mm512_mullox_epi64(reg1, regtemp1);
-    regtemp  = _mm512_set1_epi64(a[2]);
-    reg2     = _mm512_mullox_epi64(reg2, regtemp);
-    regtemp1 = _mm512_set1_epi64(a[3]);
-    reg3     = _mm512_mullox_epi64(reg3, regtemp1);
-    regtemp  = _mm512_set1_epi64(a[4]);
-    reg4     = _mm512_mullox_epi64(reg4, regtemp);
-    // compute d[0],d[1],d[2],d[3],d[4]
-    regtemp  = reg0;
-    regtemp1 = reg3;
-    regtemp  = _mm512_add_epi64(regtemp, reg1);
-    regtemp  = _mm512_add_epi64(regtemp, reg2);
-    regtemp1 = _mm512_add_epi64(regtemp1, reg4);
-    regtemp  = _mm512_add_epi64(regtemp, regtemp1);
-
-    // Carry propagate and write it to a
-    _mm512_store_epi64(temp, regtemp);
-    Uint64 carry = (unsigned long)(temp[0] >> 26);
-    a[0]         = (unsigned long)temp[0] & 0x3ffffff;
-    temp[1] += carry;
-    carry = (unsigned long)(temp[1] >> 26);
-    a[1]  = (unsigned long)temp[1] & 0x3ffffff;
-    temp[2] += carry;
-    carry = (unsigned long)(temp[2] >> 26);
-    a[2]  = (unsigned long)temp[2] & 0x3ffffff;
-    temp[3] += carry;
-    carry = (unsigned long)(temp[3] >> 26);
-    a[3]  = (unsigned long)temp[3] & 0x3ffffff;
-    temp[4] += carry;
-    carry = (unsigned long)(temp[4] >> 26);
-    a[4]  = (unsigned long)temp[4] & 0x3ffffff;
-    a[0] += carry * 5;
-    carry = (a[0] >> 26);
-    a[0]  = a[0] & 0x3ffffff;
-    a[1] += carry;
+    // a = (a*r) % p
+    mult_avx512_radix26(a, reg0, reg1, reg2, reg3, reg4); // Result will be in a
 }
 
 /**
- * @brief Function to compute a*b%p given s=b[1:5]*5
- *
- * @param a Multiplicand
- * @param b Multiplier
- * @param s Modulo Trick cached value
- * @return Uint64
+ * @brief Initialize Key and buffers of Poly1305
+ * @param key - Input key
+ * @param keyLen - Key Length
+ * @param accumulator - Output Accumulator
+ * @param processed_key - Output Key
+ * @param r - Authentication Key
+ * @param s - Addicitive Key
+ * @param finalized - Finalization indicator
+ * @return - Status
  */
-inline void
-multiply(Uint64 a[5], Uint64 b[5], Uint64 s[4])
-{
-    alignas(64) Uint64 d[5]  = {};
-    Uint64             carry = 0;
-    // a = a * r
-    // clang-format off
-    d[0] = (a[0] * b[0]) + (a[1] * s[3]) + (a[2] * s[2]) + (a[3] * s[1]) + (a[4] * s[0]);
-    d[1] = (a[0] * b[1]) + (a[1] * b[0]) + (a[2] * s[3]) + (a[3] * s[2]) + (a[4] * s[1]);
-    d[2] = (a[0] * b[2]) + (a[1] * b[1]) + (a[2] * b[0]) + (a[3] * s[3]) + (a[4] * s[2]);
-    d[3] = (a[0] * b[3]) + (a[1] * b[2]) + (a[2] * b[1]) + (a[3] * b[0]) + (a[4] * s[3]);
-    d[4] = (a[0] * b[4]) + (a[1] * b[3]) + (a[2] * b[2]) + (a[3] * b[1]) + (a[4] * b[0]);
-    // clang-format on
-
-    // Carry Propagation
-    carry = (unsigned long)(d[0] >> 26);
-    a[0]  = (unsigned long)d[0] & 0x3ffffff;
-    d[1] += carry;
-    carry = (unsigned long)(d[1] >> 26);
-    a[1]  = (unsigned long)d[1] & 0x3ffffff;
-    d[2] += carry;
-    carry = (unsigned long)(d[2] >> 26);
-    a[2]  = (unsigned long)d[2] & 0x3ffffff;
-    d[3] += carry;
-    carry = (unsigned long)(d[3] >> 26);
-    a[3]  = (unsigned long)d[3] & 0x3ffffff;
-    d[4] += carry;
-    carry = (unsigned long)(d[4] >> 26);
-    a[4]  = (unsigned long)d[4] & 0x3ffffff;
-    a[0] += carry * 5;
-    carry = (a[0] >> 26);
-    a[0]  = a[0] & 0x3ffffff;
-    a[1] += carry;
-}
-
 Status
-init(const Uint8 key[],           // Input key
-     Uint64      keyLen,          // Key Length
-     Uint64      accumulator[],   // Output Accumulator
-     Uint64      processed_key[], // Output Key
-     Uint64      r[10],           // Authentication Key
-     Uint64      s[8],            // Addicitive Key
-     bool        finalized)              // Finalization indicator
+init_radix26(const Uint8 key[],
+             Uint64      keyLen,
+             Uint64      accumulator[],
+             Uint64      processed_key[],
+             Uint64      r[10],
+             Uint64      s[8],
+             bool        finalized)
 {
     Uint8* p_expanded_key_8 = reinterpret_cast<Uint8*>(processed_key);
     // Uint8* m_acc_8 = reinterpret_cast<Uint8*>(accumulator);
@@ -346,7 +341,7 @@ init(const Uint8 key[],           // Input key
     std::copy(r, r + 5, r + 5);
 
     // Precompute r^2 value
-    multiply(r + 5, r, s);
+    multiply_radix26(r + 5, r, s);
 
     // Precompute (r^2)*5 value
     for (int i = 0; i < 4; i++) {
@@ -358,7 +353,7 @@ init(const Uint8 key[],           // Input key
     std::copy(r, r + 5, r + 10);
 
     // Precompute r^3 value
-    multiply(r + 10, r + 5, s + 4);
+    multiply_radix26(r + 10, r + 5, s + 4);
 
     // Precompute (r^3)*5 value
     for (int i = 0; i < 4; i++) {
@@ -370,7 +365,7 @@ init(const Uint8 key[],           // Input key
     std::copy(r, r + 5, r + 15);
 
     // Precompute r^4 value
-    multiply(r + 15, r + 10, s + 8);
+    multiply_radix26(r + 15, r + 10, s + 8);
 
     // Precompute (r^4)*5 value
     for (int i = 0; i < 4; i++) {
@@ -382,7 +377,7 @@ init(const Uint8 key[],           // Input key
     std::copy(r + 15, r + 20, r + 20);
 
     // Precompute r^8 value
-    multiply(r + 20, r + 15, s + 12);
+    multiply_radix26(r + 20, r + 15, s + 12);
 
     // Precompute (r^8)*5 value
     for (int i = 0; i < 4; i++) {
@@ -392,13 +387,26 @@ init(const Uint8 key[],           // Input key
     return status;
 }
 
+/**
+ * @brief Poly1305 Blockx1 Singular Implementation,
+ * This function implements Poly1305 in the form
+ * an = ((a1+m1)*r)%p;
+ *
+ * @param key - Key 256 bit
+ * @param pMsg - Message Pointer
+ * @param msgLen - Message Length
+ * @param accumulator - Accumulator
+ * @param r - Clamped R part of Key
+ * @param s - Clamped R Key multiplied by modulo trick value
+ * @return Uint64
+ */
 Uint64
-blk(Uint64      key[],
-    const Uint8 pMsg[],
-    Uint64      msgLen,
-    Uint64      accumulator[],
-    Uint64      r[5],
-    Uint64      s[4])
+poly1305_blkx1_radix26(Uint64      key[],
+                       const Uint8 pMsg[],
+                       Uint64      msgLen,
+                       Uint64      accumulator[],
+                       Uint64      r[5],
+                       Uint64      s[4])
 {
     __m512i      reg0, reg1, reg2, reg3, reg4; // Multiplication matrix
     Uint64       acc[5]      = {};
@@ -412,7 +420,7 @@ blk(Uint64      key[],
     }
 
 #if 1
-    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4);
 #endif
     // As long as there is poly block size amount of text to process
     while (msgLen > 0) {
@@ -435,9 +443,9 @@ blk(Uint64      key[],
 
         // multiply(acc, r, s);
 #if 0
-        multiply_avx512(acc,r,s);
+        mult_avx512_radix26(acc,r,s);
 #else
-        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg0, reg1, reg2, reg3, reg4);
 #endif
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -456,14 +464,28 @@ blk(Uint64      key[],
     return msgLen;
 }
 
-// Horner factor 8
+/**
+ * @brief Poly1305 Blockx8 Alternative Implementation,
+ * This function implements Poly1305 in the form
+ * an = ((h1+m1)*r^8)*r^8 + ((h2+m2)*r^8)*r^7 + ((h3+m3)*r^8)*r^6 +
+ *      ((h4+m4)*r^8)*r^5 + ((h5+m5)*r^8)*r^4 + ((h6+m6)*r^8)*r^3 +
+ *      ((h7+m7)*r^8)*r^2 + ((h8+m8)*r^8)*r;
+ *
+ * @param key - Key 256 bit
+ * @param pMsg - Message Pointer
+ * @param msgLen - Message Length
+ * @param accumulator - Accumulator
+ * @param r - Clamped R part of Key
+ * @param s - Clamped R Key multiplied by modulo trick value
+ * @return Uint64
+ */
 Uint64
-blkx8_new(Uint64      key[],
-          const Uint8 pMsg[],
-          Uint64      msgLen,
-          Uint64      accumulator[],
-          Uint64      r[10],
-          Uint64      s[8])
+poly1305_blkx8_radix26_alt(Uint64      key[],
+                           const Uint8 pMsg[],
+                           Uint64      msgLen,
+                           Uint64      accumulator[],
+                           Uint64      r[10],
+                           Uint64      s[8])
 {
     __m512i reg0, reg1, reg2, reg3, reg4;      // R
     __m512i reg10, reg11, reg12, reg13, reg14; // R^2
@@ -487,14 +509,14 @@ blkx8_new(Uint64      key[],
 
 #if 1
 
-    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4); // R
-    create_multiplication_matrix(
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4); // R
+    create_mul_mat_radix26(
         r + 5, s + 4, reg10, reg11, reg12, reg13, reg14); // R ^ 2
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 10, s + 8, reg20, reg21, reg22, reg23, reg24); // R ^ 3
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 15, s + 12, reg30, reg31, reg32, reg33, reg34); // R ^ 4
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 20, s + 16, reg40, reg41, reg42, reg43, reg44); // R ^ 8
 
 #endif
@@ -741,20 +763,20 @@ blkx8_new(Uint64      key[],
         }
         p_msg_8 += 1;
 
-        multiply_avx512(acc, reg40, reg41, reg42, reg43, reg44); // m0 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(acc, reg40, reg41, reg42, reg43, reg44); // m0 * r^8
+        mult_avx512_radix26(
             msg_temp_2, reg40, reg41, reg42, reg43, reg44); // m1 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 5, reg40, reg41, reg42, reg43, reg44); // m2 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 10, reg40, reg41, reg42, reg43, reg44); // m3 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 15, reg40, reg41, reg42, reg43, reg44); // m4 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 20, reg40, reg41, reg42, reg43, reg44); // m5 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 25, reg40, reg41, reg42, reg43, reg44); // m6 * r^8
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 30, reg40, reg41, reg42, reg43, reg44); // m7 * r^8
 
         acc[0] += msg_temp_0[0];
@@ -776,12 +798,12 @@ blkx8_new(Uint64      key[],
             ((m0*r4 + m4)r4 + (m2*r4 + m5)r3 + ((m3*r4) + m6)r2 + ((m4*r4)+
               m7)r)%p
         */
-        multiply_avx512(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
-        multiply_avx512(
+        mult_avx512_radix26(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
+        mult_avx512_radix26(
             msg_temp_2, reg30, reg31, reg32, reg33, reg34); // m1 * r^4
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 5, reg30, reg31, reg32, reg33, reg34); // m2 * r^4
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 10, reg30, reg31, reg32, reg33, reg34); // m3 * r^4
 
         acc[0] += msg_temp_2[15];
@@ -808,12 +830,12 @@ blkx8_new(Uint64      key[],
         msg_temp_2[13] += msg_temp_2[33];
         msg_temp_2[14] += msg_temp_2[34];
 
-        multiply_avx512(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
-        multiply_avx512(
+        mult_avx512_radix26(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
+        mult_avx512_radix26(
             msg_temp_2, reg20, reg21, reg22, reg23, reg24); // m1 * r^3
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 5, reg10, reg11, reg12, reg13, reg14); // m2 * r^2
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 10, reg0, reg1, reg2, reg3, reg4); // m3 * r^1
 
         for (int i = 0; i < 3; i++) {
@@ -872,7 +894,7 @@ blkx8_new(Uint64      key[],
         acc[4] += msg_temp_0[4];
 
         // multiply(acc, r, s);
-        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg0, reg1, reg2, reg3, reg4);
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -892,13 +914,28 @@ blkx8_new(Uint64      key[],
 }
 
 // Horner factor 8
+/**
+ * @brief Poly1305 Blockx8 Implementation,
+ * This function implements Poly1305 in the form
+ * an = (a(n-1)+m1)*r^8 + (m2)*r^7 + (m3)*r^6 +
+ *      (m4)*r^5 + (m5)*r^4 + (m6)*r^3
+ *      (m7)*r^2 + (m8)*r^1;
+ *
+ * @param key - Key 256 bit
+ * @param pMsg - Message Pointer
+ * @param msgLen - Message Length
+ * @param accumulator - Accumulator
+ * @param r - Clamped R part of Key
+ * @param s - Clamped R Key multiplied by modulo trick value
+ * @return Uint64
+ */
 Uint64
-blkx8(Uint64      key[],
-      const Uint8 pMsg[],
-      Uint64      msgLen,
-      Uint64      accumulator[],
-      Uint64      r[10],
-      Uint64      s[8])
+poly1305_blkx8_radix26(Uint64      key[],
+                       const Uint8 pMsg[],
+                       Uint64      msgLen,
+                       Uint64      accumulator[],
+                       Uint64      r[10],
+                       Uint64      s[8])
 {
     __m512i reg0, reg1, reg2, reg3, reg4;      // R
     __m512i reg10, reg11, reg12, reg13, reg14; // R^2
@@ -920,12 +957,12 @@ blkx8(Uint64      key[],
 
 #if 1
 
-    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4); // R
-    create_multiplication_matrix(
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4); // R
+    create_mul_mat_radix26(
         r + 5, s + 4, reg10, reg11, reg12, reg13, reg14); // R ^ 2
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 10, s + 8, reg20, reg21, reg22, reg23, reg24); // R ^ 3
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 15, s + 12, reg30, reg31, reg32, reg33, reg34); // R ^ 4
 
 #endif
@@ -1056,30 +1093,30 @@ blkx8(Uint64      key[],
         acc[3] += msg_temp_0[3];
         acc[4] += msg_temp_0[4];
 
-        multiply_avx512(acc,
-                        reg30,
-                        reg31,
-                        reg32,
-                        reg33,
-                        reg34); // a = (a + m1)* r^4 -> eqn 1
-        multiply_avx512(msg_temp_2,
-                        reg30,
-                        reg31,
-                        reg32,
-                        reg33,
-                        reg34); // m2 = m2* r^4 -> eqn 2
-        multiply_avx512(msg_temp_2 + 5,
-                        reg30,
-                        reg31,
-                        reg32,
-                        reg33,
-                        reg34); // m3 = m3* r^4 -> eqn 3
-        multiply_avx512(msg_temp_2 + 10,
-                        reg30,
-                        reg31,
-                        reg32,
-                        reg33,
-                        reg34); // m4 = m4* r^4 -> eqn 4
+        mult_avx512_radix26(acc,
+                            reg30,
+                            reg31,
+                            reg32,
+                            reg33,
+                            reg34); // a = (a + m1)* r^4 -> eqn 1
+        mult_avx512_radix26(msg_temp_2,
+                            reg30,
+                            reg31,
+                            reg32,
+                            reg33,
+                            reg34); // m2 = m2* r^4 -> eqn 2
+        mult_avx512_radix26(msg_temp_2 + 5,
+                            reg30,
+                            reg31,
+                            reg32,
+                            reg33,
+                            reg34); // m3 = m3* r^4 -> eqn 3
+        mult_avx512_radix26(msg_temp_2 + 10,
+                            reg30,
+                            reg31,
+                            reg32,
+                            reg33,
+                            reg34); // m4 = m4* r^4 -> eqn 4
 
         // a = eqn1 + m5 -> eqn 5
         acc[0] += msg_temp_2[15];
@@ -1109,33 +1146,33 @@ blkx8(Uint64      key[],
         msg_temp_2[13] += msg_temp_2[33];
         msg_temp_2[14] += msg_temp_2[34];
 
-        multiply_avx512(acc,
-                        reg30,
-                        reg31,
-                        reg32,
-                        reg33,
-                        reg34); // a = eqn5 * r^4 -> eqn 9
+        mult_avx512_radix26(acc,
+                            reg30,
+                            reg31,
+                            reg32,
+                            reg33,
+                            reg34); // a = eqn5 * r^4 -> eqn 9
 
-        multiply_avx512(msg_temp_2,
-                        reg20,
-                        reg21,
-                        reg22,
-                        reg23,
-                        reg24); // m2 = eqn6 * r^3 -> eqn 10
+        mult_avx512_radix26(msg_temp_2,
+                            reg20,
+                            reg21,
+                            reg22,
+                            reg23,
+                            reg24); // m2 = eqn6 * r^3 -> eqn 10
 
-        multiply_avx512(msg_temp_2 + 5,
-                        reg10,
-                        reg11,
-                        reg12,
-                        reg13,
-                        reg14); // m2 = eqn7 * r^2 -> eqn 11
+        mult_avx512_radix26(msg_temp_2 + 5,
+                            reg10,
+                            reg11,
+                            reg12,
+                            reg13,
+                            reg14); // m2 = eqn7 * r^2 -> eqn 11
 
-        multiply_avx512(msg_temp_2 + 10,
-                        reg0,
-                        reg1,
-                        reg2,
-                        reg3,
-                        reg4); // m3 = eqn8 * r -> eqn 12
+        mult_avx512_radix26(msg_temp_2 + 10,
+                            reg0,
+                            reg1,
+                            reg2,
+                            reg3,
+                            reg4); // m3 = eqn8 * r -> eqn 12
 
         // a = eqn9 + eqn 10 -> eqn 13
         acc[0] += msg_temp_2[0];
@@ -1206,7 +1243,7 @@ blkx8(Uint64      key[],
         acc[4] += msg_temp_0[4];
 
         // multiply(acc, r, s);
-        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg0, reg1, reg2, reg3, reg4);
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -1225,14 +1262,14 @@ blkx8(Uint64      key[],
     return msgLen;
 }
 
-// Horner factor 2
+// Horner factor 4
 Uint64
-blkx4_new(Uint64      key[],
-          const Uint8 pMsg[],
-          Uint64      msgLen,
-          Uint64      accumulator[],
-          Uint64      r[10],
-          Uint64      s[8])
+poly1305_blkx4_radix26_alt(Uint64      key[],
+                           const Uint8 pMsg[],
+                           Uint64      msgLen,
+                           Uint64      accumulator[],
+                           Uint64      r[10],
+                           Uint64      s[8])
 {
     __m512i reg0, reg1, reg2, reg3, reg4;      // r
     __m512i reg10, reg11, reg12, reg13, reg14; // r ^ 2
@@ -1255,12 +1292,12 @@ blkx4_new(Uint64      key[],
 
     // r[0:5] <= r; r[5:10] <= r**2
     // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
-    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4); // R
-    create_multiplication_matrix(
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4); // R
+    create_mul_mat_radix26(
         r + 5, s + 4, reg10, reg11, reg12, reg13, reg14); // R ^ 2
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 10, s + 8, reg20, reg21, reg22, reg23, reg24); // R ^ 3
-    create_multiplication_matrix(
+    create_mul_mat_radix26(
         r + 15, s + 12, reg30, reg31, reg32, reg33, reg34); // R ^ 4
 
 #if 1
@@ -1393,15 +1430,15 @@ blkx4_new(Uint64      key[],
         p_msg_8 += 1;
 
         // multiply(acc, r + 5, s + 4);
-        multiply_avx512(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
+        mult_avx512_radix26(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
         // multiply(msg_temp_2, r + 5, s + 4);
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2, reg30, reg31, reg32, reg33, reg34); // m1 * r^4
 
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 5, reg30, reg31, reg32, reg33, reg34); // m2 * r^4
 
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 10, reg30, reg31, reg32, reg33, reg34); // m3 * r^4
 
         // Aggregate Accumulator
@@ -1418,15 +1455,15 @@ blkx4_new(Uint64      key[],
     if (fold_needed) {
 
         // multiply(acc, r + 5, s + 4);
-        multiply_avx512(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
+        mult_avx512_radix26(acc, reg30, reg31, reg32, reg33, reg34); // m0 * r^4
         // multiply(msg_temp_2, r + 5, s + 4);
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2, reg20, reg21, reg22, reg23, reg24); // m1 * r^3
 
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 5, reg10, reg11, reg12, reg13, reg14); // m2 * r^2
 
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2 + 10, reg0, reg1, reg2, reg3, reg4); // m3 * r^1
 
         // Fold into acc
@@ -1471,7 +1508,7 @@ blkx4_new(Uint64      key[],
         acc[4] += msg_temp_0[4];
 
         // multiply(acc, r, s);
-        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg0, reg1, reg2, reg3, reg4);
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -1490,14 +1527,14 @@ blkx4_new(Uint64      key[],
     return msgLen;
 }
 
-// Horner factor 2
+// Horner factor 4
 Uint64
-blkx4(Uint64      key[],
-      const Uint8 pMsg[],
-      Uint64      msgLen,
-      Uint64      accumulator[],
-      Uint64      r[10],
-      Uint64      s[8])
+poly1305_blkx4_radix26(Uint64      key[],
+                       const Uint8 pMsg[],
+                       Uint64      msgLen,
+                       Uint64      accumulator[],
+                       Uint64      r[10],
+                       Uint64      s[8])
 {
     __m512i reg0, reg1, reg2, reg3, reg4;
     __m512i reg10, reg11, reg12, reg13, reg14;
@@ -1517,9 +1554,8 @@ blkx4(Uint64      key[],
 
     // r[0:5] <= r; r[5:10] <= r**2
     // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
-    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
-    create_multiplication_matrix(
-        r + 5, s + 4, reg10, reg11, reg12, reg13, reg14);
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4);
+    create_mul_mat_radix26(r + 5, s + 4, reg10, reg11, reg12, reg13, reg14);
 
 #if 1
     // Process 2 blocks at a time
@@ -1595,9 +1631,9 @@ blkx4(Uint64      key[],
         acc[4] += msg_temp_0[4];
 
         // multiply(acc, r + 5, s + 4);
-        multiply_avx512(acc, reg10, reg11, reg12, reg13, reg14); // a * r^2
+        mult_avx512_radix26(acc, reg10, reg11, reg12, reg13, reg14); // a * r^2
         // multiply(msg_temp_2, r + 5, s + 4);
-        multiply_avx512(
+        mult_avx512_radix26(
             msg_temp_2, reg10, reg11, reg12, reg13, reg14); // m1 * r^2
 
         // a += m2
@@ -1608,7 +1644,7 @@ blkx4(Uint64      key[],
         acc[4] += msg_temp_2[9];
 
         // multiply(acc, r + 5, s + 4);
-        multiply_avx512(acc, reg10, reg11, reg12, reg13, reg14); // a * r^2
+        mult_avx512_radix26(acc, reg10, reg11, reg12, reg13, reg14); // a * r^2
 
         // m1 += m3
         msg_temp_2[0] += msg_temp_2[10];
@@ -1617,7 +1653,7 @@ blkx4(Uint64      key[],
         msg_temp_2[3] += msg_temp_2[13];
         msg_temp_2[4] += msg_temp_2[14];
 
-        multiply_avx512(msg_temp_2, reg0, reg1, reg2, reg3, reg4); // m1 * r
+        mult_avx512_radix26(msg_temp_2, reg0, reg1, reg2, reg3, reg4); // m1 * r
         // multiply(msg_temp_2, r, s);
 
         // a += m1
@@ -1661,7 +1697,7 @@ blkx4(Uint64      key[],
         acc[4] += msg_temp_0[4];
 
         // multiply(acc, r, s);
-        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg0, reg1, reg2, reg3, reg4);
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -1682,12 +1718,12 @@ blkx4(Uint64      key[],
 
 // Horner factor 2
 Uint64
-blkx2(Uint64      key[],
-      const Uint8 pMsg[],
-      Uint64      msgLen,
-      Uint64      accumulator[],
-      Uint64      r[10],
-      Uint64      s[8])
+poly1305_blkx2_radix26(Uint64      key[],
+                       const Uint8 pMsg[],
+                       Uint64      msgLen,
+                       Uint64      accumulator[],
+                       Uint64      r[10],
+                       Uint64      s[8])
 {
     __m512i reg0, reg1, reg2, reg3, reg4;
     __m512i reg10, reg11, reg12, reg13, reg14;
@@ -1707,9 +1743,8 @@ blkx2(Uint64      key[],
 
     // r[0:5] <= r; r[5:10] <= r**2
     // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
-    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
-    create_multiplication_matrix(
-        r + 5, s + 4, reg10, reg11, reg12, reg13, reg14);
+    create_mul_mat_radix26(r, s, reg0, reg1, reg2, reg3, reg4);
+    create_mul_mat_radix26(r + 5, s + 4, reg10, reg11, reg12, reg13, reg14);
 
 #if 1
     // Process 2 blocks at a time
@@ -1753,8 +1788,8 @@ blkx2(Uint64      key[],
         acc[3] += msg_temp_0[3];
         acc[4] += msg_temp_0[4];
 
-        multiply_avx512(acc, reg10, reg11, reg12, reg13, reg14);
-        multiply_avx512(msg_temp_2, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg10, reg11, reg12, reg13, reg14);
+        mult_avx512_radix26(msg_temp_2, reg0, reg1, reg2, reg3, reg4);
 
         acc[0] += msg_temp_2[0];
         acc[1] += msg_temp_2[1];
@@ -1796,7 +1831,7 @@ blkx2(Uint64      key[],
         acc[4] += msg_temp_0[4];
 
         // multiply(acc, r, s);
-        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+        mult_avx512_radix26(acc, reg0, reg1, reg2, reg3, reg4);
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -1816,15 +1851,15 @@ blkx2(Uint64      key[],
 }
 
 Status
-update(Uint64      key[],
-       const Uint8 pMsg[],
-       Uint64      msgLen,
-       Uint64      accumulator[],
-       Uint8       msg_buffer[16],
-       Uint64&     msg_buffer_len,
-       Uint64      r[10],
-       Uint64      s[8],
-       bool        finalized)
+poly1305_update_radix26(Uint64      key[],
+                        const Uint8 pMsg[],
+                        Uint64      msgLen,
+                        Uint64      accumulator[],
+                        Uint8       msg_buffer[16],
+                        Uint64&     msg_buffer_len,
+                        Uint64      r[10],
+                        Uint64      s[8],
+                        bool        finalized)
 {
     // debug_print("Here");
     Status status = StatusOk();
@@ -1849,22 +1884,23 @@ update(Uint64      key[],
         msgLen -= msg_buffer_left;
 
         msg_buffer_len = 0;
-        // blk(key, msg_buffer, 16, accumulator, r, s);
-        // blkx2(key, msg_buffer, 16, accumulator, r, s);
-        // blkx4(key, msg_buffer, 16, accumulator, r, s);
-        blkx4_new(key, msg_buffer, 16, accumulator, r, s);
-        // blkx8(key, msg_buffer, 16, accumulator, r, s);
-        // blkx8_new(key, msg_buffer, 16, accumulator, r, s);
+        // poly1305_blkx1_radix26(key, msg_buffer, 16, accumulator, r, s);
+        // poly1305_blkx2_radix26(key, msg_buffer, 16, accumulator, r, s);
+        // poly1305_blkx4_radix26(key, msg_buffer, 16, accumulator, r, s);
+        poly1305_blkx4_radix26_alt(key, msg_buffer, 16, accumulator, r, s);
+        // poly1305_blkx8_radix26(key, msg_buffer, 16, accumulator, r, s);
+        // poly1305_blkx8_radix26_alt(key, msg_buffer, 16, accumulator, r, s);
     }
 
     Uint64 overflow = msgLen % 16;
 
-    // blk(key, pMsg, msgLen - overflow, accumulator, r, s);
-    // blkx2(key, pMsg, msgLen - overflow, accumulator, r, s);
-    // blkx4(key, pMsg, msgLen - overflow, accumulator, r, s);
-    blkx4_new(key, pMsg, msgLen - overflow, accumulator, r, s);
-    // blkx8(key, pMsg, msgLen - overflow, accumulator, r, s);
-    // blkx8_new(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // poly1305_blkx1_radix26(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // poly1305_blkx2_radix26(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // poly1305_blkx4_radix26(key, pMsg, msgLen - overflow, accumulator, r, s);
+    poly1305_blkx4_radix26_alt(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // poly1305_blkx8_radix26(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // poly1305_blkx8_radix26_alt(key, pMsg, msgLen - overflow, accumulator, r,
+    // s);
     if (overflow) {
         std::copy(pMsg + msgLen - overflow, pMsg + msgLen, msg_buffer);
         msg_buffer_len = overflow;
@@ -1874,15 +1910,15 @@ update(Uint64      key[],
 }
 
 Status
-finish(Uint64      key[],
-       const Uint8 pMsg[],
-       Uint64      msgLen,
-       Uint64      accumulator[],
-       Uint8       msg_buffer[16],
-       Uint64&     msg_buffer_len,
-       Uint64      r[10],
-       Uint64      s[8],
-       bool&       finalized)
+poly1305_finish_radix26(Uint64      key[],
+                        const Uint8 pMsg[],
+                        Uint64      msgLen,
+                        Uint64      accumulator[],
+                        Uint8       msg_buffer[16],
+                        Uint64&     msg_buffer_len,
+                        Uint64      r[10],
+                        Uint64      s[8],
+                        bool&       finalized)
 {
     Status status = StatusOk();
     if (finalized) {
@@ -1892,22 +1928,23 @@ finish(Uint64      key[],
 
     if (msgLen) {
         // s.update(update(pMsg, msgLen));
-        status.update(update(key,
-                             pMsg,
-                             msgLen,
-                             accumulator,
-                             msg_buffer,
-                             msg_buffer_len,
-                             r,
-                             s,
-                             finalized));
+        status.update(poly1305_update_radix26(key,
+                                              pMsg,
+                                              msgLen,
+                                              accumulator,
+                                              msg_buffer,
+                                              msg_buffer_len,
+                                              r,
+                                              s,
+                                              finalized));
     }
 
     if (msg_buffer_len) {
         msg_buffer[msg_buffer_len] = 0x01;
         std::fill(msg_buffer + msg_buffer_len + 1, msg_buffer + 16, 0);
-        // blk(msg_buffer, msg_buffer_len);
-        blk(key, msg_buffer, msg_buffer_len, accumulator, r, s);
+        // poly1305_blkx1_radix26(msg_buffer, msg_buffer_len);
+        poly1305_blkx1_radix26(
+            key, msg_buffer, msg_buffer_len, accumulator, r, s);
         // update(msg_buffer, msg_buffer_len);
     }
 
@@ -1986,7 +2023,10 @@ finish(Uint64      key[],
 }
 
 Status
-copy(Uint8 digest[], Uint64 len, Uint64 accumulator[], bool m_finalized)
+poly1305_copy_radix26(Uint8  digest[],
+                      Uint64 len,
+                      Uint64 accumulator[],
+                      bool   m_finalized)
 {
     Status s = StatusOk();
     if (!m_finalized) {
@@ -2007,11 +2047,11 @@ copy(Uint8 digest[], Uint64 len, Uint64 accumulator[], bool m_finalized)
 
     return s;
 }
+// End Radix26 Implementation
 
-// Radix44 Implementation
-
-void
-new_new_multiply(Uint64 a[3], Uint64 r[3], Uint64 s[2])
+// Begin Radix44 Implementation
+inline void
+poly1305_multiplyx2_radix44(Uint64 a[3], Uint64 r[3], Uint64 s[2])
 {
     /*
         d0 = a0r0 + a1s2 + a2s1
@@ -2024,68 +2064,47 @@ new_new_multiply(Uint64 a[3], Uint64 r[3], Uint64 s[2])
 
         reg0 + reg1 + reg2 = {d0, d1, d2,....}
     */
-    // Load r
     __m512i r_reg = _mm512_maskz_loadu_epi64(0x07, r);
-    // Load s
     __m512i s_reg = _mm512_maskz_loadu_epi64(0x03, s);
     // Reg0 is same as r_reg
     __m512i reg0 = r_reg;
-    // Permute using _mm512_mask_permutex2var_epi64 to generate reg1 from r_reg
-    // and s_reg
     __m512i idx  = _mm512_setr_epi64(1 << 3 | 1, 0, 1, 6, 6, 6, 6, 6);
     __m512i reg1 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
-    // Permute using _mm512_mask_permutex2var_epi64 to generate reg2 from r_reg
-    // and s_reg
     idx          = _mm512_setr_epi64(1 << 3 | 0, 1 << 3 | 1, 0, 6, 6, 6, 6, 6);
     __m512i reg2 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
-    // Broadcast a[0] to a 512 bit register
+
+    // First Part of multiplication
     __m512i regtemp = _mm512_set1_epi64(a[0]);
-    // Multiply using _mm512_madd52hi_epu64 and _mm512_madd52lo_epu64 instuction
-    // with r_reg with reg0 and save it to t_reg1_lo and t_reg1_hi
     __m512i t_reg1_lo =
         _mm512_madd52lo_epu64(_mm512_setzero_si512(), regtemp, reg0);
     __m512i t_reg1_hi =
         _mm512_madd52hi_epu64(_mm512_setzero_si512(), regtemp, reg0);
-    // Broadcast a[1] to a 512 bit register
-    regtemp = _mm512_set1_epi64(a[1]);
-    // Multiply using _mm512_madd52hi_epu64 and _mm512_madd52lo_epu64 instuction
-    // with r_reg with reg1 and save it to t_reg2_lo and t_reg2_hi
+
+    // Second Part of multiplication
+    regtemp           = _mm512_set1_epi64(a[1]);
     __m512i t_reg2_lo = _mm512_madd52lo_epu64(t_reg1_lo, regtemp, reg1);
     __m512i t_reg2_hi = _mm512_madd52hi_epu64(t_reg1_hi, regtemp, reg1);
-    // Broadcast a[2] to a 512 bit register
-    regtemp = _mm512_set1_epi64(a[2]);
-    // Multiply using _mm512_madd52hi_epu64 and _mm512_madd52lo_epu64 instuction
-    // with r_reg with reg2 and save it to t_reg3_lo and t_reg3_hi
+
+    // Third Part of multiplication
+    regtemp   = _mm512_set1_epi64(a[2]);
     t_reg1_lo = _mm512_madd52lo_epu64(t_reg2_lo, regtemp, reg2);
     t_reg1_hi = _mm512_madd52hi_epu64(t_reg2_hi, regtemp, reg2);
 
     // Carry propagation
-    // Store t_reg1_lo and t_reg1_hi to temp
-    // At this point in time we have t_reg1_lo, t_reg1_hi which contains
-    // d0,d1,d2. Shift t_reg1_lo by 44 bits to the right and save it to regtemp
-    idx     = _mm512_setr_epi64(44, 44, 42, 0, 0, 0, 0, 0);
-    regtemp = _mm512_srlv_epi64(t_reg1_lo, idx); // High bits
-    // Shift t_reg1_hi by 8 bits to the left and do an "or" with regtemp and
-    // save it to t_reg1_hi
+    idx       = _mm512_setr_epi64(44, 44, 42, 0, 0, 0, 0, 0);
+    regtemp   = _mm512_srlv_epi64(t_reg1_lo, idx); // High bits
     idx       = _mm512_setr_epi64(8, 8, 10, 0, 0, 0, 0, 0);
     t_reg1_hi = _mm512_sllv_epi64(t_reg1_hi, idx);
     t_reg1_hi = _mm512_or_epi64(t_reg1_hi, regtemp);
-    // Truncate t_reg1_lo to 44 bits and save it to t_reg1_lo
-    idx = _mm512_setr_epi64(
+    idx       = _mm512_setr_epi64(
         0xfffffffffff, 0xfffffffffff, 0x3ffffffffff, 0, 0, 0, 0, 0);
     t_reg1_lo = _mm512_and_epi64(t_reg1_lo, idx);
-    // Shuffle t_reg1_hi from (0,1,2,3,4,5,6,7) to (6,0,1,2,6,6,6,6) and save it
-    // to regtemp
     idx       = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
     regtemp   = _mm512_permutexvar_epi64(idx, t_reg1_hi);
     t_reg1_lo = _mm512_add_epi64(t_reg1_lo, regtemp);
 
-    // d0 should be 44 bits, but d1 and d2 can be more than 44 bits
-
-    // Mask 0xfffff00000000000,0xfffff00000000000,0xfffffc0000000000,0,0,0,0,0;
-    // to regtemp
-    //      d0                  d1                 d2               , excess
-    regtemp = _mm512_set_epi64(0xfffff00000000000UL,
+    // d0 should be 44 bits, but d1 and d2 can be more than 44 bit
+    regtemp   = _mm512_set_epi64(0xfffff00000000000UL,
                                0xfffff00000000000UL,
                                0xfffffc0000000000UL,
                                0,
@@ -2093,13 +2112,9 @@ new_new_multiply(Uint64 a[3], Uint64 r[3], Uint64 s[2])
                                0,
                                0,
                                0);
-    // Compute carry regtemp = regtemp and t_reg1_lo
-    regtemp = _mm512_and_epi64(regtemp, t_reg1_lo);
-    // Shuffle regtemp from (0,1,2,3,4,5,6,7) to (6,0,1,2,6,6,6,6) and save it
-    // to regtemp
-    idx     = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
-    regtemp = _mm512_permutexvar_epi64(idx, regtemp);
-    // Add regtemp and t_reg1_lo and save it to t_reg1_lo
+    regtemp   = _mm512_and_epi64(regtemp, t_reg1_lo);
+    idx       = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
+    regtemp   = _mm512_permutexvar_epi64(idx, regtemp);
     t_reg1_lo = _mm512_add_epi64(t_reg1_lo, regtemp);
 
     // d0 and d1 should be 44 bits, d2 can be more than 44 bits
@@ -2115,30 +2130,24 @@ new_new_multiply(Uint64 a[3], Uint64 r[3], Uint64 s[2])
                                0,
                                0,
                                0);
-    // Compute carry regtemp = regtemp and t_reg1_lo
-    regtemp = _mm512_and_epi64(regtemp, t_reg1_lo);
-    // Shuffle regtemp from (0,1,2,3,4,5,6,7) to (6,0,1,2,6,6,6,6) and save it
-    // to regtemp
-    idx     = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
-    regtemp = _mm512_permutexvar_epi64(idx, regtemp);
-    // Add regtemp and t_reg1_lo and save it to t_reg1_lo
+
+    regtemp   = _mm512_and_epi64(regtemp, t_reg1_lo);
+    idx       = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
+    regtemp   = _mm512_permutexvar_epi64(idx, regtemp);
     t_reg1_lo = _mm512_add_epi64(t_reg1_lo, regtemp);
 
     // Only excess is left to be processed
-    // Take excess out of t_reg1_lo and save it to regtemp, to do that we need
-    // to shuffle t_reg1_lo from (0,1,2,3,4,5,6,7) to (3,6,6,6,6,6,6,6)
     idx     = _mm512_setr_epi64(3, 6, 6, 6, 6, 6, 6, 6);
     regtemp = _mm512_permutexvar_epi64(idx, t_reg1_lo);
-    // Multiply excess with 5 and save it to regtemp
+    // Multiply excess with 5
     regtemp = _mm512_mullo_epi64(regtemp, _mm512_set1_epi64(5)); // Modulo Trick
-    // Add excess to t_reg1_lo and save it to t_reg1_lo
     t_reg1_lo = _mm512_add_epi64(t_reg1_lo, regtemp);
 
     // Carry propagate
     // Mask 0xfffff00000000000,0xfffff00000000000,0xfffffc0000000000,0,0,0,0,0;
     // to regtemp
     //      d0                  d1                 d2               , excess
-    regtemp = _mm512_set_epi64(0xfffff00000000000UL,
+    regtemp   = _mm512_set_epi64(0xfffff00000000000UL,
                                0xfffff00000000000UL,
                                0xfffffc0000000000UL,
                                0,
@@ -2146,27 +2155,24 @@ new_new_multiply(Uint64 a[3], Uint64 r[3], Uint64 s[2])
                                0,
                                0,
                                0);
-    // Compute carry regtemp = regtemp and t_reg1_lo
-    regtemp = _mm512_and_epi64(regtemp, t_reg1_lo);
-    // Shuffle regtemp from (0,1,2,3,4,5,6,7) to (6,0,1,2,6,6,6,6) and save it
-    // to regtemp
-    idx     = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
-    regtemp = _mm512_permutexvar_epi64(idx, regtemp);
-    // Add regtemp and t_reg1_lo and save it to t_reg1_lo
+    regtemp   = _mm512_and_epi64(regtemp, t_reg1_lo);
+    idx       = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
+    regtemp   = _mm512_permutexvar_epi64(idx, regtemp);
     t_reg1_lo = _mm512_add_epi64(t_reg1_lo, regtemp);
 
     // d0 should be 44 bits, but d1 and d2 can be more than 44 bits
     // Stopping carry propagation here for now.
 
-    // Masked store first 3 values of t_reg1_lo to a
     _mm512_mask_storeu_epi64(a, 0x7, t_reg1_lo);
 }
 
-int
-loadx1_message_radix44_avx512(const Uint8* p_msg,
-                              __m512i&     m0,
-                              __m512i&     m1,
-                              __m512i&     m2)
+// FIXME: Below two functions can be fused with use of template to eliminate
+// branches
+inline int
+loadx1_message_radix44(const Uint8* p_msg,
+                       __m512i&     m0,
+                       __m512i&     m1,
+                       __m512i&     m2)
 {
     // Load 128 bits from p_msg into m0 using _mm512_maskz_loadu_epi64
     m0 = _mm512_maskz_loadu_epi64(0x03, p_msg);
@@ -2202,11 +2208,11 @@ loadx1_message_radix44_avx512(const Uint8* p_msg,
     return 128;
 }
 
-int
-loadx1_message_radix44_nopad_avx512(const Uint8* p_msg,
-                                    __m512i&     m0,
-                                    __m512i&     m1,
-                                    __m512i&     m2)
+inline int
+loadx1_message_radix44_nopad(const Uint8* p_msg,
+                             __m512i&     m0,
+                             __m512i&     m1,
+                             __m512i&     m2)
 {
     // Load 128 bits from p_msg into m0 using _mm512_maskz_loadu_epi64
     m0 = _mm512_maskz_loadu_epi64(0x03, p_msg);
@@ -2240,10 +2246,10 @@ loadx1_message_radix44_nopad_avx512(const Uint8* p_msg,
 }
 
 inline int
-loadx8_message_radix44_avx512(const Uint8* p_msg,
-                              __m512i&     m0,
-                              __m512i&     m1,
-                              __m512i&     m2)
+loadx8_message_radix44(const Uint8* p_msg,
+                       __m512i&     m0,
+                       __m512i&     m1,
+                       __m512i&     m2)
 {
     __m512i temp0, temp1, temp2, temp3;
     // Load 512 bits from p_msg into m0 and m1 using _mm512_loadu_si512
@@ -2278,14 +2284,11 @@ loadx8_message_radix44_avx512(const Uint8* p_msg,
 }
 
 // Function to broadcast r value to reg0, reg1, reg2 which are 512 bit registers
-void
+inline void
 broadcast_r(const Uint64 r[3], __m512i& reg0, __m512i& reg1, __m512i& reg2)
 {
-    // Broadcast r[0] to reg0
     reg0 = _mm512_set1_epi64(r[0]);
-    // Broadcast r[1] to reg1
     reg1 = _mm512_set1_epi64(r[1]);
-    // Broadcast r[2] to reg2
     reg2 = _mm512_set1_epi64(r[2]);
 }
 
@@ -2303,14 +2306,14 @@ poly1305_calculate_modulo_trick_value(const __m512i reg1,
 }
 
 inline void
-multiplyx8_radix44_avx512(__m512i& a0,
-                          __m512i& a1,
-                          __m512i& a2,
-                          __m512i  r0,
-                          __m512i  r1,
-                          __m512i  r2,
-                          __m512i  s1,
-                          __m512i  s2)
+poly1305_multx8_radix44(__m512i& a0,
+                        __m512i& a1,
+                        __m512i& a2,
+                        __m512i  r0,
+                        __m512i  r1,
+                        __m512i  r2,
+                        __m512i  s1,
+                        __m512i  s2)
 {
     // Multiply
     __m512i extra;
@@ -2376,9 +2379,12 @@ multiplyx8_radix44_avx512(__m512i& a0,
     extra = _mm512_add_epi64(extra, d0h);
     d0l   = _mm512_add_epi64(d0l, extra);
 
+// FIXME: Make sure this is not needed
+#if 0
     // extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
     // d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(0xfffffffffff));
     // d1l   = _mm512_add_epi64(d1l, extra);
+#endif
 
     // Store d0l, d1l, d2l to a0, a1, a2
     a0 = d0l;
@@ -2387,7 +2393,7 @@ multiplyx8_radix44_avx512(__m512i& a0,
 }
 
 void
-multiply_radix44_avx512_standalone(const Uint64 a[3],
+poly1305_multx1_radix44_standalone(const Uint64 a[3],
                                    const Uint64 b[3],
                                    Uint64       out[3])
 {
@@ -2403,24 +2409,12 @@ multiply_radix44_avx512_standalone(const Uint64 a[3],
     poly1305_calculate_modulo_trick_value(reg1, reg2, s1, s2);
 
     // Multiply reg0, reg1, reg2 with m0, m1, m2
-    multiplyx8_radix44_avx512(m0, m1, m2, reg0, reg1, reg2, s1, s2);
+    poly1305_multx8_radix44(m0, m1, m2, reg0, reg1, reg2, s1, s2);
 
     // Store m0, m1, m2 to out
     _mm512_mask_storeu_epi64(out, 0x01, m0);
     _mm512_mask_storeu_epi64(out + 1, 0x01, m1);
     _mm512_mask_storeu_epi64(out + 2, 0x01, m2);
-}
-
-// Function to broadcast r value to reg0, reg1, reg2 which are 512 bit registers
-inline void
-broadcast_r(Uint64 r[3], __m512i& reg0, __m512i& reg1, __m512i& reg2)
-{
-    // Broadcast r[0] to reg0
-    reg0 = _mm512_set1_epi64(r[0]);
-    // Broadcast r[1] to reg1
-    reg1 = _mm512_set1_epi64(r[1]);
-    // Broadcast r[2] to reg2
-    reg2 = _mm512_set1_epi64(r[2]);
 }
 
 void
@@ -2446,17 +2440,17 @@ load_all_r(Uint64   r[3],
 }
 
 void
-poly1305_block_finalx8_avx512(__m512i& a0,
-                              __m512i& a1,
-                              __m512i& a2,
-                              Uint64   r[3],
-                              Uint64   r2[3],
-                              Uint64   r3[3],
-                              Uint64   r4[3],
-                              Uint64   r5[3],
-                              Uint64   r6[3],
-                              Uint64   r7[3],
-                              Uint64   r8[3])
+poly1305_block_finalx8(__m512i& a0,
+                       __m512i& a1,
+                       __m512i& a2,
+                       Uint64   r[3],
+                       Uint64   r2[3],
+                       Uint64   r3[3],
+                       Uint64   r4[3],
+                       Uint64   r5[3],
+                       Uint64   r6[3],
+                       Uint64   r7[3],
+                       Uint64   r8[3])
 {
     __m512i reg_r0, reg_r1, reg_r2;
     __m512i reg_s1, reg_s2;
@@ -2465,8 +2459,7 @@ poly1305_block_finalx8_avx512(__m512i& a0,
     // acc *= r,r2,r3,r4,r5,r6,r7,r8
     poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
 
-    multiplyx8_radix44_avx512(
-        a0, a1, a2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
+    poly1305_multx8_radix44(a0, a1, a2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
 
     // Horizontal addition
     // Downgrade to avx2, a0_256_0 and a0_256_1, a1_256_0 and a1_256_1 and
@@ -2566,28 +2559,26 @@ poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32])
 
     clamp(r);
 
-    // Save RADIX44(r) to state->r
     radix44(r, state.r);
-    // Save RADIX44(s) to state.s
     radix44(s, state.s);
 
-    // FIXME: Use new_new_multiply_multi to optimize
+    // FIXME: Use poly1305_multiplyx2_radix44 to optimize
     // Compute r**2..r**3..r**4..r**5..r**6..r**7..r**8
     // Multiply r1_key with r1_key and save it to r2_key
     // R Square
-    multiply_radix44_avx512_standalone(state.r, state.r, state.r2);
+    poly1305_multx1_radix44_standalone(state.r, state.r, state.r2);
     // R Cube
-    multiply_radix44_avx512_standalone(state.r2, state.r, state.r3);
+    poly1305_multx1_radix44_standalone(state.r2, state.r, state.r3);
     // R Biquadrate / Quartic
-    multiply_radix44_avx512_standalone(state.r3, state.r, state.r4);
+    poly1305_multx1_radix44_standalone(state.r3, state.r, state.r4);
     // R Sursolid / Quintic
-    multiply_radix44_avx512_standalone(state.r4, state.r, state.r5);
+    poly1305_multx1_radix44_standalone(state.r4, state.r, state.r5);
     // R Zenzicube / Sextic
-    multiply_radix44_avx512_standalone(state.r5, state.r, state.r6);
+    poly1305_multx1_radix44_standalone(state.r5, state.r, state.r6);
     // R Second Sursolid / Septic
-    multiply_radix44_avx512_standalone(state.r6, state.r, state.r7);
+    poly1305_multx1_radix44_standalone(state.r6, state.r, state.r7);
     // R Zenzizenzizenzic / Octic
-    multiply_radix44_avx512_standalone(state.r7, state.r, state.r8);
+    poly1305_multx1_radix44_standalone(state.r7, state.r, state.r8);
 }
 
 inline void
@@ -2610,7 +2601,7 @@ poly1305_blocksx8_radix44(Poly1305State44& state,
         broadcast_r(state.r8, reg_r0, reg_r1, reg_r2);
         poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
         // Load Initial Message
-        loadx8_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+        loadx8_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
 
         reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
         reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
@@ -2619,16 +2610,16 @@ poly1305_blocksx8_radix44(Poly1305State44& state,
         pMsg += 128;
     }
     while ((len >= 128) && state.fold) {
-        loadx8_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+        loadx8_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
 
-        multiplyx8_radix44_avx512(reg_acc0,
-                                  reg_acc1,
-                                  reg_acc2,
-                                  reg_r0,
-                                  reg_r1,
-                                  reg_r2,
-                                  reg_s1,
-                                  reg_s2);
+        poly1305_multx8_radix44(reg_acc0,
+                                reg_acc1,
+                                reg_acc2,
+                                reg_r0,
+                                reg_r1,
+                                reg_r2,
+                                reg_s1,
+                                reg_s2);
 
         reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
         reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
@@ -2656,24 +2647,24 @@ poly1305_blocksx1_radix44(Poly1305State44& state,
     __m512i reg_r0, reg_r1, reg_r2;
     __m512i reg_s1, reg_s2;
     if (state.fold) {
-        poly1305_block_finalx8_avx512(reg_acc0,
-                                      reg_acc1,
-                                      reg_acc2,
-                                      state.r,
-                                      state.r2,
-                                      state.r3,
-                                      state.r4,
-                                      state.r5,
-                                      state.r6,
-                                      state.r7,
-                                      state.r8);
+        poly1305_block_finalx8(reg_acc0,
+                               reg_acc1,
+                               reg_acc2,
+                               state.r,
+                               state.r2,
+                               state.r3,
+                               state.r4,
+                               state.r5,
+                               state.r6,
+                               state.r7,
+                               state.r8);
         state.fold = false;
     }
     broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
     poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
 
     while (len >= 16) {
-        loadx1_message_radix44_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+        loadx1_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
         // Add m0, m1, m2 to a0, a1, a2
         reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
         reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
@@ -2682,14 +2673,14 @@ poly1305_blocksx1_radix44(Poly1305State44& state,
         pMsg += 16;
         len -= 16;
 
-        multiplyx8_radix44_avx512(reg_acc0,
-                                  reg_acc1,
-                                  reg_acc2,
-                                  reg_r0,
-                                  reg_r1,
-                                  reg_r2,
-                                  reg_s1,
-                                  reg_s2);
+        poly1305_multx8_radix44(reg_acc0,
+                                reg_acc1,
+                                reg_acc2,
+                                reg_r0,
+                                reg_r1,
+                                reg_r2,
+                                reg_s1,
+                                reg_s2);
     }
     _mm512_store_epi64(state.acc0, reg_acc0);
     _mm512_store_epi64(state.acc1, reg_acc1);
@@ -2707,31 +2698,31 @@ poly1305_partial_blocks(Poly1305State44& state)
     __m512i reg_r0, reg_r1, reg_r2;
     __m512i reg_s1, reg_s2;
 
-    Uint8* pMsg = state.msg_buffer;
+    Uint8* p_msg = state.msg_buffer;
 
     assert(state.msg_buffer_len < 16);
     if (state.fold == true) {
-        poly1305_block_finalx8_avx512(reg_acc0,
-                                      reg_acc1,
-                                      reg_acc2,
-                                      state.r,
-                                      state.r2,
-                                      state.r3,
-                                      state.r4,
-                                      state.r5,
-                                      state.r6,
-                                      state.r7,
-                                      state.r8);
+        poly1305_block_finalx8(reg_acc0,
+                               reg_acc1,
+                               reg_acc2,
+                               state.r,
+                               state.r2,
+                               state.r3,
+                               state.r4,
+                               state.r5,
+                               state.r6,
+                               state.r7,
+                               state.r8);
         state.fold = false;
     }
 
     // Padding
-    pMsg[state.msg_buffer_len] = 0x01;
+    p_msg[state.msg_buffer_len] = 0x01;
     for (int i = state.msg_buffer_len + 1; i < 16; i++) {
-        pMsg[i] = 0x00;
+        p_msg[i] = 0x00;
     }
 
-    loadx1_message_radix44_nopad_avx512(pMsg, reg_msg0, reg_msg1, reg_msg2);
+    loadx1_message_radix44_nopad(p_msg, reg_msg0, reg_msg1, reg_msg2);
 
     // Setup R and S
     broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
@@ -2744,7 +2735,7 @@ poly1305_partial_blocks(Poly1305State44& state)
 
     state.msg_buffer_len = 0; // Reset message buffer
 
-    multiplyx8_radix44_avx512(
+    poly1305_multx8_radix44(
         reg_acc0, reg_acc1, reg_acc2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
 
     _mm512_store_epi64(state.acc0, reg_acc0);
@@ -2759,20 +2750,20 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
         return false;
     }
     if (state.msg_buffer_len != 0) {
-        Uint64 copyLen = len > (16 - state.msg_buffer_len)
-                             ? (16 - state.msg_buffer_len)
-                             : len;
+        Uint64 copy_len = len > (16 - state.msg_buffer_len)
+                              ? (16 - state.msg_buffer_len)
+                              : len;
         // Handle overhanging data
         std::copy(
-            pMsg, pMsg + copyLen, state.msg_buffer + state.msg_buffer_len);
-        len -= copyLen;
-        state.msg_buffer_len += copyLen;
+            pMsg, pMsg + copy_len, state.msg_buffer + state.msg_buffer_len);
+        len -= copy_len;
+        state.msg_buffer_len += copy_len;
 
-        const Uint8* temp_ptr = state.msg_buffer;
-        Uint64       temp_len = 16;
+        const Uint8* p_temp_ptr = state.msg_buffer;
+        Uint64       temp_len   = 16;
 
         if (state.msg_buffer_len == 16) {
-            poly1305_blocksx1_radix44(state, temp_ptr, temp_len);
+            poly1305_blocksx1_radix44(state, p_temp_ptr, temp_len);
             state.msg_buffer_len = 0;
         }
     }
@@ -2787,18 +2778,6 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
         state.msg_buffer_len = len;
     }
 
-    // for (int i = 0; i < 8; i++) {
-    //     std::cout << std::hex << reg_acc0[i] << " ";
-    // }
-    // std::cout << std::endl;
-    // for (int i = 0; i < 8; i++) {
-    //     std::cout << std::hex << reg_acc1[i] << " ";
-    // }
-    // std::cout << std::endl;
-    // for (int i = 0; i < 8; i++) {
-    //     std::cout << std::hex << reg_acc2[i] << " ";
-    // }
-    // std::cout << std::endl;
     return true;
 }
 
@@ -2808,33 +2787,15 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     if (state.finalized == true) {
         return false;
     }
-#if 1
-    // Implement Partial Blocks
-    if (state.msg_buffer_len != 0) {
-        if (((len + state.msg_buffer_len) >= 16)) {
-            std::copy(pMsg,
-                      pMsg + (16 - state.msg_buffer_len),
-                      state.msg_buffer + state.msg_buffer_len);
-            poly1305_update_radix44(state, state.msg_buffer, 16);
-            state.msg_buffer_len = 0;
-            len                  = len - (16 - state.msg_buffer_len);
-        } else {
-            std::copy(
-                pMsg, pMsg + len, state.msg_buffer + state.msg_buffer_len);
-            state.msg_buffer_len = (len + state.msg_buffer_len);
-            len                  = 0;
-            poly1305_partial_blocks(state);
-        }
-    }
-#endif
     if (len) {
         poly1305_update_radix44(state, pMsg, len);
         len = 0;
     }
-    // FIXME: Fix this code duplication
+    // Handle left over blocks
 #if 1
     // Implement Partial Blocks
     if (state.msg_buffer_len != 0) {
+        // FIXME: Ideally this part will not be executed.
         if (((len + state.msg_buffer_len) >= 16)) {
             std::copy(pMsg,
                       pMsg + (16 - state.msg_buffer_len),
@@ -2854,17 +2815,17 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
             reg_acc1 = _mm512_load_epi64(state.acc1),
             reg_acc2 = _mm512_load_epi64(state.acc2);
     if (state.fold) {
-        poly1305_block_finalx8_avx512(reg_acc0,
-                                      reg_acc1,
-                                      reg_acc2,
-                                      state.r,
-                                      state.r2,
-                                      state.r3,
-                                      state.r4,
-                                      state.r5,
-                                      state.r6,
-                                      state.r7,
-                                      state.r8);
+        poly1305_block_finalx8(reg_acc0,
+                               reg_acc1,
+                               reg_acc2,
+                               state.r,
+                               state.r2,
+                               state.r3,
+                               state.r4,
+                               state.r5,
+                               state.r6,
+                               state.r7,
+                               state.r8);
         state.fold = false;
     }
 
@@ -2887,18 +2848,6 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     // reg_acc1 = reg_acc1 & 0xfffffffffff
     reg_acc1 = _mm512_and_epi64(reg_acc1, _mm512_set1_epi64(0xfffffffffff));
 
-    // for (int i = 0; i < 8; i++) {
-    //     std::cout << std::hex << reg_acc0[i] << " ";
-    // }
-    // std::cout << std::endl;
-    // for (int i = 0; i < 8; i++) {
-    //     std::cout << std::hex << reg_acc1[i] << " ";
-    // }
-    // std::cout << std::endl;
-    // for (int i = 0; i < 8; i++) {
-    //     std::cout << std::hex << reg_acc2[i] << " ";
-    // }
-    // std::cout << std::endl;
     _mm512_store_epi64(state.acc0, reg_acc0);
     _mm512_store_epi64(state.acc1, reg_acc1);
     _mm512_store_epi64(state.acc2, reg_acc2);
@@ -2929,5 +2878,6 @@ poly1305_copy_radix44(Poly1305State44& state, Uint8* digest, Uint64 digest_len)
 
     return true;
 }
+// End Radix44 Implementation
 
 } // namespace alcp::mac::poly1305::zen4

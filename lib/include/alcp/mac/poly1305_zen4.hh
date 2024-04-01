@@ -34,38 +34,41 @@
 namespace alcp::mac::poly1305::zen4 {
 
 Status
-init(const Uint8 key[],           // Input key
-     Uint64      keyLen,          // Key Length
-     Uint64      accumulator[],   // Output Accumulator
-     Uint64      processed_key[], // Output Key
-     Uint64      r[10],           // Authentication Key
-     Uint64      s[8],            // Addicitive Key
-     bool        finalized);             // Finalization indicator
+init_radix26(const Uint8 key[],           // Input key
+             Uint64      keyLen,          // Key Length
+             Uint64      accumulator[],   // Output Accumulator
+             Uint64      processed_key[], // Output Key
+             Uint64      r[10],           // Authentication Key
+             Uint64      s[8],            // Addicitive Key
+             bool        finalized);             // Finalization indicator
 
 Status
-update(Uint64      key[],
-       const Uint8 pMsg[],
-       Uint64      msgLen,
-       Uint64      accumulator[],
-       Uint8       m_msg_buffer[16],
-       Uint64&     m_msg_buffer_len,
-       Uint64      r[10],
-       Uint64      s[8],
-       bool        finalized);
+poly1305_update_radix26(Uint64      key[],
+                        const Uint8 pMsg[],
+                        Uint64      msgLen,
+                        Uint64      accumulator[],
+                        Uint8       m_msg_buffer[16],
+                        Uint64&     m_msg_buffer_len,
+                        Uint64      r[10],
+                        Uint64      s[8],
+                        bool        finalized);
 
 Status
-finish(Uint64      key[],
-       const Uint8 pMsg[],
-       Uint64      msgLen,
-       Uint64      accumulator[],
-       Uint8       msg_buffer[16],
-       Uint64&     msg_buffer_len,
-       Uint64      r[10],
-       Uint64      s[8],
-       bool&       finalized);
+poly1305_finish_radix26(Uint64      key[],
+                        const Uint8 pMsg[],
+                        Uint64      msgLen,
+                        Uint64      accumulator[],
+                        Uint8       msg_buffer[16],
+                        Uint64&     msg_buffer_len,
+                        Uint64      r[10],
+                        Uint64      s[8],
+                        bool&       finalized);
 
 Status
-copy(Uint8 digest[], Uint64 len, Uint64 accumulator[], bool m_finalized);
+poly1305_copy_radix26(Uint8  digest[],
+                      Uint64 len,
+                      Uint64 accumulator[],
+                      bool   m_finalized);
 
 void
 poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32]);
