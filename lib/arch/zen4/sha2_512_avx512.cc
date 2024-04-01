@@ -497,14 +497,16 @@ namespace alcp::digest { namespace zen4 {
         state[6] += g;
         state[7] += h;
     }
-
-    static inline void process_buffer_avx2(Uint64       state[8],
-                                           const Uint8* data,
-                                           Uint32       num_chunks,
-                                           __m256i      hash_256_0,
-                                           __m256i      hash_256_1)
+    static inline void
+#if defined(COMPILER_IS_GCC)
+        __attribute__((optimize("-fsched-stalled-insns=0")))
+#endif
+        process_buffer_avx2(Uint64       state[8],
+                            const Uint8* data,
+                            Uint32       num_chunks,
+                            __m256i      hash_256_0,
+                            __m256i      hash_256_1)
     {
-
         __attribute__((aligned(64)))
         Uint64  message_sch_1[Sha512::cNumRounds + 16];
         __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2] = {};
