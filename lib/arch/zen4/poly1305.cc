@@ -2200,7 +2200,7 @@ loadx1_message_radix44(const Uint8* p_msg,
         _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(0x3ffffffffff));
 
     hi_shifted_40 =
-        _mm512_or_epi64(hi_shifted_40, _mm512_set1_epi64(1UL << 40));
+        _mm512_or_epi64(hi_shifted_40, _mm512_set1_epi64(1ULL << 40));
 
     m0 = lo_masked;
     m1 = lo_or;
@@ -2278,7 +2278,7 @@ loadx8_message_radix44(const Uint8* p_msg,
     temp3 = _mm512_srlv_epi64(temp1, _mm512_set1_epi64(24));
     // Truncate to 44 bits
     m2 = _mm512_and_epi64(temp3, _mm512_set1_epi64(0xfffffffffff));
-    m2 = _mm512_or_epi64(m2, _mm512_set1_epi64(1UL << 40));
+    m2 = _mm512_or_epi64(m2, _mm512_set1_epi64(1ULL << 40));
 
     return 512;
 }
