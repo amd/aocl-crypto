@@ -68,6 +68,21 @@ AlcpRsaBase::init()
         std::cout << "Error in alcp_rsa_request " << err << std::endl;
         return false;
     }
+
+    /* only for no padding mode*/
+    if (m_padding_mode != ALCP_TEST_RSA_NO_PADDING) {
+        err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
+        if (alcp_is_error(err)) {
+            std::cout << "Error in alcp_rsa_add_digest" << err << std::endl;
+            return err;
+        }
+        /*call mask gen function */
+        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
+        if (alcp_is_error(err)) {
+            std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
+            return err;
+        }
+    }
     return true;
 }
 
@@ -166,18 +181,6 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return err;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
-        // Adding the digest function for generating the hash in oaep padding
-        err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
-        if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_digest " << err << std::endl;
-            return err;
-        }
-        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
-        if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
-            return err;
-        }
-
         // Encrypt text
         err = alcp_rsa_publickey_encrypt_oaep(m_rsa_handle,
                                               data.m_msg,
@@ -209,17 +212,6 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                           data.m_key_len,
                                           data.m_decrypted_data);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
-        // Adding the digest function for generating the hash in oaep padding
-        err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
-        if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_digest " << err << std::endl;
-            return err;
-        }
-        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
-        if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
-            return err;
-        }
         err = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
                                                data.m_encrypted_data,
                                                data.m_key_len,
@@ -245,14 +237,6 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
 
-    // Adding the digest function for generating the hash in oaep padding
-    /* FIXME, move this and mgf function out of this */
-    err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
-    if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_rsa_add_digest" << err << std::endl;
-        return err;
-    }
-
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         err = alcp_rsa_privatekey_sign_pss(m_rsa_handle,
                                            true,
@@ -262,12 +246,6 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
                                            data.m_salt_len,
                                            data.m_signature);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-        /*call mask gen function */
-        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
-        if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
-            return err;
-        }
         /* sign function */
         err = alcp_rsa_privatekey_sign_pkcs1v15(
             m_rsa_handle, true, data.m_msg, data.m_msg_len, data.m_signature);
