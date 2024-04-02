@@ -124,7 +124,8 @@ ExtendMsg(Uint64 w[], Uint32 start, Uint32 end)
     }
 }
 
-Sha512::Sha512(alc_digest_len_t digest_len)
+template<alc_digest_len_t digest_len>
+Sha512<digest_len>::Sha512(alc_digest_len_t digest_len)
 {
     m_Iv = cIv_512;
     switch (digest_len) {
@@ -144,16 +145,19 @@ Sha512::Sha512(alc_digest_len_t digest_len)
             m_digest_len = 512 / 8;
             m_Iv         = cIv_512;
     }
-    m_block_len = Sha512::cChunkSize;
+    m_block_len = template<alc_digest_len_t digest_len>
+    Sha512<digest_len>::cChunkSize;
 }
 
-Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
+template<alc_digest_len_t digest_len>
+Sha512<digest_len>::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512(rDigestInfo.dt_len)
 {
     m_mode = rDigestInfo.dt_mode;
 }
 
-Sha512::Sha512(const Sha512& src)
+template<alc_digest_len_t digest_len>
+Sha512<digest_len>::Sha512(const Sha512& src)
 {
     m_msg_len = src.m_msg_len;
     m_mode    = src.m_mode;
@@ -166,8 +170,8 @@ Sha512::Sha512(const Sha512& src)
     m_Iv         = src.m_Iv;
 }
 
-void
-Sha512::init(void)
+void template<alc_digest_len_t digest_len>
+Sha512<digest_len>::init(void)
 {
     m_msg_len  = 0;
     m_finished = false;
@@ -175,10 +179,8 @@ Sha512::init(void)
     utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
 }
 
-Sha512::~Sha512() = default;
-
-alc_error_t
-Sha512::setIv(const void* pIv, Uint64 size)
+alc_error_t template<alc_digest_len_t digest_len>
+Sha512<digest_len>::setIv(const void* pIv, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -199,8 +201,8 @@ Sha512::setIv(const void* pIv, Uint64 size)
     return err;
 }
 
-void
-Sha512::reset()
+void template<alc_digest_len_t digest_len>
+Sha512<digest_len>::reset()
 {
     m_msg_len  = 0;
     m_finished = false;
@@ -208,8 +210,8 @@ Sha512::reset()
     utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
 }
 
-alc_error_t
-Sha512::copyHash(Uint8* pHash, Uint64 size) const
+alc_error_t template<alc_digest_len_t digest_len>
+Sha512<digest_len>::copyHash(Uint8* pHash, Uint64 size) const
 {
     // FIXME: Copying Block with Uint64 will cause issues on non 64 bit
     // aligned memory. Since PHash is user allocated pointer this can
@@ -240,14 +242,14 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
     return err;
 }
 
-alc_error_t
-Sha512::processChunk(const Uint8* pSrc, Uint64 len)
+alc_error_t template<alc_digest_len_t digest_len>
+Sha512<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
 {
     static bool cpu_is_zen3 = CpuId::cpuIsZen3();
     static bool cpu_is_zen4 = CpuId::cpuIsZen4();
 
     /* we need len to be multiple of cChunkSize */
-    assert((len & Sha512::cChunkSizeMask) == 0);
+    assert((len & cChunkSizeMask) == 0);
 
     if (cpu_is_zen4) {
 #ifdef COMPILER_IS_CLANG
@@ -285,8 +287,8 @@ Sha512::processChunk(const Uint8* pSrc, Uint64 len)
     return ALC_ERROR_NONE;
 }
 
-alc_error_t
-Sha512::update(const Uint8* pSrc, Uint64 input_size)
+alc_error_t template<alc_digest_len_t digest_len>
+Sha512<digest_len>::update(const Uint8* pSrc, Uint64 input_size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -341,7 +343,10 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     }
 
     /* No of bytes that can be processed as Chunks */
-    to_process = input_size - (input_size & Sha512::cChunkSizeMask);
+    to_process = input_size
+                 - (input_size
+                    & template<alc_digest_len_t digest_len>
+                    Sha512<digest_len>::cChunkSizeMask);
     if (to_process > 0) {
         err = processChunk(pSrc, to_process);
 
@@ -369,8 +374,8 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
  * the rest of it to ensure correct computation Default padding is 'length
  * encoding'
  */
-alc_error_t
-Sha512::finalize(const Uint8* pSrc, Uint64 size)
+alc_error_t template<alc_digest_len_t digest_len>
+Sha512<digest_len>::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 

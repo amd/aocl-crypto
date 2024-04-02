@@ -136,8 +136,8 @@ class Sha2 final : public IDigest
 typedef Sha2<ALC_DIGEST_LEN_224> Sha224;
 typedef Sha2<ALC_DIGEST_LEN_256> Sha256;
 
-template class Sha2<ALC_DIGEST_LEN_224>;
-template class Sha2<ALC_DIGEST_LEN_256>;
+template Sha224;
+template Sha256;
 
 static inline void
 CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)
