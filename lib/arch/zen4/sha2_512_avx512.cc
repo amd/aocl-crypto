@@ -193,6 +193,10 @@ namespace alcp::digest { namespace zen4 {
         return temp1 |= temp2;
     }
 
+    inline __m256i sigma0(const __m256i temp)
+    {
+        return ROTR(temp, 1) ^ ROTR(temp, 8) ^ _mm256_srli_epi64(temp, 7);
+    }
     inline __m256i sigma_0_512(const __m256i x0,
                                const __m256i x1,
                                const __m256i x4,
@@ -208,9 +212,9 @@ namespace alcp::digest { namespace zen4 {
         // temp = [ w1 || w2 ](b0)__[ w1 || w2 ](b1)
         __m256i temp = _mm256_alignr_epi8(x1, x0, 8);
 
-        /* s1 = [ sigma_0_512(w1) || sigma_0_512(w2) ](b0)__
+        /* s0 = [ sigma_0_512(w1) || sigma_0_512(w2) ](b0)__
                 [ sigma_0_512(w1) || sigma_0_512(w2) ](b1) */
-        __m256i s1 = ROTR(temp, 1) ^ ROTR(temp, 8) ^ _mm256_srli_epi64(temp, 7);
+        __m256i s0 = sigma0(temp);
 
         // From here addition to w9 and w10 also is included in this fcuntion as
         // moving it outside the function cause performance drop with gcc.
@@ -222,7 +226,7 @@ namespace alcp::digest { namespace zen4 {
 
         /* temp = [ sigma_0_512(w1)+w0+w9 || sigma_0_512(w2)+w1+10 ](b0)__
            [ sigma_0_512(w1)+w0+w9 || sigma_0_512(w2)+w1+10 ](b1)  */
-        temp = _mm256_add_epi64(s1, temp);
+        temp = _mm256_add_epi64(s0, temp);
 
         return temp;
     }
@@ -499,6 +503,14 @@ namespace alcp::digest { namespace zen4 {
     }
     static inline void
 #if defined(COMPILER_IS_GCC)
+        /* -fsched-stalled-insns=0 => This gcc compiler option optimizes the
+         * pipeline as instructions are reordered considering the data stalls.
+         * Zero argument means there is no limit on the number of instructions
+         * which may be moved. Here the optimization is only applied
+         * specifically for process_buffer_avx2 function as the same option for
+         * process_buffer_avx reduces performance for the smaller block sizes
+         * <=256
+         */
         __attribute__((optimize("-fsched-stalled-insns=0")))
 #endif
         process_buffer_avx2(Uint64       state[8],
@@ -509,7 +521,7 @@ namespace alcp::digest { namespace zen4 {
     {
         __attribute__((aligned(64)))
         Uint64  message_sch_1[Sha512::cNumRounds + 16];
-        __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2] = {};
+        __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2];
         for (Uint32 i = 0; i < num_chunks; i = i + 2) {
 
             load_data(msg_vect,
