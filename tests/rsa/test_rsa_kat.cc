@@ -37,7 +37,7 @@ alc_digest_info_t dinfo_256{}, dinfo_384{}, dinfo_512{}, mgfinfo_256{},
     mgfinfo_512{};
 
 /* padding mode */
-TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256_MGF_256)
+TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256)
 {
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
@@ -45,7 +45,7 @@ TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256_MGF_256)
     mgfinfo_256               = dinfo_256;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
 }
-TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256_MGF_256)
+TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256)
 {
     if (!useipp || !useossl)
         GTEST_SKIP() << "Temporarily skipping this test for ALCP due to a "
