@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,42 +35,7 @@
 using alcp::utils::RotateRight;
 namespace alcp::digest {
 
-class Sha2 : public Digest
-{
-  public:
-    Sha2(const std::string& name)
-        : m_name{ name }
-        , m_msg_len{ 0 }
-    {}
-
-    Sha2(const char* name)
-        : Sha2(std::string(name))
-    {}
-
-    // TODO : Removing Return here causes an error
-    /**
-     * @return  0 when function is not implemented
-     */
-
-    Uint64 getInputBlockSize() { return 0; };
-
-    /**
-     * @return 0 when the function is not implemented
-     */
-    Uint64 getHashSize() { return 0; };
-
-  protected:
-    Sha2() {}
-    virtual ~Sha2();
-
-  protected:
-    alc_sha2_mode_t m_mode;
-    std::string     m_name;
-    Uint64          m_msg_len;
-    // alc_sha2_param_t m_param;
-};
-
-class Sha256 final : public Sha2
+class Sha256 final : public IDigest
 {
   public:
     static constexpr Uint64 /* define word size */
@@ -88,19 +53,19 @@ class Sha256 final : public Sha2
   public:
     ALCP_API_EXPORT Sha256();
     ALCP_API_EXPORT Sha256(const alc_digest_info_t& rDigestInfo);
+    ALCP_API_EXPORT Sha256(const Sha256& src);
     virtual ALCP_API_EXPORT ~Sha256();
 
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    ALCP_API_EXPORT Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    ALCP_API_EXPORT Uint64 getHashSize() override;
-
   public:
+    /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    ALCP_API_EXPORT void init(void) override;
     /**
      * \brief   Updates hash for given buffer
      *
@@ -176,33 +141,25 @@ class Sha256 final : public Sha2
     ALCP_API_EXPORT alc_error_t setIv(const void* pIv, Uint64 size);
 
   private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    /* Any unprocessed bytes from last call to update() */
+    alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
+    alignas(64) Uint32 m_hash[cHashSizeWords]{};
 };
 
-class ALCP_API_EXPORT Sha224 final : public Sha2
+class ALCP_API_EXPORT Sha224 final : public IDigest
 {
   public:
     Sha224();
     Sha224(const alc_digest_info_t& rDInfo);
+    Sha224(const Sha224& src);
     ~Sha224();
+    void        init() override;
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
     void        finish() override;
     void        reset() override;
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
-
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize() override;
 
   private:
     std::shared_ptr<Sha256> m_psha256;
@@ -246,6 +203,18 @@ CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)
     pHash[5] += f;
     pHash[6] += g;
     pHash[7] += h;
+}
+
+static inline void
+extendMsg(Uint32 w[], Uint32 start, Uint32 end)
+{
+    for (Uint32 i = start; i < end; i++) {
+        const Uint32 s0 = RotateRight(w[i - 15], 7) ^ RotateRight(w[i - 15], 18)
+                          ^ (w[i - 15] >> 3);
+        const Uint32 s1 = RotateRight(w[i - 2], 17) ^ RotateRight(w[i - 2], 19)
+                          ^ (w[i - 2] >> 10);
+        w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+    }
 }
 
 } // namespace alcp::digest

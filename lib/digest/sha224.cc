@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,9 +50,11 @@ static constexpr Uint64 /* define word size */
 // clang-format on
 
 Sha224::Sha224(const alc_digest_info_t& rDInfo)
-    : Sha2{ "sha2-224" }
 {
-    m_psha256 = std::make_shared<Sha256>(rDInfo);
+    m_mode       = rDInfo.dt_mode;
+    m_digest_len = ALC_DIGEST_LEN_224 / 8;
+    m_block_len  = cChunkSize;
+    m_psha256    = std::make_shared<Sha256>(rDInfo);
     m_psha256->setIv(cIv, sizeof(cIv));
 }
 
@@ -65,12 +67,32 @@ Sha224::Sha224()
     d_info.dt_mode.dm_sha2 = ALC_SHA2_224;
     d_info.dt_custom_len   = 0;
     d_info.dt_data         = { 0 };
+    m_digest_len           = ALC_DIGEST_LEN_224 / 8;
+    m_block_len            = cChunkSize;
+    m_mode.dm_sha2         = ALC_SHA2_224;
+    m_psha256              = std::make_shared<Sha256>(d_info);
+    // m_psha256->setIv(cIv, sizeof(cIv));
+}
 
-    m_psha256 = std::make_shared<Sha256>(d_info);
-    m_psha256->setIv(cIv, sizeof(cIv));
+Sha224::Sha224(const Sha224& src)
+{
+    // Initializing the structure with default value
+    m_digest_len = src.m_digest_len;
+    m_block_len  = cChunkSize;
+    m_mode       = src.m_mode;
+    m_psha256    = std::make_shared<Sha256>(*src.m_psha256);
 }
 
 Sha224::~Sha224() = default;
+
+// ToDO : change this when the class structures are changed
+void
+Sha224::init(void)
+{
+    m_psha256->init();
+    m_psha256->setIv(cIv, sizeof(cIv));
+    return;
+}
 
 alc_error_t
 Sha224::update(const Uint8* pBuf, Uint64 size)
@@ -84,6 +106,7 @@ Sha224::finish()
     return m_psha256->finish();
 }
 
+// ToDO: retire this API when init is fully funtional
 void
 Sha224::reset()
 {
@@ -125,18 +148,6 @@ Sha224::copyHash(Uint8* pHash, Uint64 size) const
     }
 
     return err;
-}
-
-Uint64
-Sha224::getInputBlockSize()
-{
-    return cChunkSize;
-}
-
-Uint64
-Sha224::getHashSize()
-{
-    return cHashSize;
 }
 
 } // namespace alcp::digest

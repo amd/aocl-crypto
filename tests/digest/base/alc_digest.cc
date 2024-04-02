@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -78,16 +78,16 @@ AlcpDigestBase::init()
             dinfo.dt_mode.dm_sha2 = sha2_mode_len_map[m_info.dt_len];
     } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
         if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
-            dinfo.dt_custom_len = m_digest_len;
+            dinfo.dt_custom_len = m_digest_len * 8;
         else
             dinfo.dt_mode.dm_sha3 = sha3_mode_len_map[m_info.dt_len];
     }
 
     if (m_handle == nullptr) {
         m_handle          = new alc_digest_handle_t;
-        m_handle->context = malloc(alcp_digest_context_size(&dinfo));
+        m_handle->context = malloc(alcp_digest_context_size());
     } else if (m_handle->context == nullptr) {
-        m_handle->context = malloc(alcp_digest_context_size(&dinfo));
+        m_handle->context = malloc(alcp_digest_context_size());
     } else {
         alcp_digest_finish(m_handle);
     }
@@ -97,6 +97,13 @@ AlcpDigestBase::init()
         std::cout << "Error code in alcp_digest_request:" << err << std::endl;
         return false;
     }
+
+    err = alcp_digest_init(m_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+
     return true;
 }
 

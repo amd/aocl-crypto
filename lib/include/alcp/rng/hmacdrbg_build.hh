@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     auto  status   = StatusOk();
     auto  addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto* hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
-    std::shared_ptr<alcp::digest::Digest> p_digest;
+    std::shared_ptr<alcp::digest::IDigest> p_digest;
     switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
             switch (

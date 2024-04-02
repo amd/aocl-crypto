@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -93,7 +93,7 @@ ShaRound(Uint64  a,
 
 /* TODO: Add pImpl support as done in sha256 */
 
-class ALCP_API_EXPORT Sha512 final : public Sha2
+class ALCP_API_EXPORT Sha512 final : public IDigest
 {
   public:
     // clang-format off
@@ -112,9 +112,20 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
   public:
     Sha512(alc_digest_len_t digest_len = ALC_DIGEST_LEN_512);
     Sha512(const alc_digest_info_t& rDigestInfo);
+    Sha512(const Sha512& src);
     virtual ~Sha512();
 
   public:
+    /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    void init(void) override;
+
     /**
      * @brief   Updates hash for given buffer
      *
@@ -163,10 +174,10 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
      *                  finalize() is called, only operation that can be
      *                  performed is copyHash()
      *
-     * @param    size    Either valid size or 0, if pMsgBuf is nullptr, size
+     * @param    size    Either valid size or 0, if pSrc is nullptr, size
      *                   is assumed to be zero
      */
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    alc_error_t finalize(const Uint8* pSrc, Uint64 size) override;
 
     /**
      * @brief  Copies the has from context to supplied buffer
@@ -187,21 +198,12 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
 
     alc_error_t setIv(const void* pIv, Uint64 size);
 
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize() override;
-
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pImpl;
-    const Impl*           pImpl() const { return m_pImpl.get(); }
-    Impl*                 pImpl() { return m_pImpl.get(); }
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    /* Any unprocessed bytes from last call to update() */
+    alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
+    alignas(64) Uint64 m_hash[cHashSizeWords]{};
+    const Uint64* m_Iv = nullptr;
 };
 
 } // namespace alcp::digest

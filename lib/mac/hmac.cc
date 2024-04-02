@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -228,7 +228,7 @@ class Hmac::Impl
         return status;
     }
 
-    Status setDigest(digest::Digest& p_digest)
+    Status setDigest(digest::IDigest& p_digest)
     {
         Status status = StatusOk();
         m_pDigest     = &p_digest;
@@ -360,7 +360,7 @@ Hmac::reset()
 }
 
 Status
-Hmac::setDigest(digest::Digest& p_digest)
+Hmac::setDigest(digest::IDigest& p_digest)
 {
     return m_pImpl->setDigest(p_digest);
 }

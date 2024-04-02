@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -74,106 +74,8 @@ static constexpr Uint32 cRoundConstants[] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-class Sha256::Impl
-{
-  public:
-    Impl();
-    ~Impl();
-
-    alc_error_t update(const Uint8* buf, Uint64 size);
-    alc_error_t finalize(const Uint8* buf, Uint64 size);
-    alc_error_t copyHash(Uint8* buf, Uint64 size) const;
-
-    alc_error_t setIv(const void* pIv, Uint64 size);
-    void        reset();
-
-#if defined(USE_ALCP_MEMPOOL)
-    static void* operator new(size_t size)
-    {
-        return alcp::utils::mem::PoolAllocator pa =
-                   alcp::digest::GetDefaultPool().allocate(size);
-    }
-
-    static void operator delete(void* ptr, size_t size)
-    {
-        auto p = reinterpret_cast<Sha256::Impl*>(ptr);
-        GetDefaultDigestPool().deallocate(p, size);
-    }
-#endif
-
-  private:
-    static void extendMsg(Uint32 w[], Uint32 start, Uint32 end);
-    void        compressMsg(Uint32 w[]);
-    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-
-  private:
-    Uint64 m_msg_len;
-    /* Any unprocessed bytes from last call to update() */
-    alignas(64) Uint8 m_buffer[2 * cChunkSize];
-    alignas(64) Uint32 m_hash[cHashSizeWords];
-    /* index to m_buffer of previously unprocessed bytes */
-    Uint32 m_idx;
-    bool   m_finished;
-};
-
-Sha256::Impl::Impl()
-    : m_msg_len{ 0 }
-    , m_hash{ 0, }
-    , m_idx{ 0 }
-    , m_finished{ false }
-{
-
-    utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
-}
-
 alc_error_t
-Sha256::Impl::setIv(const void* pIv, Uint64 size)
-{
-    utils::CopyBlock(m_hash, pIv, size);
-
-    return ALC_ERROR_NONE;
-}
-
-void
-Sha256::Impl::reset()
-{
-    m_msg_len  = 0;
-    m_finished = false;
-    m_idx      = 0;
-    utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
-}
-
-Sha256::Impl::~Impl() = default;
-
-alc_error_t
-Sha256::Impl::copyHash(Uint8* pHash, Uint64 size) const
-{
-    utils::CopyBlockWith<Uint32, true>(
-        pHash, m_hash, cHashSize, utils::ToBigEndian<Uint32>);
-
-    return ALC_ERROR_NONE;
-}
-
-void
-Sha256::Impl::extendMsg(Uint32 w[], Uint32 start, Uint32 end)
-{
-    for (Uint32 i = start; i < end; i++) {
-        const Uint32 s0 = RotateRight(w[i - 15], 7) ^ RotateRight(w[i - 15], 18)
-                          ^ (w[i - 15] >> 3);
-        const Uint32 s1 = RotateRight(w[i - 2], 17) ^ RotateRight(w[i - 2], 19)
-                          ^ (w[i - 2] >> 10);
-        w[i] = w[i - 16] + s0 + w[i - 7] + s1;
-    }
-}
-
-void
-Sha256::Impl::compressMsg(Uint32 w[])
-{
-    alcp::digest::CompressMsg(w, m_hash, cRoundConstants);
-}
-
-alc_error_t
-Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
+Sha256::processChunk(const Uint8* pSrc, Uint64 len)
 {
     static bool shani_available = CpuId::cpuHasShani();
     // FIXME: AVX2 is deliberately disabled due to poor performance
@@ -203,10 +105,10 @@ Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
-        extendMsg(w, cChunkSizeWords, cNumRounds);
+        alcp::digest::extendMsg(w, cChunkSizeWords, cNumRounds);
 
         // Compress the message
-        compressMsg(w);
+        alcp::digest::CompressMsg(w, m_hash, cRoundConstants);
 
         p_msg_buffer32 += cChunkSizeWords;
         msg_size -= cChunkSize;
@@ -215,10 +117,79 @@ Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     return ALC_ERROR_NONE;
 }
 
+Sha256::Sha256()
+{
+    m_mode.dm_sha2 = ALC_SHA2_256;
+    m_digest_len   = 256 / 8;
+    m_block_len    = cChunkSize;
+}
+
+Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
+    : Sha256()
+{}
+
+Sha256::Sha256(const Sha256& src)
+{
+    m_msg_len    = src.m_msg_len;
+    m_digest_len = src.m_digest_len;
+    m_block_len  = src.m_block_len;
+    m_mode       = src.m_mode;
+    memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
+    memcpy(m_hash, src.m_hash, sizeof(m_hash));
+    m_idx      = src.m_idx;
+    m_finished = src.m_finished;
+}
+
+Sha256::~Sha256() = default;
+
+void
+Sha256::init(void)
+{
+    m_hash[0]  = 0x6a09e667;
+    m_hash[1]  = 0xbb67ae85;
+    m_hash[2]  = 0x3c6ef372;
+    m_hash[3]  = 0xa54ff53a;
+    m_hash[4]  = 0x510e527f;
+    m_hash[5]  = 0x9b05688c;
+    m_hash[6]  = 0x1f83d9ab;
+    m_hash[7]  = 0x5be0cd19;
+    m_finished = false;
+    m_msg_len  = 0;
+    m_idx      = 0;
+    memset(m_buffer, 0, sizeof(m_buffer));
+}
+
 alc_error_t
-Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
+Sha256::setIv(const void* pIv, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
+
+    if (pIv == nullptr) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+
+    if (size != cIvSizeBytes) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
+    }
+
+    utils::CopyBlock(m_hash, pIv, size);
+    return ALC_ERROR_NONE;
+}
+
+alc_error_t
+Sha256::update(const Uint8* pSrc, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pSrc == nullptr) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
 
     if (m_finished) {
         /* TODO Change to Status */
@@ -230,16 +201,16 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
      * Valid request, last computed has itself is good,
      * default is m_iv
      */
-    if (input_size == 0) {
+    if (size == 0) {
         return err;
     }
-    m_msg_len += input_size;
+    m_msg_len += size;
 
-    Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
+    Uint64 to_process = std::min((size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBlock(&m_buffer[m_idx], pSrc, input_size);
-        m_idx += input_size;
+        utils::CopyBlock(&m_buffer[m_idx], pSrc, size);
+        m_idx += size;
         return err;
     }
 
@@ -251,11 +222,11 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
          * of internal buffer, we process first block by copying from pSrc the
          * remaining bytes of a chunk.
          */
-        to_process = std::min(input_size, cChunkSize - idx);
+        to_process = std::min(size, cChunkSize - idx);
         utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
-        input_size -= to_process;
+        size -= to_process;
         idx += to_process;
 
         if (idx == cChunkSize) {
@@ -265,23 +236,23 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     }
 
     /* Calculate leftover bytes that can be processed as multiple chunks */
-    Uint64 num_chunks = input_size / cChunkSize;
+    Uint64 num_chunks = size / cChunkSize;
     if (num_chunks) {
 
-        Uint64 size = num_chunks * cChunkSize;
+        Uint64 sizeChunk = num_chunks * cChunkSize;
 
-        err = processChunk(pSrc, size);
+        err = processChunk(pSrc, sizeChunk);
 
-        pSrc += size;
-        input_size -= size;
+        pSrc += sizeChunk;
+        size -= sizeChunk;
     }
 
     /*
      * We still have some leftover bytes, copy them to internal buffer
      */
-    if (input_size) {
-        utils::CopyBlock(&m_buffer[idx], pSrc, input_size);
-        idx += input_size;
+    if (size) {
+        utils::CopyBlock(&m_buffer[idx], pSrc, size);
+        idx += size;
     }
 
     m_idx = idx;
@@ -289,15 +260,15 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
 }
 
 alc_error_t
-Sha256::Impl::finalize(const Uint8* pBuf, Uint64 size)
+Sha256::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished)
         return err;
 
-    if (pBuf && size)
-        err = update(pBuf, size);
+    if (pSrc && size)
+        err = update(pSrc, size);
 
     if (err) {
         return err;
@@ -331,70 +302,6 @@ Sha256::Impl::finalize(const Uint8* pBuf, Uint64 size)
     return err;
 }
 
-Sha256::Sha256()
-    : Sha2{ "sha2-256" }
-    , m_pimpl{ std::make_unique<Sha256::Impl>() }
-
-{
-    m_mode             = ALC_SHA2_256;
-    m_digest_len       = ALC_DIGEST_LEN_256;
-    m_digest_len_bytes = 256 / 8;
-}
-
-Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
-    : Sha256()
-{}
-
-Sha256::~Sha256() = default;
-
-alc_error_t
-Sha256::setIv(const void* pIv, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (pIv == nullptr) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (size != cIvSizeBytes) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-    }
-
-    if (!alcp_is_error(err))
-        err = pImpl()->setIv(pIv, size);
-
-    return err;
-}
-
-alc_error_t
-Sha256::update(const Uint8* pSrc, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (pSrc == nullptr) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-    }
-
-    if (!err)
-        err = pImpl()->update(pSrc, size);
-
-    return err;
-}
-
-alc_error_t
-Sha256::finalize(const Uint8* pSrc, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    err = pImpl()->finalize(pSrc, size);
-
-    return err;
-}
-
 alc_error_t
 Sha256::copyHash(Uint8* pHash, Uint64 size) const
 {
@@ -409,39 +316,26 @@ Sha256::copyHash(Uint8* pHash, Uint64 size) const
     if (size != cHashSize) {
         /* TODO: change to Status */
         err = ALC_ERROR_INVALID_SIZE;
+        return err;
     }
 
-    if (!err) {
-        err = pImpl()->copyHash(pHash, size);
-    }
+    utils::CopyBlockWith<Uint32, true>(
+        pHash, m_hash, cHashSize, utils::ToBigEndian<Uint32>);
 
-    return err;
+    return ALC_ERROR_NONE;
 }
 
 void
 Sha256::finish()
-{
-    // delete pImpl();
-    // pImpl() = nullptr;
-}
+{}
 
 void
 Sha256::reset()
 {
-    pImpl()->reset();
-}
-
-Sha2::~Sha2() {}
-
-Uint64
-Sha256::getInputBlockSize()
-{
-    return cChunkSize;
-}
-Uint64
-Sha256::getHashSize()
-{
-    return cHashSize;
+    m_msg_len  = 0;
+    m_finished = false;
+    m_idx      = 0;
+    utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
 } // namespace alcp::digest

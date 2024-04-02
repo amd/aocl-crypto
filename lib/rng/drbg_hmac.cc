@@ -32,7 +32,7 @@
 
 namespace alcp::rng::drbg {
 
-using alcp::digest::Digest;
+using alcp::digest::IDigest;
 using alcp::digest::Sha256;
 using alcp::mac::Hmac;
 
@@ -63,16 +63,15 @@ DebugPrint(const std::vector<Uint8>& in,
            std::string               message,
            std::string               file,
            int                       line)
-{
-}
+{}
 #endif
 
 class HmacDrbg::Impl
 {
   private:
-    std::shared_ptr<alcp::digest::Digest> m_digest;
-    std::vector<Uint8>                    m_v = {}, m_key = {};
-    Hmac                                  m_hmac_obj;
+    std::shared_ptr<alcp::digest::IDigest> m_digest;
+    std::vector<Uint8>                     m_v = {}, m_key = {};
+    Hmac                                   m_hmac_obj;
 
   public:
     /**
@@ -255,14 +254,13 @@ class HmacDrbg::Impl
     void internalReseed(const std::vector<Uint8>& cEntropyInput,
                         const std::vector<Uint8>& cAdditionalInput);
 
-    // FIXME: Change alcp::digest::Digest to alcp::digest::IDigest
     /**
-     * @brief Set the Digest object
+     * @brief Set the IDigest object
      *
-     * @param digestObject - Object of Digest class.
+     * @param digestObject - Object of IDigest class.
      * @return Status
      */
-    Status setDigest(std::shared_ptr<alcp::digest::Digest> digestObject);
+    Status setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
 
     /**
      * @brief Get a copy of internal Key
@@ -557,7 +555,7 @@ HmacDrbg::Impl::internalReseed(const std::vector<Uint8>& cEntropyInput,
 }
 
 Status
-HmacDrbg::Impl::setDigest(std::shared_ptr<Digest> digest_obj)
+HmacDrbg::Impl::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
     Status s = StatusOk();
     m_digest = digest_obj;
@@ -640,7 +638,7 @@ HmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
 }
 
 Status
-HmacDrbg::setDigest(std::shared_ptr<Digest> digest_obj)
+HmacDrbg::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
     return p_impl->setDigest(digest_obj);
 }
@@ -665,8 +663,7 @@ HmacDrbg::getVCopy()
 
 HmacDrbg::HmacDrbg()
     : p_impl{ std::make_unique<Impl>() }
-{
-}
+{}
 
 HmacDrbg::~HmacDrbg() = default;
 } // namespace alcp::rng::drbg

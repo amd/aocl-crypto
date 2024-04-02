@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -87,6 +87,7 @@ TEST_P(Sha3_512, digest_generation_test)
     Uint8             hash[DigestSize];
     std::stringstream ss;
 
+    sha3_512.init();
     ASSERT_EQ(
         sha3_512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -72,151 +72,6 @@ static constexpr Uint64 cIv_224[] = { 0x8c3d37c819544da2, 0x73e1996689dcd4d6,
                                       0x0f6d2b697bd44da8, 0x77e36f7304c48942,
                                       0x3f9d85a86a1d36c8, 0x1112e6ad91d692a1 };
 
-class Sha512::Impl
-{
-  public:
-    Impl(alc_digest_len_t digest_len);
-    alc_error_t setIv(const void* pIv, Uint64 size);
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size);
-    void        finish();
-    void        reset();
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size);
-    alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const;
-    Uint64      getHashSize();
-
-  private:
-    Uint64 m_msg_len;
-    /* Any unprocessed bytes from last call to update() */
-    alignas(64) Uint8 m_buffer[2 * cChunkSize];
-    alignas(64) Uint64 m_hash[cHashSizeWords];
-    /* index to m_buffer of previously unprocessed bytes */
-    Uint32        m_idx;
-    bool          m_finished;
-    const Uint64* m_Iv = nullptr;
-    void          compressMsg(Uint64 w[]);
-    alc_error_t   processChunk(const Uint8* pSrc, Uint64 len);
-    Uint64        m_digest_len_bytes;
-    Uint64        m_digest_len;
-};
-
-Sha512::Sha512(alc_digest_len_t digest_len)
-    : m_pImpl{ std::make_unique<Sha512::Impl>(digest_len) }
-{}
-
-Sha512::Impl::Impl(alc_digest_len_t digest_len)
-        : m_msg_len{ 0 }
-    , m_hash{ 0,}
-    , m_idx{ 0 }
-    , m_finished{ false }
-{
-    m_digest_len = digest_len;
-    m_Iv         = cIv_512;
-    switch (digest_len) {
-        case ALC_DIGEST_LEN_224:
-            m_digest_len_bytes = 224 / 8;
-            m_Iv               = cIv_224;
-            break;
-        case ALC_DIGEST_LEN_256:
-            m_digest_len_bytes = 256 / 8;
-            m_Iv               = cIv_256;
-            break;
-        case ALC_DIGEST_LEN_384:
-            m_digest_len_bytes = 384 / 8;
-            m_Iv               = cIv_384;
-            break;
-        default:
-            m_digest_len_bytes = 512 / 8;
-            m_Iv               = cIv_512;
-    }
-
-    utils::CopyQWord(&m_hash[0], m_Iv, cIvSizeBytes);
-}
-
-Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
-    : Sha512(rDigestInfo.dt_len)
-{}
-
-Sha512::~Sha512() = default;
-
-alc_error_t
-Sha512::setIv(const void* pIv, Uint64 size)
-{
-    return m_pImpl->setIv(pIv, size);
-}
-alc_error_t
-Sha512::Impl::setIv(const void* pIv, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (!pIv) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (size != cIvSizeBytes) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-    }
-
-    if (!err)
-        utils::CopyBlock(m_hash, pIv, size);
-
-    return err;
-}
-
-void
-Sha512::reset()
-{
-    m_pImpl->reset();
-}
-void
-Sha512::Impl::reset()
-{
-    m_msg_len  = 0;
-    m_finished = false;
-    m_idx      = 0;
-    utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
-}
-
-alc_error_t
-Sha512::copyHash(Uint8* pHash, Uint64 size) const
-{
-    return m_pImpl->copyHash(pHash, size);
-}
-
-alc_error_t
-Sha512::Impl::copyHash(Uint8* pHash, Uint64 size) const
-{
-    // FIXME: Copying Block with Uint64 will cause issues on non 64 bit
-    // aligned memory. Since PHash is user allocated pointer this can
-    // happen.
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (!pHash) {
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (size != m_digest_len_bytes) {
-        err = ALC_ERROR_INVALID_SIZE;
-    }
-
-    if (!err) {
-        utils::CopyBlockWith<Uint64, true>(
-            pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
-
-        if (m_digest_len == ALC_DIGEST_LEN_224) {
-            // last 4 bytes can be copied after reversing the 64 bit since it is
-            // in little endian form
-            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
-            utils::CopyBlock(&pHash[24], &hash, 4);
-        }
-    }
-
-    return err;
-}
-
 static inline void
 CompressMsg(Uint64 pMsgSchArray[], Uint64* pHash, const Uint64* pHashConstants)
 {
@@ -269,14 +124,124 @@ ExtendMsg(Uint64 w[], Uint32 start, Uint32 end)
     }
 }
 
-void
-Sha512::Impl::compressMsg(Uint64 w[])
+Sha512::Sha512(alc_digest_len_t digest_len)
 {
-    CompressMsg(w, m_hash, cRoundConstants);
+    m_Iv = cIv_512;
+    switch (digest_len) {
+        case ALC_DIGEST_LEN_224:
+            m_digest_len = 224 / 8;
+            m_Iv         = cIv_224;
+            break;
+        case ALC_DIGEST_LEN_256:
+            m_digest_len = 256 / 8;
+            m_Iv         = cIv_256;
+            break;
+        case ALC_DIGEST_LEN_384:
+            m_digest_len = 384 / 8;
+            m_Iv         = cIv_384;
+            break;
+        default:
+            m_digest_len = 512 / 8;
+            m_Iv         = cIv_512;
+    }
+    m_block_len = Sha512::cChunkSize;
+}
+
+Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
+    : Sha512(rDigestInfo.dt_len)
+{
+    m_mode = rDigestInfo.dt_mode;
+}
+
+Sha512::Sha512(const Sha512& src)
+{
+    m_msg_len = src.m_msg_len;
+    m_mode    = src.m_mode;
+    memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
+    memcpy(m_hash, src.m_hash, sizeof(m_hash));
+    m_idx        = src.m_idx;
+    m_finished   = src.m_finished;
+    m_digest_len = src.m_digest_len;
+    m_block_len  = src.m_block_len;
+    m_Iv         = src.m_Iv;
+}
+
+void
+Sha512::init(void)
+{
+    m_msg_len  = 0;
+    m_finished = false;
+    m_idx      = 0;
+    utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
+}
+
+Sha512::~Sha512() = default;
+
+alc_error_t
+Sha512::setIv(const void* pIv, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (!pIv) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+
+    if (size != cIvSizeBytes) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
+    }
+
+    if (!err)
+        utils::CopyBlock(m_hash, pIv, size);
+
+    return err;
+}
+
+void
+Sha512::reset()
+{
+    m_msg_len  = 0;
+    m_finished = false;
+    m_idx      = 0;
+    utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
 }
 
 alc_error_t
-Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
+Sha512::copyHash(Uint8* pHash, Uint64 size) const
+{
+    // FIXME: Copying Block with Uint64 will cause issues on non 64 bit
+    // aligned memory. Since PHash is user allocated pointer this can
+    // happen.
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (!pHash) {
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+
+    if (size != m_digest_len) {
+        err = ALC_ERROR_INVALID_SIZE;
+    }
+
+    if (!err) {
+        utils::CopyBlockWith<Uint64, true>(
+            pHash, m_hash, m_digest_len, utils::ToBigEndian<Uint64>);
+
+        if (m_digest_len * 8 == ALC_DIGEST_LEN_224) {
+            // last 4 bytes can be copied after reversing the 64 bit since it is
+            // in little endian form
+            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
+            utils::CopyBlock(&pHash[24], &hash, 4);
+        }
+    }
+
+    return err;
+}
+
+alc_error_t
+Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
     static bool cpu_is_zen3 = CpuId::cpuIsZen3();
     static bool cpu_is_zen4 = CpuId::cpuIsZen4();
@@ -311,7 +276,7 @@ Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
         ExtendMsg(w, cChunkSizeWords, cNumRounds);
 
         // Compress the message
-        compressMsg(w);
+        CompressMsg(w, m_hash, cRoundConstants);
 
         p_msg_buffer64 += cChunkSizeWords;
         msg_size -= cChunkSize;
@@ -322,12 +287,6 @@ Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 
 alc_error_t
 Sha512::update(const Uint8* pSrc, Uint64 input_size)
-{
-    return m_pImpl->update(pSrc, input_size);
-}
-
-alc_error_t
-Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -405,27 +364,21 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
     return err;
 }
 
-alc_error_t
-Sha512::finalize(const Uint8* pBuf, Uint64 size)
-{
-    return m_pImpl->finalize(pBuf, size);
-}
-
 /*
  * We may have some left over data for which the hash to be computed padding
  * the rest of it to ensure correct computation Default padding is 'length
  * encoding'
  */
 alc_error_t
-Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
+Sha512::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished)
         return err;
 
-    if (pBuf && size)
-        err = update(pBuf, size);
+    if (pSrc && size)
+        err = update(pSrc, size);
 
     if (err) {
         return err;
@@ -487,23 +440,6 @@ Sha512::finish()
 {
     // delete pImpl();
     // pImpl() = nullptr;
-}
-
-Uint64
-Sha512::Impl::getHashSize()
-{
-    return m_digest_len_bytes;
-}
-Uint64
-Sha512::getHashSize()
-{
-    return m_pImpl->getHashSize();
-}
-
-Uint64
-Sha512::getInputBlockSize()
-{
-    return Sha512::cChunkSize;
 }
 
 } // namespace alcp::digest

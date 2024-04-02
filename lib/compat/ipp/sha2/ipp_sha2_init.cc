@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -104,7 +104,7 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
     dinfo.dt_len          = len;
     dinfo.dt_mode.dm_sha2 = mode;
 
-    Uint64 size             = alcp_digest_context_size(&dinfo);
+    Uint64 size             = alcp_digest_context_size();
     context->handle.context = malloc(size);
     context->dinfo          = dinfo;
 
@@ -112,6 +112,12 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
 
     if (alcp_is_error(err)) {
         return ippStsBadArgErr;
+    }
+
+    err = alcp_digest_init(&(context->handle));
+
+    if (alcp_is_error(err)) {
+        return err;
     }
     printMsg("Init End");
     return ippStsNoErr;

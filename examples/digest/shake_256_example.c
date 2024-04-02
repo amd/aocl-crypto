@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,13 +43,23 @@ create_demo_session(Uint32 digest_size)
         .dt_type = ALC_DIGEST_TYPE_SHA3,
         .dt_len = ALC_DIGEST_LEN_CUSTOM,
         .dt_mode = {.dm_sha3 = ALC_SHAKE_256,},
-        .dt_custom_len = digest_size
+        .dt_custom_len = digest_size * 8
     };
 
-    Uint64 size         = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
+    if (!s_dg_handle.context) {
+        return ALC_ERROR_NO_MEMORY;
+    }
+
     err = alcp_digest_request(&dinfo, &s_dg_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+
+    err = alcp_digest_init(&s_dg_handle);
 
     if (alcp_is_error(err)) {
         return err;
@@ -284,10 +294,10 @@ main(void)
             return -1;
         }
         err = hash_demo(sample_input,
-                            strlen((const char*)sample_input),
-                            sample_output,
-                            hash_size,
-                            num_chunks);
+                        strlen((const char*)sample_input),
+                        sample_output,
+                        hash_size,
+                        num_chunks);
         if (alcp_is_error(err)) {
             return -1;
         }

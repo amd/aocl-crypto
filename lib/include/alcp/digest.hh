@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -57,9 +57,10 @@ GetDefaultDigestPool();
 class IDigest
 {
   public:
-    IDigest() {}
+    IDigest() = default;
 
   public:
+    virtual void        init(void)                               = 0;
     virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
     virtual alc_error_t finalize(const Uint8* pBuf, Uint64 size) = 0;
     virtual void        finish()                                 = 0;
@@ -70,27 +71,23 @@ class IDigest
     /**
      * @return The input block size to the hash function in bytes
      */
-    virtual Uint64 getInputBlockSize() = 0;
+    Uint64 getInputBlockSize() { return m_block_len; }
 
     /**
      * @return The digest size in bytes
      */
-    virtual Uint64 getHashSize() = 0;
+    Uint64 getHashSize() { return m_digest_len; }
 
     virtual ~IDigest() {}
-};
-
-class Digest : public IDigest
-{
 
   protected:
-    alc_digest_len_t  m_digest_len; /* digest len in bytes */
-    Uint64            m_digest_len_bytes;
+    Uint64 m_digest_len = 0; /* digest len in bytes */
+    Uint64 m_block_len  = 0;
+    bool   m_finished   = false;
+    Uint64 m_msg_len    = 0;
+    /* index to m_buffer of previously unprocessed bytes */
+    Uint32            m_idx = 0;
+    alc_digest_mode_t m_mode;
     alc_digest_data_t m_data;
-
-  protected:
-    Digest()          = default;
-    virtual ~Digest() = default;
 };
-
 } // namespace alcp::digest
