@@ -53,9 +53,6 @@ static const std::unordered_map<DigestSha512, tuple<alc_digest_len_t, Uint8>>
     DigestSizes = { { DIGEST_SHA_512_224, { ALC_DIGEST_LEN_224, 28 } },
                     { DIGEST_SHA_512_256, { ALC_DIGEST_LEN_256, 32 } },
                     { DIGEST_SHA_512_512, { ALC_DIGEST_LEN_512, 64 } } };
-// IV array size where every element is 8 bytes
-static const Uint8 IvArraySize   = 8;
-static const Uint8 IvElementSize = 8;
 
 // clang-format off
 static const KnownAnswerMap message_digest = {

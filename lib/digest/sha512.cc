@@ -413,5 +413,8 @@ Sha2_512<digest_len>::finalize(const Uint8* pSrc, Uint64 size)
 
     return err;
 }
-
+template class Sha2_512<ALC_DIGEST_LEN_224>;
+template class Sha2_512<ALC_DIGEST_LEN_256>;
+template class Sha2_512<ALC_DIGEST_LEN_384>;
+template class Sha2_512<ALC_DIGEST_LEN_512>;
 } // namespace alcp::digest

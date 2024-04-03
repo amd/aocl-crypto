@@ -184,8 +184,4 @@ typedef Sha2_512<ALC_DIGEST_LEN_256> Sha512_256;
 typedef Sha2_512<ALC_DIGEST_LEN_384> Sha384;
 typedef Sha2_512<ALC_DIGEST_LEN_512> Sha512;
 
-template class Sha2_512<ALC_DIGEST_LEN_224>;
-template class Sha2_512<ALC_DIGEST_LEN_256>;
-template class Sha2_512<ALC_DIGEST_LEN_384>;
-template class Sha2_512<ALC_DIGEST_LEN_512>;
 } // namespace alcp::digest

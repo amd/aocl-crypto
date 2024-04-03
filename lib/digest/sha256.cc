@@ -310,4 +310,7 @@ Sha2<digest_len>::copyHash(Uint8* pHash, Uint64 size) const
     return ALC_ERROR_NONE;
 }
 
+template class Sha2<ALC_DIGEST_LEN_224>;
+template class Sha2<ALC_DIGEST_LEN_256>;
+
 } // namespace alcp::digest

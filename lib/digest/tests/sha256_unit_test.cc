@@ -41,8 +41,6 @@ static const Uint8 DigestSize = 32;
 // Input Block size in bytes
 static constexpr Uint8 InputBlockSize = 64;
 // IV array size where every element is 4 bytes
-static const Uint8 IvArraySize   = 8;
-static const Uint8 IvElementSize = 4;
 
 // clang-format off
 static const KnownAnswerMap message_digest = {
