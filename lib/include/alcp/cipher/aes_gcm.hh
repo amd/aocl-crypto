@@ -58,6 +58,8 @@ typedef struct _alc_gcm_local_data
     __m128i m_tag_128;
     Uint64  m_additionalDataLen;
 
+    _alc_cipher_gcm_data_t m_gcm;
+
 } alc_gcm_local_data_t;
 
 /*
@@ -67,7 +69,7 @@ typedef struct _alc_gcm_local_data
 
 class ALCP_API_EXPORT Gcm : public Aes
 {
-  public:
+  protected:
     alc_gcm_local_data_t m_gcm_local_data;
 
   public:
@@ -75,7 +77,7 @@ class ALCP_API_EXPORT Gcm : public Aes
         : Aes(ctx)
     {
         // default ivLength is 12 bytes or 96bits
-        ctx->m_ivLen = 12;
+        m_ivLen_aes = 12;
 
         // cipher ctx
         m_gcm_local_data.m_tag_128 = _mm_setzero_si128();
@@ -93,7 +95,8 @@ class ALCP_API_EXPORT Gcm : public Aes
 
         // global precomputed hashtable pointer
         m_gcm_local_data.m_pHashSubkeyTable_global =
-            ctx->m_gcm.m_hashSubkeyTable;
+            m_gcm_local_data.m_gcm.m_hashSubkeyTable;
+        // ctx->m_gcm.m_hashSubkeyTable;
     }
 
     ~Gcm()

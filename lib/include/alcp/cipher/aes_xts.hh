@@ -54,18 +54,20 @@ class ALCP_API_EXPORT Xts : public Aes
     Uint8* m_ptweak_round_key     = NULL;
     Uint32 m_tweak_round_key_size = 0;
 
+    _alc_cipher_xts_data_t m_xts;
+
     Xts(alc_cipher_data_t* ctx)
         : Aes(ctx)
     {
-        m_pIv_xts     = ctx->m_xts.m_iv_xts;
-        m_iv_xts_size = sizeof(ctx->m_xts.m_iv_xts);
+        m_pIv_xts     = m_xts.m_iv_xts; // ctx->m_xts.m_iv_xts;
+        m_iv_xts_size = sizeof(m_xts.m_iv_xts);
 
-        m_ptweak_round_key     = ctx->m_xts.m_tweak_round_key;
-        m_tweak_round_key_size = sizeof(ctx->m_xts.m_tweak_round_key);
+        m_ptweak_round_key     = m_xts.m_tweak_round_key;
+        m_tweak_round_key_size = sizeof(m_xts.m_tweak_round_key);
 
         Aes::setMode(ALC_AES_MODE_XTS);
-        ctx->m_xts.m_aes_block_id = -1;
-        memset(ctx->m_xts.m_iv_xts, 0, m_iv_xts_size);
+        m_xts.m_aes_block_id = -1;
+        memset(m_xts.m_iv_xts, 0, m_iv_xts_size);
         memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
     };
     ~Xts()

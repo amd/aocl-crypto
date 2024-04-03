@@ -47,7 +47,7 @@ GcmGhash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
 
     /* iv is not initialized means wrong order, we
      * will return its a bad state to call setAad*/
-    if (ctx->m_pIv == nullptr) {
+    if (m_pIv_aes == nullptr) {
         err = ALC_ERROR_BAD_STATE;
         return err;
     }
@@ -55,8 +55,8 @@ GcmGhash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
     // additional data & output is NULL
     const Uint8* pAdditionalData         = pInput;
     m_gcm_local_data.m_additionalDataLen = aadLen;
-#if DEBUG_X
-    printf("\n processAad adlen %ld ", ctx->m_additionalDataLen);
+#if DEBUG_PROV_GCM_INIT
+    printf("\n processAad adlen %ld ", m_gcm_local_data.m_additionalDataLen);
 #endif
     err = aesni::processAdditionalDataGcm(pAdditionalData,
                                           m_gcm_local_data.m_additionalDataLen,
@@ -78,34 +78,38 @@ GcmGhash::init(alc_cipher_data_t* ctx,
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err             = setKey(ctx, pKey, keyLen);
-        ctx->m_isKeySet = 1;
+        err = setKey(ctx, pKey, keyLen);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+        m_isKeySet_aes =
+            1; // FIXME: verify and remove set to 1 here, its done setKey itself
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err            = setIv(ctx, pIv, ivLen);
-        ctx->m_ivState = IV_STATE_COPIED;
+        err = setIv(ctx, pIv, ivLen);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+        m_ivState_aes =
+            1; // FIXME: verify and remove set to 1 here, its done setIv itself
     }
 
     // In init call, we generate HashSubKey, partial
     // tag data.
-    if (ctx->m_ivState && ctx->m_isKeySet) {
+    if (m_ivState_aes && m_isKeySet_aes) {
         m_gcm_local_data.m_gHash_128       = _mm_setzero_si128();
         m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
-        ctx->m_dataLen                     = 0;
+        m_dataLen                          = 0;
 
-        err = aesni::InitGcm(m_cipher_key_data.m_enc_key, // ctx->m_enc_key,
+        err = aesni::InitGcm(m_cipher_key_data.m_enc_key,
                              m_nrounds,
-                             ctx->m_pIv,
-                             ctx->m_ivLen,
+                             m_pIv_aes,
+                             m_ivLen_aes,
                              m_gcm_local_data.m_hash_subKey_128,
                              m_gcm_local_data.m_tag_128,
                              m_gcm_local_data.m_counter_128,
                              m_gcm_local_data.m_reverse_mask_128);
-    } else {
-
-        // init can be called two times for setIv and setKey separately
-        // return ALC_ERROR_BAD_STATE; // FIXME: better error code?
     }
 
     return err;
@@ -113,19 +117,19 @@ GcmGhash::init(alc_cipher_data_t* ctx,
 
 #define ALCP_GCM_TAG_MAX_SIZE 16
 
-#define PROVIDER_CHANGES 1
+#define PROVIDER_CHANGES 1 // this should be default post our test code changes.
 
 alc_error_t
 GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    if (ctx->m_pIv == nullptr) {
+    if (m_pIv_aes == nullptr) {
         err = ALC_ERROR_BAD_STATE;
         return err;
     } else if (tagLen > 16 || tagLen == 0) {
         return ALC_ERROR_INVALID_SIZE;
     }
-#if DEBUG_X
+#if DEBUG_PROV_GCM_INIT
     printf("\n getTag taglen %ld isEnc %d", tagLen, ctx->enc);
 #endif
 
@@ -140,7 +144,7 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 #endif
 
     err = aesni::GetTagGcm(tagLen,
-                           ctx->m_dataLen,
+                           m_dataLen,
                            m_gcm_local_data.m_additionalDataLen,
                            m_gcm_local_data.m_gHash_128,
                            m_gcm_local_data.m_tag_128,
@@ -171,21 +175,23 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
                                          Uint64             len)               \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
-        ctx->m_dataLen += len;                                                 \
+        m_dataLen += len;                                                      \
         /*printf(" datalen %ld ", len);*/                                      \
         bool isFirstUpdate = false;                                            \
-        if (len == ctx->m_dataLen) {                                           \
+        if (len == m_dataLen) {                                                \
             isFirstUpdate = true;                                              \
         }                                                                      \
-        err = FUNC_NAME(pinput,                                                \
-                        pOutput,                                               \
-                        len,                                                   \
-                        isFirstUpdate,                                         \
-                        PKEY,                                                  \
-                        NUM_ROUNDS,                                            \
-                        &m_gcm_local_data,                                     \
-                        ctx,                                                   \
-                        ctx->m_gcm.m_hashSubkeyTable);                         \
+        err = FUNC_NAME(                                                       \
+            pinput,                                                            \
+            pOutput,                                                           \
+            len,                                                               \
+            isFirstUpdate,                                                     \
+            PKEY,                                                              \
+            NUM_ROUNDS,                                                        \
+            &m_gcm_local_data,                                                 \
+            ctx,                                                               \
+            m_gcm_local_data.m_gcm                                             \
+                .m_hashSubkeyTable); /*ctx->m_gcm.m_hashSubkeyTable);*/        \
         return err;                                                            \
     }
 
@@ -279,17 +285,19 @@ namespace aesni {
                                           Uint64             len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        ctx->m_dataLen += len;
+        m_dataLen += len;
         // to be modified to decryptGcm128 function
-        err = CryptGcm(pInput,
-                       pOutput,
-                       len,
-                       m_cipher_key_data.m_enc_key,
-                       m_nrounds,
-                       &m_gcm_local_data,
-                       ctx,
-                       false,
-                       ctx->m_gcm.m_hashSubkeyTable);
+        err =
+            CryptGcm(pInput,
+                     pOutput,
+                     len,
+                     m_cipher_key_data.m_enc_key,
+                     m_nrounds,
+                     &m_gcm_local_data,
+                     ctx,
+                     false,
+                     m_gcm_local_data.m_gcm
+                         .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
         return err;
     }
 
@@ -299,17 +307,19 @@ namespace aesni {
                                           Uint64             len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        ctx->m_dataLen += len;
+        m_dataLen += len;
         // to be modified to decryptGcm192 function
-        err = CryptGcm(pInput,
-                       pOutput,
-                       len,
-                       m_cipher_key_data.m_enc_key,
-                       m_nrounds,
-                       &m_gcm_local_data,
-                       ctx,
-                       false,
-                       ctx->m_gcm.m_hashSubkeyTable);
+        err =
+            CryptGcm(pInput,
+                     pOutput,
+                     len,
+                     m_cipher_key_data.m_enc_key,
+                     m_nrounds,
+                     &m_gcm_local_data,
+                     ctx,
+                     false,
+                     m_gcm_local_data.m_gcm
+                         .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
         return err;
     }
 
@@ -319,17 +329,19 @@ namespace aesni {
                                           Uint64             len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        ctx->m_dataLen += len;
+        m_dataLen += len;
         // to be modified to decryptGcm256 function
-        err = CryptGcm(pInput,
-                       pOutput,
-                       len,
-                       m_cipher_key_data.m_enc_key,
-                       m_nrounds,
-                       &m_gcm_local_data,
-                       ctx,
-                       false,
-                       ctx->m_gcm.m_hashSubkeyTable);
+        err =
+            CryptGcm(pInput,
+                     pOutput,
+                     len,
+                     m_cipher_key_data.m_enc_key,
+                     m_nrounds,
+                     &m_gcm_local_data,
+                     ctx,
+                     false,
+                     m_gcm_local_data.m_gcm
+                         .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
         return err;
     }
 
@@ -339,17 +351,19 @@ namespace aesni {
                                           Uint64             len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        ctx->m_dataLen += len;
+        m_dataLen += len;
         // to be modified to encryptGcm128 function
-        err = CryptGcm(pInput,
-                       pOutput,
-                       len,
-                       m_cipher_key_data.m_enc_key,
-                       m_nrounds,
-                       &m_gcm_local_data,
-                       ctx,
-                       true,
-                       ctx->m_gcm.m_hashSubkeyTable);
+        err =
+            CryptGcm(pInput,
+                     pOutput,
+                     len,
+                     m_cipher_key_data.m_enc_key,
+                     m_nrounds,
+                     &m_gcm_local_data,
+                     ctx,
+                     true,
+                     m_gcm_local_data.m_gcm
+                         .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
         return err;
     }
 
@@ -359,27 +373,7 @@ namespace aesni {
                                           Uint64             len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        ctx->m_dataLen += len;
-        // to be modified to encryptGcm192 function
-        err = CryptGcm(pInput,
-                       pOutput,
-                       len,
-                       m_cipher_key_data.m_enc_key,
-                       m_nrounds,
-                       &m_gcm_local_data,
-                       ctx,
-                       true,
-                       ctx->m_gcm.m_hashSubkeyTable);
-        return err;
-    }
-
-    alc_error_t GcmAEAD256::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pInput,
-                                          Uint8*             pOutput,
-                                          Uint64             len)
-    {
-        alc_error_t err = ALC_ERROR_NONE;
-        ctx->m_dataLen += len;
+        m_dataLen += len;
         // to be modified to encryptGcm192 function
         err =
             CryptGcm(pInput,
@@ -390,7 +384,30 @@ namespace aesni {
                      &m_gcm_local_data,
                      ctx,
                      true,
-                     ctx->m_gcm.m_hashSubkeyTable); // no need to pass this arg
+                     m_gcm_local_data.m_gcm
+                         .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD256::encryptUpdate(alc_cipher_data_t* ctx,
+                                          const Uint8*       pInput,
+                                          Uint8*             pOutput,
+                                          Uint64             len)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_dataLen += len;
+        // to be modified to encryptGcm192 function
+        err =
+            CryptGcm(pInput,
+                     pOutput,
+                     len,
+                     m_cipher_key_data.m_enc_key,
+                     m_nrounds,
+                     &m_gcm_local_data,
+                     ctx,
+                     true,
+                     m_gcm_local_data.m_gcm
+                         .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
         return err;
     }
 

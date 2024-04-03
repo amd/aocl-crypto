@@ -155,13 +155,16 @@ namespace vaes512 {
     CRYPT_WRAPPER_FUNC(
         Ctr128, encrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 10)
     CRYPT_WRAPPER_FUNC(
+        Ctr128, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 10)
+
+    CRYPT_WRAPPER_FUNC(
         Ctr192, encrypt, CryptCtr192, m_cipher_key_data.m_enc_key, 12)
     CRYPT_WRAPPER_FUNC(
-        Ctr256, encrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
-    CRYPT_WRAPPER_FUNC(
-        Ctr128, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
         Ctr192, decrypt, CryptCtr192, m_cipher_key_data.m_enc_key, 12)
+
+    CRYPT_WRAPPER_FUNC(
+        Ctr256, encrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
+
     CRYPT_WRAPPER_FUNC(
         Ctr256, decrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
 } // namespace vaes512
@@ -173,14 +176,14 @@ namespace vaes {
         Ctr128, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 10)
 
     CRYPT_WRAPPER_FUNC(
-        Ctr192, encrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 12)
+        Ctr192, encrypt, CryptCtr192, m_cipher_key_data.m_enc_key, 12)
     CRYPT_WRAPPER_FUNC(
-        Ctr192, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 12)
+        Ctr192, decrypt, CryptCtr192, m_cipher_key_data.m_enc_key, 12)
 
     CRYPT_WRAPPER_FUNC(
-        Ctr256, encrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 14)
+        Ctr256, encrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
     CRYPT_WRAPPER_FUNC(
-        Ctr256, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 14)
+        Ctr256, decrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
 
 } // namespace vaes
 
@@ -192,14 +195,14 @@ namespace aesni {
         Ctr128, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 10)
 
     CRYPT_WRAPPER_FUNC(
-        Ctr192, encrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 12)
+        Ctr192, encrypt, CryptCtr192, m_cipher_key_data.m_enc_key, 12)
     CRYPT_WRAPPER_FUNC(
-        Ctr192, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 12)
+        Ctr192, decrypt, CryptCtr192, m_cipher_key_data.m_enc_key, 12)
 
     CRYPT_WRAPPER_FUNC(
-        Ctr256, encrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 14)
+        Ctr256, encrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
     CRYPT_WRAPPER_FUNC(
-        Ctr256, decrypt, CryptCtr128, m_cipher_key_data.m_enc_key, 14)
+        Ctr256, decrypt, CryptCtr256, m_cipher_key_data.m_enc_key, 14)
 
 } // namespace aesni
 

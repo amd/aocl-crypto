@@ -39,7 +39,7 @@
 static void*
 ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
 {
-    ALCP_PROV_CIPHER_CTX* ctx;
+    ALCP_PROV_AES_CTX* ctx;
     ENTER();
 
     // printf("\n ALCP_prov_alg_gcm_newctx %ld \n", keybits);
@@ -66,7 +66,7 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
 
         ctx->base.prov_cipher_data = ctx->base.handle.alc_cipher_data;
         // printf("\n provider keyLen %d ",
-        // ctx->base.prov_cipher_data->m_keyLen_in_bytes);
+        // ctx->base.prov_cipher_data->keyLen_in_bytes);
 
         if (ctx->base.prov_cipher_data == NULL) {
             // printf("\n prov_cipher_data NULL ");
@@ -87,8 +87,8 @@ static void*
 ALCP_prov_alg_gcm_dupctx(void* provctx)
 {
     ENTER();
-    ALCP_PROV_CIPHER_CTX* ctx  = provctx;
-    ALCP_PROV_CIPHER_CTX* dctx = NULL;
+    ALCP_PROV_AES_CTX* ctx  = provctx;
+    ALCP_PROV_AES_CTX* dctx = NULL;
 
     if (ctx == NULL)
         return NULL;
@@ -102,11 +102,11 @@ ALCP_prov_alg_gcm_dupctx(void* provctx)
 
 static OSSL_FUNC_cipher_freectx_fn ALCP_prov_alg_gcm_freectx;
 
-// done:MMM
 static void
 ALCP_prov_alg_gcm_freectx(void* vctx)
 {
-    ALCP_PROV_CIPHER_CTX* ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
+    ENTER();
+    ALCP_PROV_AES_CTX* ctx = (ALCP_PROV_AES_CTX*)vctx;
 
     // free alcp
     if (ctx->base.handle.ch_context != NULL) {

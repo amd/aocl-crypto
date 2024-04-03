@@ -53,19 +53,19 @@ typedef struct alcp_aes_key_st
     Int32  rounds;
 } ALCP_AES_KEY;
 
-typedef struct prov_aes_ctx_st
+typedef struct alcp_prov_cipher_ctx_st
 {
     alc_cipher_handle_t handle;
     alc_cipher_data_t*  prov_cipher_data; /* cipher params */
     OSSL_LIB_CTX*       libctx;           /* needed for rand calls */
-} ALCP_PROV_AES_CTX;
+} ALCP_PROV_CIPHER_CTX;
 
-typedef struct alcp_prov_cipher_ctx_st
+typedef struct alcp_prov_aes_ctx_st
 {
-    ALCP_PROV_AES_CTX base; /* must be first entry in struct */
+    ALCP_PROV_CIPHER_CTX base; /* must be first entry in struct */
     // key memory to be aligned
     ALCP_AES_KEY ks;
-} ALCP_PROV_CIPHER_CTX;
+} ALCP_PROV_AES_CTX;
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];

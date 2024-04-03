@@ -42,13 +42,13 @@ alc_error_t
 Xts::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
 {
     Status s = StatusOk();
-    utils::CopyBytes(ctx->m_xts.m_iv_xts, pIv, ivLen); // Keep a copy of iv
+    utils::CopyBytes(m_xts.m_iv_xts, pIv, ivLen); // Keep a copy of iv
 
     // FIXME: In future we need to dispatch it correctly
     aesni::InitializeTweakBlock(
-        pIv, ctx->m_xts.m_tweak_block, ctx->m_xts.m_pTweak_key, getRounds());
+        pIv, m_xts.m_tweak_block, m_xts.m_pTweak_key, getRounds());
 
-    ctx->m_xts.m_aes_block_id = 0; // Initialized BlockId to 0
+    m_xts.m_aes_block_id = 0; // Initialized BlockId to 0
 
     return s.code();
 }
@@ -68,18 +68,18 @@ Xts::init(alc_cipher_data_t* ctx,
             return err;
         }
 
-        ctx->m_xts.m_pTweak_key = &(ctx->m_xts.m_tweak_round_key[0]);
+        m_xts.m_pTweak_key = &(m_xts.m_tweak_round_key[0]);
         expandTweakKeys(ctx, pKey + keyLen / 8, keyLen);
 
-        ctx->m_isKeySet = 1;
+        m_isKeySet_aes = 1;
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err            = Xts::setIv(ctx, pIv, ivLen);
-        ctx->m_ivState = IV_STATE_COPIED;
+        err           = Xts::setIv(ctx, pIv, ivLen);
+        m_ivState_aes = 1;
     }
 
-    if (!(ctx->m_ivState && ctx->m_isKeySet)) {
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
         return ALC_ERROR_BAD_STATE; // FIXME: better error code?
     }
 
@@ -92,17 +92,17 @@ Xts::tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId)
     // FIXME: In future we need to dispatch it correctly
     // m_cipher_key_data.m_xts.m_aes_block_id is the previous block id and
     // aesBlockId is the target block id.
-    if ((Int64)aesBlockId > ctx->m_xts.m_aes_block_id) {
-        aesni::TweakBlockCalculate(ctx->m_xts.m_tweak_block,
-                                   aesBlockId - ctx->m_xts.m_aes_block_id);
-    } else if ((Int64)aesBlockId < ctx->m_xts.m_aes_block_id) {
-        aesni::InitializeTweakBlock(ctx->m_xts.m_iv_xts,
-                                    ctx->m_xts.m_tweak_block,
-                                    ctx->m_xts.m_pTweak_key,
+    if ((Int64)aesBlockId > m_xts.m_aes_block_id) {
+        aesni::TweakBlockCalculate(m_xts.m_tweak_block,
+                                   aesBlockId - m_xts.m_aes_block_id);
+    } else if ((Int64)aesBlockId < m_xts.m_aes_block_id) {
+        aesni::InitializeTweakBlock(m_xts.m_iv_xts,
+                                    m_xts.m_tweak_block,
+                                    m_xts.m_pTweak_key,
                                     getRounds());
-        aesni::TweakBlockCalculate(ctx->m_xts.m_tweak_block, aesBlockId);
+        aesni::TweakBlockCalculate(m_xts.m_tweak_block, aesBlockId);
     }
-    ctx->m_xts.m_aes_block_id = aesBlockId;
+    m_xts.m_aes_block_id = aesBlockId;
 }
 
 void
@@ -113,7 +113,7 @@ Xts::expandTweakKeys(alc_cipher_data_t* ctx, const Uint8* pKey, int len)
 
     const Uint8* key = pKey ? pKey : &dummy_key[0];
     if (CpuId::cpuHasAesni()) {
-        aesni::ExpandTweakKeys(key, ctx->m_xts.m_pTweak_key, getRounds());
+        aesni::ExpandTweakKeys(key, m_xts.m_pTweak_key, getRounds());
         return;
     }
 
@@ -125,7 +125,7 @@ Xts::expandTweakKeys(alc_cipher_data_t* ctx, const Uint8* pKey, int len)
     const Uint32* rtbl = utils::s_round_constants;
     Uint32*       p_tweak_key32;
 
-    p_tweak_key32 = reinterpret_cast<Uint32*>(ctx->m_xts.m_pTweak_key);
+    p_tweak_key32 = reinterpret_cast<Uint32*>(m_xts.m_pTweak_key);
 
     for (i = 0; i < nk; i++) {
         p_tweak_key32[i] = MakeWord(
@@ -196,24 +196,24 @@ namespace aesni {
 
 // pIv arg to be removed and this is made same as other ciper wrapper func
 // length check to be converted to generic function for all cipher modes
-#define CRYPT_XTS_WRAPPER_FUNC(                                                             \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                                  \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,                            \
-                                         const Uint8*       pinput,                         \
-                                         Uint8*             pOutput,                        \
-                                         Uint64             len)                            \
-    {                                                                                       \
-        alc_error_t err = ALC_ERROR_NONE;                                                   \
-                                                                                            \
-        if (len < 16 || len > (1 << 21)) {                                                  \
-            err = ALC_ERROR_INVALID_DATA;                                                   \
-            return err;                                                                     \
-        }                                                                                   \
-        Uint64 blocks_in = len / 16;                                                        \
-        err              = FUNC_NAME(                                                       \
-            pinput, pOutput, len, PKEY, NUM_ROUNDS, ctx->m_xts.m_tweak_block); \
-        ctx->m_xts.m_aes_block_id += blocks_in;                                             \
-        return err;                                                                         \
+#define CRYPT_XTS_WRAPPER_FUNC(                                                        \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                             \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,                       \
+                                         const Uint8*       pinput,                    \
+                                         Uint8*             pOutput,                   \
+                                         Uint64             len)                       \
+    {                                                                                  \
+        alc_error_t err = ALC_ERROR_NONE;                                              \
+                                                                                       \
+        if (len < 16 || len > (1 << 21)) {                                             \
+            err = ALC_ERROR_INVALID_DATA;                                              \
+            return err;                                                                \
+        }                                                                              \
+        Uint64 blocks_in = len / 16;                                                   \
+        err              = FUNC_NAME(                                                  \
+            pinput, pOutput, len, PKEY, NUM_ROUNDS, m_xts.m_tweak_block); \
+        m_xts.m_aes_block_id += blocks_in;                                             \
+        return err;                                                                    \
     }
 
 namespace vaes512 {

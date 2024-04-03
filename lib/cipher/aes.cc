@@ -37,17 +37,18 @@ alc_error_t
 Aes::setKey(alc_cipher_data_t* ctx, const Uint8* pKey, const Uint64 keyLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
-    ctx->m_pKey   = pKey;
+    ctx->m_pKey   = pKey; // FIXME:this should be moved to provider
 
     // keyLen should be checked if its same as keyLen used during create call
-    if (ctx->m_keyLen_in_bytes != keyLen / 8) {
+    if (m_keyLen_in_bytes_aes != keyLen / 8) {
         printf("\n setKey failed, keySize invalid");
         return ALC_ERROR_INVALID_SIZE;
     }
 
     Rijndael::initRijndael(pKey, keyLen);
     getKey();
-    ctx->m_isKeySet = 1; // FIXME: use enum instead
+    m_isKeySet_aes = 1; // FIXME: use enum instead
+    // ctx->isKeySet  = 1;
     return e;
 }
 
@@ -55,7 +56,7 @@ alc_error_t
 Aes::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
-    if ((ivLen == 0) && (ivLen > sizeof(ctx->m_iv_buff))) {
+    if ((ivLen == 0) && (ivLen > MAX_CIPHER_IV_SIZE)) {
         return ALC_ERROR_INVALID_SIZE;
     }
 
@@ -64,11 +65,11 @@ Aes::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
     }
 
     // copy IV and set IvLen
-    memcpy(ctx->m_iv_buff, pIv, ivLen);
-    ctx->m_pIv = ctx->m_iv_buff;
+    memcpy(m_iv_aes, pIv, ivLen); // copy iv to aes
+    m_pIv_aes = m_iv_aes;
 
-    ctx->m_ivLen   = ivLen;
-    ctx->m_ivState = true;
+    m_ivLen_aes   = ivLen;
+    m_ivState_aes = IV_STATE_COPIED;
 
     return e;
 }
@@ -85,6 +86,9 @@ Aes::init(alc_cipher_data_t* ctx,
 
     if (pKey != NULL && keyLen != 0) {
         err = setKey(ctx, pKey, keyLen);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
     }
 
     if (pIv != NULL && ivLen != 0) {

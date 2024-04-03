@@ -62,7 +62,7 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
     new (ctx) cipher::Context;
 
     // printf("\n aead_request keyLen mem allocation %d ",
-    // ctx->m_cipher_data.m_keyLen_in_bytes);
+    // ctx->m_cipher_data.keyLen_in_bytes);
 
     err = cipher::CipherAeadBuilder::Build(cipherMode, keyLen, *ctx);
 
@@ -70,14 +70,8 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
     pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
 
     // printf("\n aead_request post build keyLen %d ",
-    // ctx->m_cipher_data.m_keyLen_in_bytes);
+    // ctx->m_cipher_data.keyLen_in_bytes);
 
-#if 1 // check
-    // alc_cipher_data_t* dat =
-    // (alc_cipher_data_t*)pCipherHandle->alc_cipher_data;
-    // printf("\n aead_request post build2 keyLen %d ",
-    // dat->m_keyLen_in_bytes);
-#endif
     return err;
 }
 
@@ -185,7 +179,7 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-#if DEBUG_X
+#if DEBUG_PROV_GCM_INIT
     printf("\n aead_init enc value %d \n", ctx->m_cipher_data.enc);
 #endif
     // init can be called to setKey or setIv or both

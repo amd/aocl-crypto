@@ -63,33 +63,25 @@ using Status = alcp::base::Status;
  */
 class Aes : public Rijndael
 {
-  public:
+  protected:
     // rounds based on keysize
     Uint32 m_nrounds = 0;
 
     alc_cipher_key_data_t m_cipher_key_data;
 
-    Aes(alc_cipher_data_t* ctx)
+    Uint32                             m_keyLen_in_bytes_aes;
+    __attribute__((aligned(16))) Uint8 m_iv_aes[MAX_CIPHER_IV_SIZE];
+    Uint8*                             m_pIv_aes      = NULL;
+    Uint64                             m_ivLen_aes    = 16; // default 16 bytes
+    Uint32                             m_isKeySet_aes = 0;
+    Uint32                             m_ivState_aes  = 0;
+    Uint64                             m_dataLen      = 0;
+
+    Aes(alc_cipher_data_t*
+            ctx) // keyLen can be passed along with alc_cipher_data_t *?
         : Rijndael()
     {
-
-#if 0 // reset keyLen =0 here, overrides keyLen set in create call. below init
-      // should be revisited.
-      
-      // key info for all modes
-        ctx->m_pKey   = NULL;
-        ctx->m_keyLen = 0;
-
-        // iv info for all modes
-        ctx->m_pIv   = NULL;
-        ctx->m_ivLen = 16; // default size
-
-        // state of iv and key
-        ctx->m_ivState  = IV_STATE_UNINITIALISED;
-        ctx->m_isKeySet = 0;
-
-        ctx->m_dataLen = 0;
-#endif
+        m_keyLen_in_bytes_aes = ctx->keyLen_in_bytes;
     }
 
     // this constructor to be removed.
@@ -220,7 +212,7 @@ AES_CLASS_GEN(Ofb, Aes)
                                          Uint64             len)               \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
-        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, ctx->m_pIv);   \
+        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
         return err;                                                            \
     }
 

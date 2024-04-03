@@ -47,7 +47,7 @@ Ofb::decrypt(alc_cipher_data_t* ctx,
                                 len,
                                 getEncryptKeys(),
                                 getRounds(),
-                                ctx->m_pIv);
+                                m_pIv_aes);
 
         return err;
     }
@@ -68,7 +68,7 @@ Ofb::encrypt(alc_cipher_data_t* ctx,
                                 len,
                                 getEncryptKeys(),
                                 getRounds(),
-                                ctx->m_pIv);
+                                m_pIv_aes);
 
         return err;
     }

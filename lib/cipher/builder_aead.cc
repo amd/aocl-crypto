@@ -464,9 +464,9 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
         return ALC_ERROR_INVALID_SIZE; // FIXME set appropriate sts
     }
 
-    ctx.m_cipher_data.m_keyLen_in_bytes =
-        keyLen / 8; // m_keyLen_in_bytes is used to verify keyLen during setKey
-                    // call in init
+    ctx.m_cipher_data.keyLen_in_bytes =
+        keyLen / 8; // keyLen_in_bytes is used to verify keyLen during setKey
+    // call in init
 
     switch (cipherMode) {
         case ALC_AES_MODE_GCM:

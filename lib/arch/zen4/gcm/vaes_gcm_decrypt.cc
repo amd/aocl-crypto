@@ -80,6 +80,13 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 {
     __m512i c1;
 
+#if 0
+    printf(" blocks %ld remBytes %d totalBytes %ld",
+           blocks,
+           remBytes,
+           (blocks * 16) + remBytes);
+#endif
+
     /* gcm init + Hash subkey init */
     const __m256i const_factor_256 =
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);

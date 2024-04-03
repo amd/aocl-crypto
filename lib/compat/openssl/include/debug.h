@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,10 @@
 
 #ifndef _OPENSSL_DEBUG_H
 #define _OPENSSL_DEBUG_H 2
-#ifdef DEBUG
+
+//#define DEBUG_PROV
+
+#ifdef DEBUG_PROV
 #define DBG_PRINT(prfx, fmt, ...) printf(prfx##fmt, __VA_ARGS__)
 
 #define ENTRY()    DBG_PRINT("Entry: ", "%s\n", __func__)

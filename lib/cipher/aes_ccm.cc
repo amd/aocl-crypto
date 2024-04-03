@@ -760,7 +760,7 @@ Ccm::decrypt(alc_cipher_data_t* ctx,
              Uint64             len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, false);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, false);
     return s.code();
 }
 
@@ -772,7 +772,7 @@ Ccm::encrypt(alc_cipher_data_t* ctx,
 {
     Status s = StatusOk();
     // FIXME: ctx to be passed to cryptUpdate
-    s = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, true);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, true);
     return s.code();
 }
 
@@ -784,7 +784,7 @@ Ccm::decryptUpdate(alc_cipher_data_t* ctx,
 {
     Status s = StatusOk();
     // FIXME: ctx to be passed to cryptUpdate
-    s = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, false);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, false);
     return s.code();
 }
 
@@ -795,7 +795,7 @@ Ccm::encryptUpdate(alc_cipher_data_t* ctx,
                    Uint64             len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, ctx->m_pIv, true);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, true);
     return s.code();
 }
 

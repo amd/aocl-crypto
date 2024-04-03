@@ -786,9 +786,7 @@ demo_Hmac_Sha512_224()
                             0xb5, 0xf5, 0x08, 0x41, 0x0c, 0x69, 0x76,
                             0x51, 0x2b, 0x24, 0x10, 0x35, 0x70, 0x9a };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 

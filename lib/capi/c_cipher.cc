@@ -93,9 +93,10 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
 
     new (ctx) cipher::Context;
 
-    pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
-
     err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
+
+    // assign ctx cipher_data to handle
+    pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
 
     return err;
 }
