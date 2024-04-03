@@ -339,29 +339,6 @@ ALCP_API_EXPORT void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
 /**
- *
- * FIXME: Need to fix return type of API
- * @brief       resets the internal state of the digest handle
- *
- * @parblock <br> &nbsp;
- * <b>This API is called to reset data so should be called after @ref
- * alcp_digest_request and at the end of
- * session call @ref alcp_digest_finish</b>
- * @endparblock
- *
- * @note       Must be called to restart the digest operation on an already
- * existing handle.
- *
- * @param [in] p_digest_handle The handle that was returned as part of call
- *                       together alcp_digest_request(), once this function
- *                       is called. the handle is will not be valid for future
- *
- * @return      None
- */
-ALCP_API_EXPORT void
-alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
-
-/**
  * @brief              Get the error string for errors occurring in digest
  *                     operations
  * @parblock <br> &nbsp;

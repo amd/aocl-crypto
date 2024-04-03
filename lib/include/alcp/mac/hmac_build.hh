@@ -30,8 +30,9 @@
 #include "alcp/base.hh"
 #include "alcp/capi/digest/builder.hh"
 #include "alcp/capi/mac/ctx.hh"
+#include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
-#include "alcp/digest/sha384.hh"
+#include "alcp/digest/sha512.hh"
 #include "hmac.hh"
 
 namespace alcp::mac {

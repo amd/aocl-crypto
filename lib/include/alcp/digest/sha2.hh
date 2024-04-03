@@ -55,7 +55,6 @@ class Sha2 final : public IDigest
 
   public:
     ALCP_API_EXPORT Sha2();
-    ALCP_API_EXPORT Sha2(const alc_digest_info_t& rDigestInfo);
     ALCP_API_EXPORT Sha2(const Sha2& src);
     virtual ALCP_API_EXPORT ~Sha2() = default;
 
@@ -82,16 +81,6 @@ class Sha2 final : public IDigest
      */
     ALCP_API_EXPORT alc_error_t update(const Uint8* pMsgBuf,
                                        Uint64       size) override;
-
-    /**
-     * \brief    Resets the internal state.
-     *
-     * \notes   `reset()` to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
-     *
-     * \return nothing
-     */
-    void reset() override;
 
     /**
      * \brief    Call for the final chunk
@@ -136,8 +125,8 @@ class Sha2 final : public IDigest
 typedef Sha2<ALC_DIGEST_LEN_224> Sha224;
 typedef Sha2<ALC_DIGEST_LEN_256> Sha256;
 
-template Sha224;
-template Sha256;
+template class Sha2<ALC_DIGEST_LEN_224>;
+template class Sha2<ALC_DIGEST_LEN_256>;
 
 static inline void
 CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)

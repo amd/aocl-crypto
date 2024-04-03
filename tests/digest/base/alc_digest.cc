@@ -149,7 +149,7 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
 void
 AlcpDigestBase::reset()
 {
-    alcp_digest_reset(m_handle);
+    alcp_digest_init(m_handle);
 }
 
 } // namespace alcp::testing

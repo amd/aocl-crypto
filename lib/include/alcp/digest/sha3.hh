@@ -85,16 +85,6 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
-     * @brief    Resets the internal state.
-     *
-     * @note     reset() to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
-     *
-     * @return   nothing
-     */
-    void reset() override;
-
-    /**
      * @brief    Call for the final chunk
      *
      *

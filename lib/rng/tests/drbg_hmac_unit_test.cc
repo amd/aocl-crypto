@@ -289,16 +289,17 @@ class HmacDrbgKat
                  m_generatedBits) = params.second;
     }
 
-    void SetUp() override { 
+    void SetUp() override
+    {
         getParams();
         SetReserve(m_add1);
         SetReserve(m_add2);
         SetReserve(m_add_reseed);
         SetReserve(m_pstr);
-
     }
 
-    inline void SetReserve(std::vector<Uint8>& var) {
+    inline void SetReserve(std::vector<Uint8>& var)
+    {
         if (var.size() == 0)
             var.reserve(1);
     }
@@ -313,25 +314,27 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
     void SetUp() override
     {
         HmacDrbgKat::SetUp();
-        alc_digest_mode_t digest_mode = {};
-        switch (len) {
-            case ALC_DIGEST_LEN_224:
-                digest_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            case ALC_DIGEST_LEN_256:
-                digest_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            default:
-                break;
-        }
-        alc_digest_info_t digest_info = {
-            ALC_DIGEST_TYPE_SHA3, len, {}, digest_mode, {}
-        };
+        // ToDo : Bring back this code when Sha3 is templatized
+        // alc_digest_mode_t digest_mode = {};
+        // switch (len) {
+        //     case ALC_DIGEST_LEN_224:
+        //         digest_mode.dm_sha3 = ALC_SHA3_224;
+        //         break;
+        //     case ALC_DIGEST_LEN_256:
+        //         digest_mode.dm_sha3 = ALC_SHA3_224;
+        //         break;
+        //     default:
+        //         break;
+        // }
+        // alc_digest_info_t digest_info = {
+        //     ALC_DIGEST_TYPE_SHA3, len, {}, digest_mode, {}
+        // };
         switch (m_digestClass) {
             case ALC_DIGEST_TYPE_SHA2:
                 p_shaObj = std::make_shared<SHA_CLASS>();
             case ALC_DIGEST_TYPE_SHA3:
-                p_shaObj = std::make_shared<SHA_CLASS>(digest_info);
+                // ToDo : Bring back this code when Sha3 is templatized
+                // p_shaObj = std::make_shared<SHA_CLASS>(digest_info);
                 break;
             default:
                 // TODO: Raise an exeception

@@ -92,7 +92,7 @@ ShaRound(Uint64  a,
 }
 
 template<alc_digest_len_t digest_len>
-class ALCP_API_EXPORT Sha512 final : public IDigest
+class ALCP_API_EXPORT Sha2_512 final : public IDigest
 {
     static_assert(ALC_DIGEST_LEN_224 == digest_len
                   || ALC_DIGEST_LEN_256 == digest_len
@@ -114,10 +114,9 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
         cIvSizeBytes                      = 64;                             /* IV size in bytes */
     // clang-format on
   public:
-    Sha512();
-    Sha512(const alc_digest_info_t& rDigestInfo);
-    Sha512(const Sha512& src);
-    virtual ~Sha512() = default;
+    Sha2_512();
+    Sha2_512(const Sha2_512& src);
+    virtual ~Sha2_512() = default;
 
   public:
     /**
@@ -142,16 +141,6 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
      * @param    size    should be valid size > 0
      */
     alc_error_t update(const Uint8* pBuf, Uint64 size) override;
-
-    /**
-     * @brief    Resets the internal state.
-     *
-     * @note   `reset()` to be called as a means to reset the internal
-     * state. This enables the processing the new buffer.
-     *
-     * @return nothing
-     */
-    void reset() override;
 
     /**
      * @brief    Call for the final chunk
@@ -190,13 +179,13 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
     alignas(64) Uint64 m_hash[cHashSizeWords]{};
 };
 
-typedef Sha512<ALC_DIGEST_LEN_224> Sha512_224;
-typedef Sha512<ALC_DIGEST_LEN_256> Sha512_256;
-typedef Sha512<ALC_DIGEST_LEN_384> Sha384;
-typedef Sha512<ALC_DIGEST_LEN_512> Sha512;
+typedef Sha2_512<ALC_DIGEST_LEN_224> Sha512_224;
+typedef Sha2_512<ALC_DIGEST_LEN_256> Sha512_256;
+typedef Sha2_512<ALC_DIGEST_LEN_384> Sha384;
+typedef Sha2_512<ALC_DIGEST_LEN_512> Sha512;
 
-template Sha512_224;
-template Sha512_256;
-template Sha384;
-template Sha512;
+template class Sha2_512<ALC_DIGEST_LEN_224>;
+template class Sha2_512<ALC_DIGEST_LEN_256>;
+template class Sha2_512<ALC_DIGEST_LEN_384>;
+template class Sha2_512<ALC_DIGEST_LEN_512>;
 } // namespace alcp::digest

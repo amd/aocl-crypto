@@ -223,7 +223,7 @@ TEST(Shake, digest_correction_with_reset_test)
 
         // Resetting the class. Now a new buffer will be used to test if the
         // digest is happening correctly
-        sha3_shake.reset();
+        sha3_shake.init();
 
         ASSERT_EQ(sha3_shake.update((const Uint8*)plaintext.c_str(),
                                     plaintext.size()),

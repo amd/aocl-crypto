@@ -32,7 +32,6 @@
 #include "alcp/digest.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
-#include "alcp/digest/sha384.hh"
 #include "alcp/digest/sha512.hh"
 
 namespace alcp::digest {
@@ -109,18 +108,6 @@ __sha_copy_wrapper(const void* pDigest, Uint8* pBuf, Uint64 len)
     return e;
 }
 
-template<typename DIGESTTYPE>
-static alc_error_t
-__sha_reset_wrapper(void* pDigest)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap = static_cast<DIGESTTYPE*>(pDigest);
-    ap->reset();
-
-    return e;
-}
-
 #if 0
 template<typename DIGESTTYPE,
          alc_error_t (DIGESTTYPE::*func)(void*, const Uint8*, Uint64)>
@@ -152,7 +139,7 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    auto algo    = new ALGONAME(sha2Info);
+    auto algo    = new ALGONAME();
     ctx.m_digest = static_cast<void*>(algo);
     ctx.init     = __sha_init_wrapper<ALGONAME>;
     ctx.update   = __sha_update_wrapper<ALGONAME>;
@@ -161,7 +148,6 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
     //   ctx.finalize = __digest_func_wrapper<ALGONAME,
     //   &ALGONAME::finalize>;
     ctx.finish = __sha_dtor<ALGONAME>;
-    ctx.reset  = __sha_reset_wrapper<ALGONAME>;
 
     // setShakeLength is not implemented for SHA2
     ctx.setShakeLength = nullptr;
@@ -183,7 +169,6 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
     destCtx.copy           = srcCtx.copy;
     destCtx.finalize       = srcCtx.finalize;
     destCtx.finish         = srcCtx.finish;
-    destCtx.reset          = srcCtx.reset;
     destCtx.setShakeLength = srcCtx.setShakeLength;
 
     return err;
@@ -202,7 +187,7 @@ class Sha2Builder
                 if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
                     __build_sha<Sha256>(rDigestInfo, rCtx);
                 } else {
-                    __build_sha<Sha512>(rDigestInfo, rCtx);
+                    __build_sha<Sha512_256>(rDigestInfo, rCtx);
                 }
                 break;
 
@@ -210,7 +195,7 @@ class Sha2Builder
                 if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
                     __build_sha<Sha224>(rDigestInfo, rCtx);
                 } else {
-                    __build_sha<Sha512>(rDigestInfo, rCtx);
+                    __build_sha<Sha512_224>(rDigestInfo, rCtx);
                 }
                 break;
 
@@ -240,7 +225,7 @@ class Sha2Builder
                 if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
                     __build_with_copy_sha<Sha256>(srcCtx, destCtx);
                 } else {
-                    __build_with_copy_sha<Sha512>(srcCtx, destCtx);
+                    __build_with_copy_sha<Sha512_256>(srcCtx, destCtx);
                 }
                 break;
 
@@ -248,7 +233,7 @@ class Sha2Builder
                 if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
                     __build_with_copy_sha<Sha224>(srcCtx, destCtx);
                 } else {
-                    __build_with_copy_sha<Sha512>(srcCtx, destCtx);
+                    __build_with_copy_sha<Sha512_224>(srcCtx, destCtx);
                 }
                 break;
 
@@ -282,7 +267,6 @@ class Sha3Builder
         rCtx.copy        = __sha_copy_wrapper<Sha3>;
         rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
         rCtx.finish      = __sha_dtor<Sha3>;
-        rCtx.reset       = __sha_reset_wrapper<Sha3>;
 
         //  Restricting setShakeLength to SHAKE128 or SHAKE256
         if (rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_128
@@ -305,7 +289,6 @@ class Sha3Builder
         destCtx.copy           = srcCtx.copy;
         destCtx.finalize       = srcCtx.finalize;
         destCtx.finish         = srcCtx.finish;
-        destCtx.reset          = srcCtx.reset;
         destCtx.setShakeLength = srcCtx.setShakeLength;
         return err;
     }

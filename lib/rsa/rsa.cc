@@ -159,7 +159,7 @@ Rsa<T>::maskGenFunct(Uint8*       mask,
 
     while (out_len < maskSize) {
 
-        m_mgf->reset();
+        m_mgf->init();
 
         m_mgf->update(input, inputLen);
         count_array[0] = (count >> 24) & 0xff;
@@ -344,7 +344,7 @@ Rsa<T>::encryptPublicOaep(const Uint8* pText,
     p_masked_db       = p_masked_seed + m_hash_len; // seed size equals hashsize
 
     // generates masked db
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(pLabel, labelSize);
     m_digest->copyHash(p_masked_db, m_hash_len);
 
@@ -425,7 +425,7 @@ Rsa<T>::decryptPrivateOaep(const Uint8* pEncText,
     }
 
     // create db
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(pLabel, labelSize);
     m_digest->copyHash(hash_label, m_hash_len);
 
@@ -486,7 +486,7 @@ Rsa<T>::signPrivatePss(bool         check,
 
     alignas(64) Uint8 message[T / 8], message_check[T / 8], hash[64]{};
 
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(pText, textSize);
     m_digest->copyHash(hash, m_hash_len);
 
@@ -495,7 +495,7 @@ Rsa<T>::signPrivatePss(bool         check,
     utils::CopyBytes(p_message + 8, hash, m_hash_len);
     utils::CopyBytes(p_message + 8 + m_hash_len, salt, saltSize);
 
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(p_message, m_hash_len + saltSize + 8);
     m_digest->copyHash(hash, m_hash_len);
 
@@ -575,7 +575,7 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
 
     alignas(64) Uint8 hash[64]{};
 
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(pText, textSize);
     m_digest->copyHash(hash, m_hash_len);
 
@@ -612,7 +612,7 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
     utils::CopyBytes(p_db_mask + 8, hash, m_hash_len);
     utils::CopyBlock(p_db_mask + 8 + m_hash_len, p_masked_db + i, saltLen);
 
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(p_db_mask, 8 + m_hash_len + saltLen);
     m_digest->copyHash(hash, m_hash_len);
 
@@ -644,7 +644,7 @@ Rsa<T>::signPrivatePkcsv15(bool         check,
 
     alignas(64) Uint8 message[T / 8]{}, message_check[T / 8]{}, hash[64]{};
 
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(pText, textSize);
     m_digest->copyHash(hash, m_hash_len);
 
@@ -703,7 +703,7 @@ Rsa<T>::verifyPublicPkcsv15(const Uint8* pText,
         return status;
     }
 
-    m_digest->reset();
+    m_digest->init();
     m_digest->finalize(pText, textSize);
     m_digest->copyHash(hash, m_hash_len);
 

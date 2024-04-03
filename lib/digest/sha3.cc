@@ -375,15 +375,6 @@ Sha3::copyHash(Uint8* pHash, Uint64 size) const
     return err;
 }
 
-void
-Sha3::reset()
-{
-    m_idx = 0;
-    memset(m_state, 0, sizeof(m_state));
-
-    m_finished = false;
-}
-
 alc_error_t
 Sha3::setShakeLength(Uint64 shakeLength)
 {

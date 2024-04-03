@@ -33,7 +33,7 @@
 
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
-#include "alcp/digest/sha384.hh"
+#include "alcp/digest/sha512.hh"
 #include "alcp/rng/drbg_hmac.hh"
 #include "alcp/rsa.h"
 #include "alcp/rsa/rsaerror.hh"
@@ -136,19 +136,27 @@ fetch_digest(const alc_digest_info_t& digestInfo)
         case ALC_DIGEST_TYPE_SHA2: {
             switch (digestInfo.dt_mode.dm_sha2) {
                 case ALC_SHA2_256: {
-                    digest = new Sha256(digestInfo);
+                    digest = new Sha256;
                     break;
                 }
                 case ALC_SHA2_224: {
-                    digest = new Sha224(digestInfo);
+                    digest = new Sha224;
                     break;
                 }
                 case ALC_SHA2_384: {
-                    digest = new Sha384(digestInfo);
+                    digest = new Sha384;
                     break;
                 }
                 case ALC_SHA2_512: {
-                    digest = new Sha512(digestInfo);
+                    digest = new Sha512;
+                    break;
+                }
+                case ALC_SHA2_512_224: {
+                    digest = new Sha512_224;
+                    break;
+                }
+                case ALC_SHA2_512_256: {
+                    digest = new Sha512_256;
                     break;
                 }
                 default: {
