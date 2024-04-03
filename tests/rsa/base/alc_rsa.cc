@@ -69,7 +69,7 @@ AlcpRsaBase::init()
         return false;
     }
 
-    /* only for no padding mode*/
+    /* only for padding mode*/
     if (m_padding_mode != ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {

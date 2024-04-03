@@ -180,18 +180,18 @@ Rsa_KAT(int                     padding_mode,
          * non-padded modes */
         std::vector<Uint8> encrypted_data_expected =
             csv.getVect("ENCRYPTEDDATA");
-        std::vector<Uint8> encrypted_data(KeySize, 0);
-        std::vector<Uint8> decrypted_data(KeySize, 0); /* keysize for padded */
-        std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
-        std::vector<Uint8> signature(KeySize, 0);
-        std::vector<Uint8> signature_data(KeySize, 0);
+        std::vector<Uint8> encrypted_data(KeySize);
+        std::vector<Uint8> decrypted_data(KeySize); /* keysize for padded */
+        std::vector<Uint8> PubKeyKeyMod(KeySize);
+        std::vector<Uint8> signature(KeySize);
+        std::vector<Uint8> expected_signature(KeySize);
         Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
 
         /* for signature generation and verification*/
         if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
             || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-            signature_data   = csv.getVect("SIGNATURE");
-            data.m_signature = &(signature[0]);
+            expected_signature = csv.getVect("SIGNATURE");
+            data.m_signature   = &(signature[0]);
             // data.m_salt      = &(salt[0]);
             // data.m_salt_len  = 5;
             /*FIXME: experimenting with Zero length salt for RSA PSS*/
@@ -244,7 +244,7 @@ Rsa_KAT(int                     padding_mode,
                 std::cout << "Error in RSA verify" << std::endl;
                 FAIL();
             }
-            EXPECT_TRUE(ArraysMatch(signature_data, signature, KeySize));
+            EXPECT_TRUE(ArraysMatch(expected_signature, signature, KeySize));
         }
 
         /* for encrypt / decrypt cases for NoPadding/OAEP*/
@@ -263,7 +263,7 @@ Rsa_KAT(int                     padding_mode,
 
             /* check if dec val is same as input */
             if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
-                input_data.resize(KeySize, 0);
+                input_data.resize(KeySize);
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data, input_data, input_data.size()));
                 data.m_msg_len = KeySize;
@@ -442,8 +442,8 @@ Rsa_Cross(int                     padding_mode,
         std::vector<Uint8> decrypted_data_ext(KeySize);
         std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
 
-        std::vector<Uint8> signature_data_main(KeySize, 0);
-        std::vector<Uint8> signature_data_ext(KeySize, 0);
+        std::vector<Uint8> signature_data_main(KeySize);
+        std::vector<Uint8> signature_data_ext(KeySize);
 
         /* misalign if buffers are aligned */
         bool force_misaligned = false;
@@ -607,7 +607,7 @@ Rsa_Cross(int                     padding_mode,
             }
             /* Now check outputs from both libs */
             if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
-                input_data.resize(KeySize, 0);
+                input_data.resize(KeySize);
                 /* compare decrypted output for ext lib vs original input */
                 EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
                 EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));

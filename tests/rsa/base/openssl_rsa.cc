@@ -75,12 +75,12 @@ OpenSSLRsaBase::init()
             break;
         default:
             std::cout << "Invalid digest length" << std::endl;
-            return 1;
+            return false;
     }
     m_md_type = EVP_get_digestbyname(m_digest_str);
     if (m_md_type == nullptr) {
         std::cout << "Digest type is invalid" << std::endl;
-        return 1;
+        return false;
     }
     return true;
 }
