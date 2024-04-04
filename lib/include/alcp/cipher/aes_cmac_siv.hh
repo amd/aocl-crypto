@@ -69,7 +69,7 @@ class ALCP_API_EXPORT CmacSiv : public Aes
 
   public:
     CmacSiv();
-
+    CmacSiv(alc_cipher_data_t* ctx);
     /**
      * @brief Set Keys for SIV and CTR
      * @param key1  Key for SIV
@@ -108,26 +108,24 @@ class ALCP_API_EXPORT CmacSiv : public Aes
      * @param pPlainText PlainText input
      * @param pCipherText CipherText output
      * @param len Length of PlainText/CipherText
-     * @param pIv Unused IV
      * @return alc_error_t
      */
-    alc_error_t encrypt(const Uint8* pPlainText,
-                        Uint8*       pCipherText,
-                        Uint64       len,
-                        const Uint8* pIv) const;
+    alc_error_t encryptUpdate(void*        ctx,
+                              const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len);
 
     /**
      * @brief Decrypts data, given all data.
      * @param pCipherText CipherText Input
      * @param pPlainText PlainText output
      * @param len Length of PlainText/CipherText
-     * @param pIv Previosly Generated Tag
      * @return alc_error_t
      */
-    alc_error_t decrypt(const Uint8* pCipherText,
-                        Uint8*       pPlainText,
-                        Uint64       len,
-                        const Uint8* pIv) const;
+    alc_error_t decryptUpdate(void*        ctx,
+                              const Uint8* pCipherText,
+                              Uint8*       pPlainText,
+                              Uint64       len);
 
     CmacSiv(const alc_key_info_t& encKey, const alc_key_info_t& authKey);
 
@@ -144,14 +142,34 @@ class ALCP_API_EXPORT CmacSiv : public Aes
      * @param length Length of the additional data
      * @return alc_error_t
      */
-    alc_error_t setAad(const Uint8 memory[], Uint64 length);
+    alc_error_t setAad(alc_cipher_data_t* ctx,
+                       const Uint8        memory[],
+                       Uint64             length);
     /**
      * @brief Depriciated, please use getTag (alternative one with Status)
      * @param out Pointer to a valid memory to write the data into.
      * @param len Size of Tag (should be 128bits)
      * @return alc_error_t
      */
-    alc_error_t getTag(Uint8 out[], Uint64 len); // Depriciated
+    alc_error_t getTag(alc_cipher_data_t* ctx,
+                       Uint8              out[],
+                       Uint64             len); // Depriciated
+
+    /**
+     * @brief Intialize CMAC-SIV
+     *
+     *
+     * @param pKey - Key for encryption
+     * @param keyLen
+     * @param pIv
+     * @param ivLen
+     * @return
+     */
+    alc_error_t init(alc_cipher_data_t* ctx,
+                     const Uint8*       pKey,
+                     Uint64             keyLen,
+                     const Uint8*       pIv,
+                     Uint64             ivLen);
 };
 
 template<typename T>
@@ -173,13 +191,16 @@ class CmacSiv<T>::Impl
     const Uint8* m_key2                        = {};
     Uint64       m_keyLength                   = {};
     Uint64       m_padLen                      = {};
+    const Uint8* m_iv                          = {};
     alignas(16) Uint8 m_cmacTemp[SIZE_CMAC]    = {};
-    Cmac m_cmac;
-    T    m_ctr; // FIXME: based on the key size appropriate Ctr class
-                // to be choosen.
+    Cmac              m_cmac;
+    alc_cipher_data_t data;
+    T* m_ctr; // FIXME: based on the key size appropriate Ctr class
+              // to be choosen.
 
   public:
-    Impl(){};
+    Impl() { m_ctr = new T(&data); };
+    ~Impl() { delete (m_ctr); }
 
     /**
      * @brief Generate Synthetic IV from Additional Data + Plaintext
@@ -222,7 +243,9 @@ class CmacSiv<T>::Impl
      * @param pIv Unused IV
      * @return Status
      */
-    Status encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len);
+    Status encryptUpdate(const Uint8 plainText[],
+                         Uint8       cipherText[],
+                         Uint64      len);
 
     /**
      * @brief Decrypts data, given all data.
@@ -232,10 +255,9 @@ class CmacSiv<T>::Impl
      * @param pIv Previosly Generated Tag
      * @return Status
      */
-    Status decrypt(const Uint8  cipherText[],
-                   Uint8        plainText[],
-                   Uint64       len,
-                   const Uint8* iv);
+    Status decryptUpdate(const Uint8 cipherText[],
+                         Uint8       plainText[],
+                         Uint64      len);
 
     /**
      * @brief Write tag into a given buffer (128bits long)
@@ -243,6 +265,13 @@ class CmacSiv<T>::Impl
      * @return Status
      */
     Status getTag(Uint8 out[]);
+
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen);
+
+    Status setIv(const Uint8 iv[]);
 
   private:
     /**
@@ -349,10 +378,15 @@ CmacSiv<T>::Impl::ctrWrapper(
     Status s = StatusOk();
 
     // FIXME: To be removed once we move everything to Status
-    alc_error_t err = ALC_ERROR_NONE;
+    alc_error_t err        = ALC_ERROR_NONE;
+    data.m_keyLen_in_bytes = m_keyLength;
+
+    // Initialize CTR with mac as IV
+    m_ctr->init(&data, m_key2, m_keyLength * 8, mac, 16);
+
     if (enc) {
         // FIXME: mac should go in seperate ctr init call.
-        err = m_ctr.encrypt(in, out, size); //, mac);
+        err = m_ctr->encrypt(&data, in, out, size); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -360,7 +394,7 @@ CmacSiv<T>::Impl::ctrWrapper(
         }
     } else {
         // FIXME: mac should go in seperate ctr init call.
-        err = m_ctr.decrypt(in, out, size); //, mac);
+        err = m_ctr->decrypt(&data, in, out, size); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::DecryptFailed("Decryption Kernel Failed!");
             s.update(cer);
@@ -472,6 +506,15 @@ CmacSiv<T>::Impl::s2v(const Uint8 plainText[], Uint64 size)
 
 template<typename T>
 Status
+CmacSiv<T>::Impl::setIv(const Uint8 iv[])
+{
+    Status s = StatusOk();
+    m_iv     = iv;
+    return s;
+}
+
+template<typename T>
+Status
 CmacSiv<T>::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 {
     Status s    = StatusOk();
@@ -479,9 +522,9 @@ CmacSiv<T>::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 
     // Block all unknown keysizes
     switch (length) {
-        case 128:
-        case 192:
-        case 256:
+        case 16:
+        case 24:
+        case 32:
             break;
         default:
             auto cer = cipher::CipherError(cipher::ErrorCode::eInvaidValue);
@@ -492,12 +535,12 @@ CmacSiv<T>::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
     m_key1 = key1;
     m_key2 = key2;
 
-    s = m_cmac.setKey(m_key1, m_keyLength);
+    s = m_cmac.setKey(m_key1, m_keyLength * 8);
     if (!s.ok()) {
         return s;
     }
 
-    m_ctr.setKey(m_key2, m_keyLength);
+    // m_ctr->setKey(m_key2, m_keyLength);
     return s;
 }
 
@@ -547,9 +590,9 @@ CmacSiv<T>::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 
 template<typename T>
 Status
-CmacSiv<T>::Impl::encrypt(const Uint8 plainText[],
-                          Uint8       cipherText[],
-                          Uint64      len)
+CmacSiv<T>::Impl::encryptUpdate(const Uint8 plainText[],
+                                Uint8       cipherText[],
+                                Uint64      len)
 {
     Status s = StatusOk();
 
@@ -568,6 +611,8 @@ CmacSiv<T>::Impl::encrypt(const Uint8 plainText[],
         q[i] = m_cmacTemp[i] & q[i];
     }
 
+    data.m_keyLen_in_bytes = m_keyLength;
+
     // Do the CTR
     s = ctrWrapper(plainText, cipherText, len + m_padLen, q, true);
 
@@ -579,10 +624,9 @@ CmacSiv<T>::Impl::encrypt(const Uint8 plainText[],
 
 template<typename T>
 Status
-CmacSiv<T>::Impl::decrypt(const Uint8  cipherText[],
-                          Uint8        plainText[],
-                          Uint64       len,
-                          const Uint8* iv)
+CmacSiv<T>::Impl::decryptUpdate(const Uint8 cipherText[],
+                                Uint8       plainText[],
+                                Uint64      len)
 {
     Status s = StatusOk();
 
@@ -592,7 +636,7 @@ CmacSiv<T>::Impl::decrypt(const Uint8  cipherText[],
 
     // Apply the mask and make q the IV
     for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = iv[i] & q[i];
+        q[i] = m_iv[i] & q[i];
     }
 
     // Do the CTR
@@ -606,7 +650,7 @@ CmacSiv<T>::Impl::decrypt(const Uint8  cipherText[],
     s = s2v(plainText, len);
 
     // Verify tag, which just got generated
-    if (memcmp(&(m_cmacTemp[0]), iv, SIZE_CMAC) != 0) {
+    if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
         // FIXME: Initiate Wipedown!
         auto cer =
             cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
@@ -617,9 +661,32 @@ CmacSiv<T>::Impl::decrypt(const Uint8  cipherText[],
 }
 
 template<typename T>
+alc_error_t
+CmacSiv<T>::Impl::init(const Uint8* pKey,
+                       Uint64       keyLen,
+                       const Uint8* pIv,
+                       Uint64       ivLen)
+{
+    m_keyLength = keyLen / 8;
+    m_key1      = pKey;
+    m_key2      = pKey + m_keyLength;
+    m_iv        = pIv;
+    setKeys(m_key1, m_key2, m_keyLength);
+    return ALC_ERROR_NONE;
+}
+
+template<typename T>
 CmacSiv<T>::CmacSiv()
     : pImpl{ std::make_unique<Impl>() }
-{}
+{
+}
+
+template<typename T>
+CmacSiv<T>::CmacSiv(alc_cipher_data_t* ctx)
+    : Aes(ctx)
+    , pImpl{ std::make_unique<Impl>() }
+{
+}
 
 template<typename T>
 CmacSiv<T>::CmacSiv(const alc_key_info_t& encKey, const alc_key_info_t& authKey)
@@ -641,6 +708,17 @@ CmacSiv<T>::Impl::getTag(Uint8 out[])
 }
 
 template<typename T>
+alc_error_t
+CmacSiv<T>::init(alc_cipher_data_t* ctx,
+                 const Uint8*       pKey,
+                 Uint64             keyLen,
+                 const Uint8*       pIv,
+                 Uint64             ivLen)
+{
+    return pImpl->init(pKey, keyLen, pIv, ivLen);
+}
+
+template<typename T>
 Status
 CmacSiv<T>::s2v(const Uint8 plainText[], Uint64 size)
 {
@@ -656,7 +734,7 @@ CmacSiv<T>::getTag(Uint8 out[])
 
 template<typename T>
 alc_error_t
-CmacSiv<T>::getTag(Uint8 out[], Uint64 len)
+CmacSiv<T>::getTag(alc_cipher_data_t* ctx, Uint8 out[], Uint64 len)
 {
     if (len != 16) {
         return ALC_ERROR_INVALID_SIZE;
@@ -678,7 +756,7 @@ CmacSiv<T>::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 
 template<typename T>
 alc_error_t
-CmacSiv<T>::setAad(const Uint8 memory[], Uint64 length)
+CmacSiv<T>::setAad(alc_cipher_data_t* ctx, const Uint8 memory[], Uint64 length)
 {
     Status s = pImpl->addAdditionalInput(memory, length);
     if (s.ok()) {
@@ -704,14 +782,14 @@ CmacSiv<T>::setPaddingLen(Uint64 len)
 
 template<typename T>
 alc_error_t
-CmacSiv<T>::encrypt(const Uint8* pPlainText,
-                    Uint8*       pCipherText,
-                    Uint64       len,
-                    const Uint8* pIv) const
+CmacSiv<T>::encryptUpdate(void*        ctx,
+                          const Uint8* pPlainText,
+                          Uint8*       pCipherText,
+                          Uint64       len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    Status s = pImpl->encrypt(pPlainText, pCipherText, len);
+    Status s = pImpl->encryptUpdate(pPlainText, pCipherText, len);
     if (!s.ok()) {
         err = ALC_ERROR_GENERIC;
     }
@@ -721,14 +799,14 @@ CmacSiv<T>::encrypt(const Uint8* pPlainText,
 
 template<typename T>
 alc_error_t
-CmacSiv<T>::decrypt(const Uint8* pCipherText,
-                    Uint8*       pPlainText,
-                    Uint64       len,
-                    const Uint8* pIv) const
+CmacSiv<T>::decryptUpdate(void*        ctx,
+                          const Uint8* pCipherText,
+                          Uint8*       pPlainText,
+                          Uint64       len)
 
 {
     alc_error_t err = ALC_ERROR_NONE;
-    Status      s   = pImpl->decrypt(pCipherText, pPlainText, len, pIv);
+    Status      s   = pImpl->decryptUpdate(pCipherText, pPlainText, len);
     if (!s.ok()) {
         err = ALC_ERROR_GENERIC;
         // std::cout << "IV Verify Failed!" << std::endl;
@@ -751,5 +829,15 @@ CmacSiv<T>::isSupported(const Uint32 keyLen)
     // FIXME: Tobe Implemented
     return true;
 }
+
+template class CmacSiv<aesni::Ctr128>;
+template class CmacSiv<aesni::Ctr192>;
+template class CmacSiv<aesni::Ctr256>;
+template class CmacSiv<vaes::Ctr128>;
+template class CmacSiv<vaes::Ctr192>;
+template class CmacSiv<vaes::Ctr256>;
+template class CmacSiv<vaes512::Ctr128>;
+template class CmacSiv<vaes512::Ctr192>;
+template class CmacSiv<vaes512::Ctr256>;
 
 } // namespace alcp::cipher

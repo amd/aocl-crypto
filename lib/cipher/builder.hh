@@ -27,6 +27,7 @@
  */
 #pragma once
 
+#include "alcp/base.hh"
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuCipherFeatures;

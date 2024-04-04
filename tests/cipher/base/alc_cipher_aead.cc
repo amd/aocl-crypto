@@ -36,7 +36,8 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{}
+{
+}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const alc_cipher_mode_t cMode,
@@ -147,9 +148,15 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     m_cinfo.ci_key = key;
 
 #if 1
-    if (m_mode == ALC_AES_MODE_SIV) {
-        m_cinfo.ci_key    = m_tkey; // Using tkey as CTR key for SIV
-        m_cinfo.ci_keyLen = cKeyLen;
+    if (m_cinfo.ci_mode == ALC_AES_MODE_SIV) {
+        // m_cinfo.ci_key    = m_tkey; // Using tkey as CTR key for SIV
+        // m_cinfo.ci_keyLen = cKeyLen;
+        std::copy(key, key + (m_keyLen / 8), m_combined_key);
+        std::copy(
+            m_tkey, m_tkey + (m_keyLen / 8), m_combined_key + (m_keyLen / 8));
+
+        // FIXME: Need to be removed from the library
+        // m_cinfo.ci_key = key;
     }
 #endif
 
@@ -157,6 +164,7 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = &key_info;
 
     /* Request Handle */
+    // FIXME:  m_cinfo.ci_mode getting corrupt
     err = alcp_cipher_aead_request(m_cinfo.ci_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
@@ -381,6 +389,9 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
     const int   cErrSize = 256;
     Uint8       err_buff[cErrSize];
 
+    err = alcp_cipher_aead_init(
+        m_handle, m_combined_key, m_keyLen, m_iv, aead_data.m_ivl);
+
     err = alcp_cipher_aead_set_aad(m_handle, aead_data.m_ad, aead_data.m_adl);
 
     if (alcp_is_error(err)) {
@@ -391,7 +402,7 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
     }
 
     if constexpr (enc) {
-        err = alcp_cipher_aead_encrypt(
+        err = alcp_cipher_aead_encrypt_update(
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Encrypt Error\n");
@@ -410,7 +421,7 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
             }
         }
     } else {
-        err = alcp_cipher_aead_decrypt(
+        err = alcp_cipher_aead_decrypt_update(
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");

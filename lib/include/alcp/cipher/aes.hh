@@ -88,7 +88,9 @@ class Aes : public Rijndael
     Aes()
         : Rijndael()
     {
-        printf("\n this constructor to be removed");
+#ifndef NDEBUG
+        printf("this constructor to be removed\n");
+#endif
     }
 
   protected:

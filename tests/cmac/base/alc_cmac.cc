@@ -46,29 +46,29 @@ bool
 AlcpCmacBase::init()
 {
     alc_error_t    err;
-    alc_mac_info_t dinfo = m_info;
+    alc_mac_info_t mac_info = m_info;
 
-#if 0 // to be fixed
+#if 1 // to be fixed
 
     const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = m_key_len * 8,
                                    .key  = m_key };
 
-    dinfo.mi_keyinfo                               = kinfo;
-    dinfo.mi_algoinfo.cmac.cmac_cipher.ci_key_info = kinfo;
+    mac_info.mi_keyinfo = kinfo;
+    // mac_info.mi_algoinfo.cmac.cmac_cipher.ci_key_info = kinfo;
 
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size(&mac_info));
     } else if (m_handle->ch_context == nullptr) {
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size(&mac_info));
     } else {
         alcp_mac_finish(m_handle);
     }
 
 #endif
 
-    err = alcp_mac_request(m_handle, &dinfo);
+    err = alcp_mac_request(m_handle, &mac_info);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_mac_request:" << err << std::endl;
         return false;

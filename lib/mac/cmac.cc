@@ -64,6 +64,8 @@ class Cmac::Impl : public cipher::Aes
     // Variable to keep track of whether CMAC has been finalized or not
     bool m_finalized = false;
 
+    alc_cipher_data_t data;
+
   public:
     Impl()
     //: Aes() FIXME: Aes(ctx) to be added
@@ -77,7 +79,12 @@ class Cmac::Impl : public cipher::Aes
         // Aes::setKey(key, len); // FIXME: add setKey with ctx
         // no error checks needed at this stage, since key and keyLength are
         // validated.
+        m_keyLen_in_bytes_aes = len / 8;
 
+        // FIXME: Check if this is required, looks like not required
+        // data.keyLen_in_bytes = len / 8;
+
+        init(&data, key, len, nullptr, 0);
         m_encrypt_keys = getEncryptKeys();
         m_rounds       = getRounds();
         getSubkeys();
@@ -287,7 +294,8 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{}
+{
+}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)

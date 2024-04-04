@@ -91,16 +91,24 @@ create_demo_session(const Uint8* key_cmac,
 
 bool
 encrypt_demo(const Uint8* plaintxt,
-             const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
+             const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt,
-             const Uint8* aad,
-             Uint64       aad_len)
+             const Uint8* iv,
+             const Uint32 ivLen,
+             const Uint8* ad,
+             const Uint32 aadLen,
+             Uint8*       tag,
+             const Uint32 tagLen,
+             const Uint8* pKey,
+             const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
+
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -108,14 +116,12 @@ encrypt_demo(const Uint8* plaintxt,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
+    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
-
-    Uint8 tag[16]; // FIXME: finall tag to be compared
 
     err = alcp_cipher_aead_get_tag(&handle, tag, 16);
     if (alcp_is_error(err)) {
@@ -135,23 +141,31 @@ encrypt_demo(const Uint8* plaintxt,
 
 bool
 decrypt_demo(const Uint8* ciphertxt,
-             const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
+             const Uint32 len,
              Uint8*       plaintxt,
-             const Uint8* aad,
-             Uint64       aad_len)
+             const Uint8* iv,
+             const Uint32 ivLen,
+             const Uint8* ad,
+             const Uint32 aadLen,
+             Uint8*       tag,
+             const Uint32 tagLen,
+             const Uint8* pKey,
+             const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
+
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
+    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -167,23 +181,24 @@ decrypt_demo(const Uint8* ciphertxt,
     return true;
 }
 
-// static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
 static Uint8* sample_plaintxt = (Uint8*)"Happy Holi from AOCL Crypto :-)!";
 
-static const Uint8 sample_key_cmac[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+// clang-format off
+static const Uint8 sample_key[] = {
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,// CMAC KEY
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
-};
-static const Uint8 sample_key2_ctr[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,// CTR KEY
     0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0,
 };
+// clang-format on
+
 static const Uint8 aad[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
 };
 
 Uint8        iv_buff[16];
+Uint8        tag[16];
 static Uint8 sample_ciphertxt[512] = {
     0,
 };
@@ -193,29 +208,47 @@ static Uint8 sample_ciphertxt[512] = {
 int
 main(void)
 {
-    int   size               = strlen((const char*)sample_plaintxt);
-    Uint8 sample_output[512] = { 0 };
+    int          size               = strlen((const char*)sample_plaintxt);
+    Uint8        sample_output[512] = { 0 };
+    const Uint64 key_size           = (sizeof(sample_key) * 8) / 2;
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
     // FIXME should be sent in create call. iv_buff
-    if (!create_demo_session(
-            sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
+    if (!create_demo_session(sample_key, sample_key, key_size)) {
         return -1; // Error condtion
     }
 
-    if (!encrypt_demo(
-            sample_plaintxt, size, sample_ciphertxt, aad, sizeof(aad))) {
+    if (!encrypt_demo(sample_plaintxt,
+                      size,
+                      sample_ciphertxt,
+                      iv_buff,
+                      sizeof(iv_buff),
+                      aad,
+                      sizeof(aad),
+                      tag,
+                      sizeof(tag),
+                      sample_key,
+                      key_size)) {
         return -1;
     }
 
-    if (!create_demo_session(
-            sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
+    if (!create_demo_session(sample_key, sample_key, key_size)) {
         return -1;
     }
 
-    if (!decrypt_demo(
-            sample_ciphertxt, size, sample_output, aad, sizeof(aad))) {
+    memcpy(iv_buff, tag, sizeof(iv_buff)); // Copy Tag to IV as its Sythetic IV.
+    if (!decrypt_demo(sample_ciphertxt,
+                      size,
+                      sample_output,
+                      iv_buff,
+                      sizeof(iv_buff),
+                      aad,
+                      sizeof(aad),
+                      tag,
+                      sizeof(tag),
+                      sample_key,
+                      key_size)) {
         return -1;
     }
 

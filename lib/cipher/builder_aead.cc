@@ -158,19 +158,19 @@ __build_CcmAead(const Uint64 keyLen, Context& ctx)
     return sts;
 }
 
-#if 0 // turning off SIV temporarily
+#if 1 // turning off SIV temporarily
 template<typename AEADMODE>
 void
-__build_aead_siv(const alc_key_info_t& encKey,
-                 const alc_key_info_t& authKey,
-                 Context&              ctx)
+__build_aead_siv(Context& ctx)
 {
-    auto algo    = new AEADMODE(encKey, authKey);
-    ctx.m_cipher = static_cast<void*>(algo);
-    ctx.decrypt  = __aes_wrapper<AEADMODE, false>;
-    ctx.encrypt  = __aes_wrapper<AEADMODE, true>;
+    auto algo = new AEADMODE(&(ctx.m_cipher_data));
+
+    ctx.m_cipher      = static_cast<void*>(algo);
+    ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
+    ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
 
     ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
+    ctx.init   = __aes_wrapperInit<AEADMODE>;
     ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
 
     ctx.finish = __aes_dtor<AEADMODE>;
@@ -178,16 +178,14 @@ __build_aead_siv(const alc_key_info_t& encKey,
 
 template<typename T1, typename T2, typename T3>
 void
-__build_aes_siv(const alc_key_info_t& encKey,
-                const alc_key_info_t& keyInfo,
-                Context&              ctx)
+__build_aes_siv(const Uint64 keyLen, Context& ctx)
 {
     if (keyLen == ALC_KEY_LEN_128) {
-        __build_aead_siv<T1>(encKey, keyInfo, ctx);
+        __build_aead_siv<T1>(ctx);
     } else if (keyLen == ALC_KEY_LEN_192) {
-        __build_aead_siv<T2>(encKey, keyInfo, ctx);
+        __build_aead_siv<T2>(ctx);
     } else if (keyLen == ALC_KEY_LEN_256) {
-        __build_aead_siv<T3>(encKey, keyInfo, ctx);
+        __build_aead_siv<T3>(ctx);
     }
 }
 
@@ -200,15 +198,15 @@ __build_aesSiv(const Uint64 keyLen, Context& ctx)
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
+            keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
+            keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
+            keyLen, ctx);
     }
     return sts;
 }
@@ -514,11 +512,9 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
         case ALC_AES_MODE_GCM:
             sts = __build_GcmAead(keyLen, ctx);
             break;
-#if 0
         case ALC_AES_MODE_SIV:
-                sts = __build_aesSiv(keyLen, ctx);
+            sts = __build_aesSiv(keyLen, ctx);
             break;
-#endif
         case ALC_AES_MODE_CCM:
             sts = __build_CcmAead(keyLen, ctx);
             break;

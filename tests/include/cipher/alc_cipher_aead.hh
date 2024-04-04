@@ -43,6 +43,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
 
     const Uint8* m_key;
     const Uint8* m_iv;
+    Uint8        m_combined_key[64];
 
     alc_cipher_aead_info_t m_cinfo;
     const Uint8*           m_tkey = nullptr;
