@@ -36,14 +36,6 @@ using namespace alcp::digest;
 typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-static const alc_digest_info_t DigestInfo = []() {
-    alc_digest_info_t DigestInfo;
-    DigestInfo.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    DigestInfo.dt_len          = ALC_DIGEST_LEN_512;
-    DigestInfo.dt_mode.dm_sha3 = ALC_SHA3_512;
-    return DigestInfo;
-}();
-
 // Digest size in bytes
 static const Uint8 DigestSize = 64;
 // Input Block size in bytes
@@ -83,7 +75,7 @@ class Sha3_512
 TEST_P(Sha3_512, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha3              sha3_512(DigestInfo);
+    Sha3              sha3_512(ALC_SHA3_512);
     Uint8             hash[DigestSize];
     std::stringstream ss;
 
@@ -112,45 +104,45 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(Sha3_512, invalid_input_update_test)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3 sha3_512(ALC_SHA3_512);
     EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.update(nullptr, 0));
 }
 
 TEST(Sha3_512, zero_size_update_test)
 {
-    Sha3        sha3_512(DigestInfo);
+    Sha3        sha3_512(ALC_SHA3_512);
     const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha3_512.update(src, 0));
 }
 
 TEST(Sha3_512, invalid_output_copy_hash_test)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3 sha3_512(ALC_SHA3_512);
     EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.copyHash(nullptr, DigestSize));
 }
 
 TEST(Sha3_512, zero_size_hash_copy_test)
 {
-    Sha3  sha3_512(DigestInfo);
+    Sha3  sha3_512(ALC_SHA3_512);
     Uint8 hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_512.copyHash(hash, 0));
 }
 
 TEST(Sha3_512, getInputBlockSizeTest)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3 sha3_512(ALC_SHA3_512);
     EXPECT_EQ(sha3_512.getInputBlockSize(), InputBlockSize);
 }
 
 TEST(Sha3_512, getHashSizeTest)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3 sha3_512(ALC_SHA3_512);
     EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
 }
 
 TEST(Sha3_512, setShakeLengthTest)
 {
-    Sha3        sha3_512(DigestInfo);
+    Sha3        sha3_512(ALC_SHA3_512);
     alc_error_t err = ALC_ERROR_NONE;
     err             = sha3_512.setShakeLength(512);
 

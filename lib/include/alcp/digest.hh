@@ -85,6 +85,5 @@ class IDigest
     /* index to m_buffer of previously unprocessed bytes */
     Uint32            m_idx = 0;
     alc_digest_mode_t m_mode;
-    alc_digest_data_t m_data;
 };
 } // namespace alcp::digest

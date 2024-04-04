@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,9 +42,9 @@ TEST(DIGEST_SHA3, KAT_SHAKE128)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode.dm_sha3 = ALC_SHAKE_128;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_mode = ALC_SHAKE_128;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_CUSTOM;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA3, KAT_SHAKE256)
@@ -52,9 +52,9 @@ TEST(DIGEST_SHA3, KAT_SHAKE256)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode.dm_sha3 = ALC_SHAKE_256;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_mode = ALC_SHAKE_256;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_CUSTOM;
     Digest_KAT(info);
 }
 
@@ -62,50 +62,50 @@ TEST(DIGEST_SHA3, KAT_SHAKE256)
 TEST(DIGEST_SHA2, KAT_224)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_224;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_224;
+    info.dt_mode = ALC_SHA2_224;
+    info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA2, KAT_256)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_256;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_256;
+    info.dt_mode = ALC_SHA2_256;
+    info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA2, KAT_384)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_384;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_384;
+    info.dt_mode = ALC_SHA2_384;
+    info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len  = ALC_DIGEST_LEN_384;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA2, KAT_512)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_512;
+    info.dt_mode = ALC_SHA2_512;
+    info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len  = ALC_DIGEST_LEN_512;
     Digest_KAT(info);
 }
 /* sha512 truncated variants- 224,256*/
 TEST(DIGEST_SHA2, KAT_512_224)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_224;
+    info.dt_mode = ALC_SHA2_512;
+    info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA2, KAT_512_256)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_256;
+    info.dt_mode = ALC_SHA2_512;
+    info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_KAT(info);
 }
 
@@ -117,9 +117,9 @@ TEST(DIGEST_SHA3, KAT_224)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_224;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_224;
+    info.dt_mode = ALC_SHA2_224;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA3, KAT_256)
@@ -127,9 +127,9 @@ TEST(DIGEST_SHA3, KAT_256)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_256;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_256;
+    info.dt_mode = ALC_SHA2_256;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA3, KAT_384)
@@ -137,9 +137,9 @@ TEST(DIGEST_SHA3, KAT_384)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_384;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_384;
+    info.dt_mode = ALC_SHA2_384;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_384;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA3, KAT_512)
@@ -147,9 +147,9 @@ TEST(DIGEST_SHA3, KAT_512)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_512;
+    info.dt_mode = ALC_SHA2_512;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_512;
     Digest_KAT(info);
 }
 

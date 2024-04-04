@@ -93,22 +93,22 @@ ippsHashGetSize_rmf(int* pSize)
 IppStatus
 alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
               alc_digest_len_t  len,
-              alc_sha2_mode_t   mode)
+              alc_digest_mode_t mode)
 {
     printMsg("Init");
     ipp_wrp_sha2_ctx* context = pState;
     alc_error_t       err;
 
     alc_digest_info_t dinfo;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len          = len;
-    dinfo.dt_mode.dm_sha2 = mode;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len  = len;
+    dinfo.dt_mode = mode;
 
     Uint64 size             = alcp_digest_context_size();
     context->handle.context = malloc(size);
     context->dinfo          = dinfo;
 
-    err = alcp_digest_request(&dinfo, &(context->handle));
+    err = alcp_digest_request(mode, &(context->handle));
 
     if (alcp_is_error(err)) {
         return ippStsBadArgErr;

@@ -191,39 +191,42 @@ Sha3::processChunk(const Uint8* pSrc, Uint64 len)
     return ALC_ERROR_NONE;
 }
 
-Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
+Sha3::Sha3(alc_digest_mode_t mode)
 {
     Uint64 chunk_size_bits = 0;
-    m_digest_len           = rDigestInfo.dt_len / 8;
-
     // chunk_size_bits are as per specs befined in
     // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf
-    switch (rDigestInfo.dt_mode.dm_sha3) {
+
+    switch (mode) {
         case ALC_SHA3_224:
             chunk_size_bits = 1152;
+            m_digest_len    = ALC_DIGEST_LEN_224 / 8;
             break;
         case ALC_SHA3_256:
             chunk_size_bits = 1088;
+            m_digest_len    = ALC_DIGEST_LEN_256 / 8;
             break;
         case ALC_SHA3_384:
             chunk_size_bits = 832;
+            m_digest_len    = ALC_DIGEST_LEN_384 / 8;
             break;
         case ALC_SHA3_512:
             chunk_size_bits = 576;
+            m_digest_len    = ALC_DIGEST_LEN_512 / 8;
             break;
         case ALC_SHAKE_128:
             chunk_size_bits = 1344;
-            m_digest_len    = rDigestInfo.dt_custom_len / 8;
+            m_digest_len    = ALC_DIGEST_LEN_128 / 8;
             break;
         case ALC_SHAKE_256:
             chunk_size_bits = 1088;
-            m_digest_len    = rDigestInfo.dt_custom_len / 8;
+            m_digest_len    = ALC_DIGEST_LEN_256 / 8;
             break;
         default:;
     }
 
     m_block_len = chunk_size_bits / 8;
-    m_mode      = rDigestInfo.dt_mode;
+    m_mode      = mode;
     m_hash.resize(m_digest_len);
 }
 
@@ -332,7 +335,7 @@ Sha3::finalize(const Uint8* pSrc, Uint64 size)
     // sha3 padding
     utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, m_block_len - m_idx);
 
-    if (m_mode.dm_sha3 == ALC_SHAKE_128 || m_mode.dm_sha3 == ALC_SHAKE_256) {
+    if (m_mode == ALC_SHAKE_128 || m_mode == ALC_SHAKE_256) {
         m_buffer[m_idx] = 0x1f;
     } else {
         m_buffer[m_idx] = 0x06;
@@ -382,7 +385,7 @@ Sha3::setShakeLength(Uint64 shakeLength)
         return ALC_ERROR_NOT_PERMITTED;
     }
     alc_error_t err = ALC_ERROR_NONE;
-    if (m_mode.dm_sha3 == ALC_SHAKE_128 || m_mode.dm_sha3 == ALC_SHAKE_256) {
+    if (m_mode == ALC_SHAKE_128 || m_mode == ALC_SHAKE_256) {
         m_digest_len = shakeLength;
         m_hash.resize(m_digest_len);
     } else {

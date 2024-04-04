@@ -318,10 +318,10 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
         // alc_digest_mode_t digest_mode = {};
         // switch (len) {
         //     case ALC_DIGEST_LEN_224:
-        //         digest_mode.dm_sha3 = ALC_SHA3_224;
+        //         digest_mode = ALC_SHA3_224;
         //         break;
         //     case ALC_DIGEST_LEN_256:
-        //         digest_mode.dm_sha3 = ALC_SHA3_224;
+        //         digest_mode = ALC_SHA3_224;
         //         break;
         //     default:
         //         break;

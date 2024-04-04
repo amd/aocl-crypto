@@ -210,10 +210,10 @@ static void
 BENCH_RSA_DecryptPvtKey_OAEP_Padding(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_PADDING_OAEP,
@@ -226,10 +226,10 @@ static void
 BENCH_RSA_DecryptPvtKey_NoPadding(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
@@ -242,10 +242,10 @@ static void
 BENCH_RSA_EncryptPubKey_OAEP_Padding(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_PADDING_OAEP,
@@ -258,10 +258,10 @@ static void
 BENCH_RSA_EncryptPubKey_NoPadding(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
@@ -274,10 +274,10 @@ static void
 BENCH_RSA_Sign_PSS(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_SIGN,
                                        ALCP_TEST_RSA_PADDING_PSS,
@@ -289,10 +289,10 @@ static void
 BENCH_RSA_Sign_PKCS(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_SIGN,
                                        ALCP_TEST_RSA_PADDING_PKCS,
@@ -304,10 +304,10 @@ static void
 BENCH_RSA_Verify_PSS(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_VERIFY,
                                        ALCP_TEST_RSA_PADDING_PSS,
@@ -319,10 +319,10 @@ static void
 BENCH_RSA_Verify_PKCS(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo               = dinfo;
+    dinfo.dt_mode = ALC_SHA2_256;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_VERIFY,
                                        ALCP_TEST_RSA_PADDING_PKCS,

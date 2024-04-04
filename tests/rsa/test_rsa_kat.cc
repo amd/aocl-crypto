@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,10 +40,10 @@ alc_digest_info_t dinfo_256{}, dinfo_384{}, dinfo_512{}, mgfinfo_256{},
 /* padding mode */
 TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256)
 {
-    dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_256               = dinfo_256;
+    dinfo_256.dt_mode = ALC_SHA2_256;
+    dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256       = dinfo_256;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
 }
 TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256)
@@ -50,10 +51,10 @@ TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256)
     if (!useipp || !useossl)
         GTEST_SKIP() << "Temporarily skipping this test for ALCP due to a "
                         "known failure in PKCS Sign";
-    dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_256               = dinfo_256;
+    dinfo_256.dt_mode = ALC_SHA2_256;
+    dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256       = dinfo_256;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_PKCS, 2048, dinfo_256, mgfinfo_256);
 }
 
@@ -71,18 +72,18 @@ TEST(RSA_EncryptDecrypt_No_Padding_2048, KAT)
 /* padding mode */
 TEST(RSA_EncryptDecrypt_OAEP_1024, KAT_SHA2_256_MGF_256)
 {
-    dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_256               = dinfo_256;
+    dinfo_256.dt_mode = ALC_SHA2_256;
+    dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256       = dinfo_256;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_OAEP, 1024, dinfo_256, mgfinfo_256);
 }
 TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_256_MGF_256)
 {
-    dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
-    dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_256               = dinfo_256;
+    dinfo_256.dt_mode = ALC_SHA2_256;
+    dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256       = dinfo_256;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_256, mgfinfo_256);
 }
 TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_512_MGF_256)
@@ -91,12 +92,12 @@ TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_512_MGF_256)
         GTEST_SKIP()
             << "IPP doesnt support using different types of Digest and Mgf "
                "schemes, skipping this test";
-    dinfo_512.dt_mode.dm_sha2   = ALC_SHA2_512;
-    dinfo_512.dt_len            = ALC_DIGEST_LEN_512;
-    dinfo_512.dt_type           = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
-    mgfinfo_256.dt_len          = ALC_DIGEST_LEN_256;
-    mgfinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo_512.dt_mode   = ALC_SHA2_512;
+    dinfo_512.dt_len    = ALC_DIGEST_LEN_512;
+    dinfo_512.dt_type   = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256.dt_mode = ALC_SHA2_256;
+    mgfinfo_256.dt_len  = ALC_DIGEST_LEN_256;
+    mgfinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_512, mgfinfo_256);
 }
 TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_256_MGF_512)
@@ -105,20 +106,20 @@ TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_256_MGF_512)
         GTEST_SKIP()
             << "IPP doesnt support using different types of Digest and Mgf "
                "schemes, skipping this test";
-    dinfo_256.dt_mode.dm_sha2   = ALC_SHA2_256;
-    dinfo_256.dt_len            = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type           = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_512.dt_mode.dm_sha2 = ALC_SHA2_512;
-    mgfinfo_512.dt_len          = ALC_DIGEST_LEN_512;
-    mgfinfo_512.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo_256.dt_mode   = ALC_SHA2_256;
+    dinfo_256.dt_len    = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type   = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_512.dt_mode = ALC_SHA2_512;
+    mgfinfo_512.dt_len  = ALC_DIGEST_LEN_512;
+    mgfinfo_512.dt_type = ALC_DIGEST_TYPE_SHA2;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_256, mgfinfo_512);
 }
 TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_512_MGF_512)
 {
-    dinfo_512.dt_mode.dm_sha2 = ALC_SHA2_512;
-    dinfo_512.dt_len          = ALC_DIGEST_LEN_512;
-    dinfo_512.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    mgfinfo_512               = dinfo_512;
+    dinfo_512.dt_mode = ALC_SHA2_512;
+    dinfo_512.dt_len  = ALC_DIGEST_LEN_512;
+    dinfo_512.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_512       = dinfo_512;
     Rsa_KAT(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_512, mgfinfo_512);
 }
 

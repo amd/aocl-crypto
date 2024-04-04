@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -61,7 +61,7 @@ IPPDigestBase::init()
     ippsHashGetSize_rmf(&ctx_size);
     m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_mode.dm_sha2) {
+        switch (m_info.dt_mode) {
             case ALC_SHA2_224:
                 status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
                 break;

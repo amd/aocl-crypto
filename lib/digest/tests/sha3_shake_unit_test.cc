@@ -45,11 +45,6 @@ enum DigestShake
 typedef tuple<const string, const Uint64, vector<string>> ParamTuple;
 typedef std::map<const string, ParamTuple>                KnownAnswerMap;
 
-alc_digest_info_t DigestInfoShake = {
-    ALC_DIGEST_TYPE_SHA3,
-    ALC_DIGEST_LEN_CUSTOM,
-};
-
 // Digest size in bytes
 static const Uint8 DigestSize = 32;
 // Shake 128 Input Block size in bytes
@@ -90,13 +85,16 @@ TEST_P(Shake, digest_generation_test)
 
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        auto digest                   = digests[enum_digest];
-        DigestInfoShake.dt_custom_len = digest_size * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+        auto digest = digests[enum_digest];
+
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
 
-        Sha3              sha3_shake(DigestInfoShake);
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(digest_size);
+
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 
@@ -129,11 +127,13 @@ TEST(Shake, invalid_input_update_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        DigestInfoShake.dt_custom_len = DigestSize * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
-        Sha3 sha3_shake(DigestInfoShake);
+
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(DigestSize);
         EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_shake.update(nullptr, 0));
     }
 }
@@ -142,11 +142,13 @@ TEST(Shake, zero_size_update_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        DigestInfoShake.dt_custom_len = DigestSize * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
-        Sha3        sha3_shake(DigestInfoShake);
+
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(DigestSize);
         const Uint8 src[DigestSize] = { 0 };
         EXPECT_EQ(ALC_ERROR_NONE, sha3_shake.update(src, 0));
     }
@@ -156,11 +158,13 @@ TEST(Shake, invalid_output_copy_hash_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        DigestInfoShake.dt_custom_len = DigestSize * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
-        Sha3 sha3_shake(DigestInfoShake);
+
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(DigestSize);
         EXPECT_EQ(ALC_ERROR_INVALID_ARG,
                   sha3_shake.copyHash(nullptr, DigestSize));
     }
@@ -170,12 +174,14 @@ TEST(Shake, zero_size_hash_copy_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        DigestInfoShake.dt_custom_len = DigestSize * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
-        DigestInfoShake.dt_custom_len = DigestSize * 8;
-        Sha3  sha3_shake(DigestInfoShake);
+
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(DigestSize);
         Uint8 hash[DigestSize];
         EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_shake.copyHash(hash, 0));
     }
@@ -185,11 +191,13 @@ TEST(Shake, over_size_hash_copy_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        DigestInfoShake.dt_custom_len = DigestSize * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
-        Sha3  sha3_shake(DigestInfoShake);
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(DigestSize);
         Uint8 hash[DigestSize + 1];
         EXPECT_EQ(ALC_ERROR_INVALID_SIZE,
                   sha3_shake.copyHash(hash, DigestSize + 1));
@@ -204,13 +212,15 @@ TEST(Shake, digest_correction_with_reset_test)
 
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        auto digest                   = digests[enum_digest];
-        DigestInfoShake.dt_custom_len = digest_size * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+        auto digest = digests[enum_digest];
+
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
 
-        Sha3              sha3_shake(DigestInfoShake);
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(digest_size);
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 
@@ -243,42 +253,41 @@ TEST(Shake, digest_correction_with_reset_test)
 
 TEST(Shake, Shake128_getInputBlockLenTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
-    Sha3 sha3_shake(DigestInfoShake);
+    Sha3 sha3_shake(ALC_SHAKE_128);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
     EXPECT_EQ(sha3_shake.getInputBlockSize(), Shake128_InputBlockSize);
 }
 
 TEST(Shake, Shake256_getInputBlockLenTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_256;
-    Sha3 sha3_shake(DigestInfoShake);
+    Sha3 sha3_shake(ALC_SHAKE_256);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
     EXPECT_EQ(sha3_shake.getInputBlockSize(), Shake256_InputBlockSize);
 }
 
 TEST(Shake, Shake128_getHashSizeTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
-    Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize / 8);
+    Sha3 sha3_shake(ALC_SHAKE_128);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
 }
 TEST(Shake, Shake256_getHashSizeTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_256;
-    Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize / 8);
+    Sha3 sha3_shake(ALC_SHAKE_256);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
 }
 
 TEST(Shake, Shake128_setShakeLengthTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
-
-    Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize / 8);
+    Sha3 sha3_shake(ALC_SHAKE_128);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
 
     constexpr unsigned short cShakelength = 100;
 
@@ -289,11 +298,10 @@ TEST(Shake, Shake128_setShakeLengthTest)
 
 TEST(Shake, Shake256_setShakeLengthTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_256;
-
-    Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize / 8);
+    Sha3 sha3_shake(ALC_SHAKE_256);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
 
     constexpr unsigned short cShakelength = 100;
 
@@ -304,11 +312,10 @@ TEST(Shake, Shake256_setShakeLengthTest)
 
 TEST(Shake, setShakeLengthAfterFinalizeTest)
 {
-    DigestInfoShake.dt_custom_len   = DigestSize;
-    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
-
-    Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize / 8);
+    Sha3 sha3_shake(ALC_SHAKE_128);
+    sha3_shake.init();
+    sha3_shake.setShakeLength(DigestSize);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
 
     sha3_shake.finalize(nullptr, 0);
 
@@ -328,12 +335,13 @@ TEST_P(Shake, setShakeLength_digest_generation_test)
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
         auto digest = digests[enum_digest];
         // initializing custom length with zero
-        DigestInfoShake.dt_custom_len = digest_size * 8;
-        DigestInfoShake.dt_mode.dm_sha3 =
+        alc_digest_mode_t mode =
             (enum_digest == DIGEST_SHA3_SHAKE_128 ? ALC_SHAKE_128
                                                   : ALC_SHAKE_256);
 
-        Sha3              sha3_shake(DigestInfoShake);
+        Sha3 sha3_shake(mode);
+        sha3_shake.init();
+        sha3_shake.setShakeLength(DigestSize);
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 

@@ -56,7 +56,7 @@ static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 class ALCP_API_EXPORT Sha3 : public IDigest
 {
   public:
-    Sha3(const alc_digest_info_t& rDigestInfo);
+    Sha3(alc_digest_mode_t mode);
     Sha3(const Sha3& src);
     ~Sha3();
 

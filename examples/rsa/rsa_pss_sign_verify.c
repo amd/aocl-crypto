@@ -218,8 +218,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     alc_digest_info_t dinfo = {
         .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+        .dt_len  = ALC_DIGEST_LEN_256,
+        .dt_mode = ALC_SHA2_256,
     };
 
     // Adding the digest function for generating the hash in oaep padding

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -176,7 +176,7 @@ demo_Hmac_Sha256()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+                    .dt_mode = ALC_SHA2_256,
                 }
             }
         },
@@ -248,7 +248,7 @@ demo_Hmac_Sha224()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = ALC_DIGEST_LEN_224,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_224,},
+                    .dt_mode = ALC_SHA2_224,
                 }
             }
         },
@@ -328,7 +328,7 @@ demo_Hmac_Sha512()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = ALC_DIGEST_LEN_512,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_512,},
+                    .dt_mode = ALC_SHA2_512,
                 }
             }
         },
@@ -386,7 +386,7 @@ demo_Hmac_Sha3_224()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA3,
                     .dt_len = ALC_DIGEST_LEN_224,
-                    .dt_mode = {.dm_sha3 = ALC_SHA3_224},
+                    .dt_mode = ALC_SHA3_224,
                 }
             }
         },
@@ -445,7 +445,7 @@ demo_Hmac_Sha3_256()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA3,
                     .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha3 = ALC_SHA3_256},
+                    .dt_mode = ALC_SHA3_256,
                 }
             }
         },
@@ -511,7 +511,7 @@ demo_Hmac_Sha3_512()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA3,
                     .dt_len = ALC_DIGEST_LEN_512,
-                    .dt_mode = {.dm_sha3 = ALC_SHA3_512},
+                    .dt_mode = ALC_SHA3_512,
                 }
             }
         },
@@ -585,7 +585,7 @@ demo_Hmac_Sha384()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = {.dm_sha3 = ALC_SHA3_384},
+                    .dt_mode = ALC_SHA3_384,
                 }
             }
         },
@@ -648,7 +648,7 @@ demo_Hmac_Sha3_384()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA3,
                     .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = {.dm_sha3 = ALC_SHA3_384},
+                    .dt_mode = ALC_SHA3_384,
                 }
             }
         },
@@ -711,7 +711,7 @@ demo_Hmac_Sha3_384_Reset()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA3,
                     .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = {.dm_sha3 = ALC_SHA3_384},
+                    .dt_mode = ALC_SHA3_384,
                 }
             }
         },

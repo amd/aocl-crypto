@@ -204,42 +204,28 @@ fetch_digest(const alc_digest_info_t& digestInfo)
 {
     using namespace alcp::digest;
     digest::IDigest* digest = nullptr;
-    switch (digestInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (digestInfo.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    digest = new Sha256;
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    digest = new Sha224;
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    digest = new Sha384;
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    digest = new Sha512;
-                    break;
-                }
-                default: {
-                    digest = nullptr;
-                }
-            }
+    switch (digestInfo.dt_mode) {
+        case ALC_SHA2_256: {
+            digest = new Sha256;
             break;
         }
-        case ALC_DIGEST_TYPE_SHA3: {
-            switch (digestInfo.dt_mode.dm_sha3) {
-                case ALC_SHA3_224: {
-                    digest = new digest::Sha3(digestInfo);
-                    break;
-                }
-                default: {
-                    digest = nullptr;
-                    break;
-                }
-            }
+        case ALC_SHA2_224: {
+            digest = new Sha224;
+            break;
+        }
+        case ALC_SHA2_384: {
+            digest = new Sha384;
+            break;
+        }
+        case ALC_SHA2_512: {
+            digest = new Sha512;
+            break;
+        }
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512: {
+            digest = new digest::Sha3(digestInfo.dt_mode);
             break;
         }
         default: {
@@ -652,9 +638,9 @@ TEST(RsaTest, EncryptOaepPadding)
 {
     alc_digest_info_t dinfo{};
 
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode = ALC_SHA2_256;
 
     std::unique_ptr<digest::IDigest> digest_ptr;
 
@@ -699,9 +685,9 @@ TEST(RsaTest, DecryptOaepPadding)
 {
     alc_digest_info_t dinfo{};
 
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode = ALC_SHA2_256;
 
     std::unique_ptr<digest::IDigest> digest_ptr;
 
@@ -808,7 +794,7 @@ TEST(RsaTest, PssSanity)
     alc_digest_info_t dinfo{};
     dinfo.dt_type           = ALC_DIGEST_TYPE_SHA2;
     dinfo.dt_len            = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode.dm_sha2   = ALC_SHA2_256;
+    dinfo.dt_mode           = ALC_SHA2_256;
     digest::IDigest* digest = fetch_digest(dinfo);
 
     std::unique_ptr<digest::IDigest> digest_ptr;
@@ -863,9 +849,9 @@ TEST(RsaTest, PssSanity)
 TEST(RsaTest, PssSignatureVerification)
 {
     alc_digest_info_t dinfo{};
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode = ALC_SHA2_256;
 
     std::unique_ptr<digest::IDigest> digest_ptr;
 
@@ -932,7 +918,7 @@ TEST(RsaTest, Pkcsv15Sanity)
     alc_digest_info_t dinfo{};
     dinfo.dt_type           = ALC_DIGEST_TYPE_SHA2;
     dinfo.dt_len            = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode.dm_sha2   = ALC_SHA2_256;
+    dinfo.dt_mode           = ALC_SHA2_256;
     digest::IDigest* digest = fetch_digest(dinfo);
 
     std::unique_ptr<digest::IDigest> digest_ptr;
@@ -974,9 +960,9 @@ TEST(RsaTest, Pkcsv15Sanity)
 TEST(RsaTest, Pkcsv15SignatureVerification)
 {
     alc_digest_info_t dinfo{};
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len          = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode = ALC_SHA2_256;
 
     std::unique_ptr<digest::IDigest> digest_ptr;
 

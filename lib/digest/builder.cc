@@ -135,28 +135,6 @@ __sha_dtor(void* pDigest)
 
 template<typename ALGONAME>
 static alc_error_t
-__build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    auto algo    = new ALGONAME();
-    ctx.m_digest = static_cast<void*>(algo);
-    ctx.init     = __sha_init_wrapper<ALGONAME>;
-    ctx.update   = __sha_update_wrapper<ALGONAME>;
-    ctx.copy     = __sha_copy_wrapper<ALGONAME>;
-    ctx.finalize = __sha_finalize_wrapper<ALGONAME>;
-    //   ctx.finalize = __digest_func_wrapper<ALGONAME,
-    //   &ALGONAME::finalize>;
-    ctx.finish = __sha_dtor<ALGONAME>;
-
-    // setShakeLength is not implemented for SHA2
-    ctx.setShakeLength = nullptr;
-
-    return err;
-}
-
-template<typename ALGONAME>
-static alc_error_t
 __build_with_copy_sha(Context& srcCtx, Context& destCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -170,6 +148,30 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
     destCtx.finalize       = srcCtx.finalize;
     destCtx.finish         = srcCtx.finish;
     destCtx.setShakeLength = srcCtx.setShakeLength;
+    destCtx.duplicate      = srcCtx.duplicate;
+
+    return err;
+}
+
+template<typename ALGONAME>
+static alc_error_t
+__build_sha(Context& ctx)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    auto algo     = new ALGONAME();
+    ctx.m_digest  = static_cast<void*>(algo);
+    ctx.init      = __sha_init_wrapper<ALGONAME>;
+    ctx.update    = __sha_update_wrapper<ALGONAME>;
+    ctx.duplicate = __build_with_copy_sha<ALGONAME>;
+    ctx.copy      = __sha_copy_wrapper<ALGONAME>;
+    ctx.finalize  = __sha_finalize_wrapper<ALGONAME>;
+    //   ctx.finalize = __digest_func_wrapper<ALGONAME,
+    //   &ALGONAME::finalize>;
+    ctx.finish = __sha_dtor<ALGONAME>;
+
+    // setShakeLength is not implemented for SHA2
+    ctx.setShakeLength = nullptr;
 
     return err;
 }
@@ -177,74 +179,29 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
 class Sha2Builder
 {
   public:
-    static alc_error_t Build(const alc_digest_info_t& rDigestInfo,
-                             Context&                 rCtx)
+    static alc_error_t Build(alc_digest_mode_t mode, Context& rCtx)
     {
         alc_error_t err = ALC_ERROR_NONE;
 
-        switch (rDigestInfo.dt_len) {
-            case ALC_DIGEST_LEN_256:
-                if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
-                    __build_sha<Sha256>(rDigestInfo, rCtx);
-                } else {
-                    __build_sha<Sha512_256>(rDigestInfo, rCtx);
-                }
+        switch (mode) {
+            case ALC_SHA2_224:
+                __build_sha<Sha224>(rCtx);
                 break;
-
-            case ALC_DIGEST_LEN_224:
-                if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
-                    __build_sha<Sha224>(rDigestInfo, rCtx);
-                } else {
-                    __build_sha<Sha512_224>(rDigestInfo, rCtx);
-                }
+            case ALC_SHA2_256:
+                __build_sha<Sha256>(rCtx);
                 break;
-
-            case ALC_DIGEST_LEN_512:
-                __build_sha<Sha512>(rDigestInfo, rCtx);
+            case ALC_SHA2_512:
+                __build_sha<Sha512>(rCtx);
                 break;
-
-            case ALC_DIGEST_LEN_384:
-                __build_sha<Sha384>(rDigestInfo, rCtx);
+            case ALC_SHA2_384:
+                __build_sha<Sha384>(rCtx);
                 break;
-
-            default:
-                err = ALC_ERROR_NOT_SUPPORTED;
+            case ALC_SHA2_512_256:
+                __build_sha<Sha512_256>(rCtx);
                 break;
-        }
-        return err;
-    }
-
-    static alc_error_t BuildWithCopy(const alc_digest_info_t& rDigestInfo,
-                                     Context&                 srcCtx,
-                                     Context&                 destCtx)
-    {
-        alc_error_t err = ALC_ERROR_NONE;
-
-        switch (rDigestInfo.dt_len) {
-            case ALC_DIGEST_LEN_256:
-                if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
-                    __build_with_copy_sha<Sha256>(srcCtx, destCtx);
-                } else {
-                    __build_with_copy_sha<Sha512_256>(srcCtx, destCtx);
-                }
+            case ALC_SHA2_512_224:
+                __build_sha<Sha512_224>(rCtx);
                 break;
-
-            case ALC_DIGEST_LEN_224:
-                if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
-                    __build_with_copy_sha<Sha224>(srcCtx, destCtx);
-                } else {
-                    __build_with_copy_sha<Sha512_224>(srcCtx, destCtx);
-                }
-                break;
-
-            case ALC_DIGEST_LEN_512:
-                __build_with_copy_sha<Sha512>(srcCtx, destCtx);
-                break;
-
-            case ALC_DIGEST_LEN_384:
-                __build_with_copy_sha<Sha384>(srcCtx, destCtx);
-                break;
-
             default:
                 err = ALC_ERROR_NOT_SUPPORTED;
                 break;
@@ -256,55 +213,50 @@ class Sha2Builder
 class Sha3Builder
 {
   public:
-    static alc_error_t Build(const alc_digest_info_t& rDigestInfo,
-                             Context&                 rCtx)
+    static alc_error_t Build(alc_digest_mode_t mode, Context& rCtx)
     {
         alc_error_t err  = ALC_ERROR_NONE;
-        auto        algo = new Sha3(rDigestInfo);
+        auto        algo = new Sha3(mode);
         rCtx.m_digest    = static_cast<void*>(algo);
         rCtx.init        = __sha_init_wrapper<Sha3>;
         rCtx.update      = __sha_update_wrapper<Sha3>;
+        rCtx.duplicate   = __build_with_copy_sha<Sha3>;
         rCtx.copy        = __sha_copy_wrapper<Sha3>;
         rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
         rCtx.finish      = __sha_dtor<Sha3>;
 
         //  Restricting setShakeLength to SHAKE128 or SHAKE256
-        if (rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_128
-            || rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+        if (mode == ALC_SHAKE_128 || mode == ALC_SHAKE_256) {
             rCtx.setShakeLength = __sha_setShakeLength_wrapper;
         } else {
             rCtx.setShakeLength = nullptr;
         }
         return err;
     }
-
-    static alc_error_t BuildWithCopy(Context& srcCtx, Context& destCtx)
-    {
-        alc_error_t err = ALC_ERROR_NONE;
-
-        auto algo = new Sha3(*(reinterpret_cast<Sha3*>(srcCtx.m_digest)));
-        destCtx.m_digest       = static_cast<void*>(algo);
-        destCtx.init           = srcCtx.init;
-        destCtx.update         = srcCtx.update;
-        destCtx.copy           = srcCtx.copy;
-        destCtx.finalize       = srcCtx.finalize;
-        destCtx.finish         = srcCtx.finish;
-        destCtx.setShakeLength = srcCtx.setShakeLength;
-        return err;
-    }
 };
 
 alc_error_t
-DigestBuilder::Build(const alc_digest_info_t& rDigestInfo, Context& rCtx)
+DigestBuilder::Build(alc_digest_mode_t mode, Context& rCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    switch (rDigestInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2:
-            err = Sha2Builder::Build(rDigestInfo, rCtx);
+    switch (mode) {
+        case ALC_SHA2_224:
+        case ALC_SHA2_256:
+        case ALC_SHA2_384:
+        case ALC_SHA2_512:
+        case ALC_SHA2_512_224:
+        case ALC_SHA2_512_256:
+            err = Sha2Builder::Build(mode, rCtx);
             break;
-        case ALC_DIGEST_TYPE_SHA3:
-            err = Sha3Builder::Build(rDigestInfo, rCtx);
+
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512:
+        case ALC_SHAKE_128:
+        case ALC_SHAKE_256:
+            err = Sha3Builder::Build(mode, rCtx);
             break;
 
         default:
@@ -316,26 +268,9 @@ DigestBuilder::Build(const alc_digest_info_t& rDigestInfo, Context& rCtx)
 }
 
 alc_error_t
-DigestBuilder::BuildWithCopy(const alc_digest_info_t dInfo,
-                             digest::Context&        srcCtx,
-                             digest::Context&        destCtx)
+DigestBuilder::BuildWithCopy(digest::Context& srcCtx, digest::Context& destCtx)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
-    switch (dInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2:
-            err = Sha2Builder::BuildWithCopy(dInfo, srcCtx, destCtx);
-            break;
-        case ALC_DIGEST_TYPE_SHA3:
-            err = Sha3Builder::BuildWithCopy(srcCtx, destCtx);
-            break;
-
-        default:
-            err = ALC_ERROR_NOT_SUPPORTED;
-            break;
-    }
-
-    return err;
+    return srcCtx.duplicate(srcCtx, destCtx);
 }
 
 } // namespace alcp::digest

@@ -41,12 +41,6 @@ create_demo_session(void)
 {
     alc_error_t err;
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA3,
-        .dt_len = ALC_DIGEST_LEN_384,
-        .dt_mode = {.dm_sha3 = ALC_SHA3_384,},
-    };
-
     Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
@@ -54,7 +48,7 @@ create_demo_session(void)
         return ALC_ERROR_NO_MEMORY;
     }
 
-    err = alcp_digest_request(&dinfo, &s_dg_handle);
+    err = alcp_digest_request(ALC_SHA3_384, &s_dg_handle);
 
     if (alcp_is_error(err)) {
         return err;

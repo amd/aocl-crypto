@@ -44,21 +44,18 @@ alcp_digest_context_size()
 }
 
 alc_error_t
-alcp_digest_request(const alc_digest_info_p pDigestInfo,
-                    alc_digest_handle_p     pDigestHandle)
+alcp_digest_request(alc_digest_mode_t mode, alc_digest_handle_p pDigestHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestInfo, err);
     ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
     new (ctx) digest::Context;
 
-    // FIMXE: Change Build to return Status and assign it to ctx->status
-    err = digest::DigestBuilder::Build(*pDigestInfo, *ctx);
+    err = digest::DigestBuilder::Build(mode, *ctx);
 
     return err;
 }
@@ -173,8 +170,7 @@ alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
 }
 
 alc_error_t
-alcp_digest_context_copy(const alc_digest_info_t   dInfo,
-                         const alc_digest_handle_p pSrcHandle,
+alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
                          const alc_digest_handle_p pDestHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -188,7 +184,7 @@ alcp_digest_context_copy(const alc_digest_info_t   dInfo,
 
     new (dest_ctx) digest::Context;
 
-    err = digest::DigestBuilder::BuildWithCopy(dInfo, *src_ctx, *dest_ctx);
+    err = digest::DigestBuilder::BuildWithCopy(*src_ctx, *dest_ctx);
 
     return err;
 }

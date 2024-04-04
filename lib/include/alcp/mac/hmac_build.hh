@@ -181,7 +181,8 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
         return status;
     }
 
-    auto p_sha3 = new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+    auto p_sha3 =
+        new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode);
     if (p_sha3 == nullptr) {
         return InternalError("Unable To Allocate Memory for Digest Object");
     }
@@ -224,56 +225,28 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
 {
     Status status = StatusOk();
 
-    switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    status = __build_hmac<digest::Sha256, Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    status = __build_hmac<digest::Sha224, Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    status = __build_hmac<digest::Sha384, Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    status = __build_hmac<digest::Sha512, Hmac>(macInfo, ctx);
-                    break;
-                }
-                default: {
-                    status.update(
-                        InternalError("Unsupported HMAC Sha2 Algorithm"));
-                }
-            }
+    switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode) {
+        case ALC_SHA2_256: {
+            status = __build_hmac<digest::Sha256, Hmac>(macInfo, ctx);
             break;
         }
-        case ALC_DIGEST_TYPE_SHA3: {
-            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
-                case ALC_SHA3_224: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA3_256: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA3_384: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA3_512: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                default: {
-                    status.update(
-                        InternalError("Unsupported HMAC SHA3 Algorithm"));
-                    break;
-                }
-            }
+        case ALC_SHA2_224: {
+            status = __build_hmac<digest::Sha224, Hmac>(macInfo, ctx);
+            break;
+        }
+        case ALC_SHA2_384: {
+            status = __build_hmac<digest::Sha384, Hmac>(macInfo, ctx);
+            break;
+        }
+        case ALC_SHA2_512: {
+            status = __build_hmac<digest::Sha512, Hmac>(macInfo, ctx);
+            break;
+        }
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512: {
+            status = __build_hmac_sha3<Hmac>(macInfo, ctx);
             break;
         }
         default: {
@@ -294,48 +267,29 @@ Status
 isDigestSupported(const alc_digest_info_t& digestInfo)
 {
     Status status{ StatusOk() };
-    switch (digestInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (digestInfo.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    break;
-                }
-                default: {
-                    status.update(
-                        InvalidArgument("Unsupported HMAC Sha2 Algorithm"));
-                }
-            }
+    switch (digestInfo.dt_mode) {
+        case ALC_SHA2_256: {
             break;
         }
-        case ALC_DIGEST_TYPE_SHA3: {
-            switch (digestInfo.dt_mode.dm_sha3) {
-                case ALC_SHA3_224: {
-                    break;
-                }
-                case ALC_SHA3_256: {
-                    break;
-                }
-                case ALC_SHA3_384: {
-                    break;
-                }
-                case ALC_SHA3_512: {
-                    break;
-                }
-                default: {
-                    status.update(
-                        InvalidArgument("Unsupported HMAC SHA3 Algorithm"));
-                    break;
-                }
-            }
+        case ALC_SHA2_224: {
+            break;
+        }
+        case ALC_SHA2_384: {
+            break;
+        }
+        case ALC_SHA2_512: {
+            break;
+        }
+        case ALC_SHA3_224: {
+            break;
+        }
+        case ALC_SHA3_256: {
+            break;
+        }
+        case ALC_SHA3_384: {
+            break;
+        }
+        case ALC_SHA3_512: {
             break;
         }
         default: {

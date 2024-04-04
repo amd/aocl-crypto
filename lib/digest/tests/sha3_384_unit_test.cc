@@ -36,14 +36,6 @@ using namespace alcp::digest;
 typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-static const alc_digest_info_t DigestInfo = []() {
-    alc_digest_info_t DigestInfo;
-    DigestInfo.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    DigestInfo.dt_len          = ALC_DIGEST_LEN_384;
-    DigestInfo.dt_mode.dm_sha3 = ALC_SHA3_384;
-    return DigestInfo;
-}();
-
 // Digest size in bytes
 static const Uint8 DigestSize = 48;
 // Input Block size in bytes
@@ -82,7 +74,7 @@ class Sha3_384
 TEST_P(Sha3_384, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha3              sha3_384(DigestInfo);
+    Sha3              sha3_384(ALC_SHA3_384);
     Uint8             hash[DigestSize];
     std::stringstream ss;
 
@@ -111,52 +103,52 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(Sha3_384, invalid_input_update_test)
 {
-    Sha3 sha3_384(DigestInfo);
+    Sha3 sha3_384(ALC_SHA3_384);
     EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384.update(nullptr, 0));
 }
 
 TEST(Sha3_384, zero_size_update_test)
 {
-    Sha3        sha3_384(DigestInfo);
+    Sha3        sha3_384(ALC_SHA3_384);
     const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha3_384.update(src, 0));
 }
 
 TEST(Sha3_384, invalid_output_copy_hash_test)
 {
-    Sha3 sha3_384(DigestInfo);
+    Sha3 sha3_384(ALC_SHA3_384);
     EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384.copyHash(nullptr, DigestSize));
 }
 
 TEST(Sha3_384, zero_size_hash_copy_test)
 {
-    Sha3  sha3_384(DigestInfo);
+    Sha3  sha3_384(ALC_SHA3_384);
     Uint8 hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_384.copyHash(hash, 0));
 }
 
 TEST(Sha3_384, over_size_hash_copy_test)
 {
-    Sha3  sha3_384(DigestInfo);
+    Sha3  sha3_384(ALC_SHA3_384);
     Uint8 hash[DigestSize + 1];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_384.copyHash(hash, DigestSize + 1));
 }
 
 TEST(Sha3_384, getInputBlockSizeTest)
 {
-    Sha3 sha3_384(DigestInfo);
+    Sha3 sha3_384(ALC_SHA3_384);
     EXPECT_EQ(sha3_384.getInputBlockSize(), InputBlockSize);
 }
 
 TEST(Sha3_384, getHashSizeTest)
 {
-    Sha3 sha3_384(DigestInfo);
+    Sha3 sha3_384(ALC_SHA3_384);
     EXPECT_EQ(sha3_384.getHashSize(), DigestSize);
 }
 
 TEST(Sha3_384, setShakeLengthTest)
 {
-    Sha3        sha3_384(DigestInfo);
+    Sha3        sha3_384(ALC_SHA3_384);
     alc_error_t err                       = ALC_ERROR_NONE;
     err                                   = sha3_384.setShakeLength(384);
     constexpr unsigned short cShakeLength = 100;

@@ -63,13 +63,13 @@ OpenSSLDigestBase::init()
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
-                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+                if (m_info.dt_mode == ALC_SHA2_512) {
                     m_md_type = EVP_sha512_224();
                 } else
                     m_md_type = EVP_sha224();
                 break;
             case ALC_DIGEST_LEN_256:
-                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+                if (m_info.dt_mode == ALC_SHA2_512) {
                     m_md_type = EVP_sha512_256();
                 } else
                     m_md_type = EVP_sha256();
@@ -99,10 +99,10 @@ OpenSSLDigestBase::init()
                 break;
             /*SHAKE*/
             case ALC_DIGEST_LEN_CUSTOM:
-                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
+                if (m_info.dt_mode == ALC_SHAKE_128) {
                     m_md_type = EVP_shake128();
                 }
-                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+                if (m_info.dt_mode == ALC_SHAKE_256) {
                     m_md_type = EVP_shake256();
                 }
                 break;

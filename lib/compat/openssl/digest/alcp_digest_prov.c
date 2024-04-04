@@ -40,7 +40,7 @@ alcp_prov_digest_freectx(void* vctx)
 }
 
 void*
-alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
+alcp_prov_digest_newctx(void* vprovctx, alc_digest_mode_t mode)
 {
     alc_prov_digest_ctx_p dig_ctx;
 
@@ -48,10 +48,9 @@ alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
 
     dig_ctx = OPENSSL_zalloc(sizeof(*dig_ctx));
     if (dig_ctx != NULL) {
-        dig_ctx->pc_digest_info = *dinfo;
         Uint64 size             = alcp_digest_context_size();
         dig_ctx->handle.context = OPENSSL_zalloc(size);
-        alc_error_t err = alcp_digest_request(dinfo, &(dig_ctx->handle));
+        alc_error_t err         = alcp_digest_request(mode, &(dig_ctx->handle));
         if (alcp_is_error(err)) {
             printf("Provider: Request failed %llu\n", (unsigned long long)err);
             OPENSSL_clear_free(dig_ctx->handle.context, size);
@@ -78,8 +77,8 @@ alcp_prov_digest_dupctx(void* vctx)
         return NULL;
     }
 
-    alc_error_t err = alcp_digest_context_copy(
-        src_ctx->pc_digest_info, &src_ctx->handle, &dest_ctx->handle);
+    alc_error_t err =
+        alcp_digest_context_copy(&src_ctx->handle, &dest_ctx->handle);
     if (err != ALC_ERROR_NONE) {
         printf("Provider: copy failed in dupctx\n");
         OPENSSL_clear_free(dest_ctx->handle.context, size);

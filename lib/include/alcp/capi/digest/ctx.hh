@@ -46,6 +46,7 @@ class Context
 
     alc_error_t (*init)(void* pDigest);
     alc_error_t (*update)(void* pDigest, const Uint8* pSrc, Uint64 len);
+    alc_error_t (*duplicate)(Context& srcCtx, Context& destCtx);
     alc_error_t (*copy)(const void* pDigest, Uint8* pBuf, Uint64 len);
     alc_error_t (*finalize)(void* pDigest, const Uint8* pBuf, Uint64 len);
     alc_error_t (*finish)(void* pDigest);

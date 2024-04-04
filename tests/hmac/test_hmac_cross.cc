@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,29 +37,29 @@
 TEST(HMAC_SHA2, CROSS_224)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_224;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA2_224;
     Hmac_Cross(224, "SHA2", info);
 }
 TEST(HMAC_SHA2, CROSS_256)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_256;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA2_256;
     Hmac_Cross(256, "SHA2", info);
 }
 TEST(HMAC_SHA2, CROSS_384)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_384;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA2_384;
     Hmac_Cross(384, "SHA2", info);
 }
 TEST(HMAC_SHA2, CROSS_512)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA2_512;
     Hmac_Cross(512, "SHA2", info);
 }
 TEST(HMAC_SHA3, CROSS_224)
@@ -67,8 +67,8 @@ TEST(HMAC_SHA3, CROSS_224)
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_224;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA3_224;
     Hmac_Cross(224, "SHA3", info);
 }
 TEST(HMAC_SHA3, CROSS_256)
@@ -76,8 +76,8 @@ TEST(HMAC_SHA3, CROSS_256)
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_256;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA3_256;
     Hmac_Cross(256, "SHA3", info);
 }
 TEST(HMAC_SHA3, CROSS_384)
@@ -85,8 +85,8 @@ TEST(HMAC_SHA3, CROSS_384)
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_384;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA3_384;
     Hmac_Cross(384, "SHA3", info);
 }
 TEST(HMAC_SHA3, CROSS_512)
@@ -94,8 +94,8 @@ TEST(HMAC_SHA3, CROSS_512)
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_512;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode = ALC_SHA3_512;
     Hmac_Cross(512, "SHA3", info);
 }
 

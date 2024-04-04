@@ -61,37 +61,6 @@ typedef enum _alc_digest_type
 } alc_digest_type_t;
 
 /**
- * @brief Stores info about mode of sha2 digest used
- *
- * @typedef enum alc_sha2_mode_t
- */
-typedef enum _alc_sha2_mode
-{
-    ALC_SHA2_224,
-    ALC_SHA2_256,
-    ALC_SHA2_384,
-    ALC_SHA2_512,
-    ALC_SHA2_512_224,
-    ALC_SHA2_512_256
-
-} alc_sha2_mode_t;
-
-/**
- * @brief Stores info about mode of sha3 digest used
- *
- * @typedef enum alc_sha3_mode_t
- */
-typedef enum _alc_sha3_mode
-{
-    ALC_SHA3_224,
-    ALC_SHA3_256,
-    ALC_SHA3_384,
-    ALC_SHA3_512,
-    ALC_SHAKE_128,
-    ALC_SHAKE_256,
-} alc_sha3_mode_t;
-
-/**
  * @brief Stores info about digest length used for digest
  *
  * @typedef enum alc_digest_len_t
@@ -129,16 +98,24 @@ typedef enum alc_digest_block_size
 /**
  * @brief Stores info about digest mode to be used
  *
- * @param dm_sha2, dm_sha3 used to store info of mode
- *
  * @union alc_digest_mode_t
  */
-typedef union _alc_digest_mode
+typedef enum _alc_digest_mode
 {
-    alc_sha2_mode_t dm_sha2;
-    alc_sha3_mode_t dm_sha3;
-
-} alc_digest_mode_t, *alc_diget_mode_p;
+    ALC_SHA2_224,
+    ALC_SHA2_256,
+    ALC_SHA2_384,
+    ALC_SHA2_512,
+    ALC_SHA2_512_224,
+    ALC_SHA2_512_256,
+    ALC_SHA3_224,
+    ALC_SHA3_256,
+    ALC_SHA3_384,
+    ALC_SHA3_512,
+    ALC_SHAKE_128,
+    ALC_SHAKE_256,
+} alc_digest_mode_t,
+    *alc_diget_mode_p;
 
 /**
  * @brief Stores info about digest data
@@ -149,7 +126,9 @@ typedef union _alc_digest_mode
  */
 typedef struct _alc_digest_data
 {
-    void* dd_ptr;
+    /* Any unprocessed bytes from last call to update() */
+    __attribute__((aligned(64))) Uint8  m_buffer[2 * 512 / 8];
+    __attribute__((aligned(64))) Uint32 m_hash[256 / 32];
 } alc_digest_data_t;
 
 /**
@@ -172,7 +151,6 @@ typedef struct _alc_digest_info
     /* length is bits */
     Uint32            dt_custom_len;
     alc_digest_mode_t dt_mode;
-    alc_digest_data_t dt_data;
 } alc_digest_info_t, *alc_digest_info_p;
 
 /**
@@ -211,11 +189,11 @@ alcp_digest_context_size(void);
 
 /**
  * @brief       Request a handle for digest  for a configuration
- *              as pointed by p_digest_info_p
+ *              as pointed by alc_digest_mode_t
  *
- * @param [in]      p_digest_info   Description of the requested digest session
+ * @param [in]      mode   Description of the requested digest session
  *
- * @param [out]      p_digest_handle Library populated session handle for future
+ * @param [out]     p_digest_handle Library populated session handle for future
  * digest operations.
  *
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -223,8 +201,8 @@ alcp_digest_context_size(void);
  * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_digest_request(const alc_digest_info_p p_digest_info,
-                    alc_digest_handle_p     p_digest_handle);
+alcp_digest_request(alc_digest_mode_t   mode,
+                    alc_digest_handle_p p_digest_handle);
 
 /**
  * @brief       Initializes the digest handle
@@ -380,15 +358,13 @@ alcp_digest_set_shake_length(const alc_digest_handle_p p_digest_handle,
 /**
  * @brief       copies the context from sorce to destination
  *
- * @param [in]   dInfo        digest info
  * @param [in]   pSrcHandle   source digest handle
  * @param [out]  pDestHandle   destination digest handle
  *
  * @return alc_error_t Error code to validate the operation
  */
 ALCP_API_EXPORT alc_error_t
-alcp_digest_context_copy(const alc_digest_info_t   dInfo,
-                         const alc_digest_handle_p pSrcHandle,
+alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
                          const alc_digest_handle_p pDestHandle);
 
 EXTERN_C_END
