@@ -149,7 +149,7 @@ static void
 BENCH_SHA2_512_224(benchmark::State& state)
 {
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA2_512_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_Bench(state, info, state.range(0));
@@ -158,7 +158,7 @@ static void
 BENCH_SHA2_512_256(benchmark::State& state)
 {
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA2_512_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_Bench(state, info, state.range(0));
