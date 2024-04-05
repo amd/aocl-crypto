@@ -71,19 +71,16 @@ IPPDigestBase::init()
             case ALC_SHA2_384:
                 status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
                 break;
-            case ALC_SHA2_512:
+            case ALC_SHA2_512_224:
                 /* for truncated variants of sha512*/
-                if (m_info.dt_len == ALC_DIGEST_LEN_224) {
-                    status =
-                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
-                } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
-                    status =
-                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
-                } else {
-                    /* if len is 512*/
-                    status =
-                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
-                }
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
+                break;
+            case ALC_SHA2_512_256:
+                /* for truncated variants of sha512*/
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
+                break;
+            case ALC_SHA2_512:
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
                 break;
             default:
                 return false;

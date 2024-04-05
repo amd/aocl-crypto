@@ -323,7 +323,7 @@ TEST(Shake, setShakeLengthAfterFinalizeTest)
 
     alc_error_t err = sha3_shake.setShakeLength(cShakelength);
     EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
-    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize / 8);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
     EXPECT_NE(sha3_shake.getHashSize(), cShakelength);
 }
 

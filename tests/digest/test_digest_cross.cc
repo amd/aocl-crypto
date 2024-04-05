@@ -92,7 +92,7 @@ TEST(DIGEST_SHA2, CROSS_512)
 TEST(DIGEST_SHA2, CROSS_512_224)
 {
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA2_512_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_Cross(224, info);
@@ -100,7 +100,7 @@ TEST(DIGEST_SHA2, CROSS_512_224)
 TEST(DIGEST_SHA2, CROSS_512_256)
 {
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA2_512_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_Cross(256, info);
@@ -114,7 +114,7 @@ TEST(DIGEST_SHA3, CROSS_224)
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_224;
+    info.dt_mode = ALC_SHA3_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_Cross(224, info);
@@ -124,7 +124,7 @@ TEST(DIGEST_SHA3, CROSS_256)
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_256;
+    info.dt_mode = ALC_SHA3_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_Cross(256, info);
@@ -135,7 +135,7 @@ TEST(DIGEST_SHA3, CROSS_384)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
 
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_384;
+    info.dt_mode = ALC_SHA3_384;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_384;
     Digest_Cross(384, info);
@@ -146,7 +146,7 @@ TEST(DIGEST_SHA3, CROSS_512)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
 
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA3_512;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_512;
     Digest_Cross(512, info);

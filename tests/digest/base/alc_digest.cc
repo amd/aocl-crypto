@@ -66,23 +66,6 @@ AlcpDigestBase::init()
     alc_error_t       err;
     alc_digest_info_t dinfo = m_info;
 
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        /* for sha512-224/256 */
-        if (m_info.dt_mode == ALC_SHA2_512
-            && m_info.dt_len != ALC_DIGEST_LEN_512) {
-            dinfo.dt_mode = ALC_SHA2_512;
-            dinfo.dt_len  = m_info.dt_len;
-        }
-        /* for normal sha2 cases */
-        else
-            dinfo.dt_mode = sha2_mode_len_map[m_info.dt_len];
-    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
-            dinfo.dt_custom_len = m_digest_len * 8;
-        else
-            dinfo.dt_mode = sha3_mode_len_map[m_info.dt_len];
-    }
-
     if (m_handle == nullptr) {
         m_handle          = new alc_digest_handle_t;
         m_handle->context = malloc(alcp_digest_context_size());
@@ -102,6 +85,13 @@ AlcpDigestBase::init()
 
     if (alcp_is_error(err)) {
         return err;
+    }
+
+    if (m_info.dt_mode == ALC_SHAKE_128 || m_info.dt_mode == ALC_SHAKE_256) {
+        err = alcp_digest_set_shake_length(m_handle, m_digest_len);
+        if (alcp_is_error(err)) {
+            return err;
+        }
     }
 
     return true;

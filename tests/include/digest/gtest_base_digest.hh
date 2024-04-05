@@ -93,8 +93,7 @@ Digest_KAT(alc_digest_info_t info)
     std::string TestDataFile       = "";
     std::string SHA3_SHAKE_Len_Str = "";
     /* for truncated sha512 (224,256)*/
-    if (info.dt_type == ALC_DIGEST_TYPE_SHA2 && info.dt_mode == ALC_SHA2_512
-        && info.dt_len != ALC_DIGEST_LEN_512) {
+    if (info.dt_mode == ALC_SHA2_512_224 || info.dt_mode == ALC_SHA2_512_256) {
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
                        + std::to_string(info.dt_len) + ".csv";
     }

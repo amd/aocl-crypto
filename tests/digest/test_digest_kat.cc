@@ -95,7 +95,7 @@ TEST(DIGEST_SHA2, KAT_512)
 TEST(DIGEST_SHA2, KAT_512_224)
 {
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA2_512_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_KAT(info);
@@ -103,7 +103,7 @@ TEST(DIGEST_SHA2, KAT_512_224)
 TEST(DIGEST_SHA2, KAT_512_256)
 {
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA2_512_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_KAT(info);
@@ -117,7 +117,7 @@ TEST(DIGEST_SHA3, KAT_224)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_224;
+    info.dt_mode = ALC_SHA3_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_224;
     Digest_KAT(info);
@@ -127,7 +127,7 @@ TEST(DIGEST_SHA3, KAT_256)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_256;
+    info.dt_mode = ALC_SHA3_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_256;
     Digest_KAT(info);
@@ -137,7 +137,7 @@ TEST(DIGEST_SHA3, KAT_384)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_384;
+    info.dt_mode = ALC_SHA3_384;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_384;
     Digest_KAT(info);
@@ -147,7 +147,7 @@ TEST(DIGEST_SHA3, KAT_512)
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
-    info.dt_mode = ALC_SHA2_512;
+    info.dt_mode = ALC_SHA3_512;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_512;
     Digest_KAT(info);

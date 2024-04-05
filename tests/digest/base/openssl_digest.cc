@@ -60,55 +60,45 @@ OpenSSLDigestBase::init()
 
     m_handle = EVP_MD_CTX_new();
 
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                if (m_info.dt_mode == ALC_SHA2_512) {
-                    m_md_type = EVP_sha512_224();
-                } else
-                    m_md_type = EVP_sha224();
-                break;
-            case ALC_DIGEST_LEN_256:
-                if (m_info.dt_mode == ALC_SHA2_512) {
-                    m_md_type = EVP_sha512_256();
-                } else
-                    m_md_type = EVP_sha256();
-                break;
-            case ALC_DIGEST_LEN_384:
-                m_md_type = EVP_sha384();
-                break;
-            case ALC_DIGEST_LEN_512:
-                m_md_type = EVP_sha512();
-                break;
-            default:
-                return false;
-        }
-    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                m_md_type = EVP_sha3_224();
-                break;
-            case ALC_DIGEST_LEN_256:
-                m_md_type = EVP_sha3_256();
-                break;
-            case ALC_DIGEST_LEN_384:
-                m_md_type = EVP_sha3_384();
-                break;
-            case ALC_DIGEST_LEN_512:
-                m_md_type = EVP_sha3_512();
-                break;
-            /*SHAKE*/
-            case ALC_DIGEST_LEN_CUSTOM:
-                if (m_info.dt_mode == ALC_SHAKE_128) {
-                    m_md_type = EVP_shake128();
-                }
-                if (m_info.dt_mode == ALC_SHAKE_256) {
-                    m_md_type = EVP_shake256();
-                }
-                break;
-            default:
-                return false;
-        }
+    switch (m_info.dt_mode) {
+        case ALC_SHA2_224:
+            m_md_type = EVP_sha224();
+            break;
+        case ALC_SHA2_256:
+            m_md_type = EVP_sha256();
+            break;
+        case ALC_SHA2_384:
+            m_md_type = EVP_sha384();
+            break;
+        case ALC_SHA2_512:
+            m_md_type = EVP_sha512();
+            break;
+        case ALC_SHA2_512_256:
+            m_md_type = EVP_sha512_256();
+            break;
+        case ALC_SHA2_512_224:
+            m_md_type = EVP_sha512_224();
+            break;
+        case ALC_SHA3_224:
+            m_md_type = EVP_sha3_224();
+            break;
+        case ALC_SHA3_256:
+            m_md_type = EVP_sha3_256();
+            break;
+        case ALC_SHA3_384:
+            m_md_type = EVP_sha3_384();
+            break;
+        case ALC_SHA3_512:
+            m_md_type = EVP_sha3_512();
+            break;
+        case ALC_SHAKE_128:
+            m_md_type = EVP_shake128();
+            break;
+        case ALC_SHAKE_256:
+            m_md_type = EVP_shake256();
+            break;
+        default:
+            return false;
     }
     if (EVP_DigestInit(m_handle, m_md_type) != 1) {
         std::cout << "Error code in EVP_DigestInit: "
