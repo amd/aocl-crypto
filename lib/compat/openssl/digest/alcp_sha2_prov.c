@@ -37,7 +37,7 @@ alcp_prov_sha2_init(void* vctx, const OSSL_PARAM params[])
     alc_error_t           err;
 
     err = alcp_digest_init(&(cctx->handle));
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Init failed\n");
         return 0;
     }

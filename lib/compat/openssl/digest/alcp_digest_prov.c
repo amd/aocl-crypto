@@ -51,7 +51,7 @@ alcp_prov_digest_newctx(void* vprovctx, alc_digest_mode_t mode)
         Uint64 size             = alcp_digest_context_size();
         dig_ctx->handle.context = OPENSSL_zalloc(size);
         alc_error_t err         = alcp_digest_request(mode, &(dig_ctx->handle));
-        if (alcp_is_error(err)) {
+        if (err != ALC_ERROR_NONE) {
             printf("Provider: Request failed %llu\n", (unsigned long long)err);
             OPENSSL_clear_free(dig_ctx->handle.context, size);
             OPENSSL_clear_free(dig_ctx, sizeof(*dig_ctx));
@@ -139,7 +139,7 @@ alcp_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
     alc_prov_digest_ctx_p cctx = vctx;
     ENTER();
     err = alcp_digest_update(&(cctx->handle), in, inl);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Unable to Update Digest\n");
         return 0;
     }
@@ -159,12 +159,12 @@ alcp_prov_digest_final(void*          vctx,
 
     // ToDO : Merge the finalize and copy call
     err = alcp_digest_finalize(&(dctx->handle), NULL, 0);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Failed to Finalize\n");
         return 0;
     }
     err = alcp_digest_copy(&(dctx->handle), out, outsize);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Failed to copy Hash\n");
         return 0;
     }

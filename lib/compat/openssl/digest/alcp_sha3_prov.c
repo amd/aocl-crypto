@@ -45,7 +45,7 @@ shake_set_ctx_params(alc_prov_digest_ctx_p cctx, const OSSL_PARAM params[])
     if (digest_size) {
         alc_error_t err =
             alcp_digest_set_shake_length(&(cctx->handle), digest_size);
-        if (alcp_is_error(err)) {
+        if (err != ALC_ERROR_NONE) {
             printf("Provider: Failed to set SHAKE Digest Length");
             return 0;
         }
@@ -61,7 +61,7 @@ alcp_prov_sha3_init(void* vctx, const OSSL_PARAM params[])
     alc_prov_digest_ctx_p cctx = vctx;
     alc_error_t           err;
     err = alcp_digest_init(&(cctx->handle));
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Init failed\n");
         return 0;
     }
@@ -77,7 +77,7 @@ alcp_prov_shake_init(void* vctx, const OSSL_PARAM params[])
     alc_error_t           err;
 
     err = alcp_digest_init(&(pctx->handle));
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Init failed\n");
         return 0;
     }
@@ -112,7 +112,7 @@ alcp_prov_shake_squeeze(void*          vctx,
     alc_prov_digest_ctx_p pctx = vctx;
 
     alc_error_t err = alcp_digest_shake_squeeze(&(pctx->handle), out, outlen);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Provider: Init failed\n");
         return 0;
     }
