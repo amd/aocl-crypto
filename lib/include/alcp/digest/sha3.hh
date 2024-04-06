@@ -118,6 +118,15 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      */
     alc_error_t setShakeLength(Uint64 shakeLength);
 
+    /**
+     * @brief To squeeze digest out of SHAKE128 or SHAKE256
+     * before finalizing.
+     * @param pBuff   pointer to the final hash generated
+     * @param len     digest len
+     * @return
+     */
+    alc_error_t shakeSqueeze(Uint8* pBuff, Uint64 len);
+
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
     void        squeezeChunk();

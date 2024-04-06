@@ -393,4 +393,21 @@ Sha3::setShakeLength(Uint64 shakeLength)
     }
     return err;
 }
+
+alc_error_t
+Sha3::shakeSqueeze(Uint8* pBuff, Uint64 len)
+{
+    if (m_finished) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+    alc_error_t err = ALC_ERROR_NONE;
+    if (m_mode == ALC_SHAKE_128 || m_mode == ALC_SHAKE_256) {
+        // Implement the squeeze function
+
+    } else {
+        err = ALC_ERROR_NOT_PERMITTED;
+    }
+    return err;
+}
+
 } // namespace alcp::digest

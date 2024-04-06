@@ -101,6 +101,24 @@ alcp_prov_shake_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     EXIT();
     return shake_set_ctx_params(pctx, params);
 }
+
+int
+alcp_prov_shake_squeeze(void*          vctx,
+                        unsigned char* out,
+                        size_t*        outl,
+                        size_t         outlen)
+{
+    ENTER();
+    alc_prov_digest_ctx_p pctx = vctx;
+
+    alc_error_t err = alcp_digest_shake_squeeze(&(pctx->handle), out, outlen);
+    if (alcp_is_error(err)) {
+        printf("Provider: Init failed\n");
+        return 0;
+    }
+    *outl = outlen;
+    return 1;
+}
 // clang-format off
 #define CREATE_COMMON_DEFINITIONS(                                             \
     name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)               \
@@ -140,6 +158,7 @@ alcp_prov_shake_set_ctx_params(void* vctx, const OSSL_PARAM params[])
           (fptr_t)alcp_prov_shake_settable_ctx_params },                       \
     { OSSL_FUNC_DIGEST_SET_CTX_PARAMS,                                         \
           (fptr_t)alcp_prov_shake_set_ctx_params },                            \
+    { OSSL_FUNC_DIGEST_SQUEEZE, (fptr_t)alcp_prov_shake_squeeze },             \
     { 0, NULL }                                                                \
     }
 

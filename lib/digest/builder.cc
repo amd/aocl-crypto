@@ -96,6 +96,17 @@ __sha_setShakeLength_wrapper(void* pDigest, Uint64 len)
     return e;
 }
 
+static alc_error_t
+__sha_shakeSqueeze_wrapper(void* pDigest, Uint8* pBuff, Uint64 len)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<Sha3*>(pDigest);
+    e       = ap->shakeSqueeze(pBuff, len);
+
+    return e;
+}
+
 template<typename DIGESTTYPE>
 static alc_error_t
 __sha_copy_wrapper(const void* pDigest, Uint8* pBuf, Uint64 len)
@@ -149,6 +160,7 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
     destCtx.finish         = srcCtx.finish;
     destCtx.setShakeLength = srcCtx.setShakeLength;
     destCtx.duplicate      = srcCtx.duplicate;
+    destCtx.shakeSqueeze   = srcCtx.shakeSqueeze;
 
     return err;
 }
@@ -170,8 +182,9 @@ __build_sha(Context& ctx)
     //   &ALGONAME::finalize>;
     ctx.finish = __sha_dtor<ALGONAME>;
 
-    // setShakeLength is not implemented for SHA2
+    // setShakeLength and shakeSqueeze are not implemented for SHA2
     ctx.setShakeLength = nullptr;
+    ctx.shakeSqueeze   = nullptr;
 
     return err;
 }
@@ -228,8 +241,10 @@ class Sha3Builder
         //  Restricting setShakeLength to SHAKE128 or SHAKE256
         if (mode == ALC_SHAKE_128 || mode == ALC_SHAKE_256) {
             rCtx.setShakeLength = __sha_setShakeLength_wrapper;
+            rCtx.shakeSqueeze   = __sha_shakeSqueeze_wrapper;
         } else {
             rCtx.setShakeLength = nullptr;
+            rCtx.shakeSqueeze   = nullptr;
         }
         return err;
     }

@@ -170,6 +170,28 @@ alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
 }
 
 alc_error_t
+alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
+                          Uint8*                    pBuff,
+                          Uint64                    size)
+
+{
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pBuff, err);
+
+    if (size == 0) {
+        return ALC_ERROR_NONE;
+    }
+
+    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+
+    if (ctx->shakeSqueeze == nullptr) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+
+    return ctx->shakeSqueeze(ctx->m_digest, pBuff, size);
+}
+alc_error_t
 alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
                          const alc_digest_handle_p pDestHandle)
 {

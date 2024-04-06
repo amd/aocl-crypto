@@ -342,7 +342,7 @@ alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
  * @endparblock
  *
  *
- * @param [in]      p_digest_handle The handle that was returned as part of call
+ * @param [in]      pDigestHandle The handle that was returned as part of call
  *                              together alcp_digest_request(),
  *
  * @param[in]      size            Size of the Digest to be set
@@ -352,7 +352,7 @@ alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
  * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_digest_set_shake_length(const alc_digest_handle_p p_digest_handle,
+alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
                              Uint64                    size);
 
 /**
@@ -366,6 +366,22 @@ alcp_digest_set_shake_length(const alc_digest_handle_p p_digest_handle,
 ALCP_API_EXPORT alc_error_t
 alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
                          const alc_digest_handle_p pDestHandle);
+
+/**
+ * @brief        Valid only for Shake algorithm for squeezing the digest out.
+ *               It can be called multiple times
+ *
+ * @param [in]   pDigestHandle   The handle that was returned as part of call
+ *                               alcp_digest_request()
+ * @param [out]  pBuff           Destination Buffer for digest out
+ * @param [in]   size            size of data to be squeezed out
+ *
+ * @return alc_error_t Error code to validate the operation
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
+                          Uint8*                    pBuff,
+                          Uint64                    size);
 
 EXTERN_C_END
 
