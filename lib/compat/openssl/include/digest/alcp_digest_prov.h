@@ -66,11 +66,14 @@ alcp_prov_digest_get_params(OSSL_PARAM    params[],
                             size_t        blockSize,
                             size_t        digestSize,
                             unsigned long flags);
+int
+alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize);
 
+// ToDO: Add all the function declaration defined in dispatch table
 OSSL_FUNC_digest_dupctx_fn  alcp_prov_digest_dupctx;
 OSSL_FUNC_digest_freectx_fn alcp_prov_digest_freectx;
 OSSL_FUNC_digest_update_fn  alcp_prov_digest_update;
-OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
+// OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
 
 /* Internal flags that can be queried */
 #define ALCP_FLAG_XOF          0x1
@@ -109,6 +112,16 @@ OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
     {                                                                          \
         ENTER();                                                               \
         return alcp_prov_digest_newctx(provctx, alcp_mode);                    \
+    }                                                                          \
+    static int alcp_prov_##name##_##grp##_digest_final(                        \
+        void* vctx, unsigned char* out, size_t* outl, size_t outsize)          \
+    {                                                                          \
+        if (outsize < len) {                                                   \
+            return 0;                                                          \
+        }                                                                      \
+                                                                               \
+        *outl = len;                                                           \
+        return alcp_prov_digest_final(vctx, out, outsize);                     \
     }                                                                          \
     DEFINE_DIGEST_GET_PARAMS(name, grp, len, blockSize, flags)
 

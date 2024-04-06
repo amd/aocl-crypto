@@ -134,7 +134,7 @@ alcp_prov_shake_squeeze(void*          vctx,
         { OSSL_FUNC_DIGEST_DUPCTX, (fptr_t)alcp_prov_digest_dupctx },          \
         { OSSL_FUNC_DIGEST_FREECTX, (fptr_t)alcp_prov_digest_freectx },        \
         { OSSL_FUNC_DIGEST_UPDATE, (fptr_t)alcp_prov_digest_update },          \
-        { OSSL_FUNC_DIGEST_FINAL, (fptr_t)alcp_prov_digest_final },
+        { OSSL_FUNC_DIGEST_FINAL, (fptr_t)alcp_prov_##name##_##grp##_digest_final },
 
 #define ALCP_CREATE_SHA3_FUNCTIONS(                                            \
     name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)               \

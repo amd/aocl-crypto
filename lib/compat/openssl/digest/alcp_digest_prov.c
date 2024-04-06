@@ -148,10 +148,7 @@ alcp_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
 }
 
 int
-alcp_prov_digest_final(void*          vctx,
-                       unsigned char* out,
-                       size_t*        outl,
-                       size_t         outsize)
+alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize)
 {
     ENTER();
     alc_error_t           err  = ALC_ERROR_NONE;
@@ -168,7 +165,6 @@ alcp_prov_digest_final(void*          vctx,
         printf("Provider: Failed to copy Hash\n");
         return 0;
     }
-    *outl = outsize;
     EXIT();
     return 1;
 }

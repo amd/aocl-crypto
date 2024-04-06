@@ -60,7 +60,8 @@ alcp_prov_sha2_init(void* vctx, const OSSL_PARAM params[])
         { OSSL_FUNC_DIGEST_FREECTX, (fptr_t)alcp_prov_digest_freectx },        \
         { OSSL_FUNC_DIGEST_INIT, (fptr_t)alcp_prov_sha2_init },                \
         { OSSL_FUNC_DIGEST_UPDATE, (fptr_t)alcp_prov_digest_update },          \
-        { OSSL_FUNC_DIGEST_FINAL, (fptr_t)alcp_prov_digest_final },            \
+        { OSSL_FUNC_DIGEST_FINAL,                                              \
+          (fptr_t)alcp_prov_##name##_##grp##_digest_final },                   \
         { 0, NULL }                                                            \
     }
 
