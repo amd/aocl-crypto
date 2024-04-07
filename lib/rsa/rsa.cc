@@ -167,13 +167,13 @@ Rsa<T>::maskGenFunct(Uint8*       mask,
         count_array[2] = (count >> 8) & 0xff;
         count_array[3] = count & 0xff;
 
-        m_mgf->finalize(count_array, 4);
+        m_mgf->update(count_array, 4);
 
         Uint64 copy_size = m_mgf_hash_len;
         if (out_len + m_mgf_hash_len <= maskSize) {
-            m_mgf->copyHash(mask + out_len, m_mgf_hash_len);
+            m_mgf->finalize(mask + out_len, m_mgf_hash_len);
         } else {
-            m_mgf->copyHash(hash, m_mgf_hash_len);
+            m_mgf->finalize(hash, m_mgf_hash_len);
             utils::CopyBytes(mask + out_len, hash, maskSize - out_len);
             break;
         }
@@ -345,8 +345,8 @@ Rsa<T>::encryptPublicOaep(const Uint8* pText,
 
     // generates masked db
     m_digest->init();
-    m_digest->finalize(pLabel, labelSize);
-    m_digest->copyHash(p_masked_db, m_hash_len);
+    m_digest->update(pLabel, labelSize);
+    m_digest->finalize(p_masked_db, m_hash_len);
 
     Uint64 p_db_size                      = m_key_size - 1 - m_hash_len;
     p_masked_db[p_db_size - 1 - textSize] = 1;
@@ -426,8 +426,8 @@ Rsa<T>::decryptPrivateOaep(const Uint8* pEncText,
 
     // create db
     m_digest->init();
-    m_digest->finalize(pLabel, labelSize);
-    m_digest->copyHash(hash_label, m_hash_len);
+    m_digest->update(pLabel, labelSize);
+    m_digest->finalize(hash_label, m_hash_len);
 
     success &= IsEqual(hash_label, p_db, m_hash_len);
 
@@ -487,8 +487,8 @@ Rsa<T>::signPrivatePss(bool         check,
     alignas(64) Uint8 message[T / 8], message_check[T / 8], hash[64]{};
 
     m_digest->init();
-    m_digest->finalize(pText, textSize);
-    m_digest->copyHash(hash, m_hash_len);
+    m_digest->update(pText, textSize);
+    m_digest->finalize(hash, m_hash_len);
 
     auto message_tmp = std::make_unique<Uint8[]>(m_hash_len + saltSize + 8);
     auto p_message   = message_tmp.get();
@@ -496,8 +496,8 @@ Rsa<T>::signPrivatePss(bool         check,
     utils::CopyBytes(p_message + 8 + m_hash_len, salt, saltSize);
 
     m_digest->init();
-    m_digest->finalize(p_message, m_hash_len + saltSize + 8);
-    m_digest->copyHash(hash, m_hash_len);
+    m_digest->update(p_message, m_hash_len + saltSize + 8);
+    m_digest->finalize(hash, m_hash_len);
 
     Uint64 p_db_size = T / 8 - m_hash_len - 1;
     auto   db        = std::make_unique<Uint8[]>(p_db_size);
@@ -576,8 +576,8 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
     alignas(64) Uint8 hash[64]{};
 
     m_digest->init();
-    m_digest->finalize(pText, textSize);
-    m_digest->copyHash(hash, m_hash_len);
+    m_digest->update(pText, textSize);
+    m_digest->finalize(hash, m_hash_len);
 
     Uint64 db_len      = T / 8 - m_hash_len - 1;
     auto   masked_db   = std::make_unique<Uint8[]>(db_len);
@@ -613,8 +613,8 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
     utils::CopyBlock(p_db_mask + 8 + m_hash_len, p_masked_db + i, saltLen);
 
     m_digest->init();
-    m_digest->finalize(p_db_mask, 8 + m_hash_len + saltLen);
-    m_digest->copyHash(hash, m_hash_len);
+    m_digest->update(p_db_mask, 8 + m_hash_len + saltLen);
+    m_digest->finalize(hash, m_hash_len);
 
     success &= IsEqual(h, hash, m_hash_len);
     Uint8 error_code = Select(success, eOk, eInternal);
@@ -645,8 +645,8 @@ Rsa<T>::signPrivatePkcsv15(bool         check,
     alignas(64) Uint8 message[T / 8]{}, message_check[T / 8]{}, hash[64]{};
 
     m_digest->init();
-    m_digest->finalize(pText, textSize);
-    m_digest->copyHash(hash, m_hash_len);
+    m_digest->update(pText, textSize);
+    m_digest->finalize(hash, m_hash_len);
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
@@ -704,8 +704,8 @@ Rsa<T>::verifyPublicPkcsv15(const Uint8* pText,
     }
 
     m_digest->init();
-    m_digest->finalize(pText, textSize);
-    m_digest->copyHash(hash, m_hash_len);
+    m_digest->update(pText, textSize);
+    m_digest->finalize(hash, m_hash_len);
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;

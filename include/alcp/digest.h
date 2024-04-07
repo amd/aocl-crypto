@@ -243,16 +243,16 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
                    Uint64                    size);
 
 /**
- * @brief       Digest is kept as part of p_digest_handle, this API allows
- *              it to be copied to specified buffer
+ * @brief       Finalize the digest with digest copy.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request and at the end of
+ * <b>This API can be called after @ref alcp_digest_request  and at the end of
  * session call @ref alcp_digest_finish</b>
  * @endparblock
  *
- * @param [in] p_digest_handle The handle that was returned as part of
- *                         call together alcp_digest_request()
+ * @param [in]      p_digest_handle The handle that was returned as part of call
+ *                              together alcp_digest_request(),
+ *
  * @param [out]       buf     Destination buffer to which digest will be copied
  *
  * @param [in]       size    Destination buffer size in bytes, should be big
@@ -263,36 +263,8 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
-                 Uint8*                    buf,
-                 Uint64                    size);
-
-/**
- * @brief       Finalize the digest with last buffer.
- *
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request  and at the end of
- * session call @ref alcp_digest_finish</b>
- * @endparblock
- *
- * @note       It is expected that application calls @ref alcp_digest_copy()
- * after calling this functions as the contents of the session is not guaranteed
- * to persist after @ref alcp_digest_finish()
- *
- * @param [in]      p_digest_handle The handle that was returned as part of call
- *                              together alcp_digest_request(),
- *
- * @param[out]      p_msg_buf       pointer to message buffer or NULL
- *
- * @param[in]      size            Size of message buffer in bytes can be 0
- *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
- */
-ALCP_API_EXPORT alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
-                     const Uint8*              p_msg_buf,
+                     Uint8*                    buf,
                      Uint64                    size);
 
 /**

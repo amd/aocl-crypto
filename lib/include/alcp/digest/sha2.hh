@@ -83,37 +83,15 @@ class Sha2 final : public IDigest
                                        Uint64       size) override;
 
     /**
-     * \brief    Call for the final chunk
+     * \brief    Call for fetching final digest
      *
      *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can be performed
-     *                   is copyHash()
+     * \param    pBuf     Destination buffer to which digest will be copied
      *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size
-     *                   is assumed to be zero
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
      */
-    ALCP_API_EXPORT alc_error_t finalize(const Uint8* pMsgBuf,
-                                         Uint64       size) override;
-
-    /**
-     * \brief  Copies the has from context to supplied buffer
-     *
-     * \notes `finalize()` to be called with last chunks that should
-     *           perform all the necessary actions, can be called with
-     *           NULL argument.
-     *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can  be performed
-     *                   is copyHash()
-     *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size is
-     *                   assumed to be zero
-     */
-    ALCP_API_EXPORT alc_error_t copyHash(Uint8* pHashBuf,
-                                         Uint64 size) const override;
+    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);

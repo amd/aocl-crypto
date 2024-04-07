@@ -125,8 +125,7 @@ TEST_P(Sha512Test, digest_generation_test)
         ASSERT_EQ(digest_obj->update((const Uint8*)plaintext.c_str(),
                                      plaintext.size()),
                   ALC_ERROR_NONE);
-        ASSERT_EQ(digest_obj->finalize(nullptr, 0), ALC_ERROR_NONE);
-        ASSERT_EQ(digest_obj->copyHash(hash.data(), digest_size),
+        ASSERT_EQ(digest_obj->finalize(hash.data(), digest_size),
                   ALC_ERROR_NONE);
 
         ss << std::hex << std::setfill('0');
@@ -163,21 +162,21 @@ TEST(Sha512Test, zero_size_update_test)
 TEST(Sha512Test, invalid_output_copy_hash_test)
 {
     Sha512 sha512;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.copyHash(nullptr, DigestSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(nullptr, DigestSize));
 }
 
 TEST(Sha512Test, zero_size_hash_copy_test)
 {
     Sha512 sha512;
     Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, 0));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(hash, 0));
 }
 
 TEST(Sha512Test, over_size_hash_copy_test)
 {
     Sha512 sha512;
     Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, DigestSize + 1));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha512Test, getInputBlockSizeTest)

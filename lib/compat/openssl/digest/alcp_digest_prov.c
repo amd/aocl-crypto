@@ -154,15 +154,9 @@ alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize)
     alc_error_t           err  = ALC_ERROR_NONE;
     alc_prov_digest_ctx_p dctx = vctx;
 
-    // ToDO : Merge the finalize and copy call
-    err = alcp_digest_finalize(&(dctx->handle), NULL, 0);
+    err = alcp_digest_finalize(&(dctx->handle), out, outsize);
     if (err != ALC_ERROR_NONE) {
-        printf("Provider: Failed to Finalize\n");
-        return 0;
-    }
-    err = alcp_digest_copy(&(dctx->handle), out, outsize);
-    if (err != ALC_ERROR_NONE) {
-        printf("Provider: Failed to copy Hash\n");
+        printf("Provider: Failed to finalize and copy digest\n");
         return 0;
     }
     EXIT();

@@ -83,8 +83,7 @@ TEST_P(Sha3_512, digest_generation_test)
     ASSERT_EQ(
         sha3_512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_512.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_512.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_512.finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -118,14 +117,14 @@ TEST(Sha3_512, zero_size_update_test)
 TEST(Sha3_512, invalid_output_copy_hash_test)
 {
     Sha3 sha3_512(ALC_SHA3_512);
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.copyHash(nullptr, DigestSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.finalize(nullptr, DigestSize));
 }
 
 TEST(Sha3_512, zero_size_hash_copy_test)
 {
     Sha3  sha3_512(ALC_SHA3_512);
     Uint8 hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_512.copyHash(hash, 0));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.finalize(hash, 0));
 }
 
 TEST(Sha3_512, getInputBlockSizeTest)

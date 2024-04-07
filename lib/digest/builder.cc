@@ -75,7 +75,7 @@ __sha_update_wrapper(void* pDigest, const Uint8* pSrc, Uint64 len)
 
 template<typename DIGESTTYPE>
 static alc_error_t
-__sha_finalize_wrapper(void* pDigest, const Uint8* pBuf, Uint64 len)
+__sha_finalize_wrapper(void* pDigest, Uint8* pBuf, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -103,18 +103,6 @@ __sha_shakeSqueeze_wrapper(void* pDigest, Uint8* pBuff, Uint64 len)
 
     auto ap = static_cast<Sha3*>(pDigest);
     e       = ap->shakeSqueeze(pBuff, len);
-
-    return e;
-}
-
-template<typename DIGESTTYPE>
-static alc_error_t
-__sha_copy_wrapper(const void* pDigest, Uint8* pBuf, Uint64 len)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap = static_cast<const DIGESTTYPE*>(pDigest);
-    e       = ap->copyHash(pBuf, len);
 
     return e;
 }
@@ -155,7 +143,6 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
 
     destCtx.init           = srcCtx.init;
     destCtx.update         = srcCtx.update;
-    destCtx.copy           = srcCtx.copy;
     destCtx.finalize       = srcCtx.finalize;
     destCtx.finish         = srcCtx.finish;
     destCtx.setShakeLength = srcCtx.setShakeLength;
@@ -176,7 +163,6 @@ __build_sha(Context& ctx)
     ctx.init      = __sha_init_wrapper<ALGONAME>;
     ctx.update    = __sha_update_wrapper<ALGONAME>;
     ctx.duplicate = __build_with_copy_sha<ALGONAME>;
-    ctx.copy      = __sha_copy_wrapper<ALGONAME>;
     ctx.finalize  = __sha_finalize_wrapper<ALGONAME>;
     //   ctx.finalize = __digest_func_wrapper<ALGONAME,
     //   &ALGONAME::finalize>;
@@ -234,7 +220,6 @@ class Sha3Builder
         rCtx.init        = __sha_init_wrapper<Sha3>;
         rCtx.update      = __sha_update_wrapper<Sha3>;
         rCtx.duplicate   = __build_with_copy_sha<Sha3>;
-        rCtx.copy        = __sha_copy_wrapper<Sha3>;
         rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
         rCtx.finish      = __sha_dtor<Sha3>;
 

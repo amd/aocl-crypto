@@ -119,6 +119,19 @@ alcp_prov_shake_squeeze(void*          vctx,
     *outl = outlen;
     return 1;
 }
+
+int
+alcp_prov_sha3_digest_final(void*          vctx,
+                            unsigned char* out,
+                            size_t*        outl,
+                            size_t         outsize)
+{
+    if (outsize == 0) {
+        return 1;
+    }
+    *outl = outsize;
+    return alcp_prov_digest_final(vctx, out, outsize);
+}
 // clang-format off
 #define CREATE_COMMON_DEFINITIONS(                                             \
     name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)               \
@@ -134,7 +147,7 @@ alcp_prov_shake_squeeze(void*          vctx,
         { OSSL_FUNC_DIGEST_DUPCTX, (fptr_t)alcp_prov_digest_dupctx },          \
         { OSSL_FUNC_DIGEST_FREECTX, (fptr_t)alcp_prov_digest_freectx },        \
         { OSSL_FUNC_DIGEST_UPDATE, (fptr_t)alcp_prov_digest_update },          \
-        { OSSL_FUNC_DIGEST_FINAL, (fptr_t)alcp_prov_##name##_##grp##_digest_final },
+        { OSSL_FUNC_DIGEST_FINAL, (fptr_t)alcp_prov_sha3_digest_final },
 
 #define ALCP_CREATE_SHA3_FUNCTIONS(                                            \
     name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)               \

@@ -102,8 +102,7 @@ TEST_P(Shake, digest_generation_test)
         ASSERT_EQ(sha3_shake.update((const Uint8*)plaintext.c_str(),
                                     plaintext.size()),
                   ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.finalize(nullptr, 0), ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.copyHash(hash.data(), digest_size),
+        ASSERT_EQ(sha3_shake.finalize(hash.data(), digest_size),
                   ALC_ERROR_NONE);
 
         ss << std::hex << std::setfill('0');
@@ -166,7 +165,7 @@ TEST(Shake, invalid_output_copy_hash_test)
         sha3_shake.init();
         sha3_shake.setShakeLength(DigestSize);
         EXPECT_EQ(ALC_ERROR_INVALID_ARG,
-                  sha3_shake.copyHash(nullptr, DigestSize));
+                  sha3_shake.finalize(nullptr, DigestSize));
     }
 }
 
@@ -183,7 +182,7 @@ TEST(Shake, zero_size_hash_copy_test)
         sha3_shake.init();
         sha3_shake.setShakeLength(DigestSize);
         Uint8 hash[DigestSize];
-        EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_shake.copyHash(hash, 0));
+        EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_shake.finalize(hash, 0));
     }
 }
 
@@ -199,8 +198,8 @@ TEST(Shake, over_size_hash_copy_test)
         sha3_shake.init();
         sha3_shake.setShakeLength(DigestSize);
         Uint8 hash[DigestSize + 1];
-        EXPECT_EQ(ALC_ERROR_INVALID_SIZE,
-                  sha3_shake.copyHash(hash, DigestSize + 1));
+        EXPECT_EQ(ALC_ERROR_INVALID_ARG,
+                  sha3_shake.finalize(hash, DigestSize + 1));
     }
 }
 
@@ -227,8 +226,7 @@ TEST(Shake, digest_correction_with_reset_test)
         ASSERT_EQ(sha3_shake.update((const Uint8*)plaintext.c_str(),
                                     plaintext.size()),
                   ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.finalize(nullptr, 0), ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.copyHash(hash.data(), digest_size),
+        ASSERT_EQ(sha3_shake.finalize(hash.data(), digest_size),
                   ALC_ERROR_NONE);
 
         // Resetting the class. Now a new buffer will be used to test if the
@@ -238,8 +236,7 @@ TEST(Shake, digest_correction_with_reset_test)
         ASSERT_EQ(sha3_shake.update((const Uint8*)plaintext.c_str(),
                                     plaintext.size()),
                   ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.finalize(nullptr, 0), ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.copyHash(hash.data(), digest_size),
+        ASSERT_EQ(sha3_shake.finalize(hash.data(), digest_size),
                   ALC_ERROR_NONE);
 
         ss << std::hex << std::setfill('0');
@@ -316,8 +313,8 @@ TEST(Shake, setShakeLengthAfterFinalizeTest)
     sha3_shake.init();
     sha3_shake.setShakeLength(DigestSize);
     EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
-
-    sha3_shake.finalize(nullptr, 0);
+    Uint8 hash[DigestSize];
+    sha3_shake.finalize(hash, DigestSize);
 
     constexpr unsigned short cShakelength = 100;
 
@@ -352,8 +349,7 @@ TEST_P(Shake, setShakeLength_digest_generation_test)
 
         // Modifying custom Length before finalizing
         ASSERT_EQ(sha3_shake.setShakeLength(digest_size), ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.finalize(nullptr, 0), ALC_ERROR_NONE);
-        ASSERT_EQ(sha3_shake.copyHash(hash.data(), digest_size),
+        ASSERT_EQ(sha3_shake.finalize(hash.data(), digest_size),
                   ALC_ERROR_NONE);
 
         ss << std::hex << std::setfill('0');

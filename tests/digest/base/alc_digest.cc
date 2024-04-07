@@ -122,15 +122,9 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
             return false;
         }
     }
-    err = alcp_digest_finalize(m_handle, NULL, 0);
+    err = alcp_digest_finalize(m_handle, data.m_digest, data.m_digest_len);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
-        return false;
-    }
-
-    err = alcp_digest_copy(m_handle, data.m_digest, data.m_digest_len);
-    if (alcp_is_error(err)) {
-        std::cout << "Error code in alcp_digest_copy:" << err << std::endl;
         return false;
     }
     return true;

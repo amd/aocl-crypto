@@ -85,30 +85,15 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
-     * @brief    Call for the final chunk
+     * \brief    Call for fetching final digest
      *
      *
-     * @param    pMsgBuf     Either valid pointer to last chunk or nullptr,
-     *                       once finalize() is called, only operation that
-     *                       can be performed is copyHash()
+     * \param    pBuf     Destination buffer to which digest will be copied
      *
-     * @param    size    Either valid size or 0, if @buf is nullptr, size
-     *                   is assumed to be zero
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
      */
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
-
-    /**
-     * @brief  Copies the has from object to supplied buffer
-     *
-     * @note   finalize() to be called before with last chunks that should
-     *           perform all the necessary actions, can be called with
-     *           NULL argument.
-     *
-     * @param    pHash   pointer to the final hash generated
-     *
-     * @param    size    hash size to be copied from the object
-     */
-    alc_error_t copyHash(Uint8* pHash, Uint64 size) const override;
+    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
     /**
      * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set

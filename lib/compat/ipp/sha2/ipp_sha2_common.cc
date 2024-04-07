@@ -54,9 +54,7 @@ alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
     ipp_wrp_sha2_ctx* context = pState;
     alc_error_t       err;
 
-    alcp_digest_finalize(&(context->handle), nullptr, 0);
-
-    err = alcp_digest_copy(
+    err = alcp_digest_finalize(
         &(context->handle), (Uint8*)pMD, context->dinfo.dt_len / 8);
     if (alcp_is_error(err)) {
         printErr("Unable to copy digest\n");

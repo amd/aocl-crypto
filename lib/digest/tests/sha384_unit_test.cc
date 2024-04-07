@@ -81,8 +81,7 @@ TEST_P(Sha384Test, digest_generation_test)
     sha384.init();
     ASSERT_EQ(sha384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
-    ASSERT_EQ(sha384.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha384.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha384.finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -116,21 +115,21 @@ TEST(Sha384Test, zero_size_update_test)
 TEST(Sha384Test, invalid_output_copy_hash_test)
 {
     Sha384 sha384;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.copyHash(nullptr, DigestSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.finalize(nullptr, DigestSize));
 }
 
 TEST(Sha384Test, zero_size_hash_copy_test)
 {
     Sha384 sha384;
     Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha384.copyHash(hash, 0));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.finalize(hash, 0));
 }
 
 TEST(Sha384Test, over_size_hash_copy_test)
 {
     Sha384 sha384;
     Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha384.copyHash(hash, DigestSize + 1));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha384Test, getInputBlockSizeTest)

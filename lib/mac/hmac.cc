@@ -126,17 +126,12 @@ class Hmac::Impl
         /* TODO: For all the following calls to digest return the proper error
         and assign */
         if (sizeof(buff) != 0 && size != 0) {
-            err = m_pDigest->finalize(buff, size);
-            if (alcp_is_error(err)) {
-                return HMACDigestOperationError("");
-            }
-        } else {
-            err = m_pDigest->finalize(nullptr, 0);
+            err = m_pDigest->update(buff, size);
             if (alcp_is_error(err)) {
                 return HMACDigestOperationError("");
             }
         }
-        err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
             return HMACDigestOperationError("");
         }
@@ -146,12 +141,12 @@ class Hmac::Impl
         if (alcp_is_error(err)) {
             return HMACDigestOperationError("");
         }
-        err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+        err = m_pDigest->update(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
             return HMACDigestOperationError("");
         }
 
-        err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
             return HMACDigestOperationError("");
         }
@@ -300,11 +295,11 @@ class Hmac::Impl
             error status */
             alc_error_t err = ALC_ERROR_NONE;
             m_pDigest->init();
-            err = m_pDigest->finalize(m_pKey, m_keylen);
+            err = m_pDigest->update(m_pKey, m_keylen);
             if (alcp_is_error(err)) {
                 return HMACDigestOperationError("");
             }
-            m_pDigest->copyHash(m_pK0, m_output_hash_size);
+            m_pDigest->finalize(m_pK0, m_output_hash_size);
             if (alcp_is_error(err)) {
                 return HMACDigestOperationError("");
             }

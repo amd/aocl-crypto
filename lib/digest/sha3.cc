@@ -320,16 +320,12 @@ Sha3::update(const Uint8* pSrc, Uint64 inputSize)
 }
 
 alc_error_t
-Sha3::finalize(const Uint8* pSrc, Uint64 size)
+Sha3::finalize(Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished) {
         return err;
-    }
-
-    if (pSrc && size) {
-        err = update(pSrc, size);
     }
 
     // sha3 padding
@@ -349,33 +345,19 @@ Sha3::finalize(const Uint8* pSrc, Uint64 size)
 
     err = processChunk(m_buffer, m_block_len);
 
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
     squeezeChunk();
 
-    m_idx = 0;
-
-    m_finished = true;
-    return err;
-}
-
-alc_error_t
-Sha3::copyHash(Uint8* pHash, Uint64 size) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (pHash == nullptr) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
+    if (pBuf != nullptr && size == m_digest_len) {
+        utils::CopyBlock(pBuf, m_hash.data(), size);
+        m_idx      = 0;
+        m_finished = true;
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_INVALID_ARG;
     }
-
-    if (size != m_digest_len) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
-    }
-
-    utils::CopyBlock(pHash, m_hash.data(), size);
-    return err;
 }
 
 alc_error_t

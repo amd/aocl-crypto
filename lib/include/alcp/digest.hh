@@ -60,11 +60,9 @@ class IDigest
     IDigest() = default;
 
   public:
-    virtual void        init(void)                               = 0;
-    virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
-    virtual alc_error_t finalize(const Uint8* pBuf, Uint64 size) = 0;
-    virtual alc_error_t copyHash(Uint8* pBuf, Uint64 size) const = 0;
-
+    virtual void        init(void)                             = 0;
+    virtual alc_error_t update(const Uint8* pBuf, Uint64 size) = 0;
+    virtual alc_error_t finalize(Uint8* pBuf, Uint64 size)     = 0;
     /**
      * @return The input block size to the hash function in bytes
      */

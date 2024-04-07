@@ -186,38 +186,6 @@ Sha512_224::init(void)
 
 template<alc_digest_len_t digest_len>
 alc_error_t
-Sha2_512<digest_len>::copyHash(Uint8* pHash, Uint64 size) const
-{
-    // FIXME: Copying Block with Uint64 will cause issues on non 64 bit
-    // aligned memory. Since PHash is user allocated pointer this can
-    // happen.
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (!pHash) {
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (size != m_digest_len) {
-        err = ALC_ERROR_INVALID_SIZE;
-    }
-
-    if (!err) {
-        utils::CopyBlockWith<Uint64, true>(
-            pHash, m_hash, m_digest_len, utils::ToBigEndian<Uint64>);
-
-        if (m_digest_len * 8 == ALC_DIGEST_LEN_224) {
-            // last 4 bytes can be copied after reversing the 64 bit since it is
-            // in little endian form
-            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
-            utils::CopyBlock(&pHash[24], &hash, 4);
-        }
-    }
-
-    return err;
-}
-template<alc_digest_len_t digest_len>
-alc_error_t
 Sha2_512<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
 {
     static bool cpu_is_zen3 = CpuId::cpuIsZen3();
@@ -349,19 +317,12 @@ Sha2_512<digest_len>::update(const Uint8* pSrc, Uint64 input_size)
  */
 template<alc_digest_len_t digest_len>
 alc_error_t
-Sha2_512<digest_len>::finalize(const Uint8* pSrc, Uint64 size)
+Sha2_512<digest_len>::finalize(Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished)
         return err;
-
-    if (pSrc && size)
-        err = update(pSrc, size);
-
-    if (err) {
-        return err;
-    }
 
     /*
      * When the bytes left in the current chunk are less than 16, current chunk
@@ -407,11 +368,26 @@ Sha2_512<digest_len>::finalize(const Uint8* pSrc, Uint64 size)
 #endif
     err = processChunk(m_buffer, buf_len);
 
-    m_idx = 0;
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
-    m_finished = true;
+    if (pBuf != nullptr && size == m_digest_len) {
+        utils::CopyBlockWith<Uint64, true>(
+            pBuf, m_hash, m_digest_len, utils::ToBigEndian<Uint64>);
 
-    return err;
+        if (m_digest_len * 8 == ALC_DIGEST_LEN_224) {
+            // last 4 bytes can be copied after reversing the 64 bit since it is
+            // in little endian form
+            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
+            utils::CopyBlock(&pBuf[24], &hash, 4);
+        }
+        m_idx      = 0;
+        m_finished = true;
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_INVALID_ARG;
+    }
 }
 template class Sha2_512<ALC_DIGEST_LEN_224>;
 template class Sha2_512<ALC_DIGEST_LEN_256>;

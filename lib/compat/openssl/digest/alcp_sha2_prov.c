@@ -45,10 +45,23 @@ alcp_prov_sha2_init(void* vctx, const OSSL_PARAM params[])
     return 1;
 }
 
+#define CREATE_SHA2_DISPATCHERS(name, grp, len)                                \
+    static int alcp_prov_##name##_##grp##_digest_final(                        \
+        void* vctx, unsigned char* out, size_t* outl, size_t outsize)          \
+    {                                                                          \
+        if (outsize < len / 8) {                                               \
+            return 0;                                                          \
+        }                                                                      \
+                                                                               \
+        *outl = len;                                                           \
+        return alcp_prov_digest_final(vctx, out, outsize);                     \
+    }
+
 #define ALCP_CREATE_SHA2_FUNCTIONS(                                            \
     name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)               \
     CREATE_DIGEST_DISPATCHERS(                                                 \
         name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)           \
+    CREATE_SHA2_DISPATCHERS(name, grp, len)                                    \
     const OSSL_DISPATCH name##_##grp##_functions[] = {                         \
         { OSSL_FUNC_DIGEST_GET_PARAMS,                                         \
           (fptr_t)alcp_prov_digest_##name##_##grp##_get_params },              \
@@ -69,7 +82,7 @@ ALCP_CREATE_SHA2_FUNCTIONS(sha512_256,
                            sha2,
                            ALC_DIGEST_LEN_256,
                            ALC_DIGEST_BLOCK_SIZE_SHA2_512,
-                           ALC_SHA2_512,
+                           ALC_SHA2_512_256,
                            SHA2,
                            ALCP_FLAG_ALGID_ABSENT);
 
@@ -77,7 +90,7 @@ ALCP_CREATE_SHA2_FUNCTIONS(sha512_224,
                            sha2,
                            ALC_DIGEST_LEN_224,
                            ALC_DIGEST_BLOCK_SIZE_SHA2_512,
-                           ALC_SHA2_512,
+                           ALC_SHA2_512_224,
                            SHA2,
                            ALCP_FLAG_ALGID_ABSENT);
 

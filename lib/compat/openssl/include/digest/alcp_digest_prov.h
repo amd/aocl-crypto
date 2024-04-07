@@ -113,16 +113,6 @@ OSSL_FUNC_digest_update_fn  alcp_prov_digest_update;
         ENTER();                                                               \
         return alcp_prov_digest_newctx(provctx, alcp_mode);                    \
     }                                                                          \
-    static int alcp_prov_##name##_##grp##_digest_final(                        \
-        void* vctx, unsigned char* out, size_t* outl, size_t outsize)          \
-    {                                                                          \
-        if (outsize < len) {                                                   \
-            return 0;                                                          \
-        }                                                                      \
-                                                                               \
-        *outl = len;                                                           \
-        return alcp_prov_digest_final(vctx, out, outsize);                     \
-    }                                                                          \
     DEFINE_DIGEST_GET_PARAMS(name, grp, len, blockSize, flags)
 
 // ToDO : OSSL_FUNC_DIGEST_DIGEST to

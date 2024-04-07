@@ -94,18 +94,19 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 
 alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
-                     const Uint8*              pMsgBuf,
+                     Uint8*                    buf,
                      Uint64                    size)
 {
     alc_error_t err;
 
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
+    // ALCP_BAD_PTR_ERR_RET(buf, err);
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
     // FIMXE: Modify finalize to return Status and assign it to ctx->status
-    err = ctx->finalize(ctx->m_digest, pMsgBuf, size);
+    err = ctx->finalize(ctx->m_digest, buf, size);
 
     return err;
 }
@@ -119,16 +120,6 @@ alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
     ctx->finish(ctx->m_digest);
 
     ctx->~Context();
-}
-
-alc_error_t
-alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
-                 Uint8*                    pBuf,
-                 Uint64                    size)
-{
-    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
-    // FIMXE: Modify copy to return Status and assign it to ctx->status
-    return ctx->copy(ctx->m_digest, pBuf, size);
 }
 
 alc_error_t

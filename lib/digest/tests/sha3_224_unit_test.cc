@@ -74,8 +74,7 @@ TEST_P(Sha3_224, digest_generation_test)
     ASSERT_EQ(
         sha3_224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_224.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_224.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_224.finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -109,21 +108,21 @@ TEST(Sha3_224, zero_size_update_test)
 TEST(Sha3_224, invalid_output_copy_hash_test)
 {
     Sha3 sha3_224(ALC_SHA3_224);
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_224.copyHash(nullptr, DigestSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_224.finalize(nullptr, DigestSize));
 }
 
 TEST(Sha3_224, zero_size_hash_copy_test)
 {
     Sha3  sha3_224(ALC_SHA3_224);
     Uint8 hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_224.copyHash(hash, 0));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_224.finalize(hash, 0));
 }
 
 TEST(Sha3_224, over_size_hash_copy_test)
 {
     Sha3  sha3_224(ALC_SHA3_224);
     Uint8 hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_224.copyHash(hash, DigestSize + 1));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_224.finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha3_224, getInputBlockSizeTest)

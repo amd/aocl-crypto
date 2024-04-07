@@ -77,8 +77,7 @@ TEST_P(Sha256Test, digest_generation_test)
     sha256.init();
     ASSERT_EQ(sha256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
-    ASSERT_EQ(sha256.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha256.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha256.finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -112,29 +111,30 @@ TEST(Sha256Test, zero_size_update_test)
 TEST(Sha256Test, invalid_output_copy_hash_test)
 {
     Sha256 sha256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.copyHash(nullptr, DigestSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.finalize(nullptr, DigestSize));
 }
 
 TEST(Sha256Test, zero_size_hash_copy_test)
 {
     Sha256 sha256;
     Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, 0));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.finalize(hash, 0));
 }
 
 TEST(Sha256Test, over_size_hash_copy_test)
 {
     Sha256 sha256;
     Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, DigestSize + 1));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha256Test, call_finalize_twice_test)
 {
     Sha256 sha256;
+    Uint8  hash[DigestSize];
     // calling finalize multiple times shoud not result in error
-    EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(nullptr, 0));
-    EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(nullptr, 0));
+    EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(hash, DigestSize));
+    EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(hash, DigestSize));
 }
 
 TEST(Sha256Test, getInputBlockSizeTest)

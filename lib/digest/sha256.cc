@@ -244,17 +244,11 @@ Sha2<digest_len>::update(const Uint8* pSrc, Uint64 size)
 
 template<alc_digest_len_t digest_len>
 alc_error_t
-Sha2<digest_len>::finalize(const Uint8* pSrc, Uint64 size)
+Sha2<digest_len>::finalize(Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (m_finished)
-        return err;
-
-    if (pSrc && size)
-        err = update(pSrc, size);
-
-    if (err) {
+    if (m_finished) {
         return err;
     }
 
@@ -279,35 +273,19 @@ Sha2<digest_len>::finalize(const Uint8* pSrc, Uint64 size)
 
     err = processChunk(m_buffer, buf_len);
 
-    m_idx = 0;
-
-    m_finished = true;
-
-    return err;
-}
-
-template<alc_digest_len_t digest_len>
-alc_error_t
-Sha2<digest_len>::copyHash(Uint8* pHash, Uint64 size) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (!pHash) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
+    if (err != ALC_ERROR_NONE) {
         return err;
     }
 
-    if (size != m_digest_len) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
+    if (pBuf != nullptr && size == m_digest_len) {
+        utils::CopyBlockWith<Uint32, true>(
+            pBuf, m_hash, m_digest_len, utils::ToBigEndian<Uint32>);
+        m_idx      = 0;
+        m_finished = true;
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_INVALID_ARG;
     }
-
-    utils::CopyBlockWith<Uint32, true>(
-        pHash, m_hash, m_digest_len, utils::ToBigEndian<Uint32>);
-
-    return ALC_ERROR_NONE;
 }
 
 template class Sha2<ALC_DIGEST_LEN_224>;

@@ -91,9 +91,13 @@ hash_demo(const Uint8* src,
         p = NULL;
     }
 
-    alcp_digest_finalize(&s_dg_handle, p, last_buf_size);
+    err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
+    if (alcp_is_error(err)) {
+        printf("Unable to compute SHA2 hash\n");
+    }
 
-    err = alcp_digest_copy(&s_dg_handle, output, out_size);
+    err = alcp_digest_finalize(&s_dg_handle, output, out_size);
+
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
     }
