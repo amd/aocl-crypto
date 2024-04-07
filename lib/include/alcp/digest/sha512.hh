@@ -151,7 +151,7 @@ class ALCP_API_EXPORT Sha2_512 final : public IDigest
      * \param    size    Destination buffer size in bytes, should be big
      *                   enough to hold the digest
      */
-    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);

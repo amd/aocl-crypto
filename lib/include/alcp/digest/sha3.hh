@@ -93,7 +93,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      * \param    size    Destination buffer size in bytes, should be big
      *                   enough to hold the digest
      */
-    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
     /**
      * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set
