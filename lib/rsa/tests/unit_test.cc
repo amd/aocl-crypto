@@ -221,11 +221,20 @@ fetch_digest(const alc_digest_info_t& digestInfo)
             digest = new Sha512;
             break;
         }
-        case ALC_SHA3_224:
-        case ALC_SHA3_256:
-        case ALC_SHA3_384:
+        case ALC_SHA3_224: {
+            digest = new digest::Sha3_224;
+            break;
+        }
+        case ALC_SHA3_256: {
+            digest = new digest::Sha3_256;
+            break;
+        }
+        case ALC_SHA3_384: {
+            digest = new digest::Sha3_384;
+            break;
+        }
         case ALC_SHA3_512: {
-            digest = new digest::Sha3(digestInfo.dt_mode);
+            digest = new digest::Sha3_512;
             break;
         }
         default: {

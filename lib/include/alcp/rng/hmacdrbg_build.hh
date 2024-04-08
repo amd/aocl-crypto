@@ -68,12 +68,20 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             p_digest = std::make_shared<alcp::digest::Sha512>();
             break;
         }
-        case ALC_SHA3_224:
-        case ALC_SHA3_256:
-        case ALC_SHA3_384:
+        case ALC_SHA3_224: {
+            p_digest = std::make_shared<alcp::digest::Sha3_224>();
+            break;
+        }
+        case ALC_SHA3_256: {
+            p_digest = std::make_shared<alcp::digest::Sha3_256>();
+            break;
+        }
+        case ALC_SHA3_384: {
+            p_digest = std::make_shared<alcp::digest::Sha3_384>();
+            break;
+        }
         case ALC_SHA3_512: {
-            p_digest = std::make_shared<digest::Sha3>(
-                drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode);
+            p_digest = std::make_shared<alcp::digest::Sha3_512>();
             break;
         }
         default: {

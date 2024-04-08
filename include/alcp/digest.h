@@ -67,15 +67,15 @@ typedef enum _alc_digest_type
  */
 typedef enum _alc_digest_len
 {
-    ALC_DIGEST_LEN_128 = 128, /* for MD2,MD4,MD5 */
-    ALC_DIGEST_LEN_192 = 192,
-    ALC_DIGEST_LEN_160 = 160, /* for SHA1 */
-    ALC_DIGEST_LEN_224 = 224, /* SHA224, SHA512/224 */
-    ALC_DIGEST_LEN_256 = 256, /* MD6, SHA256, SHA512/256 */
-    ALC_DIGEST_LEN_384 = 384, /* SHA348 */
-    ALC_DIGEST_LEN_512 = 512, /* SHA512 */
-
-    ALC_DIGEST_LEN_CUSTOM = 17, /* anything not covered by above */
+    ALC_DIGEST_LEN_128              = 128, /* for MD2,MD4,MD5 */
+    ALC_DIGEST_LEN_192              = 192,
+    ALC_DIGEST_LEN_160              = 160, /* for SHA1 */
+    ALC_DIGEST_LEN_224              = 224, /* SHA224, SHA512/224 */
+    ALC_DIGEST_LEN_256              = 256, /* MD6, SHA256, SHA512/256 */
+    ALC_DIGEST_LEN_384              = 384, /* SHA348 */
+    ALC_DIGEST_LEN_512              = 512, /* SHA512 */
+    ALC_DIGEST_LEN_CUSTOM_SHAKE_128 = 17,  /* anything not covered by above */
+    ALC_DIGEST_LEN_CUSTOM_SHAKE_256 = 18,  /* anything not covered by above */
 } alc_digest_len_t;
 
 /**

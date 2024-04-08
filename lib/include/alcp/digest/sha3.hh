@@ -53,12 +53,20 @@ static constexpr Uint8 cRotationConstants[cDim][cDim] = {
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
+template<alc_digest_len_t digest_len>
 class ALCP_API_EXPORT Sha3 : public IDigest
 {
+    static_assert(ALC_DIGEST_LEN_224 == digest_len
+                  || ALC_DIGEST_LEN_256 == digest_len
+                  || ALC_DIGEST_LEN_384 == digest_len
+                  || ALC_DIGEST_LEN_512 == digest_len
+                  || ALC_DIGEST_LEN_CUSTOM_SHAKE_128 == digest_len
+                  || ALC_DIGEST_LEN_CUSTOM_SHAKE_256 == digest_len);
+
   public:
-    Sha3(alc_digest_mode_t mode);
+    Sha3();
     Sha3(const Sha3& src);
-    ~Sha3();
+    ~Sha3() = default;
 
   public:
     /**
@@ -126,6 +134,13 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     // buffer to copy intermediate hash value
     std::vector<Uint8> m_hash;
 };
+
+typedef Sha3<ALC_DIGEST_LEN_224>              Sha3_224;
+typedef Sha3<ALC_DIGEST_LEN_256>              Sha3_256;
+typedef Sha3<ALC_DIGEST_LEN_384>              Sha3_384;
+typedef Sha3<ALC_DIGEST_LEN_512>              Sha3_512;
+typedef Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_128> Shake128;
+typedef Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_256> Shake256;
 
 namespace zen3 {
 

@@ -209,7 +209,7 @@ BENCH_SHAKE_128(benchmark::State& state)
     alc_digest_info_t info;
     info.dt_mode       = ALC_SHAKE_128;
     info.dt_type       = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len        = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_len        = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
     info.dt_custom_len = 256;
     Digest_Bench(state, info, state.range(0));
 }
@@ -219,7 +219,7 @@ BENCH_SHAKE_256(benchmark::State& state)
     alc_digest_info_t info;
     info.dt_mode       = ALC_SHAKE_256;
     info.dt_type       = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len        = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_len        = ALC_DIGEST_LEN_CUSTOM_SHAKE_256;
     info.dt_custom_len = 256;
     Digest_Bench(state, info, state.range(0));
 }

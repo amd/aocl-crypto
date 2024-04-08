@@ -120,7 +120,8 @@ OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
     }
 
     /* for extendable output functions */
-    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+        || m_info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
         if (EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len)
             != 1) {
             std::cout << "Error code in EVP_DigestFinalXOF: "

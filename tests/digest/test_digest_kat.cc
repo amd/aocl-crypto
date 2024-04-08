@@ -44,7 +44,7 @@ TEST(DIGEST_SHA3, KAT_SHAKE128)
     alc_digest_info_t info;
     info.dt_mode = ALC_SHAKE_128;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len  = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
     Digest_KAT(info);
 }
 TEST(DIGEST_SHA3, KAT_SHAKE256)
@@ -54,7 +54,7 @@ TEST(DIGEST_SHA3, KAT_SHAKE256)
     alc_digest_info_t info;
     info.dt_mode = ALC_SHAKE_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len  = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_256;
     Digest_KAT(info);
 }
 

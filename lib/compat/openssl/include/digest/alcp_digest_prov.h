@@ -47,6 +47,7 @@
 struct _alc_prov_digest_ctx
 {
     alc_digest_handle_t handle;
+    Uint32              shake_digest_size;
 };
 typedef struct _alc_prov_digest_ctx alc_prov_digest_ctx_t,
     *alc_prov_digest_ctx_p;

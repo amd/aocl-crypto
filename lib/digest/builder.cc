@@ -85,23 +85,24 @@ __sha_finalize_wrapper(void* pDigest, Uint8* pBuf, Uint64 len)
     return e;
 }
 
+template<typename DIGESTTYPE>
 static alc_error_t
 __sha_setShakeLength_wrapper(void* pDigest, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<Sha3*>(pDigest);
+    auto ap = static_cast<DIGESTTYPE*>(pDigest);
     e       = ap->setShakeLength(len);
 
     return e;
 }
-
+template<typename DIGESTTYPE>
 static alc_error_t
 __sha_shakeSqueeze_wrapper(void* pDigest, Uint8* pBuff, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<Sha3*>(pDigest);
+    auto ap = static_cast<DIGESTTYPE*>(pDigest);
     e       = ap->shakeSqueeze(pBuff, len);
 
     return e;
@@ -214,22 +215,33 @@ class Sha3Builder
   public:
     static alc_error_t Build(alc_digest_mode_t mode, Context& rCtx)
     {
-        alc_error_t err  = ALC_ERROR_NONE;
-        auto        algo = new Sha3(mode);
-        rCtx.m_digest    = static_cast<void*>(algo);
-        rCtx.init        = __sha_init_wrapper<Sha3>;
-        rCtx.update      = __sha_update_wrapper<Sha3>;
-        rCtx.duplicate   = __build_with_copy_sha<Sha3>;
-        rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
-        rCtx.finish      = __sha_dtor<Sha3>;
-
-        //  Restricting setShakeLength to SHAKE128 or SHAKE256
-        if (mode == ALC_SHAKE_128 || mode == ALC_SHAKE_256) {
-            rCtx.setShakeLength = __sha_setShakeLength_wrapper;
-            rCtx.shakeSqueeze   = __sha_shakeSqueeze_wrapper;
-        } else {
-            rCtx.setShakeLength = nullptr;
-            rCtx.shakeSqueeze   = nullptr;
+        alc_error_t err = ALC_ERROR_NONE;
+        switch (mode) {
+            case ALC_SHA3_224:
+                __build_sha<Sha3_224>(rCtx);
+                break;
+            case ALC_SHA3_256:
+                __build_sha<Sha3_256>(rCtx);
+                break;
+            case ALC_SHA3_384:
+                __build_sha<Sha3_384>(rCtx);
+                break;
+            case ALC_SHA3_512:
+                __build_sha<Sha3_512>(rCtx);
+                break;
+            case ALC_SHAKE_128:
+                __build_sha<Shake128>(rCtx);
+                rCtx.setShakeLength = __sha_setShakeLength_wrapper<Shake128>;
+                rCtx.shakeSqueeze   = __sha_shakeSqueeze_wrapper<Shake128>;
+                break;
+            case ALC_SHAKE_256:
+                __build_sha<Shake256>(rCtx);
+                rCtx.setShakeLength = __sha_setShakeLength_wrapper<Shake256>;
+                rCtx.shakeSqueeze   = __sha_shakeSqueeze_wrapper<Shake256>;
+                break;
+            default:
+                err = ALC_ERROR_NOT_SUPPORTED;
+                break;
         }
         return err;
     }

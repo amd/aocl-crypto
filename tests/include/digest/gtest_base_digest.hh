@@ -98,7 +98,8 @@ Digest_KAT(alc_digest_info_t info)
                        + std::to_string(info.dt_len) + ".csv";
     }
     /* for SHA3 shake tests (128,256)*/
-    else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+    else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+             || info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
         if (info.dt_mode == ALC_SHAKE_128) {
             SHA3_SHAKE_Len_Str = "128";
         } else if (info.dt_mode == ALC_SHAKE_256) {
@@ -136,7 +137,8 @@ Digest_KAT(alc_digest_info_t info)
 #endif
 
     /* for SHAKE variant */
-    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+        || info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
         while (csv.readNext()) {
             auto msg          = csv.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);

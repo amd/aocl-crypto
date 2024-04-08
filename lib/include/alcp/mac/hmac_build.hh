@@ -170,54 +170,6 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 
     return status;
 }
-template<typename MACALGORITHM>
-static Status
-__build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
-{
-    Status status = StatusOk();
-
-    status = validate_keys(macInfo.mi_keyinfo);
-    if (!status.ok()) {
-        return status;
-    }
-
-    auto p_sha3 =
-        new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode);
-    if (p_sha3 == nullptr) {
-        return InternalError("Unable To Allocate Memory for Digest Object");
-    }
-    ctx.m_digest = static_cast<void*>(p_sha3);
-
-    auto addr      = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-    auto hmac_algo = new (addr) MACALGORITHM();
-    if (hmac_algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for HMAC Object");
-    }
-    ctx.m_mac    = static_cast<void*>(hmac_algo);
-    ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
-    ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
-    ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
-    ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, digest::Sha3>;
-    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, digest::Sha3>;
-
-    if (macInfo.mi_keyinfo.len % 8 != 0) {
-        return InternalError("HMAC: HMAC Key should be multiple of 8");
-    }
-
-    status = hmac_algo->setDigest(*p_sha3);
-    if (!status.ok()) {
-        return status;
-    }
-
-    auto p_key  = macInfo.mi_keyinfo.key;
-    auto keylen = macInfo.mi_keyinfo.len / 8;
-    status      = hmac_algo->setKey(p_key, keylen);
-    if (!status.ok()) {
-        return status;
-    }
-
-    return status;
-}
 Status
 HmacBuilder::build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
@@ -243,10 +195,16 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
             break;
         }
         case ALC_SHA3_224:
+            status = __build_hmac<digest::Sha3_224, Hmac>(macInfo, ctx);
+            break;
         case ALC_SHA3_256:
+            status = __build_hmac<digest::Sha3_256, Hmac>(macInfo, ctx);
+            break;
         case ALC_SHA3_384:
+            status = __build_hmac<digest::Sha3_384, Hmac>(macInfo, ctx);
+            break;
         case ALC_SHA3_512: {
-            status = __build_hmac_sha3<Hmac>(macInfo, ctx);
+            status = __build_hmac<digest::Sha3_512, Hmac>(macInfo, ctx);
             break;
         }
         default: {
