@@ -182,6 +182,34 @@ AES_CLASS_GEN(Ofb, Aes)
                                   Uint64             len);                                 \
     };
 
+#define AEAD_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                     \
+    class ALCP_API_EXPORT CHILD_NEW                                            \
+        : private PARENT1                                                      \
+        , public PARENT2                                                       \
+    {                                                                          \
+      public:                                                                  \
+        CHILD_NEW(alc_cipher_data_t* ctx);                                     \
+        ~CHILD_NEW() {}                                                        \
+                                                                               \
+      public:                                                                  \
+        alc_error_t init(alc_cipher_data_t* ctx,                               \
+                         const Uint8*       pKey,                              \
+                         Uint64             keyLen,                            \
+                         const Uint8*       pIv,                               \
+                         Uint64             ivLen)                             \
+        {                                                                      \
+            return PARENT2::init(ctx, pKey, keyLen, pIv, ivLen);               \
+        }                                                                      \
+        alc_error_t encryptUpdate(alc_cipher_data_t* ctx,                      \
+                                  const Uint8*       pInput,                   \
+                                  Uint8*             pOutput,                  \
+                                  Uint64             len);                                 \
+        alc_error_t decryptUpdate(alc_cipher_data_t* ctx,                      \
+                                  const Uint8*       pCipherText,              \
+                                  Uint8*             pPlainText,               \
+                                  Uint64             len);                                 \
+    };
+
 // Macro to generate authentication class, first is used for gcm and to be
 // extended to other AEAD classes
 #define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                                 \

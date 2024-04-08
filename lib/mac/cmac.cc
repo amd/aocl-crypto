@@ -79,12 +79,12 @@ class Cmac::Impl : public cipher::Aes
         // Aes::setKey(key, len); // FIXME: add setKey with ctx
         // no error checks needed at this stage, since key and keyLength are
         // validated.
-        m_keyLen_in_bytes_aes = len / 8;
+        m_keyLen_in_bytes_aes = len;
 
         // FIXME: Check if this is required, looks like not required
         // data.keyLen_in_bytes = len / 8;
 
-        init(&data, key, len, nullptr, 0);
+        init(&data, key, len * 8, nullptr, 0);
         m_encrypt_keys = getEncryptKeys();
         m_rounds       = getRounds();
         getSubkeys();

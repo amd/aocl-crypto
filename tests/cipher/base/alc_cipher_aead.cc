@@ -395,7 +395,7 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
     err = alcp_cipher_aead_set_aad(m_handle, aead_data.m_ad, aead_data.m_adl);
 
     if (alcp_is_error(err)) {
-        printf("Err:Setadl\n");
+        printf("Err:Setadd\n");
         alcp_error_str(err, err_buff, cErrSize);
         std::cout << "Error:" << err_buff << std::endl;
         return false;

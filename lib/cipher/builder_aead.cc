@@ -158,59 +158,43 @@ __build_CcmAead(const Uint64 keyLen, Context& ctx)
     return sts;
 }
 
-#if 1 // turning off SIV temporarily
-template<typename AEADMODE>
-void
-__build_aead_siv(Context& ctx)
-{
-    auto algo = new AEADMODE(&(ctx.m_cipher_data));
-
-    ctx.m_cipher      = static_cast<void*>(algo);
-    ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
-    ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
-
-    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
-    ctx.init   = __aes_wrapperInit<AEADMODE>;
-    ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
-
-    ctx.finish = __aes_dtor<AEADMODE>;
-}
-
-template<typename T1, typename T2, typename T3>
-void
-__build_aes_siv(const Uint64 keyLen, Context& ctx)
-{
-    if (keyLen == ALC_KEY_LEN_128) {
-        __build_aead_siv<T1>(ctx);
-    } else if (keyLen == ALC_KEY_LEN_192) {
-        __build_aead_siv<T2>(ctx);
-    } else if (keyLen == ALC_KEY_LEN_256) {
-        __build_aead_siv<T3>(ctx);
-    }
-}
-
 static Status
 __build_aesSiv(const Uint64 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
-        __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            keyLen, ctx);
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead_wrapper<SivAead128>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead_wrapper<SivAead192>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead_wrapper<SivAead256>(ctx);
+        }
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
-        __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead_wrapper<SivAead128>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead_wrapper<SivAead192>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead_wrapper<SivAead256>(ctx);
+        }
+    } else {
         using namespace aesni;
-        __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            keyLen, ctx);
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead_wrapper<SivAead128>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead_wrapper<SivAead192>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead_wrapper<SivAead256>(ctx);
+        }
     }
     return sts;
 }
-#endif
 
 #if 0 // turning off poly and chacha temporarily
 // poly and chacha
