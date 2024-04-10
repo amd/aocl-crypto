@@ -63,11 +63,6 @@ class IDigest
     virtual void        init(void)                             = 0;
     virtual alc_error_t update(const Uint8* pBuf, Uint64 size) = 0;
     virtual alc_error_t finalize(Uint8* pBuf, Uint64 size)     = 0;
-    virtual alc_error_t setShakeLength(Uint64 shakeLength)
-    {
-        return ALC_ERROR_NONE;
-    };
-
     /**
      * @return The input block size to the hash function in bytes
      */

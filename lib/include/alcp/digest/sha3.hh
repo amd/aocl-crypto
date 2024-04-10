@@ -109,7 +109,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
      * @param shakeLength Custom Output Size
      * @return
      */
-    alc_error_t setShakeLength(Uint64 shakeLength) override;
+    alc_error_t setShakeLength(Uint64 shakeLength);
 
     /**
      * @brief To squeeze digest out of SHAKE128 or SHAKE256
