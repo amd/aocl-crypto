@@ -334,7 +334,10 @@ Sha3<digest_len>::processAndSqueeze()
 
     alc_error_t err    = processChunk(m_buffer, m_block_len);
     m_processing_state = STATE_SQUEEZE;
-    squeezeChunk();
+    if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+                  || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+        squeezeChunk();
+    }
     return err;
 }
 
@@ -355,7 +358,12 @@ Sha3<digest_len>::finalize(Uint8* pBuf, Uint64 size)
     }
 
     if (pBuf != nullptr && m_digest_len == size) {
-        utils::CopyBlock(pBuf, m_hash.data(), size);
+        if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+                      || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+            utils::CopyBlock(pBuf, m_hash.data(), size);
+        } else {
+            utils::CopyBlock(pBuf, (Uint8*)m_state_flat, size);
+        }
         m_idx      = 0;
         m_finished = true;
         return ALC_ERROR_NONE;
