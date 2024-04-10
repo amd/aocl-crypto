@@ -194,7 +194,7 @@ alcp_prov_shake_digest_final(void*          vctx,
           (fptr_t)alcp_prov_shake_settable_ctx_params },                       \
     { OSSL_FUNC_DIGEST_SET_CTX_PARAMS,                                         \
           (fptr_t)alcp_prov_shake_set_ctx_params },                            \
-    /*{ OSSL_FUNC_DIGEST_SQUEEZE, (fptr_t)alcp_prov_shake_squeeze },*/         \
+    { OSSL_FUNC_DIGEST_SQUEEZE, (fptr_t)alcp_prov_shake_squeeze },             \
     { 0, NULL }                                                                \
     }
 

@@ -53,6 +53,12 @@ static constexpr Uint8 cRotationConstants[cDim][cDim] = {
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
+enum ShakeState
+{
+    STATE_INT,
+    STATE_SQUEEZE,
+};
+
 template<alc_digest_len_t digest_len>
 class ALCP_API_EXPORT Sha3 : public IDigest
 {
@@ -121,8 +127,9 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     alc_error_t shakeSqueeze(Uint8* pBuff, Uint64 len);
 
   private:
-    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-    void        squeezeChunk();
+    alc_error_t        processChunk(const Uint8* pSrc, Uint64 len);
+    void               squeezeChunk();
+    inline alc_error_t processAndSqueeze();
 
     // buffer size to hold the chunk size to be processed
     alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
@@ -133,6 +140,7 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     Uint64* m_state_flat = &m_state[0][0];
     // buffer to copy intermediate hash value
     std::vector<Uint8> m_hash;
+    ShakeState         m_processing_state;
 };
 
 typedef Sha3<ALC_DIGEST_LEN_224>              Sha3_224;
