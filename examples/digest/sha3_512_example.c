@@ -85,13 +85,12 @@ hash_demo(const Uint8* src,
         p += buf_size;
     }
 
-    if (last_buf_size == 0) {
-        p = NULL;
-    }
-
-    err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
-    if (alcp_is_error(err)) {
-        printf("Unable to compute SHA2 hash\n");
+    if (last_buf_size) {
+        err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
+        if (alcp_is_error(err)) {
+            printf("Unable to compute SHA3 hash\n");
+            goto out;
+        }
     }
 
     err = alcp_digest_finalize(&s_dg_handle, output, out_size);
