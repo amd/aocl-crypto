@@ -129,7 +129,8 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     // intermediate hash
     alignas(64) Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
-    Uint64*    m_state_flat = &m_state[0][0];
+    Uint64*    m_state_flat  = &m_state[0][0];
+    Uint64     m_shake_index = 0;
     ShakeState m_processing_state;
 };
 
@@ -147,9 +148,10 @@ namespace zen3 {
                            Uint64  msg_size,
                            Uint64  m_src_size_u64);
 
-    void Sha3Finalize(Uint8* state,
-                      Uint8* hash,
-                      Uint64 hash_size,
-                      Uint64 chunk_size);
+    void Sha3Finalize(Uint8*  state,
+                      Uint8*  hash,
+                      Uint64  hash_size,
+                      Uint64  chunk_size,
+                      Uint64& index);
 } // namespace zen3
 } // namespace alcp::digest

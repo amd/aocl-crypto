@@ -133,11 +133,12 @@ Sha3<digest_len>::squeezeChunk(Uint8* pBuf, Uint64 size)
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
     if (zen3_available) {
         return zen3::Sha3Finalize(
-            (Uint8*)m_state_flat, pBuf, size, m_block_len);
+            (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
     }
 
     if (zen1_available) {
-        return zen::Sha3Finalize((Uint8*)m_state_flat, pBuf, size, m_block_len);
+        return zen::Sha3Finalize(
+            (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
     }
 
     while (m_block_len <= size - hash_copied) {
@@ -206,7 +207,6 @@ Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_128>::Sha3()
     Uint64 chunk_size_bits = 1600 - 2 * ALC_DIGEST_LEN_128;
     m_digest_len           = ALC_DIGEST_LEN_128 / 8;
     m_block_len            = chunk_size_bits / 8;
-    m_processing_state     = STATE_INT;
 }
 
 template<>
@@ -217,7 +217,6 @@ Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_256>::Sha3()
     Uint64 chunk_size_bits = 1600 - 2 * ALC_DIGEST_LEN_256;
     m_digest_len           = ALC_DIGEST_LEN_256 / 8;
     m_block_len            = chunk_size_bits / 8;
-    m_processing_state     = STATE_INT;
 }
 
 template<alc_digest_len_t digest_len>
@@ -229,6 +228,11 @@ Sha3<digest_len>::Sha3(const Sha3& src)
     memcpy(m_buffer, src.m_buffer, MaxDigestBlockSizeBits / 8);
     memcpy(m_state, src.m_state, sizeof(m_state));
     m_finished = src.m_finished;
+    if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+                  || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+        m_shake_index      = src.m_shake_index;
+        m_processing_state = src.m_processing_state;
+    }
 }
 
 template<alc_digest_len_t digest_len>
@@ -238,6 +242,11 @@ Sha3<digest_len>::init(void)
     m_idx = 0;
     memset(m_state, 0, sizeof(m_state));
     m_finished = false;
+    if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+                  || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+        m_shake_index      = 0;
+        m_processing_state = STATE_INT;
+    }
 }
 
 template<alc_digest_len_t digest_len>
@@ -325,10 +334,10 @@ Sha3<digest_len>::processAndSqueeze(Uint8* pBuf, Uint64 size)
 
     m_buffer[m_block_len - 1] |= 0x80;
 
-    alc_error_t err    = processChunk(m_buffer, m_block_len);
-    m_processing_state = STATE_SQUEEZE;
+    alc_error_t err = processChunk(m_buffer, m_block_len);
     if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
                   || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+        m_processing_state = STATE_SQUEEZE;
         squeezeChunk(pBuf, size);
     } else {
         utils::CopyBlock(pBuf, (Uint8*)m_state_flat, size);
