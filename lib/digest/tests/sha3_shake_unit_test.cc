@@ -253,9 +253,9 @@ TEST(Shake, digest_correction_with_reset_test)
         IDigest* sha3_shake = sha3_shake_ptr.get();
         sha3_shake->init();
         if (enum_digest == DIGEST_SHA3_SHAKE_128) {
-            (dynamic_cast<Shake128*>(sha3_shake))->setShakeLength(DigestSize);
+            (dynamic_cast<Shake128*>(sha3_shake))->setShakeLength(digest_size);
         } else {
-            (dynamic_cast<Shake256*>(sha3_shake))->setShakeLength(DigestSize);
+            (dynamic_cast<Shake256*>(sha3_shake))->setShakeLength(digest_size);
         }
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
@@ -391,9 +391,9 @@ TEST_P(Shake, setShakeLength_digest_generation_test)
 
         // Modifying custom Length before finalizing
         if (enum_digest == DIGEST_SHA3_SHAKE_128) {
-            (dynamic_cast<Shake128*>(sha3_shake))->setShakeLength(DigestSize);
+            (dynamic_cast<Shake128*>(sha3_shake))->setShakeLength(digest_size);
         } else {
-            (dynamic_cast<Shake256*>(sha3_shake))->setShakeLength(DigestSize);
+            (dynamic_cast<Shake256*>(sha3_shake))->setShakeLength(digest_size);
         }
         ASSERT_EQ(sha3_shake->finalize(hash.data(), digest_size),
                   ALC_ERROR_NONE);

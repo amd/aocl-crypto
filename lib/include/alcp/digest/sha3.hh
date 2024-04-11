@@ -128,8 +128,8 @@ class ALCP_API_EXPORT Sha3 : public IDigest
 
   private:
     alc_error_t        processChunk(const Uint8* pSrc, Uint64 len);
-    void               squeezeChunk();
-    inline alc_error_t processAndSqueeze();
+    inline void        squeezeChunk(Uint8* pBuf, Uint64 size);
+    inline alc_error_t processAndSqueeze(Uint8* pBuf, Uint64 size);
 
     // buffer size to hold the chunk size to be processed
     alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
@@ -137,10 +137,8 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     // intermediate hash
     alignas(64) Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
-    Uint64* m_state_flat = &m_state[0][0];
-    // buffer to copy intermediate hash value
-    std::vector<Uint8> m_hash;
-    ShakeState         m_processing_state;
+    Uint64*    m_state_flat = &m_state[0][0];
+    ShakeState m_processing_state;
 };
 
 typedef Sha3<ALC_DIGEST_LEN_224>              Sha3_224;
