@@ -81,22 +81,26 @@ class ALCP_API_EXPORT Ccm final : public Aes
 
   public:
     explicit Ccm(const Uint8* pKey, const Uint32 keyLen);
+    explicit Ccm(alc_cipher_data_t* ctx);
 
     Ccm();
     ~Ccm();
 
-    static bool isSupported(const Uint32 keyLen)
-    {
-        // FIXME: To be implemented
-        switch (keyLen) {
-            case 128:
-            case 192:
-            case 256:
-                return true;
-            default:
-                return false;
-        }
-    }
+    /**
+     * @brief Intialize CCM
+     *
+     * @param ctx - Context
+     * @param pKey - Key for encryption
+     * @param keyLen
+     * @param pIv
+     * @param ivLen
+     * @return
+     */
+    alc_error_t init(alc_cipher_data_t* ctx,
+                     const Uint8*       pKey,
+                     Uint64             keyLen,
+                     const Uint8*       pIv,
+                     Uint64             ivLen);
 
     virtual alc_error_t getTag(alc_cipher_data_t* ctx,
                                Uint8*             pOutput,

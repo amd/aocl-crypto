@@ -476,11 +476,11 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
         case ALC_AES_MODE_SIV:
                 sts = __build_aesSiv(keyLen, ctx);
             break;
-        case ALC_AES_MODE_CCM:
-                _build_aead<Ccm>(keyLen, ctx);
-            sts = StatusOk();
-            break;
 #endif
+        case ALC_AES_MODE_CCM:
+            _build_aead_wrapper<Ccm>(ctx);
+            sts.update(StatusOk());
+            break;
         default:
             break;
     }

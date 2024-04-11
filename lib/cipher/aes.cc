@@ -56,6 +56,7 @@ alc_error_t
 Aes::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
+    m_ivLen_aes   = ivLen;
     if ((ivLen == 0) && (ivLen > MAX_CIPHER_IV_SIZE)) {
         return ALC_ERROR_INVALID_SIZE;
     }

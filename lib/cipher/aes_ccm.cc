@@ -107,6 +107,7 @@ class Ccm::Impl
                        Uint8       pOutput[],
                        Uint64      len,
                        const Uint8 pIv[],
+                       Uint64      ivLen,
                        bool        isEncrypt);
 
     /**
@@ -176,6 +177,7 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
                        Uint8       pOutput[],
                        Uint64      len,
                        const Uint8 pIv[],
+                       Uint64      ivLen,
                        bool        isEncrypt)
 {
     Status s = StatusOk();
@@ -189,7 +191,7 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
         m_ccm_data.rounds    = cRounds;
 
         // Below Operations has to be done in order
-        s.update(setIv(&m_ccm_data, pIv, m_ivLen, len));
+        s.update(setIv(&m_ccm_data, pIv, ivLen, len));
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
@@ -746,12 +748,36 @@ Ccm::Impl::decrypt(ccm_data_t* pccm_data,
 // Ccm Functions
 Ccm::Ccm()
     : pImpl{ std::make_unique<Impl>(this) }
-{}
+{
+}
 
 Ccm::Ccm(const Uint8* pKey, const Uint32 keyLen)
     //: Aes(pKey, keyLen),
     : pImpl{ std::make_unique<Impl>(this) }
-{}
+{
+}
+
+Ccm::Ccm(alc_cipher_data_t* ctx)
+    : Aes(ctx)
+    , pImpl{ std::make_unique<Impl>(this) }
+{
+}
+
+alc_error_t
+Ccm::init(alc_cipher_data_t* ctx,
+          const Uint8*       pKey,
+          Uint64             keyLen,
+          const Uint8*       pIv,
+          Uint64             ivLen)
+{
+    Status s = pImpl->setIv(pIv, ivLen);
+    Aes::init(ctx, pKey, keyLen, pIv, ivLen);
+    if (s.ok()) {
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+}
 
 alc_error_t
 Ccm::decrypt(alc_cipher_data_t* ctx,
@@ -760,7 +786,7 @@ Ccm::decrypt(alc_cipher_data_t* ctx,
              Uint64             len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, false);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, m_ivLen_aes, false);
     return s.code();
 }
 
@@ -772,7 +798,7 @@ Ccm::encrypt(alc_cipher_data_t* ctx,
 {
     Status s = StatusOk();
     // FIXME: ctx to be passed to cryptUpdate
-    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, true);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, m_ivLen_aes, true);
     return s.code();
 }
 
@@ -784,7 +810,7 @@ Ccm::decryptUpdate(alc_cipher_data_t* ctx,
 {
     Status s = StatusOk();
     // FIXME: ctx to be passed to cryptUpdate
-    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, false);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, m_ivLen_aes, false);
     return s.code();
 }
 
@@ -795,7 +821,7 @@ Ccm::encryptUpdate(alc_cipher_data_t* ctx,
                    Uint64             len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, true);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_pIv_aes, m_ivLen_aes, true);
     return s.code();
 }
 
