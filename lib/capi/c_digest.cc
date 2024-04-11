@@ -140,27 +140,6 @@ alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size)
 }
 
 alc_error_t
-alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
-                             Uint64                    digestSize)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
-
-    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
-
-    if (ctx->setShakeLength == nullptr) {
-        return ALC_ERROR_NOT_SUPPORTED;
-    }
-
-    ctx->setShakeLength(ctx->m_digest, digestSize);
-
-    return err;
-}
-
-alc_error_t
 alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
                           Uint8*                    pBuff,
                           Uint64                    size)

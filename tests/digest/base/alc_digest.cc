@@ -84,14 +84,7 @@ AlcpDigestBase::init()
     err = alcp_digest_init(m_handle);
 
     if (alcp_is_error(err)) {
-        return err;
-    }
-
-    if (m_info.dt_mode == ALC_SHAKE_128 || m_info.dt_mode == ALC_SHAKE_256) {
-        err = alcp_digest_set_shake_length(m_handle, m_digest_len);
-        if (alcp_is_error(err)) {
-            return err;
-        }
+        return false;
     }
 
     return true;

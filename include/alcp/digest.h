@@ -305,29 +305,6 @@ ALCP_API_EXPORT alc_error_t
 alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
 
 /**
- * @brief       To Set custom length for SHAKE128 or SHAKE256
- *
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request  and before @ref
- * alcp_digest_finalize. This will override the digest size value set during
- * @ref alcp_digest_request</b>
- * @endparblock
- *
- *
- * @param [in]      pDigestHandle The handle that was returned as part of call
- *                              together alcp_digest_request(),
- *
- * @param[in]      size            Size of the Digest to be set
- *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
-                             Uint64                    size);
-
-/**
  * @brief       copies the context from sorce to destination
  *
  * @param [in]   pSrcHandle   source digest handle

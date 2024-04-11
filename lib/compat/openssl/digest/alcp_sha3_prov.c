@@ -43,12 +43,6 @@ shake_set_ctx_params(alc_prov_digest_ctx_p cctx, const OSSL_PARAM params[])
         return 0;
     }
     if (digest_size) {
-        alc_error_t err =
-            alcp_digest_set_shake_length(&(cctx->handle), digest_size);
-        if (err != ALC_ERROR_NONE) {
-            printf("Provider: Failed to set SHAKE Digest Length");
-            return 0;
-        }
         cctx->shake_digest_size = digest_size;
     }
     EXIT();

@@ -110,14 +110,6 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
     /**
-     * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set
-     * before finalizing.
-     * @param shakeLength Custom Output Size
-     * @return
-     */
-    alc_error_t setShakeLength(Uint64 shakeLength);
-
-    /**
      * @brief To squeeze digest out of SHAKE128 or SHAKE256
      * before finalizing.
      * @param pBuff   pointer to the final hash generated

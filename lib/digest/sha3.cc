@@ -346,7 +346,18 @@ Sha3<digest_len>::finalize(Uint8* pBuf, Uint64 size)
         return err;
     }
 
-    if (pBuf != nullptr && m_digest_len == size) {
+    if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+                  || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+        if (size == 0) {
+            return ALC_ERROR_INVALID_ARG;
+        }
+    } else {
+        if (m_digest_len != size) {
+            return ALC_ERROR_INVALID_ARG;
+        }
+    }
+
+    if (pBuf != nullptr) {
         err = processAndSqueeze(pBuf, size);
     } else {
         err = ALC_ERROR_INVALID_ARG;
@@ -354,23 +365,6 @@ Sha3<digest_len>::finalize(Uint8* pBuf, Uint64 size)
     m_idx      = 0;
     m_finished = true;
     return err;
-}
-
-template<alc_digest_len_t digest_len>
-alc_error_t
-Sha3<digest_len>::setShakeLength(Uint64 shakeLength)
-{
-    if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
-                  || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
-        // dont modify length once the squeeze starts
-        if (m_processing_state == STATE_SQUEEZE) {
-            return ALC_ERROR_NOT_PERMITTED;
-        }
-        m_digest_len = shakeLength;
-        return ALC_ERROR_NONE;
-    } else {
-        return ALC_ERROR_NOT_PERMITTED;
-    }
 }
 
 template<alc_digest_len_t digest_len>

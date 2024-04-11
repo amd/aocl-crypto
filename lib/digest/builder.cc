@@ -87,17 +87,6 @@ __sha_finalize_wrapper(void* pDigest, Uint8* pBuf, Uint64 len)
 
 template<typename DIGESTTYPE>
 static alc_error_t
-__sha_setShakeLength_wrapper(void* pDigest, Uint64 len)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap = static_cast<DIGESTTYPE*>(pDigest);
-    e       = ap->setShakeLength(len);
-
-    return e;
-}
-template<typename DIGESTTYPE>
-static alc_error_t
 __sha_shakeSqueeze_wrapper(void* pDigest, Uint8* pBuff, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
@@ -142,13 +131,12 @@ __build_with_copy_sha(Context& srcCtx, Context& destCtx)
     auto algo = new ALGONAME(*reinterpret_cast<ALGONAME*>(srcCtx.m_digest));
     destCtx.m_digest = static_cast<void*>(algo);
 
-    destCtx.init           = srcCtx.init;
-    destCtx.update         = srcCtx.update;
-    destCtx.finalize       = srcCtx.finalize;
-    destCtx.finish         = srcCtx.finish;
-    destCtx.setShakeLength = srcCtx.setShakeLength;
-    destCtx.duplicate      = srcCtx.duplicate;
-    destCtx.shakeSqueeze   = srcCtx.shakeSqueeze;
+    destCtx.init         = srcCtx.init;
+    destCtx.update       = srcCtx.update;
+    destCtx.finalize     = srcCtx.finalize;
+    destCtx.finish       = srcCtx.finish;
+    destCtx.duplicate    = srcCtx.duplicate;
+    destCtx.shakeSqueeze = srcCtx.shakeSqueeze;
 
     return err;
 }
@@ -169,9 +157,8 @@ __build_sha(Context& ctx)
     //   &ALGONAME::finalize>;
     ctx.finish = __sha_dtor<ALGONAME>;
 
-    // setShakeLength and shakeSqueeze are not implemented for SHA2
-    ctx.setShakeLength = nullptr;
-    ctx.shakeSqueeze   = nullptr;
+    // shakeSqueeze are not implemented for SHA2
+    ctx.shakeSqueeze = nullptr;
 
     return err;
 }
@@ -231,13 +218,11 @@ class Sha3Builder
                 break;
             case ALC_SHAKE_128:
                 __build_sha<Shake128>(rCtx);
-                rCtx.setShakeLength = __sha_setShakeLength_wrapper<Shake128>;
-                rCtx.shakeSqueeze   = __sha_shakeSqueeze_wrapper<Shake128>;
+                rCtx.shakeSqueeze = __sha_shakeSqueeze_wrapper<Shake128>;
                 break;
             case ALC_SHAKE_256:
                 __build_sha<Shake256>(rCtx);
-                rCtx.setShakeLength = __sha_setShakeLength_wrapper<Shake256>;
-                rCtx.shakeSqueeze   = __sha_shakeSqueeze_wrapper<Shake256>;
+                rCtx.shakeSqueeze = __sha_shakeSqueeze_wrapper<Shake256>;
                 break;
             default:
                 err = ALC_ERROR_NOT_SUPPORTED;
