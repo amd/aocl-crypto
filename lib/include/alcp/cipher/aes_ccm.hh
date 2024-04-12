@@ -78,6 +78,14 @@ class ALCP_API_EXPORT Ccm final : public Aes
 //, cipher::IDecryptUpdater
 //, cipher::IEncryptUpdater
 {
+  private:
+    Uint64       m_dataLen           = 0;
+    Uint64       m_ivLen             = 0;
+    Uint64       m_tagLen            = 0;
+    Uint64       m_additionalDataLen = 0;
+    const Uint8* m_additionalData;
+
+    ccm_data_t m_ccm_data;
 
   public:
     explicit Ccm(const Uint8* pKey, const Uint32 keyLen);
@@ -85,6 +93,8 @@ class ALCP_API_EXPORT Ccm final : public Aes
 
     Ccm();
     ~Ccm();
+
+    void init(ccm_data_t* ccm_data, unsigned int t, unsigned int q);
 
     /**
      * @brief Intialize CCM
@@ -106,27 +116,70 @@ class ALCP_API_EXPORT Ccm final : public Aes
                                Uint8*             pOutput,
                                Uint64             len);
 
-    virtual alc_error_t setIv(alc_cipher_data_t* ctx,
-                              const Uint8*       pIv,
-                              Uint64             len);
+    /**
+     * @brief Get CCM Tag
+     * @param ctx Intermediate Data
+     * @param ptag tag memory
+     * @param len Length of the tag
+     * @return
+     */
+    Status getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len);
 
+    /**
+     * @brief Set IV(nonce)
+     * @param ccm_data Intermediate Data
+     * @param pnonce Nonce Pointer
+     * @param nlen Length of Nonce
+     * @param mlen Message length
+     * @return
+     */
+    Status setIv(ccm_data_t* ccm_data,
+                 const Uint8 pnonce[],
+                 size_t      nlen,
+                 size_t      mlen);
+
+    // FIXME: Too many setAad calls, fix it
     virtual alc_error_t setAad(alc_cipher_data_t* ctx,
                                const Uint8*       pInput,
                                Uint64             len);
 
+    /**
+     * @brief Set tag length to adjust nonce value
+     *
+     *
+     * @param ctx  - Context
+     * @param len  - Length of Tag
+     * @return
+     */
     virtual alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 len);
 
-    void setAad(ccm_data_t* pccm_data, const Uint8* paad, size_t alen);
+    /**
+     * @brief Set Ad
+     * ditional Data.
+     * @param pccm_data Intermediate Data
+     * @param paad Additional Data Pointer
+     * @param alen Length of additional data
+     */
+    Status setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen);
 
-    int CcmEncrypt(ccm_data_t*  ccm_data,
-                   const Uint8* pinp,
-                   Uint8*       pout,
-                   size_t       len);
-
-    int CcmDecrypt(ccm_data_t*  ccm_data,
-                   const Uint8* pinp,
-                   Uint8*       pout,
-                   size_t       len);
+    /**
+     * @brief Encrypt/Decrypt for CCM
+     *
+     *
+     * @param pInput     Input data PlainText Or CipherText
+     * @param pOutput    Output data CipherText Or PlainText
+     * @param len        Length of the Input
+     * @param pIv        Pointer to IV
+     * @param ivLen      Length of IV
+     * @param isEncrypt  Encrypt if true
+     * @return           Status
+     */
+    Status cryptUpdate(const Uint8 pInput[],
+                       Uint8       pOutput[],
+                       Uint64      len,
+                       const Uint8 pIv[],
+                       Uint64      ivLen,
+                       bool        isEncrypt);
 
     /**
      * @brief   CCM Encrypt Operation
@@ -140,15 +193,40 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @param   pIv             Pointer to Initialization Vector @return
      * alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(alc_cipher_data_t* ctx,
-                                const Uint8*       pInput,
-                                Uint8*             pOutput,
-                                Uint64             len);
-
     virtual alc_error_t encryptUpdate(alc_cipher_data_t* ctx,
                                       const Uint8*       pInput,
                                       Uint8*             pOutput,
                                       Uint64             len);
+
+    /**
+     * @brief Reference encryption function
+     *
+     *
+     * @param ccm_data  State
+     * @param pInput    Plain Text
+     * @param pOutput   Cipher Text
+     * @param len       Length of Plain Text
+     * @return          Status
+     */
+    Status encryptRef(ccm_data_t* ccm_data,
+                      const Uint8 pInput[],
+                      Uint8       pOutput[],
+                      Uint64      len);
+
+    /**
+     * @brief Reference decrypt function
+     *
+     *
+     * @param ccm_data  State
+     * @param pInput    Cipher Text
+     * @param pOutput   Plain Text
+     * @param len       Length of Cipher Text
+     * @return          Status
+     */
+    Status decryptRef(ccm_data_t* ccm_data,
+                      const Uint8 pInput[],
+                      Uint8       pOutput[],
+                      Uint64      len);
 
     /**
      * @brief   CCM Decrypt Operation
@@ -159,19 +237,10 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @param   pIv             Pointer to Initialization Vector
      * @return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(alc_cipher_data_t* ctx,
-                                const Uint8*       pCipherText,
-                                Uint8*             pPlainText,
-                                Uint64             len);
-
     virtual alc_error_t decryptUpdate(alc_cipher_data_t* ctx,
                                       const Uint8*       pCipherText,
                                       Uint8*             pPlainText,
                                       Uint64             len);
-
-  private:
-    class Impl;
-    std::unique_ptr<Impl> pImpl;
 };
 
 } // namespace alcp::cipher
