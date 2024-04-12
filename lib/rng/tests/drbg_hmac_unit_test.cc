@@ -289,22 +289,23 @@ class HmacDrbgKat
                  m_generatedBits) = params.second;
     }
 
-    void SetUp() override { 
+    void SetUp() override
+    {
         getParams();
         SetReserve(m_add1);
         SetReserve(m_add2);
         SetReserve(m_add_reseed);
         SetReserve(m_pstr);
-
     }
 
-    inline void SetReserve(std::vector<Uint8>& var) {
+    inline void SetReserve(std::vector<Uint8>& var)
+    {
         if (var.size() == 0)
             var.reserve(1);
     }
 };
 
-template<typename SHA_CLASS, alc_digest_len_t len>
+template<typename SHA_CLASS>
 class HmacDrbgKatTemplate : public HmacDrbgKat
 {
     std::shared_ptr<SHA_CLASS> p_shaObj;
@@ -313,25 +314,12 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
     void SetUp() override
     {
         HmacDrbgKat::SetUp();
-        alc_digest_mode_t digest_mode = {};
-        switch (len) {
-            case ALC_DIGEST_LEN_224:
-                digest_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            case ALC_DIGEST_LEN_256:
-                digest_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            default:
-                break;
-        }
-        alc_digest_info_t digest_info = {
-            ALC_DIGEST_TYPE_SHA3, len, {}, digest_mode, {}
-        };
+
         switch (m_digestClass) {
             case ALC_DIGEST_TYPE_SHA2:
                 p_shaObj = std::make_shared<SHA_CLASS>();
             case ALC_DIGEST_TYPE_SHA3:
-                p_shaObj = std::make_shared<SHA_CLASS>(digest_info);
+                p_shaObj = std::make_shared<SHA_CLASS>();
                 break;
             default:
                 // TODO: Raise an exeception
@@ -343,12 +331,10 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
     }
 };
 
-class HmacDrbgKatSHA2_256
-    : public HmacDrbgKatTemplate<Sha256, ALC_DIGEST_LEN_256>
+class HmacDrbgKatSHA2_256 : public HmacDrbgKatTemplate<Sha256>
 {};
 
-class HmacDrbgKatSHA2_224
-    : public HmacDrbgKatTemplate<Sha224, ALC_DIGEST_LEN_224>
+class HmacDrbgKatSHA2_224 : public HmacDrbgKatTemplate<Sha224>
 {};
 
 TEST_P(HmacDrbgKatSHA2_256, SHA2)

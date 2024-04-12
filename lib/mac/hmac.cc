@@ -126,36 +126,31 @@ class Hmac::Impl
         /* TODO: For all the following calls to digest return the proper error
         and assign */
         if (sizeof(buff) != 0 && size != 0) {
-            err = m_pDigest->finalize(buff, size);
+            err = m_pDigest->update(buff, size);
             if (alcp_is_error(err)) {
                 return HMACDigestOperationError("");
             }
-        } else {
-            err = m_pDigest->finalize(nullptr, 0);
-            if (alcp_is_error(err)) {
-                return HMACDigestOperationError("");
-            }
-        }
-        err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-        if (alcp_is_error(err)) {
-            return HMACDigestOperationError("");
-        }
-        m_pDigest->reset();
-
-        err = m_pDigest->update(m_pK0_xor_opad, m_k0_length);
-        if (alcp_is_error(err)) {
-            return HMACDigestOperationError("");
         }
         err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
             return HMACDigestOperationError("");
         }
+        m_pDigest->init();
 
-        err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        err = m_pDigest->update(m_pK0_xor_opad, m_k0_length);
         if (alcp_is_error(err)) {
             return HMACDigestOperationError("");
         }
-        m_pDigest->reset();
+        err = m_pDigest->update(m_pTempHash, m_output_hash_size);
+        if (alcp_is_error(err)) {
+            return HMACDigestOperationError("");
+        }
+
+        err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+        if (alcp_is_error(err)) {
+            return HMACDigestOperationError("");
+        }
+        m_pDigest->init();
 
         m_finalized = true;
         return status;
@@ -179,7 +174,7 @@ class Hmac::Impl
     Status reset()
     {
         Status status = StatusOk();
-        m_pDigest->reset();
+        m_pDigest->init();
         alc_error_t err =
             m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
         if (alcp_is_error(err)) {
@@ -232,7 +227,7 @@ class Hmac::Impl
     {
         Status status = StatusOk();
         m_pDigest     = &p_digest;
-        m_pDigest->reset();
+        m_pDigest->init();
 
         m_input_block_length = m_pDigest->getInputBlockSize();
         m_output_hash_size   = m_pDigest->getHashSize();
@@ -299,16 +294,16 @@ class Hmac::Impl
             /*TODO: For all the following digest calls check and update proper
             error status */
             alc_error_t err = ALC_ERROR_NONE;
-            m_pDigest->reset();
-            err = m_pDigest->finalize(m_pKey, m_keylen);
+            m_pDigest->init();
+            err = m_pDigest->update(m_pKey, m_keylen);
             if (alcp_is_error(err)) {
                 return HMACDigestOperationError("");
             }
-            m_pDigest->copyHash(m_pK0, m_output_hash_size);
+            m_pDigest->finalize(m_pK0, m_output_hash_size);
             if (alcp_is_error(err)) {
                 return HMACDigestOperationError("");
             }
-            m_pDigest->reset();
+            m_pDigest->init();
             std::memset(m_pK0 + m_output_hash_size,
                         0x0,
                         m_input_block_length - m_output_hash_size);

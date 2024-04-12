@@ -47,7 +47,7 @@
 struct _alc_prov_digest_ctx
 {
     alc_digest_handle_t handle;
-    alc_digest_info_t   pc_digest_info;
+    Uint32              shake_digest_size;
 };
 typedef struct _alc_prov_digest_ctx alc_prov_digest_ctx_t,
     *alc_prov_digest_ctx_p;
@@ -58,7 +58,7 @@ extern const OSSL_ALGORITHM ALC_prov_digests[];
 typedef void (*fptr_t)(void);
 
 extern void*
-alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p cinfo);
+alcp_prov_digest_newctx(void* vprovctx, alc_digest_mode_t mode);
 
 const OSSL_PARAM*
 alcp_prov_digest_gettable_params(void* provctx);
@@ -67,26 +67,18 @@ alcp_prov_digest_get_params(OSSL_PARAM    params[],
                             size_t        blockSize,
                             size_t        digestSize,
                             unsigned long flags);
+int
+alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize);
 
+// ToDO: Add all the function declaration defined in dispatch table
 OSSL_FUNC_digest_dupctx_fn  alcp_prov_digest_dupctx;
 OSSL_FUNC_digest_freectx_fn alcp_prov_digest_freectx;
 OSSL_FUNC_digest_update_fn  alcp_prov_digest_update;
-OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
+// OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
 
 /* Internal flags that can be queried */
 #define ALCP_FLAG_XOF          0x1
 #define ALCP_FLAG_ALGID_ABSENT 0x2
-
-// ToDO : some of the variables will be removed from macro
-#define DEFINE_CONTEXT(name, grp, len, alcp_mode, grp_upper_case)              \
-    alc_digest_info_t s_digest_##name##_##grp##_##len##_info = {               \
-        .dt_type = ALC_DIGEST_TYPE_##grp_upper_case,                           \
-        .dt_len = len,                                                         \
-        .dt_custom_len = len,                                              \
-        .dt_mode = {                                                           \
-            .dm_##grp = alcp_mode,                                             \
-        },                                                                     \
-};
 
 #define OSSL_PARAM_LOCATE_SET_SIZE(params, key, param, value)                  \
     param = OSSL_PARAM_locate(params, key);                                    \
@@ -116,14 +108,11 @@ OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
 #define CREATE_DIGEST_DISPATCHERS(                                             \
     name, grp, len, blockSize, alcp_mode, grp_upper_case, flags)               \
                                                                                \
-    DEFINE_CONTEXT(name, grp, len, alcp_mode, grp_upper_case)                  \
-                                                                               \
     static OSSL_FUNC_digest_newctx_fn alcp_prov_##name##_##grp##_newctx;       \
     static void* alcp_prov_##name##_##grp##_newctx(void* provctx)              \
     {                                                                          \
         ENTER();                                                               \
-        return alcp_prov_digest_newctx(                                        \
-            provctx, &s_digest_##name##_##grp##_##len##_info);                 \
+        return alcp_prov_digest_newctx(provctx, alcp_mode);                    \
     }                                                                          \
     DEFINE_DIGEST_GET_PARAMS(name, grp, len, blockSize, flags)
 

@@ -45,15 +45,6 @@ using utils::CpuId;
 namespace alcp::digest {
 
 /*
- * first 32 bits of the fractional parts of the square roots
- * of the first 8 primes 2..19
- */
-static constexpr Uint32 cIv[] = {
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
-};
-
-/*
  * Round constants:
  * For each round, there is one round constant k[i] and one entry in the
  * message schedule array w[i], 0 ≤ i ≤ 63.
@@ -74,8 +65,9 @@ static constexpr Uint32 cRoundConstants[] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
+template<alc_digest_len_t digest_len>
 alc_error_t
-Sha256::processChunk(const Uint8* pSrc, Uint64 len)
+Sha2<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
 {
     static bool shani_available = CpuId::cpuHasShani();
     // FIXME: AVX2 is deliberately disabled due to poor performance
@@ -117,71 +109,56 @@ Sha256::processChunk(const Uint8* pSrc, Uint64 len)
     return ALC_ERROR_NONE;
 }
 
-Sha256::Sha256()
+template<alc_digest_len_t digest_len>
+Sha2<digest_len>::Sha2()
 {
-    m_mode.dm_sha2 = ALC_SHA2_256;
-    m_digest_len   = 256 / 8;
-    m_block_len    = cChunkSize;
+    m_digest_len = digest_len / 8;
+    m_block_len  = cChunkSize;
 }
 
-Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
-    : Sha256()
-{}
-
-Sha256::Sha256(const Sha256& src)
+template<alc_digest_len_t digest_len>
+Sha2<digest_len>::Sha2(const Sha2& src)
 {
     m_msg_len    = src.m_msg_len;
     m_digest_len = src.m_digest_len;
     m_block_len  = src.m_block_len;
-    m_mode       = src.m_mode;
     memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
     memcpy(m_hash, src.m_hash, sizeof(m_hash));
     m_idx      = src.m_idx;
     m_finished = src.m_finished;
 }
 
-Sha256::~Sha256() = default;
-
+template<alc_digest_len_t digest_len>
 void
-Sha256::init(void)
+Sha2<digest_len>::init(void)
 {
-    m_hash[0]  = 0x6a09e667;
-    m_hash[1]  = 0xbb67ae85;
-    m_hash[2]  = 0x3c6ef372;
-    m_hash[3]  = 0xa54ff53a;
-    m_hash[4]  = 0x510e527f;
-    m_hash[5]  = 0x9b05688c;
-    m_hash[6]  = 0x1f83d9ab;
-    m_hash[7]  = 0x5be0cd19;
+    if constexpr (digest_len == ALC_DIGEST_LEN_256) {
+        m_hash[0] = 0x6a09e667;
+        m_hash[1] = 0xbb67ae85;
+        m_hash[2] = 0x3c6ef372;
+        m_hash[3] = 0xa54ff53a;
+        m_hash[4] = 0x510e527f;
+        m_hash[5] = 0x9b05688c;
+        m_hash[6] = 0x1f83d9ab;
+        m_hash[7] = 0x5be0cd19;
+    } else {
+        m_hash[0] = 0xc1059ed8;
+        m_hash[1] = 0x367cd507;
+        m_hash[2] = 0x3070dd17;
+        m_hash[3] = 0xf70e5939;
+        m_hash[4] = 0xffc00b31;
+        m_hash[5] = 0x68581511;
+        m_hash[6] = 0x64f98fa7;
+        m_hash[7] = 0xbefa4fa4;
+    }
     m_finished = false;
     m_msg_len  = 0;
     m_idx      = 0;
-    memset(m_buffer, 0, sizeof(m_buffer));
 }
 
+template<alc_digest_len_t digest_len>
 alc_error_t
-Sha256::setIv(const void* pIv, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (pIv == nullptr) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (size != cIvSizeBytes) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
-    }
-
-    utils::CopyBlock(m_hash, pIv, size);
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-Sha256::update(const Uint8* pSrc, Uint64 size)
+Sha2<digest_len>::update(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -259,18 +236,13 @@ Sha256::update(const Uint8* pSrc, Uint64 size)
     return err;
 }
 
+template<alc_digest_len_t digest_len>
 alc_error_t
-Sha256::finalize(const Uint8* pSrc, Uint64 size)
+Sha2<digest_len>::finalize(Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (m_finished)
-        return err;
-
-    if (pSrc && size)
-        err = update(pSrc, size);
-
-    if (err) {
+    if (m_finished) {
         return err;
     }
 
@@ -295,47 +267,22 @@ Sha256::finalize(const Uint8* pSrc, Uint64 size)
 
     err = processChunk(m_buffer, buf_len);
 
-    m_idx = 0;
-
-    m_finished = true;
-
-    return err;
-}
-
-alc_error_t
-Sha256::copyHash(Uint8* pHash, Uint64 size) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (!pHash) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
+    if (err != ALC_ERROR_NONE) {
         return err;
     }
 
-    if (size != cHashSize) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
+    if (pBuf != nullptr && size == m_digest_len) {
+        utils::CopyBlockWith<Uint32, true>(
+            pBuf, m_hash, m_digest_len, utils::ToBigEndian<Uint32>);
+        m_idx      = 0;
+        m_finished = true;
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_INVALID_ARG;
     }
-
-    utils::CopyBlockWith<Uint32, true>(
-        pHash, m_hash, cHashSize, utils::ToBigEndian<Uint32>);
-
-    return ALC_ERROR_NONE;
 }
 
-void
-Sha256::finish()
-{}
-
-void
-Sha256::reset()
-{
-    m_msg_len  = 0;
-    m_finished = false;
-    m_idx      = 0;
-    utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
-}
+template class Sha2<ALC_DIGEST_LEN_224>;
+template class Sha2<ALC_DIGEST_LEN_256>;
 
 } // namespace alcp::digest

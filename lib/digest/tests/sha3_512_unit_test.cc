@@ -36,14 +36,6 @@ using namespace alcp::digest;
 typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-static const alc_digest_info_t DigestInfo = []() {
-    alc_digest_info_t DigestInfo;
-    DigestInfo.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    DigestInfo.dt_len          = ALC_DIGEST_LEN_512;
-    DigestInfo.dt_mode.dm_sha3 = ALC_SHA3_512;
-    return DigestInfo;
-}();
-
 // Digest size in bytes
 static const Uint8 DigestSize = 64;
 // Input Block size in bytes
@@ -76,14 +68,14 @@ static const KnownAnswerMap message_digest = {
 };
 
 // clang-format on
-class Sha3_512
+class Sha3_512_Test
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
 
-TEST_P(Sha3_512, digest_generation_test)
+TEST_P(Sha3_512_Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha3              sha3_512(DigestInfo);
+    Sha3_512          sha3_512;
     Uint8             hash[DigestSize];
     std::stringstream ss;
 
@@ -91,8 +83,7 @@ TEST_P(Sha3_512, digest_generation_test)
     ASSERT_EQ(
         sha3_512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_512.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_512.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_512.finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -104,62 +95,48 @@ TEST_P(Sha3_512, digest_generation_test)
 
 INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
-    Sha3_512,
+    Sha3_512_Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha3_512::ParamType>& info) {
+    [](const testing::TestParamInfo<Sha3_512_Test::ParamType>& info) {
         return info.param.first;
     });
 
-TEST(Sha3_512, invalid_input_update_test)
+TEST(Sha3_512_Test, invalid_input_update_test)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3_512 sha3_512;
     EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.update(nullptr, 0));
 }
 
-TEST(Sha3_512, zero_size_update_test)
+TEST(Sha3_512_Test, zero_size_update_test)
 {
-    Sha3        sha3_512(DigestInfo);
+    Sha3_512    sha3_512;
     const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha3_512.update(src, 0));
 }
 
-TEST(Sha3_512, invalid_output_copy_hash_test)
+TEST(Sha3_512_Test, invalid_output_copy_hash_test)
 {
-    Sha3 sha3_512(DigestInfo);
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.copyHash(nullptr, DigestSize));
+    Sha3_512 sha3_512;
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.finalize(nullptr, DigestSize));
 }
 
-TEST(Sha3_512, zero_size_hash_copy_test)
+TEST(Sha3_512_Test, zero_size_hash_copy_test)
 {
-    Sha3  sha3_512(DigestInfo);
-    Uint8 hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_512.copyHash(hash, 0));
+    Sha3_512 sha3_512;
+    Uint8    hash[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_512.finalize(hash, 0));
 }
 
-TEST(Sha3_512, getInputBlockSizeTest)
+TEST(Sha3_512_Test, getInputBlockSizeTest)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3_512 sha3_512;
     EXPECT_EQ(sha3_512.getInputBlockSize(), InputBlockSize);
 }
 
-TEST(Sha3_512, getHashSizeTest)
+TEST(Sha3_512_Test, getHashSizeTest)
 {
-    Sha3 sha3_512(DigestInfo);
+    Sha3_512 sha3_512;
     EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
-}
-
-TEST(Sha3_512, setShakeLengthTest)
-{
-    Sha3        sha3_512(DigestInfo);
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = sha3_512.setShakeLength(512);
-
-    constexpr unsigned short cShakeLength = 100;
-
-    err = sha3_512.setShakeLength(cShakeLength);
-    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
-    EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
-    EXPECT_NE(sha3_512.getHashSize(), cShakeLength);
 }
 
 } // namespace

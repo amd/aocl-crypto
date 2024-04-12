@@ -37,12 +37,10 @@ namespace alcp::digest {
 class DigestBuilder
 {
   public:
-    static alc_error_t Build(const alc_digest_info_t& digestInfo,
-                             digest::Context&         ctx);
+    static alc_error_t Build(alc_digest_mode_t mode, digest::Context& ctx);
 
-    static alc_error_t BuildWithCopy(const alc_digest_info_t dInfo,
-                                     digest::Context&        srcCtx,
-                                     digest::Context&        destCtx);
+    static alc_error_t BuildWithCopy(digest::Context& srcCtx,
+                                     digest::Context& destCtx);
 };
 
 } // namespace alcp::digest

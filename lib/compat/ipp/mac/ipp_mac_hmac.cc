@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -55,8 +55,8 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
                                     static_cast<Uint32>(keyLen * 8),
                                     static_cast<const Uint8*>(pKey) };
 
-    alc_sha2_mode_t  sha2_mode;
-    alc_digest_len_t sha_length;
+    alc_digest_mode_t sha2_mode;
+    alc_digest_len_t  sha_length;
 
     ipp_sha2_rmf_algo_ctx* p_method_ctx = (ipp_sha2_rmf_algo_ctx*)pMethod;
     IppHashAlgId           hashAlg      = p_method_ctx->algId;
@@ -104,7 +104,7 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
     pMacInfo->mi_type                              = ALC_MAC_HMAC;
     pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
     pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_len  = sha_length;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = sha2_mode;
+    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_mode = sha2_mode;
 
     pMacInfo->mi_keyinfo = cKinfo;
 

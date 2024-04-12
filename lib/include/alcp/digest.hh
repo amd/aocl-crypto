@@ -60,14 +60,9 @@ class IDigest
     IDigest() = default;
 
   public:
-    virtual void        init(void)                               = 0;
-    virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
-    virtual alc_error_t finalize(const Uint8* pBuf, Uint64 size) = 0;
-    virtual void        finish()                                 = 0;
-    virtual void        reset()                                  = 0;
-    // virtual alc_error_t compute(const Uint8* buf, Uint64 size)  = 0;
-    virtual alc_error_t copyHash(Uint8* pBuf, Uint64 size) const = 0;
-
+    virtual void        init(void)                             = 0;
+    virtual alc_error_t update(const Uint8* pBuf, Uint64 size) = 0;
+    virtual alc_error_t finalize(Uint8* pBuf, Uint64 size)     = 0;
     /**
      * @return The input block size to the hash function in bytes
      */
@@ -88,6 +83,5 @@ class IDigest
     /* index to m_buffer of previously unprocessed bytes */
     Uint32            m_idx = 0;
     alc_digest_mode_t m_mode;
-    alc_digest_data_t m_data;
 };
 } // namespace alcp::digest

@@ -26,7 +26,7 @@
  *
  */
 
-#include "alcp/digest/sha2_512.hh"
+#include "alcp/digest/sha512.hh"
 #include "gtest/gtest.h"
 #include <unordered_map>
 
@@ -53,9 +53,6 @@ static const std::unordered_map<DigestSha512, tuple<alc_digest_len_t, Uint8>>
     DigestSizes = { { DIGEST_SHA_512_224, { ALC_DIGEST_LEN_224, 28 } },
                     { DIGEST_SHA_512_256, { ALC_DIGEST_LEN_256, 32 } },
                     { DIGEST_SHA_512_512, { ALC_DIGEST_LEN_512, 64 } } };
-// IV array size where every element is 8 bytes
-static const Uint8 IvArraySize   = 8;
-static const Uint8 IvElementSize = 8;
 
 // clang-format off
 static const KnownAnswerMap message_digest = {
@@ -106,16 +103,30 @@ TEST_P(Sha512Test, digest_generation_test)
                                     DigestSha512::DIGEST_SHA_512_512 }) {
         auto digest                           = digests[enum_digest];
         const auto [digest_type, digest_size] = DigestSizes.at(enum_digest);
-        Sha512            sha512(digest_type);
+        IDigest* digest_obj                   = nullptr;
+        switch (digest_type) {
+            case ALC_DIGEST_LEN_224:
+                digest_obj = new Sha512_224;
+                break;
+            case ALC_DIGEST_LEN_256:
+                digest_obj = new Sha512_256;
+                break;
+            case ALC_DIGEST_LEN_512:
+                digest_obj = new Sha512;
+                break;
+            default:
+                break;
+        }
+        ASSERT_NE(nullptr, digest_obj);
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 
-        sha512.init();
-        ASSERT_EQ(
-            sha512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
-            ALC_ERROR_NONE);
-        ASSERT_EQ(sha512.finalize(nullptr, 0), ALC_ERROR_NONE);
-        ASSERT_EQ(sha512.copyHash(hash.data(), digest_size), ALC_ERROR_NONE);
+        digest_obj->init();
+        ASSERT_EQ(digest_obj->update((const Uint8*)plaintext.c_str(),
+                                     plaintext.size()),
+                  ALC_ERROR_NONE);
+        ASSERT_EQ(digest_obj->finalize(hash.data(), digest_size),
+                  ALC_ERROR_NONE);
 
         ss << std::hex << std::setfill('0');
         for (Uint16 i = 0; i < digest_size; ++i)
@@ -123,6 +134,7 @@ TEST_P(Sha512Test, digest_generation_test)
 
         std::string hash_string = ss.str();
         EXPECT_TRUE(hash_string == digest);
+        delete digest_obj;
     }
 }
 
@@ -150,42 +162,21 @@ TEST(Sha512Test, zero_size_update_test)
 TEST(Sha512Test, invalid_output_copy_hash_test)
 {
     Sha512 sha512;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.copyHash(nullptr, DigestSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(nullptr, DigestSize));
 }
 
 TEST(Sha512Test, zero_size_hash_copy_test)
 {
     Sha512 sha512;
     Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, 0));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(hash, 0));
 }
 
 TEST(Sha512Test, over_size_hash_copy_test)
 {
     Sha512 sha512;
     Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, DigestSize + 1));
-}
-
-TEST(Sha512Test, invalid_iv_test)
-{
-    Sha512 sha512;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG,
-              sha512.setIv(nullptr, IvArraySize * IvElementSize));
-}
-
-TEST(Sha512Test, zero_size_iv_test)
-{
-    Sha512 sha512;
-    Uint64 iv[IvArraySize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.setIv(iv, 0));
-}
-
-TEST(Sha512Test, over_size_iv_test)
-{
-    Sha512 sha512;
-    Uint64 iv[IvArraySize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.setIv(iv, sizeof(iv)));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha512Test, getInputBlockSizeTest)
@@ -201,25 +192,25 @@ TEST(Sha512Test, getHashSizeTest)
 
 TEST(Sha512Test, Sha512_224_getInputBlockLenTest)
 {
-    Sha512 sha512(ALC_DIGEST_LEN_224);
+    Sha512 sha512;
     EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
 }
 
 TEST(Sha512Test, Sha512_224_getHashSizeTest)
 {
-    Sha512 sha512(ALC_DIGEST_LEN_224);
+    Sha512_224 sha512;
     EXPECT_EQ(sha512.getHashSize() * 8, 224U);
 }
 
 TEST(Sha512Test, Sha512_256_getInputBlockLenTest)
 {
-    Sha512 sha512(ALC_DIGEST_LEN_256);
+    Sha512_256 sha512;
     EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
 }
 
 TEST(Sha512Test, Sha512_256_getHashSizeTest)
 {
-    Sha512 sha512(ALC_DIGEST_LEN_256);
+    Sha512_256 sha512;
     EXPECT_EQ(sha512.getHashSize() * 8, 256U);
 }
 

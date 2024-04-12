@@ -30,9 +30,8 @@
 #include "alcp/base.hh"
 #include "alcp/capi/mac/builder.hh"
 #include "alcp/digest/sha2.hh"
-#include "alcp/digest/sha2_384.hh"
-#include "alcp/digest/sha2_512.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha512.hh"
 #include "drbg_hmac.hh"
 namespace alcp::drbg {
 class HmacDrbgBuilder
@@ -52,36 +51,37 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     auto  addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto* hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
     std::shared_ptr<alcp::digest::IDigest> p_digest;
-    switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (
-                drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    p_digest = std::make_shared<alcp::digest::Sha256>();
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    p_digest = std::make_shared<alcp::digest::Sha224>();
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    p_digest = std::make_shared<alcp::digest::Sha384>();
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    p_digest = std::make_shared<alcp::digest::Sha512>();
-                    break;
-                }
-                default: {
-                    status.update(
-                        InternalError("Unsupported HMAC Sha2 Algorithm"));
-                }
-            }
+    switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode) {
+        case ALC_SHA2_256: {
+            p_digest = std::make_shared<alcp::digest::Sha256>();
             break;
         }
-        case ALC_DIGEST_TYPE_SHA3: {
-            p_digest = std::make_shared<digest::Sha3>(
-                drbgInfo.di_algoinfo.hmac_drbg.digest_info);
+        case ALC_SHA2_224: {
+            p_digest = std::make_shared<alcp::digest::Sha224>();
+            break;
+        }
+        case ALC_SHA2_384: {
+            p_digest = std::make_shared<alcp::digest::Sha384>();
+            break;
+        }
+        case ALC_SHA2_512: {
+            p_digest = std::make_shared<alcp::digest::Sha512>();
+            break;
+        }
+        case ALC_SHA3_224: {
+            p_digest = std::make_shared<alcp::digest::Sha3_224>();
+            break;
+        }
+        case ALC_SHA3_256: {
+            p_digest = std::make_shared<alcp::digest::Sha3_256>();
+            break;
+        }
+        case ALC_SHA3_384: {
+            p_digest = std::make_shared<alcp::digest::Sha3_384>();
+            break;
+        }
+        case ALC_SHA3_512: {
+            p_digest = std::make_shared<alcp::digest::Sha3_512>();
             break;
         }
         default: {
@@ -110,6 +110,7 @@ HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 Status
 HmacDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
-    return mac::isDigestSupported(drbgInfo.di_algoinfo.hmac_drbg.digest_info);
+    return mac::isDigestSupported(
+        drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode);
 }
 } // namespace alcp::drbg

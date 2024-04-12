@@ -33,14 +33,14 @@ namespace alcp::testing {
 
 /* Mapping between ALC sha mode and digest len. Update for upcoming ALC digest
  * types here*/
-std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map = {
+std::map<alc_digest_len_t, alc_digest_mode_t> sha2_mode_len_map = {
     { ALC_DIGEST_LEN_224, ALC_SHA2_224 },
     { ALC_DIGEST_LEN_256, ALC_SHA2_256 },
     { ALC_DIGEST_LEN_384, ALC_SHA2_384 },
     { ALC_DIGEST_LEN_512, ALC_SHA2_512 },
 };
 
-std::map<alc_digest_len_t, alc_sha3_mode_t> sha3_mode_len_map = {
+std::map<alc_digest_len_t, alc_digest_mode_t> sha3_mode_len_map = {
     { ALC_DIGEST_LEN_224, ALC_SHA3_224 },
     { ALC_DIGEST_LEN_256, ALC_SHA3_256 },
     { ALC_DIGEST_LEN_384, ALC_SHA3_384 },
@@ -66,23 +66,6 @@ AlcpDigestBase::init()
     alc_error_t       err;
     alc_digest_info_t dinfo = m_info;
 
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        /* for sha512-224/256 */
-        if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512
-            && m_info.dt_len != ALC_DIGEST_LEN_512) {
-            dinfo.dt_mode.dm_sha2 = ALC_SHA2_512;
-            dinfo.dt_len          = m_info.dt_len;
-        }
-        /* for normal sha2 cases */
-        else
-            dinfo.dt_mode.dm_sha2 = sha2_mode_len_map[m_info.dt_len];
-    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
-            dinfo.dt_custom_len = m_digest_len * 8;
-        else
-            dinfo.dt_mode.dm_sha3 = sha3_mode_len_map[m_info.dt_len];
-    }
-
     if (m_handle == nullptr) {
         m_handle          = new alc_digest_handle_t;
         m_handle->context = malloc(alcp_digest_context_size());
@@ -92,7 +75,7 @@ AlcpDigestBase::init()
         alcp_digest_finish(m_handle);
     }
 
-    err = alcp_digest_request(&dinfo, m_handle);
+    err = alcp_digest_request(dinfo.dt_mode, m_handle);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_request:" << err << std::endl;
         return false;
@@ -101,7 +84,7 @@ AlcpDigestBase::init()
     err = alcp_digest_init(m_handle);
 
     if (alcp_is_error(err)) {
-        return err;
+        return false;
     }
 
     return true;
@@ -132,15 +115,9 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
             return false;
         }
     }
-    err = alcp_digest_finalize(m_handle, NULL, 0);
+    err = alcp_digest_finalize(m_handle, data.m_digest, data.m_digest_len);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
-        return false;
-    }
-
-    err = alcp_digest_copy(m_handle, data.m_digest, data.m_digest_len);
-    if (alcp_is_error(err)) {
-        std::cout << "Error code in alcp_digest_copy:" << err << std::endl;
         return false;
     }
     return true;
@@ -149,7 +126,7 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
 void
 AlcpDigestBase::reset()
 {
-    alcp_digest_reset(m_handle);
+    alcp_digest_init(m_handle);
 }
 
 } // namespace alcp::testing

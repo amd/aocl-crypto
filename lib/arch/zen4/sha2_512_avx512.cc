@@ -29,7 +29,7 @@
 // FIXME: This code is duplicated from zen3. Similar duplication exists in zen2
 // as well. Find a unified architecture
 #include "alcp/digest.hh"
-#include "alcp/digest/sha2_512.hh"
+#include "alcp/digest/sha512.hh"
 #include "alcp/digest/sha_avx256.hh"
 #include "config.h"
 

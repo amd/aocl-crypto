@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -76,12 +76,11 @@ struct alcp_hmac_data_t
     alcp_hmac_data_t() // Initialize in, out all values to null/0
         : in{}
         , out{}
-    {
-    }
+    {}
 };
 
 /* add mapping for HMAC mode and length */
-extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
+extern std::map<alc_digest_len_t, alc_digest_mode_t> sha2_mode_len_map;
 
 class HmacBase
 {

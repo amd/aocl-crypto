@@ -32,8 +32,8 @@
 #include "alcp/capi/rsa/ctx.hh"
 
 #include "alcp/digest/sha2.hh"
-#include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha512.hh"
 #include "alcp/rng/drbg_hmac.hh"
 #include "alcp/rsa.h"
 #include "alcp/rsa/rsaerror.hh"
@@ -128,46 +128,33 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 }
 
 static void*
-fetch_digest(const alc_digest_info_t& digestInfo)
+fetch_digest(alc_digest_mode_t mode)
 {
-    using namespace alcp::digest;
+    using namespace digest;
     void* digest = nullptr;
-    switch (digestInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (digestInfo.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    digest = new Sha256(digestInfo);
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    digest = new Sha224(digestInfo);
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    digest = new Sha384(digestInfo);
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    digest = new Sha512(digestInfo);
-                    break;
-                }
-                default: {
-                    digest = nullptr;
-                }
-            }
+    switch (mode) {
+        case ALC_SHA2_256: {
+            digest = new Sha256;
             break;
         }
-        case ALC_DIGEST_TYPE_SHA3: {
-            switch (digestInfo.dt_mode.dm_sha3) {
-                case ALC_SHA3_224: {
-                    digest = new digest::Sha3(digestInfo);
-                    break;
-                }
-                default: {
-                    digest = nullptr;
-                    break;
-                }
-            }
+        case ALC_SHA2_224: {
+            digest = new Sha224;
+            break;
+        }
+        case ALC_SHA2_384: {
+            digest = new Sha384;
+            break;
+        }
+        case ALC_SHA2_512: {
+            digest = new Sha512;
+            break;
+        }
+        case ALC_SHA2_512_224: {
+            digest = new Sha512_224;
+            break;
+        }
+        case ALC_SHA2_512_256: {
+            digest = new Sha512_256;
             break;
         }
         default: {
@@ -193,7 +180,10 @@ alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
         ctx->m_digest = nullptr;
     }
 
-    ctx->m_digest = fetch_digest(*digestInfo);
+    ctx->m_digest = fetch_digest(digestInfo->dt_mode);
+    if (ctx->m_digest == nullptr) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
 
     ctx->setDigest(ctx->m_rsa, static_cast<digest::IDigest*>(ctx->m_digest));
 
@@ -216,7 +206,7 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
         ctx->m_mgf = nullptr;
     }
 
-    ctx->m_mgf = fetch_digest(*digestInfo);
+    ctx->m_mgf = fetch_digest(digestInfo->dt_mode);
     if (ctx->m_mgf == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }

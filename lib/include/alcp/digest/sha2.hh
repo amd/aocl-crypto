@@ -35,8 +35,12 @@
 using alcp::utils::RotateRight;
 namespace alcp::digest {
 
-class Sha256 final : public IDigest
+template<alc_digest_len_t digest_len>
+class Sha2 final : public IDigest
 {
+    static_assert(ALC_DIGEST_LEN_224 == digest_len
+                  || ALC_DIGEST_LEN_256 == digest_len);
+
   public:
     static constexpr Uint64 /* define word size */
         cWordSizeBits   = 32,
@@ -45,16 +49,14 @@ class Sha256 final : public IDigest
         cChunkSize      = cChunkSizeBits / 8, /* chunks to proces */
         cChunkSizeMask  = cChunkSize - 1,
         cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
-        cHashSizeBits   = 256,                            /* same in bits */
+        cHashSizeBits   = ALC_DIGEST_LEN_256,             /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
-        cHashSizeWords  = cHashSizeBits / cWordSizeBits,
-        cIvSizeBytes    = 32; /* IV size in bytes */
+        cHashSizeWords  = cHashSizeBits / cWordSizeBits;
 
   public:
-    ALCP_API_EXPORT Sha256();
-    ALCP_API_EXPORT Sha256(const alc_digest_info_t& rDigestInfo);
-    ALCP_API_EXPORT Sha256(const Sha256& src);
-    virtual ALCP_API_EXPORT ~Sha256();
+    ALCP_API_EXPORT Sha2();
+    ALCP_API_EXPORT Sha2(const Sha2& src);
+    virtual ALCP_API_EXPORT ~Sha2() = default;
 
   public:
     /**
@@ -81,64 +83,15 @@ class Sha256 final : public IDigest
                                        Uint64       size) override;
 
     /**
-     * \brief   Cleans up any resource that was allocated
+     * \brief    Call for fetching final digest
      *
-     * \notes   `finish()` to be called as a means to cleanup, no operation
-     *           permitted after this call. The context will be unusable.
      *
-     * \return nothing
+     * \param    pBuf     Destination buffer to which digest will be copied
+     *
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
      */
-    void finish() override;
-
-    /**
-     * \brief    Resets the internal state.
-     *
-     * \notes   `reset()` to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
-     *
-     * \return nothing
-     */
-    void reset() override;
-
-    /**
-     * \brief    Call for the final chunk
-     *
-     * \notes   `finish()` to be called as a means to cleanup, necessary
-     *           actions. Application can also call finalize() with
-     *           empty/null args application must call copyHash before
-     *           calling finish()
-     *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can be performed
-     *                   is copyHash()
-     *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size
-     *                   is assumed to be zero
-     */
-    ALCP_API_EXPORT alc_error_t finalize(const Uint8* pMsgBuf,
-                                         Uint64       size) override;
-
-    /**
-     * \brief  Copies the has from context to supplied buffer
-     *
-     * \notes `finalize()` to be called with last chunks that should
-     *           perform all the necessary actions, can be called with
-     *           NULL argument.
-     *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can  be performed
-     *                   is copyHash()
-     *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size is
-     *                   assumed to be zero
-     */
-    ALCP_API_EXPORT alc_error_t copyHash(Uint8* pHashBuf,
-                                         Uint64 size) const override;
-
-  public:
-    ALCP_API_EXPORT alc_error_t setIv(const void* pIv, Uint64 size);
+    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
@@ -147,23 +100,8 @@ class Sha256 final : public IDigest
     alignas(64) Uint32 m_hash[cHashSizeWords]{};
 };
 
-class ALCP_API_EXPORT Sha224 final : public IDigest
-{
-  public:
-    Sha224();
-    Sha224(const alc_digest_info_t& rDInfo);
-    Sha224(const Sha224& src);
-    ~Sha224();
-    void        init() override;
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
-    void        finish() override;
-    void        reset() override;
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
-    alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
-
-  private:
-    std::shared_ptr<Sha256> m_psha256;
-};
+typedef Sha2<ALC_DIGEST_LEN_224> Sha224;
+typedef Sha2<ALC_DIGEST_LEN_256> Sha256;
 
 static inline void
 CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)

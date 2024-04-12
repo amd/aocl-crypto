@@ -91,10 +91,14 @@ ShaRound(Uint64  a,
     d += t;
 }
 
-/* TODO: Add pImpl support as done in sha256 */
-
-class ALCP_API_EXPORT Sha512 final : public IDigest
+template<alc_digest_len_t digest_len>
+class ALCP_API_EXPORT Sha2_512 final : public IDigest
 {
+    static_assert(ALC_DIGEST_LEN_224 == digest_len
+                  || ALC_DIGEST_LEN_256 == digest_len
+                  || ALC_DIGEST_LEN_384 == digest_len
+                  || ALC_DIGEST_LEN_512 == digest_len);
+
   public:
     // clang-format off
     static constexpr Uint64
@@ -104,16 +108,15 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
         cChunkSize                        = cChunkSizeBits / 8,             /* chunks to proces */
         cChunkSizeMask                    = cChunkSize - 1,                 /*  */
         cChunkSizeWords                   = cChunkSizeBits / cWordSizeBits, /* same in words */
-        cHashSizeBits                     = 512,                            /* same in bits */
+        cHashSizeBits                     = ALC_DIGEST_LEN_512,             /* same in bits */
         cHashSize                         = cHashSizeBits / 8,              /* Hash size in bytes */
         cHashSizeWords                    = cHashSizeBits / cWordSizeBits,
         cIvSizeBytes                      = 64;                             /* IV size in bytes */
     // clang-format on
   public:
-    Sha512(alc_digest_len_t digest_len = ALC_DIGEST_LEN_512);
-    Sha512(const alc_digest_info_t& rDigestInfo);
-    Sha512(const Sha512& src);
-    virtual ~Sha512();
+    Sha2_512();
+    Sha2_512(const Sha2_512& src);
+    virtual ~Sha2_512() = default;
 
   public:
     /**
@@ -137,73 +140,29 @@ class ALCP_API_EXPORT Sha512 final : public IDigest
      *
      * @param    size    should be valid size > 0
      */
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
+    alc_error_t update(const Uint8* pBuf, Uint64 size) override;
 
     /**
-     * @brief   Cleans up any resource that was allocated
+     * \brief    Call for fetching final digest
      *
-     * @note   `finish()` to be called as a means to cleanup, no operation
-     *           permitted after this call. The context will be unusable.
      *
-     * @return nothing
+     * \param    pBuf    Destination buffer to which digest will be copied
+     *
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
      */
-    void finish() override;
-
-    /**
-     * @brief    Resets the internal state.
-     *
-     * @note   `reset()` to be called as a means to reset the internal
-     * state. This enables the processing the new buffer.
-     *
-     * @return nothing
-     */
-    void reset() override;
-
-    /**
-     * @brief    Call for the final chunk
-     *
-     * @note
-     *           - \ref finish() to be called as a means to cleanup, necessary
-     *           actions.
-     *           - Application can also call finalize() with
-     *           empty/null args application must call copyHash before
-     *           calling finish()
-     *
-     * @param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once
-     *                  finalize() is called, only operation that can be
-     *                  performed is copyHash()
-     *
-     * @param    size    Either valid size or 0, if pSrc is nullptr, size
-     *                   is assumed to be zero
-     */
-    alc_error_t finalize(const Uint8* pSrc, Uint64 size) override;
-
-    /**
-     * @brief  Copies the has from context to supplied buffer
-     *
-     * @note     \ref finalize() to be called with last chunks that should
-     *           perform all the necessary actions, can be called with
-     *           NULL argument.
-     *
-     * @param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once
-     *                  finalize() is called, only operation that can be
-     *                  performed is copyHash()
-     *
-     * @param    size    Either valid size or 0, if @buf is nullptr, size is
-     *                   assumed to be zero
-     */
-    alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
-
-    alc_error_t setIv(const void* pIv, Uint64 size);
+    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
     /* Any unprocessed bytes from last call to update() */
     alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
     alignas(64) Uint64 m_hash[cHashSizeWords]{};
-    const Uint64* m_Iv = nullptr;
 };
+
+typedef Sha2_512<ALC_DIGEST_LEN_224> Sha512_224;
+typedef Sha2_512<ALC_DIGEST_LEN_256> Sha512_256;
+typedef Sha2_512<ALC_DIGEST_LEN_384> Sha384;
+typedef Sha2_512<ALC_DIGEST_LEN_512> Sha512;
 
 } // namespace alcp::digest
