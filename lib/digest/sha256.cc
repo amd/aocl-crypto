@@ -128,35 +128,29 @@ Sha2<digest_len>::Sha2(const Sha2& src)
     m_finished = src.m_finished;
 }
 
-template<>
+template<alc_digest_len_t digest_len>
 void
-Sha256::init(void)
+Sha2<digest_len>::init(void)
 {
-    m_hash[0]  = 0x6a09e667;
-    m_hash[1]  = 0xbb67ae85;
-    m_hash[2]  = 0x3c6ef372;
-    m_hash[3]  = 0xa54ff53a;
-    m_hash[4]  = 0x510e527f;
-    m_hash[5]  = 0x9b05688c;
-    m_hash[6]  = 0x1f83d9ab;
-    m_hash[7]  = 0x5be0cd19;
-    m_finished = false;
-    m_msg_len  = 0;
-    m_idx      = 0;
-}
-
-template<>
-void
-Sha224::init(void)
-{
-    m_hash[0]  = 0xc1059ed8;
-    m_hash[1]  = 0x367cd507;
-    m_hash[2]  = 0x3070dd17;
-    m_hash[3]  = 0xf70e5939;
-    m_hash[4]  = 0xffc00b31;
-    m_hash[5]  = 0x68581511;
-    m_hash[6]  = 0x64f98fa7;
-    m_hash[7]  = 0xbefa4fa4;
+    if constexpr (digest_len == ALC_DIGEST_LEN_256) {
+        m_hash[0] = 0x6a09e667;
+        m_hash[1] = 0xbb67ae85;
+        m_hash[2] = 0x3c6ef372;
+        m_hash[3] = 0xa54ff53a;
+        m_hash[4] = 0x510e527f;
+        m_hash[5] = 0x9b05688c;
+        m_hash[6] = 0x1f83d9ab;
+        m_hash[7] = 0x5be0cd19;
+    } else {
+        m_hash[0] = 0xc1059ed8;
+        m_hash[1] = 0x367cd507;
+        m_hash[2] = 0x3070dd17;
+        m_hash[3] = 0xf70e5939;
+        m_hash[4] = 0xffc00b31;
+        m_hash[5] = 0x68581511;
+        m_hash[6] = 0x64f98fa7;
+        m_hash[7] = 0xbefa4fa4;
+    }
     m_finished = false;
     m_msg_len  = 0;
     m_idx      = 0;

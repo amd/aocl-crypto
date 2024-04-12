@@ -144,44 +144,22 @@ Sha2_512<digest_len>::Sha2_512(const Sha2_512& src)
     m_block_len  = src.m_block_len;
 }
 
-template<>
+template<alc_digest_len_t digest_len>
 void
-Sha512::init(void)
+Sha2_512<digest_len>::init(void)
 {
     m_msg_len  = 0;
     m_finished = false;
     m_idx      = 0;
-    utils::CopyQWord(&m_hash[0], &cIv_512[0], cIvSizeBytes);
-}
-
-template<>
-void
-Sha384::init(void)
-{
-    m_msg_len  = 0;
-    m_finished = false;
-    m_idx      = 0;
-    utils::CopyQWord(&m_hash[0], &cIv_384[0], cIvSizeBytes);
-}
-
-template<>
-void
-Sha512_256::init(void)
-{
-    m_msg_len  = 0;
-    m_finished = false;
-    m_idx      = 0;
-    utils::CopyQWord(&m_hash[0], &cIv_256[0], cIvSizeBytes);
-}
-
-template<>
-void
-Sha512_224::init(void)
-{
-    m_msg_len  = 0;
-    m_finished = false;
-    m_idx      = 0;
-    utils::CopyQWord(&m_hash[0], &cIv_224[0], cIvSizeBytes);
+    if constexpr (digest_len == ALC_DIGEST_LEN_512) {
+        utils::CopyQWord(&m_hash[0], &cIv_512[0], cIvSizeBytes);
+    } else if constexpr (digest_len == ALC_DIGEST_LEN_384) {
+        utils::CopyQWord(&m_hash[0], &cIv_384[0], cIvSizeBytes);
+    } else if constexpr (digest_len == ALC_DIGEST_LEN_224) {
+        utils::CopyQWord(&m_hash[0], &cIv_224[0], cIvSizeBytes);
+    } else {
+        utils::CopyQWord(&m_hash[0], &cIv_256[0], cIvSizeBytes);
+    }
 }
 
 template<alc_digest_len_t digest_len>
