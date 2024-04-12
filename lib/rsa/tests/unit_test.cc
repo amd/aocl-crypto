@@ -200,11 +200,11 @@ static const Uint8 Q_ModulusINV_2048[] = {
 static const Uint64 PublicKeyExponent = 0x10001;
 
 static inline digest::IDigest*
-fetch_digest(const alc_digest_info_t& digestInfo)
+fetch_digest(alc_digest_mode_t mode)
 {
     using namespace alcp::digest;
     digest::IDigest* digest = nullptr;
-    switch (digestInfo.dt_mode) {
+    switch (mode) {
         case ALC_SHA2_256: {
             digest = new Sha256;
             break;
@@ -645,15 +645,9 @@ TEST(RsaTest, KeySizeTest)
 
 TEST(RsaTest, EncryptOaepPadding)
 {
-    alc_digest_info_t dinfo{};
-
-    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode = ALC_SHA2_256;
-
     std::unique_ptr<digest::IDigest> digest_ptr;
 
-    digest::IDigest* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
     digest_ptr.reset(digest);
 
     Rsa<KEY_SIZE_1024> rsa_obj;
@@ -692,15 +686,9 @@ TEST(RsaTest, EncryptOaepPadding)
 
 TEST(RsaTest, DecryptOaepPadding)
 {
-    alc_digest_info_t dinfo{};
-
-    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode = ALC_SHA2_256;
-
     std::unique_ptr<digest::IDigest> digest_ptr;
 
-    digest::IDigest* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
 
     Rsa<KEY_SIZE_1024> rsa_obj;
@@ -800,11 +788,7 @@ TEST(RsaTest, PssSanity)
     status = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
     ASSERT_NE(ErrorCode::eOk, status.code());
 
-    alc_digest_info_t dinfo{};
-    dinfo.dt_type           = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len            = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode           = ALC_SHA2_256;
-    digest::IDigest* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
 
     std::unique_ptr<digest::IDigest> digest_ptr;
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
@@ -857,14 +841,9 @@ TEST(RsaTest, PssSanity)
 
 TEST(RsaTest, PssSignatureVerification)
 {
-    alc_digest_info_t dinfo{};
-    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode = ALC_SHA2_256;
-
     std::unique_ptr<digest::IDigest> digest_ptr;
 
-    digest::IDigest* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
 
     Rsa<KEY_SIZE_2048> rsa_obj_2048;
@@ -924,11 +903,7 @@ TEST(RsaTest, Pkcsv15Sanity)
     status = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
     ASSERT_NE(ErrorCode::eOk, status.code());
 
-    alc_digest_info_t dinfo{};
-    dinfo.dt_type           = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len            = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode           = ALC_SHA2_256;
-    digest::IDigest* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
 
     std::unique_ptr<digest::IDigest> digest_ptr;
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
@@ -968,14 +943,9 @@ TEST(RsaTest, Pkcsv15Sanity)
 
 TEST(RsaTest, Pkcsv15SignatureVerification)
 {
-    alc_digest_info_t dinfo{};
-    dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo.dt_mode = ALC_SHA2_256;
-
     std::unique_ptr<digest::IDigest> digest_ptr;
 
-    digest::IDigest* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
 
     Rsa<KEY_SIZE_2048> rsa_obj_2048;

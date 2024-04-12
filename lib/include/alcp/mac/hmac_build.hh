@@ -222,10 +222,10 @@ HmacBuilder::getSize(const alc_mac_info_t& macInfo)
 }
 
 Status
-isDigestSupported(const alc_digest_info_t& digestInfo)
+isDigestSupported(alc_digest_mode_t mode)
 {
     Status status{ StatusOk() };
-    switch (digestInfo.dt_mode) {
+    switch (mode) {
         case ALC_SHA2_256: {
             break;
         }
@@ -261,7 +261,7 @@ isDigestSupported(const alc_digest_info_t& digestInfo)
 Status
 HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
 {
-    return isDigestSupported(macInfo.mi_algoinfo.hmac.hmac_digest);
+    return isDigestSupported(macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode);
 }
 
 } // namespace alcp::mac

@@ -128,11 +128,11 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 }
 
 static void*
-fetch_digest(const alc_digest_info_t& digestInfo)
+fetch_digest(alc_digest_mode_t mode)
 {
     using namespace alcp::digest;
     void* digest = nullptr;
-    switch (digestInfo.dt_mode) {
+    switch (mode) {
         case ALC_SHA2_256: {
             digest = new Sha256;
             break;
@@ -196,7 +196,7 @@ alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
         ctx->m_digest = nullptr;
     }
 
-    ctx->m_digest = fetch_digest(*digestInfo);
+    ctx->m_digest = fetch_digest(digestInfo->dt_mode);
     if (ctx->m_digest == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }
@@ -222,7 +222,7 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
         ctx->m_mgf = nullptr;
     }
 
-    ctx->m_mgf = fetch_digest(*digestInfo);
+    ctx->m_mgf = fetch_digest(digestInfo->dt_mode);
     if (ctx->m_mgf == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }

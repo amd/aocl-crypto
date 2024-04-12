@@ -110,6 +110,7 @@ HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 Status
 HmacDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
-    return mac::isDigestSupported(drbgInfo.di_algoinfo.hmac_drbg.digest_info);
+    return mac::isDigestSupported(
+        drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode);
 }
 } // namespace alcp::drbg
