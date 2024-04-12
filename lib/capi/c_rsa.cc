@@ -130,7 +130,7 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 static void*
 fetch_digest(alc_digest_mode_t mode)
 {
-    using namespace alcp::digest;
+    using namespace digest;
     void* digest = nullptr;
     switch (mode) {
         case ALC_SHA2_256: {
@@ -155,22 +155,6 @@ fetch_digest(alc_digest_mode_t mode)
         }
         case ALC_SHA2_512_256: {
             digest = new Sha512_256;
-            break;
-        }
-        case ALC_SHA3_224: {
-            digest = new digest::Sha3_224;
-            break;
-        }
-        case ALC_SHA3_256: {
-            digest = new digest::Sha3_256;
-            break;
-        }
-        case ALC_SHA3_384: {
-            digest = new digest::Sha3_384;
-            break;
-        }
-        case ALC_SHA3_512: {
-            digest = new digest::Sha3_512;
             break;
         }
         default: {

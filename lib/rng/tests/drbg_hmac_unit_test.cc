@@ -305,7 +305,7 @@ class HmacDrbgKat
     }
 };
 
-template<typename SHA_CLASS, alc_digest_len_t len>
+template<typename SHA_CLASS>
 class HmacDrbgKatTemplate : public HmacDrbgKat
 {
     std::shared_ptr<SHA_CLASS> p_shaObj;
@@ -314,27 +314,12 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
     void SetUp() override
     {
         HmacDrbgKat::SetUp();
-        // ToDo : Bring back this code when Sha3 is templatized
-        // alc_digest_mode_t digest_mode = {};
-        // switch (len) {
-        //     case ALC_DIGEST_LEN_224:
-        //         digest_mode = ALC_SHA3_224;
-        //         break;
-        //     case ALC_DIGEST_LEN_256:
-        //         digest_mode = ALC_SHA3_224;
-        //         break;
-        //     default:
-        //         break;
-        // }
-        // alc_digest_info_t digest_info = {
-        //     ALC_DIGEST_TYPE_SHA3, len, {}, digest_mode, {}
-        // };
+
         switch (m_digestClass) {
             case ALC_DIGEST_TYPE_SHA2:
                 p_shaObj = std::make_shared<SHA_CLASS>();
             case ALC_DIGEST_TYPE_SHA3:
-                // ToDo : Bring back this code when Sha3 is templatized
-                // p_shaObj = std::make_shared<SHA_CLASS>(digest_info);
+                p_shaObj = std::make_shared<SHA_CLASS>();
                 break;
             default:
                 // TODO: Raise an exeception
@@ -346,12 +331,10 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
     }
 };
 
-class HmacDrbgKatSHA2_256
-    : public HmacDrbgKatTemplate<Sha256, ALC_DIGEST_LEN_256>
+class HmacDrbgKatSHA2_256 : public HmacDrbgKatTemplate<Sha256>
 {};
 
-class HmacDrbgKatSHA2_224
-    : public HmacDrbgKatTemplate<Sha224, ALC_DIGEST_LEN_224>
+class HmacDrbgKatSHA2_224 : public HmacDrbgKatTemplate<Sha224>
 {};
 
 TEST_P(HmacDrbgKatSHA2_256, SHA2)
