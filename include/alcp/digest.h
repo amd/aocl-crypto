@@ -126,9 +126,7 @@ typedef enum _alc_digest_mode
  */
 typedef struct _alc_digest_data
 {
-    /* Any unprocessed bytes from last call to update() */
-    __attribute__((aligned(64))) Uint8  m_buffer[2 * 512 / 8];
-    __attribute__((aligned(64))) Uint32 m_hash[256 / 32];
+    void* dd_ptr;
 } alc_digest_data_t;
 
 /**
