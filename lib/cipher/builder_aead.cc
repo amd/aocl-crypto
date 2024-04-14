@@ -64,6 +64,10 @@ _build_aead_wrapper(Context& ctx)
         ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
     }
 
+    if constexpr (std::is_base_of<Ccm, AEADMODE>::value) {
+        ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
+    }
+
     ctx.finish = __aes_dtor<AEADMODE>;
 }
 
@@ -111,6 +115,44 @@ __build_GcmAead(const Uint64 keyLen, Context& ctx)
             _build_aead_wrapper<GcmAEAD192>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
             _build_aead_wrapper<GcmAEAD256>(ctx);
+        }
+    }
+    return sts;
+}
+
+static Status
+__build_CcmAead(const Uint64 keyLen, Context& ctx)
+{
+    Status sts = StatusOk();
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+        using namespace vaes512;
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead_wrapper<CcmAead128>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead_wrapper<CcmAead192>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead_wrapper<CcmAead256>(ctx);
+        }
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+        using namespace vaes;
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead_wrapper<CcmAead128>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead_wrapper<CcmAead192>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead_wrapper<CcmAead256>(ctx);
+        }
+    } else {
+        using namespace aesni;
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead_wrapper<CcmAead128>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead_wrapper<CcmAead192>(ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead_wrapper<CcmAead256>(ctx);
         }
     }
     return sts;
@@ -478,8 +520,7 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
             break;
 #endif
         case ALC_AES_MODE_CCM:
-            _build_aead_wrapper<Ccm>(ctx);
-            sts.update(StatusOk());
+            sts = __build_CcmAead(keyLen, ctx);
             break;
         default:
             break;

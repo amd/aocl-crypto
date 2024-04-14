@@ -160,6 +160,7 @@ class Aes : public Rijndael
 AES_CLASS_GEN(Ofb, Aes)
 
 // class  for all AEAD cipher modes
+// FIXME: This class should be final.
 #define AEAD_CLASS_GEN(CHILD_NEW, PARENT)                                      \
     class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \

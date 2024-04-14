@@ -37,6 +37,20 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
+// Macros
+// FIXME: Better to use template instead of this.
+#define CRYPT_AEAD_WRAPPER_FUNC(                                               \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, ENCRYPT_FLAG)                         \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
+                                         const Uint8*       pInput,            \
+                                         Uint8*             pOutput,           \
+                                         Uint64             len)               \
+    {                                                                          \
+        Status s = StatusOk();                                                 \
+        s        = Ccm::FUNC_NAME(pInput, pOutput, len, ENCRYPT_FLAG);         \
+        return s.code();                                                       \
+    } // namespace alcp::cipher
+
 inline void
 ctrInc(Uint8 ctr[])
 {
@@ -51,78 +65,28 @@ ctrInc(Uint8 ctr[])
     }
 }
 
-// Ccm Functions
-Ccm::Ccm() {}
-
-Ccm::Ccm(const Uint8* pKey, const Uint32 keyLen) {}
-
 Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
 {
 }
 
-void
-Ccm::init(ccm_data_t* ccm_data, unsigned int t, unsigned int q)
-{
-    // ENTER();
-    std::fill(ccm_data->nonce, ccm_data->nonce + sizeof(ccm_data->nonce), 0);
-    std::fill(ccm_data->cmac, ccm_data->cmac + sizeof(ccm_data->cmac), 0);
-    ccm_data->nonce[0] = (static_cast<Uint8>(q - 1) & 7)
-                         | static_cast<Uint8>(((t - 2) / 2) & 7) << 3;
-    ccm_data->blocks = 0;
-    // EXIT();
-}
-
-alc_error_t
-Ccm::init(alc_cipher_data_t* ctx,
-          const Uint8*       pKey,
-          Uint64             keyLen,
-          const Uint8*       pIv,
-          Uint64             ivLen)
-{
-    Aes::init(ctx, pKey, keyLen, pIv, ivLen);
-    if (ivLen < 7 || ivLen > 13) {
-        // s = status::InvalidValue(
-        //     "IV length needs to be between 7 and 13 both not included!");
-        return ALC_ERROR_INVALID_SIZE;
-    }
-
-    m_ivLen = ivLen;
-
-    // Initialize ccm_data
-    m_ccm_data.blocks = 0;
-    m_ccm_data.key    = nullptr;
-    m_ccm_data.rounds = 0;
-    memset(m_ccm_data.cmac, 0, 16);
-    memset(m_ccm_data.nonce, 0, 16);
-    // 15 = n + q where n is size of nonce (iv) and q is the size of
-    // size in bytes of size in bytes of plaintext. Basically size of the
-    // variable which can store size of plaintext. This size can be fixed to a
-    // max of q = 15 - n.
-    init(&m_ccm_data, m_tagLen, 15 - ivLen);
-    return ALC_ERROR_NONE;
-}
-
+// FIXME: nRounds needs to be constexpr to be more efficient
 Status
 Ccm::cryptUpdate(const Uint8 pInput[],
                  Uint8       pOutput[],
-                 Uint64      len,
-                 const Uint8 pIv[],
-                 Uint64      ivLen,
+                 Uint64      dataLen,
                  bool        isEncrypt)
 {
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
 
-        m_dataLen = len;
-
         const Uint8* p_keys  = getEncryptKeys();
-        const Uint32 cRounds = getRounds();
+        const Uint32 cRounds = m_nrounds;
         m_ccm_data.key       = p_keys;
         m_ccm_data.rounds    = cRounds;
 
         // Below Operations has to be done in order
-        s.update(setIv(&m_ccm_data, pIv, ivLen, len));
+        s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
@@ -130,7 +94,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {
                 CCM_ERROR err =
-                    aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, len);
+                    aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, dataLen);
                 switch (err) {
                     case CCM_ERROR::LEN_MISMATCH:
                         s = status::EncryptFailed(
@@ -145,7 +109,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                 }
             } else {
                 CCM_ERROR err =
-                    aesni::ccm::Decrypt(&m_ccm_data, pInput, pOutput, len);
+                    aesni::ccm::Decrypt(&m_ccm_data, pInput, pOutput, dataLen);
                 switch (err) {
                     case CCM_ERROR::LEN_MISMATCH:
                         s = status::DecryptFailed(
@@ -159,7 +123,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                 // Burn everything
                 memset(m_ccm_data.nonce, 0, 16);
                 memset(m_ccm_data.cmac, 0, 16);
-                memset(pOutput, 0, len);
+                memset(pOutput, 0, dataLen);
                 return s;
             }
             return s;
@@ -169,9 +133,9 @@ Ccm::cryptUpdate(const Uint8 pInput[],
         setAadRef(&m_ccm_data, m_additionalData, m_additionalDataLen);
         // FIXME: Encrypt and Decrypt needs to be defined.
         if (isEncrypt) {
-            s.update(encryptRef(&m_ccm_data, pInput, pOutput, len));
+            s.update(encryptRef(&m_ccm_data, pInput, pOutput, dataLen));
         } else {
-            s.update(decryptRef(&m_ccm_data, pInput, pOutput, len));
+            s.update(decryptRef(&m_ccm_data, pInput, pOutput, dataLen));
         }
         if (s.ok() != true) {
             // Burn everything
@@ -179,7 +143,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
             // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
             memset(m_ccm_data.nonce, 0, 16);
             memset(m_ccm_data.cmac, 0, 16);
-            memset(pOutput, 0, len);
+            memset(pOutput, 0, dataLen);
             return s;
         }
     } else {
@@ -190,9 +154,9 @@ Ccm::cryptUpdate(const Uint8 pInput[],
 
 Status
 Ccm::encryptRef(ccm_data_t* pccm_data,
-                const Uint8 pinp[],
-                Uint8       pout[],
-                size_t      len)
+                const Uint8 pPlainText[],
+                Uint8       pCipherText[],
+                size_t      ptLen)
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
@@ -234,7 +198,7 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
     p_nonce_8[15] = 1;
 
     // Check if input length matches the intialized length
-    if (n != len) {
+    if (n != ptLen) {
         // EXITB();
         s = status::EncryptFailed("Length of plainText mismatch!");
         return s;
@@ -242,16 +206,16 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
 
     // Check with everything combined we won't have too many blocks to
     // encrypt
-    pccm_data->blocks += ((len + 15) >> 3) | 1;
+    pccm_data->blocks += ((ptLen + 15) >> 3) | 1;
     if (pccm_data->blocks > (Uint64(1) << 61)) {
         // EXITB();
         s = status::EncryptFailed("Overload of plaintext. Please reduce it!");
         return s;
     }
 
-    while (len >= 16) {
+    while (ptLen >= 16) {
         // Load the PlainText
-        utils::CopyBytes(in_reg, pinp, 16);
+        utils::CopyBytes(in_reg, pPlainText, 16);
 
         /* CBC */
         // Generate CMAC given plaintext by using cbc algorithm
@@ -270,25 +234,25 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         }
 
         // Store CipherText
-        utils::CopyBytes(pout, temp_reg, 16);
+        utils::CopyBytes(pCipherText, temp_reg, 16);
 
-        pinp += 16;
-        pout += 16;
-        len -= 16;
+        pPlainText += 16;
+        pCipherText += 16;
+        ptLen -= 16;
     }
-    if (len) {
+    if (ptLen) {
         /* CBC */
         // For what ever is left, generate block to encrypt using ctr
-        for (i = 0; i < len; i++) {
-            p_cmac_8[i] ^= pinp[i];
+        for (i = 0; i < ptLen; i++) {
+            p_cmac_8[i] ^= pPlainText[i];
         }
         encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         /* CTR */
         utils::CopyBytes(temp_reg, nonce, 16);
         encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-        for (i = 0; i < len; ++i)
-            pout[i] = p_temp_8[i] ^ pinp[i];
+        for (i = 0; i < ptLen; ++i)
+            pCipherText[i] = p_temp_8[i] ^ pPlainText[i];
     }
     // Zero out counter part
     for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
@@ -315,9 +279,9 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
 
 Status
 Ccm::decryptRef(ccm_data_t* pccm_data,
-                const Uint8 pinp[],
-                Uint8       pout[],
-                size_t      len)
+                const Uint8 pCipherText[],
+                Uint8       pPlainText[],
+                size_t      ctLen)
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
@@ -357,20 +321,20 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
     p_nonce_8[15] = 1;
 
     // Check if input length matches the intialized length
-    if (n != len) {
+    if (n != ctLen) {
         // EXITB();
         s = status::DecryptFailed("Length of plainText mismatch!");
         return s;
     }
 
-    while (len >= 16) {
+    while (ctLen >= 16) {
 
         /* CTR */
         utils::CopyBytes(temp_reg, nonce, 16);
         encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
         ctrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
 
-        utils::CopyBytes(in_reg, pinp, 16); // Load CipherText
+        utils::CopyBytes(in_reg, pCipherText, 16); // Load CipherText
         // Generate PlainText (Complete CTR)
         for (int i = 0; i < 4; i++) {
             temp_reg[i] ^= in_reg[i];
@@ -382,26 +346,26 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
             cmac[i] ^= temp_reg[i];
         }
 
-        utils::CopyBytes(pout, temp_reg, 16); // Store plaintext.
+        utils::CopyBytes(pPlainText, temp_reg, 16); // Store plaintext.
 
         // Generate the partial tag, Xor of CBC is above
         encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
-        pinp += 16;
-        pout += 16;
-        len -= 16;
+        pCipherText += 16;
+        pPlainText += 16;
+        ctLen -= 16;
     }
 
-    if (len) {
+    if (ctLen) {
         /* CTR */
         utils::CopyBytes(temp_reg, nonce, 16); // Copy Counter
         encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
 
-        for (i = 0; i < len; ++i) {
+        for (i = 0; i < ctLen; ++i) {
             // CTR XOR operation to generate plaintext
-            pout[i] = p_temp_8[i] ^ pinp[i];
+            pPlainText[i] = p_temp_8[i] ^ pCipherText[i];
             // CBC XOR operation to generate cmac
-            p_cmac_8[i] ^= pout[i];
+            p_cmac_8[i] ^= pPlainText[i];
         }
 
         /* CBC */
@@ -433,50 +397,8 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
     return s;
 }
 
-alc_error_t
-Ccm::decryptUpdate(alc_cipher_data_t* ctx,
-                   const Uint8        pInput[],
-                   Uint8              pOutput[],
-                   Uint64             len)
-{
-    Status s = StatusOk();
-    // FIXME: ctx to be passed to cryptUpdate
-    s = cryptUpdate(pInput, pOutput, len, m_pIv_aes, m_ivLen_aes, false);
-    return s.code();
-}
-
-alc_error_t
-Ccm::encryptUpdate(alc_cipher_data_t* ctx,
-                   const Uint8        pInput[],
-                   Uint8              pOutput[],
-                   Uint64             len)
-{
-    Status s = StatusOk();
-    s        = cryptUpdate(pInput, pOutput, len, m_pIv_aes, m_ivLen_aes, true);
-    return s.code();
-}
-
-alc_error_t
-Ccm::getTag(alc_cipher_data_t* ctx, Uint8 pOutput[], Uint64 len)
-{
-    Status s = StatusOk();
-    if (len < 4 || len > 16 || len == 0) {
-        s = status::InvalidValue(
-            "Tag length is not what we agreed upon during start!");
-        return s.code();
-    }
-    // If tagLen is 0 that means something seriously went south
-    if (m_tagLen == 0) {
-        s = status::InvalidValue(
-            "Tag length is unknown!, need to agree on tag before hand!");
-    } else {
-        s.update(getTag(&m_ccm_data, pOutput, len));
-    }
-    return s.code();
-}
-
 Status
-Ccm::getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len)
+Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
 {
     // ENTER();
     // Retrieve the tag length
@@ -485,76 +407,68 @@ Ccm::getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len)
 
     t *= 2;
     t += 2;
-    if (len != t) {
+    if (tagLen != t) {
         // EXITB();
         s = status::InvalidValue(
             "Tag length is not what we agreed upon during start!");
         return s;
     }
     utils::CopyBytes(ptag, ctx->cmac, t);
-    memset(ctx->cmac, 0, len);
+    memset(ctx->cmac, 0, tagLen);
     // EXITG();
     return s;
 }
 
 Status
-Ccm::setIv(ccm_data_t* ccm_data, const Uint8 pnonce[], size_t nlen, size_t mlen)
+Ccm::setIv(ccm_data_t* ccm_data,
+           const Uint8 pIv[],
+           size_t      ivLen,
+           size_t      dataLen)
 {
     // ENTER();
     Status       s = StatusOk();
     unsigned int q = ccm_data->nonce[0] & 7;
 
-    if (nlen < (14 - q)) {
+    if (ivLen < (14 - q)) {
         // EXITB();
         s = status::InvalidValue("Length of nonce is too small!");
         return s;
     }
-    if (sizeof(mlen) == 8 && q >= 3) {
-        ccm_data->nonce[8]  = static_cast<Uint8>(mlen >> 56);
-        ccm_data->nonce[9]  = static_cast<Uint8>(mlen >> 48);
-        ccm_data->nonce[10] = static_cast<Uint8>(mlen >> 40);
-        ccm_data->nonce[11] = static_cast<Uint8>(mlen >> 32);
+    if (sizeof(dataLen) == 8 && q >= 3) {
+        ccm_data->nonce[8]  = static_cast<Uint8>(dataLen >> 56);
+        ccm_data->nonce[9]  = static_cast<Uint8>(dataLen >> 48);
+        ccm_data->nonce[10] = static_cast<Uint8>(dataLen >> 40);
+        ccm_data->nonce[11] = static_cast<Uint8>(dataLen >> 32);
     } else {
         memset(ccm_data->nonce + 8, 0, 8);
     }
 
-    ccm_data->nonce[12] = static_cast<Uint8>(mlen >> 24);
-    ccm_data->nonce[13] = static_cast<Uint8>(mlen >> 16);
-    ccm_data->nonce[14] = static_cast<Uint8>(mlen >> 8);
-    ccm_data->nonce[15] = static_cast<Uint8>(mlen);
+    ccm_data->nonce[12] = static_cast<Uint8>(dataLen >> 24);
+    ccm_data->nonce[13] = static_cast<Uint8>(dataLen >> 16);
+    ccm_data->nonce[14] = static_cast<Uint8>(dataLen >> 8);
+    ccm_data->nonce[15] = static_cast<Uint8>(dataLen);
 
     ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
-    utils::CopyBytes(&ccm_data->nonce[1], pnonce, 14 - q);
+    utils::CopyBytes(&ccm_data->nonce[1], pIv, 14 - q);
     // EXITG();
     return s;
 }
 
 alc_error_t
-Ccm::setTagLength(alc_cipher_data_t* ctx, Uint64 len)
+Ccm::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
 {
     Status s = StatusOk();
-    if (len < 4 || len > 16) {
+    if (tagLen < 4 || tagLen > 16) {
         s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
         return s.code();
     }
-    m_tagLen = len;
-    return s.code();
-}
-
-// FIXME: Merge 2 below functions
-alc_error_t
-Ccm::setAad(alc_cipher_data_t* ctx, const Uint8 pInput[], Uint64 len)
-{
-    Status s = StatusOk();
-
-    m_additionalData    = pInput;
-    m_additionalDataLen = len;
-
+    // Stored to verify in the getTagLength API
+    m_tagLen = tagLen;
     return s.code();
 }
 
 Status
-Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen)
+Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
 {
     Status s         = StatusOk();
     Uint32 p_blk0[4] = {};
@@ -562,7 +476,7 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen)
     Uint8* p_blk0_8  = reinterpret_cast<Uint8*>(&p_blk0);
     Uint64 i         = {};
 
-    if (alen == 0) {
+    if (aadLen == 0) {
         return s; // Nothing to be done
     }
 
@@ -575,44 +489,44 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen)
 
     pccm_data->blocks++;
 
-    if (alen < (0x10000 - 0x100)) {
+    if (aadLen < (0x10000 - 0x100)) {
         // alen < (2^16 - 2^8)
-        *(p_blk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
-        *(p_blk0_8 + 1) ^= static_cast<Uint8>(alen);
+        *(p_blk0_8 + 0) ^= static_cast<Uint8>(aadLen >> 8);
+        *(p_blk0_8 + 1) ^= static_cast<Uint8>(aadLen);
         i = 2;
-    } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
+    } else if (sizeof(aadLen) == 8 && aadLen >= ((size_t)1 << 32)) {
         // alen > what 32 bits can hold.
         *(p_blk0_8 + 0) ^= 0xFF;
         *(p_blk0_8 + 1) ^= 0xFF;
-        *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 56);
-        *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 48);
-        *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 40);
-        *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen >> 32);
-        *(p_blk0_8 + 6) ^= static_cast<Uint8>(alen >> 24);
-        *(p_blk0_8 + 7) ^= static_cast<Uint8>(alen >> 16);
-        *(p_blk0_8 + 8) ^= static_cast<Uint8>(alen >> 8);
-        *(p_blk0_8 + 9) ^= static_cast<Uint8>(alen);
+        *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 56);
+        *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 48);
+        *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 40);
+        *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen >> 32);
+        *(p_blk0_8 + 6) ^= static_cast<Uint8>(aadLen >> 24);
+        *(p_blk0_8 + 7) ^= static_cast<Uint8>(aadLen >> 16);
+        *(p_blk0_8 + 8) ^= static_cast<Uint8>(aadLen >> 8);
+        *(p_blk0_8 + 9) ^= static_cast<Uint8>(aadLen);
         i = 10;
     } else {
         // alen is represented by 32 bits but larger than
         // what 16 bits can hold
         *(p_blk0_8 + 0) ^= 0xFF;
         *(p_blk0_8 + 1) ^= 0xFE;
-        *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 24);
-        *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 16);
-        *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 8);
-        *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen);
+        *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 24);
+        *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 16);
+        *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 8);
+        *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen);
         i = 6;
     }
 
     // i=2,6,10 to i=16 do the CBC operation
-    for (; i < 16 && alen; ++i, ++paad, --alen)
+    for (; i < 16 && aadLen; ++i, ++paad, --aadLen)
         *(p_blk0_8 + i) ^= *paad;
 
     encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
     pccm_data->blocks++;
 
-    Uint64 alen_16 = alen / 16;
+    Uint64 alen_16 = aadLen / 16;
     for (Uint64 j = 0; j < alen_16; j++) {
         utils::CopyBytes(aad_32, paad, 16);
         // CBC XOR Operation
@@ -626,11 +540,11 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen)
     }
 
     // Reduce already processed value from alen
-    alen -= alen_16 * 16;
+    aadLen -= alen_16 * 16;
 
-    if (alen != 0) {
+    if (aadLen != 0) {
         // Process the rest in the default way
-        for (i = 0; i < 16 && alen; i++, paad++, alen--) {
+        for (i = 0; i < 16 && aadLen; i++, paad++, aadLen--) {
             *(p_blk0_8 + i) ^= *paad;
         }
 
@@ -644,6 +558,108 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen)
     return s;
 }
 
-Ccm::~Ccm() {}
+// Auth class definitions
+
+alc_error_t
+CcmHash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
+{
+
+    m_additionalData    = pInput;
+    m_additionalDataLen = aadLen;
+
+    return ALC_ERROR_NONE;
+}
+
+alc_error_t
+CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
+{
+    Status s = StatusOk();
+    if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
+        s = status::InvalidValue(
+            "Tag length is not what we agreed upon during start!");
+        return s.code();
+    }
+    // If tagLen is 0 that means something seriously went south
+    if (m_tagLen == 0) {
+        s = status::InvalidValue(
+            "Tag length is unknown!, need to agree on tag before hand!");
+    } else {
+        s.update(Ccm::getTagRef(&m_ccm_data, pOutput, tagLen));
+    }
+    return s.code();
+}
+
+alc_error_t
+CcmHash::init(alc_cipher_data_t* ctx,
+              const Uint8*       pKey,
+              Uint64             keyLen,
+              const Uint8*       pIv,
+              Uint64             ivLen)
+{
+    int t = m_tagLen;
+    int q = 15 - ivLen;
+    if (pKey != nullptr) {
+        Aes::init(ctx, pKey, keyLen, pIv, ivLen);
+    }
+
+    if (ivLen != 0 && m_tagLen != 0) {
+        if (ivLen < 7 || ivLen > 13) {
+            // s = status::InvalidValue(
+            //     "IV length needs to be between 7 and 13 both not included!");
+            return ALC_ERROR_INVALID_SIZE;
+        }
+        // Initialize ccm_data
+        m_ccm_data.blocks = 0;
+        m_ccm_data.key    = nullptr;
+        m_ccm_data.rounds = 0;
+        memset(m_ccm_data.cmac, 0, 16);
+        memset(m_ccm_data.nonce, 0, 16);
+        // 15 = n + q where n is size of nonce (iv) and q is the size of
+        // size in bytes of size in bytes of plaintext. Basically size of the
+        // variable which can store size of plaintext. This size can be fixed to
+        // a max of q = 15 - n.
+        std::fill(
+            m_ccm_data.nonce, m_ccm_data.nonce + sizeof(m_ccm_data.nonce), 0);
+        std::fill(
+            m_ccm_data.cmac, m_ccm_data.cmac + sizeof(m_ccm_data.cmac), 0);
+        m_ccm_data.nonce[0] = (static_cast<Uint8>(q - 1) & 7)
+                              | static_cast<Uint8>(((t - 2) / 2) & 7) << 3;
+    }
+    m_ccm_data.blocks = 0;
+    return ALC_ERROR_NONE;
+}
+// Aead class definitions
+namespace vaes512 {
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, false)
+
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, false)
+
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, false)
+} // namespace vaes512
+
+namespace vaes {
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, false)
+
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, false)
+
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, false)
+} // namespace vaes
+
+namespace aesni {
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, false)
+
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, false)
+
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, true)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, false)
+} // namespace aesni
 
 } // namespace alcp::cipher

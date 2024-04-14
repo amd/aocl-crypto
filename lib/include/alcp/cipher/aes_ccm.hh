@@ -61,6 +61,7 @@ enum class CCM_ERROR
 };
 
 namespace aesni::ccm {
+    // Defined in arch/zen3
     void SetAad(ccm_data_t* ctx, const Uint8 aad[], size_t alen);
 
     CCM_ERROR Encrypt(ccm_data_t* ctx,
@@ -74,57 +75,16 @@ namespace aesni::ccm {
                       size_t      len);
 } // namespace aesni::ccm
 
-class ALCP_API_EXPORT Ccm final : public Aes
-//, cipher::IDecryptUpdater
-//, cipher::IEncryptUpdater
+class ALCP_API_EXPORT Ccm : public Aes
 {
-  private:
-    Uint64       m_dataLen           = 0;
-    Uint64       m_ivLen             = 0;
+  protected: // Needs to be protected as class CcmHash should use it
     Uint64       m_tagLen            = 0;
     Uint64       m_additionalDataLen = 0;
     const Uint8* m_additionalData;
 
     ccm_data_t m_ccm_data;
 
-  public:
-    explicit Ccm(const Uint8* pKey, const Uint32 keyLen);
-    explicit Ccm(alc_cipher_data_t* ctx);
-
-    Ccm();
-    ~Ccm();
-
-    void init(ccm_data_t* ccm_data, unsigned int t, unsigned int q);
-
-    /**
-     * @brief Intialize CCM
-     *
-     * @param ctx - Context
-     * @param pKey - Key for encryption
-     * @param keyLen
-     * @param pIv
-     * @param ivLen
-     * @return
-     */
-    alc_error_t init(alc_cipher_data_t* ctx,
-                     const Uint8*       pKey,
-                     Uint64             keyLen,
-                     const Uint8*       pIv,
-                     Uint64             ivLen);
-
-    virtual alc_error_t getTag(alc_cipher_data_t* ctx,
-                               Uint8*             pOutput,
-                               Uint64             len);
-
-    /**
-     * @brief Get CCM Tag
-     * @param ctx Intermediate Data
-     * @param ptag tag memory
-     * @param len Length of the tag
-     * @return
-     */
-    Status getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len);
-
+  private:
     /**
      * @brief Set IV(nonce)
      * @param ccm_data Intermediate Data
@@ -134,14 +94,15 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @return
      */
     Status setIv(ccm_data_t* ccm_data,
-                 const Uint8 pnonce[],
+                 const Uint8 pIv[],
                  size_t      nlen,
                  size_t      mlen);
 
-    // FIXME: Too many setAad calls, fix it
-    virtual alc_error_t setAad(alc_cipher_data_t* ctx,
-                               const Uint8*       pInput,
-                               Uint64             len);
+  public:
+    explicit Ccm(alc_cipher_data_t* ctx);
+
+    Ccm()  = default;
+    ~Ccm() = default;
 
     /**
      * @brief Set tag length to adjust nonce value
@@ -151,17 +112,11 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @param len  - Length of Tag
      * @return
      */
-    virtual alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 len);
+    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen);
 
-    /**
-     * @brief Set Ad
-     * ditional Data.
-     * @param pccm_data Intermediate Data
-     * @param paad Additional Data Pointer
-     * @param alen Length of additional data
-     */
-    Status setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen);
-
+    // FIXME: This internal function needs to be protected/private
+    // as there is 2 levels of inheritance down which this function
+    // needs to be used, there is no way to make it protected/private
     /**
      * @brief Encrypt/Decrypt for CCM
      *
@@ -176,27 +131,34 @@ class ALCP_API_EXPORT Ccm final : public Aes
      */
     Status cryptUpdate(const Uint8 pInput[],
                        Uint8       pOutput[],
-                       Uint64      len,
-                       const Uint8 pIv[],
-                       Uint64      ivLen,
+                       Uint64      dataLen,
                        bool        isEncrypt);
 
+    // FIXME: Move Ref implemntation to arch/reference
+  protected:
     /**
-     * @brief   CCM Encrypt Operation
-     * @note
-     * @param   pInput      Pointer to input buffer
-     *                          (plainText or Additional data)
-     * @param   pOuput          Pointer to encrypted buffer
-     *                          when pointer NULL, input is additional data
-     * @param   len             Len of input buffer
-     *                          (plainText or Additional data)
-     * @param   pIv             Pointer to Initialization Vector @return
-     * alc_error_t     Error code
+     * @brief Reference decrypt function
+     *
+     *
+     * @param ccm_data  State
+     * @param pInput    Cipher Text
+     * @param pOutput   Plain Text
+     * @param len       Length of Cipher Text
+     * @return          Status
      */
-    virtual alc_error_t encryptUpdate(alc_cipher_data_t* ctx,
-                                      const Uint8*       pInput,
-                                      Uint8*             pOutput,
-                                      Uint64             len);
+    Status decryptRef(ccm_data_t* ccm_data,
+                      const Uint8 pCipherText[],
+                      Uint8       pPlainText[],
+                      Uint64      ctLen);
+
+    /**
+     * @brief Set Ad
+     * ditional Data.
+     * @param pccm_data Intermediate Data
+     * @param paad Additional Data Pointer
+     * @param alen Length of additional data
+     */
+    Status setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen);
 
     /**
      * @brief Reference encryption function
@@ -209,38 +171,38 @@ class ALCP_API_EXPORT Ccm final : public Aes
      * @return          Status
      */
     Status encryptRef(ccm_data_t* ccm_data,
-                      const Uint8 pInput[],
-                      Uint8       pOutput[],
-                      Uint64      len);
+                      const Uint8 pPlainText[],
+                      Uint8       pCipherText[],
+                      Uint64      ptLen);
 
     /**
-     * @brief Reference decrypt function
-     *
-     *
-     * @param ccm_data  State
-     * @param pInput    Cipher Text
-     * @param pOutput   Plain Text
-     * @param len       Length of Cipher Text
-     * @return          Status
+     * @brief Get CCM Tag
+     * @param ctx Intermediate Data
+     * @param ptag tag memory
+     * @param len Length of the tag
+     * @return
      */
-    Status decryptRef(ccm_data_t* ccm_data,
-                      const Uint8 pInput[],
-                      Uint8       pOutput[],
-                      Uint64      len);
-
-    /**
-     * @brief   CCM Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decryptUpdate(alc_cipher_data_t* ctx,
-                                      const Uint8*       pCipherText,
-                                      Uint8*             pPlainText,
-                                      Uint64             len);
+    Status getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen);
 };
+
+AEAD_AUTH_CLASS_GEN(CcmHash, Ccm);
+
+namespace vaes512 {
+    AEAD_CLASS_GEN(CcmAead128, CcmHash);
+    AEAD_CLASS_GEN(CcmAead192, CcmHash);
+    AEAD_CLASS_GEN(CcmAead256, CcmHash);
+} // namespace vaes512
+
+namespace vaes {
+    AEAD_CLASS_GEN(CcmAead128, CcmHash);
+    AEAD_CLASS_GEN(CcmAead192, CcmHash);
+    AEAD_CLASS_GEN(CcmAead256, CcmHash);
+} // namespace vaes
+
+namespace aesni {
+    AEAD_CLASS_GEN(CcmAead128, CcmHash);
+    AEAD_CLASS_GEN(CcmAead192, CcmHash);
+    AEAD_CLASS_GEN(CcmAead256, CcmHash);
+} // namespace aesni
 
 } // namespace alcp::cipher
