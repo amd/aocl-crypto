@@ -53,7 +53,7 @@ alcp_prov_sha2_init(void* vctx, const OSSL_PARAM params[])
             return 0;                                                          \
         }                                                                      \
                                                                                \
-        *outl = len;                                                           \
+        *outl = outsize;                                                       \
         return alcp_prov_digest_final(vctx, out, outsize);                     \
     }
 
