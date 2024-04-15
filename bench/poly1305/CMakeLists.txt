@@ -23,15 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-INCLUDE(FetchContent)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
-FetchContent_Declare(benchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.6.1)
-FetchContent_MakeAvailable(benchmark)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/poly1305/base/alc_poly1305.cc ../../tests/poly1305/base/poly1305.cc)

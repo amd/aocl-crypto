@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,15 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-INCLUDE(FetchContent)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
-FetchContent_Declare(benchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.6.1)
-FetchContent_MakeAvailable(benchmark)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC}
