@@ -47,14 +47,14 @@ ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
 {
     ENTER();
     switch (operation_id) {
-        /*FIXME: When Cipher Provider is enabled and MAC provider is
-         * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
-         * internally tries to use CBC from alcp and multi update is not
-         * supported in ALCP as of now.  */
-        case OSSL_OP_CIPHER:
-            EXIT();
-            return ALC_prov_ciphers;
-            break;
+            /*FIXME: When Cipher Provider is enabled and MAC provider is
+             * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
+             * internally tries to use CBC from alcp and multi update is not
+             * supported in ALCP as of now.  */
+            // case OSSL_OP_CIPHER:
+            //     EXIT();
+            //     return ALC_prov_ciphers;
+            //     break;
             /*  FIXME: Disabled MAC,Digest and RNG Providers as of now to shift
                 focus to Cipher Provider Apps Integration*/
         case OSSL_OP_DIGEST:
