@@ -20,16 +20,12 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 4.2.1
 ---------------------------------------------------------------------------
-AOCL-Mar2024
+AOCL-April2024
 ---------------------------------------------------------------------------
   -- OpenSSL Compat (provider) library:
-	  -- Bug fixes and optimizations in cipher (all AEAD and non AEAD modes)
-	  -- AES-GCM: TLS bug fix
-	  -- Memory leaks fixes across all cipher algorithms.
-	  -- Versioning in provider library.
-  -- Poly1305: Optimizations in Reference algorithm.
-  -- AES-CFB: Bug fixes
-  -- Build system improvements:
-      -- Adding all Integration tests and unit tests into ctest.
-      -- Added cmake argument to cover valgrind tests
-  -- Tests: Refactoring and clean up
+	  -- Digest provider redesign.
+  -- Poly1305: Performance improvements and fixes
+  -- Chacha20: Performance improvements and bug fixes
+  -- RSA: Integration tests and benchmarks added for Sign and verify APIs
+  -- Digest: Updates to integration tests,benchmarks and examples to accomodate the API lifecycle changes
+  -- Build system improvements
