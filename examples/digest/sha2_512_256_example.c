@@ -207,6 +207,7 @@ main(void)
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);
+            return -1;
         } else {
             printf("=== Passed ===\n");
         }

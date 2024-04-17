@@ -48,7 +48,7 @@ create_demo_session(void)
         return ALC_ERROR_NO_MEMORY;
     }
 
-    err = alcp_digest_request(ALC_SHA2_512, &s_dg_handle);
+    err = alcp_digest_request(ALC_SHA2_512_224, &s_dg_handle);
 
     if (alcp_is_error(err)) {
         return err;
@@ -208,6 +208,7 @@ main(void)
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);
+            return -1;
         } else {
             printf("=== Passed ===\n");
         }
