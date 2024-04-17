@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -97,17 +97,19 @@ run_cmac(const alc_mac_info_p macInfo,
     return err;
 }
 
-void
-displayResults(char*  hmac_string,
-               Uint8* key,
-               Uint32 keylen,
-               Uint8* cipherText,
-               Uint32 cipherTextLen,
-               Uint8* mac,
-               Uint32 macLen,
-               Uint8* expectedMac,
-               Uint32 expectedMacLength)
+bool
+validateMAC(char*  hmac_string,
+            Uint8* key,
+            Uint32 keylen,
+            Uint8* cipherText,
+            Uint32 cipherTextLen,
+            Uint8* mac,
+            Uint32 macLen,
+            Uint8* expectedMac,
+            Uint32 expectedMacLength)
 {
+
+    bool isvalidated = false;
     printf("%s", hmac_string);
     printf(" : ");
     printf("\n\t");
@@ -125,12 +127,15 @@ displayResults(char*  hmac_string,
     printf("\n\t");
     if (!compareArray(mac, macLen, expectedMac, expectedMacLength)) {
         printf("MAC IS VERIFIED");
+        isvalidated = true;
     } else {
         printf("INVALID MAC");
     }
     printf("\n");
     printf("=======================");
     printf("\n");
+
+    return isvalidated;
 }
 
 int
@@ -172,15 +177,18 @@ demo_cmac()
         return -1;
     } else {
 
-        displayResults("CMAC",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("CMAC",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }

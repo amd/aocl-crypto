@@ -105,17 +105,18 @@ out:
     return err;
 }
 
-void
-displayResults(char*  hmac_string,
-               Uint8* key,
-               Uint32 keylen,
-               Uint8* cipherText,
-               Uint32 cipherTextLen,
-               Uint8* mac,
-               Uint32 macLen,
-               Uint8* expectedMac,
-               Uint32 expectedMacLength)
+int
+validateMAC(char*  hmac_string,
+            Uint8* key,
+            Uint32 keylen,
+            Uint8* cipherText,
+            Uint32 cipherTextLen,
+            Uint8* mac,
+            Uint32 macLen,
+            Uint8* expectedMac,
+            Uint32 expectedMacLength)
 {
+    bool isvalidated = false;
     printf("%s", hmac_string);
     printf(" : ");
     printf("\n\t");
@@ -133,12 +134,15 @@ displayResults(char*  hmac_string,
     printf("\n\t");
     if (!compareArray(mac, macLen, expectedMac, expectedMacLength)) {
         printf("MAC IS VERIFIED");
+        isvalidated = true;
     } else {
         printf("INVALID MAC");
     }
     printf("\n");
     printf("=======================");
     printf("\n");
+
+    return isvalidated;
 }
 
 int
@@ -191,15 +195,18 @@ demo_Hmac_Sha256()
         return -1;
     } else {
 
-        displayResults("HMAC SHA2-256",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA2-256",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -264,15 +271,18 @@ demo_Hmac_Sha224()
 
     } else {
 
-        displayResults("HMAC SHA2-224",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA2-224",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -344,15 +354,18 @@ demo_Hmac_Sha512()
 
     } else {
 
-        displayResults("HMAC SHA2-512",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA2-512",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -401,15 +414,18 @@ demo_Hmac_Sha3_224()
         return -1;
     } else {
 
-        displayResults("HMAC SHA3-224",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA3-224",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -461,15 +477,18 @@ demo_Hmac_Sha3_256()
         return -1;
     } else {
 
-        displayResults("HMAC SHA3-256",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA3-256",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -527,15 +546,18 @@ demo_Hmac_Sha3_512()
         return -1;
     } else {
 
-        displayResults("HMAC SHA3-512",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA3-512",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -585,7 +607,7 @@ demo_Hmac_Sha384()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = ALC_SHA3_384,
+                    .dt_mode = ALC_SHA2_384,
                 }
             }
         },
@@ -601,15 +623,18 @@ demo_Hmac_Sha384()
         return -1;
     } else {
 
-        displayResults("HMAC SHA2-384",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA2-384",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -664,15 +689,18 @@ demo_Hmac_Sha3_384()
         return -1;
     } else {
 
-        displayResults("HMAC SHA3-384",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA3-384",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -764,15 +792,18 @@ demo_Hmac_Sha3_384_Reset()
     alcp_mac_finish(&handle);
     free(handle.ch_context);
 
-    displayResults("Reset HMAC SHA3-384",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    bool isvalidated = validateMAC("Reset HMAC SHA3-384",
+                                   key,
+                                   sizeof(key) * 8,
+                                   cipherText,
+                                   sizeof(cipherText),
+                                   mac,
+                                   sizeof(mac),
+                                   expectedMac,
+                                   sizeof(expectedMac));
+    if (!isvalidated) {
+        return -1;
+    }
     return 0;
 }
 int
@@ -780,9 +811,10 @@ demo_Hmac_Sha512_224()
 {
 
     alc_error_t err;
-    Uint8       key[]        = { 0x8b, 0x1d, 0x42, 0xaa, 0xd7, 0x89, 0x0b, 0xd4,
+    Uint8       key[] = { 0x8b, 0x1d, 0x42, 0xaa, 0xd7, 0x89, 0x0b, 0xd4,
                     0x82, 0x40, 0x59, 0x2a, 0xd7, 0x88, 0x45, 0x17 };
-    Uint8       cipherText[] = { 0x47, 0xb7, 0x76, 0xb5, 0x2c, 0x13, 0x9a, 0x65,
+
+    Uint8 cipherText[] = { 0x47, 0xb7, 0x76, 0xb5, 0x2c, 0x13, 0x9a, 0x65,
                            0xbf, 0x98, 0xac, 0x2e, 0xda, 0xcc, 0xfb, 0x26 };
 
     Uint8 expectedMac[] = { 0xd7, 0xb7, 0x4d, 0xfb, 0x00, 0x70, 0xe0,
@@ -803,7 +835,7 @@ demo_Hmac_Sha512_224()
                 .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = ALC_DIGEST_LEN_224,
-                    .dt_mode = { ALC_SHA2_512,},
+                    .dt_mode = { ALC_SHA2_512_224,},
                 }
             }
         },
@@ -818,15 +850,18 @@ demo_Hmac_Sha512_224()
         return -1;
     } else {
 
-        displayResults("HMAC SHA2-512_224",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("HMAC SHA2-512_224",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -843,6 +878,10 @@ main(int argc, char const* argv[])
         goto out;
     if (demo_Hmac_Sha512() != 0)
         goto out;
+    if (demo_Hmac_Sha512_224() != 0)
+        goto out;
+
+    // SHA-3 Based HMAC
     if (demo_Hmac_Sha3_224() != 0)
         goto out;
     if (demo_Hmac_Sha3_256() != 0)
@@ -852,8 +891,6 @@ main(int argc, char const* argv[])
     if (demo_Hmac_Sha3_512() != 0)
         goto out;
     if (demo_Hmac_Sha3_384_Reset() != 0)
-        goto out;
-    if (demo_Hmac_Sha512_224() != 0)
         goto out;
 
     return 0;
