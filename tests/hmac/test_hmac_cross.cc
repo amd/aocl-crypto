@@ -43,7 +43,13 @@ TEST(HMAC_SHA2, CROSS_512_224)
 TEST(HMAC_SHA2, CROSS_224)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_224;
+    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_512_224;
+    Hmac_Cross(info);
+}
+TEST(HMAC_SHA2, CROSS_512_256)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_512_256;
     Hmac_Cross(info);
 }
 TEST(HMAC_SHA2, CROSS_256)
