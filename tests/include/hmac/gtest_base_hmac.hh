@@ -57,9 +57,7 @@ using namespace alcp::testing;
 
 /* print params verbosely */
 inline void
-PrintHmacTestData(std::vector<Uint8> key,
-                  alcp_hmac_data_t   data,
-                  std::string        mode)
+PrintHmacTestData(std::vector<Uint8> key, alcp_hmac_data_t data)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
@@ -142,9 +140,10 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
 /* Hmac Cross tests */
 void
-Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
+Hmac_Cross(alc_mac_info_t info)
 {
     std::vector<Uint8> data;
+    int                HmacSize = info.mi_algoinfo.hmac.hmac_digest.dt_len;
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
@@ -236,7 +235,7 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
             /* run test with main lib */
             if (verbose > 1)
-                PrintHmacTestData(key, data_alc, HmacType);
+                PrintHmacTestData(key, data_alc);
             if (!hb->init(info, key)) {
                 printf("Error in hmac init\n");
                 FAIL();
@@ -248,7 +247,7 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
             /* run test with ext lib */
             if (verbose > 1)
-                PrintHmacTestData(key, data_ext, HmacType);
+                PrintHmacTestData(key, data_ext);
             if (!extHb->init(info, key)) {
                 printf("Error in hmac ext init function\n");
                 FAIL();
