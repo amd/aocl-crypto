@@ -2591,8 +2591,8 @@ poly1305_blocksx8_radix44(Poly1305State44& state,
             reg_acc1 = _mm512_load_epi64(state.acc1),
             reg_acc2 = _mm512_load_epi64(state.acc2);
 
-    __m512i reg_r0, reg_r1, reg_r2;
-    __m512i reg_s1, reg_s2;
+    __m512i reg_r0{}, reg_r1{}, reg_r2{};
+    __m512i reg_s1{}, reg_s2{};
 
     // Length should be >256
     assert(len > 256);

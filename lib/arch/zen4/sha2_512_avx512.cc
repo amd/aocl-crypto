@@ -519,9 +519,9 @@ namespace alcp::digest { namespace zen4 {
                             __m256i      hash_256_0,
                             __m256i      hash_256_1)
     {
-        __attribute__((aligned(64)))
-        Uint64  message_sch_1[Sha512::cNumRounds + 16];
-        __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2];
+        __attribute__((
+            aligned(64))) Uint64 message_sch_1[Sha512::cNumRounds + 16];
+        __m256i                  msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2]{};
         for (Uint32 i = 0; i < num_chunks; i = i + 2) {
 
             load_data(msg_vect,
