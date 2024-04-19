@@ -87,7 +87,7 @@ IPPHmacBase::init()
     m_handle = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
 
     /* IPPCP Doesnt have HMAC SHA3 supported */
-    switch (m_info.mi_algoinfo.hmac.hmac_digest) {
+    switch (m_info.mi_algoinfo.hmac.digest_mode) {
         case ALC_SHA3_224:
         case ALC_SHA3_256:
         case ALC_SHA3_384:
@@ -100,7 +100,7 @@ IPPHmacBase::init()
             break;
     }
     const IppsHashMethod* p_hash_method =
-        getIppHashMethod(m_info.mi_algoinfo.hmac.hmac_digest);
+        getIppHashMethod(m_info.mi_algoinfo.hmac.digest_mode);
     if (p_hash_method == nullptr) {
         std::cout << "IPPCP: Provided Digest Not Supported" << std::endl;
         return false;
@@ -143,7 +143,7 @@ IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
                                     data.in.m_key_len,
                                     data.out.m_hmac,
                                     data.out.m_hmac_len,
-                                    getIppHashMethod(&m_info.mi_algoinfo.hmac.hmac_digest)); */
+                                    getIppHashMethod(&m_info.mi_algoinfo.hmac.digest_mode)); */
     // clang-format on
 }
 

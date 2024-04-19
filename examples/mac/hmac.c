@@ -177,7 +177,7 @@ demo_Hmac_Sha256()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA2_256,
                 
             }
@@ -250,7 +250,7 @@ demo_Hmac_Sha224()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA2_224,
                 
             }
@@ -331,7 +331,7 @@ demo_Hmac_Sha512()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA2_512,
                 
             }
@@ -390,7 +390,7 @@ demo_Hmac_Sha3_224()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA3_224,
                 
             }
@@ -450,7 +450,7 @@ demo_Hmac_Sha3_256()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA3_256,
                 
             }
@@ -517,7 +517,7 @@ demo_Hmac_Sha3_512()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA3_512,
                 
             }
@@ -592,7 +592,7 @@ demo_Hmac_Sha384()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA2_384,
                 
             }
@@ -656,7 +656,7 @@ demo_Hmac_Sha3_384()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA3_384,
                 
             }
@@ -720,7 +720,7 @@ demo_Hmac_Sha3_384_Reset()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
+                .digest_mode =  
                      ALC_SHA3_384,
                 
             }
@@ -814,8 +814,7 @@ demo_Hmac_Sha512_224()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest =  
-                     { ALC_SHA2_512_224,},
+                .digest_mode =     ALC_SHA2_512_224,
                 
             }
         },

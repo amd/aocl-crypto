@@ -60,7 +60,7 @@ typedef enum _alc_mac_type
 /**
  * @brief Stores details of HMAC
  *
- * @param  hmac_digest Store info of digest used for HMAC
+ * @param  digest_mode Store info of digest used for HMAC
  *
  * @struct alc_hmac_info_t
  *
@@ -68,7 +68,7 @@ typedef enum _alc_mac_type
 typedef struct _alc_hmac_info
 {
     // Info about the hash function to be used in HMAC
-    alc_digest_mode_t hmac_digest;
+    alc_digest_mode_t digest_mode;
     // Other specific info about HMAC
 
 } alc_hmac_info_t, *alc_hmac_info_p;

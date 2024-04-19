@@ -171,7 +171,7 @@ HMAC_init(char* digest, alc_mac_info_p macinfo)
         return 0;
     }
 
-    macinfo->mi_algoinfo.hmac.hmac_digest = digest_mode;
+    macinfo->mi_algoinfo.hmac.digest_mode = digest_mode;
     EXIT();
     return 1;
 }

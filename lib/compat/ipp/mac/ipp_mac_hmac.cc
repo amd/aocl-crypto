@@ -95,7 +95,7 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
     }
 
     pMacInfo->mi_type                      = ALC_MAC_HMAC;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest = sha2_mode;
+    pMacInfo->mi_algoinfo.hmac.digest_mode = sha2_mode;
 
     pMacInfo->mi_keyinfo = cKinfo;
 

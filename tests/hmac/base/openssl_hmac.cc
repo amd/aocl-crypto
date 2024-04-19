@@ -53,7 +53,7 @@ OpenSSLHmacBase::init()
     size_t      params_n = 0;
     const char* digest   = NULL;
 
-    switch (m_info.mi_algoinfo.hmac.hmac_digest) {
+    switch (m_info.mi_algoinfo.hmac.digest_mode) {
         case ALC_SHA2_224:
             digest = "sha224";
             break;
