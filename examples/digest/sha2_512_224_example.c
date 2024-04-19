@@ -191,15 +191,18 @@ main(void)
         num_chunks = STRING_VECTORS[i].num_chunks;
 
         alc_error_t err = create_demo_session();
-
         if (err != ALC_ERROR_NONE) {
-            err = hash_demo(sample_input,
-                            strlen((const char*)sample_input),
-                            sample_output,
-                            sizeof(sample_output),
-                            num_chunks);
+            return -1;
         }
 
+        err = hash_demo(sample_input,
+                        strlen((const char*)sample_input),
+                        sample_output,
+                        sizeof(sample_output),
+                        num_chunks);
+        if (err != ALC_ERROR_NONE) {
+            return -1;
+        }
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
         printf("Input : %s\n", sample_input);
