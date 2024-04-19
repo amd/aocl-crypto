@@ -69,6 +69,14 @@ PrintHmacTestData(std::vector<Uint8> key, alcp_hmac_data_t data)
     return;
 }
 
+/* get Mac digest len from SHA type*/
+std::map<alc_digest_mode_t, int> DigestTypeToLenMap = {
+    { ALC_SHA2_224, 224 },    { ALC_SHA2_256, 256 }, { ALC_SHA2_384, 384 },
+    { ALC_SHA2_512, 512 },    { ALC_SHA3_224, 224 }, { ALC_SHA3_256, 256 },
+    { ALC_SHA3_384, 384 },    { ALC_SHA3_512, 512 }, { ALC_SHA2_512_224, 224 },
+    { ALC_SHA2_512_256, 256 }
+};
+
 void
 Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
@@ -143,7 +151,10 @@ void
 Hmac_Cross(alc_mac_info_t info)
 {
     std::vector<Uint8> data;
-    int                HmacSize = info.mi_algoinfo.hmac.hmac_digest.dt_len;
+
+    alc_digest_mode_t digest_mode = info.mi_algoinfo.hmac.digest_mode;
+    int               HmacSize    = DigestTypeToLenMap[digest_mode];
+
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 

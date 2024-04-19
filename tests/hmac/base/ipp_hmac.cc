@@ -28,6 +28,16 @@
 
 #include "hmac/ipp_hmac.hh"
 
+/* get digest from SHA type*/
+std::map<alc_digest_mode_t, const IppsHashMethod*> IPPDigestMap = {
+    { ALC_SHA2_224, ippsHashMethod_SHA224_TT() },
+    { ALC_SHA2_256, ippsHashMethod_SHA256_TT() },
+    { ALC_SHA2_384, ippsHashMethod_SHA384() },
+    { ALC_SHA2_512, ippsHashMethod_SHA512() },
+    { ALC_SHA2_512_224, ippsHashMethod_SHA512_224() },
+    { ALC_SHA2_512_256, ippsHashMethod_SHA512_256() }
+};
+
 namespace alcp::testing {
 
 IPPHmacBase::IPPHmacBase(const alc_mac_info_t& info) {}
@@ -52,25 +62,7 @@ IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 const IppsHashMethod*
 getIppHashMethod(alc_digest_mode_t pDigestMode)
 {
-
-    switch (pDigestMode) {
-        case ALC_SHA2_224:
-            return ippsHashMethod_SHA224_TT();
-            break;
-        case ALC_SHA2_256:
-            return ippsHashMethod_SHA256_TT();
-            break;
-        case ALC_SHA2_384:
-            return ippsHashMethod_SHA384();
-            break;
-        case ALC_SHA2_512:
-            return ippsHashMethod_SHA512();
-            break;
-        default:
-            return nullptr;
-    }
-
-    return nullptr;
+    return IPPDigestMap[pDigestMode];
 }
 
 bool

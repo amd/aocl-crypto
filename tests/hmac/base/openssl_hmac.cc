@@ -28,6 +28,15 @@
 
 #include "hmac/openssl_hmac.hh"
 
+/* get Mac digest len from SHA type*/
+std::map<alc_digest_mode_t, const char*> OpenSSLDigestStringMap = {
+    { ALC_SHA2_224, "sha224" },         { ALC_SHA2_256, "sha256" },
+    { ALC_SHA2_384, "sha384" },         { ALC_SHA2_512, "sha512" },
+    { ALC_SHA3_224, "sha3-224" },       { ALC_SHA3_256, "sha3-256" },
+    { ALC_SHA3_384, "sha3-384" },       { ALC_SHA3_512, "sha3-512" },
+    { ALC_SHA2_512_224, "sha512-224" }, { ALC_SHA2_512_256, "sha512-256" }
+};
+
 namespace alcp::testing {
 
 OpenSSLHmacBase::OpenSSLHmacBase(const alc_mac_info_t& info) {}
@@ -53,34 +62,7 @@ OpenSSLHmacBase::init()
     size_t      params_n = 0;
     const char* digest   = NULL;
 
-    switch (m_info.mi_algoinfo.hmac.digest_mode) {
-        case ALC_SHA2_224:
-            digest = "sha224";
-            break;
-        case ALC_SHA2_256:
-            digest = "sha256";
-            break;
-        case ALC_SHA2_384:
-            digest = "sha384";
-            break;
-        case ALC_SHA2_512:
-            digest = "sha512";
-            break;
-        case ALC_SHA3_224:
-            digest = "sha3-224";
-            break;
-        case ALC_SHA3_256:
-            digest = "sha3-256";
-            break;
-        case ALC_SHA3_384:
-            digest = "sha3-384";
-            break;
-        case ALC_SHA3_512:
-            digest = "sha3-512";
-            break;
-        default:
-            return false;
-    }
+    digest = OpenSSLDigestStringMap[m_info.mi_algoinfo.hmac.digest_mode];
 
     if (m_mac != nullptr) {
         EVP_MAC_free(m_mac);
