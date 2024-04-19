@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,25 +50,24 @@ IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 
 // A helper function to convert ALCP digestinfo to IPPHashMethod
 const IppsHashMethod*
-getIppHashMethod(alc_digest_info_p pDigestInfo)
+getIppHashMethod(alc_digest_mode_t pDigestMode)
 {
-    if (pDigestInfo->dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (pDigestInfo->dt_len) {
-            case ALC_DIGEST_LEN_224:
-                return ippsHashMethod_SHA224_TT();
-                break;
-            case ALC_DIGEST_LEN_256:
-                return ippsHashMethod_SHA256_TT();
-                break;
-            case ALC_DIGEST_LEN_384:
-                return ippsHashMethod_SHA384();
-                break;
-            case ALC_DIGEST_LEN_512:
-                return ippsHashMethod_SHA512();
-                break;
-            default:
-                return nullptr;
-        }
+
+    switch (pDigestMode) {
+        case ALC_SHA2_224:
+            return ippsHashMethod_SHA224_TT();
+            break;
+        case ALC_SHA2_256:
+            return ippsHashMethod_SHA256_TT();
+            break;
+        case ALC_SHA2_384:
+            return ippsHashMethod_SHA384();
+            break;
+        case ALC_SHA2_512:
+            return ippsHashMethod_SHA512();
+            break;
+        default:
+            return nullptr;
     }
 
     return nullptr;
@@ -88,13 +87,20 @@ IPPHmacBase::init()
     m_handle = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
 
     /* IPPCP Doesnt have HMAC SHA3 supported */
-    if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        std::cout << "IPPCP doesnt have HMAC-SHA3 support yet,skipping the test"
-                  << std::endl;
-        return true;
+    switch (m_info.mi_algoinfo.hmac.hmac_digest) {
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512:
+            std::cout
+                << "IPPCP doesnt have HMAC-SHA3 support yet,skipping the test"
+                << std::endl;
+            return true;
+        default:
+            break;
     }
     const IppsHashMethod* p_hash_method =
-        getIppHashMethod(&m_info.mi_algoinfo.hmac.hmac_digest);
+        getIppHashMethod(m_info.mi_algoinfo.hmac.hmac_digest);
     if (p_hash_method == nullptr) {
         std::cout << "IPPCP: Provided Digest Not Supported" << std::endl;
         return false;

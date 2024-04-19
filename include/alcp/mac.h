@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -68,7 +68,7 @@ typedef enum _alc_mac_type
 typedef struct _alc_hmac_info
 {
     // Info about the hash function to be used in HMAC
-    alc_digest_info_t hmac_digest;
+    alc_digest_mode_t hmac_digest;
     // Other specific info about HMAC
 
 } alc_hmac_info_t, *alc_hmac_info_p;

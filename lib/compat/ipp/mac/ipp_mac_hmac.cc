@@ -56,55 +56,46 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
                                     static_cast<const Uint8*>(pKey) };
 
     alc_digest_mode_t sha2_mode;
-    alc_digest_len_t  sha_length;
 
     ipp_sha2_rmf_algo_ctx* p_method_ctx = (ipp_sha2_rmf_algo_ctx*)pMethod;
     IppHashAlgId           hashAlg      = p_method_ctx->algId;
     switch (hashAlg) {
         case ippHashAlg_SHA224: {
             printMsg("SHA2-224");
-            sha_length = ALC_DIGEST_LEN_224;
-            sha2_mode  = ALC_SHA2_224;
+            sha2_mode = ALC_SHA2_224;
             break;
         }
         case ippHashAlg_SHA256: {
             printMsg("SHA2-256");
-            sha_length = ALC_DIGEST_LEN_256;
-            sha2_mode  = ALC_SHA2_256;
+            sha2_mode = ALC_SHA2_256;
             break;
         }
         case ippHashAlg_SHA384: {
             printMsg("SHA2-384");
-            sha_length = ALC_DIGEST_LEN_384;
-            sha2_mode  = ALC_SHA2_384;
+            sha2_mode = ALC_SHA2_384;
             break;
         }
         case ippHashAlg_SHA512: {
             printMsg("SHA2-512");
-            sha_length = ALC_DIGEST_LEN_512;
-            sha2_mode  = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512;
             break;
         }
         case ippHashAlg_SHA512_224: {
             printMsg("SHA2-512_224");
-            sha_length = ALC_DIGEST_LEN_224;
-            sha2_mode  = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512;
             break;
         }
         case ippHashAlg_SHA512_256: {
             printMsg("SHA2-512_256");
-            sha_length = ALC_DIGEST_LEN_256;
-            sha2_mode  = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512;
             break;
         }
         default:
             return ippStsNotSupportedModeErr;
     }
 
-    pMacInfo->mi_type                              = ALC_MAC_HMAC;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_len  = sha_length;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_mode = sha2_mode;
+    pMacInfo->mi_type                      = ALC_MAC_HMAC;
+    pMacInfo->mi_algoinfo.hmac.hmac_digest = sha2_mode;
 
     pMacInfo->mi_keyinfo = cKinfo;
 

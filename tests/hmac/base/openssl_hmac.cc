@@ -53,41 +53,33 @@ OpenSSLHmacBase::init()
     size_t      params_n = 0;
     const char* digest   = NULL;
 
-    if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                digest = "sha224";
-                break;
-            case ALC_DIGEST_LEN_256:
-                digest = "sha256";
-                break;
-            case ALC_DIGEST_LEN_384:
-                digest = "sha384";
-                break;
-            case ALC_DIGEST_LEN_512:
-                digest = "sha512";
-                break;
-            default:
-                return false;
-        }
-    } else if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type
-               == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                digest = "sha3-224";
-                break;
-            case ALC_DIGEST_LEN_256:
-                digest = "sha3-256";
-                break;
-            case ALC_DIGEST_LEN_384:
-                digest = "sha3-384";
-                break;
-            case ALC_DIGEST_LEN_512:
-                digest = "sha3-512";
-                break;
-            default:
-                return false;
-        }
+    switch (m_info.mi_algoinfo.hmac.hmac_digest) {
+        case ALC_SHA2_224:
+            digest = "sha224";
+            break;
+        case ALC_SHA2_256:
+            digest = "sha256";
+            break;
+        case ALC_SHA2_384:
+            digest = "sha384";
+            break;
+        case ALC_SHA2_512:
+            digest = "sha512";
+            break;
+        case ALC_SHA3_224:
+            digest = "sha3-224";
+            break;
+        case ALC_SHA3_256:
+            digest = "sha3-256";
+            break;
+        case ALC_SHA3_384:
+            digest = "sha3-384";
+            break;
+        case ALC_SHA3_512:
+            digest = "sha3-512";
+            break;
+        default:
+            return false;
     }
 
     if (m_mac != nullptr) {

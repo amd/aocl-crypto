@@ -177,11 +177,9 @@ demo_Hmac_Sha256()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = ALC_SHA2_256,
-                }
+                .hmac_digest =  
+                     ALC_SHA2_256,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -252,11 +250,9 @@ demo_Hmac_Sha224()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_224,
-                    .dt_mode = ALC_SHA2_224,
-                }
+                .hmac_digest =  
+                     ALC_SHA2_224,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -335,11 +331,9 @@ demo_Hmac_Sha512()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_512,
-                    .dt_mode = ALC_SHA2_512,
-                }
+                .hmac_digest =  
+                     ALC_SHA2_512,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -396,11 +390,9 @@ demo_Hmac_Sha3_224()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA3,
-                    .dt_len = ALC_DIGEST_LEN_224,
-                    .dt_mode = ALC_SHA3_224,
-                }
+                .hmac_digest =  
+                     ALC_SHA3_224,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -458,11 +450,9 @@ demo_Hmac_Sha3_256()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA3,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = ALC_SHA3_256,
-                }
+                .hmac_digest =  
+                     ALC_SHA3_256,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -527,11 +517,9 @@ demo_Hmac_Sha3_512()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA3,
-                    .dt_len = ALC_DIGEST_LEN_512,
-                    .dt_mode = ALC_SHA3_512,
-                }
+                .hmac_digest =  
+                     ALC_SHA3_512,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -604,11 +592,9 @@ demo_Hmac_Sha384()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = ALC_SHA2_384,
-                }
+                .hmac_digest =  
+                     ALC_SHA2_384,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -670,11 +656,9 @@ demo_Hmac_Sha3_384()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA3,
-                    .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = ALC_SHA3_384,
-                }
+                .hmac_digest =  
+                     ALC_SHA3_384,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -736,11 +720,9 @@ demo_Hmac_Sha3_384_Reset()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA3,
-                    .dt_len = ALC_DIGEST_LEN_384,
-                    .dt_mode = ALC_SHA3_384,
-                }
+                .hmac_digest =  
+                     ALC_SHA3_384,
+                
             }
         },
         .mi_keyinfo = kinfo
@@ -832,11 +814,9 @@ demo_Hmac_Sha512_224()
         .mi_type = ALC_MAC_HMAC,
         .mi_algoinfo={
             .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_224,
-                    .dt_mode = { ALC_SHA2_512_224,},
-                }
+                .hmac_digest =  
+                     { ALC_SHA2_512_224,},
+                
             }
         },
         .mi_keyinfo = kinfo

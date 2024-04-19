@@ -79,8 +79,6 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
     /* Initialize info params based on test type */
     info.mi_type = ALC_MAC_HMAC;
-    info.mi_algoinfo.hmac.hmac_digest.dt_len =
-        static_cast<enum _alc_digest_len>(HmacSize);
 
     AlcpHmacBase ahb(info);
     HmacBase*    hb;
@@ -152,8 +150,6 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
     /* Initialize info params based on test type */
     info.mi_type = ALC_MAC_HMAC;
-    info.mi_algoinfo.hmac.hmac_digest.dt_len =
-        static_cast<enum _alc_digest_len>(HmacSize);
 
     AlcpHmacBase ahb(info);
     RngBase      rb;

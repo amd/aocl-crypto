@@ -147,52 +147,31 @@ HMAC_init(char* digest, alc_mac_info_p macinfo)
         return 0;
     }
 
-    alc_digest_info_t digestinfo;
-    alc_digest_type_t digest_type;
-    alc_digest_len_t  digest_len;
     alc_digest_mode_t digest_mode;
 
     if (!strcasecmp(digest, "sha256")) {
-        digest_type = ALC_DIGEST_TYPE_SHA2;
-        digest_len  = ALC_DIGEST_LEN_256;
         digest_mode = ALC_SHA2_256;
     } else if (!strcasecmp(digest, "sha224")) {
-        digest_type = ALC_DIGEST_TYPE_SHA2;
-        digest_len  = ALC_DIGEST_LEN_224;
         digest_mode = ALC_SHA2_224;
     } else if (!strcasecmp(digest, "sha384")) {
-        digest_type = ALC_DIGEST_TYPE_SHA2;
-        digest_len  = ALC_DIGEST_LEN_384;
         digest_mode = ALC_SHA2_384;
     } else if (!strcasecmp(digest, "sha512")) {
-        digest_type = ALC_DIGEST_TYPE_SHA2;
-        digest_len  = ALC_DIGEST_LEN_512;
         digest_mode = ALC_SHA2_512;
     } else if (!strcasecmp(digest, "sha3-224")) {
-        digest_type = ALC_DIGEST_TYPE_SHA3;
-        digest_len  = ALC_DIGEST_LEN_224;
         digest_mode = ALC_SHA3_224;
     } else if (!strcasecmp(digest, "sha3-256")) {
-        digest_type = ALC_DIGEST_TYPE_SHA3;
-        digest_len  = ALC_DIGEST_LEN_256;
         digest_mode = ALC_SHA3_256;
     } else if (!strcasecmp(digest, "sha3-384")) {
-        digest_type = ALC_DIGEST_TYPE_SHA3;
-        digest_len  = ALC_DIGEST_LEN_384;
         digest_mode = ALC_SHA3_384;
     } else if (!strcasecmp(digest, "sha3-512")) {
-        digest_type = ALC_DIGEST_TYPE_SHA3;
-        digest_len  = ALC_DIGEST_LEN_512;
         digest_mode = ALC_SHA3_512;
     } else {
         printf("HMAC Provider: Digest '%s' Not Supported", digest);
         EXIT();
         return 0;
     }
-    digestinfo.dt_type                    = digest_type;
-    digestinfo.dt_len                     = digest_len;
-    digestinfo.dt_mode                    = digest_mode;
-    macinfo->mi_algoinfo.hmac.hmac_digest = digestinfo;
+
+    macinfo->mi_algoinfo.hmac.hmac_digest = digest_mode;
     EXIT();
     return 1;
 }

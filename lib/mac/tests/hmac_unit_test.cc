@@ -320,7 +320,6 @@ class HmacTestFixture
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    alc_digest_info_t     m_digest_info;
     std::vector<Uint8>    m_cipher_text;
     std::vector<Uint8>    m_expected_mac;
     std::vector<Uint8>    m_key;
@@ -368,23 +367,14 @@ class HmacTestFixture
             }
 
         } else if (sha_type == "SHA3") {
-            m_digest_info.dt_type = ALC_DIGEST_TYPE_SHA3;
             if (hash_name == "224") {
-                m_digest_info.dt_len  = ALC_DIGEST_LEN_224;
-                m_digest_info.dt_mode = ALC_SHA3_224;
-                m_p_sha3              = std::make_unique<Sha3_224>();
+                m_p_sha3 = std::make_unique<Sha3_224>();
             } else if (hash_name == "256") {
-                m_digest_info.dt_len  = ALC_DIGEST_LEN_256;
-                m_digest_info.dt_mode = ALC_SHA3_256;
-                m_p_sha3              = std::make_unique<Sha3_256>();
+                m_p_sha3 = std::make_unique<Sha3_256>();
             } else if (hash_name == "384") {
-                m_digest_info.dt_len  = ALC_DIGEST_LEN_384;
-                m_digest_info.dt_mode = ALC_SHA3_384;
-                m_p_sha3              = std::make_unique<Sha3_384>();
+                m_p_sha3 = std::make_unique<Sha3_384>();
             } else if (hash_name == "512") {
-                m_digest_info.dt_len  = ALC_DIGEST_LEN_512;
-                m_digest_info.dt_mode = ALC_SHA3_512;
-                m_p_sha3              = std::make_unique<Sha3_512>();
+                m_p_sha3 = std::make_unique<Sha3_512>();
             }
             m_p_hmac->setDigest(*m_p_sha3);
         }
