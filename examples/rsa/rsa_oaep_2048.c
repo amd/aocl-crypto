@@ -305,12 +305,12 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle;
     alc_error_t      err = create_demo_session(&s_rsa_handle);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         return -1;
     }
 
     err = Rsa_demo(&s_rsa_handle);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         return -1;
     }
 

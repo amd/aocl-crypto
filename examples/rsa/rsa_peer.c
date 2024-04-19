@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -313,17 +313,17 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle_peer1;
     alc_error_t      err = create_demo_session(&s_rsa_handle_peer1);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         return -1;
     }
     alc_rsa_handle_t s_rsa_handle_peer2;
 
     err = create_demo_session(&s_rsa_handle_peer2);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         return -1;
     }
     err = Rsa_demo(&s_rsa_handle_peer1, &s_rsa_handle_peer2);
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         return -1;
     }
 

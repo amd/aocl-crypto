@@ -48,7 +48,7 @@ create_demo_session(Uint32 digest_size)
 
     err = alcp_digest_request(ALC_SHAKE_128, &s_dg_handle);
 
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         return err;
     }
 
@@ -72,7 +72,7 @@ hash_demo(const Uint8* src,
 
     while (num_chunks-- > 0) {
         err = alcp_digest_update(&s_dg_handle, p, buf_size);
-        if (alcp_is_error(err)) {
+        if (err != ALC_ERROR_NONE) {
             printf("Unable to compute SHA3 hash\n");
             goto out;
         }
@@ -81,7 +81,7 @@ hash_demo(const Uint8* src,
 
     if (last_buf_size) {
         err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
-        if (alcp_is_error(err)) {
+        if (err != ALC_ERROR_NONE) {
             printf("Unable to compute SHA3 hash\n");
             goto out;
         }
@@ -89,7 +89,7 @@ hash_demo(const Uint8* src,
 
     err = alcp_digest_finalize(&s_dg_handle, output, out_size);
 
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
         printf("Unable to copy digest\n");
     }
 
@@ -286,7 +286,7 @@ main(void)
         output_string    = malloc(hash_size * 2 + 1);
 
         alc_error_t err = create_demo_session(hash_size);
-        if (alcp_is_error(err)) {
+        if (err != ALC_ERROR_NONE) {
             return -1;
         }
         err = hash_demo(sample_input,
@@ -294,7 +294,7 @@ main(void)
                         sample_output,
                         hash_size,
                         num_chunks);
-        if (alcp_is_error(err)) {
+        if (err != ALC_ERROR_NONE) {
             return -1;
         }
 
