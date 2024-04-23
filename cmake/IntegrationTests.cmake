@@ -29,11 +29,16 @@ FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(gtest)
+find_package(Threads)
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 # SET(COMMON_SRCS ${COMMON_SRCS} PARENT_SCOPE)
 
 SET(LIBS ${LIBS} gtest alcp)
+
+IF(UNIX)
+    SET(LIBS ${LIBS} pthread)
+ENDIF()
 
 SET(ALCP_TEST_INCLUDES "${CMAKE_SOURCE_DIR}/include"
                        "${CMAKE_SOURCE_DIR}/lib/include"

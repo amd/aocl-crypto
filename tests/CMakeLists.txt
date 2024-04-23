@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,18 +23,12 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
- INCLUDE(FetchContent)
- INCLUDE(GoogleTest)
- FetchContent_Declare(gtest
-     GIT_REPOSITORY https://github.com/google/googletest.git
-     GIT_TAG release-1.12.1)
- FetchContent_MakeAvailable(gtest)
 
- include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 
- SET(LIBS ${LIBS} gtest alcp)
+SET(LIBS ${LIBS} gtest alcp)
 
- IF(UNIX)
+IF(UNIX)
     SET(LIBS ${LIBS} pthread)
 ENDIF()
 
