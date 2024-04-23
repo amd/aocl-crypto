@@ -36,7 +36,8 @@ FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 
 SET(LIBS ${LIBS} gtest alcp)
 
-IF(UNIX)
+# as per discussion: https://discourse.cmake.org/t/target-link-libraries-for-lpthread-ldl-and-lutils/1235/3
+IF(Threads_FOUND)
     SET(LIBS ${LIBS} pthread)
 ENDIF()
 

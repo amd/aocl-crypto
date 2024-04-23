@@ -24,6 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
@@ -58,10 +59,6 @@ IF(ENABLE_TESTS_OPENSSL_API)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL library
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_ecdh.cc)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
-
-IF(UNIX)
-    SET(LIBS ${LIBS} pthread)
-ENDIF()
 
 ADD_EXECUTABLE(test_ecdh_kat test_ecdh_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 

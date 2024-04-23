@@ -28,10 +28,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 
 SET(LIBS ${LIBS} gtest alcp)
 
-IF(UNIX)
-    SET(LIBS ${LIBS} pthread)
-ENDIF()
-
  SET(EXTRA_INCLUDES "")
  SET(ALCP_INCLUDES
     "${CMAKE_SOURCE_DIR}/include"
