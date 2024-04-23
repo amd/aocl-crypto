@@ -1,0 +1,840 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>AOCL-Cryptography Quick Starter for Linux &#8212; Home</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_header.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_footer.css" />
+    <link rel="stylesheet" type="text/css" href="_static/fonts.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://download.amd.com/js/analytics/analyticsinit.js"></script>
+    <script async="async" src="_static/code_word_breaks.js"></script>
+    <script async="async" src="_static/renameVersionLinks.js"></script>
+    <script async="async" src="_static/rdcMisc.js"></script>
+    <script async="async" src="_static/theme_mode_captions.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'Quick_Start';</script>
+    <link rel="icon" href="https://www.amd.com/themes/custom/amd/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="google-site-verification" content="ZOn0RZC0Pwzlmf2SaE0bRttWk1YzOhuslbpxUDchQ90" />
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+
+<header class="common-header" >
+    <nav class="navbar navbar-expand-xl">
+        <div class="container-fluid main-nav rocm-header">
+            
+            <div class="header-logo">
+                <a class="navbar-brand" href="https://www.amd.com/">
+                    <img src="_static/images/amd-header-logo.svg" alt="AMD Logo" title="AMD Logo" width="90" class="d-inline-block align-text-top hover-opacity"/>
+                </a>
+                <div class="vr vr mx-40 my-25"></div>
+                <a class="klavika-font hover-opacity" href="/">AOCL Cryptography</a>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var elements = document.getElementsByClassName('header-all-versions');
+            for (var i = 0; i < elements.length; i++) {
+                elements[i].remove();
+            }
+
+            elements = document.querySelector("body > footer > div > section > div:nth-child(1) > div > ul").children;
+            var removable_items = ['2023, Advanced Micro Devices, Inc', 'Statement on Forced Labor', 'Fair and Open Competition', 'UK Tax Strategy', 'Cookie Policy', 'Cookie Settings'];
+            for(var i = 0; i < elements.length; i++) {
+                if(removable_items.includes(elements[i].innerText)) {
+                    elements[i].remove();
+                    i--;
+                }
+            }
+        })
+    </script>
+                <a class="header-all-versions" href="https://rocm.docs.amd.com/en/latest/release/versions.html">Version List</a>
+            </div>
+            <div class="icon-nav text-center d-flex ms-auto">
+            </div>
+        </div>
+    </nav>
+    
+</header>
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Home</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="aocl_crypto.html">AOCL Cryptography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Related_Pages.html">Related Pages</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="APIs.html">APIs</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="group__cipher.html">Cipher API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__digest.html">Digest API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__ec.html">EC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__mac.html">MAC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rsa.html">RSA API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rng.html">RNG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__error.html">Error API</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-angle-right"></span>
+  </label></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">AOCL-Cryptog...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>AOCL-Cryptography Quick Starter for Linux</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-installing-and-running-examples-from-source">Building, installing and running examples from source</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-prerequisites">Installing Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cloning-repositories">Cloning Repositories</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-aocl-utils">Building AOCL-Utils</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-aocl-cryptography">Building AOCL-Cryptography</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#executing-examples">Executing Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-script-to-do-all-the-above">Single script to do all the above</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-application-development-environment">Setting up Application Development Environment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-environment-variables">Exporting Environment Variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-application-to-show-version">Sample application to show version</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compiling-the-application">Compiling the application</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#execute-the-application">Execute the application</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-script-to-setup-the-example-application">Single script to setup the example application</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="aocl-cryptography-quick-starter-for-linux">
+<h1>AOCL-Cryptography Quick Starter for Linux<a class="headerlink" href="#aocl-cryptography-quick-starter-for-linux" title="Permalink to this heading">#</a></h1>
+<p>AOCL-Cryptography is a powerful and flexible cryptography library from AOCL.<br />
+This guide is meant for people who want to get this library setup without going through all the nitty gritty of cmake, linux and prerequisite setup.</p>
+<p>This guide will only focus on Ubuntu-22.04 as its a popular and desktop and server OS. In future this guide might get extended to other operating systems as well.</p>
+<p><strong>Note: Below AOCL-Cryptography will be shortened to the repository name AOCL-Crypto.</strong></p>
+<section id="building-installing-and-running-examples-from-source">
+<h2>Building, installing and running examples from source<a class="headerlink" href="#building-installing-and-running-examples-from-source" title="Permalink to this heading">#</a></h2>
+<section id="installing-prerequisites">
+<h3>Installing Prerequisites<a class="headerlink" href="#installing-prerequisites" title="Permalink to this heading">#</a></h3>
+<p>Some packages which are required for AOCL-Cryptography can be installed with below commands</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w">                      </span><span class="c1"># Sync repository information</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>git<span class="w">                 </span><span class="c1"># To clone github repositories</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libssl-dev<span class="w">          </span><span class="c1"># For openssl</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>make<span class="w">                </span><span class="c1"># Build system</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>cmake<span class="w">               </span><span class="c1"># Build system generator</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>p7zip-full<span class="w">          </span><span class="c1"># Re-archive static libs</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>gcc-12<span class="w"> </span>g++-12<span class="w">       </span><span class="c1"># Compiler</span>
+</pre></div>
+</div>
+<p>What is given above should be sufficient for most users but if your OS did not come with a working install of <code class="docutils literal notranslate"><span class="pre">sudo</span></code>, you can install it by running <code class="docutils literal notranslate"><span class="pre">apt</span> <span class="pre">install</span> <span class="pre">sudo</span></code> as root. Make sure repository list is upto date.</p>
+</section>
+<section id="cloning-repositories">
+<h3>Cloning Repositories<a class="headerlink" href="#cloning-repositories" title="Permalink to this heading">#</a></h3>
+<p>There are mainly two repositories which are needed, one being <code class="docutils literal notranslate"><span class="pre">aocl-crypto</span></code> and the other which is a dependency named <code class="docutils literal notranslate"><span class="pre">aocl-utils</span></code>. <code class="docutils literal notranslate"><span class="pre">AOCL-Utils</span></code> provide the means to correctly identify the CPU. This is a necessary dependency to ensure optimal performance of <code class="docutils literal notranslate"><span class="pre">AOCL-Crypto</span></code>. Both of these repositories can be cloned with below command</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/amd/aocl-crypto.git<span class="w"> </span>-b<span class="w"> </span>amd-main
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/amd/aocl-utils.git<span class="w">  </span>-b<span class="w"> </span>amd-main
+</pre></div>
+</div>
+<p>Please ensure that you are running the above commands from a directory where you have write access.</p>
+</section>
+<section id="building-aocl-utils">
+<h3>Building AOCL-Utils<a class="headerlink" href="#building-aocl-utils" title="Permalink to this heading">#</a></h3>
+<p>Cloned repository has the latest released version of AOCL-Utils. AOCL-Utils is built using CMake build system generator. AOCL-Utils have a lot of configurations which you can enable/disable. Below command has what is minimum necessary to make it work optimally.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save current working directory</span>
+<span class="nb">pushd</span><span class="w"> </span>.
+
+<span class="c1"># Setup build directory</span>
+<span class="nb">cd</span><span class="w"> </span>aocl-utils
+mkdir<span class="w"> </span>build
+<span class="nb">cd</span><span class="w"> </span>build
+
+<span class="c1"># Configure AOCL-Utils with make build system.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CC</span><span class="o">=</span>gcc-12<span class="p">;</span><span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CXX</span><span class="o">=</span>g++-12
+cmake<span class="w"> </span>../<span class="w"> </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span>install<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>-DALCI_DOCS<span class="o">=</span>OFF
+
+<span class="c1"># Build the project with all available threads.</span>
+make<span class="w"> </span>-j<span class="w"> </span><span class="k">$(</span>nproc<span class="w"> </span>--all<span class="k">)</span>
+
+<span class="c1"># Install the project into build/install directory</span>
+make<span class="w"> </span>install
+
+<span class="c1"># Revert back to the original working directory.</span>
+<span class="nb">popd</span>
+</pre></div>
+</div>
+</section>
+<section id="building-aocl-cryptography">
+<h3>Building AOCL-Cryptography<a class="headerlink" href="#building-aocl-cryptography" title="Permalink to this heading">#</a></h3>
+<p>Cloned repository has the latest released version of AOCL-Cryptography. AOCL-Cryptography is built using CMake build system generator. AOCL-Utils have a lot of configurations which you can enable/disable. Below command has what is minimum necessary to make it work optimally.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save current working directory</span>
+<span class="nb">pushd</span><span class="w"> </span>.
+
+<span class="c1"># Setup build directory</span>
+<span class="nb">cd</span><span class="w"> </span>aocl-crypto
+mkdir<span class="w"> </span>build
+<span class="nb">cd</span><span class="w"> </span>build
+
+<span class="c1"># Configure AOCL-Cryptography with make build system.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CC</span><span class="o">=</span>gcc-12<span class="p">;</span><span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CXX</span><span class="o">=</span>g++-12
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;cmake ../ -DALCP_ENABLE_EXAMPLES=ON \</span>
+<span class="s2">-DOPENSSL_INSTALL_DIR=/usr \</span>
+<span class="s2">-DCMAKE_INSTALL_PREFIX=</span><span class="nv">$PWD</span><span class="s2">/install \</span>
+<span class="s2">-DENABLE_AOCL_UTILS=ON \</span>
+<span class="s2">-DAOCL_UTILS_INSTALL_DIR=</span><span class="nv">$PWD</span><span class="s2">/../../aocl-utils/build/install\&quot;&quot;</span>
+cmake<span class="w"> </span>../<span class="w"> </span>-DALCP_ENABLE_EXAMPLES<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">            </span>-DOPENSSL_INSTALL_DIR<span class="o">=</span>/usr<span class="w"> </span><span class="se">\</span>
+<span class="w">            </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$PWD</span>/install<span class="w"> </span><span class="se">\</span>
+<span class="w">            </span>-DENABLE_AOCL_UTILS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">            </span>-DAOCL_UTILS_INSTALL_DIR<span class="o">=</span><span class="nv">$PWD</span>/../../aocl-utils/build/install
+
+<span class="c1"># Build the project with all available threads.</span>
+make<span class="w"> </span>-j<span class="w"> </span><span class="k">$(</span>nproc<span class="w"> </span>--all<span class="k">)</span>
+
+<span class="c1"># Install the project into build/install directory</span>
+make<span class="w"> </span>install
+
+<span class="c1"># Revert back to the original working directory.</span>
+<span class="nb">popd</span>
+</pre></div>
+</div>
+</section>
+<section id="executing-examples">
+<h3>Executing Examples<a class="headerlink" href="#executing-examples" title="Permalink to this heading">#</a></h3>
+<p>To execute the examples, loader has to find the library to load. For this both AOCL-Utils and AOCL-Cryptography’s library path has to be added into <code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code>. Once this is added we can execute any executable which is compiled with AOCL-Cryptography. To show proof of the concept <code class="docutils literal notranslate"><span class="pre">aes-cfb</span></code> example can be executed.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save current working directory</span>
+<span class="nb">pushd</span><span class="w"> </span>.
+
+<span class="c1"># Setup environment</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$PWD</span>/aocl-utils/build/install/lib:<span class="nv">$PWD</span>/aocl-utils/build/install/lib64:<span class="nv">$LD_LIBRARY_PATH</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$PWD</span>/aocl-crypto/build/install/lib:<span class="nv">$PWD</span>/aocl-crypto/build/install/lib64:<span class="nv">$LD_LIBRARY_PATH</span>
+
+<span class="c1"># Get into build directory</span>
+<span class="nb">cd</span><span class="w"> </span>aocl-crypto/build
+
+<span class="c1"># Execute the CFB Example</span>
+<span class="nv">$PWD</span>/examples/cipher/aes-cfb
+
+<span class="c1"># Revert back to the original working directory.</span>
+<span class="nb">popd</span>
+</pre></div>
+</div>
+</section>
+<section id="single-script-to-do-all-the-above">
+<h3>Single script to do all the above<a class="headerlink" href="#single-script-to-do-all-the-above" title="Permalink to this heading">#</a></h3>
+<p>To end with, here is a script which runs everything. Feel free to save this script somewhere as a .sh file and execute it. As always please ensure you do have write access to the current working directory.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+
+<span class="c1"># This file is supposed to be a guide to compile AOCL-Cryptography with examples </span>
+<span class="c1"># from source.</span>
+<span class="c1"># It should only require minimal interaction from user.</span>
+<span class="c1"># All functions in this file should be straight forward and minimal.</span>
+<span class="c1"># For detailed info please take a look at BUILD.md located in the root of </span>
+<span class="c1"># AOCL-Cryptography source code directory.</span>
+
+<span class="c1"># Global Variables to be modifed depending on repo location</span>
+<span class="nv">AOCL_CRYPTO_REPO</span><span class="o">=</span><span class="s2">&quot;https://github.com/amd/aocl-crypto.git&quot;</span>
+<span class="nv">AOCL_UTILS_REPO</span><span class="o">=</span><span class="s2">&quot;https://github.com/amd/aocl-utils.git&quot;</span>
+<span class="nv">AOCL_BRANCH</span><span class="o">=</span><span class="s2">&quot;amd-main&quot;</span>
+
+<span class="c1"># Function to check if lsb_release is installed</span>
+ensure_lsb_release<span class="o">(){</span>
+<span class="w">    </span><span class="nb">type</span><span class="w"> </span>lsb_release<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-ne<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;lsb_release not found!&quot;</span>
+<span class="w">        </span><span class="nb">exit</span><span class="w"> </span>-1<span class="p">;</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;lsb_release found&quot;</span>
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
+
+<span class="c1"># Function to check if OS is ubuntu with a specific version</span>
+detect_ubuntu<span class="o">(){</span>
+<span class="w">    </span>lsb_release<span class="w"> </span>--id<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Ubuntu&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="c1"># Detected Ubuntu</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Detected Ubuntu&quot;</span>
+<span class="w">        </span>lsb_release<span class="w"> </span>--release<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="nv">$1</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Detected OS Release Version </span><span class="nv">$1</span><span class="s2">&quot;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="m">0</span>
+<span class="w">        </span><span class="k">fi</span>
+<span class="w">    </span><span class="k">fi</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="c1"># Return error</span>
+<span class="o">}</span>
+
+<span class="c1"># Function to exit with an error if some execution failed</span>
+quit_if_status_not_zero<span class="o">(){</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span>-ne<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Command returned error&quot;</span>
+<span class="w">        </span><span class="nb">exit</span><span class="w"> </span>-1<span class="w"> </span>
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
+
+<span class="c1"># Function to install all packages, OS indipendant (eventually)</span>
+ensure_packages<span class="o">(){</span>
+<span class="w">    </span>detect_ubuntu<span class="w"> </span><span class="m">22</span>.04
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo apt update\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w">                      </span><span class="c1"># Sync repository information</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo install git\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>git<span class="w">                 </span><span class="c1"># To clone github repositories</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo install libssl-dev\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libssl-dev<span class="w">          </span><span class="c1"># For openssl</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo install make\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>make<span class="w">                </span><span class="c1"># Build system</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo install cmake\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>cmake<span class="w">               </span><span class="c1"># Build system generator</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo install p7zip-full\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>p7zip-full<span class="w">          </span><span class="c1"># Re-archive static libs</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;sudo install gcc-12 g++-12\&quot;&quot;</span>
+<span class="w">        </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>gcc-12<span class="w"> </span>g++-12<span class="w">       </span><span class="c1"># Compiler</span>
+<span class="w">        </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="m">0</span>
+<span class="w">    </span><span class="k">fi</span>
+<span class="w">    </span><span class="c1"># detect_rhel 8</span>
+<span class="w">    </span><span class="c1"># if [ $? -eq 1 ]; then</span>
+<span class="w">    </span><span class="c1">#    sudo yum install...</span>
+<span class="w">    </span><span class="c1">#    ...</span>
+<span class="w">    </span><span class="c1">#    return 1</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OS support check failed!&quot;</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span>-1
+<span class="o">}</span>
+
+<span class="c1"># Function to make sure what this script writes don&#39;t already exist</span>
+ensure_no_directory_conflict<span class="o">(){</span>
+<span class="w">    </span><span class="c1"># Check if aocl-crypto directory already exists</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-d<span class="w"> </span>aocl-crypto<span class="w"> </span><span class="o">||</span><span class="w">  </span>-f<span class="w"> </span>aocl-crypto<span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;aocl-crypto exists!&quot;</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Please run \&quot;rm -rf aocl-crypto\&quot;&quot;</span>
+<span class="w">        </span><span class="nb">exit</span><span class="w"> </span>-1
+<span class="w">    </span><span class="k">fi</span>
+<span class="w">    </span><span class="c1"># Check if aocl-utils directory already exists</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-d<span class="w"> </span>aocl-utils<span class="w"> </span><span class="o">||</span><span class="w"> </span>-f<span class="w"> </span>aocl-utils<span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;aocl-utils exists!&quot;</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Please run \&quot;rm -rf aocl-utils\&quot;&quot;</span>
+<span class="w">        </span><span class="nb">exit</span><span class="w"> </span>-1
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
+
+<span class="c1"># Function to clone the repo both aocl-utils and aocl-crypto.</span>
+clone_repos<span class="o">(){</span>
+
+<span class="w">    </span><span class="c1"># Clone AOCL-Cryptography</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;git clone </span><span class="nv">$AOCL_CRYPTO_REPO</span><span class="s2"> -b </span><span class="nv">$AOCL_BRANCH</span><span class="s2">\&quot;&quot;</span>
+<span class="w">    </span>git<span class="w"> </span>clone<span class="w"> </span><span class="nv">$AOCL_CRYPTO_REPO</span><span class="w"> </span>-b<span class="w"> </span><span class="nv">$AOCL_BRANCH</span>
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+
+<span class="w">    </span>sleep<span class="w"> </span><span class="m">1</span>
+
+<span class="w">    </span><span class="c1"># Clone AOCL-Utils</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;git clone </span><span class="nv">$AOCL_UTILS_REPO</span><span class="s2"> -b </span><span class="nv">$AOCL_BRANCH</span><span class="s2">\&quot;&quot;</span>
+<span class="w">    </span>git<span class="w"> </span>clone<span class="w"> </span><span class="nv">$AOCL_UTILS_REPO</span><span class="w"> </span>-b<span class="w"> </span><span class="nv">$AOCL_BRANCH</span>
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+
+<span class="o">}</span>
+
+<span class="c1"># Function to build aocl-utils with minimal configuration</span>
+compile_aocl_utils<span class="o">(){</span>
+
+<span class="w">    </span><span class="nb">pushd</span><span class="w"> </span>.
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;cd into aocl-utils&quot;</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>aocl-utils
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;creating build directory&quot;</span>
+<span class="w">    </span>mkdir<span class="w"> </span>build
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;cd into build directory&quot;</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>build
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Setting GCC-12 as the compiler&quot;</span>
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">CC</span><span class="o">=</span>gcc-12<span class="p">;</span><span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CXX</span><span class="o">=</span>g++-12
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;cmake ../ -DCMAKE_INSTALL_PREFIX=</span><span class="nv">$PWD</span><span class="s2">/install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF\&quot;&quot;</span>
+<span class="w">    </span>cmake<span class="w"> </span>../<span class="w"> </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span>install<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>-DALCI_DOCS<span class="o">=</span>OFF
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;make -j </span><span class="k">$(</span>nproc<span class="w"> </span>--all<span class="k">)</span><span class="s2">\&quot;&quot;</span>
+<span class="w">    </span>make<span class="w"> </span>-j<span class="w"> </span><span class="k">$(</span>nproc<span class="w"> </span>--all<span class="k">)</span>
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">    </span>make<span class="w"> </span>install
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">    </span><span class="nb">popd</span>
+
+<span class="o">}</span>
+
+<span class="c1"># Function to build AOCL-Cryptography with minimal configuration</span>
+compile_aocl_crypto<span class="o">(){</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="nb">pushd</span><span class="w"> </span>.
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;cd into aocl-crypto&quot;</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>aocl-crypto
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;creating build directory&quot;</span>
+<span class="w">    </span>mkdir<span class="w"> </span>build
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;cd into build directory&quot;</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>build
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Setting GCC-12 as the compiler&quot;</span>
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">CC</span><span class="o">=</span>gcc-12<span class="p">;</span><span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CXX</span><span class="o">=</span>g++-12
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;cmake ../ -DALCP_ENABLE_EXAMPLES=ON \</span>
+<span class="s2">-DOPENSSL_INSTALL_DIR=/usr \</span>
+<span class="s2">-DCMAKE_INSTALL_PREFIX=</span><span class="nv">$PWD</span><span class="s2">/install \</span>
+<span class="s2">-DENABLE_AOCL_UTILS=ON \</span>
+<span class="s2">-DAOCL_UTILS_INSTALL_DIR=</span><span class="nv">$PWD</span><span class="s2">/../../aocl-utils/build/install\&quot;&quot;</span>
+<span class="w">    </span>cmake<span class="w"> </span>../<span class="w"> </span>-DALCP_ENABLE_EXAMPLES<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">              </span>-DOPENSSL_INSTALL_DIR<span class="o">=</span>/usr<span class="w"> </span><span class="se">\</span>
+<span class="w">              </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$PWD</span>/install<span class="w"> </span><span class="se">\</span>
+<span class="w">              </span>-DENABLE_AOCL_UTILS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">              </span>-DAOCL_UTILS_INSTALL_DIR<span class="o">=</span><span class="nv">$PWD</span>/../../aocl-utils/build/install
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running \&quot;make -j </span><span class="k">$(</span>nproc<span class="w"> </span>--all<span class="k">)</span><span class="s2">\&quot;&quot;</span>
+<span class="w">    </span>make<span class="w"> </span>-j<span class="w"> </span><span class="k">$(</span>nproc<span class="w"> </span>--all<span class="k">)</span>
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">    </span>make<span class="w"> </span>install
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">    </span><span class="nb">popd</span>
+
+<span class="o">}</span>
+
+<span class="c1"># Function to show how to execute an example properly</span>
+run_example_cfb<span class="o">(){</span>
+
+<span class="w">    </span><span class="nb">pushd</span><span class="w"> </span>.
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Exporting library paths for loader&quot;</span>
+<span class="w">    </span><span class="c1"># Update loader with aocl-utils lib</span>
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$PWD</span>/aocl-utils/build/install/lib:<span class="nv">$PWD</span>/aocl-utils/build/install/lib64:<span class="nv">$LD_LIBRARY_PATH</span>
+<span class="w">    </span><span class="c1"># Update loader with aocl-crypto lib</span>
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$PWD</span>/aocl-crypto/build/install/lib:<span class="nv">$PWD</span>/aocl-crypto/build/install/lib64:<span class="nv">$LD_LIBRARY_PATH</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;cd into aocl-crypto/build&quot;</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>aocl-crypto/build
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Executing \&quot;</span><span class="nv">$PWD</span><span class="s2">/examples/cipher/aes-cfb\&quot;&quot;</span>
+<span class="w">    </span><span class="nv">$PWD</span>/examples/cipher/aes-cfb
+<span class="w">    </span>quit_if_status_not_zero<span class="w"> </span><span class="nv">$?</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Executed Successfully!, output above&quot;</span>
+<span class="w">    </span><span class="nb">popd</span>
+
+<span class="o">}</span>
+
+<span class="c1"># Make sure we dont destroy anything</span>
+ensure_no_directory_conflict
+<span class="c1"># Make sure we can detect the OS</span>
+ensure_lsb_release
+<span class="c1"># Make sure all the needed packages (dependancies) are installed</span>
+ensure_packages
+<span class="c1"># Clone Utils and Crypto</span>
+clone_repos
+<span class="c1"># Build Utils and Install it into a prefix inside build directory</span>
+compile_aocl_utils
+<span class="c1"># Build Crypto and Install it into a prefix inside the build directory</span>
+compile_aocl_crypto
+<span class="c1"># Run an example to show that, its indeed working.</span>
+run_example_cfb
+</pre></div>
+</div>
+</section>
+</section>
+<section id="setting-up-application-development-environment">
+<h2>Setting up Application Development Environment<a class="headerlink" href="#setting-up-application-development-environment" title="Permalink to this heading">#</a></h2>
+<p>As AOCL-Cryptography is a C/C++ library you can write a C/C++ application with AOCL-Cryptography and accelerate the cryptographic performance.</p>
+<p>AOCL-Cryptography interacts with applications using C-API. In future for C++ a native API will be exposed reducing the complexity and increasing the flexibility of the API.</p>
+<section id="exporting-environment-variables">
+<h3>Exporting Environment Variables<a class="headerlink" href="#exporting-environment-variables" title="Permalink to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Adding AOCL-Utils into environment variables</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/lib:aocl-utils/build/install/lib64:</span><span class="nv">$LD_LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/lib:aocl-utils/build/install/lib64:</span><span class="nv">$LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">C_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/include:</span><span class="nv">$C_INCLUDE_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CPLUS_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/include:</span><span class="nv">$CPLUS_INCLUDE_PATH</span><span class="s2">&quot;</span>
+
+<span class="c1"># Adding AOCL-Cryptography into environment variables</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/lib:aocl-crypto/build/install/lib64:</span><span class="nv">$LD_LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/lib:aocl-crypto/build/install/lib64:</span><span class="nv">$LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">C_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/include:</span><span class="nv">$C_INCLUDE_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CPLUS_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/include:</span><span class="nv">$CPLUS_INCLUDE_PATH</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="sample-application-to-show-version">
+<h3>Sample application to show version<a class="headerlink" href="#sample-application-to-show-version" title="Permalink to this heading">#</a></h3>
+<p>Copy and paste this into a terminal, it will create a file named <code class="docutils literal notranslate"><span class="pre">version.c</span></code></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s">&lt;&lt; EOF &gt; version.c</span>
+<span class="s">#include &lt;alcp/alcp.h&gt;</span>
+<span class="s">#include &lt;stdio.h&gt;</span>
+
+<span class="s">int</span>
+<span class="s">main()</span>
+<span class="s">{</span>
+<span class="s">    // Call alcp_get_version function which returns a string</span>
+<span class="s">    printf(&quot;ALCP_VERSION_IS: %s\n&quot;, alcp_get_version());</span>
+<span class="s">    return 0;</span>
+<span class="s">}</span>
+<span class="s">EOF</span>
+</pre></div>
+</div>
+<section id="compiling-the-application">
+<h4>Compiling the application<a class="headerlink" href="#compiling-the-application" title="Permalink to this heading">#</a></h4>
+<p>As you have already run the <code class="docutils literal notranslate"><span class="pre">Exporting</span> <span class="pre">Environment</span> <span class="pre">Variables</span></code> code snippet, building becomes very simple.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcc<span class="w"> </span>version.c<span class="w"> </span>-o<span class="w"> </span>version<span class="w"> </span>-lalcp<span class="w"> </span>-laoclutils
+</pre></div>
+</div>
+</section>
+<section id="execute-the-application">
+<h4>Execute the application<a class="headerlink" href="#execute-the-application" title="Permalink to this heading">#</a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./version
+</pre></div>
+</div>
+</section>
+</section>
+<section id="single-script-to-setup-the-example-application">
+<h3>Single script to setup the example application<a class="headerlink" href="#single-script-to-setup-the-example-application" title="Permalink to this heading">#</a></h3>
+<p>As always to end with, here is a script which builds and executes application. Feel free to modify it as you please for your own application.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Adding AOCL-Utils into environment variables</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/lib:aocl-utils/build/install/lib64:</span><span class="nv">$LD_LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/lib:aocl-utils/build/install/lib64:</span><span class="nv">$LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">C_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/include:</span><span class="nv">$C_INCLUDE_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CPLUS_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-utils/build/install/include:</span><span class="nv">$CPLUS_INCLUDE_PATH</span><span class="s2">&quot;</span>
+
+<span class="c1"># Adding AOCL-Cryptography into environment variables</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/lib:aocl-crypto/build/install/lib64:</span><span class="nv">$LD_LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/lib:aocl-crypto/build/install/lib64:</span><span class="nv">$LIBRARY_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">C_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/include:</span><span class="nv">$C_INCLUDE_PATH</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CPLUS_INCLUDE_PATH</span><span class="o">=</span><span class="s2">&quot;aocl-crypto/build/install/include:</span><span class="nv">$CPLUS_INCLUDE_PATH</span><span class="s2">&quot;</span>
+
+<span class="c1"># Write the sample Application</span>
+cat<span class="w"> </span><span class="s">&lt;&lt; EOF &gt; version.c</span>
+<span class="s">#include &lt;alcp/alcp.h&gt;</span>
+<span class="s">#include &lt;stdio.h&gt;</span>
+
+<span class="s">int</span>
+<span class="s">main()</span>
+<span class="s">{</span>
+<span class="s">    // Call alcp_get_version function which returns a string</span>
+<span class="s">    printf(&quot;ALCP_VERSION_IS: %s\n&quot;, alcp_get_version());</span>
+<span class="s">    return 0;</span>
+<span class="s">}</span>
+<span class="s">EOF</span>
+
+<span class="c1"># Compile the application</span>
+gcc<span class="w"> </span>version.c<span class="w"> </span>-o<span class="w"> </span>version<span class="w"> </span>-lalcp<span class="w"> </span>-laoclutils
+
+<span class="c1"># Execute the application</span>
+./version
+</pre></div>
+</div>
+<p>Now you got AOCL-Cryptography setup for development, Enjoy :-).</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-installing-and-running-examples-from-source">Building, installing and running examples from source</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-prerequisites">Installing Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cloning-repositories">Cloning Repositories</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-aocl-utils">Building AOCL-Utils</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-aocl-cryptography">Building AOCL-Cryptography</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#executing-examples">Executing Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-script-to-do-all-the-above">Single script to do all the above</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-application-development-environment">Setting up Application Development Environment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-environment-variables">Exporting Environment Variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-application-to-show-version">Sample application to show version</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compiling-the-application">Compiling the application</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#execute-the-application">Execute the application</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-script-to-setup-the-example-application">Single script to setup the example application</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <p>
+  </p>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+<footer class="rocm-footer">
+    <div class="container-lg">
+        <section class="bottom-menu menu py-45">
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <ul>
+                        <li><a href="https://www.amd.com/en/corporate/copyright" target="_blank">Terms and Conditions</a></li>
+                        
+                        <li><a href="">2023, Advanced Micro Devices, Inc</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/privacy" target="_blank">Privacy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/trademarks" target="_blank">Trademarks</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf" target="_blank">Statement on Forced Labor</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/competition" target="_blank">Fair and Open Competition</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf" target="_blank">UK Tax Strategy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/cookies" target="_blank">Cookie Policy</a></li>
+                        <!-- OneTrust Cookies Settings button start -->
+                        <li><a href="#cookie-settings" id="ot-sdk-btn" class="ot-sdk-show-settings">Cookie Settings</a></li>
+                        <!-- OneTrust Cookies Settings button end -->
+                    </ul>
+                </div>
+            </div>
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <div>
+                        <span class="copyright">© 2023 Advanced Micro Devices, Inc</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</footer>
+
+<!-- <div id="rdc-watermark-container">
+    <img id="rdc-watermark" src="_static/images/alpha-watermark.svg" alt="DRAFT watermark"/>
+</div> -->
+  </body>
+</html>

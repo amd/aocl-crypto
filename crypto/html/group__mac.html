@@ -1,0 +1,680 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>MAC API &#8212; Home</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_header.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_footer.css" />
+    <link rel="stylesheet" type="text/css" href="_static/fonts.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://download.amd.com/js/analytics/analyticsinit.js"></script>
+    <script async="async" src="_static/code_word_breaks.js"></script>
+    <script async="async" src="_static/renameVersionLinks.js"></script>
+    <script async="async" src="_static/rdcMisc.js"></script>
+    <script async="async" src="_static/theme_mode_captions.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'group__mac';</script>
+    <link rel="icon" href="https://www.amd.com/themes/custom/amd/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="RSA API" href="group__rsa.html" />
+    <link rel="prev" title="EC API" href="group__ec.html" />
+    <meta name="google-site-verification" content="ZOn0RZC0Pwzlmf2SaE0bRttWk1YzOhuslbpxUDchQ90" />
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+
+<header class="common-header" >
+    <nav class="navbar navbar-expand-xl">
+        <div class="container-fluid main-nav rocm-header">
+            
+            <div class="header-logo">
+                <a class="navbar-brand" href="https://www.amd.com/">
+                    <img src="_static/images/amd-header-logo.svg" alt="AMD Logo" title="AMD Logo" width="90" class="d-inline-block align-text-top hover-opacity"/>
+                </a>
+                <div class="vr vr mx-40 my-25"></div>
+                <a class="klavika-font hover-opacity" href="/">AOCL Cryptography</a>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var elements = document.getElementsByClassName('header-all-versions');
+            for (var i = 0; i < elements.length; i++) {
+                elements[i].remove();
+            }
+
+            elements = document.querySelector("body > footer > div > section > div:nth-child(1) > div > ul").children;
+            var removable_items = ['2023, Advanced Micro Devices, Inc', 'Statement on Forced Labor', 'Fair and Open Competition', 'UK Tax Strategy', 'Cookie Policy', 'Cookie Settings'];
+            for(var i = 0; i < elements.length; i++) {
+                if(removable_items.includes(elements[i].innerText)) {
+                    elements[i].remove();
+                    i--;
+                }
+            }
+        })
+    </script>
+                <a class="header-all-versions" href="https://rocm.docs.amd.com/en/latest/release/versions.html">Version List</a>
+            </div>
+            <div class="icon-nav text-center d-flex ms-auto">
+            </div>
+        </div>
+    </nav>
+    
+</header>
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Home</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="aocl_crypto.html">AOCL Cryptography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Related_Pages.html">Related Pages</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="APIs.html">APIs</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="group__cipher.html">Cipher API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__digest.html">Digest API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__ec.html">EC API</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">MAC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rsa.html">RSA API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rng.html">RNG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__error.html">Error API</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-angle-right"></span>
+  </label></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="APIs.html" class="nav-link">APIs</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">MAC API</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>MAC API</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structures">Data Structures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="mac-api">
+<h1>MAC API<a class="headerlink" href="#mac-api" title="Permalink to this heading">#</a></h1>
+<p>A Message Authentication Code (MAC) is a cryptographic technique used to verify the authenticity and integrity of a message, ensuring that it has not been tampered during transmission.</p>
+<hr class="docutils" />
+<section id="data-structures">
+<h2>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">#</a></h2>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv415alc_hmac_info_t">
+<span id="_CPPv315alc_hmac_info_t"></span><span id="_CPPv215alc_hmac_info_t"></span><span id="alc_hmac_info_t"></span><span class="target" id="structalc__hmac__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_hmac_info_t</span></span></span><a class="headerlink" href="#_CPPv415alc_hmac_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores details of HMAC. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Param hmac_digest<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Store info of digest used for HMAC </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv415alc_cmac_info_t">
+<span id="_CPPv315alc_cmac_info_t"></span><span id="_CPPv215alc_cmac_info_t"></span><span id="alc_cmac_info_t"></span><span class="target" id="structalc__cmac__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cmac_info_t</span></span></span><a class="headerlink" href="#_CPPv415alc_cmac_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores details of CMAC. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Param cmac_cipher<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Store info of cipher used for CMAC </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv419alc_poly1305_info_t">
+<span id="_CPPv319alc_poly1305_info_t"></span><span id="_CPPv219alc_poly1305_info_t"></span><span id="alc_poly1305_info_t"></span><span class="target" id="structalc__poly1305__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_poly1305_info_t</span></span></span><a class="headerlink" href="#_CPPv419alc_poly1305_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores details for Poly1305. </p>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv414alc_mac_info_t">
+<span id="_CPPv314alc_mac_info_t"></span><span id="_CPPv214alc_mac_info_t"></span><span id="alc_mac_info_t"></span><span class="target" id="structalc__mac__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_mac_info_t</span></span></span><a class="headerlink" href="#_CPPv414alc_mac_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores details of CMAC. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Supported MAC algorithms HMAC, CMAC, POLY1305 </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Param mi_type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Store Type of MAC to be used </p>
+</dd>
+<dt class="field-even">Param mi_algoinfo<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Union of <a class="reference internal" href="#structalc__hmac__info__t"><span class="std std-ref">alc_hmac_info_t</span></a>, <a class="reference internal" href="#structalc__cmac__info__t"><span class="std std-ref">alc_cmac_info_t</span></a></p>
+</dd>
+<dt class="field-odd">Param mi_keyinfo<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Store key info</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv416alc_mac_handle_t">
+<span id="_CPPv316alc_mac_handle_t"></span><span id="_CPPv216alc_mac_handle_t"></span><span id="alc_mac_handle_t"></span><span class="target" id="structalc__mac__handle__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_mac_handle_t</span></span></span><a class="headerlink" href="#_CPPv416alc_mac_handle_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Handle for maintaining session. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Param ch_context<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pointer to the context of the mac </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418alcp_mac_supportedK14alc_mac_info_p">
+<span id="_CPPv318alcp_mac_supportedK14alc_mac_info_p"></span><span id="_CPPv218alcp_mac_supportedK14alc_mac_info_p"></span><span id="alcp_mac_supported__alc_mac_info_pC"></span><span class="target" id="group__mac_1gae25ea8947b1ce7d8e438fde7134412e4"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_supported</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_mac_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pcMacInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418alcp_mac_supportedK14alc_mac_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows to check if a given algorithm is supported or not. </p>
+<p> <strong>This API needs to be called before any other API is called to know if mac that is being request is supported or not </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#group__mac_1gae25ea8947b1ce7d8e438fde7134412e4"><span class="std std-ref">alcp_mac_supported()</span></a> is called first to know if the given configuration is valid.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pcMacInfo</strong> – <strong>[in]</strong> Description of the requested mac session</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421alcp_mac_context_sizeK14alc_mac_info_p">
+<span id="_CPPv321alcp_mac_context_sizeK14alc_mac_info_p"></span><span id="_CPPv221alcp_mac_context_sizeK14alc_mac_info_p"></span><span id="alcp_mac_context_size__alc_mac_info_pC"></span><span class="target" id="group__mac_1ga8e825fac41c09780bc09344d4bdc6fac"></span><span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_context_size</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_mac_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421alcp_mac_context_sizeK14alc_mac_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Gets the size of the context for a session described by pMacInfo. </p>
+<p> <strong>This API can be called before <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a> to identify the memory to be allocated for context </strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pMacInfo</strong> – <strong>[in]</strong> Description of the requested MAC session </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Size of Context </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416alcp_mac_request16alc_mac_handle_pK14alc_mac_info_p">
+<span id="_CPPv316alcp_mac_request16alc_mac_handle_pK14alc_mac_info_p"></span><span id="_CPPv216alcp_mac_request16alc_mac_handle_pK14alc_mac_info_p"></span><span id="alcp_mac_request__alc_mac_handle_p.alc_mac_info_pC"></span><span class="target" id="group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_request</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_mac_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416alcp_mac_request16alc_mac_handle_pK14alc_mac_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows caller to request for a MAC as described by pMacInfo. </p>
+<p> <strong>This API must be called before making any other API call</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked after each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pMacInfo</strong> – <strong>[in]</strong> Description of the MAC session </p></li>
+<li><p><strong>pMacHandle</strong> – <strong>[out]</strong> Library populated session handle for future mac operations. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"><span class="std std-ref">alcp_mac_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415alcp_mac_update16alc_mac_handle_pPK5Uint86Uint64">
+<span id="_CPPv315alcp_mac_update16alc_mac_handle_pPK5Uint86Uint64"></span><span id="_CPPv215alcp_mac_update16alc_mac_handle_pPK5Uint86Uint64"></span><span id="alcp_mac_update__alc_mac_handle_p.Uint8CP.Uint64"></span><span class="target" id="group__mac_1ga971092a09032f0b13a07797aa908dc6d"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_update</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">buff</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415alcp_mac_update16alc_mac_handle_pPK5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows caller to update MAC with chunk of data to be authenticated. </p>
+<p> <strong>This API is called to update data to be authenticated. So should be called after <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a> and before the end of session call, <a class="reference internal" href="#group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"><span class="std std-ref">alcp_mac_finish</span></a></strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pMacHandle</strong> – <strong>[in]</strong> Session handle for future MAC operation </p></li>
+<li><p><strong>buff</strong> – <strong>[in]</strong> The chunk of the message to be updated </p></li>
+<li><p><strong>size</strong> – <strong>[in]</strong> Length of input buffer in bytes </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"><span class="std std-ref">alcp_mac_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417alcp_mac_finalize16alc_mac_handle_pPK5Uint86Uint64">
+<span id="_CPPv317alcp_mac_finalize16alc_mac_handle_pPK5Uint86Uint64"></span><span id="_CPPv217alcp_mac_finalize16alc_mac_handle_pPK5Uint86Uint64"></span><span id="alcp_mac_finalize__alc_mac_handle_p.Uint8CP.Uint64"></span><span class="target" id="group__mac_1ga5e8bd2c0f6b4c79f66a2b0446cfeb5a8"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_finalize</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">buff</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417alcp_mac_finalize16alc_mac_handle_pPK5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows caller to finalize MAC with final chunk of data to be authenticated. </p>
+<p> <strong>This API is called to finalize mac so should be called after <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a> and before <a class="reference internal" href="#group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"><span class="std std-ref">alcp_mac_finish</span></a></strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><ul class="simple">
+<li><p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false.</p></li>
+<li><p>It is expected that application calls <a class="reference internal" href="#group__mac_1gadace2affa0b9169f16a7fb15f8361863"><span class="std std-ref">alcp_mac_copy()</span></a> after calling this function as the contents of the session is not guaranteed to persist after <a class="reference internal" href="#group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"><span class="std std-ref">alcp_mac_finish()</span></a></p></li>
+</ul>
+</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pMacHandle</strong> – <strong>[in]</strong> Session handle for future MAC operation </p></li>
+<li><p><strong>buff</strong> – <strong>[in]</strong> The last chunk of the message to be updated </p></li>
+<li><p><strong>size</strong> – <strong>[in]</strong> Length of input buffer in bytes. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"><span class="std std-ref">alcp_mac_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv413alcp_mac_copy16alc_mac_handle_pP5Uint86Uint64">
+<span id="_CPPv313alcp_mac_copy16alc_mac_handle_pP5Uint86Uint64"></span><span id="_CPPv213alcp_mac_copy16alc_mac_handle_pP5Uint86Uint64"></span><span id="alcp_mac_copy__alc_mac_handle_p.Uint8P.Uint64"></span><span class="target" id="group__mac_1gadace2affa0b9169f16a7fb15f8361863"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_copy</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">buff</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413alcp_mac_copy16alc_mac_handle_pP5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows caller to copy MAC to the buffer. </p>
+<p> <strong>This API is called to copy mac, so should be called after <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a> and before <a class="reference internal" href="#group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"><span class="std std-ref">alcp_mac_finish</span></a> </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pMacHandle</strong> – <strong>[in]</strong> Session handle for future MAC operation </p></li>
+<li><p><strong>buff</strong> – <strong>[out]</strong> Destination buffer to which mac will be copied </p></li>
+<li><p><strong>size</strong> – <strong>[in]</strong> Length of output buffer in bytes </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"><span class="std std-ref">alcp_mac_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415alcp_mac_finish16alc_mac_handle_p">
+<span id="_CPPv315alcp_mac_finish16alc_mac_handle_p"></span><span id="_CPPv215alcp_mac_finish16alc_mac_handle_p"></span><span id="alcp_mac_finish__alc_mac_handle_p"></span><span class="target" id="group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_finish</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415alcp_mac_finish16alc_mac_handle_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Free resources that was allotted by <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a>. </p>
+<p> <strong>This API is called to free resources so should be called to free the session</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request()</span></a> should be called first to allocate the Handler.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pMacHandle</strong> – <strong>[in]</strong> Session handle used for the MAC operations </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"><span class="std std-ref">alcp_mac_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv414alcp_mac_reset16alc_mac_handle_p">
+<span id="_CPPv314alcp_mac_reset16alc_mac_handle_p"></span><span id="_CPPv214alcp_mac_reset16alc_mac_handle_p"></span><span id="alcp_mac_reset__alc_mac_handle_p"></span><span class="target" id="group__mac_1ga66ce651f23cc11bb84097465f3414f89"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_reset</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414alcp_mac_reset16alc_mac_handle_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>resets the data given to it during <a class="reference internal" href="#group__mac_1ga971092a09032f0b13a07797aa908dc6d"><span class="std std-ref">alcp_mac_update</span></a> or <a class="reference internal" href="#group__mac_1ga5e8bd2c0f6b4c79f66a2b0446cfeb5a8"><span class="std std-ref">alcp_mac_finalize</span></a></p>
+<p> <strong>This API is called to reset data so should be called after <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a> and before <a class="reference internal" href="#group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"><span class="std std-ref">alcp_mac_finish</span></a></strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pMacHandle</strong> – <strong>[in]</strong> Session handle for future MAC operation </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"><span class="std std-ref">alcp_mac_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv414alcp_mac_error16alc_mac_handle_pP5Uint86Uint64">
+<span id="_CPPv314alcp_mac_error16alc_mac_handle_pP5Uint86Uint64"></span><span id="_CPPv214alcp_mac_error16alc_mac_handle_pP5Uint86Uint64"></span><span id="alcp_mac_error__alc_mac_handle_p.Uint8P.Uint64"></span><span class="target" id="group__mac_1gaef9a22d57a0de9b2389e4d991e1167dc"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_mac_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_mac_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pMacHandle</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pBuff</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414alcp_mac_error16alc_mac_handle_pP5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Get the error string for errors occurring in MAC operations. </p>
+<p> <strong> This API is called to get the error string. It should be called after <a class="reference internal" href="#group__mac_1ga0f5b9651affe0a6ddef366c3468e3870"><span class="std std-ref">alcp_mac_request</span></a> and before <a class="reference internal" href="#group__mac_1ga01d6dd08f4385918a733fbc611d75ab3"><span class="std std-ref">alcp_mac_finish</span></a> </strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pMacHandle</strong> – <strong>[in]</strong> Session handle for MAC operation </p></li>
+<li><p><strong>pBuff</strong> – <strong>[out]</strong> Destination Buffer to which Error String will be copied </p></li>
+<li><p><strong>size</strong> – <strong>[in]</strong> Length of the Buffer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>alc_error_t Error code to validate the Handle </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Permalink to this heading">#</a></h2>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv414alc_mac_type_t">
+<span id="_CPPv314alc_mac_type_t"></span><span id="_CPPv214alc_mac_type_t"></span><span id="alc_mac_type_t___alc_mac_type"></span><span class="target" id="group__mac_1gad9418b46131031526468aa80f6a2f571"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">_alc_mac_type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_mac_type_t</span></span></span><a class="headerlink" href="#_CPPv414alc_mac_type_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores info regarding the type of MAC used. </p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="group__ec.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">EC API</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="group__rsa.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">RSA API</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structures">Data Structures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <p>
+  </p>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+<footer class="rocm-footer">
+    <div class="container-lg">
+        <section class="bottom-menu menu py-45">
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <ul>
+                        <li><a href="https://www.amd.com/en/corporate/copyright" target="_blank">Terms and Conditions</a></li>
+                        
+                        <li><a href="">2023, Advanced Micro Devices, Inc</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/privacy" target="_blank">Privacy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/trademarks" target="_blank">Trademarks</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf" target="_blank">Statement on Forced Labor</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/competition" target="_blank">Fair and Open Competition</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf" target="_blank">UK Tax Strategy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/cookies" target="_blank">Cookie Policy</a></li>
+                        <!-- OneTrust Cookies Settings button start -->
+                        <li><a href="#cookie-settings" id="ot-sdk-btn" class="ot-sdk-show-settings">Cookie Settings</a></li>
+                        <!-- OneTrust Cookies Settings button end -->
+                    </ul>
+                </div>
+            </div>
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <div>
+                        <span class="copyright">© 2023 Advanced Micro Devices, Inc</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</footer>
+
+<!-- <div id="rdc-watermark-container">
+    <img id="rdc-watermark" src="_static/images/alpha-watermark.svg" alt="DRAFT watermark"/>
+</div> -->
+  </body>
+</html>
