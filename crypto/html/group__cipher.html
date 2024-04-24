@@ -1,0 +1,1091 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Cipher API &#8212; Home</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_header.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_footer.css" />
+    <link rel="stylesheet" type="text/css" href="_static/fonts.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://download.amd.com/js/analytics/analyticsinit.js"></script>
+    <script async="async" src="_static/code_word_breaks.js"></script>
+    <script async="async" src="_static/renameVersionLinks.js"></script>
+    <script async="async" src="_static/rdcMisc.js"></script>
+    <script async="async" src="_static/theme_mode_captions.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'group__cipher';</script>
+    <link rel="icon" href="https://www.amd.com/themes/custom/amd/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Digest API" href="group__digest.html" />
+    <link rel="prev" title="APIs" href="APIs.html" />
+    <meta name="google-site-verification" content="ZOn0RZC0Pwzlmf2SaE0bRttWk1YzOhuslbpxUDchQ90" />
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+
+<header class="common-header" >
+    <nav class="navbar navbar-expand-xl">
+        <div class="container-fluid main-nav rocm-header">
+            
+            <div class="header-logo">
+                <a class="navbar-brand" href="https://www.amd.com/">
+                    <img src="_static/images/amd-header-logo.svg" alt="AMD Logo" title="AMD Logo" width="90" class="d-inline-block align-text-top hover-opacity"/>
+                </a>
+                <div class="vr vr mx-40 my-25"></div>
+                <a class="klavika-font hover-opacity" href="/">AOCL Cryptography</a>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var elements = document.getElementsByClassName('header-all-versions');
+            for (var i = 0; i < elements.length; i++) {
+                elements[i].remove();
+            }
+
+            elements = document.querySelector("body > footer > div > section > div:nth-child(1) > div > ul").children;
+            var removable_items = ['2023, Advanced Micro Devices, Inc', 'Statement on Forced Labor', 'Fair and Open Competition', 'UK Tax Strategy', 'Cookie Policy', 'Cookie Settings'];
+            for(var i = 0; i < elements.length; i++) {
+                if(removable_items.includes(elements[i].innerText)) {
+                    elements[i].remove();
+                    i--;
+                }
+            }
+        })
+    </script>
+                <a class="header-all-versions" href="https://rocm.docs.amd.com/en/latest/release/versions.html">Version List</a>
+            </div>
+            <div class="icon-nav text-center d-flex ms-auto">
+            </div>
+        </div>
+    </nav>
+    
+</header>
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Home</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="aocl_crypto.html">AOCL Cryptography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Related_Pages.html">Related Pages</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="APIs.html">APIs</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Cipher API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__digest.html">Digest API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__ec.html">EC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__mac.html">MAC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rsa.html">RSA API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rng.html">RNG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__error.html">Error API</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-angle-right"></span>
+  </label></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="APIs.html" class="nav-link">APIs</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Cipher API</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Cipher API</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structures">Data Structures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="cipher-api">
+<h1>Cipher API<a class="headerlink" href="#cipher-api" title="Permalink to this heading">#</a></h1>
+<p>Cipher is a cryptographic technique used to secure information by transforming message into a cryptic form that can only be read by those with the key to decipher it.</p>
+<hr class="docutils" />
+<section id="data-structures">
+<h2>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">#</a></h2>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv417alc_cipher_info_t">
+<span id="_CPPv317alc_cipher_info_t"></span><span id="_CPPv217alc_cipher_info_t"></span><span id="alc_cipher_info_t"></span><span class="target" id="structalc__cipher__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_info_t</span></span></span><a class="headerlink" href="#_CPPv417alc_cipher_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Opaque cipher context, populated from the library. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Param ci_type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Specify which cipher type to be used for encrypt and decrypt </p>
+</dd>
+<dt class="field-even">Param ci_key_info<span class="colon">:</span></dt>
+<dd class="field-even"><p>store the info related to key </p>
+</dd>
+<dt class="field-odd">Param ci_algo_info<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Algorithm specific info is stored </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv419alc_cipher_handle_t">
+<span id="_CPPv319alc_cipher_handle_t"></span><span id="_CPPv219alc_cipher_handle_t"></span><span id="alc_cipher_handle_t"></span><span class="target" id="structalc__cipher__handle__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_handle_t</span></span></span><a class="headerlink" href="#_CPPv419alc_cipher_handle_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Handle for maintaining session. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Param alc_cipher_context_p<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pointer to the user allocated context of the cipher </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv426alc_cipher_mode_gcm_info_t">
+<span id="_CPPv326alc_cipher_mode_gcm_info_t"></span><span id="_CPPv226alc_cipher_mode_gcm_info_t"></span><span id="alc_cipher_mode_gcm_info_t"></span><span class="target" id="structalc__cipher__mode__gcm__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_mode_gcm_info_t</span></span></span><a class="headerlink" href="#_CPPv426alc_cipher_mode_gcm_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores special info needed for GCM mode. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently not in use </p>
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv426alc_cipher_mode_siv_info_t">
+<span id="_CPPv326alc_cipher_mode_siv_info_t"></span><span id="_CPPv226alc_cipher_mode_siv_info_t"></span><span id="alc_cipher_mode_siv_info_t"></span><span class="target" id="structalc__cipher__mode__siv__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_mode_siv_info_t</span></span></span><a class="headerlink" href="#_CPPv426alc_cipher_mode_siv_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores special info needed for SIV mode. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Param xi_ctr_key<span class="colon">:</span></dt>
+<dd class="field-odd"><p>holds the info about secondary key for SIV </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv414alc_key_info_t">
+<span id="_CPPv314alc_key_info_t"></span><span id="_CPPv214alc_key_info_t"></span><span id="alc_key_info_t"></span><span class="target" id="structalc__key__info__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_key_info_t</span></span></span><a class="headerlink" href="#_CPPv414alc_key_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Store info related to key. </p>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421alcp_cipher_supportedK17alc_cipher_info_p">
+<span id="_CPPv321alcp_cipher_supportedK17alc_cipher_info_p"></span><span id="_CPPv221alcp_cipher_supportedK17alc_cipher_info_p"></span><span id="alcp_cipher_supported__alc_cipher_info_pC"></span><span class="target" id="group__cipher_1ga48dc5a25fb2249639ce7a9e0422a7491"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_supported</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421alcp_cipher_supportedK17alc_cipher_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Check if a given algorithm is supported. </p>
+<p> <strong>This API needs to be called before any other API is called to know if cipher that is being requested is supported or not </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This API is provided to allow application to make decision on fallback mechanism </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pCipherInfo</strong> – <strong>[in]</strong> The information about the cipher algorithm and modes as described by <a class="reference internal" href="#structalc__cipher__info__t"><span class="std std-ref">alc_cipher_info_t</span></a></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ALC_ERROR_NONE </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424alcp_cipher_context_sizeK17alc_cipher_info_p">
+<span id="_CPPv324alcp_cipher_context_sizeK17alc_cipher_info_p"></span><span id="_CPPv224alcp_cipher_context_sizeK17alc_cipher_info_p"></span><span id="alcp_cipher_context_size__alc_cipher_info_pC"></span><span class="target" id="group__cipher_1ga5805429d2c8bdfe9af00849b5bedfdc9"></span><span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_context_size</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424alcp_cipher_context_sizeK17alc_cipher_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Gets the size of the context for a session described by pCipherInfo. </p>
+<p> <strong>This API should be called before <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a> to identify the memory to be allocated for context </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#group__cipher_1ga48dc5a25fb2249639ce7a9e0422a7491"><span class="std std-ref">alcp_cipher_supported()</span></a> should be called first to know if the given cipher/key length configuration is valid.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pCipherInfo</strong> – <strong>[in]</strong> Description of the requested cipher session </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Size of Context </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419alcp_cipher_requestK17alc_cipher_info_p19alc_cipher_handle_p">
+<span id="_CPPv319alcp_cipher_requestK17alc_cipher_info_p19alc_cipher_handle_p"></span><span id="_CPPv219alcp_cipher_requestK17alc_cipher_info_p19alc_cipher_handle_p"></span><span id="alcp_cipher_request__alc_cipher_info_pC.alc_cipher_handle_p"></span><span class="target" id="group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_request</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherInfo</span></span>, <span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419alcp_cipher_requestK17alc_cipher_info_p19alc_cipher_handle_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Request for populating handle with algorithm specified by pCipherInfo. </p>
+<p> <strong>This API can be called after <a class="reference internal" href="#group__cipher_1ga48dc5a25fb2249639ce7a9e0422a7491"><span class="std std-ref">alcp_cipher_supported</span></a> is called </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherInfo</strong> – <strong>[in]</strong> Description of the cipher session </p></li>
+<li><p><strong>pCipherHandle</strong> – <strong>[out]</strong>  Library populated session handle for future cipher operations. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"><span class="std std-ref">alcp_cipher_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419alcp_cipher_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8">
+<span id="_CPPv319alcp_cipher_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="_CPPv219alcp_cipher_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="alcp_cipher_encrypt__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1ga2f5bc55e4bd1b4a945ed82890f28c2c4"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_encrypt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pPlainText</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pCipherText</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419alcp_cipher_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Encrypt plain text and write it to cipher text with provided handle. </p>
+<p> <strong>This API can be called after <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a> is called and at the end of session call <a class="reference internal" href="#group__cipher_1gaf832e27d19a687390118c7ebc4fd80a9"><span class="std std-ref">alcp_cipher_finish</span></a></strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pPlainText</strong> – <strong>[in]</strong> Pointer to Plain Text </p></li>
+<li><p><strong>pCipherText</strong> – <strong>[out]</strong> Pointer to Cipher Text </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> Pointer to Initialization Vector </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length of cipher/plain text </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"><span class="std std-ref">alcp_cipher_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419alcp_cipher_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8">
+<span id="_CPPv319alcp_cipher_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="_CPPv219alcp_cipher_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="alcp_cipher_decrypt__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1gaf3f2e75fd5182808532a3508f605f156"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_decrypt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pCipherText</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pPlainText</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419alcp_cipher_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Decryption of cipher text and write it to plain text with provided handle. </p>
+<p> <strong>This API should be called only after <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a>. API is meant to be used with CBC,CTR,CFB,OFB,XTS mode, it needs to be called before <a class="reference internal" href="#group__cipher_1ga54fd55f7f99b77ba014717cd1adf100b"><span class="std std-ref">alcp_cipher_set_iv</span></a>.</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, pCipherHandle is valid. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pPlainText</strong> – <strong>[in]</strong> Pointer to Plain Text </p></li>
+<li><p><strong>pCipherText</strong> – <strong>[out]</strong> Pointer to Cipher Text </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> Pointer to Initialization Vector </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length of cipher/plain text </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"><span class="std std-ref">alcp_cipher_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426alcp_cipher_blocks_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64">
+<span id="_CPPv326alcp_cipher_blocks_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64"></span><span id="_CPPv226alcp_cipher_blocks_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64"></span><span id="alcp_cipher_blocks_encrypt__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint64"></span><span class="target" id="group__cipher_1ga81dcb169616be43c15ec861ded7cfa9f"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_blocks_encrypt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pPlainText</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pCipherText</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">currPlainTextLen</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">startBlockNum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426alcp_cipher_blocks_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Encrypt plain text and write it to cipher text with provided handle. </p>
+<p> <strong>This XTS specific API should be called only after <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a>. API is meant to be used with XTS mode, it needs to be called before <a class="reference internal" href="#group__cipher_1ga54fd55f7f99b77ba014717cd1adf100b"><span class="std std-ref">alcp_cipher_set_iv</span></a>.</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>XTS: Argument currCipherTextLen should be multiple of 16bytes unless it’s the last call. Also last call if there is a paritial block, both partial and a complete block has to be included in the last call to this function. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pPlainText</strong> – <strong>[in]</strong> Pointer to Plain Text </p></li>
+<li><p><strong>pCipherText</strong> – <strong>[out]</strong> Pointer to Cipher Text </p></li>
+<li><p><strong>currPlainTextLen</strong> – <strong>[in]</strong> Length of the given plaintext </p></li>
+<li><p><strong>startBlockNum</strong> – <strong>[in]</strong> Start block number of given plaintext </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"><span class="std std-ref">alcp_cipher_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426alcp_cipher_blocks_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64">
+<span id="_CPPv326alcp_cipher_blocks_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64"></span><span id="_CPPv226alcp_cipher_blocks_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64"></span><span id="alcp_cipher_blocks_decrypt__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint64"></span><span class="target" id="group__cipher_1ga49892c0402f614dd9fdaba9213e813be"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_blocks_decrypt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pCipherText</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pPlainText</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">currCipherTextLen</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">startBlockNum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426alcp_cipher_blocks_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint646Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Decryption of cipher text and write it to plain text with provided handle. </p>
+<p> <strong>This XTS specific API should be called only after <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a>. API is meant to be used with XTS mode, it needs to be called before <a class="reference internal" href="#group__cipher_1ga54fd55f7f99b77ba014717cd1adf100b"><span class="std std-ref">alcp_cipher_set_iv</span></a>.</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, pCipherHandle is valid. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>XTS: Argument currCipherTextLen should be multiple of 16bytes unless it’s the last call. Also last call if there is a partial block, both partial and a complete block has to be included in the last call to this function. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pPlainText</strong> – <strong>[out]</strong> Pointer to Plain Text </p></li>
+<li><p><strong>pCipherText</strong> – <strong>[in]</strong> Pointer to Cipher Text </p></li>
+<li><p><strong>startBlockNum</strong> – <strong>[in]</strong> Start block number of given plaintext </p></li>
+<li><p><strong>currCipherTextLen</strong> – <strong>[in]</strong> Length of the given Cipher Text </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"><span class="std std-ref">alcp_cipher_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418alcp_cipher_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8">
+<span id="_CPPv318alcp_cipher_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8"></span><span id="_CPPv218alcp_cipher_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8"></span><span id="alcp_cipher_set_iv__alc_cipher_handle_pC.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1ga54fd55f7f99b77ba014717cd1adf100b"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_set_iv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418alcp_cipher_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Set the IV/Nonce. </p>
+<p> <strong>This API can be called after <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a> is called.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for encrypt/decrypt operation </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length in bytes of IV/Nonce </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> IV/Nonce </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"><span class="std std-ref">alcp_cipher_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418alcp_cipher_finishK19alc_cipher_handle_p">
+<span id="_CPPv318alcp_cipher_finishK19alc_cipher_handle_p"></span><span id="_CPPv218alcp_cipher_finishK19alc_cipher_handle_p"></span><span id="alcp_cipher_finish__alc_cipher_handle_pC"></span><span class="target" id="group__cipher_1gaf832e27d19a687390118c7ebc4fd80a9"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_finish</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418alcp_cipher_finishK19alc_cipher_handle_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Release resources allocated by alcp_cipher_request. </p>
+<p>FIXME: Need to fix return type of API <p> <strong>This API is called to free resources so should be called to free the session</strong></p>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>alcp_cipher_finish to be called at the end of the transaction, context will be unusable after this call.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417alcp_cipher_error19alc_cipher_handle_pP5Uint86Uint64">
+<span id="_CPPv317alcp_cipher_error19alc_cipher_handle_pP5Uint86Uint64"></span><span id="_CPPv217alcp_cipher_error19alc_cipher_handle_pP5Uint86Uint64"></span><span id="alcp_cipher_error__alc_cipher_handle_p.Uint8P.Uint64"></span><span class="target" id="group__cipher_1ga348cf42957470a7fff1d4b5c9968f397"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pBuff</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417alcp_cipher_error19alc_cipher_handle_pP5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Get a copy of the error string for cipher operations. </p>
+<p> <strong> This API is called to get the error string. It should be called after <a class="reference internal" href="#group__cipher_1gabdb1abf68822dcd9f8959629fc3dd8ee"><span class="std std-ref">alcp_cipher_request</span></a> and before <a class="reference internal" href="#group__cipher_1gaf832e27d19a687390118c7ebc4fd80a9"><span class="std std-ref">alcp_cipher_finish</span></a> </strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for cipher operation </p></li>
+<li><p><strong>pBuff</strong> – <strong>[out]</strong> Destination Buffer to which Error String will be copied </p></li>
+<li><p><strong>size</strong> – <strong>[in]</strong> Length of the Buffer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>alc_error_t Error code to validate the Handle </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426alcp_cipher_aead_supportedK22alc_cipher_aead_info_p">
+<span id="_CPPv326alcp_cipher_aead_supportedK22alc_cipher_aead_info_p"></span><span id="_CPPv226alcp_cipher_aead_supportedK22alc_cipher_aead_info_p"></span><span id="alcp_cipher_aead_supported__alc_cipher_aead_info_pC"></span><span class="target" id="group__cipher_1gaa5b3ab54a9d4cb43ec0a9f5c6896a640"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_supported</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_aead_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426alcp_cipher_aead_supportedK22alc_cipher_aead_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Check if a given algorithm is supported. </p>
+<p> <strong>This AEAD API needs to be called before any other AEAD API is called to know if AEAD cipher that is being request is supported or not </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This AEAD API is provided to allow application to make decision on fallback mechanism </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pCipherInfo</strong> – <strong>[in]</strong> The information about the cipher algorithm and modes as described by <a class="reference internal" href="#structalc__cipher__info__t"><span class="std std-ref">alc_cipher_info_t</span></a></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ALC_ERROR_NONE </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429alcp_cipher_aead_context_sizeK22alc_cipher_aead_info_p">
+<span id="_CPPv329alcp_cipher_aead_context_sizeK22alc_cipher_aead_info_p"></span><span id="_CPPv229alcp_cipher_aead_context_sizeK22alc_cipher_aead_info_p"></span><span id="alcp_cipher_aead_context_size__alc_cipher_aead_info_pC"></span><span class="target" id="group__cipher_1gae2d7fb8c92cd916fe75e0ebd3f870749"></span><span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_context_size</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_aead_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherInfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429alcp_cipher_aead_context_sizeK22alc_cipher_aead_info_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Gets the size of the context for a session described by pCipherInfo. </p>
+<p> <strong>This AEAD API should be called before <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> to identify the memory to be allocated for context </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>alcp_cipher_aead_supported should be called first to know if the given cipher/key length configuration is valid.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pCipherInfo</strong> – <strong>[in]</strong> Description of the requested cipher session </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Size of Context </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424alcp_cipher_aead_requestK22alc_cipher_aead_info_p19alc_cipher_handle_p">
+<span id="_CPPv324alcp_cipher_aead_requestK22alc_cipher_aead_info_p19alc_cipher_handle_p"></span><span id="_CPPv224alcp_cipher_aead_requestK22alc_cipher_aead_info_p19alc_cipher_handle_p"></span><span id="alcp_cipher_aead_request__alc_cipher_aead_info_pC.alc_cipher_handle_p"></span><span class="target" id="group__cipher_1ga3900632a3cd49636d74da5b1404f1759"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_request</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_aead_info_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherInfo</span></span>, <span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424alcp_cipher_aead_requestK22alc_cipher_aead_info_p19alc_cipher_handle_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Request for populating handle with algorithm specified by pCipherInfo. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1gaa5b3ab54a9d4cb43ec0a9f5c6896a640"><span class="std std-ref">alcp_cipher_aead_supported</span></a> is called </strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherInfo</strong> – <strong>[in]</strong> Description of the cipher session </p></li>
+<li><p><strong>pCipherHandle</strong> – <strong>[out]</strong>  Library populated session handle for future cipher operations. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424alcp_cipher_aead_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8">
+<span id="_CPPv324alcp_cipher_aead_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="_CPPv224alcp_cipher_aead_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="alcp_cipher_aead_encrypt__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1ga9ae7df1ae2140f1790cc919dbc98b440"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_encrypt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pPlainText</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pCipherText</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424alcp_cipher_aead_encryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Encrypt plain text and write it to cipher text with provided handle. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> is called and at the end of session call <a class="reference internal" href="#group__cipher_1gad44e49e950afe97e232fd8af59e43618"><span class="std std-ref">alcp_cipher_aead_finish</span></a></strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please check examples for the mode to check prefered API, it can either be <a class="reference internal" href="#group__cipher_1ga9ae7df1ae2140f1790cc919dbc98b440"><span class="std std-ref">alcp_cipher_aead_encrypt</span></a> or <a class="reference internal" href="#group__cipher_1ga64bdcfc58253498bc98138aa5248bb00"><span class="std std-ref">alcp_cipher_aead_encrypt_update</span></a></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pPlainText</strong> – <strong>[in]</strong> Pointer to Plain Text </p></li>
+<li><p><strong>pCipherText</strong> – <strong>[out]</strong> Pointer to Cipher Text </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> Pointer to Initialization Vector </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length of cipher/plain text </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431alcp_cipher_aead_encrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8">
+<span id="_CPPv331alcp_cipher_aead_encrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="_CPPv231alcp_cipher_aead_encrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="alcp_cipher_aead_encrypt_update__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1ga64bdcfc58253498bc98138aa5248bb00"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_encrypt_update</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pInput</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pOutput</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431alcp_cipher_aead_encrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>AEAD encryption of plain text and write it to cipher text with provided handle. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> is called and at the end of session call <a class="reference internal" href="#group__cipher_1gad44e49e950afe97e232fd8af59e43618"><span class="std std-ref">alcp_cipher_aead_finish</span></a></strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please check examples for the mode to check prefered API, it can either be <a class="reference internal" href="#group__cipher_1ga9ae7df1ae2140f1790cc919dbc98b440"><span class="std std-ref">alcp_cipher_aead_encrypt</span></a> or <a class="reference internal" href="#group__cipher_1ga64bdcfc58253498bc98138aa5248bb00"><span class="std std-ref">alcp_cipher_aead_encrypt_update</span></a></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pInput</strong> – <strong>[in]</strong> Pointer to Input data (plainText or additional data) </p></li>
+<li><p><strong>pOutput</strong> – <strong>[out]</strong> Pointer to output data (cipherText or Tag) </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length of input or output data </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> Pointer to Initialization Vector </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431alcp_cipher_aead_decrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8">
+<span id="_CPPv331alcp_cipher_aead_decrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="_CPPv231alcp_cipher_aead_decrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="alcp_cipher_aead_decrypt_update__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1gac266341f80ee943212e2af377a50b66c"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_decrypt_update</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pInput</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pOutput</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431alcp_cipher_aead_decrypt_updateK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>AEAD decryption of cipher text and write it to plain text with provided handle. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> is called and at the end of session call <a class="reference internal" href="#group__cipher_1gad44e49e950afe97e232fd8af59e43618"><span class="std std-ref">alcp_cipher_aead_finish</span></a></strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, ctx to be considered valid. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please check examples for the mode to check prefered API, it can either be <a class="reference internal" href="#group__cipher_1ga556153856c47efd4237e9a4a054594be"><span class="std std-ref">alcp_cipher_aead_decrypt</span></a> or <a class="reference internal" href="#group__cipher_1gac266341f80ee943212e2af377a50b66c"><span class="std std-ref">alcp_cipher_aead_decrypt_update</span></a></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pInput</strong> – <strong>[in]</strong> Pointer to Input data (CipherText or additional data) </p></li>
+<li><p><strong>pOutput</strong> – <strong>[out]</strong> Pointer to output data (PlainText or Tag) </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length of input or output data </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> Pointer to Initialization Vector </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424alcp_cipher_aead_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8">
+<span id="_CPPv324alcp_cipher_aead_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="_CPPv224alcp_cipher_aead_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8"></span><span id="alcp_cipher_aead_decrypt__alc_cipher_handle_pC.Uint8CP.Uint8P.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1ga556153856c47efd4237e9a4a054594be"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_decrypt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pCipherText</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pPlainText</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424alcp_cipher_aead_decryptK19alc_cipher_handle_pPK5Uint8P5Uint86Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Decryption of cipher text and write it to plain text with provided handle. </p>
+<p> <strong>This AEAD API should be called only after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a>. API is meant to be used with CCM mode, it needs to be called before <a class="reference internal" href="#group__cipher_1ga77ac13c950d4e87b8332452037ffa8db"><span class="std std-ref">alcp_cipher_aead_set_iv</span></a>.</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Error needs to be checked for each call, valid only if <a class="reference internal" href="group__error.html#group__error_1ga25449dce14e25fd4bdca014186c1eefa"><span class="std std-ref">alcp_is_error</span></a> (ret) is false, pCipherHandle is valid. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please check examples for the mode to check prefered API, it can either be <a class="reference internal" href="#group__cipher_1ga556153856c47efd4237e9a4a054594be"><span class="std std-ref">alcp_cipher_aead_decrypt</span></a> or <a class="reference internal" href="#group__cipher_1gac266341f80ee943212e2af377a50b66c"><span class="std std-ref">alcp_cipher_aead_decrypt_update</span></a></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p></li>
+<li><p><strong>pPlainText</strong> – <strong>[in]</strong> Pointer to Plain Text </p></li>
+<li><p><strong>pCipherText</strong> – <strong>[out]</strong> Pointer to Cipher Text </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> Pointer to Initialization Vector </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length of cipher/plain text </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423alcp_cipher_aead_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8">
+<span id="_CPPv323alcp_cipher_aead_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8"></span><span id="_CPPv223alcp_cipher_aead_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8"></span><span id="alcp_cipher_aead_set_iv__alc_cipher_handle_pC.Uint64.Uint8CP"></span><span class="target" id="group__cipher_1ga77ac13c950d4e87b8332452037ffa8db"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_set_iv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pIv</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423alcp_cipher_aead_set_ivK19alc_cipher_handle_p6Uint64PK5Uint8" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>AEAD set the IV/Nonce. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> is called. It should be called after <a class="reference internal" href="#group__cipher_1ga4c668afbe095fd1be95a6bb4c680482a"><span class="std std-ref">alcp_cipher_aead_set_tag_length</span></a> for CCM mode. For GCM mode should be called before <a class="reference internal" href="#group__cipher_1gaab57db5a53fcef8287587a5b40f30280"><span class="std std-ref">alcp_cipher_aead_set_aad</span></a></strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for encrypt/decrypt operation </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length in bytes of IV/Nonce </p></li>
+<li><p><strong>pIv</strong> – <strong>[in]</strong> IV/Nonce </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424alcp_cipher_aead_set_aadK19alc_cipher_handle_pPK5Uint86Uint64">
+<span id="_CPPv324alcp_cipher_aead_set_aadK19alc_cipher_handle_pPK5Uint86Uint64"></span><span id="_CPPv224alcp_cipher_aead_set_aadK19alc_cipher_handle_pPK5Uint86Uint64"></span><span id="alcp_cipher_aead_set_aad__alc_cipher_handle_pC.Uint8CP.Uint64"></span><span class="target" id="group__cipher_1gaab57db5a53fcef8287587a5b40f30280"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_set_aad</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pInput</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424alcp_cipher_aead_set_aadK19alc_cipher_handle_pPK5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>AEAD set Additonal Data for the Tag Generation. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a>. For SIV there should only be one call to this AEAD API and for others like GCM and CCM mode, this has to be called after <a class="reference internal" href="#group__cipher_1ga77ac13c950d4e87b8332452037ffa8db"><span class="std std-ref">alcp_cipher_aead_set_iv</span></a>. For SIV, this has to be called immediately after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a>, also IV of SIV needs to be passed into this AEAD API as the last call.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for encrypt/decrypt operation </p></li>
+<li><p><strong>pInput</strong> – <strong>[in]</strong> Additional Data in Bytes </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length in bytes of Additional Data </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424alcp_cipher_aead_get_tagK19alc_cipher_handle_pP5Uint86Uint64">
+<span id="_CPPv324alcp_cipher_aead_get_tagK19alc_cipher_handle_pP5Uint86Uint64"></span><span id="_CPPv224alcp_cipher_aead_get_tagK19alc_cipher_handle_pP5Uint86Uint64"></span><span id="alcp_cipher_aead_get_tag__alc_cipher_handle_pC.Uint8P.Uint64"></span><span class="target" id="group__cipher_1ga94dfc37ad518537c38cf584f096b979f"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_get_tag</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pOutput</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424alcp_cipher_aead_get_tagK19alc_cipher_handle_pP5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>AEAD get a copy of Tag generated. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> is called and at the end of session call, just before <a class="reference internal" href="#group__cipher_1gad44e49e950afe97e232fd8af59e43618"><span class="std std-ref">alcp_cipher_aead_finish</span></a> </strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for encrypt/decrypt operation </p></li>
+<li><p><strong>pOutput</strong> – <strong>[out]</strong> Byte addressable memory to write tag into </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length in bytes of Tag in bytes </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431alcp_cipher_aead_set_tag_lengthK19alc_cipher_handle_p6Uint64">
+<span id="_CPPv331alcp_cipher_aead_set_tag_lengthK19alc_cipher_handle_p6Uint64"></span><span id="_CPPv231alcp_cipher_aead_set_tag_lengthK19alc_cipher_handle_p6Uint64"></span><span id="alcp_cipher_aead_set_tag_length__alc_cipher_handle_pC.Uint64"></span><span class="target" id="group__cipher_1ga4c668afbe095fd1be95a6bb4c680482a"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_set_tag_length</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">len</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431alcp_cipher_aead_set_tag_lengthK19alc_cipher_handle_p6Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>AEAD set the tag length. </p>
+<p> <strong>This AEAD API can be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> is called. It’s meant for CCM mode, should be called before <a class="reference internal" href="#group__cipher_1ga77ac13c950d4e87b8332452037ffa8db"><span class="std std-ref">alcp_cipher_aead_set_iv</span></a>.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for encrypt/decrypt operation </p></li>
+<li><p><strong>len</strong> – <strong>[in]</strong> Length in bytes of Tag in bytes </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p> Error Code for the API called. If alc_error_t is not ALC_ERROR_NONE then <a class="reference internal" href="#group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"><span class="std std-ref">alcp_cipher_aead_error</span></a> or <a class="reference internal" href="group__error.html#group__error_1gae9cce53a5b75064eb0018dc8033b28d8"><span class="std std-ref">alcp_error_str</span></a> needs to be called to know about error occurred </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423alcp_cipher_aead_finishK19alc_cipher_handle_p">
+<span id="_CPPv323alcp_cipher_aead_finishK19alc_cipher_handle_p"></span><span id="_CPPv223alcp_cipher_aead_finishK19alc_cipher_handle_p"></span><span id="alcp_cipher_aead_finish__alc_cipher_handle_pC"></span><span class="target" id="group__cipher_1gad44e49e950afe97e232fd8af59e43618"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_finish</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423alcp_cipher_aead_finishK19alc_cipher_handle_p" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Release resources allocated by alcp_cipher_aead_request. </p>
+<p>FIXME: Need to fix return type of API <p> <strong>This AEAD API is called to free resources so should be called to free the session</strong></p>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>alcp_cipher_aead_finish to be called at the end of the transaction, context will be unusable after this call.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for future encrypt decrypt operation </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422alcp_cipher_aead_error19alc_cipher_handle_pP5Uint86Uint64">
+<span id="_CPPv322alcp_cipher_aead_error19alc_cipher_handle_pP5Uint86Uint64"></span><span id="_CPPv222alcp_cipher_aead_error19alc_cipher_handle_pP5Uint86Uint64"></span><span id="alcp_cipher_aead_error__alc_cipher_handle_p.Uint8P.Uint64"></span><span class="target" id="group__cipher_1ga699332cfed105b25d16d8c48e7b93fd6"></span><a class="reference internal" href="group__error.html#_CPPv411alc_error_t" title="alc_error_t"><span class="n"><span class="pre">alc_error_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_cipher_aead_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">alc_cipher_handle_p</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pCipherHandle</span></span>, <span class="n"><span class="pre">Uint8</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pBuff</span></span>, <span class="n"><span class="pre">Uint64</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422alcp_cipher_aead_error19alc_cipher_handle_pP5Uint86Uint64" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Get a copy of the error string for cipher operations. </p>
+<p> <strong> This AEAD API is called to get the error string. It should be called after <a class="reference internal" href="#group__cipher_1ga3900632a3cd49636d74da5b1404f1759"><span class="std std-ref">alcp_cipher_aead_request</span></a> and before <a class="reference internal" href="#group__cipher_1gad44e49e950afe97e232fd8af59e43618"><span class="std std-ref">alcp_cipher_aead_finish</span></a> </strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pCipherHandle</strong> – <strong>[in]</strong> Session handle for cipher operation </p></li>
+<li><p><strong>pBuff</strong> – <strong>[out]</strong> Destination Buffer to which Error String will be copied </p></li>
+<li><p><strong>size</strong> – <strong>[in]</strong> Length of the Buffer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>alc_error_t Error code to validate the Handle </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417alcp_key_get_algoP14alc_key_info_t">
+<span id="_CPPv317alcp_key_get_algoP14alc_key_info_t"></span><span id="_CPPv217alcp_key_get_algoP14alc_key_info_t"></span><span id="alcp_key_get_algo__alc_key_info_tP"></span><span class="target" id="group__cipher_1gac0be44ec05096148031733fa5f06f6e4"></span><a class="reference internal" href="#_CPPv413alc_key_alg_t" title="alc_key_alg_t"><span class="n"><span class="pre">alc_key_alg_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_key_get_algo</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv414alc_key_info_t" title="alc_key_info_t"><span class="n"><span class="pre">alc_key_info_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">kinfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417alcp_key_get_algoP14alc_key_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows caller to get Algorithm used in key. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently not in use. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kinfo</strong> – <strong>[in]</strong> Stores info regarding key</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>alc_key_alg_t Enum which stores algorithm used for key </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417alcp_key_get_typeP14alc_key_info_t">
+<span id="_CPPv317alcp_key_get_typeP14alc_key_info_t"></span><span id="_CPPv217alcp_key_get_typeP14alc_key_info_t"></span><span id="alcp_key_get_type__alc_key_info_tP"></span><span class="target" id="group__cipher_1gaa79c7315e93732f23a053baaca338e06"></span><a class="reference internal" href="#_CPPv414alc_key_type_t" title="alc_key_type_t"><span class="n"><span class="pre">alc_key_type_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alcp_key_get_type</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv414alc_key_info_t" title="alc_key_info_t"><span class="n"><span class="pre">alc_key_info_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">kinfo</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417alcp_key_get_typeP14alc_key_info_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Allows caller to get Algorithm used in key. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently not in use. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kinfo</strong> – <strong>[in]</strong> Stores info regarding key</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>alc_key_type_t Enum which stores type of key used </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Permalink to this heading">#</a></h2>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv417alc_cipher_type_t">
+<span id="_CPPv317alc_cipher_type_t"></span><span id="_CPPv217alc_cipher_type_t"></span><span id="alc_cipher_type_t___alc_cipher_type"></span><span class="target" id="group__cipher_1ga42ecb7cd3dff3297e9fe45f23b8f4092"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">_alc_cipher_type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_type_t</span></span></span><a class="headerlink" href="#_CPPv417alc_cipher_type_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Specify which type of cipher to be used. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv417alc_cipher_mode_t">
+<span id="_CPPv317alc_cipher_mode_t"></span><span id="_CPPv217alc_cipher_mode_t"></span><span id="alc_cipher_mode_t___alc_cipher_mode"></span><span class="target" id="group__cipher_1ga9bb95dca00032d59f169a2c2c7ae24d7"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">_alc_cipher_mode</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_mode_t</span></span></span><a class="headerlink" href="#_CPPv417alc_cipher_mode_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Specify which Mode of AES to be used for encrypt and decrypt. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv414alc_aes_ctrl_t">
+<span id="_CPPv314alc_aes_ctrl_t"></span><span id="_CPPv214alc_aes_ctrl_t"></span><span id="alc_aes_ctrl_t___alc_aes_ctrl"></span><span class="target" id="group__cipher_1ga94f41b7e5ad64acfe370a2ba1870f5ab"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">_alc_aes_ctrl</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_aes_ctrl_t</span></span></span><a class="headerlink" href="#_CPPv414alc_aes_ctrl_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Set control flags supported by cipher algorithms. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently not in use </p>
+</div>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv414alc_key_type_t">
+<span id="_CPPv314alc_key_type_t"></span><span id="_CPPv214alc_key_type_t"></span><span class="target" id="group__cipher_1gabd06919fdf8a2a3d2ad2df8e15372868"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">[anonymous]</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_key_type_t</span></span></span><a class="headerlink" href="#_CPPv414alc_key_type_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores Type of Key being used for Cipher. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv413alc_key_alg_t">
+<span id="_CPPv313alc_key_alg_t"></span><span id="_CPPv213alc_key_alg_t"></span><span class="target" id="group__cipher_1ga77e6a98860c678cd5035672746c402df"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">[anonymous]</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_key_alg_t</span></span></span><a class="headerlink" href="#_CPPv413alc_key_alg_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores Algorithm for key. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv413alc_key_len_t">
+<span id="_CPPv313alc_key_len_t"></span><span id="_CPPv213alc_key_len_t"></span><span class="target" id="group__cipher_1ga1dbfc9fe4c3d17dcc8cbfbde9e53d17d"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">[anonymous]</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_key_len_t</span></span></span><a class="headerlink" href="#_CPPv413alc_key_len_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores length of key. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv413alc_key_fmt_t">
+<span id="_CPPv313alc_key_fmt_t"></span><span id="_CPPv213alc_key_fmt_t"></span><span class="target" id="group__cipher_1ga599b7ed683e87ac52c1bc8449baba8be"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">[anonymous]</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_key_fmt_t</span></span></span><a class="headerlink" href="#_CPPv413alc_key_fmt_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Stores Format of key. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv420alc_cipher_context_t">
+<span id="_CPPv320alc_cipher_context_t"></span><span id="_CPPv220alc_cipher_context_t"></span><span id="alc_cipher_context_t__void"></span><span class="target" id="group__cipher_1ga4cb3bf566e0082a4087739a56484c006"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alc_cipher_context_t</span></span></span><a class="headerlink" href="#_CPPv420alc_cipher_context_t" title="Permalink to this definition">#</a><br /></dt>
+<dd><p>Opaque type of a cipher context, comes from the library. </p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="APIs.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">APIs</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="group__digest.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Digest API</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structures">Data Structures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <p>
+  </p>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+<footer class="rocm-footer">
+    <div class="container-lg">
+        <section class="bottom-menu menu py-45">
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <ul>
+                        <li><a href="https://www.amd.com/en/corporate/copyright" target="_blank">Terms and Conditions</a></li>
+                        
+                        <li><a href="">2023, Advanced Micro Devices, Inc</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/privacy" target="_blank">Privacy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/trademarks" target="_blank">Trademarks</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf" target="_blank">Statement on Forced Labor</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/competition" target="_blank">Fair and Open Competition</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf" target="_blank">UK Tax Strategy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/cookies" target="_blank">Cookie Policy</a></li>
+                        <!-- OneTrust Cookies Settings button start -->
+                        <li><a href="#cookie-settings" id="ot-sdk-btn" class="ot-sdk-show-settings">Cookie Settings</a></li>
+                        <!-- OneTrust Cookies Settings button end -->
+                    </ul>
+                </div>
+            </div>
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <div>
+                        <span class="copyright">© 2023 Advanced Micro Devices, Inc</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</footer>
+
+<!-- <div id="rdc-watermark-container">
+    <img id="rdc-watermark" src="_static/images/alpha-watermark.svg" alt="DRAFT watermark"/>
+</div> -->
+  </body>
+</html>

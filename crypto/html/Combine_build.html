@@ -1,0 +1,773 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Build and Installation &#8212; Home</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_header.css" />
+    <link rel="stylesheet" type="text/css" href="_static/rocm_footer.css" />
+    <link rel="stylesheet" type="text/css" href="_static/fonts.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://download.amd.com/js/analytics/analyticsinit.js"></script>
+    <script async="async" src="_static/code_word_breaks.js"></script>
+    <script async="async" src="_static/renameVersionLinks.js"></script>
+    <script async="async" src="_static/rdcMisc.js"></script>
+    <script async="async" src="_static/theme_mode_captions.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'Combine_build';</script>
+    <link rel="icon" href="https://www.amd.com/themes/custom/amd/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="google-site-verification" content="ZOn0RZC0Pwzlmf2SaE0bRttWk1YzOhuslbpxUDchQ90" />
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+
+<header class="common-header" >
+    <nav class="navbar navbar-expand-xl">
+        <div class="container-fluid main-nav rocm-header">
+            
+            <div class="header-logo">
+                <a class="navbar-brand" href="https://www.amd.com/">
+                    <img src="_static/images/amd-header-logo.svg" alt="AMD Logo" title="AMD Logo" width="90" class="d-inline-block align-text-top hover-opacity"/>
+                </a>
+                <div class="vr vr mx-40 my-25"></div>
+                <a class="klavika-font hover-opacity" href="/">AOCL Cryptography</a>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var elements = document.getElementsByClassName('header-all-versions');
+            for (var i = 0; i < elements.length; i++) {
+                elements[i].remove();
+            }
+
+            elements = document.querySelector("body > footer > div > section > div:nth-child(1) > div > ul").children;
+            var removable_items = ['2023, Advanced Micro Devices, Inc', 'Statement on Forced Labor', 'Fair and Open Competition', 'UK Tax Strategy', 'Cookie Policy', 'Cookie Settings'];
+            for(var i = 0; i < elements.length; i++) {
+                if(removable_items.includes(elements[i].innerText)) {
+                    elements[i].remove();
+                    i--;
+                }
+            }
+        })
+    </script>
+                <a class="header-all-versions" href="https://rocm.docs.amd.com/en/latest/release/versions.html">Version List</a>
+            </div>
+            <div class="icon-nav text-center d-flex ms-auto">
+            </div>
+        </div>
+    </nav>
+    
+</header>
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Home</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="aocl_crypto.html">AOCL Cryptography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Related_Pages.html">Related Pages</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="APIs.html">APIs</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="group__cipher.html">Cipher API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__digest.html">Digest API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__ec.html">EC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__mac.html">MAC API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rsa.html">RSA API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__rng.html">RNG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group__error.html">Error API</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-angle-right"></span>
+  </label></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Build and...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Build and Installation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-instruction-for-linux-platform">Build Instruction for Linux Platform</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building">Building</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#extra-steps-for-making-static-library-work">Extra steps for making STATIC library work</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-examples">Enable Examples</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-aocl-utils-checks">Enable AOCL UTILS checks</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-debug-configuration">Build Debug Configuration</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-compiling-with-address-sanitizer-support">For Compiling with Address Sanitizer Support</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-benches">Build Benches</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#execute-benchmarks">Execute Benchmarks</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#arguments-can-be-provided-in-above-bench-as">Arguments can be provided in above bench as</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-tests-using-kat-vectors-and-cross-library-tests">Build Tests (using KAT vectors, and cross library tests)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#execute-tests">Execute Tests</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-instruction-for-windows-platform">Build Instruction for Windows Platform</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#following-software-should-be-installed-prior-to-build-aocl-cryptography">Following software should be installed prior to build AOCL Cryptography</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-setup">Environment Setup:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-build-with-llvm-clang">Windows Build with LLVM/Clang:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build">Build</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-to-find-binaries-dll-s-by-setting-an-environment-variable">Steps to find binaries/dll’s by setting an environment variable</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Enable Examples</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#run-examples">Run Examples</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-aocl-utils">Enable AOCL-UTILS</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-debug-build">For Debug Build</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">For Compiling with Address Sanitizer Support</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-build-tests-using-kat-vectors">To Build Tests (using KAT vectors)</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#to-run-tests">To Run Tests:</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-benchmarks">Build Benchmarks</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#to-build-bench">To Build Bench</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#to-run-bench">To Run Bench:</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#arguments-can-be-provided-as">Arguments can be provided as:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling-compat-libs">Enabling compat libs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-after-enabling-compat-libs">Build after enabling compat libs</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-openssl-compatibility-libs">Building OpenSSL Compatibility Libs</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-ipp-cp-compatibility-libs">Building IPP-CP Compatibility Libs</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">NOTES:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="build-and-installation">
+<h1>Build and Installation<a class="headerlink" href="#build-and-installation" title="Permalink to this heading">#</a></h1>
+<p>To build AOCL Cryptography for different platforms please refer to the document related to your platform</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#build-instruction-for-linux-platform"> Linux </a></p></li>
+<li><p><a class="reference internal" href="#build-instruction-for-windows-platform"> Windows </a></p></li>
+</ul>
+<hr class="docutils" />
+<section id="build-instruction-for-linux-platform">
+<h2>Build Instruction for Linux Platform<a class="headerlink" href="#build-instruction-for-linux-platform" title="Permalink to this heading">#</a></h2>
+<section id="building">
+<h3>Building<a class="headerlink" href="#building" title="Permalink to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>mkdir<span class="w"> </span>build
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$<span class="w"> </span>cmake<span class="w"> </span>../
+</pre></div>
+</div>
+<section id="extra-steps-for-making-static-library-work">
+<h4>Extra steps for making STATIC library work<a class="headerlink" href="#extra-steps-for-making-static-library-work" title="Permalink to this heading">#</a></h4>
+<p>To generate a single .a file from all the .a files</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ar<span class="w"> </span>crsT<span class="w"> </span>libnew.a<span class="w"> </span>libalcp.a<span class="w"> </span>libarch_zen3.a<span class="w"> </span>libarch_avx2.a
+mv<span class="w"> </span>libnew.a<span class="w"> </span>libalcp.a
+</pre></div>
+</div>
+</section>
+<section id="enable-examples">
+<h4>Enable Examples<a class="headerlink" href="#enable-examples" title="Permalink to this heading">#</a></h4>
+<p>To enable examples, append <code class="docutils literal notranslate"><span class="pre">-DALCP_ENABLE_EXAMPLES=ON</span></code> to the cmake configuration command.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cmake<span class="w"> </span>-DALCP_ENABLE_EXAMPLES<span class="o">=</span>ON<span class="w"> </span>../
+</pre></div>
+</div>
+</section>
+<section id="enable-aocl-utils-checks">
+<h4>Enable AOCL UTILS checks<a class="headerlink" href="#enable-aocl-utils-checks" title="Permalink to this heading">#</a></h4>
+<p>To enable aocl utils support, append <code class="docutils literal notranslate"><span class="pre">-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source</span></code> and <code class="docutils literal notranslate"><span class="pre">-DENABLE_AOCL_UTILS=ON</span></code> to the cmake configuration command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cmake<span class="w"> </span>-DENABLE_AOCL_UTILS<span class="o">=</span>ON<span class="w"> </span>-DAOCL_UTILS_INSTALL_DIR<span class="o">=</span>path/to/aocl/utils/source<span class="w"> </span>../
+</pre></div>
+</div>
+</section>
+<section id="build-debug-configuration">
+<h4>Build Debug Configuration<a class="headerlink" href="#build-debug-configuration" title="Permalink to this heading">#</a></h4>
+<p>To build in debug mode, append <code class="docutils literal notranslate"><span class="pre">-DCMAKE_BUILD_TYPE=DEBUG</span></code> to the cmake configuration command.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cmake<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>DEBUG<span class="w"> </span>../
+</pre></div>
+</div>
+</section>
+<section id="for-compiling-with-address-sanitizer-support">
+<h4>For Compiling with Address Sanitizer Support<a class="headerlink" href="#for-compiling-with-address-sanitizer-support" title="Permalink to this heading">#</a></h4>
+<p>To enable sanitizers (asan, tsan etc), append <code class="docutils literal notranslate"><span class="pre">-DALCP_SANITIZE=ON</span></code> to the cmake configuration command.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cmake<span class="w"> </span>-DALCP_SANITIZE<span class="o">=</span>ON<span class="w"> </span>../
+</pre></div>
+</div>
+</section>
+<section id="build-benches">
+<h4>Build Benches<a class="headerlink" href="#build-benches" title="Permalink to this heading">#</a></h4>
+<p>To build benchmarking support with alcp library, append <code class="docutils literal notranslate"><span class="pre">-DALCP_ENABLE_BENCH=ON</span></code> to the cmake configuration command.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cmake<span class="w"> </span>-DALCP_ENABLE_BENCH<span class="o">=</span>ON<span class="w"> </span>../
+</pre></div>
+</div>
+<p>Benchmarks will be built into <code class="docutils literal notranslate"><span class="pre">bench/{algorithm_type}/</span></code></p>
+<p>Please look into <strong><a class="reference internal" href="bench_README.html"><span class="doc std std-doc"> README.md </span></a></strong> from bench.</p>
+<section id="execute-benchmarks">
+<h5>Execute Benchmarks<a class="headerlink" href="#execute-benchmarks" title="Permalink to this heading">#</a></h5>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./bench/{algorithm_type}/bench_{algorithm_type}
+</pre></div>
+</div>
+</section>
+<section id="arguments-can-be-provided-in-above-bench-as">
+<h5>Arguments can be provided in above bench as<a class="headerlink" href="#arguments-can-be-provided-in-above-bench-as" title="Permalink to this heading">#</a></h5>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./bench/digest/bench_digest --benchmark_filter=SHA2_&lt;SHA SCHEME&gt;_&lt;Block Size&gt;
+$ ./bench/digest/bench_digest --benchmark_filter=SHA2_512_16 (runs SHA256 schemes for 16 block size)
+$ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="build-tests-using-kat-vectors-and-cross-library-tests">
+<h4>Build Tests (using KAT vectors, and cross library tests)<a class="headerlink" href="#build-tests-using-kat-vectors-and-cross-library-tests" title="Permalink to this heading">#</a></h4>
+<p>To build tests, append <code class="docutils literal notranslate"><span class="pre">-DALCP_ENABLE_TESTS=ON</span></code> to the cmake configuration command.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cmake<span class="w"> </span>-DALCP_ENABLE_TESTS<span class="o">=</span>ON<span class="w"> </span>../
+</pre></div>
+</div>
+<p>Test executables can be found inside <code class="docutils literal notranslate"><span class="pre">tests/{algorithm_type}</span></code> directory</p>
+<p>For more details see <strong><a class="reference internal" href="tests_README.html"><span class="doc std std-doc">README.md</span></a></strong> from tests.</p>
+</section>
+</section>
+<section id="execute-tests">
+<h3>Execute Tests<a class="headerlink" href="#execute-tests" title="Permalink to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./tests/<span class="o">{</span>algorithm_type<span class="o">}</span>/test_<span class="o">{</span>algorithm_type<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="build-instruction-for-windows-platform">
+<h2>Build Instruction for Windows Platform<a class="headerlink" href="#build-instruction-for-windows-platform" title="Permalink to this heading">#</a></h2>
+<section id="following-software-should-be-installed-prior-to-build-aocl-cryptography">
+<h3>Following software should be installed prior to build AOCL Cryptography<a class="headerlink" href="#following-software-should-be-installed-prior-to-build-aocl-cryptography" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>MS Visual Studio (2019 or greater)</p></li>
+<li><p>Clang 15.0 or above</p></li>
+<li><p>Python 3.7 or greater</p></li>
+<li><p>Cmake 3.21 or greater</p></li>
+<li><p>Git</p></li>
+</ul>
+</section>
+<section id="environment-setup">
+<h3>Environment Setup:<a class="headerlink" href="#environment-setup" title="Permalink to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Install visual Studio with workload: <em>Desktop development with c++</em></p>
+<ul class="simple">
+<li><p>Enable Clang/cl tools(required) &amp; Address Santizer(if require)</p></li>
+</ul>
+</li>
+<li><p>If using LLVM/Clang as external toolset:</p>
+<ul class="simple">
+<li><p>Install LLVM</p></li>
+<li><p>Install plugin: <em>llvm2019.vsix</em> :<a class="reference external" href="https://marketplace.visualstudio.com/items?itemName=MarekAniola.mangh-llvm2019">https://marketplace.visualstudio.com/items?itemName=MarekAniola.mangh-llvm2019</a></p></li>
+<li><p>Install VS19 version 16.10</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="windows-build-with-llvm-clang">
+<h3>Windows Build with LLVM/Clang:<a class="headerlink" href="#windows-build-with-llvm-clang" title="Permalink to this heading">#</a></h3>
+<p>Using Powershell:</p>
+<ol class="arabic simple">
+<li><p>Checkout the latest code.</p></li>
+<li><p>Open the powershell.exe (as administrator)</p></li>
+<li><p>Set path to current working directory/cmake_source_directory</p></li>
+</ol>
+</section>
+<section id="build">
+<h3>Build<a class="headerlink" href="#build" title="Permalink to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">from</span> <span class="pre">source</span> <span class="pre">directory</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span> <span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">A</span> <span class="p">[</span><span class="n">platform</span><span class="p">:</span> <span class="n">x86</span><span class="o">/</span><span class="n">x64</span><span class="p">]</span> <span class="o">-</span><span class="n">B</span> <span class="p">[</span><span class="n">build_directory</span><span class="p">]</span> <span class="p">[</span><span class="n">Enable</span> <span class="n">features</span><span class="p">]</span> <span class="o">-</span><span class="n">DCMAKE_BUILD_TYPE</span><span class="o">=</span><span class="p">[</span><span class="n">RELEASE</span><span class="p">]</span> <span class="o">-</span><span class="n">G</span> <span class="s2">&quot;[generator: Visual Studio 17 2022]&quot;</span> <span class="o">-</span><span class="n">T</span> <span class="p">[</span><span class="n">toolset</span><span class="p">:</span><span class="n">ClangCl</span><span class="o">/</span><span class="n">LLVM</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Default set values:</p>
+<ul class="simple">
+<li><p>Generator:’Visual Studio Generator’</p></li>
+<li><p>platform: ‘x64’ if external LLVM toolset use: -T LLVM (otherwise,ClangCl)</p></li>
+<li><p>Available features: EXAMPLES, ADDRESS SANITIZER, TESTS, BENCH</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Powershell</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>* 1. cmake -A x64 -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
+		`-Build binaries will be written to cmake_source_directory/build`
+* 2. cmake --build .\build --config=release
+</pre></div>
+</div>
+<section id="steps-to-find-binaries-dll-s-by-setting-an-environment-variable">
+<h4>Steps to find binaries/dll’s by setting an environment variable<a class="headerlink" href="#steps-to-find-binaries-dll-s-by-setting-an-environment-variable" title="Permalink to this heading">#</a></h4>
+<p>After build, alcp &amp; gtests dll’s are not found by feature’s *.exe.
+Run the batch file(Set_Env_Path.bat) to set the environment path required by examples, tests &amp; bench.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">scripts</span>\<span class="n">Set_Env_Path</span><span class="o">.</span><span class="n">bat</span>
+<span class="o">-</span><span class="n">Restart</span> <span class="n">the</span> <span class="n">powershell</span> <span class="o">&amp;</span> <span class="n">run</span> <span class="nb">any</span> <span class="n">feature</span> <span class="o">.</span><span class="n">exe</span> <span class="kn">from</span> <span class="nn">build</span> <span class="n">directory</span> <span class="ow">or</span> <span class="n">directly</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h4>Enable Examples<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">DALCP_ENABLE_EXAMPLES</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span> 
+<span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="o">.</span>\<span class="n">build</span> <span class="o">--</span><span class="n">config</span><span class="o">=</span><span class="n">release</span>
+</pre></div>
+</div>
+</section>
+<section id="run-examples">
+<h4>Run Examples<a class="headerlink" href="#run-examples" title="Permalink to this heading">#</a></h4>
+<p>Run from build directory after setting an environment path.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
+</pre></div>
+</div>
+</section>
+<section id="enable-aocl-utils">
+<h4>Enable AOCL-UTILS<a class="headerlink" href="#enable-aocl-utils" title="Permalink to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">DENABLE_AOCL_UTILS</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">DAOCL_UTILS_INSTALL_DIR</span><span class="o">=</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">aocl</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">source</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span>
+<span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="o">.</span>\<span class="n">build</span> <span class="o">--</span><span class="n">config</span><span class="o">=</span><span class="n">release</span>
+</pre></div>
+</div>
+</section>
+<section id="for-debug-build">
+<h4>For Debug Build<a class="headerlink" href="#for-debug-build" title="Permalink to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">DCMAKE_BUILD_TYPE</span><span class="o">=</span><span class="n">DEBUG</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span>
+<span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="o">.</span>\<span class="n">build</span> <span class="o">--</span><span class="n">config</span><span class="o">=</span><span class="n">debug</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h4>For Compiling with Address Sanitizer Support<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">DALCP_SANITIZE</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span>
+<span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="o">.</span>\<span class="n">build</span> <span class="o">--</span><span class="n">config</span><span class="o">=</span><span class="n">release</span>
+</pre></div>
+</div>
+<p>`Running from build directory
+PS&gt;cd build</p>
+</section>
+<section id="to-build-tests-using-kat-vectors">
+<h4>To Build Tests (using KAT vectors)<a class="headerlink" href="#to-build-tests-using-kat-vectors" title="Permalink to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ Append the argument &#39;-DALCP_ENABLE_TESTS=ON&#39;
+
+PS&gt; cmake -DALCP_ENABLE_TESTS=ON ./
+PS&gt; cmake --build . --config=release
+</pre></div>
+</div>
+<p>This will create test executable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="o">.</span>\<span class="n">build</span>\<span class="n">tests</span>\<span class="p">{</span><span class="n">algorithm_type</span><span class="p">}</span>\<span class="n">release</span>\<span class="o">*.</span><span class="n">exe</span>
+</pre></div>
+</div>
+<section id="to-run-tests">
+<h5>To Run Tests:<a class="headerlink" href="#to-run-tests" title="Permalink to this heading">#</a></h5>
+<div class="highlight-PS notranslate"><div class="highlight"><pre><span></span>$ .\tests\{algorithm_type}\release\test_{algorithm_type}
+</pre></div>
+</div>
+<div class="highlight-For notranslate"><div class="highlight"><pre><span></span>PS&gt; ctest -C release
+</pre></div>
+</div>
+</section>
+</section>
+<section id="build-benchmarks">
+<h4>Build Benchmarks<a class="headerlink" href="#build-benchmarks" title="Permalink to this heading">#</a></h4>
+<section id="to-build-bench">
+<h5>To Build Bench<a class="headerlink" href="#to-build-bench" title="Permalink to this heading">#</a></h5>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ Append the argument -DALCP_ENABLE_BENCH=ON
+PS&gt; cmake -DALCP_ENABLE_BENCH=ON ./
+PS&gt; cmake --build . --config=release
+</pre></div>
+</div>
+<p>This will create bench executable into:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="o">.</span>\<span class="n">build</span>\<span class="n">bench</span>\<span class="p">{</span><span class="n">algorithm_type</span><span class="p">}</span>\<span class="p">{</span><span class="n">build_type</span><span class="p">}</span>\<span class="o">*.</span><span class="n">exe</span>
+</pre></div>
+</div>
+</section>
+<section id="to-run-bench">
+<h5>To Run Bench:<a class="headerlink" href="#to-run-bench" title="Permalink to this heading">#</a></h5>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ .\bench\{algorithm_type}\release\bench_{algorithm_type}
+</pre></div>
+</div>
+</section>
+<section id="arguments-can-be-provided-as">
+<h5>Arguments can be provided as:<a class="headerlink" href="#arguments-can-be-provided-as" title="Permalink to this heading">#</a></h5>
+<div class="highlight-PS notranslate"><div class="highlight"><pre><span></span>$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_&lt;SHA SCHEME&gt;_&lt;Block Size&gt;
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="enabling-compat-libs">
+<h3>Enabling compat libs<a class="headerlink" href="#enabling-compat-libs" title="Permalink to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#building-openssl-compatibility-libs"><span class="xref myst">Enable OpenSSL - To compare performance .</span></a></p></li>
+<li><p><a class="reference internal" href="#building-ipp-cp-compatibility-libs"><span class="xref myst">Enable IPPCP - To compare performance.</span></a></p></li>
+</ol>
+</section>
+<section id="build-after-enabling-compat-libs">
+<h3>Build after enabling compat libs<a class="headerlink" href="#build-after-enabling-compat-libs" title="Permalink to this heading">#</a></h3>
+<section id="building-openssl-compatibility-libs">
+<h4>Building OpenSSL Compatibility Libs<a class="headerlink" href="#building-openssl-compatibility-libs" title="Permalink to this heading">#</a></h4>
+<p>Enabling openSSL</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">DENABLE_TESTS_OPENSSL_API</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">DOPENSSL_INSTALL_DIR</span><span class="o">=</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">openssl</span> <span class="o">./</span>
+<span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span><span class="o">/</span> <span class="o">--</span><span class="n">config</span><span class="o">=</span><span class="n">release</span>
+</pre></div>
+</div>
+</section>
+<section id="building-ipp-cp-compatibility-libs">
+<h4>Building IPP-CP Compatibility Libs<a class="headerlink" href="#building-ipp-cp-compatibility-libs" title="Permalink to this heading">#</a></h4>
+<p>Enabling IPP-Crypto</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">-</span><span class="n">DENABLE_TESTS_IPP_API</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">DIPP_INSTALL_DIR</span><span class="o">=</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">ipp_crypto</span> <span class="o">./</span>
+<span class="n">PS</span><span class="o">&gt;</span> <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span><span class="o">/</span> <span class="o">--</span><span class="n">config</span><span class="o">=</span><span class="n">release</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>NOTES:<a class="headerlink" href="#notes" title="Permalink to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.</span> <span class="n">Use</span> <span class="s1">&#39;-o&#39;</span> <span class="k">for</span> <span class="n">OpenSSL</span> <span class="o">&amp;</span> <span class="s1">&#39;-i&#39;</span> <span class="k">for</span> <span class="n">IPPCP</span> <span class="n">to</span> <span class="n">run</span> <span class="n">tests</span> <span class="o">&amp;</span> <span class="n">bench</span> <span class="k">for</span> <span class="n">them</span><span class="o">.</span> <span class="n">And</span> <span class="n">also</span> <span class="nb">set</span> <span class="nb">bin</span> <span class="n">path</span> <span class="n">of</span> <span class="n">compat</span> <span class="n">libs</span> <span class="ow">in</span> <span class="n">PATH</span> <span class="n">variable</span><span class="o">.</span>
+<span class="mf">2.</span> <span class="n">Run</span> <span class="o">*</span><span class="n">scripts</span>\<span class="n">Set_Env_Path</span><span class="o">.</span><span class="n">bat</span><span class="o">*</span> <span class="n">to</span> <span class="nb">set</span> <span class="n">the</span> <span class="n">path</span> <span class="n">of</span> <span class="n">binaries</span> <span class="ow">in</span> <span class="n">environment</span> <span class="n">variable</span><span class="o">.</span>
+<span class="mf">3.</span> <span class="n">To</span> <span class="n">Enable</span> <span class="n">examples</span><span class="p">,</span> <span class="n">tests</span> <span class="o">&amp;</span> <span class="n">bench</span><span class="p">:</span>
+<span class="o">&gt;</span><span class="n">cmake</span> <span class="o">-</span><span class="n">A</span> <span class="n">x64</span> <span class="o">-</span><span class="n">DALCP_ENABLE_EXAMPLES</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">DALCP_ENABLE_TESTS</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">DALCP_ENABLE_BENCH</span><span class="o">=</span><span class="n">ON</span> <span class="o">-</span><span class="n">DCMAKE_BUILD_TYPE</span><span class="o">=</span><span class="n">RELEASE</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span> <span class="o">-</span><span class="n">T</span> <span class="n">ClangCl</span>
+<span class="mf">4.</span> <span class="n">Few</span> <span class="n">non</span><span class="o">-</span><span class="n">critical</span> <span class="n">warnings</span> <span class="n">are</span> <span class="n">expected</span> <span class="ow">in</span> <span class="n">Windows</span> <span class="n">build</span> <span class="k">with</span> <span class="n">Clang</span> <span class="k">while</span> <span class="n">integrating</span> <span class="n">other</span> <span class="n">libs</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-instruction-for-linux-platform">Build Instruction for Linux Platform</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building">Building</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#extra-steps-for-making-static-library-work">Extra steps for making STATIC library work</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-examples">Enable Examples</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-aocl-utils-checks">Enable AOCL UTILS checks</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-debug-configuration">Build Debug Configuration</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-compiling-with-address-sanitizer-support">For Compiling with Address Sanitizer Support</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-benches">Build Benches</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#execute-benchmarks">Execute Benchmarks</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#arguments-can-be-provided-in-above-bench-as">Arguments can be provided in above bench as</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-tests-using-kat-vectors-and-cross-library-tests">Build Tests (using KAT vectors, and cross library tests)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#execute-tests">Execute Tests</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-instruction-for-windows-platform">Build Instruction for Windows Platform</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#following-software-should-be-installed-prior-to-build-aocl-cryptography">Following software should be installed prior to build AOCL Cryptography</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-setup">Environment Setup:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-build-with-llvm-clang">Windows Build with LLVM/Clang:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build">Build</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-to-find-binaries-dll-s-by-setting-an-environment-variable">Steps to find binaries/dll’s by setting an environment variable</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Enable Examples</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#run-examples">Run Examples</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-aocl-utils">Enable AOCL-UTILS</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-debug-build">For Debug Build</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">For Compiling with Address Sanitizer Support</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-build-tests-using-kat-vectors">To Build Tests (using KAT vectors)</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#to-run-tests">To Run Tests:</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build-benchmarks">Build Benchmarks</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#to-build-bench">To Build Bench</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#to-run-bench">To Run Bench:</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#arguments-can-be-provided-as">Arguments can be provided as:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling-compat-libs">Enabling compat libs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-after-enabling-compat-libs">Build after enabling compat libs</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-openssl-compatibility-libs">Building OpenSSL Compatibility Libs</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-ipp-cp-compatibility-libs">Building IPP-CP Compatibility Libs</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">NOTES:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <p>
+  </p>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+<footer class="rocm-footer">
+    <div class="container-lg">
+        <section class="bottom-menu menu py-45">
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <ul>
+                        <li><a href="https://www.amd.com/en/corporate/copyright" target="_blank">Terms and Conditions</a></li>
+                        
+                        <li><a href="">2023, Advanced Micro Devices, Inc</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/privacy" target="_blank">Privacy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/trademarks" target="_blank">Trademarks</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf" target="_blank">Statement on Forced Labor</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/competition" target="_blank">Fair and Open Competition</a></li>
+                        <li><a href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf" target="_blank">UK Tax Strategy</a></li>
+                        <li><a href="https://www.amd.com/en/corporate/cookies" target="_blank">Cookie Policy</a></li>
+                        <!-- OneTrust Cookies Settings button start -->
+                        <li><a href="#cookie-settings" id="ot-sdk-btn" class="ot-sdk-show-settings">Cookie Settings</a></li>
+                        <!-- OneTrust Cookies Settings button end -->
+                    </ul>
+                </div>
+            </div>
+            <div class="row d-flex align-items-center">
+                <div class="col-12 text-center">
+                    <div>
+                        <span class="copyright">© 2023 Advanced Micro Devices, Inc</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</footer>
+
+<!-- <div id="rdc-watermark-container">
+    <img id="rdc-watermark" src="_static/images/alpha-watermark.svg" alt="DRAFT watermark"/>
+</div> -->
+  </body>
+</html>
