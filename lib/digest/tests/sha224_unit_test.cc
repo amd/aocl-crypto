@@ -208,6 +208,33 @@ TEST(Sha224Test, getHashSizeTest)
     EXPECT_EQ(sha224.getHashSize(), DigestSize);
 }
 
+TEST(Sha224Test, object_copy_test)
+{
+    string            plaintext("1111");
+    Sha224            sha224;
+    Uint8             hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream ss, ss_dup;
+
+    sha224.init();
+    ASSERT_EQ(sha224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
+
+    Sha224 sha224_dup = sha224;
+
+    ASSERT_EQ(sha224.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha224_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+
+    ss << std::hex << std::setfill('0');
+    ss_dup << std::hex << std::setfill('0');
+    ;
+    for (Uint16 i = 0; i < DigestSize; ++i) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
+    }
+    std::string hash_string = ss.str(), hash_string_dup = ss_dup.str();
+    EXPECT_TRUE(hash_string == hash_string_dup);
+}
+
 TEST_P(Sha224Kat, KnownAnswerTest2)
 {
 
