@@ -85,22 +85,23 @@ TEST(Chacha20, KeyStream)
         0x39, 0x8b, 0x6e, 0xda, 0x1a, 0x83, 0x2c, 0x89, 0xc1, 0x67, 0xea, 0xcd,
         0x90, 0x1d, 0x7e, 0x2b, 0xf3, 0x63
     };
-    std::vector<Uint8> key_stream(expected_key_stream.size());
+    std::vector<Uint8> key_stream(expected_key_stream.size(), 0);
 
-    ChaCha20 chacha20_obj;
+    ref::ChaCha256 chacha20_obj;
     chacha20_obj.setKey(key, sizeof(key));
     chacha20_obj.setIv(iv, sizeof(iv));
-    chacha20_obj.getKeyStream(&key_stream[0], key_stream.size());
+    chacha20_obj.encrypt(
+        nullptr, &key_stream[0], &key_stream[0], key_stream.size());
 
     EXPECT_EQ(key_stream, expected_key_stream);
 }
 TEST(Chacha20, Encrypt)
 {
-    ChaCha20 chacha20_obj_enc, chacha20_obj_dec;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                       0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    ref::ChaCha256 chacha20_obj_enc, chacha20_obj_dec;
+    Uint8          key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                             0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                             0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                             0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8 iv[] = { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
     std::vector<Uint8> plaintext = {
@@ -133,22 +134,23 @@ TEST(Chacha20, Encrypt)
 
     chacha20_obj_enc.setKey(key, sizeof(key));
     chacha20_obj_enc.setIv(iv, sizeof(iv));
-    chacha20_obj_enc.processInput(&plaintext[0], plaintext.size(), &output[0]);
+    chacha20_obj_enc.encrypt(
+        nullptr, &plaintext[0], &output[0], plaintext.size());
     ASSERT_EQ(output, expected_output);
     chacha20_obj_dec.setKey(key, sizeof(key));
     chacha20_obj_dec.setIv(iv, sizeof(iv));
-    chacha20_obj_dec.processInput(
-        &output[0], plaintext.size(), &decrypted_plaintext[0]);
+    chacha20_obj_dec.decrypt(
+        nullptr, &output[0], &decrypted_plaintext[0], plaintext.size());
     EXPECT_EQ(decrypted_plaintext, plaintext);
 }
 
 TEST(Chacha20, Encrypt_MultipleBytes)
 {
-    ChaCha20 chacha20_obj_enc, chacha20_obj_dec;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                       0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    ref::ChaCha256 chacha20_obj_enc, chacha20_obj_dec;
+    Uint8          key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                             0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                             0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                             0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8 iv[] = { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
     std::vector<Uint8> plaintext = {
@@ -239,12 +241,13 @@ TEST(Chacha20, Encrypt_MultipleBytes)
     chacha20_obj_dec.setKey(key, sizeof(key));
     chacha20_obj_dec.setIv(iv, sizeof(iv));
     for (Uint64 i = 0; i < plaintext.size(); i++) {
-        chacha20_obj_enc.processInput(&plaintext[0], i, &output[0]);
+        chacha20_obj_enc.encrypt(nullptr, &plaintext[0], &output[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
             << "Failed to Encrypt block size " << i;
-        chacha20_obj_dec.processInput(&output[0], i, &decrypted_plaintext[0]);
+        chacha20_obj_dec.decrypt(
+            nullptr, &output[0], &decrypted_plaintext[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
@@ -254,11 +257,11 @@ TEST(Chacha20, Encrypt_MultipleBytes)
 
 TEST(Chacha20, PerformanceTest)
 {
-    ChaCha20 chacha20_obj;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                       0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    ref::ChaCha256 chacha20_obj;
+    Uint8          key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                             0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                             0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                             0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8 iv[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
@@ -271,8 +274,8 @@ TEST(Chacha20, PerformanceTest)
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha20_obj.processInput(
-            &plaintext[0], plaintext.size(), &ciphertext[0]);
+        chacha20_obj.encrypt(
+            nullptr, &plaintext[0], &ciphertext[0], plaintext.size());
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"

@@ -52,13 +52,16 @@ static constexpr Uint32 Chacha20Constants[4] = {
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t crypt(alc_cipher_data_t* ctx,                              \
-                          const Uint8*       pInput,                           \
-                          Uint8*             pOutput,                          \
-                          Uint64             pInputLen);                                   \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pInput,                         \
+                            Uint8*             pOutput,                        \
+                            Uint64             pInputLen);                                 \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pInput,                         \
+                            Uint8*             pOutput,                        \
+                            Uint64             pInputLen);                                 \
     };
 
-template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ALCP_API_EXPORT ChaCha20
 {
     // ChaCha256 should be able to access this
@@ -120,38 +123,14 @@ class ALCP_API_EXPORT ChaCha20
                      const Uint64       keyLen,
                      const Uint8*       pIv,
                      const Uint64       ivLen);
-
-    alc_error_t processInput(const Uint8 plaintext[],
-                             Uint64      plaintext_length,
-                             Uint8       ciphertext[]);
-
-    /**
-     * @brief Get the Chacha20 Keystream of @ref key_stream_length for the
-     * provided key and iv
-     * @param [out] output_key_stream Buffer for storing the key stream
-     * @param [in] key_stream_length Length of the keystream required.
-     * @return
-     */
-    alc_error_t getKeyStream(Uint8  output_key_stream[],
-                             Uint64 key_stream_length);
 };
 
 namespace vaes512 {
-    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eVaes512>);
+    CHACHA_CLASS_GEN(ChaCha256, ChaCha20);
 } // namespace vaes512
 
-// duplicate of vaes512 namespace, to be removed
-namespace vaes {
-    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eReference>);
-} // namespace vaes
-
-// duplicate of vaes512 namespace, to be removed
-namespace aesni {
-    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eReference>);
-} // namespace aesni
-
 namespace ref {
-    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eReference>);
+    CHACHA_CLASS_GEN(ChaCha256, ChaCha20);
 } // namespace ref
 
 } // namespace alcp::cipher::chacha20

@@ -41,12 +41,4 @@ ProcessInput(const Uint8 key[],
              Uint8       ciphertext[],
              Uint64      blocks,
              int         remBytes);
-alc_error_t
-getKeyStream(const Uint8 key[],
-             Uint64      keylen,
-             Uint8       iv[],
-             Uint64      ivlen,
-             Uint8       output_key_stream[],
-             Uint64      key_stream_length);
-
 } // namespace alcp::cipher::chacha20::zen4

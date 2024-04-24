@@ -81,7 +81,7 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
-    ChaCha20Poly1305<CpuCipherFeatures::eDynamic>* chacha_poly;
+    ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eDynamic>* chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
     void                            SetUp() override
@@ -103,7 +103,8 @@ class ChaCha20Poly1305Test : public testing::Test
 
     void createChachaPolyObject()
     {
-        chacha_poly = new ChaCha20Poly1305<CpuCipherFeatures::eDynamic>();
+        chacha_poly =
+            new ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eDynamic>();
     }
     void destroyChachaPolyObject() { delete chacha_poly; }
 
@@ -112,7 +113,7 @@ class ChaCha20Poly1305Test : public testing::Test
         alc_error_t err = ALC_ERROR_NONE;
 
         // setNonce has to be called before setKey.
-        err = chacha_poly->setNonce(&nonce[0], nonce.size());
+        err = chacha_poly->setIv(&nonce[0], nonce.size());
         ASSERT_EQ(err, ALC_ERROR_NONE);
 
         err = chacha_poly->setKey(&key[0], key.size());
@@ -196,11 +197,11 @@ TEST_F(ChaCha20Poly1305Test, MultiBytesDecryptTest)
 
 TEST(Chacha20Poly1305, PerformanceTest)
 {
-    ChaCha20Poly1305 chacha_poly;
-    Uint8            key[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
-                               0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
-                               0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97,
-                               0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f };
+    ChaCha20Poly1305<ref::ChaCha256> chacha_poly;
+    Uint8 key[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+                    0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
+                    0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97,
+                    0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f };
 
     Uint8 AAD[] = { 0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1,
                     0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 };
@@ -211,7 +212,7 @@ TEST(Chacha20Poly1305, PerformanceTest)
     std::vector<Uint8> plaintext(256);
     std::vector<Uint8> ciphertext(plaintext.size());
 
-    chacha_poly.setNonce(nonce, sizeof(nonce));
+    chacha_poly.setIv(nonce, sizeof(nonce));
     chacha_poly.setKey(key, sizeof(key));
     chacha_poly.setAad(AAD, sizeof(AAD));
 

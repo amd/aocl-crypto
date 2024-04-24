@@ -46,7 +46,7 @@ CreateDemoSession(const Uint8* key,
     alc_cipher_aead_info_t cinfo = { // request params
                                      .ci_type =
                                          ALC_CIPHER_TYPE_CHACHA20_POLY1305,
-                                     .ci_mode   = ALC_AES_MODE_NONE,
+                                     .ci_mode   = ALC_CHACHA20_POLY1305,
                                      .ci_keyLen = cKeyLen,
                                      // init params
                                      .ci_key   = key,
@@ -77,21 +77,30 @@ CreateDemoSession(const Uint8* key,
 int
 AlcpChacha20Poly1305EncryptDemo(
     const Uint8* plaintxt,
-    const Uint32 cLen, /* Describes both 'plaintxt' and 'ciphertxt' */
+    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
     Uint8*       ciphertxt,
     const Uint8* iv,
-    const Uint32 cIvLen,
+    const Uint32 ivLen,
     const Uint8* ad,
-    const Uint32 cAdLen,
+    const Uint32 aadLen,
     Uint8*       tag,
-    const Uint32 cTagLen)
+    const Uint32 tagLen,
+    const Uint8* pKey,
+    const Uint32 keyLen)
 {
     alc_error_t err;
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
 
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
+    if (alcp_is_error(err)) {
+        printf("Error: unable init \n");
+        alcp_error_str(err, err_buf, cErrSize);
+        return -1;
+    }
+
     // set tag length
-    err = alcp_cipher_aead_set_tag_length(&handle, cTagLen);
+    err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -99,7 +108,7 @@ AlcpChacha20Poly1305EncryptDemo(
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, cAdLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable Chacha20-Poly1305 add data processing \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -107,7 +116,7 @@ AlcpChacha20Poly1305EncryptDemo(
     }
 
     // Chacha20-Poly1305 encrypt
-    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, cLen);
+    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -116,7 +125,7 @@ AlcpChacha20Poly1305EncryptDemo(
 
     // get tag. Once Tag is obtained encrypt_update cannot be called again and
     // will return an error.
-    err = alcp_cipher_aead_get_tag(&handle, tag, cTagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -127,23 +136,32 @@ AlcpChacha20Poly1305EncryptDemo(
 }
 
 int
-AlcpChacha20Poly1305DecryptDemo(
-    const Uint8* ciphertxt,
-    const Uint32 cLen, /* Describes both 'plaintxt' and 'ciphertxt' */
-    Uint8*       plaintxt,
-    const Uint8* iv,
-    const Uint32 cIvLen,
-    const Uint8* ad,
-    const Uint32 cAdLen,
-    Uint8*       tag,
-    const Uint32 cTagLen)
+AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
+                                const Uint32 len,
+                                Uint8*       plaintxt,
+                                const Uint8* iv,
+                                const Uint32 ivLen,
+                                const Uint8* ad,
+                                const Uint32 aadLen,
+                                Uint8*       tag,
+                                const Uint32 tagLen,
+                                const Uint8* pKey,
+                                const Uint32 keyLen)
 {
     alc_error_t err;
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
     Uint8       tag_decrypt[16];
+
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
+    if (alcp_is_error(err)) {
+        printf("Error: unable init \n");
+        alcp_error_str(err, err_buf, cErrSize);
+        return -1;
+    }
+
     // set tag length
-    err = alcp_cipher_aead_set_tag_length(&handle, cTagLen);
+    err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -151,7 +169,7 @@ AlcpChacha20Poly1305DecryptDemo(
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, cAdLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable Chacha20-Poly1305 add data processing \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -161,7 +179,7 @@ AlcpChacha20Poly1305DecryptDemo(
     // FIXME: init call needs to be added to set key and iv.
 
     // Chacha20-Poly1305 decrypt
-    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, cLen);
+    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -169,20 +187,20 @@ AlcpChacha20Poly1305DecryptDemo(
     }
 
     // get tag
-    err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, cTagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
-    char* p_hex_tag_decrypt = BytesToHexString(tag_decrypt, cTagLen);
+    char* p_hex_tag_decrypt = BytesToHexString(tag_decrypt, tagLen);
     printf("TAG Decrypt:%s\n", p_hex_tag_decrypt);
     free(p_hex_tag_decrypt);
 
     bool is_tag_matched = true;
 
-    for (int i = 0; i < cTagLen; i++) {
+    for (int i = 0; i < tagLen; i++) {
         if (tag_decrypt[i] != tag[i]) {
             is_tag_matched = is_tag_matched & false;
         }
@@ -190,7 +208,7 @@ AlcpChacha20Poly1305DecryptDemo(
 
     if (is_tag_matched == false) {
         printf("\n Tag mismatched, input encrypted data is not trusthworthy\n");
-        memset(plaintxt, 0, cLen);
+        memset(plaintxt, 0, len);
         return -1;
     } else {
         printf("\n Encrypt and Decrypt Tag is matched.\n");
@@ -240,7 +258,9 @@ main(int argc, char const* argv[])
                                              cSampleAd,
                                              sizeof(cSampleAd),
                                              sample_tag_output,
-                                             sizeof(sample_tag_output));
+                                             sizeof(sample_tag_output),
+                                             cSampleKey,
+                                             sizeof(cSampleKey) * 8);
     if (retval != 0)
         goto out;
     char* p_plaintext_hex_string =
@@ -277,7 +297,9 @@ main(int argc, char const* argv[])
                                              cSampleAd,
                                              sizeof(cSampleAd),
                                              sample_tag_output,
-                                             sizeof(sample_tag_output));
+                                             sizeof(sample_tag_output),
+                                             cSampleKey,
+                                             sizeof(cSampleKey) * 8);
 
     if (retval != 0)
         goto out;

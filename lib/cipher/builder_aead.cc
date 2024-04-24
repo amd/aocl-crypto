@@ -32,6 +32,7 @@
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/chacha20_build.hh"
+#include "alcp/cipher/chacha20_poly1305.hh"
 #include "alcp/utils/cpuid.hh"
 
 #include "builder.hh"
@@ -45,6 +46,8 @@ namespace alcp::cipher {
 
 using Context = alcp::cipher::Context;
 using namespace alcp::base;
+
+using alcp::cipher::chacha20::Chacha20Poly1305Builder;
 
 template<typename AEADMODE>
 void
@@ -196,177 +199,6 @@ __build_aesSiv(const Uint64 keyLen, Context& ctx)
     return sts;
 }
 
-#if 0 // turning off poly and chacha temporarily
-// poly and chacha
-
-template<CpuCipherFeatures cpu_cipher_feature, bool is_encrypt>
-static alc_error_t
-__chacha20_Poly1305processInputWrapper(void*        rCipher,
-                                       const Uint8* pSrc,
-                                       Uint8*       pDest,
-                                       Uint64       len,
-                                       const Uint8* pIv)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap =
-        static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
-    if constexpr (is_encrypt) {
-
-        e = ap->encryptupdate(pSrc, len, pDest);
-    } else {
-        e = ap->decryptupdate(pSrc, len, pDest);
-    }
-
-    return e;
-}
-
-template<CpuCipherFeatures cpu_cipher_feature>
-static alc_error_t
-__chacha20_Poly1305setKeyWrapper(void*        rCipher,
-                                 Uint64       keyLen,
-                                 const Uint8* pKey)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    // auto ap =
-    //  static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
-
-    // e = ap->setKey(keyLen, pKey);
-
-    return e;
-}
-
-template<CpuCipherFeatures cpu_cipher_feature>
-static alc_error_t
-__chacha20_Poly1305setIvWrapper(void*        rCipher,
-                                Uint64       iv_length,
-                                const Uint8* iv)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap =
-        static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
-
-    e = ap->setIv(iv, iv_length);
-
-    return e;
-}
-
-template<CpuCipherFeatures cpu_cipher_feature>
-static alc_error_t
-__chacha20_Poly1305setTagLengthWrapper(void* rCipher, Uint64 tag_length)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap =
-        static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
-
-    e = ap->setTagLength(tag_length);
-
-    return e;
-}
-
-template<CpuCipherFeatures cpu_cipher_feature>
-static alc_error_t
-__chacha20_Poly1305setAADWrapper(void* rCipher, const Uint8* pAad, Uint64 len)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap =
-        static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
-
-    e = ap->setAad(pAad, len);
-
-    return e;
-}
-
-template<CpuCipherFeatures cpu_cipher_feature>
-static alc_error_t
-__chacha20_Poly1305getTagWrapper(void* rCipher, Uint8* pTag, Uint64 len)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap =
-        static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
-
-    e = ap->getTag(pTag, len);
-
-    return e;
-}
-template<CpuCipherFeatures cpu_cipher_feature>
-static alc_error_t
-__chacha20_Poly1305FinishWrapper(const void* rCipher)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap =
-        static_cast<const chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(
-            rCipher);
-
-    delete ap;
-
-    return e;
-}
-
-template<CpuCipherFeatures cpu_cipher_feature>
-alc_error_t
-__build_chacha20poly1305(const alc_cipher_aead_info_t& cCipherAlgoInfo,
-                         Context&                      ctx)
-{
-    chacha20::ChaCha20Poly1305<cpu_cipher_feature>* chacha_poly1305 =
-        new chacha20::ChaCha20Poly1305<cpu_cipher_feature>();
-    ctx.m_cipher = chacha_poly1305;
-
-    // setNonce to be merged with setIv and setKey to be moved to different
-    // C-API
-#if 0
-    if (chacha_poly1305->setNonce(cCipherAlgoInfo.ci_iv,
-                                  cCipherAlgoInfo.ci_algo_info.iv_length / 8)) {
-        return ALC_ERROR_INVALID_ARG;
-    }
-
-    if (chacha_poly1305->setKey(cCipherAlgoInfo.ci_key,
-                                cCipherAlgoInfo.ci_keyLen / 8)) {
-        return ALC_ERROR_INVALID_ARG;
-    }
-#endif
-    ctx.setKey = __chacha20_Poly1305setKeyWrapper<cpu_cipher_feature>;
-
-    ctx.setIv = __chacha20_Poly1305setIvWrapper<cpu_cipher_feature>;
-
-    ctx.setAad = __chacha20_Poly1305setAADWrapper<cpu_cipher_feature>;
-    ctx.setTagLength =
-        __chacha20_Poly1305setTagLengthWrapper<cpu_cipher_feature>;
-
-    ctx.encryptUpdate =
-        __chacha20_Poly1305processInputWrapper<cpu_cipher_feature, true>;
-    ctx.decryptUpdate =
-        __chacha20_Poly1305processInputWrapper<cpu_cipher_feature, false>;
-
-    ctx.getTag = __chacha20_Poly1305getTagWrapper<cpu_cipher_feature>;
-    ctx.finish = __chacha20_Poly1305FinishWrapper<cpu_cipher_feature>;
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-chacha20::Chacha20Poly1305Builder::Build(
-    const alc_cipher_aead_info_t& cCipherAlgoInfo, Context& ctx)
-{
-
-    CpuCipherFeatures cpu_cipher_feature = getCpuCipherfeature();
-    if (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
-        return __build_chacha20poly1305<CpuCipherFeatures::eVaes512>(
-            cCipherAlgoInfo, ctx);
-    } else {
-        return __build_chacha20poly1305<CpuCipherFeatures::eReference>(
-            cCipherAlgoInfo, ctx);
-    }
-
-    return ALC_ERROR_NONE;
-}
-#endif
-
 // AEAD Builder
 alc_error_t
 CipherAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
@@ -375,8 +207,13 @@ CipherAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    switch (ALC_CIPHER_TYPE_AES) {
-        case ALC_CIPHER_TYPE_AES:
+    switch (cipherMode) {
+        case ALC_CHACHA20_POLY1305:
+            err = Chacha20Poly1305Builder::Build(cipherMode, keyLen, ctx);
+            break;
+        case ALC_AES_MODE_GCM:
+        case ALC_AES_MODE_CCM:
+        case ALC_AES_MODE_SIV:
             err = AesAeadBuilder::Build(cipherMode, keyLen, ctx);
             break;
         // case ALC_CIPHER_TYPE_CHACHA20_POLY1305:

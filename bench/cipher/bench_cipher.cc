@@ -829,7 +829,7 @@ BENCH_CHACHA20_ENCRYPT_256(benchmark::State& state)
                                             state.range(0),
                                             ENCRYPT,
                                             ALC_CIPHER_TYPE_CHACHA20,
-                                            ALC_AES_MODE_NONE,
+                                            ALC_CHACHA20,
                                             256));
 }
 static void
@@ -839,7 +839,7 @@ BENCH_CHACHA20_DECRYPT_256(benchmark::State& state)
                                             state.range(0),
                                             DECRYPT,
                                             ALC_CIPHER_TYPE_CHACHA20,
-                                            ALC_AES_MODE_NONE,
+                                            ALC_CHACHA20,
                                             256));
 }
 
