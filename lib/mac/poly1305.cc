@@ -50,8 +50,16 @@ using reference::Poly1305Ref;
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305()
 {
-    if constexpr (utils::CpuArchFeature::eReference == feature) {
+    if constexpr (utils::CpuArchFeature::eReference == feature
+                  || utils::CpuArchFeature::eAvx2 == feature) {
         poly1305_impl = std::make_unique<Poly1305Ref>();
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
+        // utils::CpuArchFeature::eDynamic
+        if (!(CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+              && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+              && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW))) {
+            poly1305_impl = std::make_unique<Poly1305Ref>();
+        }
     }
 }
 
@@ -59,7 +67,8 @@ template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
 {
-    if constexpr (utils::CpuArchFeature::eReference == feature) {
+    if constexpr ((utils::CpuArchFeature::eReference == feature)
+                  || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->init(key, len);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 #if POLY1305_RADIX_26
@@ -74,7 +83,7 @@ Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
         zen4::poly1305_init_radix44(state, key);
         return StatusOk();
 #endif
-    } else {
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // Manual dispatch in case we don't know where to dispatch to.
         if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
@@ -102,7 +111,8 @@ template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
 {
-    if constexpr (utils::CpuArchFeature::eReference == feature) {
+    if constexpr ((utils::CpuArchFeature::eReference == feature)
+                  || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->update(pMsg, msgLen);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
         // return poly1305_impl->update(pMsg, msgLen);
@@ -123,7 +133,7 @@ Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
             return status::UpdateAfterFinalzeError("");
         }
 #endif
-    } else {
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // Manual dispatch in case we don't know where to dispatch to.
         if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
@@ -156,12 +166,13 @@ template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::reset()
 {
-    if constexpr (utils::CpuArchFeature::eReference == feature) {
+    if constexpr ((utils::CpuArchFeature::eReference == feature)
+                  || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->reset();
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
         state.reset();
         return StatusOk();
-    } else {
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // Manual dispatch in case we don't know where to dispatch to.
         if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
@@ -179,7 +190,8 @@ template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
 {
-    if constexpr (utils::CpuArchFeature::eReference == feature) {
+    if constexpr ((utils::CpuArchFeature::eReference == feature)
+                  || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->finish(pMsg, msgLen);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 // return poly1305_impl->finish(pMsg, msgLen);
@@ -199,8 +211,7 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
         else
             return status::AlreadyFinalizedError("");
 #endif
-
-    } else {
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // Manual dispatch in case we don't know where to dispatch to.
         if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
@@ -238,7 +249,8 @@ template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
 {
-    if constexpr (utils::CpuArchFeature::eReference == feature) {
+    if constexpr ((utils::CpuArchFeature::eReference == feature)
+                  || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->copy(digest, length);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 #if POLY1305_RADIX_26
@@ -250,7 +262,7 @@ Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
         else
             return status::CopyWithoutFinalizeError("");
 #endif
-    } else {
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // Manual dispatch in case we don't know where to dispatch to.
         if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
