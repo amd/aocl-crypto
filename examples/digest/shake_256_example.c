@@ -92,6 +92,7 @@ hash_demo(const Uint8* src,
 
     if (!s_dg_handle_dup.context) {
         printf("Unable to allocate context\n");
+        err = ALC_ERROR_GENERIC;
         goto out;
     }
     err = alcp_digest_context_copy(&s_dg_handle, &s_dg_handle_dup);
