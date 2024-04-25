@@ -203,10 +203,12 @@ Digest_KAT(alc_digest_info_t info, int ctx_reuse)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
-            if (!db->context_copy()) {
-                std::cout << "Error: Digest base context_copy failed"
-                          << std::endl;
-                FAIL();
+            if (ctx_reuse == ALCP_TEST_DIGEST_CTX_COPY) {
+                if (!db->context_copy()) {
+                    std::cout << "Error: Digest base context_copy failed"
+                              << std::endl;
+                    FAIL();
+                }
             }
             if (!db->digest_function(data)) {
                 std::cout << "Error: Digest function failed" << std::endl;

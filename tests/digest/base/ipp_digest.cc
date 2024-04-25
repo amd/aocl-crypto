@@ -99,6 +99,17 @@ IPPDigestBase::init()
 bool
 IPPDigestBase::context_copy()
 {
+    IppStatus status = ippStsNoErr;
+    status           = ippsHashDuplicate_rmf(m_handle, m_handle_dup);
+    if (status != ippStsNoErr) {
+        std::cout << "Error code in ippsHashUpdate_rmf: " << status
+                  << std::endl;
+        return false;
+    }
+    std::swap(m_handle, m_handle_dup);
+    if (m_handle_dup != nullptr) {
+        delete[] reinterpret_cast<Uint8*>(m_handle_dup);
+    }
     return true;
 }
 

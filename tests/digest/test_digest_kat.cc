@@ -80,6 +80,8 @@ TEST(DIGEST_SHA2, KAT_224)
 }
 TEST(DIGEST_SHA2, KAT_224_CTX_COPY)
 {
+    if (useipp)
+        GTEST_SKIP() << "IPP doesnt have ctx copy feature yet";
     alc_digest_info_t info;
     info.dt_mode = ALC_SHA2_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;

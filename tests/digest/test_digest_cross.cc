@@ -77,6 +77,8 @@ TEST(DIGEST_SHA2, CROSS_224)
 }
 TEST(DIGEST_SHA2, CROSS_224_CTX_COPY)
 {
+    if (useipp || oa_override)
+        GTEST_SKIP() << "Ctx copy tests are not yet enabled for ipp";
     alc_digest_info_t info;
     info.dt_mode = ALC_SHA2_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
