@@ -36,7 +36,8 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{}
+{
+}
 
 /* xts */
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
@@ -108,7 +109,8 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 
     m_cinfo.ci_type = m_cipher_type;
     if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
-        m_cinfo.ci_mode   = ALC_AES_MODE_NONE;
+        // m_cinfo.ci_mode   = ALC_AES_MODE_NONE;
+        m_cinfo.ci_mode   = m_mode;
         m_cinfo.ci_keyLen = cKeyLen;
 
         m_cinfo.ci_key   = key;

@@ -61,6 +61,7 @@ create_demo_session(alc_cipher_handle_p handle,
 
     alc_cipher_info_t cinfo = { // request params
                                 .ci_type   = ALC_CIPHER_TYPE_CHACHA20,
+                                .ci_mode   = ALC_CHACHA20,
                                 .ci_keyLen = cKeyLen,
                                 // init params
                                 .ci_key   = key,
@@ -88,6 +89,13 @@ create_demo_session(alc_cipher_handle_p handle,
     }
     printf("Request Succeeded\n");
 
+    err = alcp_cipher_init(handle, key, cKeyLen, iv, ivlength);
+
+    if (alcp_is_error(err)) {
+        free(handle->ch_context);
+        printf("Error: Unable to Initalize \n");
+        goto out;
+    }
     // FIXME: alcp_cipher_aead_int() to be added here
 
     return 0;
@@ -173,7 +181,7 @@ main(void)
     Uint8        sample_output[512] = { 0 };
     const int    cPlaintextSize     = strlen((const char*)sample_plaintxt);
     const int    cCiphertextSize    = cPlaintextSize; // No padding
-    const Uint64 ivlen              = sizeof(iv) * 8;
+    const Uint64 ivlen              = sizeof(iv);
     const Uint64 keylen             = sizeof(sample_key) * 8;
 
     printf("Input Text: %s\n", sample_plaintxt);

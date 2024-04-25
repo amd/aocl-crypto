@@ -31,8 +31,13 @@
 
 #include "alcp/capi/cipher/ctx.hh"
 #include "alcp/cipher.hh"
+#include "alcp/utils/cpuid.hh"
 
+using alcp::utils::CpuCipherFeatures;
 namespace alcp::cipher {
+
+CpuCipherFeatures
+getCpuCipherfeature();
 
 class CipherBuilder
 {

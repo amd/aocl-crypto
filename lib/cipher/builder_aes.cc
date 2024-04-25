@@ -34,7 +34,6 @@
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/aes_xts.hh"
-#include "alcp/utils/cpuid.hh"
 
 // FIXME: to be moved out
 #include "alcp/cipher/aes_gcm.hh"
@@ -42,38 +41,12 @@
 
 #include "builder.hh"
 
-using alcp::utils::CpuCipherFeatures;
-using alcp::utils::CpuId;
-
 #include <type_traits> /* for is_same_v<> */
 
 namespace alcp::cipher {
 
 using Context = alcp::cipher::Context;
 using namespace alcp::base;
-
-CpuCipherFeatures
-getCpuCipherfeature()
-{
-    CpuCipherFeatures cpu_feature =
-        CpuCipherFeatures::eReference; // If no arch features present,means no
-                                       // acceleration, Fall back to reference
-
-    if (CpuId::cpuHasAesni()) {
-        cpu_feature = CpuCipherFeatures::eAesni;
-
-        if (CpuId::cpuHasVaes()) {
-            cpu_feature = CpuCipherFeatures::eVaes256;
-
-            if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
-                && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
-                && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
-                cpu_feature = CpuCipherFeatures::eVaes512;
-            }
-        }
-    }
-    return cpu_feature;
-}
 
 /* CIPHER CONTEXT INTERFACE BINDING */
 /**
@@ -283,18 +256,21 @@ CipherBuilder::Build(const alc_cipher_mode_t cipherMode,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    switch (ALC_CIPHER_TYPE_AES) { // can we avoid type ?
-        case ALC_CIPHER_TYPE_AES:
-            err = AesBuilder::Build(cipherMode, keyLen, ctx);
-            break;
-#if 0
-        case ALC_CIPHER_TYPE_CHACHA20:
-            err = chacha20::Chacha20Builder::Build(cipherInfo, ctx);
+    switch (cipherMode) { // can we avoid type ?
+#if 1
+        case ALC_CHACHA20:
+            err = chacha20::Chacha20Builder::Build(cipherMode, keyLen, ctx);
             break;
 #endif
+        case ALC_AES_MODE_CBC:
+        case ALC_AES_MODE_CTR:
+        case ALC_AES_MODE_CFB:
+        case ALC_AES_MODE_OFB:
+        case ALC_AES_MODE_XTS:
+            err = AesBuilder::Build(cipherMode, keyLen, ctx);
+            break;
         default:
             err = ALC_ERROR_NOT_SUPPORTED;
-            break;
     }
 
     return err;
@@ -376,16 +352,13 @@ bool
 CipherBuilder::Supported(const alc_cipher_mode_t cipherMode,
                          const Uint64            keyLen)
 {
-
     // FIXME: remove ci_type dependency
-    switch (ALC_CIPHER_TYPE_AES) // switch (cinfo.ci_type)
+    switch (cipherMode) // switch (cinfo.ci_type)
     {
-        case ALC_CIPHER_TYPE_AES:
-            return AesBuilder::Supported(cipherMode, keyLen);
-        case ALC_CIPHER_TYPE_CHACHA20:
+        case ALC_CHACHA20:
             return chacha20::Chacha20Builder::Supported(cipherMode, keyLen);
         default:
-            return false;
+            return AesBuilder::Supported(cipherMode, keyLen);
     }
 }
 

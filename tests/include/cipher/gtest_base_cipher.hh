@@ -437,15 +437,15 @@ Chacha20CrossTest(int              keySize,
     /* Request from others to validate openssl with ipp */
     CipherTestingCore* alcpTC = nullptr;
     if (oa_override) {
-        alcpTC = new CipherTestingCore(
-            LIB_TYPE::OPENSSL, cipher_type, ALC_AES_MODE_NONE);
+        alcpTC =
+            new CipherTestingCore(LIB_TYPE::OPENSSL, cipher_type, ALC_CHACHA20);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = new CipherTestingCore(
-            LIB_TYPE::ALCP, cipher_type, ALC_AES_MODE_NONE);
+        alcpTC =
+            new CipherTestingCore(LIB_TYPE::ALCP, cipher_type, ALC_CHACHA20);
     }
     CipherTestingCore* extTC = nullptr;
     ExecRecPlay*       fr    = nullptr;
@@ -454,14 +454,14 @@ Chacha20CrossTest(int              keySize,
     try {
         if (useossl)
             extTC = new CipherTestingCore(
-                LIB_TYPE::OPENSSL, cipher_type, ALC_AES_MODE_NONE);
+                LIB_TYPE::OPENSSL, cipher_type, ALC_CHACHA20);
         else if (useipp)
-            extTC = new CipherTestingCore(
-                LIB_TYPE::IPP, cipher_type, ALC_AES_MODE_NONE);
+            extTC =
+                new CipherTestingCore(LIB_TYPE::IPP, cipher_type, ALC_CHACHA20);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
             extTC = new CipherTestingCore(
-                LIB_TYPE::OPENSSL, cipher_type, ALC_AES_MODE_NONE);
+                LIB_TYPE::OPENSSL, cipher_type, ALC_CHACHA20);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -1368,7 +1368,7 @@ ChachaKatTest(int keySize, encDec_t encDec, _alc_cipher_type cipher_type)
 
     /* for chacha20, AES mode is not used */
     CipherTestingCore testing_core =
-        CipherTestingCore(cModeStr, cipher_type, ALC_AES_MODE_NONE);
+        CipherTestingCore(cModeStr, cipher_type, ALC_CHACHA20);
 
     bool retval = false;
 

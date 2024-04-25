@@ -36,7 +36,7 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
-//#define DEBUG_PROV_GCM_INIT 0
+// #define DEBUG_PROV_GCM_INIT 0
 
 EXTERN_C_BEGIN
 
@@ -88,6 +88,10 @@ typedef enum _alc_cipher_mode
     ALC_AES_MODE_GCM,
     ALC_AES_MODE_CCM,
     ALC_AES_MODE_SIV,
+
+    // FIXME: This needs to be handled better
+    ALC_CHACHA20,
+    ALC_CHACHA20_POLY1305,
 
     ALC_AES_MODE_MAX,
 

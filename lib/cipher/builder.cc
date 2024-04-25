@@ -26,4 +26,32 @@
  *
  */
 
+#include "alcp/capi/cipher/builder.hh"
 #include "alcp/cipher/aes.hh"
+
+using alcp::utils::CpuId;
+namespace alcp::cipher {
+CpuCipherFeatures
+getCpuCipherfeature()
+{
+    CpuCipherFeatures cpu_feature =
+        CpuCipherFeatures::eReference; // If no arch features present,means
+                                       // no acceleration, Fall back to
+                                       // reference
+
+    if (CpuId::cpuHasAesni()) {
+        cpu_feature = CpuCipherFeatures::eAesni;
+
+        if (CpuId::cpuHasVaes()) {
+            cpu_feature = CpuCipherFeatures::eVaes256;
+
+            if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+                && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+                && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+                cpu_feature = CpuCipherFeatures::eVaes512;
+            }
+        }
+    }
+    return cpu_feature;
+}
+} // namespace alcp::cipher

@@ -29,7 +29,7 @@
 #pragma once
 
 #include "alcp/base.hh"
-#include "alcp/error.h"
+#include "alcp/cipher.h"
 #include "alcp/utils/cpuid.hh"
 
 namespace alcp::cipher::chacha20 {
@@ -39,10 +39,30 @@ using utils::CpuId;
 static constexpr Uint32 Chacha20Constants[4] = {
     0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
 };
+
 #define CHACHA20_BLOCK_SIZE 64
+
+#define CHACHA_CLASS_GEN(CHILD_NEW, PARENT)                                    \
+    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
+                                                                               \
+    {                                                                          \
+      public:                                                                  \
+        /* CHILD_NEW(alc_cipher_data_t* ctx)                                   \
+            : PARENT(ctx){};*/                                                 \
+        ~CHILD_NEW(){};                                                        \
+                                                                               \
+      public:                                                                  \
+        alc_error_t crypt(alc_cipher_data_t* ctx,                              \
+                          const Uint8*       pInput,                           \
+                          Uint8*             pOutput,                          \
+                          Uint64             pInputLen);                                   \
+    };
+
 template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ALCP_API_EXPORT ChaCha20
 {
+    // ChaCha256 should be able to access this
+  protected:
     // Key Length of Chacha20 is fixed as 256 bits
     static constexpr Uint64 cMKeylen = 256 / 8;
     // array to store the key
@@ -54,6 +74,8 @@ class ALCP_API_EXPORT ChaCha20
   protected:
     alignas(16) Uint8 m_iv[cMIvlen];
 
+    // FIXME: Needs to be private or protected after chacha20-poly1305
+    // integration
   public:
     /**
      * @brief Method to set the Chacha20 Key.
@@ -73,21 +95,7 @@ class ALCP_API_EXPORT ChaCha20
      */
     alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);
 
-    /**
-     * @brief Encryption/Decryption function of Chacha20 Algorithm taking
-     * plaintext/ciphertext as input and produces the output. Both Encrypt and
-     * Decrypt uses the same function as Chacha20 encrypt and decrypt path is
-     * same.
-     * @param [in] plaintext Input to the Chacha20 Algorithm
-     * @param [in] plaintext_length Input/Output Length of the provided
-     * plaintext/ciphertext
-     * @param [out] ciphertext Output from the Chacha20 Algorithm
-     * @return
-     */
-    alc_error_t processInput(const Uint8 plaintext[],
-                             Uint64      plaintext_length,
-                             Uint8       ciphertext[]);
-
+  private:
     /**
      * @brief Validates Chacha20 Key and returns an error code for invalid Key.
      * @param [in] key Chacha20 key for encryption/decryption
@@ -96,6 +104,7 @@ class ALCP_API_EXPORT ChaCha20
      * @return Error code
      */
     static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
+
     /**
      * @brief Validates Chacha20 Iv and returns an error code for invalid Iv.
      * @param [in] iv Chacha20 iv for encryption/decryption
@@ -104,6 +113,17 @@ class ALCP_API_EXPORT ChaCha20
      * @return Error code
      */
     static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
+
+  public:
+    alc_error_t init(alc_cipher_data_t* ctx,
+                     const Uint8*       pKey,
+                     const Uint64       keyLen,
+                     const Uint8*       pIv,
+                     const Uint64       ivLen);
+
+    alc_error_t processInput(const Uint8 plaintext[],
+                             Uint64      plaintext_length,
+                             Uint8       ciphertext[]);
 
     /**
      * @brief Get the Chacha20 Keystream of @ref key_stream_length for the
@@ -115,5 +135,23 @@ class ALCP_API_EXPORT ChaCha20
     alc_error_t getKeyStream(Uint8  output_key_stream[],
                              Uint64 key_stream_length);
 };
+
+namespace vaes512 {
+    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eVaes512>);
+} // namespace vaes512
+
+// duplicate of vaes512 namespace, to be removed
+namespace vaes {
+    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eReference>);
+} // namespace vaes
+
+// duplicate of vaes512 namespace, to be removed
+namespace aesni {
+    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eReference>);
+} // namespace aesni
+
+namespace ref {
+    CHACHA_CLASS_GEN(ChaCha256, ChaCha20<CpuCipherFeatures::eReference>);
+} // namespace ref
 
 } // namespace alcp::cipher::chacha20

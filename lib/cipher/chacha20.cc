@@ -32,6 +32,36 @@
 
 namespace alcp::cipher::chacha20 {
 
+#define CRYPT_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)                \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
+                                         const Uint8*       pinput,            \
+                                         Uint8*             pOutput,           \
+                                         Uint64             len)               \
+    {                                                                          \
+        alc_error_t err = ALC_ERROR_NONE;                                      \
+        err             = FUNC_NAME(pinput, len, pOutput);                     \
+        return err;                                                            \
+    }
+
+template<CpuCipherFeatures cpu_cipher_feature>
+alc_error_t
+ChaCha20<cpu_cipher_feature>::init(alc_cipher_data_t* ctx,
+                                   const Uint8*       pKey,
+                                   const Uint64       keyLen,
+                                   const Uint8*       pIv,
+                                   const Uint64       ivLen)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    err = setKey(pKey, keyLen);
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
+    err = setIv(pIv, ivLen);
+
+    return err;
+}
+
 template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20<cpu_cipher_feature>::validateKey(const Uint8* key, Uint64 keylen)
@@ -175,5 +205,22 @@ ChaCha20<cpu_cipher_feature>::getKeyStream(Uint8  outputKeyStream[],
 template class ChaCha20<CpuCipherFeatures::eVaes512>;
 template class ChaCha20<CpuCipherFeatures::eReference>;
 template class ChaCha20<CpuCipherFeatures::eDynamic>;
+
+// FIXME: Calling chacha20 dispatch as aesni, vaes, vaes512 is not a good idea.
+namespace aesni {
+    CRYPT_WRAPPER_FUNC(ChaCha256, crypt, processInput);
+}
+
+namespace vaes {
+    CRYPT_WRAPPER_FUNC(ChaCha256, crypt, processInput);
+}
+
+namespace vaes512 {
+    CRYPT_WRAPPER_FUNC(ChaCha256, crypt, processInput);
+}
+
+namespace ref {
+    CRYPT_WRAPPER_FUNC(ChaCha256, crypt, processInput);
+}
 
 } // namespace alcp::cipher::chacha20
