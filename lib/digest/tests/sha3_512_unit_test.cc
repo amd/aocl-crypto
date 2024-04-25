@@ -139,4 +139,32 @@ TEST(Sha3_512_Test, getHashSizeTest)
     EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
 }
 
+TEST(Sha3_512_Test, object_copy_test)
+{
+    string            plaintext("1111");
+    Sha3_512          sha3_512;
+    Uint8             hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream ss, ss_dup;
+
+    sha3_512.init();
+    ASSERT_EQ(
+        sha3_512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        ALC_ERROR_NONE);
+
+    Sha3_512 sha3_512_dup = sha3_512;
+
+    ASSERT_EQ(sha3_512.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_512_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+
+    ss << std::hex << std::setfill('0');
+    ss_dup << std::hex << std::setfill('0');
+    ;
+    for (Uint16 i = 0; i < DigestSize; ++i) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
+    }
+    std::string hash_string = ss.str(), hash_string_dup = ss_dup.str();
+    EXPECT_TRUE(hash_string == hash_string_dup);
+}
+
 } // namespace

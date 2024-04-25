@@ -32,7 +32,7 @@
 
 #include "alcp/digest.h"
 
-static alc_digest_handle_t s_dg_handle;
+static alc_digest_handle_t s_dg_handle, s_dg_handle_dup;
 
 static alc_error_t
 create_demo_session(Uint32 digest_size)
@@ -86,14 +86,51 @@ hash_demo(const Uint8* src,
         }
     }
 
+    // copying context to demonstrate the squeeze functionality
+    // Shake digest supports alcp_digest_shake_squeeze in addition to
+    // alcp_digest_finalize. It allows multiple calls to be made to squeeze
+    // variable length digest output. alcp_digest_finalize() should not be
+    // called after this.
+    Uint64 size             = alcp_digest_context_size();
+    s_dg_handle_dup.context = malloc(size);
+
+    if (!s_dg_handle_dup.context) {
+        printf("Unable to allocate context\n");
+        err = ALC_ERROR_GENERIC;
+        goto out;
+    }
+    err = alcp_digest_context_copy(&s_dg_handle, &s_dg_handle_dup);
+    if (err != ALC_ERROR_NONE) {
+        printf("Unable to copy context\n");
+        goto out;
+    }
+
+    Uint8* output_dup = malloc(out_size);
+    for (Uint16 i = 0; i < out_size; i++) {
+        err = alcp_digest_shake_squeeze(&s_dg_handle_dup, output_dup + i, 1);
+        if (err != ALC_ERROR_NONE) {
+            printf("Unable to squeeze\n");
+            goto out;
+        }
+    }
+
     err = alcp_digest_finalize(&s_dg_handle, output, out_size);
     if (err != ALC_ERROR_NONE) {
         printf("Unable to copy digest\n");
+        goto out;
+    }
+
+    if (memcmp(output_dup, output, out_size)) {
+        printf("squeeze operation failed\n");
+        err = ALC_ERROR_GENERIC;
     }
 
 out:
     alcp_digest_finish(&s_dg_handle);
+    alcp_digest_finish(&s_dg_handle_dup);
     free(s_dg_handle.context);
+    free(s_dg_handle_dup.context);
+    free(output_dup);
     return err;
 }
 

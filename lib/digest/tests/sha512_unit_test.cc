@@ -214,4 +214,31 @@ TEST(Sha512Test, Sha512_256_getHashSizeTest)
     EXPECT_EQ(sha512.getHashSize() * 8, 256U);
 }
 
+TEST(Sha512Test, object_copy_test)
+{
+    string            plaintext("1111");
+    Sha512            sha512;
+    Uint8             hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream ss, ss_dup;
+
+    sha512.init();
+    ASSERT_EQ(sha512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
+
+    Sha512 sha512_dup = sha512;
+
+    ASSERT_EQ(sha512.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha512_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+
+    ss << std::hex << std::setfill('0');
+    ss_dup << std::hex << std::setfill('0');
+    ;
+    for (Uint16 i = 0; i < DigestSize; ++i) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
+    }
+    std::string hash_string = ss.str(), hash_string_dup = ss_dup.str();
+    EXPECT_TRUE(hash_string == hash_string_dup);
+}
+
 } // namespace

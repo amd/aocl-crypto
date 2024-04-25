@@ -142,5 +142,31 @@ TEST(Sha384Test, getHashSizeTest)
     Sha384 sha384;
     EXPECT_EQ(sha384.getHashSize(), DigestSize);
 }
+TEST(Sha384Test, object_copy_test)
+{
+    string            plaintext("1111");
+    Sha384            sha384;
+    Uint8             hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream ss, ss_dup;
+
+    sha384.init();
+    ASSERT_EQ(sha384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
+
+    Sha384 sha384_dup = sha384;
+
+    ASSERT_EQ(sha384.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha384_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+
+    ss << std::hex << std::setfill('0');
+    ss_dup << std::hex << std::setfill('0');
+    ;
+    for (Uint16 i = 0; i < DigestSize; ++i) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
+    }
+    std::string hash_string = ss.str(), hash_string_dup = ss_dup.str();
+    EXPECT_TRUE(hash_string == hash_string_dup);
+}
 
 } // namespace
