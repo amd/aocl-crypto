@@ -87,6 +87,10 @@ hash_demo(const Uint8* src,
     }
 
     // copying context to demonstrate the squeeze functionality
+    // Shake digest supports alcp_digest_shake_squeeze in addition to
+    // alcp_digest_finalize. It allows multiple calls to be made to squeeze
+    // variable length digest output. alcp_digest_finalize() should not be
+    // called after this.
     Uint64 size             = alcp_digest_context_size();
     s_dg_handle_dup.context = malloc(size);
 
