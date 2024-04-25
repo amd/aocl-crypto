@@ -81,7 +81,7 @@ GetDigestStr(_alc_digest_type digest_type)
 }
 
 void
-Digest_KAT(alc_digest_info_t info)
+Digest_KAT(alc_digest_info_t info, int ctx_reuse)
 {
     Uint8              Temp = 0;
     alcp_digest_data_t data;
@@ -162,9 +162,11 @@ Digest_KAT(alc_digest_info_t info)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
-            if (!db->context_copy()) {
-                std::cout << "Error: Digest base init failed" << std::endl;
-                FAIL();
+            if (ctx_reuse == ALCP_TEST_DIGEST_CTX_COPY) {
+                if (!db->context_copy()) {
+                    std::cout << "Error: Digest base init failed" << std::endl;
+                    FAIL();
+                }
             }
             if (!db->digest_function(data)) {
                 std::cout << "Error: Digest function failed" << std::endl;
