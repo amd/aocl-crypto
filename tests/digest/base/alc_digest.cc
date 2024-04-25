@@ -104,6 +104,32 @@ AlcpDigestBase::~AlcpDigestBase()
 }
 
 bool
+AlcpDigestBase::context_copy()
+{
+    alc_error_t err;
+    m_handle_dup          = new alc_digest_handle_t;
+    m_handle_dup->context = malloc(alcp_digest_context_size());
+    err                   = alcp_digest_context_copy(m_handle, m_handle_dup);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_digest_context_copy:" << err
+                  << std::endl;
+        return false;
+    }
+    std::swap(m_handle, m_handle_dup);
+    /* now free dup handle */
+    if (m_handle_dup != nullptr) {
+        alcp_digest_finish(m_handle_dup);
+        if (m_handle_dup->context != nullptr) {
+            free(m_handle_dup->context);
+            m_handle_dup->context = nullptr;
+        }
+        delete m_handle_dup;
+        m_handle_dup = nullptr;
+    }
+    return true;
+}
+
+bool
 AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     alc_error_t err;

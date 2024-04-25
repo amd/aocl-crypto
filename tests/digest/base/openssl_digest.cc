@@ -109,6 +109,12 @@ OpenSSLDigestBase::init()
 }
 
 bool
+OpenSSLDigestBase::context_copy()
+{
+    return true;
+}
+
+bool
 OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     unsigned int outsize = 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,16 +29,18 @@
 #include "alcp/alcp.h"
 #include "alcp/digest.h"
 #include "digest/digest.hh"
+#include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <malloc.h>
 #include <vector>
-
 #pragma once
 
 namespace alcp::testing {
 class AlcpDigestBase : public DigestBase
 {
     alc_digest_handle_t* m_handle     = {};
+    alc_digest_handle_t* m_handle_dup = {};
     alc_digest_info_t    m_info       = {};
     Uint8*               m_message    = {};
     Uint8*               m_digest     = {};
@@ -53,6 +55,8 @@ class AlcpDigestBase : public DigestBase
     bool init();
 
     ~AlcpDigestBase();
+
+    bool context_copy();
 
     bool digest_function(const alcp_digest_data_t& data);
     /* Resets the context back to initial condition, reuse context */

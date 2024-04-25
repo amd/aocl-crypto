@@ -97,6 +97,12 @@ IPPDigestBase::init()
 }
 
 bool
+IPPDigestBase::context_copy()
+{
+    return true;
+}
+
+bool
 IPPDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     IppStatus status = ippStsNoErr;
@@ -117,6 +123,7 @@ IPPDigestBase::digest_function(const alcp_digest_data_t& data)
 
 void
 IPPDigestBase::reset()
-{}
+{
+}
 
 } // namespace alcp::testing

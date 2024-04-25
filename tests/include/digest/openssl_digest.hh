@@ -43,7 +43,8 @@
 namespace alcp::testing {
 class OpenSSLDigestBase : public DigestBase
 {
-    EVP_MD_CTX*       m_handle = nullptr;
+    EVP_MD_CTX*       m_handle     = nullptr;
+    EVP_MD_CTX*       m_handle_dup = nullptr;
     alc_digest_info_t m_info{};
     Uint8*            m_message    = nullptr;
     Uint8*            m_digest     = nullptr;
@@ -65,6 +66,7 @@ class OpenSSLDigestBase : public DigestBase
     bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
+    bool context_copy();
     bool digest_function(const alcp_digest_data_t& data);
     void reset();
 };

@@ -162,6 +162,10 @@ Digest_KAT(alc_digest_info_t info)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
+            if (!db->context_copy()) {
+                std::cout << "Error: Digest base init failed" << std::endl;
+                FAIL();
+            }
             if (!db->digest_function(data)) {
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
@@ -193,6 +197,10 @@ Digest_KAT(alc_digest_info_t info)
             }
 
             if (!db->init(info, data.m_digest_len)) {
+                std::cout << "Error: Digest base init failed" << std::endl;
+                FAIL();
+            }
+            if (!db->context_copy()) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
