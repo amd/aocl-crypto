@@ -112,7 +112,7 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
     priv_key_radix32[51] = carry;
 
     static bool zen2_available = CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
 
     if (zen3_available) {
         zen3::AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
@@ -147,7 +147,7 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
     }
 
     static bool zen2_available = CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()  || CpuId::cpuIsZen5();
 
     if (zen3_available) {
         zen3::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);

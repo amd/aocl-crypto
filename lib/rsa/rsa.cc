@@ -214,7 +214,7 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 
     // FIXME: We should probably use flag base dispatching than ZENVER dispatch
     //        as this kind of dispatch will pick reference in non AMD machines.
-    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen4_available = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
@@ -265,7 +265,7 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 
     // FIXME: We should probably use flag base dispatching than ZENVER dispatch
     //        as this kind of dispatch will pick reference in non AMD machines.
-    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen4_available = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
@@ -763,7 +763,7 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     ConvertToBigNum(mod, m_pub_key.m_mod, size);
     m_pub_key.m_size           = size / 8;
     m_key_size                 = size;
-    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen4_available = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen_available_flags =
@@ -816,7 +816,7 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
     ConvertToBigNum(mod, m_priv_key.m_mod, size * 2);
     m_priv_key.m_size = size / 8;
 
-    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen4_available = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen_available_flags =

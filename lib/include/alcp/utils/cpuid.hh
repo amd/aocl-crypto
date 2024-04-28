@@ -65,6 +65,7 @@ enum class CpuZenVer
     ZEN2 = 1,
     ZEN3 = 2,
     ZEN4 = 3,
+    ZEN5 = 4,
 };
 
 // using alci::Cpu;
@@ -198,6 +199,13 @@ class ALCP_API_EXPORT CpuId
      * @return false
      */
     static bool cpuIsZen4();
+    /**
+     * @brief Returns true if currently executing cpu is Zen5
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuIsZen5();
 
   private:
     class Impl;

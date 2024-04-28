@@ -73,5 +73,6 @@
 #cmakedefine ALCP_CPUID_FORCE_ZEN2
 #cmakedefine ALCP_CPUID_FORCE_ZEN3
 #cmakedefine ALCP_CPUID_FORCE_ZEN4
+#cmakedefine ALCP_CPUID_FORCE_ZEN5
 
 #endif /* _INCLUDE_CONFIG_H */

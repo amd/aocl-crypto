@@ -113,6 +113,7 @@ checkAMDSupport()
     printBoolMsg("ZEN2", CpuId::cpuIsZen2());
     printBoolMsg("ZEN3", CpuId::cpuIsZen3());
     printBoolMsg("ZEN4", CpuId::cpuIsZen4());
+    printBoolMsg("ZEN5", CpuId::cpuIsZen5());
 }
 
 int

@@ -167,7 +167,7 @@ alc_error_t
 Sha2_512<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
 {
     static bool cpu_is_zen3 = CpuId::cpuIsZen3();
-    static bool cpu_is_zen4 = CpuId::cpuIsZen4();
+    static bool cpu_is_zen4 = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
 
     /* we need len to be multiple of cChunkSize */
     assert((len & cChunkSizeMask) == 0);

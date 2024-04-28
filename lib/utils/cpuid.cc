@@ -175,6 +175,13 @@ class CpuId::Impl
      * @return false
      */
     bool cpuIsZen4();
+    /**
+     * @brief Returns true if currently executing cpu is Zen5
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuIsZen5();
 
     bool ensureCpuArch(CpuZenVer cpuZenVer);
 };
@@ -428,6 +435,21 @@ CpuId::Impl::cpuIsZen4()
     return state;
 #endif
 }
+bool
+CpuId::Impl::cpuIsZen5()
+{
+#if defined(ALCP_CPUID_FORCE)
+    static bool flag = ensureCpuArch(CpuZenVer::ZEN5);
+    return flag;
+#else
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu.isUarch(Uarch::eZen5);
+#else
+    static bool state = false;
+#endif
+    return state;
+#endif
+}
 
 bool
 CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
@@ -437,6 +459,7 @@ CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
     bool zen2_flag = Impl::m_cpu.isUarch(Uarch::eZen2);
     bool zen3_flag = Impl::m_cpu.isUarch(Uarch::eZen3);
     bool zen4_flag = Impl::m_cpu.isUarch(Uarch::eZen4);
+    bool zen5_flag = Impl::m_cpu.isUarch(Uarch::eZen5);
 #else
     // Default dispatch is to Zen2
     // If this condition is setup, you can never force it to zen3 or zen4
@@ -445,22 +468,27 @@ CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
     bool zen2_flag = true;
     bool zen3_flag = false;
     bool zen4_flag = false;
+    bool zen5_flag = false;
 #endif
 #if defined(ALCP_CPUID_FORCE)
-#if defined(ALCP_CPUID_FORCE_ZEN4)
-    if (zen4_flag) {
+#if defined(ALCP_CPUID_FORCE_ZEN5)
+    if (zen5_flag) {
+        return (cpuZenVer == CpuZenVer::ZEN5);
+    }
+#elif defined(ALCP_CPUID_FORCE_ZEN4)
+    if (zen4_flag || zen5_flag) {
         return (cpuZenVer == CpuZenVer::ZEN4);
     }
 #elif defined(ALCP_CPUID_FORCE_ZEN3)
-    if (zen3_flag || zen4_flag) {
+    if (zen3_flag || zen4_flag || zen5_flag) {
         return (cpuZenVer == CpuZenVer::ZEN3);
     }
 #elif defined(ALCP_CPUID_FORCE_ZEN2)
-    if (zen2_flag || zen3_flag || zen4_flag) {
+    if (zen2_flag || zen3_flag || zen4_flag || zen5_flag) {
         return (cpuZenVer == CpuZenVer::ZEN2);
     }
 #elif defined(ALCP_CPUID_FORCE_ZEN)
-    if (zen1_flag || zen2_flag || zen3_flag || zen4_flag) {
+    if (zen1_flag || zen2_flag || zen3_flag || zen4_flag || zen5_flag) {
         return (cpuZenVer == CpuZenVer::ZEN);
     }
 #else
@@ -476,6 +504,9 @@ CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
     }
 #endif
     switch (cpuZenVer) {
+        case CpuZenVer::ZEN5:
+            return zen5_flag;
+
         case CpuZenVer::ZEN4:
             return zen4_flag;
 
@@ -585,6 +616,12 @@ bool
 CpuId::cpuIsZen4()
 {
     return pImpl.get()->cpuIsZen4();
+}
+
+bool
+CpuId::cpuIsZen5()
+{
+    return pImpl.get()->cpuIsZen5();
 }
 
 } // namespace alcp::utils
