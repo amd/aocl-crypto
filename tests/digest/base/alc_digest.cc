@@ -107,6 +107,11 @@ bool
 AlcpDigestBase::context_copy()
 {
     alc_error_t err;
+    /* skip ctx copy if handle is null, and there is no ctx to copy */
+    if (m_handle == nullptr || m_handle->context == nullptr) {
+        std::cout << "Context is null, skipping context copy" << std::endl;
+        return true;
+    }
     m_handle_dup          = new alc_digest_handle_t;
     m_handle_dup->context = malloc(alcp_digest_context_size());
     err                   = alcp_digest_context_copy(m_handle, m_handle_dup);

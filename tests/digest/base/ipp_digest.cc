@@ -100,7 +100,12 @@ bool
 IPPDigestBase::context_copy()
 {
     IppStatus status = ippStsNoErr;
-    status           = ippsHashDuplicate_rmf(m_handle, m_handle_dup);
+    /* skip ctx copy if handle is null, and there is no ctx to copy */
+    if (m_handle == nullptr) {
+        std::cout << "Context is null, skipping context copy" << std::endl;
+        return true;
+    }
+    status = ippsHashDuplicate_rmf(m_handle, m_handle_dup);
     if (status != ippStsNoErr) {
         std::cout << "Error code in ippsHashUpdate_rmf: " << status
                   << std::endl;

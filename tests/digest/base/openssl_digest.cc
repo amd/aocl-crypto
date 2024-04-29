@@ -111,6 +111,11 @@ OpenSSLDigestBase::init()
 bool
 OpenSSLDigestBase::context_copy()
 {
+    /* skip ctx copy if handle is null, and there is no ctx to copy */
+    if (m_handle == nullptr) {
+        std::cout << "Context is null, skipping context copy" << std::endl;
+        return true;
+    }
     /* create dup ctx and copy context */
     m_handle_dup = EVP_MD_CTX_new();
     if (EVP_MD_CTX_copy_ex(m_handle_dup, m_handle) != 1) {
