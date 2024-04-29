@@ -115,14 +115,13 @@ AlcpDigestBase::context_copy()
     m_handle_dup          = new alc_digest_handle_t;
     m_handle_dup->context = malloc(alcp_digest_context_size());
     err                   = alcp_digest_context_copy(m_handle, m_handle_dup);
-    if (alcp_is_error(err) || m_handle_dup == nullptr) {
+    if (alcp_is_error(err) || m_handle_dup == nullptr
+        || m_handle_dup->context == nullptr) {
         std::cout << "Error code in alcp_digest_context_copy:" << err
                   << std::endl;
         alcp_digest_finish(m_handle_dup);
-        if (m_handle_dup->context != nullptr) {
-            free(m_handle_dup->context);
-            m_handle_dup->context = nullptr;
-        }
+        free(m_handle_dup->context);
+        m_handle_dup->context = nullptr;
         delete m_handle_dup;
         m_handle_dup = nullptr;
         return false;
@@ -131,10 +130,8 @@ AlcpDigestBase::context_copy()
 
     /* now free dup handle */
     alcp_digest_finish(m_handle_dup);
-    if (m_handle_dup->context != nullptr) {
-        free(m_handle_dup->context);
-        m_handle_dup->context = nullptr;
-    }
+    free(m_handle_dup->context);
+    m_handle_dup->context = nullptr;
     delete m_handle_dup;
     m_handle_dup = nullptr;
 
