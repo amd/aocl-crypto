@@ -301,9 +301,7 @@ alcp_cipher_context_size(void);
  * @param [in]    keyLen           key length in bits
  * @param [out]   pCipherHandle    Library populated session handle for future
  * cipher operations.
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
+ * @return   &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_request(const alc_cipher_mode_t cipherMode,
@@ -347,9 +345,7 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
  * @param[in]    datalen           Length of cipher/plain text
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
+ * @return   &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
@@ -372,9 +368,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
  * @param[in]    datalen           Length of cipher/plain text
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
+ * @return   &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
@@ -402,9 +396,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  * @param[out]   pCipherText   Pointer to Cipher Text
  * @param[in]    currPlainTextLen Length of the given plaintext
  * @param[in]    startBlockNum Start block number of given plaintext
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
+ * @return   &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
@@ -433,9 +425,7 @@ alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
  * @param[in]    pCipherText   Pointer to Cipher Text
  * @param[in]    startBlockNum    Start block number of given plaintext
  * @param[in]    currCipherTextLen    Length of the given Cipher Text
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
+ * @return   &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
@@ -460,21 +450,6 @@ alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
  */
 ALCP_API_EXPORT void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
-
-/**
- * @brief   Get a copy of the error string for cipher operations.
- * @parblock <br> &nbsp;
- * <b> This API is called to get the error string. It should be called after
- * @ref alcp_cipher_request and before @ref alcp_cipher_finish </b>
- * @endparblock
- * @param [in] pCipherHandle Session handle for cipher operation
- * @param [out] pBuff  Destination Buffer to which Error String will be copied
- * @param [in] size    Length of the Buffer.
- *
- * @return alc_error_t Error code to validate the Handle
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_error(alc_cipher_handle_p pCipherHandle, Uint8* pBuff, Uint64 size);
 
 EXTERN_C_END
 
