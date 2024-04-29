@@ -86,8 +86,15 @@ aes_dupctx(void* ctx)
     return ret;
 }
 
+// dummy function
+bool
+alcp_prov_is_running(void)
+{
+    return true;
+}
+
 /* ossl_aes256cbc_functions */
-#if 1 // for debugging
+#if 1 // for debugging, to be removed.
 static OSSL_FUNC_cipher_get_params_fn aes_256_cbc_get_params;
 static int
 aes_256_cbc_get_params(OSSL_PARAM params[])
@@ -95,13 +102,6 @@ aes_256_cbc_get_params(OSSL_PARAM params[])
     return ALCP_prov_cipher_generic_get_params(params, 0x2, 0, 256, 128, 128);
 }
 static OSSL_FUNC_cipher_newctx_fn aes_256_cbc_newctx;
-
-// dummy function
-bool
-alcp_prov_is_running(void)
-{
-    return true;
-}
 
 static void*
 aes_256_cbc_newctx(void* provctx)
