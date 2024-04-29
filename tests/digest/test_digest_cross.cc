@@ -42,7 +42,7 @@ TEST(DIGEST_SHA3, CROSS_SHAKE128)
     info.dt_mode = ALC_SHAKE_128;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
-    Digest_Cross(128, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(128, info, false);
 }
 TEST(DIGEST_SHA3, CROSS_SHAKE128_CTX_COPY)
 {
@@ -52,7 +52,7 @@ TEST(DIGEST_SHA3, CROSS_SHAKE128_CTX_COPY)
     info.dt_mode = ALC_SHAKE_128;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
-    Digest_Cross(128, info, ALCP_TEST_DIGEST_CTX_COPY);
+    Digest_Cross(128, info, true);
 }
 
 TEST(DIGEST_SHA3, CROSS_SHAKE256)
@@ -63,7 +63,7 @@ TEST(DIGEST_SHA3, CROSS_SHAKE256)
     info.dt_mode = ALC_SHAKE_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_256;
-    Digest_Cross(256, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(256, info, false);
 }
 
 /* SHA2 cross tests */
@@ -73,7 +73,7 @@ TEST(DIGEST_SHA2, CROSS_224)
     info.dt_mode = ALC_SHA2_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(224, info, false);
 }
 TEST(DIGEST_SHA2, CROSS_224_CTX_COPY)
 {
@@ -83,7 +83,7 @@ TEST(DIGEST_SHA2, CROSS_224_CTX_COPY)
     info.dt_mode = ALC_SHA2_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info, ALCP_TEST_DIGEST_CTX_COPY);
+    Digest_Cross(224, info, true);
 }
 
 TEST(DIGEST_SHA2, CROSS_256)
@@ -92,7 +92,7 @@ TEST(DIGEST_SHA2, CROSS_256)
     info.dt_mode = ALC_SHA2_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(256, info, false);
 }
 TEST(DIGEST_SHA2, CROSS_384)
 {
@@ -100,7 +100,7 @@ TEST(DIGEST_SHA2, CROSS_384)
     info.dt_mode = ALC_SHA2_384;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_384;
-    Digest_Cross(384, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(384, info, false);
 }
 TEST(DIGEST_SHA2, CROSS_512)
 {
@@ -108,7 +108,7 @@ TEST(DIGEST_SHA2, CROSS_512)
     info.dt_mode = ALC_SHA2_512;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_512;
-    Digest_Cross(512, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(512, info, false);
 }
 /* truncated sha512 variants */
 TEST(DIGEST_SHA2, CROSS_512_224)
@@ -117,7 +117,7 @@ TEST(DIGEST_SHA2, CROSS_512_224)
     info.dt_mode = ALC_SHA2_512_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(224, info, false);
 }
 TEST(DIGEST_SHA2, CROSS_512_256)
 {
@@ -125,7 +125,7 @@ TEST(DIGEST_SHA2, CROSS_512_256)
     info.dt_mode = ALC_SHA2_512_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(256, info, false);
 }
 
 /* SHA3 cross tests */
@@ -139,7 +139,7 @@ TEST(DIGEST_SHA3, CROSS_224)
     info.dt_mode = ALC_SHA3_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(224, info, false);
 }
 TEST(DIGEST_SHA3, CROSS_224_CTX_COPY)
 {
@@ -149,7 +149,7 @@ TEST(DIGEST_SHA3, CROSS_224_CTX_COPY)
     info.dt_mode = ALC_SHA3_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info, ALCP_TEST_DIGEST_CTX_COPY);
+    Digest_Cross(224, info, true);
 }
 
 TEST(DIGEST_SHA3, CROSS_256)
@@ -160,7 +160,7 @@ TEST(DIGEST_SHA3, CROSS_256)
     info.dt_mode = ALC_SHA3_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(256, info, false);
 }
 TEST(DIGEST_SHA3, CROSS_384)
 {
@@ -171,7 +171,7 @@ TEST(DIGEST_SHA3, CROSS_384)
     info.dt_mode = ALC_SHA3_384;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_384;
-    Digest_Cross(384, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(384, info, false);
 }
 TEST(DIGEST_SHA3, CROSS_512)
 {
@@ -182,7 +182,7 @@ TEST(DIGEST_SHA3, CROSS_512)
     info.dt_mode = ALC_SHA3_512;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_512;
-    Digest_Cross(512, info, ALCP_TEST_DIGEST_CTX_REUSE);
+    Digest_Cross(512, info, false);
 }
 
 int

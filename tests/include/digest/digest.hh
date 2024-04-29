@@ -35,9 +35,6 @@
 
 namespace alcp::testing {
 
-#define ALCP_TEST_DIGEST_CTX_REUSE 0
-#define ALCP_TEST_DIGEST_CTX_COPY  1
-
 struct alcp_digest_data_t
 {
     const Uint8* m_msg        = nullptr;

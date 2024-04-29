@@ -81,7 +81,7 @@ GetDigestStr(_alc_digest_type digest_type)
 }
 
 void
-Digest_KAT(alc_digest_info_t info, int ctx_reuse)
+Digest_KAT(alc_digest_info_t info, bool ctx_copy)
 {
     Uint8              Temp = 0;
     alcp_digest_data_t data;
@@ -162,7 +162,7 @@ Digest_KAT(alc_digest_info_t info, int ctx_reuse)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
-            if (ctx_reuse == ALCP_TEST_DIGEST_CTX_COPY) {
+            if (ctx_copy) {
                 if (!db->context_copy()) {
                     std::cout << "Error: Digest base context_copy failed"
                               << std::endl;
@@ -203,7 +203,7 @@ Digest_KAT(alc_digest_info_t info, int ctx_reuse)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
-            if (ctx_reuse == ALCP_TEST_DIGEST_CTX_COPY) {
+            if (ctx_copy) {
                 if (!db->context_copy()) {
                     std::cout << "Error: Digest base context_copy failed"
                               << std::endl;
@@ -231,7 +231,7 @@ Digest_KAT(alc_digest_info_t info, int ctx_reuse)
 
 /* Digest Cross tests */
 void
-Digest_Cross(int HashSize, alc_digest_info_t info, int ctx_reuse)
+Digest_Cross(int HashSize, alc_digest_info_t info, bool ctx_copy)
 {
     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
     std::vector<Uint8> digestExt(HashSize / 8, 0);
@@ -304,7 +304,7 @@ Digest_Cross(int HashSize, alc_digest_info_t info, int ctx_reuse)
         if (verbose > 1)
             PrintDigestTestData(data_alc, GetDigestStr(info.dt_type));
 
-        if (ctx_reuse == ALCP_TEST_DIGEST_CTX_COPY) {
+        if (ctx_copy) {
             if (!db->context_copy()) {
                 std::cout << "Error: Digest base context_copy failed"
                           << std::endl;
@@ -324,7 +324,7 @@ Digest_Cross(int HashSize, alc_digest_info_t info, int ctx_reuse)
         if (verbose > 1)
             PrintDigestTestData(data_ext, GetDigestStr(info.dt_type));
 
-        if (ctx_reuse == ALCP_TEST_DIGEST_CTX_COPY) {
+        if (ctx_copy) {
             if (!extDb->context_copy()) {
                 std::cout << "Error: Digest base context_copy failed"
                           << std::endl;
