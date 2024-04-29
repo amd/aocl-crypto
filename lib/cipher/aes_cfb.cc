@@ -39,51 +39,123 @@ namespace alcp::cipher {
 
 // cfb uses encKey for both encrypt and decrypt
 namespace vaes512 {
-    CRYPT_WRAPPER_FUNC(
-        Cfb128, encrypt, aesni::EncryptCfb128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
-        Cfb192, encrypt, aesni::EncryptCfb192, m_cipher_key_data.m_enc_key, 12)
-    CRYPT_WRAPPER_FUNC(
-        Cfb256, encrypt, aesni::EncryptCfb256, m_cipher_key_data.m_enc_key, 14)
+    CRYPT_WRAPPER_FUNC(Cfb128,
+                       encrypt,
+                       aesni::EncryptCfb128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_ENC)
+    CRYPT_WRAPPER_FUNC(Cfb192,
+                       encrypt,
+                       aesni::EncryptCfb192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_ENC)
+    CRYPT_WRAPPER_FUNC(Cfb256,
+                       encrypt,
+                       aesni::EncryptCfb256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_ENC)
 
-    CRYPT_WRAPPER_FUNC(
-        Cfb128, decrypt, DecryptCfb128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
-        Cfb192, decrypt, DecryptCfb192, m_cipher_key_data.m_enc_key, 12)
-    CRYPT_WRAPPER_FUNC(
-        Cfb256, decrypt, DecryptCfb256, m_cipher_key_data.m_enc_key, 14)
+    CRYPT_WRAPPER_FUNC(Cfb128,
+                       decrypt,
+                       DecryptCfb128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_DEC)
+    CRYPT_WRAPPER_FUNC(Cfb192,
+                       decrypt,
+                       DecryptCfb192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_DEC)
+    CRYPT_WRAPPER_FUNC(Cfb256,
+                       decrypt,
+                       DecryptCfb256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_DEC)
 } // namespace vaes512
 
 namespace vaes {
-    CRYPT_WRAPPER_FUNC(
-        Cfb128, encrypt, aesni::EncryptCfb128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
-        Cfb192, encrypt, aesni::EncryptCfb192, m_cipher_key_data.m_enc_key, 12)
-    CRYPT_WRAPPER_FUNC(
-        Cfb256, encrypt, aesni::EncryptCfb256, m_cipher_key_data.m_enc_key, 14)
+    CRYPT_WRAPPER_FUNC(Cfb128,
+                       encrypt,
+                       aesni::EncryptCfb128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_ENC)
+    CRYPT_WRAPPER_FUNC(Cfb192,
+                       encrypt,
+                       aesni::EncryptCfb192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_ENC)
+    CRYPT_WRAPPER_FUNC(Cfb256,
+                       encrypt,
+                       aesni::EncryptCfb256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_ENC)
 
-    CRYPT_WRAPPER_FUNC(
-        Cfb128, decrypt, DecryptCfb128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
-        Cfb192, decrypt, DecryptCfb192, m_cipher_key_data.m_enc_key, 12)
-    CRYPT_WRAPPER_FUNC(
-        Cfb256, decrypt, DecryptCfb256, m_cipher_key_data.m_enc_key, 14)
+    CRYPT_WRAPPER_FUNC(Cfb128,
+                       decrypt,
+                       DecryptCfb128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_DEC)
+    CRYPT_WRAPPER_FUNC(Cfb192,
+                       decrypt,
+                       DecryptCfb192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_DEC)
+    CRYPT_WRAPPER_FUNC(Cfb256,
+                       decrypt,
+                       DecryptCfb256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_DEC)
 } // namespace vaes
 
 namespace aesni {
-    CRYPT_WRAPPER_FUNC(
-        Cfb128, encrypt, EncryptCfb128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
-        Cfb192, encrypt, EncryptCfb192, m_cipher_key_data.m_enc_key, 12)
-    CRYPT_WRAPPER_FUNC(
-        Cfb256, encrypt, EncryptCfb256, m_cipher_key_data.m_enc_key, 14)
+    CRYPT_WRAPPER_FUNC(Cfb128,
+                       encrypt,
+                       EncryptCfb128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_ENC)
+    CRYPT_WRAPPER_FUNC(Cfb192,
+                       encrypt,
+                       EncryptCfb192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_ENC)
+    CRYPT_WRAPPER_FUNC(Cfb256,
+                       encrypt,
+                       EncryptCfb256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_ENC)
 
-    CRYPT_WRAPPER_FUNC(
-        Cfb128, decrypt, DecryptCfb128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_WRAPPER_FUNC(
-        Cfb192, decrypt, DecryptCfb192, m_cipher_key_data.m_enc_key, 12)
-    CRYPT_WRAPPER_FUNC(
-        Cfb256, decrypt, DecryptCfb256, m_cipher_key_data.m_enc_key, 14)
+    CRYPT_WRAPPER_FUNC(Cfb128,
+                       decrypt,
+                       DecryptCfb128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_DEC)
+    CRYPT_WRAPPER_FUNC(Cfb192,
+                       decrypt,
+                       DecryptCfb192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_DEC)
+    CRYPT_WRAPPER_FUNC(Cfb256,
+                       decrypt,
+                       DecryptCfb256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_DEC)
 } // namespace aesni
 
 } // namespace alcp::cipher

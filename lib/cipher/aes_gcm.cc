@@ -136,8 +136,7 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 #if PROVIDER_CHANGES // During decrypt, tag generated should be compared with
                      // input Tag.
     Uint8 tagInput[ALCP_GCM_TAG_MAX_SIZE];
-    if (!ctx->enc) { // FIXME: encrypt or decrypt state should be maintained
-                     // with the gcm class
+    if (!m_isEnc_aes) {
         // create a copy of input
         memcpy(tagInput, ptag, tagLen);
     }
@@ -154,10 +153,10 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 
 #if PROVIDER_CHANGES // During decrypt, tag generated should be compared with
                      // input Tag.
-    if (!ctx->enc) { // FIXME: encrypt or decrypt state should be maintained
-                     // with the gcm class
+    if (!m_isEnc_aes) {
         if (memcmp(ptag, tagInput, tagLen)) {
             printf("\n Error: Tag mismatch");
+            // clear data
             return ALC_ERROR_TAG_MISMATCH;
         }
     }
@@ -168,7 +167,7 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 
 // this wrapper to be refined further.
 #define CRYPT_AEAD_WRAPPER_FUNC(                                               \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)             \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
                                          const Uint8*       pinput,            \
                                          Uint8*             pOutput,           \
@@ -176,6 +175,7 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         m_dataLen += len;                                                      \
+        m_isEnc_aes = IS_ENC;                                                  \
         /*printf(" datalen %ld ", len);*/                                      \
         bool isFirstUpdate = false;                                            \
         if (len == m_dataLen) {                                                \
@@ -201,37 +201,43 @@ namespace vaes512 {
                             decryptUpdate,
                             decryptGcm128,
                             m_cipher_key_data.m_enc_key,
-                            10)
+                            10,
+                            ALCP_DEC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD192,
                             decryptUpdate,
                             decryptGcm192,
                             m_cipher_key_data.m_enc_key,
-                            12)
+                            12,
+                            ALCP_DEC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD256,
                             decryptUpdate,
                             decryptGcm256,
                             m_cipher_key_data.m_enc_key,
-                            14)
+                            14,
+                            ALCP_DEC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD128,
                             encryptUpdate,
                             encryptGcm128,
                             m_cipher_key_data.m_enc_key,
-                            10)
+                            10,
+                            ALCP_ENC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD192,
                             encryptUpdate,
                             encryptGcm192,
                             m_cipher_key_data.m_enc_key,
-                            12)
+                            12,
+                            ALCP_ENC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD256,
                             encryptUpdate,
                             encryptGcm256,
                             m_cipher_key_data.m_enc_key,
-                            14)
+                            14,
+                            ALCP_ENC)
 
 } // namespace vaes512
 
@@ -240,37 +246,43 @@ namespace vaes {
                             decryptUpdate,
                             decryptGcm128,
                             m_cipher_key_data.m_enc_key,
-                            10)
+                            10,
+                            ALCP_DEC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD192,
                             decryptUpdate,
                             decryptGcm192,
                             m_cipher_key_data.m_enc_key,
-                            12)
+                            12,
+                            ALCP_DEC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD256,
                             decryptUpdate,
                             decryptGcm256,
                             m_cipher_key_data.m_enc_key,
-                            14)
+                            14,
+                            ALCP_DEC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD128,
                             encryptUpdate,
                             encryptGcm128,
                             m_cipher_key_data.m_enc_key,
-                            10)
+                            10,
+                            ALCP_ENC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD192,
                             encryptUpdate,
                             encryptGcm192,
                             m_cipher_key_data.m_enc_key,
-                            12)
+                            12,
+                            ALCP_ENC)
 
     CRYPT_AEAD_WRAPPER_FUNC(GcmAEAD256,
                             encryptUpdate,
                             encryptGcm256,
                             m_cipher_key_data.m_enc_key,
-                            14)
+                            14,
+                            ALCP_ENC)
 
 } // namespace vaes
 
@@ -286,6 +298,7 @@ namespace aesni {
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_dataLen += len;
+        m_isEnc_aes = 0;
         // to be modified to decryptGcm128 function
         err =
             CryptGcm(pInput,
@@ -308,6 +321,7 @@ namespace aesni {
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_dataLen += len;
+        m_isEnc_aes = 0;
         // to be modified to decryptGcm192 function
         err =
             CryptGcm(pInput,
@@ -330,6 +344,7 @@ namespace aesni {
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_dataLen += len;
+        m_isEnc_aes = 0;
         // to be modified to decryptGcm256 function
         err =
             CryptGcm(pInput,
@@ -352,6 +367,7 @@ namespace aesni {
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_dataLen += len;
+        m_isEnc_aes = 1;
         // to be modified to encryptGcm128 function
         err =
             CryptGcm(pInput,
@@ -374,6 +390,7 @@ namespace aesni {
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_dataLen += len;
+        m_isEnc_aes = 1;
         // to be modified to encryptGcm192 function
         err =
             CryptGcm(pInput,
@@ -396,6 +413,7 @@ namespace aesni {
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_dataLen += len;
+        m_isEnc_aes = 1;
         // to be modified to encryptGcm192 function
         err =
             CryptGcm(pInput,

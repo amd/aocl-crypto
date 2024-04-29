@@ -460,27 +460,15 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // get tag
-    err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
+    err = alcp_cipher_aead_get_tag(
+        &handle, tag, tagLen); // feed input encrypt tag to be matched.
     if (alcp_is_error(err)) {
-        printf("Error: unable getting tag \n");
+        memset(plaintxt, 0, len);
+        printf("Error: unable getting tag, Decrypt tag mismatch \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
-    bool isTagMatched = true;
-
-    for (int i = 0; i < tagLen; i++) {
-        if (tagDecrypt[i] != tag[i]) {
-            isTagMatched = isTagMatched & false;
-        }
-    }
-
-    if (isTagMatched == false) {
-        // printf("\n tag mismatched, input encrypted data is not trusthworthy
-        // ");
-        memset(plaintxt, 0, len);
-        return -1;
-    }
     return 0;
 }
 

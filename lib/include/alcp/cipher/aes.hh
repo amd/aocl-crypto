@@ -42,6 +42,9 @@
 
 namespace alcp::cipher {
 
+#define ALCP_ENC 1
+#define ALCP_DEC 0
+
 typedef struct alc_cipher_key_data
 {
     // key expanded
@@ -75,6 +78,7 @@ class Aes : public Rijndael
     Uint64                             m_ivLen_aes    = 16; // default 16 bytes
     Uint32                             m_isKeySet_aes = 0;
     Uint32                             m_ivState_aes  = 0;
+    Uint32                             m_isEnc_aes    = ALCP_ENC;
     Uint64                             m_dataLen      = 0;
 
     Aes(alc_cipher_data_t*
@@ -236,13 +240,14 @@ AES_CLASS_GEN(Ofb, Aes)
 } // namespace alcp::cipher
 
 #define CRYPT_WRAPPER_FUNC(                                                    \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)             \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
                                          const Uint8*       pinput,            \
                                          Uint8*             pOutput,           \
                                          Uint64             len)               \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
+        m_isEnc_aes     = IS_ENC;                                              \
         err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
         return err;                                                            \
     }

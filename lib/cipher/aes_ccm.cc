@@ -39,15 +39,15 @@ namespace alcp::cipher {
 
 // Macros
 // FIXME: Better to use template instead of this.
-#define CRYPT_AEAD_WRAPPER_FUNC(                                               \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, ENCRYPT_FLAG)                         \
+#define CRYPT_AEAD_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, IS_ENC)   \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
                                          const Uint8*       pInput,            \
                                          Uint8*             pOutput,           \
                                          Uint64             len)               \
     {                                                                          \
-        Status s = StatusOk();                                                 \
-        s        = Ccm::FUNC_NAME(pInput, pOutput, len, ENCRYPT_FLAG);         \
+        Status s    = StatusOk();                                              \
+        m_isEnc_aes = IS_ENC;                                                  \
+        s           = Ccm::FUNC_NAME(pInput, pOutput, len, IS_ENC);            \
         return s.code();                                                       \
     } // namespace alcp::cipher
 
@@ -67,8 +67,7 @@ ctrInc(Uint8 ctr[])
 
 Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
-{
-}
+{}
 
 // FIXME: nRounds needs to be constexpr to be more efficient
 Status
@@ -630,36 +629,36 @@ CcmHash::init(alc_cipher_data_t* ctx,
 }
 // Aead class definitions
 namespace vaes512 {
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, ALCP_DEC)
 } // namespace vaes512
 
 namespace vaes {
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, ALCP_DEC)
 } // namespace vaes
 
 namespace aesni {
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decryptUpdate, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decryptUpdate, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, true)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, false)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encryptUpdate, cryptUpdate, ALCP_ENC)
+    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decryptUpdate, cryptUpdate, ALCP_DEC)
 } // namespace aesni
 
 } // namespace alcp::cipher
