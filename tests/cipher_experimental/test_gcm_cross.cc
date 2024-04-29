@@ -89,17 +89,20 @@ GcmCross_KAT(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     data_update.m_output     = &output[0];
     data_update.m_output_len = output.size();
 
+    alc_test_gcm_finalize_data_t data_finalize;
+
     if constexpr (encryptor) { // Encrypt
         data_update.m_input = &datasetPlainText[0];
+        data_finalize.m_tag = &tagbuff[0];
     } else { // Decrypt
         data_update.m_input = &datasetCipherText[0];
+        data_finalize.m_tag = &datasetTag[0]; // encrypt Tag is input for
+                                              // decrypt
     }
     data_update.m_input_len = data.chunkSize;
 
-    alc_test_gcm_finalize_data_t data_finalize;
     data_finalize.m_tag_expected = &datasetTag[0];
     data_finalize.m_tag_len      = datasetTag.size();
-    data_finalize.m_tag          = &tagbuff[0];
     data_finalize.m_out    = data_update.m_output; // If needed for padding
     data_finalize.m_pt_len = datasetPlainText.size();
     data_finalize.verified = false;
@@ -128,11 +131,11 @@ GcmCross_KAT(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
 
     if constexpr (encryptor) { // Encrypt
         ASSERT_EQ(output, datasetCipherText);
+        ASSERT_EQ(tagbuff, datasetTag);
     } else { // Decrypt
         ASSERT_EQ(output, datasetPlainText);
+        // decrypt tag matching is done with getTag api
     }
-
-    ASSERT_EQ(tagbuff, datasetTag);
 }
 
 /**

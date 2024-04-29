@@ -36,8 +36,7 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const alc_cipher_mode_t cMode,
@@ -272,19 +271,37 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
-        err = alcp_cipher_aead_get_tag(
-            m_handle, aead_data.m_tagBuff, aead_data.m_tagl);
-        if (alcp_is_error(err)) {
-            printf("TAG Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
-            return false;
-        }
-        // Tag verification
-        if (std::memcmp(aead_data.m_tag, aead_data.m_tagBuff, aead_data.m_tagl)
-            != 0) {
-            std::cout << "Error: Tag Verification Failed!" << std::endl;
-            return false;
+
+        if (m_cinfo.ci_mode == ALC_AES_MODE_GCM) {
+
+            // Tag verification done in getTag api for gcm, other aead modes to
+            // be made similar to gcm. Encrypt tag is shared has input to
+            // decrypt
+            err = alcp_cipher_aead_get_tag(
+                m_handle, aead_data.m_tag, aead_data.m_tagl);
+            if (alcp_is_error(err)) {
+                printf("TAG Error\n");
+                alcp_error_str(err, err_buff, cErrSize);
+                std::cout << "Error:" << err_buff << std::endl;
+                return false;
+            }
+
+        } else {
+            err = alcp_cipher_aead_get_tag(
+                m_handle, aead_data.m_tagBuff, aead_data.m_tagl);
+            if (alcp_is_error(err)) {
+                printf("TAG Error\n");
+                alcp_error_str(err, err_buff, cErrSize);
+                std::cout << "Error:" << err_buff << std::endl;
+                return false;
+            }
+            // Tag verification
+            if (std::memcmp(
+                    aead_data.m_tag, aead_data.m_tagBuff, aead_data.m_tagl)
+                != 0) {
+                std::cout << "Error: Tag Verification Failed!" << std::endl;
+                return false;
+            }
         }
     }
     return true;

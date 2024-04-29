@@ -1053,7 +1053,12 @@ AesAeadCrosstest(int               keySize,
                     /* Verify only if tag contains valid data */
                     if (!data_alc.m_isTagValid || !data_ext.m_isTagValid) {
                         ASSERT_TRUE(ArraysMatch(out_pt_alc, out_pt_ext));
-                        EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                        if (!(isgcm
+                              && (encDec == DECRYPT))) { // gcm decrypt tag is
+                                                         // validated in getTag
+                                                         // c-api itself
+                            EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                        }
                     }
                 } else if (!(isgcm || isccm)) {
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));

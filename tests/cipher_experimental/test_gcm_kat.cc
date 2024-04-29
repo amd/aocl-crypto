@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -75,18 +75,21 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
         dataUpdate.m_iv_len     = datasetInitvector.size();
         dataUpdate.m_output     = &output[0];
         dataUpdate.m_output_len = output.size();
+
+        alc_test_gcm_finalize_data_t dataFinalize;
         if constexpr (encryptor) { // Encrypt
             dataUpdate.m_input     = &datasetPlainText[0];
             dataUpdate.m_input_len = datasetPlainText.size();
+            dataFinalize.m_tag     = &tagbuff[0];
         } else { // Decrypt
             dataUpdate.m_input     = &datasetCipherText[0];
             dataUpdate.m_input_len = datasetCipherText.size();
+            dataFinalize.m_tag =
+                &tagbuff[0]; // encrypt Tag or expectedTag is input for decrypt
         }
-
-        alc_test_gcm_finalize_data_t dataFinalize;
         dataFinalize.m_tag_expected = &datasetTag[0];
         dataFinalize.m_tag_len      = datasetTag.size();
-        dataFinalize.m_tag          = &tagbuff[0];
+
         dataFinalize.m_out    = dataUpdate.m_output; // If needed for padding
         dataFinalize.m_pt_len = datasetPlainText.size();
         dataFinalize.verified = false;
@@ -97,11 +100,11 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
 
         if constexpr (encryptor) { // Encrypt
             ASSERT_EQ(output, datasetCipherText);
+            ASSERT_EQ(tagbuff, datasetTag);
         } else { // Decrypt
             ASSERT_EQ(output, datasetPlainText);
+            // decrypt tag matching is done with getTag api
         }
-
-        ASSERT_EQ(tagbuff, datasetTag);
     }
 }
 

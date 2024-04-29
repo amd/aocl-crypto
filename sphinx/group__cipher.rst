@@ -24,7 +24,6 @@ Functions
 .. doxygenfunction:: alcp_cipher_blocks_decrypt_xts
 .. doxygenfunction:: alcp_cipher_init
 .. doxygenfunction:: alcp_cipher_finish
-.. doxygenfunction:: alcp_cipher_error
 .. doxygenfunction:: alcp_cipher_aead_context_size
 .. doxygenfunction:: alcp_cipher_aead_request
 .. doxygenfunction:: alcp_cipher_aead_encrypt
