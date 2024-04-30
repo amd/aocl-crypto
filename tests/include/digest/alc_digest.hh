@@ -97,6 +97,7 @@ class AlcpDigestBase : public DigestBase
 
     /* Resets the context back to initial condition, reuse context */
     void reset();
+    void finish();
 };
 
 } // namespace alcp::testing

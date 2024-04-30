@@ -134,6 +134,7 @@ class DigestBase
     virtual bool digest_squeeze(const alcp_digest_data_t& data)  = 0;
     virtual bool context_copy()                                  = 0;
     virtual void reset()                                         = 0;
+    virtual void finish()                                        = 0;
 };
-
-} // namespace alcp::testing
+};
+ // namespace alcp::testing

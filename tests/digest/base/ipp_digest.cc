@@ -144,4 +144,7 @@ void
 IPPDigestBase::reset()
 {}
 
+void
+IPPDigestBase::finish()
+{}
 } // namespace alcp::testing

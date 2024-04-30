@@ -86,13 +86,14 @@ void inline Digest_Bench(benchmark::State& state,
     data.m_msg_len = block_size;
 
     for (auto _ : state) {
+        db->init();
         if (!db->digest_update(data)) {
             state.SkipWithError("Error in running digest benchmark:");
         }
         if (!db->digest_finalize(data)) {
             state.SkipWithError("Error in running digest benchmark:");
         }
-        db->reset();
+        db->finish();
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * block_size, benchmark::Counter::kIsRate);

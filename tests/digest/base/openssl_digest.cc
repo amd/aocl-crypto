@@ -191,4 +191,9 @@ OpenSSLDigestBase::reset()
     }
 }
 
+void
+OpenSSLDigestBase::finish()
+{
+}
+    
 } // namespace alcp::testing
