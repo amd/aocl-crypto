@@ -287,22 +287,6 @@ ALCP_API_EXPORT void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
 /**
- * @brief              Get the error string for errors occurring in digest
- *                     operations
- * @parblock <br> &nbsp;
- * <b> This API is called to get the error string. It should be called after
- * @ref alcp_digest_request and before @ref alcp_digest_finish </b>
- * @endparblock
- * @param [in] pDigestHandle Session handle for digest operation
- * @param [out] pBuff  Destination Buffer to which Error String will be copied
- * @param [in] size    Length of the Buffer.
- *
- * @return alc_error_t Error code to validate the Handle
- */
-ALCP_API_EXPORT alc_error_t
-alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
-
-/**
  * @brief       copies the context from sorce to destination
  *
  * @param [in]   pSrcHandle   source digest handle

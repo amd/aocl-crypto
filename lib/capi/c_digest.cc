@@ -123,23 +123,6 @@ alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
 }
 
 alc_error_t
-alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
-
-    auto p_ctx = static_cast<digest::Context*>(pDigestHandle->context);
-
-    String message = String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
-
-    return err;
-}
-
-alc_error_t
 alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
                           Uint8*                    pBuff,
                           Uint64                    size)
