@@ -42,7 +42,7 @@ class Context
     // using PoolAllocator = alcp::utils::PoolAllocator;
 
   public:
-    void* m_digest;
+    void* m_digest = nullptr;
 
     alc_error_t (*init)(void* pDigest);
     alc_error_t (*update)(void* pDigest, const Uint8* pSrc, Uint64 len);

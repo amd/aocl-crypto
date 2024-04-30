@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,8 @@ namespace alcp::mac {
 
 struct Context
 {
-    void* m_mac;
-    void* m_digest;
+    void* m_mac    = nullptr;
+    void* m_digest = nullptr;
     Status (*update)(void* mac, const Uint8* buff, Uint64 size);
     Status (*finalize)(void* mac, const Uint8* buff, Uint64 size);
     Status (*copy)(void* mac, Uint8* buff, Uint64 size);
