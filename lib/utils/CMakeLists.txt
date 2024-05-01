@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -40,7 +40,9 @@ IF(ENABLE_AOCL_UTILS)
 		ExternalProject_Add(aoclutils
 			GIT_REPOSITORY git@github.amd.com:AOCL/aocl-utils.git
 			GIT_TAG amd-main
-			CMAKE_ARGS  -DALCI_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+			SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
+			CMAKE_ARGS  -DALCI_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
+ 			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libaoclutils.so ${CMAKE_BINARY_DIR}/external/lib/libaoclutils.a
 		)
 		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
