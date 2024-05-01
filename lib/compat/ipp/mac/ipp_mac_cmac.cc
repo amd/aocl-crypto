@@ -53,10 +53,7 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
 
-    const alc_key_info_t cKinfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                    ALC_KEY_FMT_RAW,
-                                    ALC_KEY_ALG_MAC,
-                                    ALC_KEY_LEN_CUSTOM,
+    const alc_key_info_t cKinfo = { ALC_KEY_ALG_SYMMETRIC,
                                     static_cast<Uint32>(keyLen * 8),
                                     static_cast<const Uint8*>(pKey) };
     alc_mac_info_t       macinfo;

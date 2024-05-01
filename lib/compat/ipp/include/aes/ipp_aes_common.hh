@@ -105,7 +105,9 @@ alcp_encdecAES(const Ipp8u*       pSrc,
                       << std::endl;
         }
 #endif
-        err = alcp_cipher_request(&(context->cinfo), &(context->handle));
+        err = alcp_cipher_request(context->cinfo.ci_mode,
+                                  context->cinfo.ci_keyLen,
+                                  &(context->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
             alcp_error_str(err, err_buf, err_size);
@@ -116,7 +118,7 @@ alcp_encdecAES(const Ipp8u*       pSrc,
     }
 
     // init
-    err = alcp_cipher_init(&handle,
+    err = alcp_cipher_init(&(context->handle),
                            context->cinfo.ci_key,
                            context->cinfo.ci_keyLen,
                            context->cinfo.ci_iv,
@@ -131,14 +133,12 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         err = alcp_cipher_encrypt(&(context->handle),
                                   reinterpret_cast<const Uint8*>(pSrc),
                                   reinterpret_cast<Uint8*>(pDst),
-                                  len,
-                                  reinterpret_cast<const Uint8*>(pCtrValue));
+                                  len);
     } else {
         err = alcp_cipher_decrypt(&(context->handle),
                                   reinterpret_cast<const Uint8*>(pSrc),
                                   reinterpret_cast<Uint8*>(pDst),
-                                  len,
-                                  reinterpret_cast<const Uint8*>(pCtrValue));
+                                  len);
     }
 #ifdef DEBUG
     if (mode == ALC_AES_MODE_XTS) {

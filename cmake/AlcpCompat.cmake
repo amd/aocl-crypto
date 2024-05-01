@@ -40,7 +40,7 @@ FUNCTION(alcp_check_compat_option)
 		string(COMPARE EQUAL "${value}" "ipp" result)
 		IF (result)
 			# If comparision true then enable ipp-compat
-			SET(ENABLE_IPP_COMPAT FALSE PARENT_SCOPE)
+			SET(ENABLE_IPP_COMPAT TRUE PARENT_SCOPE)
 			MESSAGE("-- Enabled IPP Compatibility SHIM Layer")
 		ENDIF(result)
 	ENDFOREACH(value ${AOCL_COMPAT_LIBS})

@@ -48,10 +48,7 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
                const IppsHashMethod* pMethod)
 {
 
-    const alc_key_info_t cKinfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                    ALC_KEY_FMT_RAW,
-                                    ALC_KEY_ALG_MAC,
-                                    ALC_KEY_LEN_CUSTOM,
+    const alc_key_info_t cKinfo = { ALC_KEY_ALG_MAC,
                                     static_cast<Uint32>(keyLen * 8),
                                     static_cast<const Uint8*>(pKey) };
 

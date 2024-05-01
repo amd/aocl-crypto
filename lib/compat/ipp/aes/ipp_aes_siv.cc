@@ -42,7 +42,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
 {
     static alc_cipher_handle_t handle;
     alc_key_info_t             kinfo = {
-        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_ALG_SYMMETRIC,
         ALC_KEY_FMT_RAW,
     };
 
@@ -55,23 +55,17 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
 
     alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
 
-    alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES,
-        {
-            ALC_KEY_TYPE_SYMMETRIC,
-            ALC_KEY_FMT_RAW,
-            {},
-            {},
-            ((Uint32)keyLen) * 8,
-            pAuthKey,
-        },
-        {
-            ALC_AES_MODE_SIV,
-            NULL,
-        },
-    };
+    alc_cipher_aead_info_t cinfo = { ALC_CIPHER_TYPE_AES,
+                                     ALC_AES_MODE_SIV,
+                                     ((Uint32)keyLen) * 8,
+                                     pAuthKey,
+                                     NULL };
 
     cinfo.ci_algo_info.ai_siv = siv_info;
+
+    Uint8 combined_key[64] = {};
+    std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
+    std::copy(pConfKey, pConfKey + keyLen, combined_key + keyLen);
 
     /*
      * Application is expected to allocate for context
@@ -89,6 +83,15 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
         return ippStsErr;
     }
 
+    err =
+        alcp_cipher_aead_init(&handle, combined_key, cinfo.ci_keyLen, pSIV, 16);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        free(handle.ch_context);
+        return ippStsErr;
+    }
+
     for (int i = 0; i < numAD; i++) {
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
@@ -99,7 +102,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt(&handle, pSrc, pDst, len, pSIV);
+    err = alcp_cipher_aead_encrypt_update(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -135,7 +138,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
 {
     static alc_cipher_handle_t handle;
     alc_key_info_t             kinfo = {
-        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_ALG_SYMMETRIC,
         ALC_KEY_FMT_RAW,
     };
 
@@ -148,23 +151,17 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
 
     alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
 
-    alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES,
-        {
-            ALC_KEY_TYPE_SYMMETRIC,
-            ALC_KEY_FMT_RAW,
-            {},
-            {},
-            ((Uint32)keyLen) * 8,
-            pAuthKey,
-        },
-        {
-            ALC_AES_MODE_SIV,
-            NULL,
-        },
-    };
+    alc_cipher_aead_info_t cinfo = { ALC_CIPHER_TYPE_AES,
+                                     ALC_AES_MODE_SIV,
+                                     ((Uint32)keyLen) * 8,
+                                     pAuthKey,
+                                     NULL };
 
     cinfo.ci_algo_info.ai_siv = siv_info;
+
+    Uint8 combined_key[64] = {};
+    std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
+    std::copy(pConfKey, pConfKey + keyLen, combined_key + keyLen);
 
     /*
      * Application is expected to allocate for context
@@ -182,6 +179,15 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
         return ippStsErr;
     }
 
+    err =
+        alcp_cipher_aead_init(&handle, combined_key, cinfo.ci_keyLen, pSIV, 16);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        free(handle.ch_context);
+        return ippStsErr;
+    }
+
     for (int i = 0; i < numAD; i++) {
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
@@ -192,7 +198,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_decrypt(&handle, pSrc, pDst, len, pSIV);
+    err = alcp_cipher_aead_decrypt_update(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: Tag Verification Failed \n");
         *pAuthPassed = false;
@@ -218,7 +224,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
 {
     static alc_cipher_handle_t handle;
     alc_key_info_t             kinfo = {
-        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_ALG_SYMMETRIC,
         ALC_KEY_FMT_RAW,
     };
 
@@ -234,19 +240,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
 
     alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES,
-        {
-            ALC_KEY_TYPE_SYMMETRIC,
-            ALC_KEY_FMT_RAW,
-            {},
-            {},
-            ((Uint32)keyLen) * 8,
-            pKey,
-        },
-        {
-            ALC_AES_MODE_SIV,
-            NULL,
-        },
+        ALC_CIPHER_TYPE_AES, ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, pKey, NULL
     };
     cinfo.ci_algo_info.ai_siv = siv_info;
 
@@ -279,7 +273,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     {
         std::vector<Uint8> fakeDest = std::vector<Uint8>(ADlen[numAD - 1]);
         err                         = alcp_cipher_aead_encrypt(
-            &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size(), pSIV);
+            &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size());
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
             alcp_error_str(err, err_buf, err_size);

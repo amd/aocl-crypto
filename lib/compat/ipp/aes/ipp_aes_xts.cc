@@ -94,7 +94,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     cinfo.ci_mode   = ALC_AES_MODE_XTS;
     cinfo.ci_iv     = pTweakPT;
 
-    handle.ch_context = malloc(alcp_cipher_context_size();
+    handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context)
         return ippStsErr;
 
