@@ -55,7 +55,7 @@ endfunction(alcp_get_build_environment)
 function(alcp_check_compiler_version)
     include(CheckCXXCompilerFlag)
     set(GCC_MIN_REQ "10.3.0")
-    set (CLANG_MIN_REQ "12.0.0")
+    set (CLANG_MIN_REQ "14.0.0")
     # if gcc
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
