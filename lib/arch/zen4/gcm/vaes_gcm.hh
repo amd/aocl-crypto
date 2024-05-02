@@ -62,7 +62,7 @@ int inline dynamicUnroll(Uint64 blocks)
     }
 
     return num_512_blks;
-};
+}
 
 void inline computeHashSubKeys(int           num_512_blks,
                                __m128i       Hsubkey_128,

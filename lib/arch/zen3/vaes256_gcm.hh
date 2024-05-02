@@ -65,7 +65,7 @@ int inline dynamicUnroll(Uint64 blocks)
     }
 
     return num_256_blks;
-};
+}
 
 static inline void
 gMulParallel2(__m256i&      res,
