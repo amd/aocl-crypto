@@ -287,19 +287,14 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             }
 
         } else {
+            // pass expected for gcm decrypt, get_tag api return error if tag is
+            // not matched
             err = alcp_cipher_aead_get_tag(
-                m_handle, aead_data.m_tagBuff, aead_data.m_tagl);
+                m_handle, aead_data.m_tag, aead_data.m_tagl);
             if (alcp_is_error(err)) {
                 printf("TAG Error\n");
                 alcp_error_str(err, err_buff, cErrSize);
                 std::cout << "Error:" << err_buff << std::endl;
-                return false;
-            }
-            // Tag verification
-            if (std::memcmp(
-                    aead_data.m_tag, aead_data.m_tagBuff, aead_data.m_tagl)
-                != 0) {
-                std::cout << "Error: Tag Verification Failed!" << std::endl;
                 return false;
             }
         }
