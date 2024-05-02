@@ -147,7 +147,9 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
             data.m_msg_len    = csv.getVect("MESSAGE").size();
             data.m_digest_len = csv.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
-            data.m_digest = &(digest_[0]);
+            std::vector<Uint8> digest_dup_(data.m_digest_len, 0);
+            data.m_digest     = &(digest_[0]);
+            data.m_digest_dup = &(digest_dup_[0]);
             /* FIXME: Hack when msg is NULL, this case is not currently handled
              * in some of the digest apis */
             bool isMsgEmpty = std::all_of(
@@ -176,12 +178,26 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
             }
             /* for shake variants, after context copy, read output from
              * duplicate handle */
+            if (ctx_copy) {
+                if (!db->digest_squeeze(data)) {
+                    std::cout << "Error: digest_squeeze failed" << std::endl;
+                    FAIL();
+                }
+            }
             EXPECT_TRUE(ArraysMatch(
                 digest_,               // output
                 csv.getVect("DIGEST"), // expected, from the KAT test data
                 csv,
                 std::string(GetDigestStr(info.dt_type) + "_"
                             + SHA3_SHAKE_Len_Str + "_KAT")));
+            /* if context copy, check digest outputs from both handles */
+            if (ctx_copy)
+                EXPECT_TRUE(ArraysMatch(
+                    digest_dup_, // output squeezed out of m_handle_dup
+                    csv.getVect("DIGEST"), // expected, from the KAT test data
+                    csv,
+                    std::string(GetDigestStr(info.dt_type) + "_"
+                                + SHA3_SHAKE_Len_Str + "_KAT")));
         }
     } else {
         while (csv.readNext()) {
