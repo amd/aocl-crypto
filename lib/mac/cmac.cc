@@ -75,12 +75,6 @@ class Cmac::Impl : public cipher::Aes
         setMode(ALC_AES_MODE_NONE);
     }
 
-    ~Impl()
-    {
-        m_encrypt_keys = nullptr;
-        reset();
-    }
-
     Impl(alc_cipher_data_t* data)
         : Aes(data)
     {

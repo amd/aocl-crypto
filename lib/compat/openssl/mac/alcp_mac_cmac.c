@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,29 +30,29 @@
 DEFINE_CMAC_CONTEXT("CBC")
 
 int
-ALCP_prov_CMAC_get_ctx_params(void* vctx, OSSL_PARAM params[])
+alcp_prov_cmac_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     ENTER();
-    int ret = ALCP_prov_mac_get_ctx_params(vctx, params);
+    int ret = alcp_prov_mac_get_ctx_params(vctx, params);
     EXIT();
     return ret;
 }
 int
-ALCP_prov_CMAC_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+alcp_prov_cmac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
-    int ret = ALCP_prov_mac_set_ctx_params(vctx, params);
+    int ret = alcp_prov_mac_set_ctx_params(vctx, params);
     EXIT();
     return ret;
 }
 
 void
-ALCP_prov_CMAC_ctxfree(alc_prov_mac_ctx_p mac_ctx)
+alcp_prov_cmac_ctxfree(alc_prov_mac_ctx_p mac_ctx)
 {
     ENTER();
-    ALCP_prov_mac_freectx(mac_ctx);
+    alcp_prov_mac_freectx(mac_ctx);
     EXIT();
 }
 
 /* MAC dispatchers */
-CREATE_MAC_DISPATCHERS(CMAC, CBC);
+// CREATE_MAC_DISPATCHERS(CMAC, CBC);

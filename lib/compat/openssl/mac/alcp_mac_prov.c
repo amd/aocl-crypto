@@ -35,7 +35,7 @@
 #include "provider/alcp_names.h"
 
 void
-ALCP_prov_mac_freectx(void* vctx)
+alcp_prov_mac_freectx(void* vctx)
 {
     ENTER();
     alc_prov_mac_ctx_p mctx = vctx;
@@ -46,23 +46,28 @@ ALCP_prov_mac_freectx(void* vctx)
     OPENSSL_free(mctx->handle.ch_context);
     mctx->handle.ch_context = NULL;
     OPENSSL_free(vctx);
-    vctx = NULL;
     EXIT();
 }
 
 void*
-ALCP_prov_mac_newctx(void* vprovctx, const alc_mac_info_p macinfo)
+ALCP_prov_mac_newctx(const alc_mac_info_p macinfo)
 {
     ENTER();
 
     alc_prov_mac_ctx_p mac_ctx;
-    alc_prov_ctx_p     pctx = (alc_prov_ctx_p)vprovctx;
-    mac_ctx                 = OPENSSL_zalloc(sizeof(*mac_ctx));
+    mac_ctx = OPENSSL_zalloc(sizeof(*mac_ctx));
 
     if (mac_ctx != NULL) {
-        mac_ctx->pc_prov_ctx = pctx;
-        mac_ctx->pc_libctx   = pctx->ap_libctx;
-        mac_ctx->pc_mac_info = *macinfo;
+        mac_ctx->pc_mac_info       = *macinfo;
+        Uint64 size                = alcp_mac_context_size();
+        mac_ctx->handle.ch_context = OPENSSL_malloc(size);
+        alc_error_t err = alcp_mac_request(&(mac_ctx->handle), macinfo);
+        if (alcp_is_error(err)) {
+            printf("MAC Provider: Request Failed\n");
+            OPENSSL_clear_free(mac_ctx->handle.ch_context, size);
+            OPENSSL_clear_free(mac_ctx, sizeof(*mac_ctx));
+            return NULL;
+        }
     }
 
     EXIT();
@@ -223,7 +228,6 @@ ALCP_prov_mac_init(void*                vctx,
         kinfo.len = 128;
     }
     alc_prov_mac_ctx_p cctx    = vctx;
-    alc_error_t        err     = ALC_ERROR_NONE;
     alc_mac_info_p     macinfo = &cctx->pc_mac_info;
 
     macinfo->mi_keyinfo = kinfo;
@@ -240,19 +244,12 @@ ALCP_prov_mac_init(void*                vctx,
             }
         }
     }
-    Uint64 size             = alcp_mac_context_size();
-    cctx->handle.ch_context = OPENSSL_malloc(size);
-    err                     = alcp_mac_request(&(cctx->handle), macinfo);
-    if (alcp_is_error(err)) {
-        printf("MAC Provider: Request Failed\n");
-        return 0;
-    }
     EXIT();
     return 1;
 }
 
 int
-ALCP_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
+alcp_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
 {
     ENTER();
 
@@ -269,7 +266,7 @@ ALCP_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
 }
 
 int
-ALCP_prov_mac_final(void*          vctx,
+alcp_prov_mac_final(void*          vctx,
                     unsigned char* out,
                     size_t*        outl,
                     size_t         outsize)
@@ -283,7 +280,7 @@ ALCP_prov_mac_final(void*          vctx,
         return 0;
     }
 
-    alcp_mac_reset(&(mctx->handle));
+    // alcp_mac_reset(&(mctx->handle));
 
     *outl = outsize;
     EXIT();
@@ -292,11 +289,11 @@ ALCP_prov_mac_final(void*          vctx,
 
 static const char MAC_DEF_PROP[] = "provider=alcp,fips=no";
 
-extern const OSSL_DISPATCH mac_CMAC_functions[];
-extern const OSSL_DISPATCH mac_HMAC_functions[];
+extern const OSSL_DISPATCH cmac_functions[];
+extern const OSSL_DISPATCH hmac_functions[];
 
 const OSSL_ALGORITHM ALC_prov_macs[] = {
-    { ALCP_PROV_NAMES_CMAC, MAC_DEF_PROP, mac_CMAC_functions },
-    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, mac_HMAC_functions },
+    //{ ALCP_PROV_NAMES_CMAC, MAC_DEF_PROP, cmac_functions },
+    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, hmac_functions },
     { NULL, NULL, NULL },
 };
