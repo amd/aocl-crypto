@@ -37,10 +37,13 @@ namespace alcp::testing {
 
 struct alcp_digest_data_t
 {
-    const Uint8* m_msg        = nullptr;
-    Uint64       m_msg_len    = 0;
-    Uint8*       m_digest     = nullptr;
-    Uint64       m_digest_len = 0;
+    const Uint8* m_msg     = nullptr;
+    Uint64       m_msg_len = 0;
+    Uint8*       m_digest  = nullptr;
+    Uint8*       m_digest_dup =
+        nullptr; /* digest output read from duplicate handle using the squeeze
+                    api, only for Shake variants */
+    Uint64 m_digest_len = 0;
 };
 
 /* add mapping for SHA mode and length */
@@ -128,6 +131,7 @@ class DigestBase
     virtual bool init(const alc_digest_info_t& info, Int64 digest_len) = 0;
     virtual bool init()                                                = 0;
     virtual bool digest_function(const alcp_digest_data_t& data)       = 0;
+    virtual bool digest_squeeze(const alcp_digest_data_t& data)        = 0;
     virtual bool context_copy()                                        = 0;
     virtual void reset()                                               = 0;
 };

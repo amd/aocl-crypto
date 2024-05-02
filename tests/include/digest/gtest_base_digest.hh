@@ -86,6 +86,8 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
     Uint8              Temp = 0;
     alcp_digest_data_t data;
     std::vector<Uint8> digest(info.dt_len / 8, 0);
+    /* for storing the squeezed digest from duplicate handle */
+    std::vector<Uint8> digest_dup(info.dt_len / 8, 0);
     AlcpDigestBase     adb(info);
     DigestBase*        db;
     db = &adb;
@@ -146,7 +148,6 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
             data.m_digest_len = csv.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
-
             /* FIXME: Hack when msg is NULL, this case is not currently handled
              * in some of the digest apis */
             bool isMsgEmpty = std::all_of(
@@ -173,6 +174,8 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
+            /* for shake variants, after context copy, read output from
+             * duplicate handle */
             EXPECT_TRUE(ArraysMatch(
                 digest_,               // output
                 csv.getVect("DIGEST"), // expected, from the KAT test data
@@ -187,7 +190,7 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
             data.m_msg_len    = csv.getVect("MESSAGE").size();
             data.m_digest_len = csv.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
-
+            data.m_digest_dup = &(digest_dup[0]);
             /* FIXME: Hack when msg is NULL, this case is not currently handled
              * in some of the digest apis */
             bool isMsgEmpty = std::all_of(

@@ -164,6 +164,14 @@ OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
     return true;
 }
 
+bool
+OpenSSLDigestBase::digest_squeeze(const alcp_digest_data_t& data)
+{
+    unsigned int outsize = 0;
+
+    return true;
+}
+
 void
 OpenSSLDigestBase::reset()
 {

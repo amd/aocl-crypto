@@ -158,6 +158,22 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
     return true;
 }
 
+bool
+AlcpDigestBase::digest_squeeze(const alcp_digest_data_t& data)
+{
+    alc_error_t err;
+
+    /* read m_digest_dup from m_handle_dup */
+    err = alcp_digest_shake_squeeze(
+        m_handle_dup, data.m_digest_dup, data.m_digest_len);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_digest_shake_squeeze:" << err
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
 void
 AlcpDigestBase::reset()
 {

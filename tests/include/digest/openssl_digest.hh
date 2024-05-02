@@ -48,6 +48,7 @@ class OpenSSLDigestBase : public DigestBase
     alc_digest_info_t m_info{};
     Uint8*            m_message    = nullptr;
     Uint8*            m_digest     = nullptr;
+    Uint8*            m_digest_dup = nullptr;
     Int64             m_digest_len = 0;
     const EVP_MD*     m_md_type    = nullptr;
 
@@ -68,6 +69,7 @@ class OpenSSLDigestBase : public DigestBase
 
     bool context_copy();
     bool digest_function(const alcp_digest_data_t& data);
+    bool digest_squeeze(const alcp_digest_data_t& data);
     void reset();
 };
 

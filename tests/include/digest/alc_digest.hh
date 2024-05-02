@@ -39,13 +39,18 @@
 namespace alcp::testing {
 class AlcpDigestBase : public DigestBase
 {
-    alc_digest_handle_t* m_handle     = {};
+    alc_digest_handle_t* m_handle = {};
+    /* duplicate context created from m_handle */
     alc_digest_handle_t* m_handle_dup = {};
     alc_digest_info_t    m_info       = {};
     Uint8*               m_message    = {};
     Uint8*               m_digest     = {};
-    Int64                m_digest_len = {}; /*SHAKE*/
-    void*                m_context    = {};
+    /* Digest output which would be squeezed out
+                                     of the duplicate context */
+    Uint8* m_digest_dup_ctx = {};
+    /* for Sha3 shake variants */
+    Int64 m_digest_len = {};
+    void* m_context    = {};
 
   public:
     AlcpDigestBase(const alc_digest_info_t& info);
@@ -56,9 +61,14 @@ class AlcpDigestBase : public DigestBase
 
     ~AlcpDigestBase();
 
+    /* copies ctx from main m_handle to duplicate handle m_handle_dup
+     */
     bool context_copy();
 
     bool digest_function(const alcp_digest_data_t& data);
+
+    bool digest_squeeze(const alcp_digest_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
     void reset();
 };

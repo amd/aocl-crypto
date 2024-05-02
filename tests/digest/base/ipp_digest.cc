@@ -137,6 +137,14 @@ IPPDigestBase::digest_function(const alcp_digest_data_t& data)
     return true;
 }
 
+bool
+IPPDigestBase::digest_squeeze(const alcp_digest_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+
+    return true;
+}
+
 void
 IPPDigestBase::reset()
 {
