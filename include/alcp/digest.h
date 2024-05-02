@@ -226,14 +226,12 @@ alcp_digest_init(alc_digest_handle_p p_digest_handle);
  * @note        repeated calls to this is allowed and the handle will
  *              contain the latest digest.
  *
- * @param [in]  p_digest_handle  The handle that was returned as part of call
- *                               together alcp_digest_request()
+ * @param [in]  p_digest_handle  Handle created by alcp_digest_request()
  *
- * @param [in]  buf              Destination buffer to which digest will be
- *                               copied
+ * @param [in]  buf              Input buffer
  *
- * @param [in]  size             Destination buffer size in bytes, should be big
- *                               enough to hold the digest
+ * @param [in]  size             Input buffer size in bytes.
+ *
  * @return      &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
@@ -249,8 +247,7 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  * session call @ref alcp_digest_finish</b>
  * @endparblock
  *
- * @param [in]   p_digest_handle  The handle that was returned as part of call
- *                                together alcp_digest_request(),
+ * @param [in]   p_digest_handle  Handle created by alcp_digest_request()
  *
  * @param [out]  buf              Destination buffer to which digest will be
  *                                copied
@@ -276,10 +273,9 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
  *
  * @note        Must be called to ensure memory allotted (if any) is cleaned.
  *
- * @param [in]  p_digest_handle  The handle that was returned as part of calling
- *                               alcp_digest_request(). Once this function
- *                               is called, the handle is will not be valid for
- *                               future
+ * @param [in]  p_digest_handle  Handle created by alcp_digest_request().
+ *                               Once this function is called, the handle will
+ *                               not be valid for future calls
  *
  * @return      None
  */
@@ -287,7 +283,7 @@ ALCP_API_EXPORT void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
 /**
- * @brief        copies the context from sorce to destination
+ * @brief        copies the context from source to destination
  *
  * @parblock <br> &nbsp;
  * <b>This API can be called only after @ref alcp_digest_request and before
@@ -312,8 +308,7 @@ alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
  * session call @ref alcp_digest_finish</b>
  * @endparblock
  *
- * @param [in]   pDigestHandle  The handle that was returned as part of call
- *                              alcp_digest_request()
+ * @param [in]   pDigestHandle  Handle created by alcp_digest_request()
  * @param [out]  pBuff          Destination Buffer for digest out
  * @param [in]   size           size of data to be squeezed out
  *
