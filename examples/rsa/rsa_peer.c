@@ -243,6 +243,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         err = ALC_ERROR_NONE;
     } else {
         printf("\n decrypted text not matching the original text");
+        err = ALC_ERROR_GENERIC;
         goto free_dec_text_peer_2;
     }
 
@@ -290,6 +291,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         err = ALC_ERROR_NONE;
     } else {
         printf("\n decrypted text not matching the original text");
+        err = ALC_ERROR_GENERIC;
     }
 
 free_dec_text_peer_1:
