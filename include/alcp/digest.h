@@ -137,7 +137,6 @@ typedef struct _alc_digest_data
  * @param dt_custom_len Stores digest length valid when dgst_len ==
  * ALC_DIGEST_LEN_CUSTOM
  * @param dt_mode Stores info about digest mode to be used
- * @param dt_data Stores info about digest data
  *
  * @struct alc_digest_info_t
  */
