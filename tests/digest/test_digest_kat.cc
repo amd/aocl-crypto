@@ -49,6 +49,12 @@ TEST(DIGEST_SHA3, KAT_SHAKE128_CTX_COPY)
 
 TEST(DIGEST_SHA3, KAT_SHAKE128_CTX_COPY_SQUEEZE)
 {
+    /* This functionality is supported only from Openssl 3.3.0 onwards */
+#if OPENSSL_API_LEVEL < 30300
+    if (useossl)
+        GTEST_SKIP() << "Openssl supports Shake Squeeze test only from v3.3.0 "
+                        "onwards, skipping this";
+#endif
     if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;

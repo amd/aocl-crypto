@@ -147,8 +147,6 @@ IPPDigestBase::digest_finalize(const alcp_digest_data_t& data)
 bool
 IPPDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 {
-    IppStatus status = ippStsNoErr;
-
     return true;
 }
 

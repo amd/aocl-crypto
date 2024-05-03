@@ -28,6 +28,7 @@
 #pragma once
 
 /* C/C++ Headers */
+#include <cstring>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>

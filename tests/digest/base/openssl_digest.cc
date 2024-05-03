@@ -173,7 +173,15 @@ bool
 OpenSSLDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 {
     unsigned int outsize = 0;
-
+    /* This API is supported only from Openssl 3.3.0 onwards */
+#if OPENSSL_API_LEVEL >= 30300
+    if (EVP_DigestSqueeze(m_handle_dup, data.m_digest_dup, data.m_digest_len)
+        != 1) {
+        std::cout << "Error code in EVP_DigestFinal_ex: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
+#endif
     return true;
 }
 
