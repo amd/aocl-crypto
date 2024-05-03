@@ -41,7 +41,6 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
 {
     ALCP_PROV_AES_CTX* ctx;
     ENTER();
-
     // printf("\n ALCP_prov_alg_gcm_newctx %ld \n", keybits);
 
     // if (!ossl_prov_is_running())
@@ -49,7 +48,6 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
 
     ctx = OPENSSL_zalloc(sizeof(*ctx));
     if (ctx != NULL) {
-        // printf("\n ctx %ld \n", alcp_cipher_aead_context_size());
 
         // allocate context
         ctx->base.handle.ch_context =
@@ -65,12 +63,10 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
             ALC_AES_MODE_GCM, keybits, &(ctx->base.handle));
 
         ctx->base.prov_cipher_data = ctx->base.handle.alc_cipher_data;
-        // printf("\n provider keyLen %d ",
-        // ctx->base.prov_cipher_data->keyLen_in_bytes);
 
         if (ctx->base.prov_cipher_data == NULL) {
-            // printf("\n prov_cipher_data NULL ");
             OPENSSL_clear_free(ctx, sizeof(*ctx));
+            return NULL;
         }
 
         if (err == ALC_ERROR_NONE) {

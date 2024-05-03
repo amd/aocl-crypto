@@ -65,16 +65,17 @@ ALCP_prov_gcm_initctx(void* provctx, ALCP_PROV_CIPHER_CTX* ctx, size_t keybits)
     alc_cipher_data_t* cipherctx = ctx->prov_cipher_data;
 
     cipherctx->pad         = 1; // not used internally
-    cipherctx->m_mode      = ALC_AES_MODE_GCM;
+    cipherctx->mode        = ALC_AES_MODE_GCM;
     cipherctx->tagLength   = UNINITIALISED_SIZET;
     cipherctx->tls_aad_len = UNINITIALISED_SIZET;
     cipherctx->ivLen = (EVP_GCM_TLS_FIXED_IV_LEN + EVP_GCM_TLS_EXPLICIT_IV_LEN);
     cipherctx->keyLen_in_bytes = keybits / 8;
-    ctx->libctx                = ALCP_prov_libctx_of(provctx);
+    // ctx->libctx                = ALCP_prov_libctx_of(provctx); //this creates
+    // mem leaks, to be investigated.
 
-    // printf("\n ALCP_prov_gcm_initctx ivLen %ld keyLen %d \n",
-    //    cipherctx->ivLen,
-    //   cipherctx->keyLen_in_bytes);
+    /* printf("\n ALCP_prov_gcm_initctx ivLen %ld keyLen %d \n",
+        cipherctx->ivLen,
+       cipherctx->keyLen_in_bytes); */
 }
 
 /*

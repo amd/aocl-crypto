@@ -186,7 +186,7 @@ typedef struct _alc_cipher_generic_data
 #define MAX_CIPHER_IV_SIZE (1024 / 8)
 typedef struct _alc_cipher_data
 {
-    alc_cipher_mode_t m_mode;
+    alc_cipher_mode_t mode;
 
     // iv info
     const Uint8* pIv;

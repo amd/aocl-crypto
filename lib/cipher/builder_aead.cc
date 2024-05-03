@@ -78,7 +78,6 @@ _build_aead_wrapper(Context& ctx)
  * @brief Builder specific to GCM AEAD Mode with Dispatcher
  *
  * Takes the params and builds the appropriate path given size info
- * @param pKey      Key for initializing cipher class
  * @param keyLen    Length of the key
  * @param ctx       Context for the AEAD GCM Cipher
  * @return Status

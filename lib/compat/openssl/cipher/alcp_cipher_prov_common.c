@@ -259,7 +259,7 @@ cipher_generic_init_internal(ALCP_PROV_CIPHER_CTX* ctx,
     // if (!ossl_prov_is_running())
     // return 0;
 
-    if (iv != NULL && cipherctx->m_mode != EVP_CIPH_ECB_MODE) {
+    if (iv != NULL && cipherctx->mode != EVP_CIPH_ECB_MODE) {
 
         alc_error_t err = alcp_cipher_init(&(ctx->handle), NULL, 0, iv, ivlen);
         if (alcp_is_error(err)) {
@@ -268,9 +268,9 @@ cipher_generic_init_internal(ALCP_PROV_CIPHER_CTX* ctx,
     }
 
     if (iv == NULL && cipherctx->ivState
-        && (cipherctx->m_mode == EVP_CIPH_CBC_MODE
-            || cipherctx->m_mode == EVP_CIPH_CFB_MODE
-            || cipherctx->m_mode == EVP_CIPH_OFB_MODE)) {
+        && (cipherctx->mode == EVP_CIPH_CBC_MODE
+            || cipherctx->mode == EVP_CIPH_CFB_MODE
+            || cipherctx->mode == EVP_CIPH_OFB_MODE)) {
         /* reset IV for these modes to keep compatibility with 1.1.1 */
         memcpy(cipherctx->iv_buff, genCipherctx->oiv_buff, cipherctx->ivLen);
 
@@ -905,7 +905,7 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
                                  size_t       kbits,
                                  size_t       blkbits,
                                  size_t       ivbits,
-                                 unsigned int m_mode,
+                                 unsigned int mode,
                                  uint64_t     flags,
                                  void*        provctx)
 {
@@ -923,7 +923,7 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
     cipherctx->pad             = 1;
     cipherctx->keyLen_in_bytes = ((kbits) / 8);
     cipherctx->ivLen           = ((ivbits) / 8);
-    cipherctx->m_mode          = m_mode;
+    cipherctx->mode            = mode;
     genCipherctx->blocksize    = blkbits / 8;
     if (provctx != NULL) {
         ctx->libctx = ALCP_prov_libctx_of(provctx); /* used for rand */
