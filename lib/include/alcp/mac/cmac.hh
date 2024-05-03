@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,6 +49,7 @@ class Cmac final : public Mac
 {
   public:
     ALCP_API_EXPORT Cmac();
+    ALCP_API_EXPORT Cmac(alc_cipher_data_t* data);
     ALCP_API_EXPORT ~Cmac();
     /**
      * @brief Update CMAC with plaintext Message

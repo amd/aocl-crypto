@@ -32,7 +32,10 @@ namespace alcp::cipher {
 
 // Class Siv functions
 
-Siv::Siv(alc_cipher_data_t* ctx) {}
+Siv::Siv(alc_cipher_data_t* ctx)
+    : m_cmac{ Cmac(ctx) }
+{
+}
 
 Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
@@ -129,9 +132,9 @@ Siv::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 
     // Block all unknown keysizes
     switch (length) {
-        case 16:
-        case 24:
-        case 32:
+        case 128:
+        case 192:
+        case 256:
             break;
         default:
             auto cer = cipher::CipherError(cipher::ErrorCode::eInvaidValue);
@@ -269,9 +272,9 @@ SivHash::init(alc_cipher_data_t* ctx,
               const Uint8*       pIv,
               Uint64             ivLen)
 {
-    Uint64 keyLength = keyLen / 8;
+    Uint64 keyLength = keyLen;
     m_key1           = pKey;
-    m_key2           = pKey + keyLength;
+    m_key2           = pKey + keyLength / 8;
     m_iv             = pIv;
     setKeys(m_key1, m_key2, keyLength);
     return ALC_ERROR_NONE;

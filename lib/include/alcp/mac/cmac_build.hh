@@ -89,9 +89,10 @@ __build_cmac(const alc_cipher_info_t& cipherInfo,
              Context&                 ctx)
 {
     using namespace status;
-    Status status = StatusOk();
-    auto   addr   = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-    auto   p_algo = new (addr) Cmac();
+    Status status            = StatusOk();
+    auto   addr              = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    ctx.data.keyLen_in_bytes = cKinfo.len / 8;
+    auto p_algo              = new (addr) Cmac(&ctx.data);
 
     auto p_key = cKinfo.key;
     auto len   = cKinfo.len;

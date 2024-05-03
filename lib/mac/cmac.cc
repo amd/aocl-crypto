@@ -43,6 +43,7 @@ class Cmac::Impl : public cipher::Aes
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
     // Authentication
   private:
+    alc_cipher_data_t    m_cdata       = {};
     static constexpr int cAESBlockSize = 16;
     alignas(16) Uint8 m_k1[cAESBlockSize]{};
     alignas(16) Uint8 m_k2[cAESBlockSize]{};
@@ -73,19 +74,23 @@ class Cmac::Impl : public cipher::Aes
         setMode(ALC_AES_MODE_NONE);
     }
 
+    Impl(alc_cipher_data_t* data)
+        : Aes(data)
+    {
+        setMode(ALC_AES_MODE_NONE);
+        m_cdata = *data;
+    }
+
     Status setKey(const Uint8 key[], Uint64 len)
     {
         Status s{ StatusOk() };
-        // Aes::setKey(key, len); // FIXME: add setKey with ctx
-        // no error checks needed at this stage, since key and keyLength are
-        // validated.
-        m_keyLen_in_bytes_aes = len;
+        Aes::setKey(&m_cdata, key, len);
 
         // FIXME: Check if this is required, looks like not required
         // data.keyLen_in_bytes = len / 8;
 
-        init(&data, key, len * 8, nullptr, 0);
-        m_encrypt_keys = getEncryptKeys();
+        init(&data, key, len, nullptr, 0);
+        m_encrypt_keys = m_cipher_key_data.m_enc_key;
         m_rounds       = getRounds();
         getSubkeys();
         s = reset();
@@ -294,6 +299,11 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
+{
+}
+
+Cmac::Cmac(alc_cipher_data_t* data)
+    : m_pImpl{ std::make_unique<Cmac::Impl>(data) }
 {
 }
 
