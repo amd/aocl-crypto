@@ -197,16 +197,16 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
                          Uint64                    aadLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
+    if (aadLen == 0) {
+        return err;
+    }
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
 
-    // ALCP_ZERO_LEN_ERR_RET(len, err);
-
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify setAad to return Status and assign to context status
     err = ctx->setAad(ctx, pInput, aadLen);
 
     return err;

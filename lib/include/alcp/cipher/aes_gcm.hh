@@ -79,16 +79,12 @@ class ALCP_API_EXPORT Gcm : public Aes
         // default ivLength is 12 bytes or 96bits
         m_ivLen_aes = 12;
 
-        // cipher ctx
-        m_gcm_local_data.m_tag_128 = _mm_setzero_si128();
+        m_gcm_local_data.m_num_512blks_precomputed = 0;
+        m_gcm_local_data.m_num_256blks_precomputed = 0;
 
-        // gcm local ctx
         m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
         m_gcm_local_data.m_gHash_128       = _mm_setzero_si128();
         m_gcm_local_data.m_counter_128     = _mm_setzero_si128();
-
-        m_gcm_local_data.m_num_512blks_precomputed = 0;
-        m_gcm_local_data.m_num_256blks_precomputed = 0;
 
         m_gcm_local_data.m_reverse_mask_128 =
             _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
@@ -96,7 +92,9 @@ class ALCP_API_EXPORT Gcm : public Aes
         // global precomputed hashtable pointer
         m_gcm_local_data.m_pHashSubkeyTable_global =
             m_gcm_local_data.m_gcm.m_hashSubkeyTable;
-        // ctx->m_gcm.m_hashSubkeyTable;
+
+        m_gcm_local_data.m_tag_128           = _mm_setzero_si128();
+        m_gcm_local_data.m_additionalDataLen = 0;
     }
 
     ~Gcm()

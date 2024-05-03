@@ -70,13 +70,14 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
         dataInit.m_key     = &datasetKey[0];
         dataInit.m_key_len = datasetKey.size();
 
-        alc_test_gcm_update_data_t dataUpdate;
+        alc_test_gcm_update_data_t   dataUpdate;
+        alc_test_gcm_finalize_data_t dataFinalize;
+
         dataUpdate.m_iv         = &datasetInitvector[0];
         dataUpdate.m_iv_len     = datasetInitvector.size();
         dataUpdate.m_output     = &output[0];
         dataUpdate.m_output_len = output.size();
 
-        alc_test_gcm_finalize_data_t dataFinalize;
         if constexpr (encryptor) { // Encrypt
             dataUpdate.m_input     = &datasetPlainText[0];
             dataUpdate.m_input_len = datasetPlainText.size();
@@ -84,9 +85,10 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
         } else { // Decrypt
             dataUpdate.m_input     = &datasetCipherText[0];
             dataUpdate.m_input_len = datasetCipherText.size();
-            dataFinalize.m_tag =
-                &tagbuff[0]; // encrypt Tag or expectedTag is input for decrypt
+            dataFinalize.m_tag = &datasetTag[0]; // encrypt Tag or expectedTag
+                                                 // is input for decrypt
         }
+
         dataFinalize.m_tag_expected = &datasetTag[0];
         dataFinalize.m_tag_len      = datasetTag.size();
 

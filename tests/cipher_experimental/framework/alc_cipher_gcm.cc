@@ -70,7 +70,7 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
         return false;
     }
 
-    if (data_gcm->m_aad) {
+    if (data_gcm->m_aad_len > 0) {
         // Additional Data
         err = alcp_cipher_aead_set_aad(
             &m_handle, data_gcm->m_aad, data_gcm->m_aad_len);
