@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,9 +26,8 @@
  *
  */
 
+#include "hardware_rng.hh"
 #include "alcp/base.hh"
-/* TODO: move this to alcp/rng/ */
-#include "../../rng/include/hardware_rng.hh"
 #include "alcp/rng/rngerror.hh"
 
 #include <immintrin.h>
