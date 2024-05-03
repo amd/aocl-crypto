@@ -391,9 +391,20 @@ Rsa_Cross(int                     padding_mode,
 
     err = alcp_drbg_supported(&drbg_info);
     if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_drbg_supported: " << err << std::endl;
-        FAIL();
+        std::cout << "Hardware Rng support failed. Falling Back to System Rng"
+                  << std::endl;
+
+        // Fall back to OS RNG if hardware rng rdrand instruction is not
+        // supported.
+        drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source =
+            ALC_RNG_SOURCE_OS;
+        err = alcp_drbg_supported(&drbg_info);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_drbg_supported: " << err << std::endl;
+            FAIL();
+        }
     }
+
     handle.ch_context = malloc(alcp_drbg_context_size(&drbg_info));
     if (handle.ch_context == nullptr) {
         std::cout << "Error: alcp_drbg_supported: " << std::endl;
