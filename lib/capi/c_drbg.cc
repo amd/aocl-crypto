@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -78,6 +78,11 @@ alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
     new (p_ctx) drbg::Context;
     p_ctx->status = drbg::DrbgBuilder::build(*pDrbgInfo, *p_ctx);
+    if (!p_ctx->status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
     return err;
 }
 

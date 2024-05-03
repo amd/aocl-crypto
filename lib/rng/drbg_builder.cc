@@ -32,9 +32,10 @@
 #include "alcp/interface/Irng.hh"
 #include "alcp/rng/ctrdrbg_build.hh"
 #include "alcp/rng/hmacdrbg_build.hh"
+#include "alcp/rng/rngerror.hh"
+#include "alcp/utils/cpuid.hh"
 #include "hardware_rng.hh"
 #include "system_rng.hh"
-
 namespace alcp::drbg {
 class CustomRng : public IRng
 {
@@ -161,7 +162,11 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
                 break;
             }
             case ALC_RNG_SOURCE_ARCH: {
-                irng = std::make_shared<alcp::rng::HardwareRng>();
+                if (alcp::utils::CpuId::cpuHasRdRand()) {
+                    irng = std::make_shared<alcp::rng::HardwareRng>();
+                } else {
+                    return rng::status::NotPermitted("");
+                }
                 break;
             }
             default:

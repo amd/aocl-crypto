@@ -169,7 +169,10 @@ Drbg::readRandom(Uint8 buf[], Uint64 size)
 Status
 Drbg::setRng(std::shared_ptr<IRng> entropyIn)
 {
-    Status s     = StatusOk();
+    Status s = StatusOk();
+    if (entropyIn == nullptr) {
+        return status::NoEntropySource("");
+    }
     m_entropy_in = entropyIn;
     return s;
 }
