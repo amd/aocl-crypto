@@ -51,7 +51,6 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
                          alc_cipher_handle_p     pCipherHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    // printf("\n alcp_cipher_aead_request");
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_ZERO_LEN_ERR_RET(keyLen, err);
@@ -61,16 +60,10 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
 
     new (ctx) cipher::Context;
 
-    // printf("\n aead_request keyLen mem allocation %d ",
-    // ctx->m_cipher_data.keyLen_in_bytes);
-
     err = cipher::CipherAeadBuilder::Build(cipherMode, keyLen, *ctx);
 
     // assign ctx cipher_data to handle.
     pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
-
-    // printf("\n aead_request post build keyLen %d ",
-    // ctx->m_cipher_data.keyLen_in_bytes);
 
     return err;
 }
@@ -91,7 +84,6 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify Encrypt to return Status and assign to context status
     err = ctx->encrypt(ctx, pPlainText, pCipherText, len);
 
     return err;
@@ -109,13 +101,9 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
-    // Sometimes Encrypt needs to be called with 0 length
-    // ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify encryptUpdate to return Status and assign to context
-    // status
     err = ctx->encryptUpdate(ctx, pInput, pOutput, len);
 
     return err;
@@ -137,7 +125,6 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify decrypt to return Status and assign to context status
     err = ctx->decrypt(ctx, pCipherText, pPlainText, len);
 
     return err;
@@ -155,8 +142,6 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
-    // Sometimes Encrypt needs to be called with 0 length
-    // ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -184,7 +169,6 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
 #endif
     // init can be called to setKey or setIv or both
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {
-        // printf("\n ctx->init key %p keyLen %ld ", pKey, keyLen);
         err = ctx->init(ctx, pKey, keyLen, pIv, ivLen);
     }
 
@@ -228,7 +212,6 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify getTag to return Status and assign to context status
     err = ctx->getTag(ctx, pOutput, tagLen);
 
     return err;
@@ -247,8 +230,6 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify setTagLength to return Status and assign to context
-    // status
     err = ctx->setTagLength(ctx, tagLen);
 
     return err;

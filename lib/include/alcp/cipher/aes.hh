@@ -81,8 +81,7 @@ class Aes : public Rijndael
     Uint32                             m_isEnc_aes    = ALCP_ENC;
     Uint64                             m_dataLen      = 0;
 
-    Aes(alc_cipher_data_t*
-            ctx) // keyLen can be passed along with alc_cipher_data_t *?
+    Aes(alc_cipher_data_t* ctx)
         : Rijndael()
     {
         m_keyLen_in_bytes_aes = ctx->keyLen_in_bytes;
@@ -91,11 +90,7 @@ class Aes : public Rijndael
     // this constructor to be removed.
     Aes()
         : Rijndael()
-    {
-#ifndef NDEBUG
-        printf("this constructor to be removed\n");
-#endif
-    }
+    {}
 
   protected:
     virtual ~Aes() {}
@@ -166,7 +161,6 @@ class Aes : public Rijndael
 AES_CLASS_GEN(Ofb, Aes)
 
 // class  for all AEAD cipher modes
-// FIXME: This class should be final.
 #define AEAD_CLASS_GEN(CHILD_NEW, PARENT)                                      \
     class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \
@@ -214,8 +208,7 @@ AES_CLASS_GEN(Ofb, Aes)
                                   Uint64             len);                                 \
     };
 
-// Macro to generate authentication class, first is used for gcm and to be
-// extended to other AEAD classes
+// Macro to generate authentication class
 #define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                                 \
     class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \
@@ -237,8 +230,6 @@ AES_CLASS_GEN(Ofb, Aes)
                            Uint64             aadLen);                                     \
     };
 
-} // namespace alcp::cipher
-
 #define CRYPT_WRAPPER_FUNC(                                                    \
     CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)             \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
@@ -251,5 +242,7 @@ AES_CLASS_GEN(Ofb, Aes)
         err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
         return err;                                                            \
     }
+
+} // namespace alcp::cipher
 
 #endif /* _CIPHER_AES_HH_ */

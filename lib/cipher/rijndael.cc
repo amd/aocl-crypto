@@ -733,21 +733,6 @@ Rijndael::getDecryptKeys() const
 
 #define BYTE0O_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
-#if 0
-Status
-Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
-{
-    Status sts = StatusOk();
-    // FIXME: Something is wrong with this check
-    if ((len < cMinKeySize) || (len > cMaxKeySize)) {
-        sts.update(status::InvalidArgument("Key length not acceptable"));
-    }
-
-    pImpl()->setKey(pUserKey, len);
-    return sts;
-}
-#endif
-
 void
 Rijndael::setDecryptKey(const Uint8*, Uint64)
 {

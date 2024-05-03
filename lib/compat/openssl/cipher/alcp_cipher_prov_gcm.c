@@ -90,8 +90,8 @@ ALCP_prov_alg_gcm_dupctx(void* provctx)
         return NULL;
 
     dctx = OPENSSL_memdup(ctx, sizeof(*ctx));
-    if (dctx != NULL && dctx->base.prov_cipher_data->m_pKey != NULL)
-        dctx->base.prov_cipher_data->m_pKey = (const Uint8*)&dctx->ks;
+    if (dctx != NULL && dctx->base.prov_cipher_data->pKey != NULL)
+        dctx->base.prov_cipher_data->pKey = (const Uint8*)&dctx->ks;
 
     return dctx;
 }

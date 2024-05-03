@@ -68,27 +68,6 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
-#if 0 // FIXME: XTS
-    // Tweak key is appended after encryption key.
-    if (cipherMode == ALC_AES_MODE_XTS) {
-        auto tweak_key = pCipherInfo->ci_key + keyLen / 8;
-
-        /* Additional checks for XTS, bug found by libfuzzer*/
-        ALCP_BAD_PTR_ERR_RET(tweak_key, err);
-        ALCP_BAD_PTR_ERR_RET(pCipherInfo->ci_key, err);
-
-        if (tweak_key == nullptr
-            || (keyLen != 128
-                && keyLen != 256)) {
-            return ALC_ERROR_INVALID_ARG;
-        }
-        if (validateKeys(
-                tweak_key, pCipherInfo->ci_key, keyLen)) {
-            return ALC_ERROR_DUPLICATE_KEY;
-        }
-    }
-#endif
-
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     new (ctx) cipher::Context;
@@ -143,7 +122,6 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify Encrypt to return Status and assign to context status
     err = ctx->encrypt(ctx, pPlainText, pCipherText, len);
 
     return err;

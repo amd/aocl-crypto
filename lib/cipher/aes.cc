@@ -37,7 +37,7 @@ alc_error_t
 Aes::setKey(alc_cipher_data_t* ctx, const Uint8* pKey, const Uint64 keyLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
-    ctx->m_pKey   = pKey; // FIXME:this should be moved to provider
+    ctx->pKey     = pKey;
 
     // keyLen should be checked if its same as keyLen used during create call
     if (m_keyLen_in_bytes_aes != keyLen / 8) {

@@ -43,7 +43,6 @@ Variables
 ---------
 .. doxygenvariable:: alc_cipher_type_t
 .. doxygenvariable:: alc_cipher_mode_t
-.. doxygenvariable:: alc_aes_ctrl_t
 .. doxygenvariable:: alc_key_type_t
 .. doxygenvariable:: alc_key_alg_t
 .. doxygenvariable:: alc_key_len_t
