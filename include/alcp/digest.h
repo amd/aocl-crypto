@@ -137,7 +137,6 @@ typedef struct _alc_digest_data
  * @param dt_custom_len Stores digest length valid when dgst_len ==
  * ALC_DIGEST_LEN_CUSTOM
  * @param dt_mode Stores info about digest mode to be used
- * @param dt_data Stores info about digest data
  *
  * @struct alc_digest_info_t
  */
@@ -171,7 +170,7 @@ typedef struct _alc_digest_handle
 } alc_digest_handle_t, *alc_digest_handle_p, AlcDigestHandle, *AlcDigestHandleP;
 
 /**
- * @brief       Returns the context size of the interaction
+ * @brief  Returns the context size
  *
  * @parblock <br> &nbsp;
  * <b>This API should be called before @ref alcp_digest_request to identify the
@@ -180,23 +179,21 @@ typedef struct _alc_digest_handle
  *
  *
  *
- * @return      Size of Context
+ * @return Size of Context
  */
 ALCP_API_EXPORT Uint64
 alcp_digest_context_size(void);
 
 /**
- * @brief       Request a handle for digest  for a configuration
- *              as pointed by alc_digest_mode_t
+ * @brief        Request a handle for digest  for a configuration
+ *               as pointed by alc_digest_mode_t
  *
- * @param [in]      mode   Description of the requested digest session
+ * @param [in]   mode             Description of the requested digest session
  *
- * @param [out]     p_digest_handle Library populated session handle for future
+ * @param [out]  p_digest_handle  Library populated session handle for future
  * digest operations.
  *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * @return       &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_request(alc_digest_mode_t   mode,
@@ -205,11 +202,14 @@ alcp_digest_request(alc_digest_mode_t   mode,
 /**
  * @brief       Initializes the digest handle
  *
- * @param [in]      p_digest_handle Library populated session handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called only after @ref alcp_digest_request and before
+ * session call @ref alcp_digest_finish</b>
+ * @endparblock
  *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * @param [in]  p_digest_handle  Library populated session handle
+ *
+ * @return      &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_init(alc_digest_handle_p p_digest_handle);
@@ -219,21 +219,20 @@ alcp_digest_init(alc_digest_handle_p p_digest_handle);
  *              as mentioned by size in bytes.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request and at the end of
- * session call @ref alcp_digest_finish</b>
+ * <b>This API can be called only after @ref alcp_digest_request and before
+ * session call @ref alcp_digest_finalize</b>
  * @endparblock
  *
- * @note       repeated calls to this is allowed and the handle will
- *               contain the latest digest.
- * @param [in] p_digest_handle The handle that was returned as part of call
- * together alcp_digest_request()
- * @param [in] buf              Destination buffer to which digest will be
- * copied
- * @param [in] size             Destination buffer size in bytes, should be big
- * enough to hold the digest
- * @return   &nbsp; Error Code for the API called. if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @note        repeated calls to this is allowed and the handle will
+ *              contain the latest digest.
+ *
+ * @param [in]  p_digest_handle  Handle created by alcp_digest_request()
+ *
+ * @param [in]  buf              Input buffer
+ *
+ * @param [in]  size             Input buffer size in bytes.
+ *
+ * @return      &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_update(const alc_digest_handle_p p_digest_handle,
@@ -244,21 +243,19 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  * @brief       Finalize the digest with digest copy.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request  and at the end of
+ * <b>This API can be called only after @ref alcp_digest_request and before
  * session call @ref alcp_digest_finish</b>
  * @endparblock
  *
- * @param [in]      p_digest_handle The handle that was returned as part of call
- *                              together alcp_digest_request(),
+ * @param [in]   p_digest_handle  Handle created by alcp_digest_request()
  *
- * @param [out]       buf     Destination buffer to which digest will be copied
+ * @param [out]  buf              Destination buffer to which digest will be
+ *                                copied
  *
- * @param [in]       size    Destination buffer size in bytes, should be big
- * enough to hold the digest
+ * @param [in]   size             Destination buffer size in bytes, should be
+ *                                big enough to hold the digest
  *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * @return       &nbsp; Error Code for the API called.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
@@ -267,7 +264,6 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
 
 /**
  *
- * FIXME: Need to fix return type of API
  * @brief       Performs any cleanup actions
  *
  * @parblock <br> &nbsp;
@@ -275,11 +271,11 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
  * session</b>
  * @endparblock
  *
- * @note       Must be called to ensure memory allotted (if any) is cleaned.
+ * @note        Must be called to ensure memory allotted (if any) is cleaned.
  *
- * @param [in] p_digest_handle The handle that was returned as part of call
- *                       together alcp_digest_request(), once this function
- *                       is called. the handle is will not be valid for future
+ * @param [in]  p_digest_handle  Handle created by alcp_digest_request().
+ *                               Once this function is called, the handle will
+ *                               not be valid for future calls
  *
  * @return      None
  */
@@ -287,12 +283,17 @@ ALCP_API_EXPORT void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
 /**
- * @brief       copies the context from sorce to destination
+ * @brief        copies the context from source to destination
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API can be called only after @ref alcp_digest_request and before
+ * session call @ref alcp_digest_finish</b> on pSrcHandle
+ * @endparblock
  *
  * @param [in]   pSrcHandle   source digest handle
- * @param [out]  pDestHandle   destination digest handle
+ * @param [out]  pDestHandle  destination digest handle
  *
- * @return alc_error_t Error code to validate the operation
+ * @return       alc_error_t Error code to validate the operation
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
@@ -302,12 +303,16 @@ alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
  * @brief        Valid only for Shake algorithm for squeezing the digest out.
  *               It can be called multiple times
  *
- * @param [in]   pDigestHandle   The handle that was returned as part of call
- *                               alcp_digest_request()
- * @param [out]  pBuff           Destination Buffer for digest out
- * @param [in]   size            size of data to be squeezed out
+ * @parblock <br> &nbsp;
+ * <b>This API can be called only after @ref alcp_digest_request and before
+ * session call @ref alcp_digest_finish</b>
+ * @endparblock
  *
- * @return alc_error_t Error code to validate the operation
+ * @param [in]   pDigestHandle  Handle created by alcp_digest_request()
+ * @param [out]  pBuff          Destination Buffer for digest out
+ * @param [in]   size           size of data to be squeezed out
+ *
+ * @return       alc_error_t Error code to validate the operation
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
