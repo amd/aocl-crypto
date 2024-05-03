@@ -197,7 +197,8 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                     csv.getVect("DIGEST"), // expected, from the KAT test data
                     csv,
                     std::string(GetDigestStr(info.dt_type) + "_"
-                                + SHA3_SHAKE_Len_Str + "_KAT")));
+                                + SHA3_SHAKE_Len_Str + "_KAT"
+                                + " for duplicate digest")));
         }
     } else {
         while (csv.readNext()) {
