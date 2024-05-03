@@ -44,7 +44,18 @@ TEST(DIGEST_SHA3, KAT_SHAKE128_CTX_COPY)
     info.dt_mode = ALC_SHAKE_128;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
-    Digest_KAT(info, true);
+    Digest_KAT(info, true, false);
+}
+
+TEST(DIGEST_SHA3, KAT_SHAKE128_CTX_COPY_SQUEEZE)
+{
+    if (useipp)
+        GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
+    alc_digest_info_t info;
+    info.dt_mode = ALC_SHAKE_128;
+    info.dt_type = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
+    Digest_KAT(info, true, true);
 }
 
 /* SHAKE128/256 tests (IPP doesnt have these) */
@@ -56,7 +67,7 @@ TEST(DIGEST_SHA3, KAT_SHAKE128)
     info.dt_mode = ALC_SHAKE_128;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_128;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA3, KAT_SHAKE256)
 {
@@ -66,7 +77,7 @@ TEST(DIGEST_SHA3, KAT_SHAKE256)
     info.dt_mode = ALC_SHAKE_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_CUSTOM_SHAKE_256;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 
 /* SHA2 tests */
@@ -76,7 +87,7 @@ TEST(DIGEST_SHA2, KAT_224)
     info.dt_mode = ALC_SHA2_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA2, KAT_224_CTX_COPY)
 {
@@ -86,7 +97,7 @@ TEST(DIGEST_SHA2, KAT_224_CTX_COPY)
     info.dt_mode = ALC_SHA2_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_KAT(info, true);
+    Digest_KAT(info, true, false);
 }
 
 TEST(DIGEST_SHA2, KAT_256)
@@ -95,7 +106,7 @@ TEST(DIGEST_SHA2, KAT_256)
     info.dt_mode = ALC_SHA2_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA2, KAT_384)
 {
@@ -103,7 +114,7 @@ TEST(DIGEST_SHA2, KAT_384)
     info.dt_mode = ALC_SHA2_384;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_384;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA2, KAT_512)
 {
@@ -111,7 +122,7 @@ TEST(DIGEST_SHA2, KAT_512)
     info.dt_mode = ALC_SHA2_512;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_512;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 /* sha512 truncated variants- 224,256*/
 TEST(DIGEST_SHA2, KAT_512_224)
@@ -120,7 +131,7 @@ TEST(DIGEST_SHA2, KAT_512_224)
     info.dt_mode = ALC_SHA2_512_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA2, KAT_512_256)
 {
@@ -128,7 +139,7 @@ TEST(DIGEST_SHA2, KAT_512_256)
     info.dt_mode = ALC_SHA2_512_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA2;
     info.dt_len  = ALC_DIGEST_LEN_256;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 
 /* SHA3 tests */
@@ -142,7 +153,7 @@ TEST(DIGEST_SHA3, KAT_224)
     info.dt_mode = ALC_SHA3_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA3, KAT_224_CTX_COPY)
 {
@@ -152,7 +163,7 @@ TEST(DIGEST_SHA3, KAT_224_CTX_COPY)
     info.dt_mode = ALC_SHA3_224;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_224;
-    Digest_KAT(info, true);
+    Digest_KAT(info, true, false);
 }
 
 TEST(DIGEST_SHA3, KAT_256)
@@ -163,7 +174,7 @@ TEST(DIGEST_SHA3, KAT_256)
     info.dt_mode = ALC_SHA3_256;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_256;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA3, KAT_384)
 {
@@ -173,7 +184,7 @@ TEST(DIGEST_SHA3, KAT_384)
     info.dt_mode = ALC_SHA3_384;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_384;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 TEST(DIGEST_SHA3, KAT_512)
 {
@@ -183,7 +194,7 @@ TEST(DIGEST_SHA3, KAT_512)
     info.dt_mode = ALC_SHA3_512;
     info.dt_type = ALC_DIGEST_TYPE_SHA3;
     info.dt_len  = ALC_DIGEST_LEN_512;
-    Digest_KAT(info, false);
+    Digest_KAT(info, false, false);
 }
 
 int

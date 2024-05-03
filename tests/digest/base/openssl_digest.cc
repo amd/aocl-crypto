@@ -133,15 +133,20 @@ OpenSSLDigestBase::context_copy()
 }
 
 bool
-OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
+OpenSSLDigestBase::digest_update(const alcp_digest_data_t& data)
 {
-    unsigned int outsize = 0;
-
     if (EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len) != 1) {
         std::cout << "Error code in EVP_DigestUpdate: "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
+    return true;
+}
+
+bool
+OpenSSLDigestBase::digest_finalize(const alcp_digest_data_t& data)
+{
+    unsigned int outsize = 0;
 
     /* for extendable output functions */
     if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128

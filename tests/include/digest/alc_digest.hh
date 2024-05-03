@@ -65,7 +65,9 @@ class AlcpDigestBase : public DigestBase
      */
     bool context_copy();
 
-    bool digest_function(const alcp_digest_data_t& data);
+    bool digest_update(const alcp_digest_data_t& data);
+
+    bool digest_finalize(const alcp_digest_data_t& data);
 
     bool digest_squeeze(const alcp_digest_data_t& data);
 

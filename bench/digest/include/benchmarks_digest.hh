@@ -95,7 +95,10 @@ void inline Digest_Bench(benchmark::State& state,
     data.m_msg_len = block_size;
 
     for (auto _ : state) {
-        if (!db->digest_function(data)) {
+        if (!db->digest_update(data)) {
+            state.SkipWithError("Error in running digest benchmark:");
+        }
+        if (!db->digest_finalize(data)) {
             state.SkipWithError("Error in running digest benchmark:");
         }
         db->reset();

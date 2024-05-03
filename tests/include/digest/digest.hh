@@ -130,7 +130,8 @@ class DigestBase
   public:
     virtual bool init(const alc_digest_info_t& info, Int64 digest_len) = 0;
     virtual bool init()                                                = 0;
-    virtual bool digest_function(const alcp_digest_data_t& data)       = 0;
+    virtual bool digest_update(const alcp_digest_data_t& data)         = 0;
+    virtual bool digest_finalize(const alcp_digest_data_t& data)       = 0;
     virtual bool digest_squeeze(const alcp_digest_data_t& data)        = 0;
     virtual bool context_copy()                                        = 0;
     virtual void reset()                                               = 0;

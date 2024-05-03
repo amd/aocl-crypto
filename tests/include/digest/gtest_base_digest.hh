@@ -81,7 +81,7 @@ GetDigestStr(_alc_digest_type digest_type)
 }
 
 void
-Digest_KAT(alc_digest_info_t info, bool ctx_copy)
+Digest_KAT(alc_digest_info_t info, bool ctx_copy, bool test_squeeze)
 {
     Uint8              Temp = 0;
     alcp_digest_data_t data;
@@ -165,6 +165,10 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
+            if (!db->digest_update(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
+            }
             if (ctx_copy) {
                 if (!db->context_copy()) {
                     std::cout << "Error: Digest base context_copy failed"
@@ -172,17 +176,16 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                     FAIL();
                 }
             }
-            if (!db->digest_function(data)) {
-                std::cout << "Error: Digest function failed" << std::endl;
-                FAIL();
-            }
-            /* for shake variants, after context copy, read output from
-             * duplicate handle */
-            if (ctx_copy) {
+            /* Squeeze option only for SHAKE variants */
+            if (test_squeeze) {
                 if (!db->digest_squeeze(data)) {
                     std::cout << "Error: digest_squeeze failed" << std::endl;
                     FAIL();
                 }
+            }
+            if (!db->digest_finalize(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
             }
             EXPECT_TRUE(ArraysMatch(
                 digest_,               // output
@@ -190,8 +193,9 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                 csv,
                 std::string(GetDigestStr(info.dt_type) + "_"
                             + SHA3_SHAKE_Len_Str + "_KAT")));
-            /* if context copy, check digest outputs from both handles */
-            if (ctx_copy)
+
+            /* for squeeze test, check digest outputs from both handles */
+            if (test_squeeze)
                 EXPECT_TRUE(ArraysMatch(
                     digest_dup_, // output squeezed out of m_handle_dup
                     csv.getVect("DIGEST"), // expected, from the KAT test data
@@ -223,6 +227,10 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
+            if (!db->digest_update(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
+            }
             if (ctx_copy) {
                 if (!db->context_copy()) {
                     std::cout << "Error: Digest base context_copy failed"
@@ -230,11 +238,10 @@ Digest_KAT(alc_digest_info_t info, bool ctx_copy)
                     FAIL();
                 }
             }
-            if (!db->digest_function(data)) {
+            if (!db->digest_finalize(data)) {
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
-
             /*conv m_digest into a vector */
             std::vector<Uint8> digest_vector(std::begin(digest),
                                              std::end(digest));
@@ -332,11 +339,14 @@ Digest_Cross(int HashSize, alc_digest_info_t info, bool ctx_copy)
             }
         }
 
-        if (!db->digest_function(data_alc)) {
+        if (!db->digest_update(data_alc)) {
             std::cout << "Error: Digest function failed" << std::endl;
             FAIL();
         }
-
+        if (!db->digest_finalize(data_alc)) {
+            std::cout << "Error: Digest function failed" << std::endl;
+            FAIL();
+        }
         if (!extDb->init(info, digestExt.size())) {
             std::cout << "Error: Ext Digest base init failed" << std::endl;
             FAIL();
@@ -351,7 +361,11 @@ Digest_Cross(int HashSize, alc_digest_info_t info, bool ctx_copy)
                 FAIL();
             }
         }
-        if (!extDb->digest_function(data_ext)) {
+        if (!extDb->digest_update(data_ext)) {
+            std::cout << "Error: Ext Digest function failed" << std::endl;
+            FAIL();
+        }
+        if (!extDb->digest_finalize(data_ext)) {
             std::cout << "Error: Ext Digest function failed" << std::endl;
             FAIL();
         }

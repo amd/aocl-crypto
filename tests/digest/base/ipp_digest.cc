@@ -119,7 +119,7 @@ IPPDigestBase::context_copy()
 }
 
 bool
-IPPDigestBase::digest_function(const alcp_digest_data_t& data)
+IPPDigestBase::digest_update(const alcp_digest_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 
@@ -129,7 +129,14 @@ IPPDigestBase::digest_function(const alcp_digest_data_t& data)
                   << std::endl;
         return false;
     }
-    status = ippsHashFinal_rmf(data.m_digest, m_handle);
+    return true;
+}
+
+bool
+IPPDigestBase::digest_finalize(const alcp_digest_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+    status           = ippsHashFinal_rmf(data.m_digest, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "Error code in ippsHashFinal_rmf: " << status << std::endl;
         return false;

@@ -152,13 +152,11 @@ AlcpDigestBase::context_copy()
         m_handle_dup = nullptr;
         return false;
     }
-    // std::swap(m_handle, m_handle_dup);
-
     return true;
 }
 
 bool
-AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
+AlcpDigestBase::digest_update(const alcp_digest_data_t& data)
 {
     alc_error_t err;
     if (data.m_msg != nullptr && data.m_msg_len > 0) {
@@ -169,6 +167,13 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
             return false;
         }
     }
+    return true;
+}
+
+bool
+AlcpDigestBase::digest_finalize(const alcp_digest_data_t& data)
+{
+    alc_error_t err;
     err = alcp_digest_finalize(m_handle, data.m_digest, data.m_digest_len);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
@@ -181,7 +186,6 @@ bool
 AlcpDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 {
     alc_error_t err;
-
     /* read m_digest_dup from m_handle_dup */
     err = alcp_digest_shake_squeeze(
         m_handle_dup, data.m_digest_dup, data.m_digest_len);
