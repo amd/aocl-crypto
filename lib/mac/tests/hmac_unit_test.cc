@@ -354,16 +354,16 @@ class HmacTestFixture
         if (sha_type == "SHA2") {
             if (hash_name == "256") {
                 m_p_sha256 = std::make_unique<Sha256>();
-                m_p_hmac->init(&m_key[0], m_key.size(),*m_p_sha256);
+                m_p_hmac->init(&m_key[0], m_key.size(), *m_p_sha256);
             } else if (hash_name == "224") {
                 m_p_sha224 = std::make_unique<Sha224>();
-                m_p_hmac->init(&m_key[0], m_key.size(),*m_p_sha224);
+                m_p_hmac->init(&m_key[0], m_key.size(), *m_p_sha224);
             } else if (hash_name == "384") {
                 m_p_sha384 = std::make_unique<Sha384>();
-                m_p_hmac->init(&m_key[0], m_key.size(),*m_p_sha384);
+                m_p_hmac->init(&m_key[0], m_key.size(), *m_p_sha384);
             } else if (hash_name == "512") {
                 m_p_sha512 = std::make_unique<Sha512>();
-                m_p_hmac->init(&m_key[0], m_key.size(),*m_p_sha512);
+                m_p_hmac->init(&m_key[0], m_key.size(), *m_p_sha512);
             }
 
         } else if (sha_type == "SHA3") {
@@ -393,7 +393,7 @@ TEST(HmacReliabilityTest, NullUpdate)
     Sha256 sha256;
     Hmac   hmac;
     Status status = StatusOk();
-    status = hmac.init(&key[0], key.size(), sha256);
+    status        = hmac.init(&key[0], key.size(), sha256);
     ASSERT_EQ(status, StatusOk());
     ASSERT_EQ(status, StatusOk());
 
@@ -516,7 +516,7 @@ TEST(HmacTest, UpdateFinalizeReset)
     Sha256 sha256;
     Hmac   hmac;
 
-    hmac.init(&key[0], key.size(),sha256);
+    hmac.init(&key[0], key.size(), sha256);
 
     hmac.update(&cipher_text.at(0), cipher_text.size());
     hmac.finalize(nullptr, 0);
@@ -547,7 +547,7 @@ TEST(HmacTest, setKeyAfterFinalize)
     Sha256 sha256;
     Hmac   hmac;
 
-    hmac.init(&key[0], key.size(),sha256);
+    hmac.init(&key[0], key.size(), sha256);
 
     hmac.update(&cipher_text.at(0), cipher_text.size());
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
@@ -568,7 +568,7 @@ TEST(HmacTest, setKeyAfterFinalize)
                                 cipher_text.end());
 
     // Reset with different Key
-    hmac.init(&key[0], key.size(),sha256);
+    hmac.init(&key[0], key.size(), sha256);
 
     hmac.update(&block1[0], block1.size());
     hmac.update(&block2[0], block2.size());
@@ -590,7 +590,7 @@ TEST(HmacRobustnessTest, callUpdateWithNullKey)
     Hmac   hmac;
     Sha256 sha256;
 
-    hmac.init(nullptr, 0,sha256);
+    hmac.init(nullptr, 0, sha256);
     Status s = hmac.update(nullptr, 0);
     EXPECT_EQ(s, InitError(""));
 }
@@ -598,7 +598,7 @@ TEST(HmacRobustnessTest, callUpdateWithNullKey)
 TEST(HmacRobustnessTest, callUpdateWithoutInit)
 {
 
-    Hmac  hmac;
+    Hmac   hmac;
     Status s = hmac.update(nullptr, 0);
     EXPECT_EQ(s, InitError(""));
 }
@@ -617,7 +617,7 @@ TEST(HmacRobustnessTest, callFinalizeWithNullKey)
     Hmac   hmac;
     Sha256 sha256;
 
-    hmac.init(nullptr, 0,sha256);
+    hmac.init(nullptr, 0, sha256);
     Status s = hmac.finalize(nullptr, 0);
     EXPECT_EQ(s, InitError(""));
 }
@@ -630,7 +630,7 @@ TEST(HmacRobustnessTest, callUpdateAfterFinalize)
     Uint8  data[32]{};
     Sha256 sha256;
     Status s{ StatusOk() };
-    s = hmac.init(key, sizeof(key),sha256);
+    s = hmac.init(key, sizeof(key), sha256);
     ASSERT_TRUE(s.ok());
     s = hmac.finalize(data, sizeof(data));
     ASSERT_TRUE(s.ok());

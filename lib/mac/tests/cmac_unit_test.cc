@@ -259,7 +259,6 @@ class CMACFuncionalityTest
     }
 
     inline void SetReserve(std::vector<Uint8>& var)
-
     {
         if (var.size() == 0)
             var.reserve(1);

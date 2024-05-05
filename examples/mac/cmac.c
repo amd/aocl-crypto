@@ -72,12 +72,15 @@ run_cmac(const alc_mac_info_p macInfo,
         return err;
     }
     // Update can be called multiple times with smaller chunks of the
+    //
     // cipherText
     err = alcp_mac_update(&handle, cipherText, cipherTextLen);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Update\n");
         return err;
     }
+
+    err = alcp_mac_finalize(&handle, mac, mac_size);
 
     err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {

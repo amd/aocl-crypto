@@ -102,7 +102,8 @@ __hmac_wrapperInit(void* hmac, const Uint8* key, Uint64 size, void* digest)
 {
     auto hmac_algo = static_cast<Hmac*>(hmac);
 
-    return hmac_algo->init(key, size, *reinterpret_cast<DIGESTALGORITHM*>(digest));
+    return hmac_algo->init(
+        key, size, *reinterpret_cast<DIGESTALGORITHM*>(digest));
 }
 
 template<typename DIGESTALGORITHM>
@@ -112,9 +113,8 @@ __build_with_copy_hmac(Context& srcCtx, Context& destCtx)
     destCtx.m_digest = new DIGESTALGORITHM(
         *reinterpret_cast<DIGESTALGORITHM*>(srcCtx.m_digest));
 
-    auto hmac_algo =
-        new Hmac(*reinterpret_cast<Hmac*>(srcCtx.m_mac));
-    destCtx.m_mac = static_cast<void*>(hmac_algo);
+    auto hmac_algo = new Hmac(*reinterpret_cast<Hmac*>(srcCtx.m_mac));
+    destCtx.m_mac  = static_cast<void*>(hmac_algo);
 
     destCtx.update    = srcCtx.update;
     destCtx.finalize  = srcCtx.finalize;
