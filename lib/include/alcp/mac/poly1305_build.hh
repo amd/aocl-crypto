@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,18 +59,10 @@ __poly1305_wrapperUpdate(void* poly1305, const Uint8* buff, Uint64 size)
 
 template<CpuArchFeature feature>
 static Status
-__poly1305_wrapperFinalize(void* poly1305, const Uint8* buff, Uint64 size)
+__poly1305_wrapperFinalize(void* poly1305, Uint8* buff, Uint64 size)
 {
     auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     return p_poly1305->finalize(buff, size);
-}
-
-template<CpuArchFeature feature>
-static Status
-__poly1305_wrapperCopy(void* poly1305, Uint8* buff, Uint64 size)
-{
-    auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
-    return p_poly1305->copy(buff, size);
 }
 
 template<CpuArchFeature feature>
@@ -78,7 +70,6 @@ static void
 __poly1305_wrapperFinish(void* poly1305, void* digest)
 {
     auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
-    p_poly1305->finish();
 #if 0
     p_poly1305->~Poly1305();
 #else
@@ -117,11 +108,11 @@ __build_poly1305_arch(const alc_key_info_t& cKinfo, Context& ctx)
     }
     ctx.m_mac = static_cast<void*>(p_algo);
 
-    ctx.update   = __poly1305_wrapperUpdate<feature>;
-    ctx.finalize = __poly1305_wrapperFinalize<feature>;
-    ctx.copy     = __poly1305_wrapperCopy<feature>;
-    ctx.finish   = __poly1305_wrapperFinish<feature>;
-    ctx.reset    = __poly1305_wrapperReset<feature>;
+    ctx.update    = __poly1305_wrapperUpdate<feature>;
+    ctx.finalize  = __poly1305_wrapperFinalize<feature>;
+    ctx.finish    = __poly1305_wrapperFinish<feature>;
+    ctx.reset     = __poly1305_wrapperReset<feature>;
+    ctx.duplicate = nullptr;
 
     return status;
 }

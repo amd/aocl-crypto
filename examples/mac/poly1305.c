@@ -43,15 +43,11 @@ poly1305_demo(const alc_mac_info_p macInfo,
 
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = alcp_mac_supported(macInfo);
+    handle.ch_context = malloc(alcp_mac_context_size(macInfo));
 
-    if (err == ALC_ERROR_NONE) {
-        handle.ch_context = malloc(alcp_mac_context_size(macInfo));
-    } else {
-        printf("Information provided is unsupported\n");
-        return err;
+    if (handle.ch_context == NULL) {
+        return ALC_ERROR_GENERIC;
     }
-    printf("Support Success!\n");
 
     err = alcp_mac_request(&handle, macInfo);
     if (alcp_is_error(err)) {
@@ -66,19 +62,13 @@ poly1305_demo(const alc_mac_info_p macInfo,
         return err;
     }
     printf("Mac Generation Success!\n");
-    // In Finalize code, last remaining buffer can be provided if any exists
-    // with its size
-    err = alcp_mac_finalize(&handle, NULL, 0);
+
+    err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Finalize\n");
         return err;
     }
-    printf("Finalized!\n");
-    err = alcp_mac_copy(&handle, mac, mac_size);
-    if (alcp_is_error(err)) {
-        printf("Error Occurred while Copying MAC\n");
-        return err;
-    }
+
     printf("Mac Copy Success!\n");
     alcp_mac_finish(&handle);
     free(handle.ch_context);

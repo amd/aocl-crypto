@@ -100,17 +100,12 @@ AlcpCmacBase::cmacFunction(const alcp_cmac_data_t& data)
         return false;
     }
 
-    err = alcp_mac_finalize(m_handle, NULL, 0);
+    err = alcp_mac_finalize(m_handle, data.m_cmac, data.m_cmac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
         return false;
     }
 
-    err = alcp_mac_copy(m_handle, data.m_cmac, data.m_cmac_len);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
-        return false;
-    }
     // Without reseting it is not possible to reuse m_handle after finalizing
     reset();
     return true;

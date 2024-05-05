@@ -64,12 +64,11 @@ run_hmac(const alc_mac_info_p macInfo,
 {
 
     alc_error_t err = ALC_ERROR_NONE;
-    err             = alcp_mac_supported(macInfo);
-    if (err == ALC_ERROR_NONE) {
-        handle.ch_context = malloc(alcp_mac_context_size(macInfo));
-    } else {
-        printf("HMAC Infomation is unsupported\n");
-        return err;
+
+    handle.ch_context = malloc(alcp_mac_context_size(macInfo));
+
+    if (handle.ch_context == NULL) {
+        return ALC_ERROR_GENERIC;
     }
 
     Uint8 error_message[1024] = "";
@@ -85,11 +84,7 @@ run_hmac(const alc_mac_info_p macInfo,
     }
     // In Finalize code, last remaining buffer can be provided if any exists
     // with its size
-    err = alcp_mac_finalize(&handle, NULL, 0);
-    if (alcp_is_error(err)) {
-        goto out;
-    }
-    err = alcp_mac_copy(&handle, mac, mac_size);
+    err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         goto out;
     }
@@ -741,18 +736,12 @@ demo_Hmac_Sha3_384_Reset()
         return -1;
     }
 
-    // In Finalize code, last remaining buffer can be provided if any exists
-    // with its size
-    err = alcp_mac_finalize(&handle, NULL, 0);
+    err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Finalize\n");
         return -1;
     }
-    err = alcp_mac_copy(&handle, mac, mac_size);
-    if (alcp_is_error(err)) {
-        printf("Error Occurred while Copying MAC\n");
-        return -1;
-    }
+
     alcp_mac_finish(&handle);
     free(handle.ch_context);
 

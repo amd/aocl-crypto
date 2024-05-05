@@ -45,8 +45,7 @@ debug_dump(std::string str, BIGNUM* z)
 #else
 void
 debug_dump(std::string str, BIGNUM* z)
-{
-}
+{}
 #endif
 
 /*
@@ -168,8 +167,7 @@ Poly1305BNRef::blk(const Uint8 pMsg[], Uint64 msgLen)
 
         // Find if we are in the last block, if we are, then only do left
         // bytes
-        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i) * 16)
-                                                       : 16;
+        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i)*16) : 16;
 #ifdef DEBUG
         std::cout << "Current Block Length:" << curr_blocklen << std::endl;
 #endif
@@ -238,17 +236,19 @@ Poly1305BNRef::update(const Uint8 pMsg[], Uint64 msgLen)
     return s;
 }
 Status
-Poly1305BNRef::finish(const Uint8 pMsg[], Uint64 msgLen)
+Poly1305BNRef::finish(Uint8 digest[], Uint64 length)
 {
     Status s = StatusOk();
     if (m_finalized) {
         s.update(status::InternalError("Already finalized!"));
         return s;
     }
-    s.update(update(pMsg, msgLen));
-    if (!s.ok()) {
+
+    if (length != 16) {
+        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
         return s;
     }
+
     blk(m_msg_buffer, m_msg_buffer_len);
 
     // a+=s;
@@ -256,22 +256,6 @@ Poly1305BNRef::finish(const Uint8 pMsg[], Uint64 msgLen)
     debug_dump("A FIN:", m_a_bn);
     BN_bn2bin(m_a_bn, m_accumulator);
     m_finalized = true;
-    return s;
-    // Erasing will be taken care by the "State" destructor
-}
-
-Status
-Poly1305BNRef::copy(Uint8 digest[], Uint64 length)
-{
-    Status s = StatusOk();
-    if (!m_finalized) {
-        s.update(status::InternalError("Not finalized yet!"));
-        return s;
-    }
-    if (length != 16) {
-        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
-        return s;
-    }
 
     int offset = 0;
     if (BN_num_bytes(m_a_bn) > static_cast<int>(length)) {
@@ -281,6 +265,7 @@ Poly1305BNRef::copy(Uint8 digest[], Uint64 length)
         m_accumulator + offset, m_accumulator + BN_num_bytes(m_a_bn), digest);
 
     return s;
+    // Erasing will be taken care by the "State" destructor
 }
 
 Status
@@ -477,7 +462,7 @@ Poly1305Ref::update(const Uint8 pMsg[], Uint64 msgLen)
 }
 
 Status
-Poly1305Ref::finish(const Uint8 pMsg[], Uint64 msgLen)
+Poly1305Ref::finish(Uint8 digest[], Uint64 len)
 {
     Status s = StatusOk();
     if (m_finalized) {
@@ -485,8 +470,9 @@ Poly1305Ref::finish(const Uint8 pMsg[], Uint64 msgLen)
         return s;
     }
 
-    if (msgLen) {
-        s.update(update(pMsg, msgLen));
+    if (len != 16) {
+        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
+        return s;
     }
 
     if (m_msg_buffer_len) {
@@ -565,30 +551,14 @@ Poly1305Ref::finish(const Uint8 pMsg[], Uint64 msgLen)
         m_accumulator[i] = acc[i];
     }
 
-    m_finalized = true;
-
-    return s;
-}
-
-Status
-Poly1305Ref::copy(Uint8 digest[], Uint64 len)
-{
-    Status s = StatusOk();
-    if (!m_finalized) {
-        s.update(status::InternalError("Not finalized yet!"));
-        return s;
-    }
-    if (len != 16) {
-        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
-        return s;
-    }
-
     const Uint8* p_accumulator_8 = reinterpret_cast<Uint8*>(m_accumulator);
 
     std::copy(p_accumulator_8, p_accumulator_8 + 4, digest);
     std::copy(p_accumulator_8 + 8, p_accumulator_8 + 12, digest + 4);
     std::copy(p_accumulator_8 + 16, p_accumulator_8 + 20, digest + 8);
     std::copy(p_accumulator_8 + 24, p_accumulator_8 + 28, digest + 12);
+
+    m_finalized = true;
 
     return s;
 }

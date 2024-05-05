@@ -37,20 +37,52 @@
 #include <memory>
 
 namespace alcp::mac {
-class ALCP_API_EXPORT Hmac final : public Mac
+class ALCP_API_EXPORT Hmac final : public IMac
 {
-
-  public:
-    digest::IDigest* m_pDigest;
-
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pImpl;
-    const Impl*           pImpl() const { return m_pImpl.get(); }
-    Impl*                 pImpl() { return m_pImpl.get(); }
+    // Input Key to HMAC
+    const Uint8* m_pKey{};
+    // Length of the input key must be >0 to be valid
+    Uint32 m_keylen{};
+    // Length of the preprocessed Key
+    Uint32 m_k0_length{};
+    // Input Block Length or B of the digest used by HMAC
+    Uint32 m_input_block_length{};
+    // Size of the message digest
+    Uint32 m_output_hash_size{};
+    // Optimization: Maximum output size of 64 bytes and Maximum Internal Block
+    // Length of 144 bytes
+    static constexpr int cMaxHashSize            = 64;
+    static constexpr int cMaxInternalBlockLength = 144;
+    /* Placeholder variable to hold intermediate hash and the the mac value
+    after finalize has been called */
+    alignas(16) Uint8 m_pTempHash[cMaxHashSize]{};
+
+    // Variable to track whether finalize has been called
+    bool m_finalized = false;
+
+    // TODO: Consider Shared pointer for this implementation
+    /**
+     * Pointer to the Base class Digest, holds the address of the derived class
+     * object of Digest which supports HMAC
+     *
+     */
+    digest::IDigest* m_pDigest{};
+
+    alignas(16) Uint8 m_pK0_xor_opad[cMaxInternalBlockLength]{};
+    alignas(16) Uint8 m_pK0_xor_ipad[cMaxInternalBlockLength]{};
+
+    /**
+     * Preprocessed Key to match the input block length input_block_length
+     * get_k0 function performs the preprocessing
+     * */
+    alignas(16) Uint8 m_pK0[cMaxInternalBlockLength]{};
 
   public:
-    Hmac();
+    Hmac()  = default;
+    ~Hmac() = default;
+    Hmac(Hmac& hmac);
+
     /**
      * @brief Can be called continously to update message on small chunks
      * @param buff: message array block to update HMAC
@@ -59,18 +91,11 @@ class ALCP_API_EXPORT Hmac final : public Mac
      */
     Status update(const Uint8* buff, Uint64 size) override;
     /**
-     * @brief Can be called only once to update the final message chunk
-     * @param size: Size of the final message chunk
+     * @brief Can be called only once to get the final mac
+     * @param size: Size of the final mac
      * @returns Status
      */
-    Status finalize(const Uint8* buff, Uint64 size) override;
-    /**
-     * @brief Can be called only once to update the final message chunk
-     * @param buff: Pointer to the array to copy the message hash to
-     * @param size: Message digest Size
-     * @returns Status
-     */
-    Status copyHash(Uint8* buff, Uint64 size) const;
+    Status finalize(Uint8* buff, Uint64 size) override;
     /**
      * @brief get the output hash size to allocate the output array on
      * @returns the output hash size of HMAC
@@ -95,17 +120,18 @@ class ALCP_API_EXPORT Hmac final : public Mac
     Status setKey(const Uint8 key[], Uint32 keylen);
 
     /**
-     * @brief finish HMAC.
-     */
-    void finish() override;
-    /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with
      * the same digest and same key.
      * @returns Status
      */
     Status reset() override;
 
-    ~Hmac();
+  private:
+    void getK0XorPad();
+
+    void copyData(Uint8* destination, const Uint8* source, int len);
+
+    Status getK0();
 };
 
 namespace avx2 {

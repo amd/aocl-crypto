@@ -100,26 +100,15 @@ MacBuilder::getSize(const alc_mac_info_t& macInfo)
 }
 
 Status
-MacBuilder::isSupported(const alc_mac_info_t& macInfo)
+MacBuilder::BuildWithCopy(mac::Context& srcCtx, mac::Context& destCtx)
 {
-    Status s{ StatusOk() };
-
-    switch (macInfo.mi_type) {
-        case ALC_MAC_CMAC:
-            s = CmacBuilder::isSupported(macInfo);
-            break;
-        case ALC_MAC_HMAC:
-            s = HmacBuilder::isSupported(macInfo);
-            break;
-        case ALC_MAC_POLY1305:
-            s = Poly1305Builder::isSupported(macInfo);
-            break;
-        default:
-            return InvalidArgument("Invalid MAC Algorithm");
-            break;
+    Status status = StatusOk();
+    if (srcCtx.duplicate) {
+        status = srcCtx.duplicate(srcCtx, destCtx);
+    } else {
+        status.update(NotImplemented("Unknown MAC Type"));
     }
-
-    return s;
+    return status;
 }
 
 } // namespace alcp::mac

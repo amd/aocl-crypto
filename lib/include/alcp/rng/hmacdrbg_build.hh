@@ -40,8 +40,6 @@ class HmacDrbgBuilder
     static Status build(const alc_drbg_info_t& drbgInfo, Context& ctx);
 
     static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
-
-    static Status isSupported(const alc_drbg_info_t& drbgInfo);
 };
 
 Status
@@ -105,12 +103,5 @@ Uint64
 HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 {
     return sizeof(alcp::rng::drbg::HmacDrbg);
-}
-
-Status
-HmacDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
-{
-    return mac::isDigestSupported(
-        drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode);
 }
 } // namespace alcp::drbg

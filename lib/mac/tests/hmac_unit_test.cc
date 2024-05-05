@@ -380,12 +380,6 @@ class HmacTestFixture
         }
         m_p_hmac->setKey(&m_key[0], m_key.size());
     }
-    void TearDown() override
-    {
-        if (m_p_hmac) {
-            m_p_hmac->finish();
-        }
-    }
 };
 
 TEST(HmacReliabilityTest, NullUpdate)
@@ -410,13 +404,10 @@ TEST(HmacReliabilityTest, NullUpdate)
 
     status = hmac.update(&cipher_text[0], cipher_text.size());
     ASSERT_EQ(status, StatusOk());
-    status = hmac.finalize(nullptr, 0);
-    ASSERT_EQ(status, StatusOk());
 
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST_P(HmacTestFixture, HMAC_UPDATE)
@@ -427,10 +418,8 @@ TEST_P(HmacTestFixture, HMAC_UPDATE)
 
     m_p_hmac->update(&m_cipher_text[0], m_cipher_text.size());
 
-    m_p_hmac->finalize(nullptr, 0);
-
     std::vector<Uint8> mac = std::vector<Uint8>(m_p_hmac->getHashSize(), 0);
-    m_p_hmac->copyHash(&mac.at(0), mac.size());
+    m_p_hmac->finalize(&mac.at(0), mac.size());
 
     EXPECT_EQ(mac, m_expected_mac);
 }
@@ -458,10 +447,9 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
 
     m_p_hmac->update(&block1[0], block1.size());
     m_p_hmac->update(&block2[0], block2.size());
-    m_p_hmac->finalize(nullptr, 0);
 
     std::vector<Uint8> mac = std::vector<Uint8>(m_p_hmac->getHashSize(), 0);
-    m_p_hmac->copyHash(&mac.at(0), mac.size());
+    m_p_hmac->finalize(&mac.at(0), mac.size());
 
     EXPECT_EQ(mac, m_expected_mac);
 }
@@ -484,11 +472,10 @@ TEST(HmacTest, UpdateReset)
     hmac.reset();
 
     hmac.update(&cipher_text[0], cipher_text.size());
-    hmac.finalize(nullptr, 0);
+
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacTest, FinalizeReset)
@@ -504,16 +491,15 @@ TEST(HmacTest, FinalizeReset)
     Hmac   hmac;
     hmac.setDigest(sha256);
     hmac.setKey(&key[0], key.size());
-    hmac.finalize(&cipher_text[0], cipher_text.size());
+    hmac.update(&cipher_text[0], cipher_text.size());
 
     hmac.reset();
 
     hmac.update(&cipher_text[0], cipher_text.size());
-    hmac.finalize(nullptr, 0);
+
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacTest, UpdateFinalizeReset)
@@ -542,11 +528,10 @@ TEST(HmacTest, UpdateFinalizeReset)
     hmac.reset();
 
     hmac.update(&block1[0], block1.size());
-    hmac.finalize(&block2[0], block2.size());
+    hmac.update(&block2[0], block2.size());
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacTest, setKeyAfterFinalize)
@@ -571,9 +556,8 @@ TEST(HmacTest, setKeyAfterFinalize)
     hmac.setKey(&key[0], key.size());
 
     hmac.update(&cipher_text.at(0), cipher_text.size());
-    hmac.finalize(nullptr, 0);
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
 
     pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_LT_B");
@@ -593,10 +577,9 @@ TEST(HmacTest, setKeyAfterFinalize)
     hmac.setKey(&key[0], key.size());
 
     hmac.update(&block1[0], block1.size());
-    hmac.finalize(&block2[0], block2.size());
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.update(&block2[0], block2.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
@@ -702,19 +685,6 @@ TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
     Uint8  key[16]{};
     Status s = hmac.setKey(key, sizeof(key));
     ASSERT_EQ(s, EmptyHMACDigestError(""));
-}
-
-TEST(HmacRobustnessTest, callCopyWithoutFinalize)
-{
-
-    Hmac   hmac;
-    Sha256 sha256;
-
-    Uint8 key[16]{};
-    hmac.setDigest(sha256);
-    hmac.setKey(key, sizeof(key));
-    Status s = hmac.copyHash(nullptr, 0);
-    EXPECT_EQ(s, CopyWithoutFinalizeError(""));
 }
 
 INSTANTIATE_TEST_SUITE_P(

@@ -141,26 +141,6 @@ typedef struct alc_mac_handle
 } alc_mac_handle_t, *alc_mac_handle_p, AlcMacHandle;
 
 /**
- * @brief  Allows to check if a given algorithm is supported or not
- *
- * @parblock <br> &nbsp;
- * <b>This API needs to be called before any other API is called to
- * know if mac that is being request is supported or not </b>
- * @endparblock
- *
- * @note        alcp_mac_supported() is called first to
- *              know if the given configuration is valid.
- *
- * @param [in]      pcMacInfo Description of the requested mac session
- *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_mac_supported(const alc_mac_info_p pcMacInfo);
-
-/**
  * @brief       Gets the size of the context for a session described by
  *              pMacInfo
  *
@@ -214,8 +194,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 
 /**
- * @brief               Allows caller to finalize MAC with final chunk of data
- *                      to be authenticated
+ * @brief               Allows caller to finalize and copy final MAC
  * @parblock <br> &nbsp;
  * <b>This API is called to finalize mac so should be called after @ref
  * alcp_mac_request and before @ref alcp_mac_finish</b>
@@ -223,39 +202,17 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
  * @note
  *                      - Error needs to be checked for each call,
  *                        valid only if @ref alcp_is_error (ret) is false.
- *                      - It is expected that application calls
- *                        alcp_mac_copy() after calling this function as the
- *                        contents of the session is not guaranteed to persist
- *                        after alcp_mac_finish()
+ *
  * @param [in]   pMacHandle  Session handle for future MAC
  *                       operation
- * @param [in]   buff        The last chunk of the message to be updated
- * @param [in]   size        Length of input buffer in bytes.
+ * @param [in]   buff        The buffer holding mac
+ * @param [in]   size        mac size in bytes.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_mac_error or @ref alcp_error_str needs
  * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
-
-/**
- * @brief               Allows caller to copy MAC to the buffer
- * @parblock <br> &nbsp;
- * <b>This API is called to copy mac, so should be called after @ref
- * alcp_mac_request and before @ref alcp_mac_finish </b>
- * @endparblock
- * @note                Error needs to be checked for each call,
- *                      valid only if @ref alcp_is_error (ret) is false
- * @param [in] pMacHandle    Session handle for future MAC
- *                      operation
- * @param[out]   buff   Destination buffer to which mac will be copied
- * @param[in]    size   Length of output buffer in bytes
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_mac_error or @ref alcp_error_str needs
- * to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
+alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
 
 /**
  *
@@ -307,6 +264,23 @@ alcp_mac_reset(alc_mac_handle_p pMacHandle);
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* pBuff, Uint64 size);
+
+/**
+ * @brief        copies the context from source to destination
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API can be called only after @ref alcp_mac_request and before
+ * session call @ref alcp_mac_finish</b> on pSrcHandle
+ * @endparblock
+ *
+ * @param [in]   pSrcHandle   source mac handle
+ * @param [out]  pDestHandle  destination mac handle
+ *
+ * @return       alc_error_t Error code to validate the operation
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
+                      const alc_mac_handle_p pDestHandle);
 
 EXTERN_C_END
 

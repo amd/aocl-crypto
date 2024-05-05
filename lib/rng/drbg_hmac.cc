@@ -310,12 +310,11 @@ HmacDrbg::Impl::HMAC_Wrapper(const Uint8  cIn1[],
         m_hmac_obj.update(cIn2, cIn2Len);
     if (cIn3 != nullptr && cIn3Len != 0)
         m_hmac_obj.update(cIn3, cIn3Len);
-    m_hmac_obj.finalize(nullptr, 0);
 
     // Assert that we have enough memory to write the output into
     assert(cOutLen >= m_digest->getHashSize());
 
-    m_hmac_obj.copyHash(out, m_digest->getHashSize());
+    m_hmac_obj.finalize(out, m_digest->getHashSize());
 }
 
 void

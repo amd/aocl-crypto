@@ -94,17 +94,12 @@ AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
         return false;
     }
 
-    err = alcp_mac_finalize(m_handle, NULL, 0);
+    err = alcp_mac_finalize(m_handle, data.out.m_hmac, data.out.m_hmac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
         return false;
     }
 
-    err = alcp_mac_copy(m_handle, data.out.m_hmac, data.out.m_hmac_len);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
-        return false;
-    }
     return true;
 }
 

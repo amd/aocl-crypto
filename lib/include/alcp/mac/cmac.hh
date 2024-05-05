@@ -45,7 +45,7 @@ union reg_128
 };
 
 namespace alcp::mac {
-class Cmac final : public Mac
+class Cmac final : public IMac
 {
   public:
     ALCP_API_EXPORT Cmac();
@@ -68,31 +68,16 @@ class Cmac final : public Mac
     ALCP_API_EXPORT Status setKey(const Uint8 key[], Uint64 len);
 
     /**
-     * @brief Finish CMAC. Other calls are not valid after finish
-     */
-    void finish() override;
-
-    /**
      * @brief Reset CMAC. After resetting update can be called by the same key
      */
     ALCP_API_EXPORT Status reset() override;
     /**
-     * @brief Finalize CMAC with any remaining data. After Finalize call Mac can
-     * be copied using copy function
+     * @brief Call Finalize to copy the digest
      *
-     * @param pMsgBuf   Plaintext Message Buffer bytes remaining to be updated
-     * @param size      Size of the Plaintext Message Buffer in bytes
+     * @param pMsgBuf   cmac buffer
+     * @param size      Size of the cmac in bytes
      */
-    ALCP_API_EXPORT Status finalize(const Uint8 pMsgBuf[],
-                                    Uint64      size) override;
-    /**
-     * @brief Copy MAC to memory pointer by buff . Should be called only after
-     * Mac has been Finalized.
-     *
-     * @param buff      Output Buffer to which Mac will be copied
-     * @param size      Size of the buffer in bytes.
-     */
-    ALCP_API_EXPORT Status copy(Uint8 buff[], Uint64 size);
+    ALCP_API_EXPORT Status finalize(Uint8 pMsgBuf[], Uint64 size) override;
 
   private:
     class Impl;

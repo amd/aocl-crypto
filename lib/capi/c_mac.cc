@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,27 +41,8 @@ EXTERN_C_BEGIN
 Uint64
 alcp_mac_context_size(const alc_mac_info_p pcMacInfo)
 {
-    Uint64 size = sizeof(mac::Context) + mac::MacBuilder::getSize(*pcMacInfo);
+    Uint64 size = sizeof(mac::Context);
     return size;
-}
-
-alc_error_t
-alcp_mac_supported(const alc_mac_info_p pcMacInfo)
-{
-
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pcMacInfo, err);
-    // FIXME: Implement Digest Support check
-    Status s = mac::MacBuilder::isSupported(*pcMacInfo);
-
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!s.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
-
-    return err;
 }
 
 alc_error_t
@@ -106,7 +87,7 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
 }
 
 alc_error_t
-alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
+alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -122,28 +103,6 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
     } else {
         err = ALC_ERROR_NONE;
     }
-    return err;
-}
-
-alc_error_t
-alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
-    ALCP_BAD_PTR_ERR_RET(buff, err);
-
-    auto p_ctx    = static_cast<mac::Context*>(pMacHandle->ch_context);
-    p_ctx->status = p_ctx->copy(p_ctx->m_mac, buff, size);
-
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
-
     return err;
 }
 
@@ -195,6 +154,54 @@ alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* pBuff, Uint64 size)
 
     int size_to_copy = size > message.size() ? message.size() : size;
     snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
+
+    return err;
+}
+
+alc_error_t
+alcp_mac_init(alc_mac_handle_p pMacHandle, const Uint8* key, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
+    ALCP_BAD_PTR_ERR_RET(key, err);
+
+    auto   p_ctx  = static_cast<mac::Context*>(pMacHandle->ch_context);
+    Status status = p_ctx->init(p_ctx->m_mac, key, size);
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+    // FIXME: This function is always returning no errors
+    return err;
+}
+
+alc_error_t
+alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
+                      const alc_mac_handle_p pDestHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pSrcHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDestHandle, err);
+
+    auto src_ctx  = static_cast<mac::Context*>(pSrcHandle->ch_context);
+    auto dest_ctx = static_cast<mac::Context*>(pDestHandle->ch_context);
+
+    ALCP_BAD_PTR_ERR_RET(src_ctx, err);
+    ALCP_BAD_PTR_ERR_RET(dest_ctx, err);
+    ALCP_BAD_PTR_ERR_RET(src_ctx->m_digest, err);
+    new (dest_ctx) mac::Context;
+
+    Status status = mac::MacBuilder::BuildWithCopy(*src_ctx, *dest_ctx);
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
 
     return err;
 }

@@ -188,17 +188,17 @@ Poly1305<feature>::reset()
 
 template<utils::CpuArchFeature feature>
 Status
-Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
+Poly1305<feature>::finalize(Uint8 digest[], Uint64 digestLen)
 {
     if constexpr ((utils::CpuArchFeature::eReference == feature)
                   || (utils::CpuArchFeature::eAvx2 == feature)) {
-        return poly1305_impl->finish(pMsg, msgLen);
+        return poly1305_impl->finish(digest, digestLen);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 // return poly1305_impl->finish(pMsg, msgLen);
 #if POLY1305_RADIX_26
-        return zen4::poly1305_finish_radix26(state.key,
-                                             pMsg,
-                                             msgLen,
+        return zen4::poly1305_finish_radix26(digest,
+                                             digestLen,
+                                             state.key,
                                              state.a,
                                              state.msg_buffer,
                                              state.msg_buffer_len,
@@ -206,7 +206,7 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
                                              &state.s[0],
                                              state.finalized);
 #else
-        if (zen4::poly1305_finalize_radix44(state, pMsg, msgLen) == true)
+        if (zen4::poly1305_finalize_radix44(state, digest, digestLen) == true)
             return StatusOk();
         else
             return status::AlreadyFinalizedError("");
@@ -217,9 +217,9 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
 #if POLY1305_RADIX_26
-            return zen4::poly1305_finish_radix26(state.key,
-                                                 pMsg,
-                                                 msgLen,
+            return zen4::poly1305_finish_radix26(digest,
+                                                 digestLen,
+                                                 state.key,
                                                  state.a,
                                                  state.msg_buffer,
                                                  state.msg_buffer_len,
@@ -227,57 +227,14 @@ Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
                                                  &state.s[0],
                                                  state.finalized);
 #else
-            if (zen4::poly1305_finalize_radix44(state, pMsg, msgLen) == true)
+            if (zen4::poly1305_finalize_radix44(state, digest, digestLen)
+                == true)
                 return StatusOk();
             else
                 return status::AlreadyFinalizedError("");
 #endif
         } else {
-            return poly1305_impl->finish(pMsg, msgLen);
-        }
-    }
-    return base::status::InternalError("Dispatch Failure");
-}
-
-template<utils::CpuArchFeature feature>
-void
-Poly1305<feature>::finish()
-{
-}
-
-template<utils::CpuArchFeature feature>
-Status
-Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
-{
-    if constexpr ((utils::CpuArchFeature::eReference == feature)
-                  || (utils::CpuArchFeature::eAvx2 == feature)) {
-        return poly1305_impl->copy(digest, length);
-    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
-#if POLY1305_RADIX_26
-        return zen4::poly1305_copy_radix26(
-            digest, length, state.a, state.finalized);
-#else
-        if (zen4::poly1305_copy_radix44(state, digest, length) == true)
-            return StatusOk();
-        else
-            return status::CopyWithoutFinalizeError("");
-#endif
-    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
-        // Manual dispatch in case we don't know where to dispatch to.
-        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
-#if POLY1305_RADIX_26
-            return zen4::poly1305_copy_radix26(
-                digest, length, state.a, state.finalized);
-#else
-            if (zen4::poly1305_copy_radix44(state, digest, length) == true)
-                return StatusOk();
-            else
-                return status::CopyWithoutFinalizeError("");
-#endif
-        } else {
-            return poly1305_impl->copy(digest, length);
+            return poly1305_impl->finish(digest, digestLen);
         }
     }
     return base::status::InternalError("Dispatch Failure");

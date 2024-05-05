@@ -71,7 +71,14 @@ class Cmac::Impl : public cipher::Aes
     Impl()
     //: Aes() FIXME: Aes(ctx) to be added
     {
+        // Todo: Do we need to change the mode
         setMode(ALC_AES_MODE_NONE);
+    }
+
+    ~Impl()
+    {
+        m_encrypt_keys = nullptr;
+        reset();
     }
 
     Impl(alc_cipher_data_t* data)
@@ -101,11 +108,6 @@ class Cmac::Impl : public cipher::Aes
         return s;
     }
 
-    void finish()
-    {
-        m_encrypt_keys = nullptr;
-        reset();
-    }
     Status reset()
     {
         memset(m_temp_enc_result_8, 0, cAESBlockSize);
@@ -211,7 +213,7 @@ class Cmac::Impl : public cipher::Aes
         return status;
     }
 
-    Status finalize(const Uint8 plaintext[], Uint64 plaintext_size)
+    Status finalize(Uint8 pMsgBuf[], Uint64 size)
     {
         if (m_finalized) {
             return AlreadyFinalizedError("");
@@ -224,9 +226,7 @@ class Cmac::Impl : public cipher::Aes
             CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
 
         Status s{ StatusOk() };
-        if (plaintext_size != 0) {
-            update(plaintext, plaintext_size);
-        }
+
         if (has_avx2_aesni) {
             avx2::finalize(m_storage_buffer,
                            m_storage_buffer_offset,
@@ -236,6 +236,7 @@ class Cmac::Impl : public cipher::Aes
                            m_rounds,
                            m_temp_enc_result_8,
                            m_encrypt_keys);
+            utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
             m_finalized = true;
             return s;
         }
@@ -268,17 +269,10 @@ class Cmac::Impl : public cipher::Aes
         // temp_enc_result
         encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
 
+        utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
+
         m_finalized = true;
         return s;
-    }
-    Status copy(Uint8 buff[], Uint64 size)
-    {
-        if (!m_finalized) {
-            return CopyWithoutFinalizeError("");
-        } else {
-            utils::CopyBytes(buff, m_temp_enc_result_8, size);
-        }
-        return StatusOk();
     }
 
   private:
@@ -303,24 +297,16 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{
-}
+{}
 
 Cmac::Cmac(alc_cipher_data_t* data)
     : m_pImpl{ std::make_unique<Cmac::Impl>(data) }
-{
-}
+{}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
 {
     return m_pImpl->update(pMsgBuf, size);
-}
-
-void
-Cmac::finish()
-{
-    m_pImpl->finish();
 }
 
 Status
@@ -330,15 +316,9 @@ Cmac::reset()
 }
 
 Status
-Cmac::finalize(const Uint8 pMsgBuf[], Uint64 size)
+Cmac::finalize(Uint8 pMsgBuf[], Uint64 size)
 {
     return m_pImpl->finalize(pMsgBuf, size);
-}
-
-Status
-Cmac::copy(Uint8 buff[], Uint64 size)
-{
-    return m_pImpl->copy(buff, size);
 }
 
 Status

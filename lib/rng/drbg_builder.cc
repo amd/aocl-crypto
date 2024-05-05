@@ -228,6 +228,7 @@ DrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
     return size;
 }
 
+// ToDO: Check if the isSupported is required
 Status
 DrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
@@ -244,7 +245,7 @@ DrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
             return CtrDrbgBuilder::isSupported(drbgInfo);
             break;
         case ALC_DRBG_HMAC:
-            return HmacDrbgBuilder::isSupported(drbgInfo);
+            return s;
             break;
     }
     return s;

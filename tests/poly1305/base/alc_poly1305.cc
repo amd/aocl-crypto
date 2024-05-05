@@ -94,15 +94,9 @@ AlcpPoly1305Base::mac(const alcp_poly1305_data_t& data)
         return false;
     }
 
-    err = alcp_mac_finalize(m_handle, NULL, 0);
+    err = alcp_mac_finalize(m_handle, data.m_mac, data.m_mac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
-        return false;
-    }
-
-    err = alcp_mac_copy(m_handle, data.m_mac, data.m_mac_len);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
         return false;
     }
 

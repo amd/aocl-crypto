@@ -181,20 +181,12 @@ class Poly1305BNRef
      */
     Status update(const Uint8 pMsg[], Uint64 msgLen);
     /**
-     * @brief
-     * @param pMsg Given message, finishes internal state processing the
-     * message.
-     * @param msgLen Length of message in bytes
-     * @return Status/Result of the operation
-     */
-    Status finish(const Uint8 pMsg[], Uint64 msgLen);
-    /**
-     * @brief
+     * @brief finishes internal state processing
      * @param digest Copy the digest/mac to given buffer
      * @param length Length of the buffer to copy into
      * @return Status/Result of the operation
      */
-    Status copy(Uint8 digest[], Uint64 length);
+    Status finish(Uint8 digest[], Uint64 length);
     /**
      * @brief Resets the temporary buffers without clearing key
      * @return Status/Result of the operation
@@ -223,20 +215,12 @@ class Poly1305Ref
      */
     Status update(const Uint8 pMsg[], Uint64 msgLen);
     /**
-     * @brief
-     * @param pMsg Given message, finishes internal state processing the
-     * message.
-     * @param msgLen Length of message in bytes
-     * @return Status/Result of the operation
-     */
-    Status finish(const Uint8 pMsg[], Uint64 msgLen);
-    /**
-     * @brief
+     * @brief finishes internal state processing
      * @param digest Copy the digest/mac to given buffer
      * @param length Length of the buffer to copy into
      * @return Status/Result of the operation
      */
-    Status copy(Uint8 digest[], Uint64 len);
+    Status finish(Uint8 digest[], Uint64 length);
     /**
      * @brief Resets the temporary buffers without clearing key
      * @return Status/Result of the operation
