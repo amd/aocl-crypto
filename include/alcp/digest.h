@@ -52,10 +52,6 @@ EXTERN_C_BEGIN
  */
 typedef enum _alc_digest_type
 {
-    ALC_DIGEST_TYPE_MD2,
-    ALC_DIGEST_TYPE_MD4,
-    ALC_DIGEST_TYPE_MD5,
-    ALC_DIGEST_TYPE_SHA1,
     ALC_DIGEST_TYPE_SHA2,
     ALC_DIGEST_TYPE_SHA3,
 } alc_digest_type_t;
