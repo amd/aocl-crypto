@@ -113,8 +113,8 @@ typedef enum _alc_digest_mode
 ```
 
 ### The _Digest_ class
-This is the C++ interface to the Digests, all digest algorithms will 
-inherited this class.
+This is the C++ interface to the Digests. All digest algorithms will 
+inherit this class.
 
 ```c++
 class IDigest
@@ -162,7 +162,7 @@ class Sha2 final : public IDigest
         cWordSizeBits   = 32,
         cNumRounds      = 64,                 /* num rounds in sha256 */
         cChunkSizeBits  = 512,                /* chunk size in bits */
-        cChunkSize      = cChunkSizeBits / 8, /* chunks to proces */
+        cChunkSize      = cChunkSizeBits / 8, /* chunks to process */
         cChunkSizeMask  = cChunkSize - 1,
         cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
         cHashSizeBits   = ALC_DIGEST_LEN_256,             /* same in bits */
@@ -196,7 +196,7 @@ Digests are computed like the other subsystem, All APIs are prefixed with
 `alcp_digest`, `alcp` being project prefix and `digest` being subsystem prefix.
 Following are the C99 APIs.
 
- 1. Context size determination: The context size needs to be queried form the
+ 1. Context size determination: The context size needs to be queried from the
     library, this helps the Application designer to allocate and free the memory
     needed for the 'Handle'.
     ```c
@@ -238,6 +238,7 @@ Following are the C99 APIs.
 
  6. Squeeze : Valid only for Shake(SHA3) algorithm for squeezing the digest out.
     This can be called multiple times to squeeze the digest out in steps.
+    This API cannot be called together with 'alcp_digest_finalize'.
      ```c
     alc_error_t
     alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
