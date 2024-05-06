@@ -40,6 +40,9 @@ OpenSSLDigestBase::~OpenSSLDigestBase()
     if (m_handle != nullptr) {
         EVP_MD_CTX_free(m_handle);
     }
+    if (m_handle_dup != nullptr) {
+        EVP_MD_CTX_free(m_handle_dup);
+    }
 }
 
 bool
@@ -122,10 +125,6 @@ OpenSSLDigestBase::context_copy()
         std::cout << "Error code in EVP_MD_CTX_copy_ex: "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
-    }
-    /* now free the dup handle*/
-    if (m_handle_dup != nullptr) {
-        EVP_MD_CTX_free(m_handle_dup);
     }
     return true;
 }

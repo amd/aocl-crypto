@@ -40,6 +40,9 @@ IPPDigestBase::~IPPDigestBase()
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
     }
+    if (m_handle_dup != nullptr) {
+        delete[] reinterpret_cast<Uint8*>(m_handle_dup);
+    }
 }
 
 bool
@@ -110,9 +113,6 @@ IPPDigestBase::context_copy()
         std::cout << "Error code in ippsHashUpdate_rmf: " << status
                   << std::endl;
         return false;
-    }
-    if (m_handle_dup != nullptr) {
-        delete[] reinterpret_cast<Uint8*>(m_handle_dup);
     }
     return true;
 }
