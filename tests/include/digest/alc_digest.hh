@@ -45,12 +45,8 @@ class AlcpDigestBase : public DigestBase
     alc_digest_info_t    m_info       = {};
     Uint8*               m_message    = {};
     Uint8*               m_digest     = {};
-    /* Digest output which would be squeezed out
-                                     of the duplicate context */
-    Uint8* m_digest_dup_ctx = {};
     /* for Sha3 shake variants */
     Int64 m_digest_len = {};
-    void* m_context    = {};
 
   public:
     AlcpDigestBase(const alc_digest_info_t& info);
