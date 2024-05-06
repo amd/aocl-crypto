@@ -123,8 +123,6 @@ OpenSSLDigestBase::context_copy()
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    /* swap it so that m_handle is the one propagated in the next steps */
-    std::swap(m_handle, m_handle_dup);
     /* now free the dup handle*/
     if (m_handle_dup != nullptr) {
         EVP_MD_CTX_free(m_handle_dup);

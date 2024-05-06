@@ -111,7 +111,6 @@ IPPDigestBase::context_copy()
                   << std::endl;
         return false;
     }
-    std::swap(m_handle, m_handle_dup);
     if (m_handle_dup != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle_dup);
     }
