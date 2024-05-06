@@ -43,47 +43,51 @@ struct Context
                            const Uint8* pSrc,
                            Uint8*       pDst,
                            Uint64       len,
-                           const Uint8* pIv);
+                           const Uint8* pIv){ nullptr };
 
     alc_error_t (*encrypt)(const void*  rCipher,
                            const Uint8* pSrt,
                            Uint8*       pDrc,
                            Uint64       len,
-                           const Uint8* pIv);
+                           const Uint8* pIv){ nullptr };
 
     alc_error_t (*encryptBlocks)(const void*  rCipher,
                                  const Uint8* pSrt,
                                  Uint8*       pDrc,
                                  Uint64       currPlainTextLen,
-                                 Uint64       startBlockNum);
+                                 Uint64       startBlockNum){ nullptr };
 
     alc_error_t (*decryptBlocks)(const void*  rCipher,
                                  const Uint8* pSrt,
                                  Uint8*       pDrc,
                                  Uint64       currCipherTextLen,
-                                 Uint64       startBlockNum);
+                                 Uint64       startBlockNum){ nullptr };
 
     alc_error_t (*decryptUpdate)(void*        rCipher,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
                                  Uint64       len,
-                                 const Uint8* pIv);
+                                 const Uint8* pIv){ nullptr };
 
     alc_error_t (*encryptUpdate)(void*        rCipher,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
                                  Uint64       len,
-                                 const Uint8* pIv);
+                                 const Uint8* pIv){ nullptr };
 
-    alc_error_t (*setIv)(void* rCipher, Uint64 len, const Uint8* pIv);
+    alc_error_t (*setIv)(void*        rCipher,
+                         Uint64       len,
+                         const Uint8* pIv){ nullptr };
 
-    alc_error_t (*setAad)(void* rCipher, const Uint8* pAad, Uint64 len);
+    alc_error_t (*setAad)(void*        rCipher,
+                          const Uint8* pAad,
+                          Uint64       len){ nullptr };
 
-    alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 len);
+    alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 len){ nullptr };
 
-    alc_error_t (*setTagLength)(void* rCipher, Uint64 len);
+    alc_error_t (*setTagLength)(void* rCipher, Uint64 len){ nullptr };
 
-    alc_error_t (*finish)(const void*);
+    alc_error_t (*finish)(const void*){ nullptr };
 
     Status status{ StatusOk() };
 };
