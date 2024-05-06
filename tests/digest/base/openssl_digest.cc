@@ -120,6 +120,10 @@ OpenSSLDigestBase::context_copy()
         return true;
     }
     /* create dup ctx and copy context */
+    if (m_handle_dup != nullptr) {
+        EVP_MD_CTX_free(m_handle_dup);
+        m_handle_dup = nullptr;
+    }
     m_handle_dup = EVP_MD_CTX_new();
     if (EVP_MD_CTX_copy_ex(m_handle_dup, m_handle) != 1) {
         std::cout << "Error code in EVP_MD_CTX_copy_ex: "
