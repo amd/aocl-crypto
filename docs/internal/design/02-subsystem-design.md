@@ -91,87 +91,102 @@ typedef struct {
 ## Digests
 
 ### Design
-The datatype `alc_digest_type_t` describes the digest that is being requested or
+The datatype `alc_digest_mode_t` describes the digest that is being requested or
 operated on.
 
 ```c
-typedef enum _alc_digest_type 
+typedef enum _alc_digest_mode
 {
-
-    ALC_DIGEST_TYPE_MD2,
-    ALC_DIGEST_TYPE_MD4,
-
-    ALC_DIGEST_TYPE_MD5,
-    ALC_DIGEST_TYPE_SHA1,
-    ALC_DIGEST_TYPE_SHA2,
-    ALC_DIGEST_TYPE_SHA3,
-} alc_digest_type_t;
-```
-
-```c
-typedef enum _alc_digest_attr {
-    ALC_DIGEST_ATTR_SINGLE,     /* Block */
-    ALC_DIGEST_ATTR_MULTIPART,  /* Stream */
-} alc_digest_attr_t;
-```
-
-```c
-typedef struct _alc_digest_info_t {
-    alc_digest_type_t type;
-    alc_digest_attr_t attr;
-} alc_digest_info_t;
-
-
-#ifndef __cplusplus
-typedef void*  alc_digest_ctx_t;
-#endif
-
+    ALC_SHA2_224,
+    ALC_SHA2_256,
+    ALC_SHA2_384,
+    ALC_SHA2_512,
+    ALC_SHA2_512_224,
+    ALC_SHA2_512_256,
+    ALC_SHA3_224,
+    ALC_SHA3_256,
+    ALC_SHA3_384,
+    ALC_SHA3_512,
+    ALC_SHAKE_128,
+    ALC_SHAKE_256,
+} alc_digest_mode_t,
 ```
 
 ### The _Digest_ class
-This is the C++ interface to the Digests, all digest algorithms will be
-inherited by this class.
+This is the C++ interface to the Digests. All digest algorithms will 
+inherit this class.
 
 ```c++
-class DigestInterface {
+class IDigest
+{
   public:
-    virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
-    virtual alc_error_t finalize(const Uint8* pBuf, Uint64 size) = 0;
-    virtual void        finish()                                 = 0;
-    virtual alc_error_t copyHash(Uint8* pBuf, Uint64 size) const = 0;
+    IDigest() = default;
+
+  public:
+    virtual void        init(void)                             = 0;
+    virtual alc_error_t update(const Uint8* pBuf, Uint64 size) = 0;
+    virtual alc_error_t finalize(Uint8* pBuf, Uint64 size)     = 0;
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    Uint64 getInputBlockSize() { return m_block_len; }
+
+    /**
+     * @return The digest size in bytes
+     */
+    Uint64 getHashSize() { return m_digest_len; }
+
+    virtual ~IDigest() {}
+
   protected:
-    //static cpuid_variant cpu;
+    Uint64 m_digest_len = 0; /* digest len in bytes */
+    Uint64 m_block_len  = 0;
+    bool   m_finished   = false;
+    Uint64 m_msg_len    = 0;
+    /* index to m_buffer of previously unprocessed bytes */
+    Uint32            m_idx = 0;
+    alc_digest_mode_t m_mode;
 };
 ```
-All algorithms are expected to implement the `DigestInterface` abstract base class.
+All algorithms are expected to implement the `IDigest` abstract base class.
 
-
-
- 
 ```c++
-class Sha2 : public DigestInterface {
+template<alc_digest_len_t digest_len>
+class Sha2 final : public IDigest
+{
+    static_assert(ALC_DIGEST_LEN_224 == digest_len
+                  || ALC_DIGEST_LEN_256 == digest_len);
+
   public:
-    Sha2(alc_sha2_mode_t mode)
-            :m_mode{mode}
-    {
-        if (cpuid::isCpu(ALC_CPU_ZEN3)) {
-            m_finit{sha256}
-        }
-    }
-    virtual bool init(args) {m_finit(args);}
-    virtual bool update(args) {f_fupdate(args);}
-    virtual bool finalize(args) {m_ffinalize(args);}
+    static constexpr Uint64 /* define word size */
+        cWordSizeBits   = 32,
+        cNumRounds      = 64,                 /* num rounds in sha256 */
+        cChunkSizeBits  = 512,                /* chunk size in bits */
+        cChunkSize      = cChunkSizeBits / 8, /* chunks to process */
+        cChunkSizeMask  = cChunkSize - 1,
+        cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
+        cHashSizeBits   = ALC_DIGEST_LEN_256,             /* same in bits */
+        cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
+        cHashSizeWords  = cHashSizeBits / cWordSizeBits;
 
-    // stream digest
-    virtual bool compute(args) {m_fcompute(args);}
+  public:
+    ALCP_API_EXPORT Sha2();
+    ALCP_API_EXPORT Sha2(const Sha2& src);
+    virtual ALCP_API_EXPORT ~Sha2() = default;
+
+  public:
+    ALCP_API_EXPORT void init(void) override;
+
+    ALCP_API_EXPORT alc_error_t update(const Uint8* pMsgBuf,
+                                       Uint64       size) override;
+
+    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+
   private:
-    Sha2() {}
-
-    alc_sha2_mode_t m_mode;
-    alc_sha2_attr_t m_attr;
-    alc_sha2_param_t m_param;
-
-    std::function m_fupdate, m_ffinalize, m_fcompute;
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    /* Any unprocessed bytes from last call to update() */
+    alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
+    alignas(64) Uint32 m_hash[cHashSizeWords]{};
 };
 
 ```
@@ -181,67 +196,72 @@ Digests are computed like the other subsystem, All APIs are prefixed with
 `alcp_digest`, `alcp` being project prefix and `digest` being subsystem prefix.
 Following are the C99 APIs.
 
- 1. Query: One needs to query the library and see if a required algorithm is
-    supported. Only upon making sure the algorithm and its parameterized
-    customization is supported by library, application writer must proceed to
-    next steps.
-    ```c
-    alc_error_t
-    alcp_digest_supported(const alc_digest_info_t *);
-    ```
-
- 2. Context size determination: The context size needs to be queried form the
+ 1. Context size determination: The context size needs to be queried from the
     library, this helps the Application designer to allocate and free the memory
     needed for the 'Handle'.
     ```c
     Uint64
-    alcp_digest_context_size(const alc_digest_info_t *);
+    alcp_digest_context_size();
     ```
 
- 3. Request : The application needs to request the 'Handle', and supposed to
-    send required configuration via the input of type `alc_digest_info_t`.
+ 2. Request : The application needs to request the 'Handle', and supposed to
+    send required configuration via the input of type `alc_digest_mode_t`.
     ```c
     alc_error_t
-    alcp_digest_request(const alc_digest_info_t* p_digest_info,
+    alcp_digest_request(alc_digest_mode_t mode,
                         alc_digest_handle_t*     p_digest_handle);
+    ```
+
+ 3. Init : Initializes the digest object. This is called to start a new sequence
+    of digest creation.
+    ```c
+    alc_error_t
+    alcp_digest_init(alc_digest_handle_p p_digest_handle);
     ```
 
  4. Update : Both block and stream digests are treated alike, however the
     update() method allows application to build on previously processed blocks.
-
     ```c
     alc_error_t
     alcp_digest_update(const alc_digest_handle_t* p_digest_handle,
                        const Uint8*               buf,
                        Uint64                     size);
     ```
- 5. Finalize: This is the marker for last block, or end of sequence. Once this
-    is called, its not possible to call update() again.
+    
+ 5. Duplicate : Duplicates the digest handle from 'pSrcHandle' to 'pDestHandle'.
+    The independent duplicated handled can then be used to proceed with the remaining steps in lifecycle
+    ```c
+    alc_error_t
+    alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
+                             const alc_digest_handle_p pDestHandle);
+    ```
 
+ 6. Squeeze : Valid only for Shake(SHA3) algorithm for squeezing the digest out.
+    This can be called multiple times to squeeze the digest out in steps.
+    This API cannot be called together with 'alcp_digest_finalize'.
+     ```c
+    alc_error_t
+    alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
+                              Uint8*                    pBuff,
+                              Uint64                    size);
+    ```
+
+ 7. Finalize: This is the marker for end of sequence and also copies the digest that is computed. Once this
+    is called, its not possible to call update() again.
     ```c
     alc_error_t
     alcp_digest_finalize(const alc_digest_handle_t* p_digest_handle,
-                         const Uint8*              p_msg_buf,
-                         Uint64                    size);
+                         Uint8*                     digest,
+                         Uint64                     digest_size);
     ```
 
- 6. Finish : This is a cleanup phase, once finish is called the session ends,
+ 8. Finish : This is a cleanup phase, once finish is called the session ends,
     and the handle is no longer valid. Hence the digest needs to be copied by
     the application before this step.
     ```c
     void
     alcp_digest_finish(const alc_digest_handle_t* p_digest_handle);
     ```
-
- 7. Copy : The digest that is computed is held as part of internal
-    representation, that needs to be requested by application to be copied to a
-    buffer before calling `alcp_digest_finish()`.
-    ```c
-    alc_error_t
-    alcp_digest_copy(const alc_digest_handle_t* p_digest_handle,
-                     Uint8*                    buf,
-                     Uint64                    size);
-   ```
 
 ## Ciphers
 

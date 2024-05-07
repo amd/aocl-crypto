@@ -52,10 +52,6 @@ EXTERN_C_BEGIN
  */
 typedef enum _alc_digest_type
 {
-    ALC_DIGEST_TYPE_MD2,
-    ALC_DIGEST_TYPE_MD4,
-    ALC_DIGEST_TYPE_MD5,
-    ALC_DIGEST_TYPE_SHA1,
     ALC_DIGEST_TYPE_SHA2,
     ALC_DIGEST_TYPE_SHA3,
 } alc_digest_type_t;
@@ -219,7 +215,7 @@ alcp_digest_init(alc_digest_handle_p p_digest_handle);
  *              as mentioned by size in bytes.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_request and before
+ * <b>This API can be called only after @ref alcp_digest_init and before
  * session call @ref alcp_digest_finalize</b>
  * @endparblock
  *
@@ -243,7 +239,7 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  * @brief       Finalize the digest with digest copy.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_request and before
+ * <b>This API can be called only after @ref alcp_digest_update and before
  * session call @ref alcp_digest_finish</b>
  * @endparblock
  *
@@ -286,7 +282,7 @@ alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
  * @brief        copies the context from source to destination
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_request and before
+ * <b>This API can be called only after @ref alcp_digest_init and before
  * session call @ref alcp_digest_finish</b> on pSrcHandle
  * @endparblock
  *
@@ -301,10 +297,11 @@ alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
 
 /**
  * @brief        Valid only for Shake algorithm for squeezing the digest out.
- *               It can be called multiple times
+ *               It can be called multiple times. It should not be called with
+ * @ref alcp_digest_finalize
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_request and before
+ * <b>This API can be called only after @ref alcp_digest_update and before
  * session call @ref alcp_digest_finish</b>
  * @endparblock
  *
