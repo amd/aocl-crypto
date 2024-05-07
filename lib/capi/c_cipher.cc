@@ -191,6 +191,8 @@ alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
+    ALCP_BAD_PTR_ERR_RET(ctx->decryptBlocksXts, err);
     err = ctx->decryptBlocksXts(
         ctx, pCipherText, pPlainText, currCipherTextLen, startBlockNum);
 
