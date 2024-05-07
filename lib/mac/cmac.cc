@@ -84,7 +84,11 @@ class Cmac::Impl : public cipher::Aes
     Status setKey(const Uint8 key[], Uint64 len)
     {
         Status s{ StatusOk() };
-        Aes::setKey(&m_cdata, key, len);
+        if (Aes::setKey(&m_cdata, key, len) != 0) {
+            // FIXME: Need to create another error function
+            s = status::EmptyKeyError("Invalid Key Size");
+            return s;
+        }
 
         // FIXME: Check if this is required, looks like not required
         // data.keyLen_in_bytes = len / 8;

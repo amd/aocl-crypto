@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -236,7 +236,9 @@ class CMACFuncionalityTest
         auto       tuple_values = cParams.second;
 
         tie(m_key, m_plain_text, m_expected_mac) = tuple_values;
-        m_cmac                                   = std::make_unique<Cmac>();
+        alc_cipher_data_t data;
+        data.keyLen_in_bytes = m_key.size();
+        m_cmac               = std::make_unique<Cmac>(&data);
         m_cmac->setKey(&m_key[0], static_cast<Uint64>(m_key.size()) * 8);
         m_mac = std::vector<Uint8>(m_expected_mac.size());
         SetReserve(m_plain_text);
@@ -256,7 +258,8 @@ class CMACFuncionalityTest
         assert(block1.size() + block2.size() == singleblock.size());
     }
 
-    inline void SetReserve(std::vector<Uint8>& var) {
+    inline void SetReserve(std::vector<Uint8>& var)
+    {
         if (var.size() == 0)
             var.reserve(1);
     }
@@ -365,9 +368,11 @@ TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
 
 TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
 {
-    Cmac  cmac2;
-    Uint8 key[16]{};
-    Uint8 mac[16];
+    alc_cipher_data_t data;
+    Uint8             key[16]{};
+    Uint8             mac[16];
+    data.keyLen_in_bytes = sizeof(key);
+    Cmac cmac2(&data);
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
     ASSERT_TRUE(s.ok());
@@ -377,8 +382,10 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
 
 TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 {
-    Cmac  cmac2;
-    Uint8 key[16]{};
+    alc_cipher_data_t data;
+    Uint8             key[16]{};
+    data.keyLen_in_bytes = sizeof(key);
+    Cmac cmac2(&data);
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
     ASSERT_TRUE(s.ok());
@@ -391,8 +398,10 @@ TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 {
-    Cmac  cmac2;
-    Uint8 key[16]{};
+    alc_cipher_data_t data;
+    Uint8             key[16]{};
+    data.keyLen_in_bytes = sizeof(key);
+    Cmac cmac2(&data);
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
     ASSERT_TRUE(s.ok());
@@ -407,12 +416,15 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 #ifdef NDEBUG
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)
 {
-    Cmac  cmac2;
-    Uint8 key[30]{};
+    alc_cipher_data_t data;
+    Uint8             key[30]{};
+    data.keyLen_in_bytes = sizeof(key) / 8;
+    Cmac cmac2(&data);
 
     // FIXME: Rijindael setKey should be returning proper error status and this
     // should not be passing
-    EXPECT_THROW(cmac2.setKey(key, sizeof(key) * 8), std::out_of_range);
+    Status s = cmac2.setKey(key, sizeof(key) * 8);
+    EXPECT_EQ(s.ok(), false);
 }
 #endif
 
