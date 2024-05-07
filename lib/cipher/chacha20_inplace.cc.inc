@@ -167,11 +167,7 @@ ProcessInput(const Uint8 key[],
              Uint64      blocks,
              int         remBytes)
 {
-    Uint64 plaintextLength = (blocks * 64) + remBytes;
-    Uint64 n_blocks        = blocks;
-    if (remBytes) {
-        n_blocks++;
-    }
+    Uint64       plaintextLength = (blocks * 64) + remBytes;
     const Uint32 cInitialCounter = *(reinterpret_cast<const Uint32*>(iv));
     Uint32       state[16];
     for (Uint64 blocks = 0; blocks < plaintextLength; blocks += 64) {
