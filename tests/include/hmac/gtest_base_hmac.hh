@@ -76,15 +76,42 @@ std::map<alc_digest_mode_t, int> DigestTypeToLenMap = {
     { ALC_SHA3_384, 384 },    { ALC_SHA3_512, 512 }, { ALC_SHA2_512_224, 224 },
     { ALC_SHA2_512_256, 256 }
 };
+/* get SHA2 type string to pass into the KAT test function */
+std::string
+DigestTypeToStr(alc_digest_mode_t DigestType)
+{
+    switch (DigestType) {
+        case ALC_SHA2_224:
+        case ALC_SHA2_256:
+        case ALC_SHA2_384:
+        case ALC_SHA2_512:
+            return "SHA2";
+            break;
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512:
+            return "SHA3";
+            break;
+        default:
+            return "";
+            break;
+    }
+}
 
 void
-Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
+Hmac_KAT(alc_digest_mode_t HmacDigestMode)
 {
-    alcp_hmac_data_t   data;
+    alcp_hmac_data_t data{};
+
+    std::string        HmacType = DigestTypeToStr(HmacDigestMode);
+    int                HmacSize = DigestTypeToLenMap[HmacDigestMode];
     std::vector<Uint8> hmac(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    info.mi_type = ALC_MAC_HMAC;
+    alc_mac_info_t info{};
+    info.mi_type                      = ALC_MAC_HMAC;
+    info.mi_algoinfo.hmac.digest_mode = HmacDigestMode;
 
     AlcpHmacBase ahb(info);
     HmacBase*    hb;
@@ -148,18 +175,18 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
 /* Hmac Cross tests */
 void
-Hmac_Cross(alc_mac_info_t info)
+Hmac_Cross(alc_digest_mode_t HmacDigestMode)
 {
     std::vector<Uint8> data;
-
-    alc_digest_mode_t digest_mode = info.mi_algoinfo.hmac.digest_mode;
-    int               HmacSize    = DigestTypeToLenMap[digest_mode];
+    int                HmacSize = DigestTypeToLenMap[HmacDigestMode];
 
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    info.mi_type = ALC_MAC_HMAC;
+    alc_mac_info_t info{};
+    info.mi_algoinfo.hmac.digest_mode = HmacDigestMode;
+    info.mi_type                      = ALC_MAC_HMAC;
 
     AlcpHmacBase ahb(info);
     RngBase      rb;
@@ -201,7 +228,7 @@ Hmac_Cross(alc_mac_info_t info)
 
     for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
-            alcp_hmac_data_t data_alc, data_ext;
+            alcp_hmac_data_t data_alc{}, data_ext{};
 
             /* generate msg data from msg_full */
             msg_full = ShuffleVector(msg_full, rng);

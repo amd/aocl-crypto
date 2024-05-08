@@ -41,58 +41,42 @@ TEST(HMAC_SHA3, KAT_224)
 {
     if (useipp)
         GTEST_SKIP();
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_224;
-    Hmac_KAT(224, "SHA3", info);
+    Hmac_KAT(ALC_SHA3_224);
 }
 TEST(HMAC_SHA3, KAT_256)
 {
     if (useipp)
         GTEST_SKIP();
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_256;
-    Hmac_KAT(256, "SHA3", info);
+    Hmac_KAT(ALC_SHA3_256);
 }
 TEST(HMAC_SHA3, KAT_384)
 {
     if (useipp)
         GTEST_SKIP();
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_384;
-    Hmac_KAT(384, "SHA3", info);
+    Hmac_KAT(ALC_SHA3_384);
 }
 TEST(HMAC_SHA3, KAT_512)
 {
     if (useipp)
         GTEST_SKIP();
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_512;
-    Hmac_KAT(512, "SHA3", info);
+    Hmac_KAT(ALC_SHA3_512);
 }
 /* HMAC SHA2 tests */
 TEST(HMAC_SHA2, KAT_224)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_224;
-    Hmac_KAT(224, "SHA2", info);
+    Hmac_KAT(ALC_SHA2_224);
 }
 TEST(HMAC_SHA2, KAT_256)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_256;
-    Hmac_KAT(256, "SHA2", info);
+    Hmac_KAT(ALC_SHA2_256);
 }
 TEST(HMAC_SHA2, KAT_384)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_384;
-    Hmac_KAT(384, "SHA2", info);
+    Hmac_KAT(ALC_SHA2_384);
 }
 TEST(HMAC_SHA2, KAT_512)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_512;
-    Hmac_KAT(512, "SHA2", info);
+    Hmac_KAT(ALC_SHA2_512);
 }
 
 int
