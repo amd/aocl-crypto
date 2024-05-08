@@ -31,7 +31,7 @@
 IppStatus
 alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
 {
-    p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size(pcMacInfo));
+    p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size());
 
     if (p_mac_ctx->handle.ch_context == NULL) {
         return ippStsErr;
@@ -39,7 +39,7 @@ alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
 
     p_mac_ctx->mac_info = *pcMacInfo;
 
-    err = alcp_mac_request(&p_mac_ctx->handle, pcMacInfo);
+    auto err = alcp_mac_request(&p_mac_ctx->handle, pcMacInfo);
     if (err != ALC_ERROR_NONE) {
         printErr("ALCP MAC Provider:  Request failed\n");
         return ippStsErr;

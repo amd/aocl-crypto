@@ -153,7 +153,7 @@ typedef struct alc_mac_handle
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
-alcp_mac_context_size(const alc_mac_info_p pMacInfo);
+alcp_mac_context_size(void);
 
 /**
  * @brief    Allows caller to request for a MAC as described by

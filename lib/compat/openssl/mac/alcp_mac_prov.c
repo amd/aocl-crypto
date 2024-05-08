@@ -240,7 +240,7 @@ ALCP_prov_mac_init(void*                vctx,
             }
         }
     }
-    Uint64 size             = alcp_mac_context_size(macinfo);
+    Uint64 size             = alcp_mac_context_size();
     cctx->handle.ch_context = OPENSSL_malloc(size);
     err                     = alcp_mac_request(&(cctx->handle), macinfo);
     if (alcp_is_error(err)) {

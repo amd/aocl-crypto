@@ -55,9 +55,9 @@ AlcpHmacBase::init()
     dinfo.mi_keyinfo = kinfo;
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else if (m_handle->ch_context == nullptr) {
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else {
         alcp_mac_finish(m_handle);
     }

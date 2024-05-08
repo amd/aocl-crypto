@@ -65,7 +65,7 @@ run_hmac(const alc_mac_info_p macInfo,
 
     alc_error_t err = ALC_ERROR_NONE;
 
-    handle.ch_context = malloc(alcp_mac_context_size(macInfo));
+    handle.ch_context = malloc(alcp_mac_context_size());
 
     if (handle.ch_context == NULL) {
         return ALC_ERROR_GENERIC;
@@ -78,7 +78,8 @@ run_hmac(const alc_mac_info_p macInfo,
         goto out;
     }
 
-    err = alcp_mac_init(&handle,macInfo->mi_keyinfo.key, macInfo->mi_keyinfo.len / 8);
+    err = alcp_mac_init(
+        &handle, macInfo->mi_keyinfo.key, macInfo->mi_keyinfo.len / 8);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Init - %lu\n", err);
         goto out;
@@ -714,14 +715,15 @@ demo_Hmac_Sha3_384_Reset()
     Uint64 mac_size = ALC_DIGEST_LEN_384 / 8;
     Uint8  mac[mac_size];
 
-    handle.ch_context = malloc(alcp_mac_context_size(&macinfo));
+    handle.ch_context = malloc(alcp_mac_context_size());
     alc_error_t err   = ALC_ERROR_NONE;
     err               = alcp_mac_request(&handle, &macinfo);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request");
         return -1;
     }
-    err = alcp_mac_init(&handle,macinfo.mi_keyinfo.key, macinfo.mi_keyinfo.len / 8);
+    err = alcp_mac_init(
+        &handle, macinfo.mi_keyinfo.key, macinfo.mi_keyinfo.len / 8);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Init - %lu\n", err);
         return -1;

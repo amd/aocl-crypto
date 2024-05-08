@@ -39,7 +39,7 @@ using namespace alcp;
 EXTERN_C_BEGIN
 
 Uint64
-alcp_mac_context_size(const alc_mac_info_p pcMacInfo)
+alcp_mac_context_size(void)
 {
     Uint64 size = sizeof(mac::Context);
     return size;

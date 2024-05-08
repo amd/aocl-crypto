@@ -43,7 +43,7 @@ poly1305_demo(const alc_mac_info_p macInfo,
 
     alc_error_t err = ALC_ERROR_NONE;
 
-    handle.ch_context = malloc(alcp_mac_context_size(macInfo));
+    handle.ch_context = malloc(alcp_mac_context_size());
 
     if (handle.ch_context == NULL) {
         return ALC_ERROR_GENERIC;
