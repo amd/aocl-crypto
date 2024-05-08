@@ -47,25 +47,16 @@ std::map<alc_digest_len_t, alc_digest_mode_t> sha3_mode_len_map = {
     { ALC_DIGEST_LEN_512, ALC_SHA3_512 },
 };
 
-AlcpDigestBase::AlcpDigestBase(const alc_digest_info_t& info)
+AlcpDigestBase::AlcpDigestBase(alc_digest_mode_t mode)
 {
-    init(info, m_digest_len);
-}
-
-bool
-AlcpDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
-{
-    m_info       = info;
-    m_digest_len = digest_len;
-    return init();
+    m_mode = mode;
+    init();
 }
 
 bool
 AlcpDigestBase::init()
 {
-    alc_error_t       err;
-    alc_digest_info_t dinfo = m_info;
-
+    alc_error_t err;
     if (m_handle == nullptr) {
         m_handle          = new alc_digest_handle_t;
         m_handle->context = malloc(alcp_digest_context_size());
@@ -83,7 +74,7 @@ AlcpDigestBase::init()
         m_handle->context = malloc(alcp_digest_context_size());
     }
 
-    err = alcp_digest_request(dinfo.dt_mode, m_handle);
+    err = alcp_digest_request(m_mode, m_handle);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_request:" << err << std::endl;
         return false;

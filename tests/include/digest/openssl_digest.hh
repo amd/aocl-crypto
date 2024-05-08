@@ -46,7 +46,7 @@ class OpenSSLDigestBase : public DigestBase
 {
     EVP_MD_CTX*       m_handle     = nullptr;
     EVP_MD_CTX*       m_handle_dup = nullptr;
-    alc_digest_info_t m_info{};
+    alc_digest_mode_t m_mode{};
     Uint8*            m_message    = nullptr;
     Uint8*            m_digest     = nullptr;
     Uint8*            m_digest_dup = nullptr;
@@ -61,11 +61,9 @@ class OpenSSLDigestBase : public DigestBase
      *
      * @param info Information of which digest to use and what length.
      */
-    OpenSSLDigestBase(const alc_digest_info_t& info);
+    OpenSSLDigestBase(alc_digest_mode_t mode);
     ~OpenSSLDigestBase();
 
-    // All inits
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
     bool context_copy();

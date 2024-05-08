@@ -42,17 +42,16 @@ class IPPDigestBase : public DigestBase
 {
     IppsHashState_rmf* m_handle     = nullptr;
     IppsHashState_rmf* m_handle_dup = nullptr;
-    alc_digest_info_t  m_info{};
+    alc_digest_mode_t  m_mode{};
     Uint8*             m_message    = nullptr;
     Uint8*             m_digest     = nullptr;
     Uint8*             m_digest_dup = nullptr;
     Int64              m_digest_len;
 
   public:
-    IPPDigestBase(const alc_digest_info_t& info);
+    IPPDigestBase(alc_digest_mode_t mode);
     ~IPPDigestBase();
 
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
     bool context_copy();

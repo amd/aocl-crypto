@@ -30,9 +30,10 @@
 
 namespace alcp::testing {
 
-IPPDigestBase::IPPDigestBase(const alc_digest_info_t& info)
+IPPDigestBase::IPPDigestBase(alc_digest_mode_t mode)
 {
-    init(info, m_digest_len);
+    m_mode = mode;
+    init();
 }
 
 IPPDigestBase::~IPPDigestBase()
@@ -46,13 +47,6 @@ IPPDigestBase::~IPPDigestBase()
 }
 
 bool
-IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
-{
-    m_info = info;
-    return init();
-}
-
-bool
 IPPDigestBase::init()
 {
     IppStatus status = ippStsNoErr;
@@ -63,34 +57,31 @@ IPPDigestBase::init()
     int ctx_size;
     ippsHashGetSize_rmf(&ctx_size);
     m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_mode) {
-            case ALC_SHA2_224:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
-                break;
-            case ALC_SHA2_256:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256_TT());
-                break;
-            case ALC_SHA2_384:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
-                break;
-            case ALC_SHA2_512_224:
-                /* for truncated variants of sha512*/
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
-                break;
-            case ALC_SHA2_512_256:
-                /* for truncated variants of sha512*/
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
-                break;
-            case ALC_SHA2_512:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
-                break;
-            default:
-                return false;
-        }
-    } else {
-        return false;
+    switch (m_mode) {
+        case ALC_SHA2_224:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
+            break;
+        case ALC_SHA2_256:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256_TT());
+            break;
+        case ALC_SHA2_384:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
+            break;
+        case ALC_SHA2_512_224:
+            /* for truncated variants of sha512*/
+            ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
+            break;
+        case ALC_SHA2_512_256:
+            /* for truncated variants of sha512*/
+            ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
+            break;
+        case ALC_SHA2_512:
+            ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
+            break;
+        default:
+            return false;
     }
+
     /* check error code */
     if (status != ippStsNoErr) {
         std::cout << "Error code in ippsHashInit_rmf: " << status << std::endl;
@@ -151,7 +142,6 @@ IPPDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 
 void
 IPPDigestBase::reset()
-{
-}
+{}
 
 } // namespace alcp::testing
