@@ -94,7 +94,7 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     return 0;
 }
 
-int
+void
 close_demo_session()
 {
     alcp_cipher_finish(&handle);

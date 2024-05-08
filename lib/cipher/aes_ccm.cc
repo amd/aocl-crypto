@@ -67,7 +67,8 @@ ctrInc(Uint8 ctr[])
 
 Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
-{}
+{
+}
 
 // FIXME: nRounds needs to be constexpr to be more efficient
 Status
@@ -159,9 +160,14 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
-    Status        s = StatusOk();
-    size_t        n;
-    unsigned int  i, q;
+    Status       s = StatusOk();
+    size_t       n;
+    unsigned int i, q;
+    if (pPlainText == nullptr || pCipherText == nullptr
+        || pccm_data == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
     unsigned char flags0 = pccm_data->nonce[0];
     const Uint8*  p_key  = pccm_data->key;
     Uint32        cmac[4], nonce[4], in_reg[4], temp_reg[4];
@@ -284,9 +290,14 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
-    Status        s = StatusOk();
-    size_t        n;
-    unsigned int  i, q;
+    Status       s = StatusOk();
+    unsigned int i, q;
+    size_t       n;
+    if (pPlainText == nullptr || pCipherText == nullptr
+        || pccm_data == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
     unsigned char flags0 = pccm_data->nonce[0];
     const Uint8*  p_key  = pccm_data->key;
     Uint32        cmac[4], nonce[4], in_reg[4], temp_reg[4];
@@ -399,15 +410,17 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
 Status
 Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
 {
-    // ENTER();
     // Retrieve the tag length
-    Status       s = StatusOk();
+    Status s = StatusOk();
+    if (ctx == nullptr || ptag == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
     unsigned int t = (ctx->nonce[0] >> 3) & 7;
 
     t *= 2;
     t += 2;
     if (tagLen != t) {
-        // EXITB();
         s = status::InvalidValue(
             "Tag length is not what we agreed upon during start!");
         return s;
@@ -424,12 +437,15 @@ Ccm::setIv(ccm_data_t* ccm_data,
            size_t      ivLen,
            size_t      dataLen)
 {
-    // ENTER();
     Status       s = StatusOk();
     unsigned int q = ccm_data->nonce[0] & 7;
 
+    if (ccm_data == nullptr || pIv == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
+
     if (ivLen < (14 - q)) {
-        // EXITB();
         s = status::InvalidValue("Length of nonce is too small!");
         return s;
     }
@@ -457,6 +473,10 @@ alc_error_t
 Ccm::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
 {
     Status s = StatusOk();
+    if (ctx == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s.code();
+    }
     if (tagLen < 4 || tagLen > 16) {
         s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
         return s.code();
@@ -474,6 +494,12 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
     Uint32 aad_32[4] = {};
     Uint8* p_blk0_8  = reinterpret_cast<Uint8*>(&p_blk0);
     Uint64 i         = {};
+
+    // FIXME: Should we let paad be null when aadLen is 0
+    if (paad == nullptr || pccm_data == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
 
     if (aadLen == 0) {
         return s; // Nothing to be done
@@ -573,6 +599,10 @@ alc_error_t
 CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
 {
     Status s = StatusOk();
+    if (ctx == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s.code();
+    }
     if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
         s = status::InvalidValue(
             "Tag length is not what we agreed upon during start!");
@@ -597,6 +627,11 @@ CcmHash::init(alc_cipher_data_t* ctx,
 {
     int t = m_tagLen;
     int q = 15 - ivLen;
+
+    if (pKey == nullptr && pIv == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+
     if (pKey != nullptr) {
         Aes::init(ctx, pKey, keyLen, pIv, ivLen);
     }

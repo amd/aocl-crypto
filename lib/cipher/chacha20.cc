@@ -62,11 +62,16 @@ ChaCha20::init(alc_cipher_data_t* ctx,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = setKey(pKey, keyLen);
-    if (err != ALC_ERROR_NONE) {
-        return err;
+    if (pKey != NULL && keyLen != 0) {
+        err = setKey(pKey, keyLen);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
     }
-    err = setIv(pIv, ivLen);
+
+    if (pIv != NULL && ivLen != 0) {
+        err = setIv(pIv, ivLen);
+    }
 
     return err;
 }

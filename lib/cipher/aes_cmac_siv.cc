@@ -41,6 +41,10 @@ Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
 {
     Status s{ StatusOk() };
+    if (data == nullptr || mac == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
     s = m_cmac.finalize(data, size);
     if (!s.ok()) {
         return s;
@@ -65,6 +69,10 @@ Siv::cmacWrapperMultiData(const Uint8 data1[],
                           Uint64      macSize)
 {
     Status s{ StatusOk() };
+    if (data1 == nullptr || data2 == nullptr || mac == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
     s = m_cmac.update(data1, size1);
     if (!s.ok()) {
         return s;
@@ -88,6 +96,11 @@ Status
 Siv::addAdditionalInput(const Uint8 memory[], Uint64 length)
 {
     Status s = StatusOk();
+
+    if (memory == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
 
     // FIXME: Allocate SIZE_CMAC for 10 vectors on intialization to be more
     // optimal.
@@ -130,6 +143,11 @@ Siv::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 {
     Status s = StatusOk();
 
+    if (key1 == nullptr || key2 == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
+
     // Block all unknown keysizes
     switch (length) {
         case 128:
@@ -158,7 +176,11 @@ Status
 Siv::s2v(const Uint8 plainText[], Uint64 size)
 {
     // Assume plaintest to be 128 bit multiples.
-    Status             s    = StatusOk();
+    Status s = StatusOk();
+    if (plainText == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
     std::vector<Uint8> zero = std::vector<Uint8>(SIZE_CMAC, 0);
 
     // Do a cmac of Zero Vector, first additonal data.
@@ -249,6 +271,9 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
 alc_error_t
 SivHash::getTag(alc_cipher_data_t* ctx, Uint8 out[], Uint64 len)
 {
+    if (ctx == nullptr || out == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
     if (len != 16) {
         return ALC_ERROR_INVALID_SIZE;
     }
@@ -261,6 +286,9 @@ SivHash::getTag(alc_cipher_data_t* ctx, Uint8 out[], Uint64 len)
 alc_error_t
 SivHash::setAad(alc_cipher_data_t* ctx, const Uint8 memory[], Uint64 length)
 {
+    if (ctx == nullptr || memory == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
     Status s = addAdditionalInput(memory, length);
     return s.code();
 }
@@ -273,9 +301,16 @@ SivHash::init(alc_cipher_data_t* ctx,
               Uint64             ivLen)
 {
     Uint64 keyLength = keyLen;
-    m_key1           = pKey;
-    m_key2           = pKey + keyLength / 8;
-    m_iv             = pIv;
+    if (ctx == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    if (pKey != nullptr) {
+        m_key1 = pKey;
+        m_key2 = pKey + keyLength / 8;
+    }
+    if (pIv != nullptr) {
+        m_iv = pIv;
+    }
     setKeys(m_key1, m_key2, keyLength);
     return ALC_ERROR_NONE;
 }
@@ -303,7 +338,7 @@ namespace aesni {
         Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                         0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-        s = s2v(pPlainText, len);
+        s = s2v(pPlainText, len); // Nullptr check inside this function
 
         if (!s.ok()) {
             return s.code();
