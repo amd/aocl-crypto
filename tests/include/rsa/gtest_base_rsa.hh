@@ -293,12 +293,13 @@ Rsa_Cross(int                     padding_mode,
           const alc_digest_info_t dinfo,
           const alc_digest_info_t mgfinfo)
 {
-    alcp_rsa_data_t   data_main{}, data_ext{};
-    int               ret_val_main = 0, ret_val_ext = 0;
-    AlcpRsaBase       arb;
-    alc_drbg_handle_t handle{};
-    alc_drbg_info_t   drbg_info{};
-    alc_error_t       err = ALC_ERROR_NONE;
+    alcp_rsa_data_t data_main{}, data_ext{};
+    int             ret_val_main = 0, ret_val_ext = 0;
+    AlcpRsaBase     arb;
+    /*FIXME: enable these back once DRBG bug is fixed */
+    // alc_drbg_handle_t handle{};
+    // alc_drbg_info_t   drbg_info{};
+    alc_error_t err = ALC_ERROR_NONE;
 
     // FIXME: Better use unique pointer here
     RsaBase *rb_main = {}, *rb_ext = {};
@@ -372,8 +373,10 @@ Rsa_Cross(int                     padding_mode,
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
 
+    /*FIXME: enable these back once DRBG bug is fixed */
     /* use ctr-drbg to randomize the input buffer */
     /* TO DO: maybe parameterize the DRBG type, and params in future? */
+#if 0
     drbg_info.di_algoinfo.ctr_drbg.di_keysize              = 128;
     drbg_info.di_algoinfo.ctr_drbg.use_derivation_function = true;
     drbg_info.di_type                                      = ALC_DRBG_CTR;
@@ -407,6 +410,7 @@ Rsa_Cross(int                     padding_mode,
         std::cout << "Error: alcp_drbg_initialize: " << err << std::endl;
         FAIL();
     }
+#endif
 
     int InputSize = 0;
     for (int i = loop_start; i < InputSize_Max; i++) {
@@ -420,8 +424,11 @@ Rsa_Cross(int                     padding_mode,
         else
             InputSize = i + 1;
 
-        std::vector<Uint8> input_data(InputSize);
-        /* shuffle input vector after each iterations */
+        std::vector<Uint8> input_data = rngb.genRandomBytes(InputSize);
+
+/* shuffle input vector after each iterations */
+/*FIXME: enable these back once DRBG bug is fixed */
+#if 0
         err = alcp_drbg_randomize(&handle,
                                   &(input_data[0]),
                                   input_data.size(),
@@ -433,6 +440,7 @@ Rsa_Cross(int                     padding_mode,
                       << std::endl;
             FAIL();
         }
+#endif
 
         /* set test data for each lib */
         std::vector<Uint8> encrypted_data_main(KeySize);
@@ -480,8 +488,14 @@ Rsa_Cross(int                     padding_mode,
         data_main.m_msg_len = data_ext.m_msg_len = input_data.size() - 1;
 
         /* set seed and label for padding mode */
-        std::vector<Uint8> seed(rb_main->m_hash_len);
-        /* shuffle seed data after each iterations */
+        // std::vector<Uint8> seed(rb_main->m_hash_len);
+        std::vector<Uint8> seed{};
+        if (padding_mode == 1)
+            seed = rngb.genRandomBytes(rb_main->m_hash_len);
+
+            /* shuffle seed data after each iterations */
+            /*FIXME: enable these back once DRBG bug is fixed */
+#if 0
         if (padding_mode == 1) {
             err = alcp_drbg_randomize(
                 &handle, &(seed[0]), seed.size(), cSecurityStrength, NULL, 0);
@@ -491,11 +505,16 @@ Rsa_Cross(int                     padding_mode,
                 FAIL();
             }
         }
+#endif
+
         data_main.m_pseed = data_ext.m_pseed = &(seed[0]);
 
         /* label length should vary */
         std::vector<Uint8> label(i * KeySize);
         if (padding_mode == 1) {
+            label = rngb.genRandomBytes(label.size());
+/*FIXME: enable these back once DRBG bug is fixed */
+#if 0
             err = alcp_drbg_randomize(
                 &handle, &(label[0]), label.size(), cSecurityStrength, NULL, 0);
             if (alcp_is_error(err)) {
@@ -503,6 +522,7 @@ Rsa_Cross(int                     padding_mode,
                           << std::endl;
                 FAIL();
             }
+#endif
         }
         data_main.m_label = data_ext.m_label = &(label[0]);
         data_main.m_label_size = data_ext.m_label_size = label.size();
@@ -632,11 +652,14 @@ Rsa_Cross(int                     padding_mode,
             PrintRsaTestData(data_ext);
         }
     }
+/*FIXME: enable these back once DRBG bug is fixed */
+#if 0
     alcp_drbg_finish(&handle);
     if (handle.ch_context) {
         free(handle.ch_context);
         handle.ch_context = nullptr;
     }
+#endif
     return;
 }
 #endif
