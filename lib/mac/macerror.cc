@@ -70,4 +70,11 @@ EmptyHMACDigestError(StringView msg)
     auto e = MacError(alcp::base::eInvalidArgument, ErrorCode::eEmptyDigest);
     return Status(e, msg);
 }
+
+Status
+InitError(StringView msg)
+{
+    auto e = MacError(alcp::base::eInvalidArgument, ErrorCode::eInitError);
+    return Status(e, msg);
+}
 } // namespace alcp::mac::status

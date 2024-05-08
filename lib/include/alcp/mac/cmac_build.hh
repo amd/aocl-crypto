@@ -68,7 +68,7 @@ __cmac_wrapperFinish(void* cmac, void* digest)
 }
 
 static Status
-__cmac_wrapperReset(void* cmac, void* digest)
+__cmac_wrapperReset(void* cmac)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->reset();

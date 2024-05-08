@@ -67,6 +67,12 @@ AlcpHmacBase::init()
         printf("Error code in alcp_mac_request: %ld\n", err);
         return false;
     }
+
+    err = alcp_mac_init(m_handle, m_key, m_key_len);
+    if (alcp_is_error(err)) {
+        printf("Error code in alcp_mac_request: %ld\n", err);
+        return false;
+    }
     return true;
 }
 

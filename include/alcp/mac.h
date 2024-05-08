@@ -174,6 +174,23 @@ ALCP_API_EXPORT alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
 
 /**
+ * @brief    Allows caller to set key and initialize hmac session
+ * @parblock <br> &nbsp;
+ * <b>This API must be called before making any other API call</b>
+ * @endparblock
+ * @note     Error needs to be checked after each call,
+ *           valid only if @ref alcp_is_error (ret) is false
+ * @param [in]   pMacHandle Library populated session handle for future
+ * @param [in]   key  pointer to key for mac operations.
+ * @param [in]   size size of key.
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_mac_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_mac_init(alc_mac_handle_p pMacHandle, const Uint8* key, Uint64 size);
+
+/**
  * @brief    Allows caller to update MAC with chunk of data to be authenticated
  * @parblock <br> &nbsp;
  * <b>This API is called to update data to be authenticated. So should be called

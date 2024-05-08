@@ -81,7 +81,7 @@ __poly1305_wrapperFinish(void* poly1305, void* digest)
 
 template<CpuArchFeature feature>
 static Status
-__poly1305_wrapperReset(void* poly1305, void* digest)
+__poly1305_wrapperReset(void* poly1305)
 {
     auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     return p_poly1305->reset();

@@ -66,12 +66,11 @@ Hmac::update(const Uint8* buff, Uint64 size)
     if (m_finalized) {
         return UpdateAfterFinalzeError("");
     }
-    if (m_pDigest == nullptr) {
-        return EmptyHMACDigestError("");
+
+    if (m_pKey == nullptr || m_pDigest == nullptr) {
+        return InitError("");
     }
-    if (m_pKey == nullptr) {
-        return EmptyKeyError("");
-    }
+
     Status status = StatusOk();
     if (buff != nullptr && size != 0) {
         alc_error_t err = m_pDigest->update(buff, size);
@@ -92,12 +91,10 @@ Hmac::finalize(Uint8* buff, Uint64 size)
     Status      status = StatusOk();
     alc_error_t err    = ALC_ERROR_NONE;
 
-    if (m_pDigest == nullptr) {
-        return EmptyHMACDigestError("");
+    if (m_pDigest == nullptr || m_pKey == nullptr) {
+        return InitError("");
     }
-    if (m_pKey == nullptr) {
-        return EmptyKeyError("");
-    }
+
 
     /* TODO: For all the following calls to digest return the proper error
     and assign */
@@ -142,13 +139,20 @@ Hmac::reset()
 }
 
 Status
-Hmac::setKey(const Uint8 key[], Uint32 keylen)
+Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest)
 {
     Status status = StatusOk();
 
-    if (m_pDigest == nullptr) {
-        return EmptyHMACDigestError("");
+    if (key == nullptr || keylen == 0)
+    {
+        return InitError("");
     }
+
+    m_pDigest     = &digest;
+    m_pDigest->init();
+
+    m_input_block_length = m_pDigest->getInputBlockSize();
+    m_output_hash_size   = m_pDigest->getHashSize();
 
     /* Clear all the buffers as with changed, continued update is not
     possible */
@@ -177,19 +181,6 @@ Hmac::setKey(const Uint8 key[], Uint32 keylen)
     if (!status.ok()) {
         return status;
     }
-    return status;
-}
-
-Status
-Hmac::setDigest(digest::IDigest& p_digest)
-{
-    Status status = StatusOk();
-    m_pDigest     = &p_digest;
-    m_pDigest->init();
-
-    m_input_block_length = m_pDigest->getInputBlockSize();
-    m_output_hash_size   = m_pDigest->getHashSize();
-
     return status;
 }
 

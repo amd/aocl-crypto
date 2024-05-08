@@ -34,11 +34,11 @@ struct Context
 {
     void* m_mac    = nullptr;
     void* m_digest = nullptr;
-    Status (*init)(void* mac, const Uint8* key, Uint64 size);
+    Status (*init)(void* mac, const Uint8* key, Uint64 size, void* digest);
     Status (*update)(void* mac, const Uint8* buff, Uint64 size);
     Status (*finalize)(void* mac, Uint8* buff, Uint64 size);
     void (*finish)(void* mac, void* digest);
-    Status (*reset)(void* mac, void* digest);
+    Status (*reset)(void* mac);
     Status (*duplicate)(Context& srcCtx, Context& destCtx);
 
     alcp::base::Status status{ StatusOk() };

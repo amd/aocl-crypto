@@ -103,21 +103,13 @@ class ALCP_API_EXPORT Hmac final : public IMac
     Uint64 getHashSize();
 
     /**
-     * @brief set the Digest to be used by HMAC
-     * @param digest: Digest class to be used by HMAC. Should be called before
-     * setting the Key
-     * @returns Status
-     */
-    Status setDigest(digest::IDigest& digest);
-
-    /**
-     * @brief set the Key to be used by HMAC. Should be called only after
-     * setting the digest
+     * @brief set the digest and the key to be used by HMAC. 
      * @param key: Pointer to the key to be used by HMAC
      * @param keylen: Length of the key to be used by HMAC
+     * @param digest: Digest class to be used by HMAC.
      * @returns Status
      */
-    Status setKey(const Uint8 key[], Uint32 keylen);
+    Status init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest);
 
     /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with

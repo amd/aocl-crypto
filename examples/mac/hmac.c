@@ -77,6 +77,12 @@ run_hmac(const alc_mac_info_p macInfo,
         printf("Error Occurred on MAC Request - %lu\n", err);
         goto out;
     }
+
+    err = alcp_mac_init(&handle,macInfo->mi_keyinfo.key, macInfo->mi_keyinfo.len / 8);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Init - %lu\n", err);
+        goto out;
+    }
     // Update can be called multiple times with smaller chunks of the cipherText
     err = alcp_mac_update(&handle, cipherText, cipherTextLen);
     if (alcp_is_error(err)) {
@@ -715,6 +721,12 @@ demo_Hmac_Sha3_384_Reset()
         printf("Error Occurred on MAC Request");
         return -1;
     }
+    err = alcp_mac_init(&handle,macinfo.mi_keyinfo.key, macinfo.mi_keyinfo.len / 8);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Init - %lu\n", err);
+        return -1;
+    }
+
     // Update can be called multiple times with smaller chunks of the cipherText
     err = alcp_mac_update(&handle, cipherText, sizeof(cipherText));
     if (alcp_is_error(err)) {
