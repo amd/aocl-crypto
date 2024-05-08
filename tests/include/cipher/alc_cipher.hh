@@ -39,7 +39,6 @@ class AlcpCipherBase : public CipherBase
   private:
     alc_cipher_handle_p m_handle = nullptr;
     alc_cipher_info_t   m_cinfo;
-    alc_key_info_t      m_keyinfo;
     alc_cipher_mode_t   m_mode;
     _alc_cipher_type    m_cipher_type;
     const Uint8*        m_iv;
