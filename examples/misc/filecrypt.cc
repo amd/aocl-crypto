@@ -293,14 +293,15 @@ namespace crypto {
             const int          cErrSize = 256;
             Uint8              err_buf[cErrSize];
 
-            alc_cipher_info_t cinfo = { // request params
-                                        .ci_type = ALC_CIPHER_TYPE_AES,
-                                        .ci_mode = ALC_AES_MODE_CFB,
-                                        .ci_keyLen =
-                                            static_cast<Uint32>(key.size()) * 8,
-                                        // init params
-                                        .ci_key = &key.at(0),
-                                        .ci_iv  = &iv.at(0)
+            alc_cipher_info_t cinfo = {
+                // request params
+                .ci_type   = ALC_CIPHER_TYPE_AES,
+                .ci_mode   = ALC_AES_MODE_CFB,
+                .ci_keyLen = static_cast<Uint32>(key.size()) * 8,
+                // init params
+                .ci_key   = &key.at(0),
+                .ci_iv    = &iv.at(0),
+                .ci_ivLen = iv.size(),
             };
 
             /*
@@ -322,6 +323,19 @@ namespace crypto {
                 // goto out;
             }
             printf("Request Succeeded\n");
+
+            // Initialize the cipher with IV and Key
+            err = alcp_cipher_init(&handle,
+                                   cinfo.ci_key,
+                                   cinfo.ci_keyLen,
+                                   cinfo.ci_iv,
+                                   cinfo.ci_ivLen);
+            if (alcp_is_error(err)) {
+                free(handle.ch_context);
+                printf("Error: Unable to Init \n");
+                // goto out;
+            }
+            printf("Init Succeeded\n");
 
             err =
                 alcp_cipher_encrypt(&handle, &in.at(0), &out.at(0), in.size());
@@ -351,14 +365,15 @@ namespace crypto {
             const int   cErrSize = 256;
             Uint8       err_buf[cErrSize];
 
-            alc_cipher_info_t cinfo = { // request params
-                                        .ci_type = ALC_CIPHER_TYPE_AES,
-                                        .ci_mode = ALC_AES_MODE_CFB,
-                                        .ci_keyLen =
-                                            static_cast<Uint32>(key.size()) * 8,
-                                        // init params
-                                        .ci_key = &key.at(0),
-                                        .ci_iv  = &iv.at(0)
+            alc_cipher_info_t cinfo = {
+                // request params
+                .ci_type   = ALC_CIPHER_TYPE_AES,
+                .ci_mode   = ALC_AES_MODE_CFB,
+                .ci_keyLen = static_cast<Uint32>(key.size()) * 8,
+                // init params
+                .ci_key   = &key.at(0),
+                .ci_iv    = &iv.at(0),
+                .ci_ivLen = iv.size(),
             };
 
             /*
@@ -381,6 +396,13 @@ namespace crypto {
             }
             printf("Request Succeeded\n");
 
+            // Initialize the cipher with IV and Key
+            err = alcp_cipher_init(&handle,
+                                   cinfo.ci_key,
+                                   cinfo.ci_keyLen,
+                                   cinfo.ci_iv,
+                                   cinfo.ci_ivLen);
+
             err =
                 alcp_cipher_decrypt(&handle, &in.at(0), &out.at(0), in.size());
             if (alcp_is_error(err)) {
@@ -397,7 +419,7 @@ namespace crypto {
             return out;
         }
         ~Crypt() { std::cout << "Crypt Destructor" << std::endl; }
-    };
+    }; // namespace crypto
 
     class Encryptor
     {
