@@ -155,8 +155,10 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
                      // input Tag.
     if (!m_isEnc_aes) {
         if (memcmp(ptag, tagInput, tagLen)) {
-            printf("\n Error: Tag mismatch");
+            // printf("\n Error: Tag mismatch");
             // clear data
+            memset(ptag, 0, tagLen);
+            memset(tagInput, 0, tagLen);
             return ALC_ERROR_TAG_MISMATCH;
         }
     }

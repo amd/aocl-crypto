@@ -288,15 +288,16 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // get tag
-    err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
+    // encrypt and decrypt tag will not match, since inputText, cipherText and
+    // outputText are overwritten multiple times. So we avoid tag matching part.
+#if 0    
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
         return;
     }
-
-    // encrypt and decrypt tag will not match, since inputText, cipherText and
-    // outputText are overwritten multiple times. So we avoid tag matching part.
+#endif
 }
 
 /*
