@@ -49,7 +49,7 @@
 
 static alc_cipher_handle_t handle;
 
-void
+int
 create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 {
     alc_error_t err;
@@ -71,7 +71,7 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context) {
         printf("Error: context allocation failed \n");
-        return;
+        return -1;
     }
 
     /* Request a context with mode and keyLength */
@@ -80,7 +80,7 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
         free(handle.ch_context);
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
     printf("request succeeded\n");
 
@@ -89,11 +89,12 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: Unable to init \n");
-        return;
+        return -1;
     }
+    return 0;
 }
 
-void
+int
 encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt)
@@ -106,13 +107,14 @@ encrypt_demo(const Uint8* plaintxt,
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     printf("encrypt succeeded\n");
+    return 0;
 }
 
-void
+int
 decrypt_demo(const Uint8* ciphertxt,
              const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
              Uint8*       plaintxt)
@@ -125,13 +127,13 @@ decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     printf("decrypt succeeded\n");
+    return 0;
 }
 
-// static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
 static Uint8* sample_plaintxt = (Uint8*)"A paragraph is a series of sentences "
                                         "that are organized and coherent, and "
                                         "are all related to a single topic. "
@@ -154,19 +156,9 @@ static const Uint8 sample_iv[] = {
     0xb, 0x4, 0xa, 0x5, 0x9, 0x6, 0x8, 0x7,
 };
 
-#if 0
-/*
- * Encrypted text of "Hello World from AOCL Crypto !!!"
- * with key = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
- * with iv = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
- */
-
-static Uint8 cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
-#else
 static Uint8 sample_ciphertxt[1000] = {
     0,
 };
-#endif
 
 #define BITS_PER_BYTE 8
 
@@ -217,30 +209,44 @@ int
 main(void)
 {
     Uint8 sample_output[1000] = { 0 };
+    int   retval              = 0;
 
     int pt_size = strlen((const char*)sample_plaintxt);
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
     // Tweak Key is appended to Sample Key
-    create_demo_session(sample_key, sample_iv, (sizeof(sample_key) / 2) * 8);
+    retval = create_demo_session(
+        sample_key, sample_iv, (sizeof(sample_key) / 2) * 8);
+    if (retval != 0) {
+        printf("\n demo failed at create session \n");
+        return -1;
+    }
 
 #ifdef DEBUG
     printf("plain text with size %d: \n", pt_size);
     ALC_PRINT(((Uint8*)sample_plaintxt), pt_size);
 #endif
-    encrypt_demo(sample_plaintxt,
-                 pt_size, /* len of 'plaintxt' and 'ciphertxt' */
-                 sample_ciphertxt);
+    retval = encrypt_demo(sample_plaintxt,
+                          pt_size, /* len of 'plaintxt' and 'ciphertxt' */
+                          sample_ciphertxt);
+    if (retval != 0)
+        goto out;
+
 #ifdef DEBUG
     printf("cipher text with size: %d \n", pt_size);
     ALC_PRINT(((Uint8*)&sample_ciphertxt), pt_size);
 #endif
-    decrypt_demo(sample_ciphertxt, pt_size, sample_output);
+    retval = decrypt_demo(sample_ciphertxt, pt_size, sample_output);
+    if (retval != 0)
+        goto out;
+
 #ifdef DEBUG
     printf("out text with size %d: \n", pt_size);
     ALC_PRINT(((Uint8*)&sample_output), pt_size);
 #endif
-    printf("sample_output: %s\n", sample_output);
+
+    // printf("sample_output: %s\n", sample_output);
+out:
     /*
      * Complete the transaction
      */
