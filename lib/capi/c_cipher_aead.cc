@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -96,14 +96,11 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
-
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify Encrypt to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->encrypt, err);
     err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
 
     return err;
@@ -130,8 +127,6 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     // FIXME: Modify encryptUpdate to return Status and assign to context
     // status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->encryptUpdate, err);
     err = ctx->encryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
 
     return err;
@@ -156,8 +151,6 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify decrypt to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->decrypt, err);
     err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len, pIv);
 
     return err;
@@ -184,8 +177,6 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     // FIXME: Modify decryptUpdate to return Status and assign to context
     // status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->decryptUpdate, err);
     err = ctx->decryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
 
     return err;
@@ -208,8 +199,6 @@ alcp_cipher_aead_set_iv(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify setIv to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->setIv, err);
     err = ctx->setIv(ctx->m_cipher, len, pIv);
 
     return err;
@@ -231,8 +220,6 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify setAad to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->setAad, err);
     err = ctx->setAad(ctx->m_cipher, pInput, len);
 
     return err;
@@ -255,8 +242,6 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify getTag to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->getTag, err);
     err = ctx->getTag(ctx->m_cipher, pOutput, len);
 
     return err;
@@ -277,8 +262,6 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
 
     // FIXME: Modify setTagLength to return Status and assign to context
     // status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->setTagLength, err);
     err = ctx->setTagLength(ctx->m_cipher, len);
 
     return err;
@@ -295,10 +278,6 @@ alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
 
     cipher::Context* ctx =
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    if (ctx->m_cipher == nullptr || ctx->finish == nullptr) {
-        return;
-    }
 
     ctx->finish(ctx->m_cipher);
 
