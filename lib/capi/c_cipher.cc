@@ -139,8 +139,6 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify Encrypt to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->encrypt, err);
     err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
 
     return err;
@@ -164,8 +162,6 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->encryptBlocks, err);
     err = ctx->encryptBlocks(ctx->m_cipher,
                              pPlainText,
                              pCipherText,
@@ -195,8 +191,6 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify decrypt to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->decrypt, err);
     err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len, pIv);
 
     return err;
@@ -220,8 +214,6 @@ alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->decryptBlocks, err);
     err = ctx->decryptBlocks(ctx->m_cipher,
                              pCipherText,
                              pPlainText,
@@ -247,8 +239,6 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify setIv to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->setIv, err);
     err = ctx->setIv(ctx->m_cipher, len, pIv);
 
     return err;
@@ -263,9 +253,6 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
     cipher::Context* ctx =
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    if (ctx->m_cipher == nullptr || ctx->finish == nullptr) {
-        return;
-    }
     ctx->finish(ctx->m_cipher);
 
     ctx->~Context();
