@@ -95,6 +95,14 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 }
 
 int
+close_demo_session()
+{
+    alcp_cipher_finish(&handle);
+    free(handle.ch_context);
+    handle.ch_context = NULL;
+}
+
+int
 encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt)
@@ -134,12 +142,29 @@ decrypt_demo(const Uint8* ciphertxt,
     return 0;
 }
 
-static Uint8* sample_plaintxt = (Uint8*)"A paragraph is a series of sentences "
-                                        "that are organized and coherent, and "
-                                        "are all related to a single topic. "
-                                        "Almost every piece of writing you do "
-                                        "that is longer than a few sentences "
-                                        "should be organized into paragraphs.";
+bool
+verify_same(Uint64 size, Uint8 expected[size], Uint8 actual[size])
+{
+    for (Uint64 i = 0; i < size; i++) {
+        if (expected[i] != actual[i]) {
+            printf("Mismatch in i:%ld ", i);
+            printf("Expected %x", expected[i]);
+            printf("Actual %x\n", actual[i]);
+            printf("Failure!, something might have went wrong with the"
+                   "library\n");
+            return 0;
+        }
+    }
+    printf("Verified!\n");
+    return 1;
+}
+
+static Uint8 sample_plaintxt[] = "A paragraph is a series of sentences "
+                                 "that are organized and coherent, and "
+                                 "are all related to a single topic. "
+                                 "Almost every piece of writing you do "
+                                 "that is longer than a few sentences "
+                                 "should be organized into paragraphs.";
 
 // clang-format off
 static const Uint8 sample_key[] = {
@@ -236,6 +261,12 @@ main(void)
     printf("cipher text with size: %d \n", pt_size);
     ALC_PRINT(((Uint8*)&sample_ciphertxt), pt_size);
 #endif
+
+    close_demo_session();
+
+    retval = create_demo_session(
+        sample_key, sample_iv, (sizeof(sample_key) / 2) * 8);
+
     retval = decrypt_demo(sample_ciphertxt, pt_size, sample_output);
     if (retval != 0)
         goto out;
@@ -250,9 +281,10 @@ out:
     /*
      * Complete the transaction
      */
-    alcp_cipher_finish(&handle);
 
-    free(handle.ch_context);
+    close_demo_session();
+
+    verify_same(pt_size, sample_plaintxt, sample_output);
 
     return 0;
 }
