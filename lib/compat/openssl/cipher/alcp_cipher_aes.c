@@ -94,75 +94,9 @@ alcp_prov_is_running(void)
 }
 
 /* ossl_aes256cbc_functions */
-#if 1 // for debugging, to be removed.
-static OSSL_FUNC_cipher_get_params_fn aes_256_cbc_get_params;
-static int
-aes_256_cbc_get_params(OSSL_PARAM params[])
-{
-    return ALCP_prov_cipher_generic_get_params(params, 0x2, 0, 256, 128, 128);
-}
-static OSSL_FUNC_cipher_newctx_fn aes_256_cbc_newctx;
-
-static void*
-aes_256_cbc_newctx(void* provctx)
-{
-    ENTER();
-    ALCP_PROV_CIPHER_CTX* ctx =
-        alcp_prov_is_running()
-            ? CRYPTO_zalloc(sizeof(*ctx),
-                            "/home/mmm/workspace/xaocl-crypto/lib/compat/"
-                            "openssl/cipher/alcp_cipher_aes.c",
-                            93)
-            : ((void*)0);
-
-    if (ctx != NULL) {
-        ctx->handle.ch_context =
-            OPENSSL_malloc(alcp_cipher_aead_context_size());
-        if (ctx->handle.ch_context == NULL) {
-            printf("\n context allocation failed ");
-            return NULL;
-        }
-        alc_error_t err =
-            alcp_cipher_request(ALC_AES_MODE_CBC, 256, &(ctx->handle));
-        ctx->prov_cipher_data = ctx->handle.alc_cipher_data;
-        if (ctx->prov_cipher_data == NULL) {
-            OPENSSL_clear_free(ctx, sizeof(*ctx));
-        }
-
-        if (err == ALC_ERROR_NONE) {
-            if (ctx != ((void*)0)) {
-                ALCP_prov_cipher_generic_initkey(
-                    ctx, 256, 128, 128, 0x2, 0, provctx);
-            }
-        } else {
-            OPENSSL_clear_free(ctx, sizeof(*ctx));
-        }
-    }
-    return ctx;
-}
-const OSSL_DISPATCH ALCP_prov_aes256cbc_functions[] = {
-    { 1, (void (*)(void))aes_256_cbc_newctx },
-    { 7, (void (*)(void))aes_freectx },
-    { 8, (void (*)(void))aes_dupctx },
-    { 2, (void (*)(void))ALCP_prov_cipher_generic_einit },
-    { 3, (void (*)(void))ALCP_prov_cipher_generic_dinit },
-    { 4, (void (*)(void))ALCP_prov_cipher_generic_block_update },
-    { 5, (void (*)(void))ALCP_prov_cipher_generic_block_final },
-    { 6, (void (*)(void))ALCP_prov_cipher_generic_cipher },
-    { 9, (void (*)(void))aes_256_cbc_get_params },
-    { 10, (void (*)(void))ALCP_prov_cipher_generic_get_ctx_params },
-    { 11, (void (*)(void))ALCP_prov_cipher_generic_set_ctx_params },
-    { 12, (void (*)(void))ALCP_prov_cipher_generic_gettable_params },
-    { 13, (void (*)(void))ALCP_prov_cipher_generic_gettable_ctx_params },
-    { 14, (void (*)(void))ALCP_prov_cipher_generic_settable_ctx_params },
-    { 0, ((void*)0) }
-};
-
-#else
 IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 256, 128, 128, block)
-#endif
-/* ossl_aes192cbc_functions */
-IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 192, 128, 128, block)
+    /* ossl_aes192cbc_functions */
+    IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 192, 128, 128, block)
     /* ossl_aes128cbc_functions */
     IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 128, 128, 128, block)
 
