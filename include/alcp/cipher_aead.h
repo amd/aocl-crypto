@@ -171,7 +171,7 @@ alcp_cipher_aead_context_size(void);
  * @param [out]   pCipherHandle    Library populated session handle for future
  * cipher operations.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -198,7 +198,7 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
  * @param[out]   pCipherText   Pointer to Cipher Text
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -226,7 +226,7 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @param[out]   pOutput   Pointer to output data (cipherText or Tag)
  * @param[in]    len       Length of input or output data
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -255,7 +255,7 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @param[out]   pOutput   Pointer to output data (PlainText or Tag)
  * @param[in]    len       Length of input or output data
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -283,7 +283,7 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @param[out]   pCipherText   Pointer to Cipher Text
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -304,7 +304,7 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
  * @param[in] pIv  IV/Nonce
  * @param[in] ivLen  iv Length in bits
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -327,7 +327,7 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
  * @param[in] pInput    Additional Data in Bytes
  * @param[in] len       Length in bytes of Additional Data
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -345,7 +345,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
  * @param[out] pOutput  Byte addressable memory to write tag into
  * @param[in] tagLen       Length in bytes of Tag in bytes
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -363,7 +363,7 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] tagLen       Length in bytes of Tag in bytes
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -386,24 +386,6 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
  */
 ALCP_API_EXPORT void
 alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle);
-
-/**
- * @brief   Get a copy of the error string for cipher operations.
- * @parblock <br> &nbsp;
- * <b> This AEAD API is called to get the error string. It should be called
- * after
- * @ref alcp_cipher_aead_request and before @ref alcp_cipher_aead_finish </b>
- * @endparblock
- * @param [in] pCipherHandle Session handle for cipher operation
- * @param [out] pBuff  Destination Buffer to which Error String will be copied
- * @param [in] size    Length of the Buffer.
- *
- * @return alc_error_t Error code to validate the Handle
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_aead_error(alc_cipher_handle_p pCipherHandle,
-                       Uint8*              pBuff,
-                       Uint64              size);
 
 EXTERN_C_END
 

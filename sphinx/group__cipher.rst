@@ -35,7 +35,6 @@ Functions
 .. doxygenfunction:: alcp_cipher_aead_get_tag
 .. doxygenfunction:: alcp_cipher_aead_set_tag_length
 .. doxygenfunction:: alcp_cipher_aead_finish
-.. doxygenfunction:: alcp_cipher_aead_error
 
 ----
 
