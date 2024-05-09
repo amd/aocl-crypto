@@ -46,8 +46,6 @@ Hmac::Hmac(Hmac& hmac)
     m_output_hash_size   = hmac.m_output_hash_size;
     m_finalized          = hmac.m_finalized;
 
-    // ToDO : m_pDIgest should be set from outside the class interface
-    // set key from outside the class interface
     memcpy(m_pTempHash, hmac.m_pTempHash, cMaxHashSize);
     memcpy(m_pK0_xor_opad, hmac.m_pK0_xor_opad, cMaxInternalBlockLength);
     memcpy(m_pK0_xor_ipad, hmac.m_pK0_xor_ipad, cMaxInternalBlockLength);
@@ -94,7 +92,6 @@ Hmac::finalize(Uint8* buff, Uint64 size)
     if (m_pDigest == nullptr || m_pKey == nullptr) {
         return InitError("");
     }
-
 
     /* TODO: For all the following calls to digest return the proper error
     and assign */
@@ -143,23 +140,16 @@ Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest)
 {
     Status status = StatusOk();
 
-    if (key == nullptr || keylen == 0)
-    {
+    if (key == nullptr || keylen == 0) {
         return InitError("");
     }
 
-    m_pDigest     = &digest;
+    m_pDigest = &digest;
     m_pDigest->init();
 
     m_input_block_length = m_pDigest->getInputBlockSize();
     m_output_hash_size   = m_pDigest->getHashSize();
 
-    /* Clear all the buffers as with changed, continued update is not
-    possible */
-    memset(m_pK0_xor_opad, 0, cMaxInternalBlockLength);
-    memset(m_pK0_xor_ipad, 0, cMaxInternalBlockLength);
-    memset(m_pK0, 0, cMaxInternalBlockLength);
-    memset(m_pTempHash, 0, cMaxHashSize);
     m_finalized = false;
 
     m_pKey   = key;
@@ -177,9 +167,6 @@ Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest)
     alc_error_t err = m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
     if (alcp_is_error(err)) {
         return HMACDigestOperationError("");
-    }
-    if (!status.ok()) {
-        return status;
     }
     return status;
 }
