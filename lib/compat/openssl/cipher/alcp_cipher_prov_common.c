@@ -1010,6 +1010,15 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
       CIPHER_DEF_PROP,
       ALCP_prov_aes256siv_functions },
 
+    { ALCP_PROV_NAMES_AES_128_CCM,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes128ccm_functions },
+    { ALCP_PROV_NAMES_AES_192_CCM,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes192ccm_functions },
+    { ALCP_PROV_NAMES_AES_256_CCM,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes256ccm_functions },
     // Terminate OpenSSL Algorithm list with Null Pointer.
     { NULL, NULL, NULL },
 };

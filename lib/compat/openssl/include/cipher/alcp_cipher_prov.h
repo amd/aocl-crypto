@@ -71,14 +71,17 @@ extern const OSSL_DISPATCH ALCP_prov_aes256gcm_functions[];
 
 extern const OSSL_DISPATCH ALCP_prov_aes128xts_functions[];
 extern const OSSL_DISPATCH ALCP_prov_aes256xts_functions[];
+
 extern const OSSL_DISPATCH ALCP_prov_aes128siv_functions[];
 extern const OSSL_DISPATCH ALCP_prov_aes192siv_functions[];
 extern const OSSL_DISPATCH ALCP_prov_aes256siv_functions[];
+
+extern const OSSL_DISPATCH ALCP_prov_aes128ccm_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes192ccm_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes256ccm_functions[];
+
 #if 0
 
- extern const OSSL_DISPATCH ccm_functions_128[];
- extern const OSSL_DISPATCH ccm_functions_192[];
- extern const OSSL_DISPATCH ccm_functions_256[];
  extern const OSSL_DISPATCH siv_functions_128[];
  extern const OSSL_DISPATCH siv_functions_192[];
  extern const OSSL_DISPATCH siv_functions_256[];
