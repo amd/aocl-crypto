@@ -100,7 +100,10 @@ typedef enum _alc_cipher_mode
 #define IV_STATE_COPIED        2 /* iv has been copied from the iv buffer */
 #define IV_STATE_FINISHED      3 /* the iv has been used - so don't reuse it */
 
-#define MAX_NUM_512_BLKS 8
+#define MAX_NUM_512_BLKS      8
+#define MAX_CIPHER_IV_SIZE    (1024 / 8)
+#define __RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+#define AES_BLOCK_SIZE        16
 
 typedef struct _alc_cipher_gcm_data
 {
@@ -108,8 +111,6 @@ typedef struct _alc_cipher_gcm_data
     __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
 
 } _alc_cipher_gcm_data_t;
-
-#define __RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 
 // FIXME: _alc_cipher_xts_data structure needs further refinement.
 typedef struct _alc_cipher_xts_data
@@ -121,68 +122,6 @@ typedef struct _alc_cipher_xts_data
     Int64  m_aes_block_id;
 
 } _alc_cipher_xts_data_t;
-
-#define AES_BLOCK_SIZE 16
-
-// FIXME: provider datastructures should be moved to alcp_provider.h
-// ALCP provider generic Cipher data
-typedef struct _alc_cipher_generic_data
-{
-    Uint8 oiv_buff[AES_BLOCK_SIZE];
-
-    Uint32 updated : 1; /* Set to 1 during update for one shot ciphers */
-    Uint32 variable_keylength : 1;
-    Uint32 inverse_cipher     : 1; /* set to 1 to use inverse cipher */
-    Uint32 use_bits : 1;   /* Set to 0 for cfb1 to use bits instead of bytes */
-    Uint32 tlsversion;     /* If TLS padding is in use the TLS version number */
-    Uint8* tlsmac;         /* tls MAC extracted from the last record */
-    Int32  alloced;        /* Whether the tlsmac data has been allocated or
-                            * points into the user buffer. */
-    size_t tlsmacsize;     /* Size of the TLS MAC */
-    Int32  removetlspad;   /* Whether TLS padding should be removed or not */
-    size_t removetlsfixed; /* Length of the fixed size data to remove when
-                            * processing TLS data (equals mac size plus
-                            * IV size if applicable) */
-    Uint32 num;            /* number of iv bytes */
-    size_t blocksize;
-    size_t bufsz; /* Number of bytes in buf */
-
-} _alc_cipher_generic_data_t;
-
-#define MAX_CIPHER_IV_SIZE (1024 / 8)
-
-// ALCP provider Cipher data
-typedef struct _alc_prov_cipher_data
-{
-    alc_cipher_mode_t mode;
-
-    // iv info
-    const Uint8* pIv;
-    Uint8        iv_buff[MAX_CIPHER_IV_SIZE];
-    Uint64       ivLen;
-
-    // key info
-    const Uint8* pKey;
-    Uint32       keyLen_in_bytes;
-
-    Uint32 ivState;
-    Uint32 isKeySet;
-    Uint32 enc : 1;         /*! Set to 1 if we are encrypting or 0 otherwise */
-    Uint32 pad : 1;         /*! Whether padding should be used or not */
-    Uint64 tls_enc_records; /*! Number of TLS records encrypted */
-    Uint32 iv_gen_rand : 1; /*! No IV was specified, so generate a rand IV */
-    Uint32 iv_gen      : 1; /*! It is OK to generate IVs */
-
-    // aead params
-    Uint64 tagLength;
-    Uint64 tls_aad_len;
-    Uint32 tls_aad_pad_sz;
-
-    Uint8 buf[AES_BLOCK_SIZE]; /*! buffer to store partial blocks */
-
-    _alc_cipher_generic_data_t generic;
-
-} alc_prov_cipher_data_t;
 
 typedef struct _alc_cipher_data
 {
@@ -238,7 +177,7 @@ typedef alc_cipher_context_t* alc_cipher_context_p;
 typedef struct _alc_cipher_handle
 {
     alc_cipher_context_p ch_context;
-    void*                alc_cipher_data;
+    void*                alc_prov_cipher_data;
 } alc_cipher_handle_t, *alc_cipher_handle_p;
 
 /**

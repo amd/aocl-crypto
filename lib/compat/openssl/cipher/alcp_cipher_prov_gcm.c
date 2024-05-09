@@ -62,7 +62,7 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
         alc_error_t err = alcp_cipher_aead_request(
             ALC_AES_MODE_GCM, keybits, &(ctx->base.handle));
 
-        ctx->base.prov_cipher_data = ctx->base.handle.alc_cipher_data;
+        ctx->base.prov_cipher_data = ctx->base.handle.alc_prov_cipher_data;
 
         if (ctx->base.prov_cipher_data == NULL) {
             OPENSSL_clear_free(ctx, sizeof(*ctx));

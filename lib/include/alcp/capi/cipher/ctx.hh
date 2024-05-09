@@ -28,8 +28,11 @@
 #pragma once
 
 #include "alcp/cipher.h"
-
 #include "alcp/cipher.hh"
+
+// FIXME: find alternative to skip use of "alc_prov_cipher_data_t" with
+// performance penality
+#include "../compat/openssl/include/provider/alcp_provider_cipherdata.h"
 
 #include <functional>
 
@@ -38,9 +41,10 @@ namespace alcp::cipher {
 typedef struct Context
 {
     void* m_cipher = nullptr;
-    alc_prov_cipher_data_t
-        m_prov_cipher_data; // FIXME:alc_prov_cipher_data_t should be moved out
-    alc_cipher_data_t m_alcp_cipher_data;
+    // FIXME: find alternative to skip use of "alc_prov_cipher_data_t" with
+    // performance penality
+    alc_prov_cipher_data_t m_prov_cipher_data;
+    alc_cipher_data_t      m_alcp_cipher_data;
 
     // sw methods
     alc_error_t (*decrypt)(void*        ctx,

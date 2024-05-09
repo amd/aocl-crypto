@@ -40,6 +40,7 @@
 
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
+#include "provider/alcp_provider_cipherdata.h"
 
 #define GCM_IV_DEFAULT_SIZE 12
 #define GCM_IV_MAX_SIZE     (1024 / 8)

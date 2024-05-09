@@ -121,7 +121,7 @@ gcm_init(void*            vctx,
         }
     }
 #if DEBUG_PROV_GCM_INIT
-    alc_prov_cipher_data_t* cipherctxTemp = ctx->handle.alc_cipher_data;
+    alc_prov_cipher_data_t* cipherctxTemp = ctx->handle.alc_prov_cipher_data;
     printf("\n gcm_init enc value %d", cipherctxTemp->enc);
 #endif
     // set key
