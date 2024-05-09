@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -131,10 +131,6 @@ namespace alcp::mac { namespace avx2 {
             current_temp_k0_xor_ipad++;
             current_temp_k0_xor_opad++;
         }
-    }
-    void copyData(Uint8* destination, const Uint8* source, int len)
-    {
-        utils::CopyBlock<Uint64>(destination, source, len);
     }
 
 }} // namespace alcp::mac::avx2
