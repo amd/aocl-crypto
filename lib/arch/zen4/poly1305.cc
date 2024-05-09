@@ -49,8 +49,7 @@ debug_print(std::string in)
 #else
 void
 debug_print(std::string in)
-{
-}
+{}
 #endif
 
 namespace alcp::mac::poly1305::zen4 {
@@ -1910,33 +1909,26 @@ poly1305_update_radix26(Uint64      key[],
 }
 
 Status
-poly1305_finish_radix26(Uint64      key[],
-                        const Uint8 pMsg[],
-                        Uint64      msgLen,
-                        Uint64      accumulator[],
-                        Uint8       msg_buffer[16],
-                        Uint64&     msg_buffer_len,
-                        Uint64      r[10],
-                        Uint64      s[8],
-                        bool&       finalized)
+poly1305_finish_radix26(Uint8   digest[],
+                        Uint64  len,
+                        Uint64  key[],
+                        Uint64  accumulator[],
+                        Uint8   msg_buffer[16],
+                        Uint64& msg_buffer_len,
+                        Uint64  r[10],
+                        Uint64  s[8],
+                        bool&   finalized)
 {
     Status status = StatusOk();
+
     if (finalized) {
         status.update(status::InternalError("Cannot update after finalized!"));
         return status;
     }
 
-    if (msgLen) {
-        // s.update(update(pMsg, msgLen));
-        status.update(poly1305_update_radix26(key,
-                                              pMsg,
-                                              msgLen,
-                                              accumulator,
-                                              msg_buffer,
-                                              msg_buffer_len,
-                                              r,
-                                              s,
-                                              finalized));
+    if (len != 16) {
+        status.update(status::InvalidArgument("Invalid Size for Poly1305"));
+        return status;
     }
 
     if (msg_buffer_len) {
@@ -2017,27 +2009,6 @@ poly1305_finish_radix26(Uint64      key[],
         accumulator[i] = acc[i];
     }
 
-    finalized = true;
-
-    return status;
-}
-
-Status
-poly1305_copy_radix26(Uint8  digest[],
-                      Uint64 len,
-                      Uint64 accumulator[],
-                      bool   m_finalized)
-{
-    Status s = StatusOk();
-    if (!m_finalized) {
-        s.update(status::InternalError("Not finalized yet!"));
-        return s;
-    }
-    if (len != 16) {
-        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
-        return s;
-    }
-
     const Uint8* p_accumulator_8 = reinterpret_cast<Uint8*>(accumulator);
 
     std::copy(p_accumulator_8, p_accumulator_8 + 4, digest);
@@ -2045,8 +2016,11 @@ poly1305_copy_radix26(Uint8  digest[],
     std::copy(p_accumulator_8 + 16, p_accumulator_8 + 20, digest + 8);
     std::copy(p_accumulator_8 + 24, p_accumulator_8 + 28, digest + 12);
 
-    return s;
+    finalized = true;
+
+    return status;
 }
+
 // End Radix26 Implementation
 
 // Begin Radix44 Implementation
@@ -2782,35 +2756,17 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
 }
 
 bool
-poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
+poly1305_finalize_radix44(Poly1305State44& state,
+                          Uint8*           digest,
+                          Uint64           digest_len)
 {
     if (state.finalized == true) {
         return false;
     }
-    if (len) {
-        poly1305_update_radix44(state, pMsg, len);
-        len = 0;
-    }
-    // Handle left over blocks
-#if 1
     // Implement Partial Blocks
     if (state.msg_buffer_len != 0) {
-        // FIXME: Ideally this part will not be executed.
-        if (((len + state.msg_buffer_len) >= 16)) {
-            std::copy(pMsg,
-                      pMsg + (16 - state.msg_buffer_len),
-                      state.msg_buffer + state.msg_buffer_len);
-            poly1305_update_radix44(state, state.msg_buffer, 16);
-            state.msg_buffer_len = 0;
-            len                  = len - (16 - state.msg_buffer_len);
-        } else {
-            std::copy(
-                pMsg, pMsg + len, state.msg_buffer + state.msg_buffer_len);
-            state.msg_buffer_len = (len + state.msg_buffer_len);
-            poly1305_partial_blocks(state);
-        }
+        poly1305_partial_blocks(state);
     }
-#endif
     __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
             reg_acc1 = _mm512_load_epi64(state.acc1),
             reg_acc2 = _mm512_load_epi64(state.acc2);
@@ -2852,32 +2808,19 @@ poly1305_finalize_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
     _mm512_store_epi64(state.acc1, reg_acc1);
     _mm512_store_epi64(state.acc2, reg_acc2);
 
-    state.finalized = true;
-    return true;
-}
-
-bool
-poly1305_copy_radix44(Poly1305State44& state, Uint8* digest, Uint64 digest_len)
-{
-    if (state.finalized == false) {
-        return false;
-    }
-    Uint64 hash[3];
     Uint64 digest_temp[2];
 
-    hash[0] = state.acc0[0];
-    hash[1] = state.acc1[0];
-    hash[2] = state.acc2[0];
-
-    digest_temp[0] = hash[0] | hash[1] << 44;
-    digest_temp[1] = (hash[1] >> 20) | hash[2] << 24;
+    digest_temp[0] = state.acc0[0] | state.acc1[0] << 44;
+    digest_temp[1] = (state.acc1[0] >> 20) | state.acc2[0] << 24;
 
     std::copy(reinterpret_cast<Uint8*>(digest_temp),
               reinterpret_cast<Uint8*>(digest_temp) + 16,
               digest);
 
+    state.finalized = true;
     return true;
 }
+
 // End Radix44 Implementation
 
 } // namespace alcp::mac::poly1305::zen4

@@ -54,21 +54,15 @@ poly1305_update_radix26(Uint64      key[],
                         bool        finalized);
 
 Status
-poly1305_finish_radix26(Uint64      key[],
-                        const Uint8 pMsg[],
-                        Uint64      msgLen,
+poly1305_finish_radix26(const Uint8 digest[],
+                        Uint64      digestLen,
+                        Uint64      key[],
                         Uint64      accumulator[],
                         Uint8       msg_buffer[16],
                         Uint64&     msg_buffer_len,
                         Uint64      r[10],
                         Uint64      s[8],
                         bool&       finalized);
-
-Status
-poly1305_copy_radix26(Uint8  digest[],
-                      Uint64 len,
-                      Uint64 accumulator[],
-                      bool   m_finalized);
 
 void
 poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32]);
@@ -77,11 +71,6 @@ bool
 poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len);
 
 bool
-poly1305_finalize_radix44(Poly1305State44& state,
-                          const Uint8*     pMsg,
-                          Uint64           len);
-
-bool
-poly1305_copy_radix44(Poly1305State44& state, Uint8* digest, Uint64 digest_len);
+poly1305_finalize_radix44(Poly1305State44& state, Uint8* digest, Uint64 len);
 
 } // namespace alcp::mac::poly1305::zen4

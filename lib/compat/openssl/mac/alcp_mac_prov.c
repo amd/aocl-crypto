@@ -240,7 +240,7 @@ ALCP_prov_mac_init(void*                vctx,
             }
         }
     }
-    Uint64 size             = alcp_mac_context_size(macinfo);
+    Uint64 size             = alcp_mac_context_size();
     cctx->handle.ch_context = OPENSSL_malloc(size);
     err                     = alcp_mac_request(&(cctx->handle), macinfo);
     if (alcp_is_error(err)) {
@@ -277,14 +277,9 @@ ALCP_prov_mac_final(void*          vctx,
     ENTER();
     alc_error_t        err  = ALC_ERROR_NONE;
     alc_prov_mac_ctx_p mctx = vctx;
-    err                     = alcp_mac_finalize(&(mctx->handle), NULL, 0);
+    err = alcp_mac_finalize(&(mctx->handle), out, (Uint64)outsize);
     if (alcp_is_error(err)) {
         printf("MAC Provider: Failed to Finalize\n");
-        return 0;
-    }
-    err = alcp_mac_copy(&(mctx->handle), out, (Uint64)outsize);
-    if (alcp_is_error(err)) {
-        printf("MAC Provider: Failed to copy Hash\n");
         return 0;
     }
 

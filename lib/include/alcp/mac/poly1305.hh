@@ -55,20 +55,12 @@ class ALCP_API_EXPORT IPoly1305
      */
     virtual Status update(const Uint8 pMsg[], Uint64 msgLen) = 0;
     /**
-     * @brief
-     * @param pMsg Given message, finishes internal state processing the
-     * message.
-     * @param msgLen Length of message in bytes
-     * @return Status/Result of the operation
-     */
-    virtual Status finish(const Uint8 pMsg[], Uint64 msgLen) = 0;
-    /**
-     * @brief
+     * @brief finishes internal state processing
      * @param digest Copy the digest/mac to given buffer
      * @param length Length of the buffer to copy into
      * @return Status/Result of the operation
      */
-    virtual Status copy(Uint8 digest[], Uint64 len) = 0;
+    virtual Status finish(Uint8 digest[], Uint64 len) = 0;
     /**
      * @brief Resets the temporary buffers without clearing key
      * @return Status/Result of the operation
@@ -79,7 +71,7 @@ class ALCP_API_EXPORT IPoly1305
 
 using utils::CpuArchFeature;
 template<utils::CpuArchFeature feature = CpuArchFeature::eDynamic>
-class ALCP_API_EXPORT Poly1305 : public Mac
+class ALCP_API_EXPORT Poly1305 : public IMac
 {
   private:
     std::unique_ptr<IPoly1305> poly1305_impl;
@@ -111,23 +103,11 @@ class ALCP_API_EXPORT Poly1305 : public Mac
     Status reset() override;
     /**
      * @brief
-     * @param pMsg Given message, finalizes internal state processing the
-     * message.
-     * @param msgLen Length of message in bytes
+     * @param digest mac buffer
+     * @param digestLen Length of mac in bytes
      * @return Status/Result of the operation
      */
-    Status finalize(const Uint8 pMsg[], Uint64 msgLen) override;
-    /**
-     * @brief
-     * @param digest Copy the digest/mac to given buffer
-     * @param length Length of the buffer to copy into
-     * @return Status/Result of the operation
-     */
-    Status copy(Uint8 digest[], Uint64 length);
-    /**
-     * @brief Cleanup the buffers and marks end of a context
-     */
-    void finish() override;
+    Status finalize(Uint8 digest[], Uint64 digestLen) override;
     // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
     // msgLen);
     Poly1305();

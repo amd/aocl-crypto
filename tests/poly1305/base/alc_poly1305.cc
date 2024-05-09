@@ -55,9 +55,9 @@ AlcpPoly1305Base::init()
     dinfo.mi_keyinfo = kinfo;
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else if (m_handle->ch_context == nullptr) {
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else {
         alcp_mac_finish(m_handle);
     }
@@ -94,15 +94,9 @@ AlcpPoly1305Base::mac(const alcp_poly1305_data_t& data)
         return false;
     }
 
-    err = alcp_mac_finalize(m_handle, NULL, 0);
+    err = alcp_mac_finalize(m_handle, data.m_mac, data.m_mac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
-        return false;
-    }
-
-    err = alcp_mac_copy(m_handle, data.m_mac, data.m_mac_len);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
         return false;
     }
 

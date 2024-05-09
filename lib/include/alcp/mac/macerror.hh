@@ -44,7 +44,8 @@ enum ErrorCode : Uint16
     eAlreadyFinalized,
     eCopyWithoutFinalize,
     eDigestOperationError,
-    eEmptyDigest
+    eEmptyDigest,
+    eInitError
 };
 
 class MacError final : public ErrorBase
@@ -103,7 +104,9 @@ class MacError final : public ErrorBase
             { alcp::mac::ErrorCode::eEmptyDigest,
               "HMAC Digest cannot be empty" },
             { alcp::mac::ErrorCode::eDigestOperationError,
-              "HMAC Failed During Internal Digest Operation" }
+              "HMAC Failed During Internal Digest Operation" },
+            { alcp::mac::ErrorCode::eInitError,
+              "Init Error" },
         };
 
         MacErrorMapT::const_iterator it =
@@ -124,7 +127,7 @@ namespace status {
     ALCP_API_EXPORT Status EmptyKeyError(StringView msg);
     ALCP_API_EXPORT Status HMACDigestOperationError(StringView msg);
     ALCP_API_EXPORT Status EmptyHMACDigestError(StringView msg);
-
+    ALCP_API_EXPORT Status InitError(StringView msg);
 } // namespace status
 
 } // namespace alcp::mac

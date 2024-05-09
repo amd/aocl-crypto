@@ -32,11 +32,7 @@ ippsAES_CMACGetSize(int* pSize)
 {
     printMsg("ippsAES_CMACGetSize:  ENTRY");
 
-    alc_mac_info_t macinfo;
-    macinfo.mi_type                              = ALC_MAC_CMAC;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
-    Uint64 context_size = alcp_mac_context_size(&macinfo);
+    Uint64 context_size = alcp_mac_context_size();
     *pSize = sizeof(ipp_wrp_mac_ctx) + static_cast<int>(context_size);
     printMsg("ippsAES_CMACGetSize:  EXIT");
     return ippStsNoErr;

@@ -60,13 +60,10 @@ run_cmac(const alc_mac_info_p macInfo,
 
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = alcp_mac_supported(macInfo);
+    handle.ch_context = malloc(alcp_mac_context_size());
 
-    if (err == ALC_ERROR_NONE) {
-        handle.ch_context = malloc(alcp_mac_context_size(macInfo));
-    } else {
-        printf("CMAC Information provided is unsupported\n");
-        return err;
+    if (handle.ch_context == NULL) {
+        return ALC_ERROR_GENERIC;
     }
 
     err = alcp_mac_request(&handle, macInfo);
@@ -74,22 +71,17 @@ run_cmac(const alc_mac_info_p macInfo,
         printf("Error Occurred on MAC Request - %lu\n", err);
         return err;
     }
-    // Update can be called multiple times with smaller chunks of the cipherText
+    // Update can be called multiple times with smaller chunks of the
+    // cipherText
     err = alcp_mac_update(&handle, cipherText, cipherTextLen);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Update\n");
         return err;
     }
-    // In Finalize code, last remaining buffer can be provided if any exists
-    // with its size
-    err = alcp_mac_finalize(&handle, NULL, 0);
+
+    err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Finalize\n");
-        return err;
-    }
-    err = alcp_mac_copy(&handle, mac, mac_size);
-    if (alcp_is_error(err)) {
-        printf("Error Occurred while Copying MAC\n");
         return err;
     }
     alcp_mac_finish(&handle);

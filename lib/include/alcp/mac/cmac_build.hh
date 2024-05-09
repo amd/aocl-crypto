@@ -53,31 +53,22 @@ __cmac_wrapperUpdate(void* cmac, const Uint8* buff, Uint64 size)
 }
 
 static Status
-__cmac_wrapperFinalize(void* cmac, const Uint8* buff, Uint64 size)
+__cmac_wrapperFinalize(void* cmac, Uint8* buff, Uint64 size)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->finalize(buff, size);
-}
-
-static Status
-__cmac_wrapperCopy(void* cmac, Uint8* buff, Uint64 size)
-{
-    auto p_cmac = static_cast<Cmac*>(cmac);
-    return p_cmac->copy(buff, size);
 }
 
 static void
 __cmac_wrapperFinish(void* cmac, void* digest)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
-    p_cmac->finish();
-    p_cmac->~Cmac();
-
+    delete p_cmac;
     // Not deleting the memory because it is allocated by application
 }
 
 static Status
-__cmac_wrapperReset(void* cmac, void* digest)
+__cmac_wrapperReset(void* cmac)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->reset();
@@ -89,10 +80,9 @@ __build_cmac(const alc_cipher_info_t& cipherInfo,
              Context&                 ctx)
 {
     using namespace status;
-    Status status = StatusOk();
-    auto   addr   = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    Status status                 = StatusOk();
     ctx.data.alcp_keyLen_in_bytes = cKinfo.len / 8;
-    auto p_algo                   = new (addr) Cmac(&ctx.data);
+    auto p_algo                   = new Cmac(&ctx.data);
 
     auto p_key = cKinfo.key;
     auto len   = cKinfo.len;
@@ -102,12 +92,11 @@ __build_cmac(const alc_cipher_info_t& cipherInfo,
     }
     ctx.m_mac = static_cast<void*>(p_algo);
 
-    ctx.update   = __cmac_wrapperUpdate;
-    ctx.finalize = __cmac_wrapperFinalize;
-    ctx.copy     = __cmac_wrapperCopy;
-    ctx.finish   = __cmac_wrapperFinish;
-    ctx.reset    = __cmac_wrapperReset;
-
+    ctx.update    = __cmac_wrapperUpdate;
+    ctx.finalize  = __cmac_wrapperFinalize;
+    ctx.finish    = __cmac_wrapperFinish;
+    ctx.reset     = __cmac_wrapperReset;
+    ctx.duplicate = nullptr;
     return status;
 }
 Status

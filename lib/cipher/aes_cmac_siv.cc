@@ -34,8 +34,7 @@ namespace alcp::cipher {
 
 Siv::Siv(alc_cipher_data_t* ctx)
     : m_cmac{ Cmac(ctx) }
-{
-}
+{}
 
 Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
@@ -45,11 +44,11 @@ Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
-    s = m_cmac.finalize(data, size);
+    s = m_cmac.update(data, size);
     if (!s.ok()) {
         return s;
     }
-    s = m_cmac.copy(mac, macSize);
+    s = m_cmac.finalize(mac, macSize);
     if (!s.ok()) {
         return s;
     }
@@ -77,11 +76,11 @@ Siv::cmacWrapperMultiData(const Uint8 data1[],
     if (!s.ok()) {
         return s;
     }
-    s = m_cmac.finalize(data2, size2);
+    s = m_cmac.update(data2, size2);
     if (!s.ok()) {
         return s;
     }
-    s = m_cmac.copy(mac, macSize);
+    s = m_cmac.finalize(mac, macSize);
     if (!s.ok()) {
         return s;
     }

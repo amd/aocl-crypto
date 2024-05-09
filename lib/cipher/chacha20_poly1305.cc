@@ -172,11 +172,7 @@ alc_error_t
 ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::getTag(Uint8* pOutput,
                                                         Uint64 len)
 {
-    alcp::base::Status s = Poly1305::finalize(nullptr, 0);
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-    s = Poly1305::copy(pOutput, len);
+    alcp::base::Status s = Poly1305::finalize(pOutput, len);
     if (!s.ok()) {
         return ALC_ERROR_EXISTS;
     }

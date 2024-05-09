@@ -259,6 +259,7 @@ class CMACFuncionalityTest
     }
 
     inline void SetReserve(std::vector<Uint8>& var)
+
     {
         if (var.size() == 0)
             var.reserve(1);
@@ -271,20 +272,8 @@ TEST_P(CMACFuncionalityTest, CMAC_SINGLE_UPDATE)
     Status s{ StatusOk() };
     s = m_cmac->update(&m_plain_text[0], m_plain_text.size());
     ASSERT_TRUE(s.ok());
-    s = m_cmac->finalize(nullptr, 0);
-    ASSERT_TRUE(s.ok());
 
-    s = m_cmac->copy(&m_mac[0], m_mac.size());
-    ASSERT_TRUE(s.ok());
-    EXPECT_EQ(m_mac, m_expected_mac);
-}
-
-TEST_P(CMACFuncionalityTest, CMAC_SINGLE_FINALIZE)
-{
-    Status s{ StatusOk() };
-    s = m_cmac->finalize(&m_plain_text[0], m_plain_text.size());
-    ASSERT_TRUE(s.ok());
-    s = m_cmac->copy(&m_mac[0], m_mac.size());
+    s = m_cmac->finalize(&m_mac[0], m_mac.size());
     ASSERT_TRUE(s.ok());
     EXPECT_EQ(m_mac, m_expected_mac);
 }
@@ -293,9 +282,9 @@ TEST_P(CMACFuncionalityTest, CMAC_UPDATE_FINALIZE)
 {
 
     Status s{ StatusOk() };
-    s = m_cmac->finalize(&m_plain_text[0], m_plain_text.size());
+    s = m_cmac->update(&m_plain_text[0], m_plain_text.size());
     ASSERT_TRUE(s.ok());
-    s = m_cmac->copy(&m_mac[0], m_mac.size());
+    s = m_cmac->finalize(&m_mac[0], m_mac.size());
     ASSERT_TRUE(s.ok());
     EXPECT_EQ(m_mac, m_expected_mac);
 }
@@ -316,10 +305,8 @@ TEST_P(CMACFuncionalityTest, CMAC_MULTIPLE_UPDATE)
     ASSERT_TRUE(s.ok());
     s = m_cmac->update(&block2[0], block2.size());
     ASSERT_TRUE(s.ok());
-    s = m_cmac->finalize(nullptr, 0);
+    s = m_cmac->finalize(&m_mac[0], m_mac.size());
     ASSERT_TRUE(s.ok());
-
-    m_cmac->copy(&m_mac[0], m_mac.size());
     EXPECT_EQ(m_mac, m_expected_mac);
 }
 
@@ -328,9 +315,8 @@ TEST_P(CMACFuncionalityTest, CMAC_RESET)
     m_cmac->update(&m_plain_text[0], m_plain_text.size());
     m_cmac->reset();
     m_cmac->update(&m_plain_text[0], m_plain_text.size());
-    m_cmac->finalize(nullptr, 0);
+    m_cmac->finalize(&m_mac[0], m_mac.size());
 
-    m_cmac->copy(&m_mac[0], m_mac.size());
     EXPECT_EQ(m_mac, m_expected_mac);
 }
 
@@ -355,29 +341,6 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
 
     Status s = cmac2.finalize(data, sizeof(data));
     ASSERT_EQ(s, EmptyKeyError(""));
-}
-
-TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
-{
-    Cmac  cmac2;
-    Uint8 mac[16];
-
-    Status s = cmac2.copy(mac, sizeof(mac));
-    ASSERT_EQ(s, CopyWithoutFinalizeError(""));
-}
-
-TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
-{
-    alc_cipher_data_t data;
-    Uint8             key[16]{};
-    Uint8             mac[16];
-    data.alcp_keyLen_in_bytes = sizeof(key);
-    Cmac cmac2(&data);
-
-    Status s = cmac2.setKey(key, sizeof(key) * 8);
-    ASSERT_TRUE(s.ok());
-    s = cmac2.copy(mac, sizeof(mac));
-    ASSERT_EQ(s, CopyWithoutFinalizeError(""));
 }
 
 TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
