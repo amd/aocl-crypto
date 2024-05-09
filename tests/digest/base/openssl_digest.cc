@@ -30,9 +30,10 @@
 
 namespace alcp::testing {
 
-OpenSSLDigestBase::OpenSSLDigestBase(const alc_digest_info_t& info)
+OpenSSLDigestBase::OpenSSLDigestBase(alc_digest_mode_t mode)
 {
-    init(info, m_digest_len);
+    m_mode = mode;
+    init();
 }
 
 OpenSSLDigestBase::~OpenSSLDigestBase()
@@ -46,14 +47,6 @@ OpenSSLDigestBase::~OpenSSLDigestBase()
 }
 
 bool
-OpenSSLDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
-{
-    m_info       = info;
-    m_digest_len = digest_len;
-    return init();
-}
-
-bool
 OpenSSLDigestBase::init()
 {
     if (m_handle != nullptr) {
@@ -63,7 +56,7 @@ OpenSSLDigestBase::init()
 
     m_handle = EVP_MD_CTX_new();
 
-    switch (m_info.dt_mode) {
+    switch (m_mode) {
         case ALC_SHA2_224:
             m_md_type = EVP_sha224();
             break;
@@ -150,8 +143,7 @@ OpenSSLDigestBase::digest_finalize(const alcp_digest_data_t& data)
     unsigned int outsize = 0;
 
     /* for extendable output functions */
-    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
-        || m_info.dt_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
+    if (m_mode == ALC_SHAKE_128 || m_mode == ALC_SHAKE_256) {
         if (EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len)
             != 1) {
             std::cout << "Error code in EVP_DigestFinalXOF: "
