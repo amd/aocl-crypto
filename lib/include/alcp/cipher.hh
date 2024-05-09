@@ -39,35 +39,4 @@
 #include <iostream>
 
 namespace alcp { namespace cipher {
-
-    class ALCP_API_EXPORT ICipher
-    {
-      public:
-        /**
-         * @brief   CBC Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len) const = 0;
-
-        /**
-         * @brief   CBC Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len) const = 0;
-
-        virtual ~ICipher(){};
-    };
-
-}} // namespace alcp::cipher
+}}

@@ -25,7 +25,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#if 0
 
 #include <algorithm>
 #include <memory>
@@ -43,12 +42,11 @@
 constexpr CpuCipherFeatures cCpuFeatureSelect = CpuCipherFeatures::eDynamic;
 
 using alcp::cipher::Ctr;
-using alcp::cipher::ICipher;
 namespace alcp::cipher::unittest::ctr {
 std::vector<Uint8> key       = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> iv        = { 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> plainText = {
     0x02, 0x01, 0x00, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -56,6 +54,90 @@ std::vector<Uint8> plainText = {
 std::vector<Uint8> cipherText = { 0x5a, 0xa2, 0xf9, 0xdb, 0xe4, 0x4a,
                                   0xc9, 0x81, 0x8e, 0x03, 0x30, 0x98,
                                   0x77, 0x6d, 0xba, 0x37 };
+
+/**
+ * @brief Basic API for cipher functionality
+ *
+ */
+class ICipher
+{
+  public:
+    virtual alc_error_t init(const Uint8* pKey,
+                             const Uint64 keyLen,
+                             const Uint8* pIv,
+                             const Uint64 ivLen) = 0;
+
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len) = 0;
+
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len) = 0;
+    virtual ~ICipher() {}
+};
+
+template<class CTRKeyLen>
+class CtrWrapper : public ICipher
+{
+  private:
+    std::unique_ptr<CTRKeyLen> ctrObj;
+    alc_cipher_data_t          data;
+
+  public:
+    /**
+     * @brief Initalizes and emulates Cipher Request
+     *
+     *
+     * @param pKey  Key as byte array
+     * @param keyLen  Length of key in bits
+     * @param pIv Iv as byte array
+     * @param ivLen Length of iv in bits
+     * @return alc_error_t
+     */
+    alc_error_t init(const Uint8* pKey,
+                     const Uint64 keyLen,
+                     const Uint8* pIv,
+                     const Uint64 ivLen)
+    {
+        data.alcp_keyLen_in_bytes = keyLen / 8;
+        ctrObj                    = std::make_unique<CTRKeyLen>(&data);
+        return ctrObj->init(&data, pKey, keyLen, pIv, ivLen);
+    }
+
+    /**
+     * @brief Encrypts a given buffer with a length
+     *
+     *
+     * @param pInput  PlainText
+     * @param pOutput  CipherText
+     * @param len      PlainText Length
+     * @return alc_error_t
+     */
+    alc_error_t encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
+    {
+        return ctrObj->encrypt(&data, pInput, pOutput, len);
+    }
+
+    /**
+     * @brief Decrypts a given buffer with a length
+     *
+     *
+     * @param pInput CipherText
+     * @param pOutput PlainText
+     * @param len  CipherText Length
+     * @return alc_error_t
+     */
+    alc_error_t decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
+    {
+        return ctrObj->decrypt(&data, pInput, pOutput, len);
+    }
+
+    // FIXME: Need a finish API to complete the update functionality
+
+    CtrWrapper() = default;
+    ~CtrWrapper(){};
+};
 
 /**
  * @brief Factory based Dynamic Dispatch with minimal branches
@@ -70,41 +152,41 @@ CtrFactory()
     if constexpr (features == utils::CpuCipherFeatures::eAesni) {
         using namespace aesni;
         if constexpr (keylen == 128) {
-            ctr = std::make_unique<Ctr128>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr128>>(); // Create
         } else if constexpr (keylen == 192)
-            ctr = std::make_unique<Ctr192>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr192>>(); // Create
         else if constexpr (keylen == 256)
-            ctr = std::make_unique<Ctr256>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr256>>(); // Create
         else {
             std::cout << "Error Keysize is not supported!" << std::endl;
             // Dispatch to something else
-            ctr = std::make_unique<Ctr128>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr128>>(); // Create
         }
     } else if constexpr (features == utils::CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         if constexpr (keylen == 128) {
-            ctr = std::make_unique<Ctr128>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr128>>(); // Create
         } else if constexpr (keylen == 192)
-            ctr = std::make_unique<Ctr192>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr192>>(); // Create
         else if constexpr (keylen == 256)
-            ctr = std::make_unique<Ctr256>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr256>>(); // Create
         else {
             std::cout << "Error Keysize is not supported!" << std::endl;
             // Dispatch to something else
-            ctr = std::make_unique<Ctr128>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr128>>(); // Create
         }
     } else if constexpr (features == utils::CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         if constexpr (keylen == 128) {
-            ctr = std::make_unique<Ctr128>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr128>>(); // Create
         } else if constexpr (keylen == 192)
-            ctr = std::make_unique<Ctr192>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr192>>(); // Create
         else if constexpr (keylen == 256)
-            ctr = std::make_unique<Ctr256>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr256>>(); // Create
         else {
             std::cout << "Error Keysize is not supported!" << std::endl;
             // Dispatch to something else
-            ctr = std::make_unique<Ctr128>(keylen); // Create
+            ctr = std::make_unique<CtrWrapper<Ctr128>>(); // Create
         }
     } else if constexpr (features == utils::CpuCipherFeatures::eDynamic) {
         alcp::utils::CpuId              cpu;
@@ -204,7 +286,21 @@ TEST(CTR, BasicEncryption)
     // ctr->setKey(128, &key[0]);  or
     // ctr->setKey(128, &key[0]);
 
-    ctr->encrypt(&plainText[0], &output[0], plainText.size(), &iv[0]);
+    alc_error_t err = ctr->init(&key[0], key.size() * 8, &iv[0], iv.size());
+
+    if (alcp_is_error(err)) {
+        std::cout << "Init failed!" << std::endl;
+    }
+
+    EXPECT_FALSE(alcp_is_error(err));
+
+    err = ctr->encrypt(&plainText[0], &output[0], plainText.size());
+
+    if (alcp_is_error(err)) {
+        std::cout << "Encrypt failed!" << std::endl;
+    }
+
+    EXPECT_FALSE(alcp_is_error(err));
 
     EXPECT_EQ(cipherText, output);
 }
@@ -219,7 +315,21 @@ TEST(CTR, BasicDecryption)
 
     // ctr->setKey(128, &key[0]);
 
-    ctr->decrypt(&cipherText[0], &output[0], cipherText.size(), &iv[0]);
+    alc_error_t err = ctr->init(&key[0], key.size() * 8, &iv[0], iv.size());
+
+    if (alcp_is_error(err)) {
+        std::cout << "Init failed!" << std::endl;
+    }
+
+    EXPECT_FALSE(alcp_is_error(err));
+
+    err = ctr->decrypt(&cipherText[0], &output[0], cipherText.size());
+
+    if (alcp_is_error(err)) {
+        std::cout << "Decrypt failed!" << std::endl;
+    }
+
+    EXPECT_FALSE(alcp_is_error(err));
 
     EXPECT_EQ(plainText, output);
 }
@@ -227,9 +337,9 @@ TEST(CTR, BasicDecryption)
 TEST(CTR, RandomEncryptDecryptTest)
 {
     Uint8        key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
     const Uint64 cTextSize   = 100000;
     std::vector<Uint8> plain_text_vect(cTextSize);
     std::vector<Uint8> cipher_text_vect(cTextSize);
@@ -264,15 +374,40 @@ TEST(CTR, RandomEncryptDecryptTest)
 
             // ctr->setKey(128, &key[0]);
 
-            ctr->encrypt(&plainTextVect[0],
-                         &cipher_text_vect[0],
-                         plainTextVect.size(),
-                         iv);
+            alc_error_t err =
+                ctr->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
 
-            ctr->decrypt(&cipher_text_vect[0],
-                         &plainTextOut[0],
-                         plainTextVect.size(),
-                         iv);
+            if (alcp_is_error(err)) {
+                std::cout << "Init failed!" << std::endl;
+            }
+
+            EXPECT_FALSE(alcp_is_error(err));
+
+            err = ctr->encrypt(
+                &plainTextVect[0], &cipher_text_vect[0], plainTextVect.size());
+
+            if (alcp_is_error(err)) {
+                std::cout << "Encrypt failed!" << std::endl;
+            }
+
+            EXPECT_FALSE(alcp_is_error(err));
+
+            err = ctr->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
+
+            if (alcp_is_error(err)) {
+                std::cout << "Init failed!" << std::endl;
+            }
+
+            EXPECT_FALSE(alcp_is_error(err));
+
+            err = ctr->decrypt(
+                &cipher_text_vect[0], &plainTextOut[0], plainTextVect.size());
+
+            if (alcp_is_error(err)) {
+                std::cout << "Decrypt failed!" << std::endl;
+            }
+
+            EXPECT_FALSE(alcp_is_error(err));
 
             EXPECT_EQ(plainTextVect, plainTextOut);
 #ifdef DEBUG
@@ -292,5 +427,3 @@ main(int argc, char** argv)
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-#endif
