@@ -170,7 +170,7 @@ demo_cmac()
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
     err = run_cmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("Error in CMAC\n");
         return -1;
     } else {

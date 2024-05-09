@@ -83,7 +83,7 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     err =
         alcp_rsa_set_publickey(ps_rsa_handle, PublicKeyExponent, Modulus, size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         return err;
     }
@@ -108,7 +108,7 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_get_publickey(
         ps_rsa_handle, &public_exponent, pub_key_mod, size_key);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n publickey fetch failed");
         goto free_pub_key_mod;
     }
@@ -119,7 +119,7 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     err = alcp_rsa_publickey_encrypt(
         ps_rsa_handle, ALCP_RSA_PADDING_NONE, text, size_key, enc_text);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n public key encrypt failed\n");
         goto free_enc_text;
     }
@@ -140,11 +140,11 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle;
     alc_error_t      err = create_demo_session(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
     err = Rsa_encrypt_demo(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
     alcp_rsa_finish(&s_rsa_handle);

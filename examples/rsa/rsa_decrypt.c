@@ -146,7 +146,7 @@ Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         return err;
     }
@@ -168,7 +168,7 @@ Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     err = alcp_rsa_privatekey_decrypt(
         ps_rsa_handle, ALCP_RSA_PADDING_NONE, enc_text, size_key, dec_text);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n private key decryption failed\n");
         goto free_dec_text;
     }
@@ -186,11 +186,11 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle;
     alc_error_t      err = create_demo_session(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
     err = Rsa_decrypt_demo(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
     alcp_rsa_finish(&s_rsa_handle);

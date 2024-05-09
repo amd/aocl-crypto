@@ -48,7 +48,7 @@ create_demo_session(Uint32 digest_size)
 
     err = alcp_digest_request(ALC_SHAKE_256, &s_dg_handle);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return err;
     }
 
@@ -71,7 +71,7 @@ hash_demo(const Uint8* src,
 
     while (num_chunks-- > 0) {
         err = alcp_digest_update(&s_dg_handle, p, buf_size);
-        if (err != ALC_ERROR_NONE) {
+        if (alcp_is_error(err)) {
             printf("Unable to compute SHA3 hash\n");
             goto out;
         }
@@ -80,7 +80,7 @@ hash_demo(const Uint8* src,
 
     if (last_buf_size) {
         err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
-        if (err != ALC_ERROR_NONE) {
+        if (alcp_is_error(err)) {
             printf("Unable to compute SHA3 hash\n");
             goto out;
         }
@@ -100,7 +100,7 @@ hash_demo(const Uint8* src,
         goto out;
     }
     err = alcp_digest_context_copy(&s_dg_handle, &s_dg_handle_dup);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("Unable to copy context\n");
         goto out;
     }
@@ -108,14 +108,14 @@ hash_demo(const Uint8* src,
     Uint8* output_dup = malloc(out_size);
     for (Uint16 i = 0; i < out_size; i++) {
         err = alcp_digest_shake_squeeze(&s_dg_handle_dup, output_dup + i, 1);
-        if (err != ALC_ERROR_NONE) {
+        if (alcp_is_error(err)) {
             printf("Unable to squeeze\n");
             goto out;
         }
     }
 
     err = alcp_digest_finalize(&s_dg_handle, output, out_size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
         goto out;
     }
@@ -317,7 +317,7 @@ main(void)
         sample_output    = malloc(hash_size);
         output_string    = malloc(hash_size * 2 + 1);
         alc_error_t err  = create_demo_session(hash_size);
-        if (err != ALC_ERROR_NONE) {
+        if (alcp_is_error(err)) {
             return -1;
         }
         err = hash_demo(sample_input,
@@ -325,7 +325,7 @@ main(void)
                         sample_output,
                         hash_size,
                         num_chunks);
-        if (err != ALC_ERROR_NONE) {
+        if (alcp_is_error(err)) {
             return -1;
         }
 

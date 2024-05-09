@@ -194,7 +194,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     // Adding the public key for applying encryption
     err =
         alcp_rsa_set_publickey(ps_rsa_handle, PublicKeyExponent, Modulus, size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         return err;
     }
@@ -208,7 +208,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of private key failed");
         goto free_buff;
     }
@@ -221,7 +221,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     // Adding the digest function for generating the hash in oaep padding
     err = alcp_rsa_add_digest(ps_rsa_handle, &dinfo);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of digest for oaep failed");
         return err;
     }
@@ -234,7 +234,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     // Adding the mask generation function for generating the seed and data
     // block mask
     err = alcp_rsa_add_mgf(ps_rsa_handle, &mgf_info);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of mgf for oaep failed");
         return err;
     }
@@ -255,7 +255,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_privatekey_sign_pkcs1v15(
         ps_rsa_handle, check, text, text_size, pSignedBuff);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n signature process failed");
         goto free_buff;
     }
@@ -266,7 +266,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_publickey_verify_pkcs1v15(
         ps_rsa_handle, text, text_size, pSignedBuff);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n verification process failed");
         goto free_buff;
     } else {
@@ -285,12 +285,12 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle;
     alc_error_t      err = create_demo_session(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
 
     err = Rsa_demo(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
 

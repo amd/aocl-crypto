@@ -144,7 +144,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     /* Peer 1 set keys*/
     err = alcp_rsa_set_publickey(
         ps_rsa_handle_peer1, PublicKeyExponent, Modulus, sizeof(Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of public key on peer1 failed");
         return err;
     }
@@ -157,14 +157,14 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of private key on peer1 failed");
         return err;
     }
     /* Peer 2 set keys*/
     err = alcp_rsa_set_publickey(
         ps_rsa_handle_peer2, PublicKeyExponent, Modulus, sizeof(Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of public key on peer 2 failed");
         return err;
     }
@@ -177,7 +177,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of private key on peer2 failed");
         return err;
     }
@@ -217,7 +217,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                      text_peer_1,
                                      size_key_peer_1,
                                      enc_text_peer_1);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer1 publc key encrypt failed");
         goto free_enc_text_peer_1;
     }
@@ -234,7 +234,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                       enc_text_peer_1,
                                       size_key_peer_2,
                                       dec_text_peer_2);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer2 private key decryption failed");
         goto free_dec_text_peer_2;
     }
@@ -265,7 +265,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                      text_peer_2,
                                      size_key_peer_2,
                                      enc_text_peer_2);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer2 publc key encrypt failed");
         goto free_enc_text_peer_2;
     }
@@ -280,7 +280,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                       enc_text_peer_2,
                                       size_key_peer_1,
                                       dec_text_peer_1);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer1 private key decryption failed");
         goto free_dec_text_peer_1;
     }
@@ -315,17 +315,17 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle_peer1;
     alc_error_t      err = create_demo_session(&s_rsa_handle_peer1);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
     alc_rsa_handle_t s_rsa_handle_peer2;
 
     err = create_demo_session(&s_rsa_handle_peer2);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
     err = Rsa_demo(&s_rsa_handle_peer1, &s_rsa_handle_peer2);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
 

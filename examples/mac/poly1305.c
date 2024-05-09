@@ -111,7 +111,7 @@ main(int argc, char const* argv[])
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
     err = poly1305_demo(&macinfo, data, sizeof(data), mac, mac_size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("Error in CMAC\n");
         return -1;
     } else {

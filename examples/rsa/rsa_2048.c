@@ -190,7 +190,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     err =
         alcp_rsa_set_publickey(ps_rsa_handle, PublicKeyExponent, Modulus, size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         return err;
     }
@@ -212,7 +212,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_publickey_encrypt(
         ps_rsa_handle, ALCP_RSA_PADDING_NONE, text, size, enc_text);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n publc key encrypt failed");
         goto free_buff;
     }
@@ -222,7 +222,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     err = alcp_rsa_set_privatekey(
         ps_rsa_handle, DP, DQ, P, Q, QINV, Modulus, sizeof(P));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         goto free_buff;
     }
@@ -230,7 +230,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_privatekey_decrypt(
         ps_rsa_handle, ALCP_RSA_PADDING_NONE, enc_text, size, dec_text);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n private key decryption failed");
         goto free_buff;
     }
@@ -255,12 +255,12 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle;
     alc_error_t      err = create_demo_session(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
 
     err = Rsa_demo(&s_rsa_handle);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         return -1;
     }
 
