@@ -172,7 +172,7 @@ alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
  *
  * @param [in] err    Actual Error
  */
-ALCP_API_EXPORT bool
+ALCP_API_EXPORT Uint8
 alcp_is_error(alc_error_t err);
 
 /**
