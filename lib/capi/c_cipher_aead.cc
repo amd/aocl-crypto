@@ -63,7 +63,7 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
     err = cipher::CipherAeadBuilder::Build(cipherMode, keyLen, *ctx);
 
     // assign ctx cipher_data to handle.
-    pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
+    pCipherHandle->alc_cipher_data = &(ctx->m_prov_cipher_data);
 
     return err;
 }
@@ -165,7 +165,7 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 #if DEBUG_PROV_GCM_INIT
-    printf("\n aead_init enc value %d \n", ctx->m_cipher_data.enc);
+    printf("\n aead_init enc value %d \n", ctx->m_prov_cipher_data.enc);
 #endif
     // init can be called to setKey or setIv or both
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {

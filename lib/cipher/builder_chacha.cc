@@ -49,7 +49,7 @@ __chacha20_wrapperInit(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CHACHA*>(ctxp->m_cipher);
 
-    e = ap->init(&(ctxp->m_cipher_data), pKey, keyLen / 8, pIv, ivLen);
+    e = ap->init(&(ctxp->m_alcp_cipher_data), pKey, keyLen / 8, pIv, ivLen);
 
     return e;
 }
@@ -66,7 +66,7 @@ __chacha20_encryptWrapper(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CHACHA*>(ctxp->m_cipher);
 
-    e = ap->encrypt(&(ctxp->m_cipher_data), pSrc, pDest, len);
+    e = ap->encrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
 
     return e;
 }
@@ -83,7 +83,7 @@ __chacha20_decryptWrapper(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CHACHA*>(ctxp->m_cipher);
 
-    e = ap->decrypt(&(ctxp->m_cipher_data), pSrc, pDest, len);
+    e = ap->decrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
 
     return e;
 }

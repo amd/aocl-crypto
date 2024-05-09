@@ -37,8 +37,10 @@ namespace alcp::cipher {
 
 typedef struct Context
 {
-    void*             m_cipher = nullptr;
-    alc_cipher_data_t m_cipher_data;
+    void* m_cipher = nullptr;
+    alc_prov_cipher_data_t
+        m_prov_cipher_data; // FIXME:alc_prov_cipher_data_t should be moved out
+    alc_cipher_data_t m_alcp_cipher_data;
 
     // sw methods
     alc_error_t (*decrypt)(void*        ctx,
@@ -71,7 +73,8 @@ typedef struct Context
     alc_error_t (*encryptUpdate)(void*        ctx,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
-                                 Uint64       len);
+
+                                 Uint64 len){ nullptr };
 
     alc_error_t (*init)(void*        ctx,
                         const Uint8* pKey,

@@ -48,9 +48,9 @@ __aes_wrapper(void* ctx, const Uint8* pSrc, Uint8* pDest, Uint64 len)
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if (encrypt)
-        e = ap->encrypt(&(ctxp->m_cipher_data), pSrc, pDest, len);
+        e = ap->encrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
     else
-        e = ap->decrypt(&(ctxp->m_cipher_data), pSrc, pDest, len);
+        e = ap->decrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
 
     return e;
 }
@@ -69,11 +69,17 @@ __aes_wrapper_crypt_block_xts(void*        ctx,
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e.update(ap->encryptBlocksXts(
-            &(ctxp->m_cipher_data), pSrc, pDest, currSrcLen, startBlockNum));
+        e.update(ap->encryptBlocksXts(&(ctxp->m_alcp_cipher_data),
+                                      pSrc,
+                                      pDest,
+                                      currSrcLen,
+                                      startBlockNum));
     else
-        e.update(ap->decryptBlocksXts(
-            &(ctxp->m_cipher_data), pSrc, pDest, currSrcLen, startBlockNum));
+        e.update(ap->decryptBlocksXts(&(ctxp->m_alcp_cipher_data),
+                                      pSrc,
+                                      pDest,
+                                      currSrcLen,
+                                      startBlockNum));
 
     return !(e.ok() == 1);
 }
@@ -88,9 +94,9 @@ __aes_wrapperUpdate(void* ctx, const Uint8* pSrc, Uint8* pDest, Uint64 len)
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e = ap->encryptUpdate(&(ctxp->m_cipher_data), pSrc, pDest, len);
+        e = ap->encryptUpdate(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
     else
-        e = ap->decryptUpdate(&(ctxp->m_cipher_data), pSrc, pDest, len);
+        e = ap->decryptUpdate(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
 
     return e;
 }
@@ -104,7 +110,7 @@ __aes_wrapperSetIv(void* ctx, const Uint8* pIv, Uint64 ivLen)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setIv(&(ctxp->m_cipher_data), pIv, ivLen);
+    e = ap->setIv(&(ctxp->m_alcp_cipher_data), pIv, ivLen);
 
     return e;
 }
@@ -122,7 +128,7 @@ __aes_wrapperInit(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->init(&(ctxp->m_cipher_data), pKey, keyLen, pIv, ivLen);
+    e = ap->init(&(ctxp->m_alcp_cipher_data), pKey, keyLen, pIv, ivLen);
 
     return e;
 }
@@ -136,7 +142,7 @@ __aes_wrapperGetTag(void* ctx, Uint8* pTag, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->getTag(&(ctxp->m_cipher_data), pTag, len);
+    e = ap->getTag(&(ctxp->m_alcp_cipher_data), pTag, len);
 
     return e;
 }
@@ -150,7 +156,7 @@ __aes_wrapperSetTKey(void* ctx, const Uint8* pTag, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    ap->setTweakKey(&(ctxp->m_cipher_data), pTag, len);
+    ap->setTweakKey(&(ctxp->m_alcp_cipher_data), pTag, len);
 
     return e;
 }
@@ -164,7 +170,7 @@ __aes_wrapperSetTagLength(void* ctx, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setTagLength(&(ctxp->m_cipher_data), len);
+    e = ap->setTagLength(&(ctxp->m_alcp_cipher_data), len);
 
     return e;
 }
@@ -178,7 +184,7 @@ __aes_wrapperSetAad(void* ctx, const Uint8* pAad, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setAad(&(ctxp->m_cipher_data), pAad, len);
+    e = ap->setAad(&(ctxp->m_alcp_cipher_data), pAad, len);
 
     return e;
 }

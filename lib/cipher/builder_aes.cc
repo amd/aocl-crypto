@@ -61,7 +61,7 @@ template<typename CIPHERMODE>
 void
 _build_aes_cipher(const Uint64 keyLen, Context& ctx)
 {
-    CIPHERMODE* algo = new CIPHERMODE(&(ctx.m_cipher_data));
+    CIPHERMODE* algo = new CIPHERMODE(&(ctx.m_alcp_cipher_data));
 
     ctx.m_cipher = static_cast<void*>(algo);
 
@@ -120,7 +120,7 @@ __build_aes(const Uint64 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    auto algo    = new CIPHERMODE(&(ctx.m_cipher_data));
+    auto algo    = new CIPHERMODE(&(ctx.m_alcp_cipher_data));
     ctx.m_cipher = static_cast<void*>(algo);
     ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
     ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
@@ -287,7 +287,10 @@ AesBuilder::Build(const alc_cipher_mode_t cipherMode,
         return ALC_ERROR_INVALID_SIZE; // FIXME set appropriate sts
     }
 
-    ctx.m_cipher_data.keyLen_in_bytes =
+    ctx.m_prov_cipher_data.keyLen_in_bytes =
+        keyLen / 8; // FIXME: provider data, can be removed
+
+    ctx.m_alcp_cipher_data.alcp_keyLen_in_bytes =
         keyLen / 8; // keyLen_in_bytes is used to verify keyLen during setKey
     // call in init
 

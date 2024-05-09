@@ -53,7 +53,7 @@ template<typename AEADMODE>
 void
 _build_aead_wrapper(Context& ctx)
 {
-    auto algo = new AEADMODE(&(ctx.m_cipher_data));
+    auto algo = new AEADMODE(&(ctx.m_alcp_cipher_data));
 
     ctx.m_cipher      = static_cast<void*>(algo);
     ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
@@ -237,7 +237,10 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
         return ALC_ERROR_INVALID_SIZE; // FIXME set appropriate sts
     }
 
-    ctx.m_cipher_data.keyLen_in_bytes =
+    ctx.m_prov_cipher_data.keyLen_in_bytes =
+        keyLen / 8; // provider, can be removed
+
+    ctx.m_alcp_cipher_data.alcp_keyLen_in_bytes =
         keyLen / 8; // keyLen_in_bytes is used to verify keyLen during setKey
     // call in init
 

@@ -75,7 +75,7 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
     err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
 
     // assign ctx cipher_data to handle
-    pCipherHandle->alc_cipher_data = &(ctx->m_cipher_data);
+    pCipherHandle->alc_cipher_data = &(ctx->m_prov_cipher_data);
 
     return err;
 }

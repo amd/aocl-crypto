@@ -124,6 +124,7 @@ typedef struct _alc_cipher_xts_data
 
 #define AES_BLOCK_SIZE 16
 
+// FIXME: provider datastructures should be moved to alcp_provider.h
 // ALCP provider generic Cipher data
 typedef struct _alc_cipher_generic_data
 {
@@ -151,7 +152,7 @@ typedef struct _alc_cipher_generic_data
 #define MAX_CIPHER_IV_SIZE (1024 / 8)
 
 // ALCP provider Cipher data
-typedef struct _alc_cipher_data
+typedef struct _alc_prov_cipher_data
 {
     alc_cipher_mode_t mode;
 
@@ -181,6 +182,11 @@ typedef struct _alc_cipher_data
 
     _alc_cipher_generic_data_t generic;
 
+} alc_prov_cipher_data_t;
+
+typedef struct _alc_cipher_data
+{
+    Uint32 alcp_keyLen_in_bytes;
 } alc_cipher_data_t;
 
 /**

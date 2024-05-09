@@ -84,7 +84,7 @@ class Aes : public Rijndael
     Aes(alc_cipher_data_t* ctx)
         : Rijndael()
     {
-        m_keyLen_in_bytes_aes = ctx->keyLen_in_bytes;
+        m_keyLen_in_bytes_aes = ctx->alcp_keyLen_in_bytes;
     }
 
     // this constructor to be removed.

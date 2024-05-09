@@ -237,8 +237,8 @@ class CMACFuncionalityTest
 
         tie(m_key, m_plain_text, m_expected_mac) = tuple_values;
         alc_cipher_data_t data;
-        data.keyLen_in_bytes = m_key.size();
-        m_cmac               = std::make_unique<Cmac>(&data);
+        data.alcp_keyLen_in_bytes = m_key.size();
+        m_cmac                    = std::make_unique<Cmac>(&data);
         m_cmac->setKey(&m_key[0], static_cast<Uint64>(m_key.size()) * 8);
         m_mac = std::vector<Uint8>(m_expected_mac.size());
         SetReserve(m_plain_text);
@@ -371,7 +371,7 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
     alc_cipher_data_t data;
     Uint8             key[16]{};
     Uint8             mac[16];
-    data.keyLen_in_bytes = sizeof(key);
+    data.alcp_keyLen_in_bytes = sizeof(key);
     Cmac cmac2(&data);
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
@@ -384,7 +384,7 @@ TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 {
     alc_cipher_data_t data;
     Uint8             key[16]{};
-    data.keyLen_in_bytes = sizeof(key);
+    data.alcp_keyLen_in_bytes = sizeof(key);
     Cmac cmac2(&data);
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
@@ -400,7 +400,7 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 {
     alc_cipher_data_t data;
     Uint8             key[16]{};
-    data.keyLen_in_bytes = sizeof(key);
+    data.alcp_keyLen_in_bytes = sizeof(key);
     Cmac cmac2(&data);
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
@@ -418,7 +418,7 @@ TEST(CMACRobustnessTest, CMAC_wrongKeySize)
 {
     alc_cipher_data_t data;
     Uint8             key[30]{};
-    data.keyLen_in_bytes = sizeof(key) / 8;
+    data.alcp_keyLen_in_bytes = sizeof(key) / 8;
     Cmac cmac2(&data);
 
     // FIXME: Rijindael setKey should be returning proper error status and this
