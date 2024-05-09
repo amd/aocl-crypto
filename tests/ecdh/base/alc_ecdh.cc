@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -104,7 +104,7 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
         alc_error_t err;
         Uint8       err_buff[256];
         err = alcp_ec_set_privatekey(m_ec_handle, private_key);
-        if (err != ALC_ERROR_NONE) {
+        if (alcp_is_error(err)) {
             alcp_ec_error(m_ec_handle, err_buff, 256);
             std::cout << "Error in alcp_ec_set_privatekey : " << err_buff
                       << std::endl;
