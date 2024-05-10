@@ -33,9 +33,6 @@
 
 #include "provider/alcp_provider.h"
 
-#define ENABLE_CIPHER 1
-#define ENABLE_DIGEST 0
-
 static void
 ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 {
@@ -73,20 +70,14 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
          * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
          * internally tries to use CBC from alcp and multi update is not
          * supported in ALCP as of now.  */
-#if ENABLE_CIPHER
         case OSSL_OP_CIPHER:
             return ALC_prov_ciphers;
             break;
-#endif
-
-#if ENABLE_DIGEST
-        /*  FIXME: Disabled MAC,Digest and RNG Providers as of now to shift
-            focus to Cipher Provider Apps Integration*/
         case OSSL_OP_DIGEST:
             return ALC_prov_digests;
             break;
-#endif
-
+            /*  FIXME: Disabled MAC and RNG Providers as of now to shift
+                focus to Cipher and Digest Provider Apps Integration*/
 #if 0
         case OSSL_OP_MAC:
             EXIT();
