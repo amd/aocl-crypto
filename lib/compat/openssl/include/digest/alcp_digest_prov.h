@@ -65,6 +65,20 @@ alcp_prov_digest_get_params(OSSL_PARAM    params[],
                             size_t        blockSize,
                             size_t        digestSize,
                             unsigned long flags);
+
+extern const OSSL_DISPATCH sha224_sha2_functions[];
+extern const OSSL_DISPATCH sha256_sha2_functions[];
+extern const OSSL_DISPATCH sha384_sha2_functions[];
+extern const OSSL_DISPATCH sha512_sha2_functions[];
+extern const OSSL_DISPATCH sha512_224_sha2_functions[];
+extern const OSSL_DISPATCH sha512_256_sha2_functions[];
+extern const OSSL_DISPATCH sha224_sha3_functions[];
+extern const OSSL_DISPATCH sha256_sha3_functions[];
+extern const OSSL_DISPATCH sha384_sha3_functions[];
+extern const OSSL_DISPATCH sha512_sha3_functions[];
+extern const OSSL_DISPATCH shake128_sha3_functions[];
+extern const OSSL_DISPATCH shake256_sha3_functions[];
+
 int
 alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize);
 

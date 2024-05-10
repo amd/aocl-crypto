@@ -238,7 +238,6 @@ class Cmac::Impl : public cipher::Aes
                            m_temp_enc_result_8,
                            m_encrypt_keys);
             utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
-            utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
             m_finalized = true;
             return s;
         }
@@ -270,8 +269,6 @@ class Cmac::Impl : public cipher::Aes
         // Encrypt the data from temp_enc_result and store it back to
         // temp_enc_result
         encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
-
-        utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
 
         utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
 
