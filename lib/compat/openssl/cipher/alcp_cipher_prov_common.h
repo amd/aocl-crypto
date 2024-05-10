@@ -224,9 +224,6 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
             }                                                                  \
             alc_error_t err = alcp_cipher_request(                             \
                 ALC_AES_MODE_##UCMODE, kbits, &(ctx->handle));                 \
-            if (&(ctx->prov_cipher_data) == NULL) {                            \
-                OPENSSL_clear_free(ctx, sizeof(*ctx));                         \
-            }                                                                  \
                                                                                \
             if (err == ALC_ERROR_NONE) {                                       \
                 if (ctx != ((void*)0)) {                                       \
