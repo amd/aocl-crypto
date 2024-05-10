@@ -50,7 +50,7 @@ using utils::CpuId;
 
 // RFC5297
 
-ALCP_API_EXPORT class Siv
+class ALCP_API_EXPORT Siv
 {
   protected:
     /*
@@ -123,8 +123,7 @@ ALCP_API_EXPORT class Siv
      * @return Status, is failure or success status object
      */
     Status s2v(const Uint8 plainText[], Uint64 size);
-
-  public:
+    
     Siv() = default;
     Siv(alc_cipher_data_t* ctx);
 };
