@@ -40,12 +40,6 @@ namespace alcp::mac {
 class ALCP_API_EXPORT Hmac final : public IMac
 {
   private:
-    // Input Key to HMAC
-    const Uint8* m_pKey{};
-    // Length of the input key must be >0 to be valid
-    Uint32 m_keylen{};
-    // Length of the preprocessed Key
-    Uint32 m_k0_length{};
     // Input Block Length or B of the digest used by HMAC
     Uint32 m_input_block_length{};
     // Size of the message digest
@@ -54,12 +48,12 @@ class ALCP_API_EXPORT Hmac final : public IMac
     // Length of 144 bytes
     static constexpr int cMaxHashSize            = 64;
     static constexpr int cMaxInternalBlockLength = 144;
-    /* Placeholder variable to hold intermediate hash and the the mac value
-    after finalize has been called */
-    alignas(16) Uint8 m_pTempHash[cMaxHashSize]{};
 
     // Variable to track whether finalize has been called
     bool m_finalized = false;
+
+    // Variable to track whether initialize has been called
+    bool m_isInit = false;
 
     // TODO: Consider Shared pointer for this implementation
     /**
@@ -71,12 +65,6 @@ class ALCP_API_EXPORT Hmac final : public IMac
 
     alignas(16) Uint8 m_pK0_xor_opad[cMaxInternalBlockLength]{};
     alignas(16) Uint8 m_pK0_xor_ipad[cMaxInternalBlockLength]{};
-
-    /**
-     * Preprocessed Key to match the input block length input_block_length
-     * get_k0 function performs the preprocessing
-     * */
-    alignas(16) Uint8 m_pK0[cMaxInternalBlockLength]{};
 
   public:
     Hmac()  = default;
@@ -103,7 +91,7 @@ class ALCP_API_EXPORT Hmac final : public IMac
     Uint64 getHashSize();
 
     /**
-     * @brief set the digest and the key to be used by HMAC. 
+     * @brief set the digest and the key to be used by HMAC.
      * @param key: Pointer to the key to be used by HMAC
      * @param keylen: Length of the key to be used by HMAC
      * @param digest: Digest class to be used by HMAC.
@@ -117,13 +105,6 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @returns Status
      */
     Status reset() override;
-
-  private:
-    void getK0XorPad();
-
-    void copyData(Uint8* destination, const Uint8* source, int len);
-
-    Status getK0();
 };
 
 namespace avx2 {
@@ -131,8 +112,5 @@ namespace avx2 {
                                          Uint8* m_pK0,
                                          Uint8* m_pK0_xor_ipad,
                                          Uint8* m_pK0_xor_opad);
-    ALCP_API_EXPORT void copyData(Uint8*       destination,
-                                  const Uint8* source,
-                                  int          len);
 } // namespace avx2
 } // namespace alcp::mac
