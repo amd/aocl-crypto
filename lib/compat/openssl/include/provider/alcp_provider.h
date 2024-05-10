@@ -56,9 +56,9 @@ typedef struct alcp_aes_key_st
 
 typedef struct alcp_prov_cipher_ctx_st
 {
-    alc_cipher_handle_t     handle;
-    alc_prov_cipher_data_t* prov_cipher_data; /* cipher params */
-    OSSL_LIB_CTX*           libctx;           /* needed for rand calls */
+    alc_cipher_handle_t    handle;
+    alc_prov_cipher_data_t prov_cipher_data; /* cipher params */
+    OSSL_LIB_CTX*          libctx;           /* needed for rand calls */
 } ALCP_PROV_CIPHER_CTX;
 
 typedef struct alcp_prov_aes_ctx_st

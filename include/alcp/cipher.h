@@ -177,7 +177,6 @@ typedef alc_cipher_context_t* alc_cipher_context_p;
 typedef struct _alc_cipher_handle
 {
     alc_cipher_context_p ch_context;
-    void*                alc_prov_cipher_data;
 } alc_cipher_handle_t, *alc_cipher_handle_p;
 
 /**

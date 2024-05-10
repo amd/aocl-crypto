@@ -141,7 +141,7 @@ CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_END(ALCP_prov_cipher_generic)
                                                    const OSSL_PARAM params[])
 {
     ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     const OSSL_PARAM*       p;
     ENTER();
 
@@ -227,7 +227,7 @@ ALCP_prov_libctx_of(ALCP_PROV_CIPHER_CTX* ctx)
 void
 ALCP_prov_cipher_generic_reset_ctx(ALCP_PROV_CIPHER_CTX* ctx)
 {
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
 
     if (ctx != NULL && genCipherctx->alloced) {
@@ -247,7 +247,7 @@ cipher_generic_init_internal(ALCP_PROV_CIPHER_CTX* ctx,
                              int                   enc)
 {
 
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
@@ -343,7 +343,7 @@ ALCP_prov_cipher_generic_block_update(void*        vctx,
 {
     size_t                      outlint      = 0;
     ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
@@ -522,7 +522,7 @@ ALCP_prov_cipher_generic_block_final(void*   vctx,
                                      size_t  outsize)
 {
     ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
 
     ENTER();
@@ -629,7 +629,7 @@ ALCP_prov_cipher_generic_stream_update(void*        vctx,
                                        size_t       inl)
 {
     ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
@@ -708,7 +708,7 @@ ALCP_prov_cipher_generic_stream_final(void*   vctx,
                                       size_t  outsize)
 {
     ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     ENTER();
 
     // if (!ossl_prov_is_running())
@@ -732,7 +732,7 @@ ALCP_prov_cipher_generic_cipher(void*        vctx,
                                 size_t       inl)
 {
     ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     ENTER();
 
     alc_error_t err = ALC_ERROR_NONE;
@@ -768,7 +768,7 @@ int
 ALCP_prov_cipher_generic_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
@@ -825,7 +825,7 @@ int
 ALCP_prov_cipher_generic_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
@@ -886,7 +886,7 @@ ALCP_prov_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
                                 const Uint8*          iv,
                                 size_t                ivlen)
 {
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
@@ -910,7 +910,7 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
                                  void*        provctx)
 {
     ALCP_PROV_CIPHER_CTX*       ctx          = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t*     cipherctx    = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t*     cipherctx    = &(ctx->prov_cipher_data);
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
     if ((flags & PROV_CIPHER_FLAG_INVERSE_CIPHER) != 0) {

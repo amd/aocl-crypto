@@ -237,9 +237,6 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
         return ALC_ERROR_INVALID_SIZE; // FIXME set appropriate sts
     }
 
-    ctx.m_prov_cipher_data.keyLen_in_bytes =
-        keyLen / 8; // provider, can be removed
-
     ctx.m_alcp_cipher_data.alcp_keyLen_in_bytes =
         keyLen / 8; // keyLen_in_bytes is used to verify keyLen during setKey
     // call in init

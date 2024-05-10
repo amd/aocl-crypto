@@ -62,7 +62,7 @@ void
 ALCP_prov_gcm_initctx(void* provctx, ALCP_PROV_CIPHER_CTX* ctx, size_t keybits)
 {
     ENTER();
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     cipherctx->pad         = 1; // not used internally
     cipherctx->mode        = ALC_AES_MODE_GCM;
@@ -91,7 +91,7 @@ gcm_init(void*            vctx,
          int              enc)
 {
     ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     ENTER();
 
@@ -211,7 +211,7 @@ ctr64_inc(Uint8* counter)
 static int
 getivgen(ALCP_PROV_CIPHER_CTX* ctx, Uint8* out, size_t olen)
 {
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     // setIV
     alc_error_t err = alcp_cipher_aead_init(
@@ -238,7 +238,7 @@ getivgen(ALCP_PROV_CIPHER_CTX* ctx, Uint8* out, size_t olen)
 static int
 setivinv(ALCP_PROV_CIPHER_CTX* ctx, Uint8* in, size_t inl)
 {
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     if (!cipherctx->iv_gen || !cipherctx->isKeySet || cipherctx->enc)
         return 0;
@@ -261,7 +261,7 @@ int
 ALCP_prov_gcm_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     OSSL_PARAM* p;
     size_t      sz;
@@ -359,7 +359,7 @@ int
 ALCP_prov_gcm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     const OSSL_PARAM* p;
     size_t            sz;
@@ -539,7 +539,7 @@ ALCP_prov_gcm_cipher(void*        vctx,
 static int
 gcm_iv_generate(ALCP_PROV_CIPHER_CTX* ctx, int offset)
 {
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     int sz = cipherctx->ivLen - offset;
 
@@ -570,7 +570,7 @@ gcm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
     size_t                  olen      = 0;
     int                     rv        = 0;
     alc_error_t             err       = ALC_ERROR_NONE;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     ENTER();
 
     if (cipherctx->tls_aad_len != UNINITIALISED_SIZET) {
@@ -683,9 +683,9 @@ gcm_tls_init(ALCP_PROV_CIPHER_CTX* dat, Uint8* aad, size_t aad_len)
         return 0;
 
     /* Save the aad for later use. */
-    buf = dat->prov_cipher_data->buf;
+    buf = dat->prov_cipher_data.buf;
     memcpy(buf, aad, aad_len);
-    dat->prov_cipher_data->tls_aad_len = aad_len;
+    dat->prov_cipher_data.tls_aad_len = aad_len;
 
     len = buf[aad_len - 2] << 8 | buf[aad_len - 1];
     /* Correct length for explicit iv. */
@@ -694,7 +694,7 @@ gcm_tls_init(ALCP_PROV_CIPHER_CTX* dat, Uint8* aad, size_t aad_len)
     len -= EVP_GCM_TLS_EXPLICIT_IV_LEN;
 
     /* If decrypting correct for tag too. */
-    if (!dat->prov_cipher_data->enc) {
+    if (!dat->prov_cipher_data.enc) {
         if (len < EVP_GCM_TLS_TAG_LEN)
             return 0;
         len -= EVP_GCM_TLS_TAG_LEN;
@@ -708,7 +708,7 @@ gcm_tls_init(ALCP_PROV_CIPHER_CTX* dat, Uint8* aad, size_t aad_len)
 static int
 gcm_tls_iv_set_fixed(ALCP_PROV_CIPHER_CTX* ctx, Uint8* iv, size_t len)
 {
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     /* Special case: -1 length restores whole IV */
     if (len == (size_t)-1) {
@@ -745,7 +745,7 @@ alcp_gcm_one_shot(ALCP_PROV_CIPHER_CTX* ctx,
 {
     int                     ret       = 0;
     alc_error_t             err       = ALC_ERROR_NONE;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     if (alcp_cipher_aead_set_aad(&(ctx->handle), aad, aad_len)
         != ALC_ERROR_NONE) {
@@ -793,7 +793,7 @@ gcm_tls_cipher(ALCP_PROV_CIPHER_CTX* ctx,
     size_t                  arg       = EVP_GCM_TLS_EXPLICIT_IV_LEN;
     size_t                  plen      = 0;
     Uint8*                  tag       = NULL;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     ENTER();
     // printf("\n alcp tls_cipher %ld padlen, %ld len", *padlen, len);
 
