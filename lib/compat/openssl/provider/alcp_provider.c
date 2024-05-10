@@ -73,12 +73,11 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
         case OSSL_OP_CIPHER:
             return ALC_prov_ciphers;
             break;
-        /*  FIXME: Disabled MAC,Digest and RNG Providers as of now to shift
-            focus to Cipher Provider Apps Integration*/
         case OSSL_OP_DIGEST:
             return ALC_prov_digests;
             break;
-
+            /*  FIXME: Disabled MAC and RNG Providers as of now to shift
+                focus to Cipher and Digest Provider Apps Integration*/
 #if 0
         case OSSL_OP_MAC:
             EXIT();
