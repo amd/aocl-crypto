@@ -41,7 +41,7 @@ namespace alcp::cipher {
 typedef struct Context
 {
     void* m_cipher = nullptr;
-    // FIXME: find alternative to skip use of "alc_prov_cipher_data_t" with
+    // FIXME: find alternative to skip use of "alc_prov_cipher_data_t" without
     // performance penality
     alc_prov_cipher_data_t m_prov_cipher_data;
     alc_cipher_data_t      m_alcp_cipher_data;
