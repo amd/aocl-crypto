@@ -925,9 +925,10 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
     cipherctx->ivLen           = ((ivbits) / 8);
     cipherctx->mode            = mode;
     genCipherctx->blocksize    = blkbits / 8;
-    if (provctx != NULL) {
-        ctx->libctx = ALCP_prov_libctx_of(provctx); /* used for rand */
-    }
+    // FIXME: This creates mem leaks to be investigated
+    // if (provctx != NULL) {
+    //     ctx->libctx = ALCP_prov_libctx_of(provctx); /* used for rand */
+    // }
 }
 
 static const char    CIPHER_DEF_PROP[]  = "provider=alcp,fips=no";
@@ -980,7 +981,15 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_OFB,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ofb_functions },
+
 #endif
+    // XTS
+    { ALCP_PROV_NAMES_AES_128_XTS,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes128xts_functions },
+    { ALCP_PROV_NAMES_AES_256_XTS,
+      CIPHER_DEF_PROP,
+      ALCP_prov_aes256xts_functions },
     // GCM
     { ALCP_PROV_NAMES_AES_128_GCM,
       CIPHER_DEF_PROP,

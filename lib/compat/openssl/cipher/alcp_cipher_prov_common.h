@@ -27,6 +27,7 @@
  */
 
 #pragma once
+#include "provider/alcp_provider.h"
 
 #define AES_BLOCK_SIZE 16
 
@@ -97,6 +98,11 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
                                  unsigned int mode,
                                  uint64_t     flags,
                                  void*        provctx);
+
+int
+ALCP_prov_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
+                                const Uint8*          iv,
+                                size_t                ivlen);
 
 // this macro needs to be removed.
 #define OSSL_PARAM_END                                                         \
