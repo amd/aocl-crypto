@@ -99,7 +99,7 @@ class Aes : public Rijndael
     // Without CMAC-SIV extending AES, we cannot access it with protected,
     // Please change to protected if needed in future
   public:
-    alc_error_t init(alc_cipher_data_t* ctx,
+    ALCP_API_EXPORT alc_error_t init(alc_cipher_data_t* ctx,
                      const Uint8*       pKey,
                      const Uint64       keyLen,
                      const Uint8*       pIv,
