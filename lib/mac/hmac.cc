@@ -187,7 +187,6 @@ Hmac::finalize(Uint8* buff, Uint64 size)
     if (alcp_is_error(err)) {
         return HMACDigestOperationError("");
     }
-    m_pDigest->init();
     m_finalized = true;
     return status;
 }
