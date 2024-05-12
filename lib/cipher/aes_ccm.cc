@@ -67,8 +67,7 @@ ctrInc(Uint8 ctr[])
 
 Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
-{
-}
+{}
 
 // FIXME: nRounds needs to be constexpr to be more efficient
 Status
@@ -632,10 +631,17 @@ CcmHash::init(alc_cipher_data_t* ctx,
         return ALC_ERROR_INVALID_ARG;
     }
 
-    if (pKey != nullptr) {
-        Aes::init(ctx, pKey, keyLen, pIv, ivLen);
+    alc_error_t err = Aes::init(ctx, pKey, keyLen, pIv, ivLen);
+    if (alcp_is_error(err)) {
+        return err;
     }
 
+    // if (pKey != nullptr) {
+    //     Aes::init(ctx, pKey, keyLen, nullptr, 0);
+    // }
+    // if (pIv != nullptr) {
+    //     Aes::init(ctx, nullptr, 0, pIv, ivLen)
+    // }
     if (ivLen != 0 && m_tagLen != 0) {
         if (ivLen < 7 || ivLen > 13) {
             // s = status::InvalidValue(
