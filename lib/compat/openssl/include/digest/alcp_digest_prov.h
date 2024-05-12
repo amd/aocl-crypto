@@ -42,6 +42,8 @@
 
 #include "debug.h"
 
+// ToDo: Check if _alc_prov_digest_ctx can be removed
+// if we remove the pc_digest_info
 struct _alc_prov_digest_ctx
 {
     alc_digest_handle_t handle;
@@ -65,20 +67,6 @@ alcp_prov_digest_get_params(OSSL_PARAM    params[],
                             size_t        blockSize,
                             size_t        digestSize,
                             unsigned long flags);
-
-extern const OSSL_DISPATCH sha224_sha2_functions[];
-extern const OSSL_DISPATCH sha256_sha2_functions[];
-extern const OSSL_DISPATCH sha384_sha2_functions[];
-extern const OSSL_DISPATCH sha512_sha2_functions[];
-extern const OSSL_DISPATCH sha512_224_sha2_functions[];
-extern const OSSL_DISPATCH sha512_256_sha2_functions[];
-extern const OSSL_DISPATCH sha224_sha3_functions[];
-extern const OSSL_DISPATCH sha256_sha3_functions[];
-extern const OSSL_DISPATCH sha384_sha3_functions[];
-extern const OSSL_DISPATCH sha512_sha3_functions[];
-extern const OSSL_DISPATCH shake128_sha3_functions[];
-extern const OSSL_DISPATCH shake256_sha3_functions[];
-
 int
 alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize);
 
@@ -131,4 +119,21 @@ OSSL_FUNC_digest_update_fn  alcp_prov_digest_update;
 // ToDO : OSSL_FUNC_DIGEST_DIGEST to
 // be added later. Its currently not
 // implemented in OSSL provider
+/*
+ * Dispatchers are created by alcp_digest_sha.c using macro defined
+ * above
+ */
+extern const OSSL_DISPATCH sha224_sha2_functions[];
+extern const OSSL_DISPATCH sha256_sha2_functions[];
+extern const OSSL_DISPATCH sha384_sha2_functions[];
+extern const OSSL_DISPATCH sha512_sha2_functions[];
+extern const OSSL_DISPATCH sha512_224_sha2_functions[];
+extern const OSSL_DISPATCH sha512_256_sha2_functions[];
+extern const OSSL_DISPATCH sha224_sha3_functions[];
+extern const OSSL_DISPATCH sha256_sha3_functions[];
+extern const OSSL_DISPATCH sha384_sha3_functions[];
+extern const OSSL_DISPATCH sha512_sha3_functions[];
+extern const OSSL_DISPATCH shake128_sha3_functions[];
+extern const OSSL_DISPATCH shake256_sha3_functions[];
+
 #endif /* _OPENSSL_ALCP_DIGEST_PROV_H */

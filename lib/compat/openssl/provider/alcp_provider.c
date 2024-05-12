@@ -83,7 +83,6 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             EXIT();
             return ALC_prov_macs;
             break;
-
         case OSSL_OP_RAND:
             EXIT();
             return ALC_prov_rng;
