@@ -50,7 +50,7 @@ alcp_prov_mac_freectx(void* vctx)
 }
 
 void*
-ALCP_prov_mac_newctx(const alc_mac_info_p macinfo)
+alcp_prov_mac_newctx(const alc_mac_info_p macinfo)
 {
     ENTER();
 
@@ -75,7 +75,7 @@ ALCP_prov_mac_newctx(const alc_mac_info_p macinfo)
 }
 
 void*
-ALCP_prov_mac_dupctx(void* vctx)
+alcp_prov_mac_dupctx(void* vctx)
 {
     ENTER();
     // FIXME: Implementation pending for context copy
@@ -95,7 +95,7 @@ static const OSSL_PARAM mac_known_gettable_params[] = {
 };
 
 const OSSL_PARAM*
-ALCP_prov_mac_gettable_params(void* provctx)
+alcp_prov_mac_gettable_params(void* provctx)
 {
     ENTER();
 
@@ -104,7 +104,7 @@ ALCP_prov_mac_gettable_params(void* provctx)
 }
 
 int
-ALCP_prov_mac_get_params(OSSL_PARAM params[])
+alcp_prov_mac_get_params(OSSL_PARAM params[])
 {
     ENTER();
     EXIT();
@@ -112,7 +112,7 @@ ALCP_prov_mac_get_params(OSSL_PARAM params[])
 }
 
 const OSSL_PARAM*
-ALCP_prov_mac_gettable_ctx_params(void* cctx, void* provctx)
+alcp_prov_mac_gettable_ctx_params(void* cctx, void* provctx)
 {
     ENTER();
     EXIT();
@@ -121,7 +121,7 @@ ALCP_prov_mac_gettable_ctx_params(void* cctx, void* provctx)
 
 /* Parameters that libcrypto can send to this implementation */
 const OSSL_PARAM*
-ALCP_prov_mac_settable_ctx_params(void* cctx, void* provctx)
+alcp_prov_mac_settable_ctx_params(void* cctx, void* provctx)
 {
     ENTER();
     EXIT();
@@ -129,7 +129,7 @@ ALCP_prov_mac_settable_ctx_params(void* cctx, void* provctx)
 }
 
 int
-ALCP_prov_mac_set_params(const OSSL_PARAM params[])
+alcp_prov_mac_set_params(const OSSL_PARAM params[])
 {
     ENTER();
     EXIT();
@@ -137,7 +137,7 @@ ALCP_prov_mac_set_params(const OSSL_PARAM params[])
 }
 
 int
-ALCP_prov_mac_get_ctx_params(void* vctx, OSSL_PARAM params[])
+alcp_prov_mac_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     ENTER();
     EXIT();
@@ -182,7 +182,7 @@ HMAC_init(char* digest, alc_mac_info_p macinfo)
 }
 
 int
-ALCP_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+alcp_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
     int               ret = 0;
@@ -212,7 +212,7 @@ ALCP_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     return ret;
 }
 int
-ALCP_prov_mac_init(void*                vctx,
+alcp_prov_mac_init(void*                vctx,
                    const unsigned char* key,
                    size_t               keylen,
                    const OSSL_PARAM     params[])
@@ -289,11 +289,11 @@ alcp_prov_mac_final(void*          vctx,
 
 static const char MAC_DEF_PROP[] = "provider=alcp,fips=no";
 
-extern const OSSL_DISPATCH cmac_functions[];
+// extern const OSSL_DISPATCH cmac_functions[];
 extern const OSSL_DISPATCH hmac_functions[];
 
 const OSSL_ALGORITHM ALC_prov_macs[] = {
-    //{ ALCP_PROV_NAMES_CMAC, MAC_DEF_PROP, cmac_functions },
+    //{ alcp_PROV_NAMES_CMAC, MAC_DEF_PROP, cmac_functions },
     { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, hmac_functions },
     { NULL, NULL, NULL },
 };
