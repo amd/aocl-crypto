@@ -27,10 +27,25 @@
  */
 
 #include "alcp_cipher_prov_aead_ccm.h"
+
+void
+ALCP_prov_ccm_initctx(ALCP_PROV_CIPHER_CTX* ctx, size_t keybits)
+{
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
+    cipherctx->keyLen_in_bytes        = keybits / 8;
+    cipherctx->isKeySet               = 0;
+    cipherctx->ivState                = 0;
+    cipherctx->ccm.isTagSet           = 0;
+    cipherctx->ccm.isLenSet           = 0;
+    cipherctx->ccm.l                  = 8;
+    cipherctx->ccm.m                  = 12;
+    cipherctx->tls_aad_len            = UNINITIALISED_SIZET;
+}
+
 static void*
 ALCP_prov_alg_ccm_newctx(void* provctx, size_t keybits)
 {
-    ALCP_PROV_CCM_CTX* ctx;
+    ALCP_PROV_CIPHER_CTX* ctx;
     ENTER();
 
     ctx = OPENSSL_zalloc(sizeof(*ctx));
@@ -50,11 +65,6 @@ ALCP_prov_alg_ccm_newctx(void* provctx, size_t keybits)
             alcp_cipher_aead_request(ALC_AES_MODE_CCM, keybits, &(ctx->handle));
 
         ctx->prov_cipher_data = ctx->prov_cipher_data;
-
-        if (ctx->prov_cipher_data == NULL) {
-            OPENSSL_clear_free(ctx, sizeof(*ctx));
-            return NULL;
-        }
 
         if (err == ALC_ERROR_NONE) {
             ALCP_prov_ccm_initctx(ctx, keybits);
@@ -77,8 +87,8 @@ ALCP_prov_alg_ccm_dupctx(void* provctx)
         return NULL;
 
     dctx = OPENSSL_memdup(ctx, sizeof(*ctx));
-    if (dctx != NULL && dctx->base.prov_cipher_data->pKey != NULL)
-        dctx->base.prov_cipher_data->pKey = (const Uint8*)&dctx->ks;
+    // if (dctx != NULL && dctx->base.prov_cipher_data->pKey != NULL)
+    //     dctx->base.prov_cipher_data->pKey = (const Uint8*)&dctx->ks;
 
     return dctx;
 }
@@ -87,7 +97,7 @@ static void
 ALCP_prov_alg_ccm_freectx(void* vctx)
 {
     ENTER();
-    ALCP_PROV_CCM_CTX* ctx = (ALCP_PROV_CCM_CTX*)vctx;
+    ALCP_PROV_CIPHER_CTX* ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
 
     // free alcp
     if (ctx->handle.ch_context != NULL) {

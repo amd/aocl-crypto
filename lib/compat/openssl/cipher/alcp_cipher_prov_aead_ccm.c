@@ -29,17 +29,17 @@
 #include "alcp_cipher_prov_aead_ccm.h"
 
 static size_t
-ccm_get_ivlen(ALCP_PROV_CCM_CTX* ctx)
+ccm_get_ivlen(ALCP_PROV_CIPHER_CTX* ctx)
 {
-    return 15 - ctx->l;
+    return 15 - ctx->prov_cipher_data.ccm.l;
 }
 
 int
 ALCP_prov_ccm_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
 
-    ALCP_PROV_CCM_CTX*      ctx       = (ALCP_PROV_CCM_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     OSSL_PARAM* p;
 
@@ -51,7 +51,7 @@ ALCP_prov_ccm_get_ctx_params(void* vctx, OSSL_PARAM params[])
 
     p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_AEAD_TAGLEN);
     if (p != NULL) {
-        size_t m = ctx->m;
+        size_t m = cipherctx->ccm.m;
 
         if (!OSSL_PARAM_set_size_t(p, m)) {
             ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
@@ -101,7 +101,7 @@ ALCP_prov_ccm_get_ctx_params(void* vctx, OSSL_PARAM params[])
 
     p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_AEAD_TAG);
     if (p != NULL) {
-        if (!cipherctx->enc || !ctx->isTagSet) {
+        if (!cipherctx->enc || !cipherctx->ccm.isTagSet) {
             ERR_raise(ERR_LIB_PROV, PROV_R_TAG_NOT_SET);
             return 0;
         }
@@ -114,17 +114,17 @@ ALCP_prov_ccm_get_ctx_params(void* vctx, OSSL_PARAM params[])
             return 0;
         }
 
-        ctx->isTagSet      = 0;
-        cipherctx->ivState = 0;
-        ctx->isLenSet      = 0;
+        cipherctx->ccm.isTagSet = 0;
+        cipherctx->ivState      = 0;
+        cipherctx->ccm.isLenSet = 0;
     }
     return 1;
 }
 static int
-ccm_tls_init(ALCP_PROV_CCM_CTX* ctx, unsigned char* aad, size_t alen)
+ccm_tls_init(ALCP_PROV_CIPHER_CTX* ctx, unsigned char* aad, size_t alen)
 {
     size_t                  len;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     ENTER();
 
@@ -141,33 +141,35 @@ ccm_tls_init(ALCP_PROV_CCM_CTX* ctx, unsigned char* aad, size_t alen)
     len -= EVP_CCM_TLS_EXPLICIT_IV_LEN;
 
     if (!cipherctx->enc) {
-        if (len < ctx->m)
+        if (len < cipherctx->ccm.m)
             return 0;
 
-        len -= ctx->m;
+        len -= cipherctx->ccm.m;
     }
     cipherctx->buf[alen - 2] = (unsigned char)(len >> 8);
     cipherctx->buf[alen - 1] = (unsigned char)(len & 0xff);
     EXIT();
 
-    return ctx->m;
+    return cipherctx->ccm.m;
 }
 
 static int
-ccm_tls_iv_set_fixed(ALCP_PROV_CCM_CTX* ctx, unsigned char* fixed, size_t flen)
+ccm_tls_iv_set_fixed(ALCP_PROV_CIPHER_CTX* ctx,
+                     unsigned char*        fixed,
+                     size_t                flen)
 {
     if (flen != EVP_CCM_TLS_FIXED_IV_LEN)
         return 0;
 
-    memcpy(ctx->prov_cipher_data->iv_buff, fixed, flen);
+    memcpy(ctx->prov_cipher_data.iv_buff, fixed, flen);
     return 1;
 }
 
 int
 ALCP_prov_ccm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
-    ALCP_PROV_CCM_CTX*      ctx       = (ALCP_PROV_CCM_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     const OSSL_PARAM* p;
     size_t            sz;
@@ -193,11 +195,12 @@ ALCP_prov_ccm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
                 return 0;
             }
             memcpy(cipherctx->buf, p->data, p->data_size);
-            ctx->isTagSet = 1;
+            cipherctx->ccm.isTagSet = 1;
         }
-        ctx->m = p->data_size;
-        if (ctx->m != 0) {
-            if (alcp_cipher_aead_set_tag_length(&(ctx->handle), ctx->m)) {
+        cipherctx->ccm.m = p->data_size;
+        if (cipherctx->ccm.m != 0) {
+            if (alcp_cipher_aead_set_tag_length(&(ctx->handle),
+                                                cipherctx->ccm.m)) {
                 return 0;
             }
         }
@@ -216,7 +219,7 @@ ALCP_prov_ccm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_IV_LENGTH);
             return 0;
         }
-        ctx->l = ivlen;
+        cipherctx->ccm.l = ivlen;
     }
 
     p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_AEAD_TLS1_AAD);
@@ -239,27 +242,15 @@ ALCP_prov_ccm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
             return 0;
         }
-        if (ccm_tls_iv_set_fixed(ctx, p->data, p->data_size) == 0) {
+        if (ccm_tls_iv_set_fixed(
+                (ALCP_PROV_CIPHER_CTX*)ctx, p->data, p->data_size)
+            == 0) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_IV_LENGTH);
             return 0;
         }
     }
 
     return 1;
-}
-
-void
-ALCP_prov_ccm_initctx(ALCP_PROV_CCM_CTX* ctx, size_t keybits)
-{
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
-    cipherctx->keyLen_in_bytes        = keybits / 8;
-    cipherctx->isKeySet               = 0;
-    cipherctx->ivState                = 0;
-    ctx->isTagSet                     = 0;
-    ctx->isLenSet                     = 0;
-    ctx->l                            = 8;
-    ctx->m                            = 12;
-    cipherctx->tls_aad_len            = UNINITIALISED_SIZET;
 }
 
 int
@@ -271,13 +262,13 @@ ALCP_prov_ccm_init(void*                vctx,
                    const OSSL_PARAM     params[],
                    int                  enc)
 {
-    ALCP_PROV_CCM_CTX*      ctx       = (ALCP_PROV_CCM_CTX*)vctx;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    ALCP_PROV_CIPHER_CTX*   ctx       = (ALCP_PROV_CIPHER_CTX*)vctx;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
 
     cipherctx->enc = enc;
 
     if (iv != NULL) {
-        if (ivlen != ccm_get_ivlen(ctx)) {
+        if (ivlen != ccm_get_ivlen((ALCP_PROV_CIPHER_CTX*)ctx)) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_IV_LENGTH);
             return 0;
         }
@@ -327,18 +318,19 @@ ALCP_prov_ccm_dinit(void*                vctx,
     return ALCP_prov_ccm_init(vctx, key, keylen, iv, ivlen, params, 0);
 }
 static int
-ccm_tls_cipher(ALCP_PROV_CCM_CTX* ctx,
-               Uint8*             out,
-               size_t*            padlen,
-               const Uint8*       in,
-               size_t             len)
+ccm_tls_cipher(ALCP_PROV_CIPHER_CTX* ctx,
+               Uint8*                out,
+               size_t*               padlen,
+               const Uint8*          in,
+               size_t                len)
 {
     int                     rv        = 0;
     size_t                  olen      = 0;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     ENTER();
 
-    if (in == NULL || out != in || len < EVP_CCM_TLS_EXPLICIT_IV_LEN + ctx->m)
+    if (in == NULL || out != in
+        || len < EVP_CCM_TLS_EXPLICIT_IV_LEN + cipherctx->ccm.m)
         goto err;
 
     if (cipherctx->enc)
@@ -348,13 +340,16 @@ ccm_tls_cipher(ALCP_PROV_CCM_CTX* ctx,
            in,
            EVP_CCM_TLS_EXPLICIT_IV_LEN);
 
-    len -= EVP_CCM_TLS_EXPLICIT_IV_LEN + ctx->m;
+    len -= EVP_CCM_TLS_EXPLICIT_IV_LEN + cipherctx->ccm.m;
 
-    if (alcp_cipher_aead_init(
-            &(ctx->handle), NULL, 0, cipherctx->buf, ccm_get_ivlen(ctx))) {
+    if (alcp_cipher_aead_init(&(ctx->handle),
+                              NULL,
+                              0,
+                              cipherctx->buf,
+                              ccm_get_ivlen((ALCP_PROV_CIPHER_CTX*)ctx))) {
         goto err;
     }
-    ctx->isLenSet = 1;
+    cipherctx->ccm.isLenSet = 1;
 
     if (alcp_cipher_aead_set_aad(
             &(ctx->handle), cipherctx->buf, cipherctx->tls_aad_len))
@@ -365,13 +360,13 @@ ccm_tls_cipher(ALCP_PROV_CCM_CTX* ctx,
 
     if (cipherctx->enc) {
 
-        if (alcp_cipher_aead_encrypt(&(ctx->handle), in, out, len)) {
+        if (alcp_cipher_aead_encrypt_update(&(ctx->handle), in, out, len)) {
             goto err;
         }
-        olen = len + EVP_CCM_TLS_EXPLICIT_IV_LEN + ctx->m;
+        olen = len + EVP_CCM_TLS_EXPLICIT_IV_LEN + cipherctx->ccm.m;
     } else {
 
-        if (alcp_cipher_aead_decrypt(&(ctx->handle), in, out, len)) {
+        if (alcp_cipher_aead_decrypt_update(&(ctx->handle), in, out, len)) {
             goto err;
         }
         olen = len;
@@ -385,25 +380,26 @@ err:
 }
 
 void
-alcp_prov_ccm_cipher_set_plaintext_length(ALCP_PROV_CCM_CTX* ctx, size_t len)
+alcp_prov_ccm_cipher_set_plaintext_length(ALCP_PROV_CIPHER_CTX* ctx, size_t len)
 {
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     // FIXME: Requires API to set the Length for multi update. Here it
     // is saved to context.
     // Until its fixed, plaintext length cannot be reset from inside CCM hence
     // multiple calls to CCM update might fail
-    ctx->l        = len;
-    ctx->isLenSet = 1;
+    cipherctx->ccm.l        = len;
+    cipherctx->ccm.isLenSet = 1;
 }
 static int
-alcp_prov_ccm_cipher_internal(ALCP_PROV_CCM_CTX* ctx,
-                              Uint8*             out,
-                              size_t*            padlen,
-                              const Uint8*       in,
-                              size_t             len)
+alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
+                              Uint8*                out,
+                              size_t*               padlen,
+                              const Uint8*          in,
+                              size_t                len)
 {
     size_t                  olen      = 0;
     int                     rv        = 0;
-    alc_prov_cipher_data_t* cipherctx = ctx->prov_cipher_data;
+    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
     ENTER();
     if (!cipherctx->isKeySet) {
         return 0;
@@ -423,13 +419,13 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CCM_CTX* ctx,
             alcp_prov_ccm_cipher_set_plaintext_length(ctx, len);
         } else {
 
-            if (!ctx->isLenSet && len)
+            if (!cipherctx->ccm.isLenSet && len)
                 goto err;
             if (alcp_cipher_aead_set_aad(&(ctx->handle), in, len))
                 goto err;
         }
     } else {
-        if (!ctx->isLenSet) {
+        if (!cipherctx->ccm.isLenSet) {
             alcp_prov_ccm_cipher_set_plaintext_length(ctx, len);
         }
 
@@ -437,10 +433,10 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CCM_CTX* ctx,
             if (alcp_cipher_aead_encrypt_update(&(ctx->handle), in, out, len)) {
                 goto err;
             }
-            ctx->isTagSet = 1;
+            cipherctx->ccm.isTagSet = 1;
         } else {
 
-            if (!ctx->isTagSet)
+            if (!cipherctx->ccm.isTagSet)
                 goto err;
 
             if (alcp_cipher_aead_decrypt_update(&(ctx->handle), in, out, len)) {
@@ -449,14 +445,14 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CCM_CTX* ctx,
 
             // TODO: Tag verification
             if (alcp_cipher_aead_get_tag(
-                    &(ctx->handle), cipherctx->buf, ctx->m)) {
+                    &(ctx->handle), cipherctx->buf, cipherctx->ccm.m)) {
                 printf("Error getting the tag\n");
                 goto err;
             }
 
-            cipherctx->ivState = 0;
-            ctx->isTagSet      = 0;
-            ctx->isLenSet      = 0;
+            cipherctx->ivState      = 0;
+            cipherctx->ccm.isTagSet = 0;
+            cipherctx->ccm.isLenSet = 0;
         }
     }
     olen = len;
@@ -472,8 +468,8 @@ ALCP_prov_ccm_stream_final(void*          vctx,
                            size_t*        outl,
                            size_t         outsize)
 {
-    ALCP_PROV_CCM_CTX* ctx = (ALCP_PROV_CCM_CTX*)vctx;
-    int                i;
+    ALCP_PROV_CIPHER_CTX* ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
+    int                   i;
 
     i = alcp_prov_ccm_cipher_internal(ctx, out, outl, NULL, 0);
     if (i <= 0)
@@ -490,7 +486,7 @@ ALCP_prov_ccm_stream_update(void*        vctx,
                             const Uint8* in,
                             size_t       inl)
 {
-    ALCP_PROV_CCM_CTX* ctx = (ALCP_PROV_CCM_CTX*)vctx;
+    ALCP_PROV_CIPHER_CTX* ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
     if (outsize < inl) {
         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
         return 0;
@@ -511,7 +507,7 @@ ALCP_prov_ccm_cipher(void*                vctx,
                      const unsigned char* in,
                      size_t               inl)
 {
-    ALCP_PROV_CCM_CTX* ctx = (ALCP_PROV_CCM_CTX*)vctx;
+    ALCP_PROV_CIPHER_CTX* ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
 
     if (outsize < inl) {
         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);

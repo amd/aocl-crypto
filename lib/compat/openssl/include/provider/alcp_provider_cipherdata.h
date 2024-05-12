@@ -35,6 +35,13 @@
 #include <alcp/alcp.h>
 #include <alcp/cipher.h>
 
+typedef struct _alc_cipher_ccm_data
+{
+    Uint32 isLenSet : 1;
+    size_t l, m;
+    Uint32 isTagSet;
+} _alc_cipher_ccm_data_t;
+
 // ALCP provider generic Cipher data
 typedef struct _alc_cipher_generic_data
 {
@@ -89,6 +96,7 @@ typedef struct _alc_prov_cipher_data
     Uint8 buf[AES_BLOCK_SIZE]; /*! buffer to store partial blocks */
 
     _alc_cipher_generic_data_t generic;
+    _alc_cipher_ccm_data_t     ccm;
 
 } alc_prov_cipher_data_t;
 

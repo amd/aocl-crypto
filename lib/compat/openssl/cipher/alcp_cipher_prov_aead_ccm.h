@@ -30,14 +30,6 @@
 
 #include "alcp_cipher_prov_aead.h"
 #include "provider/alcp_provider.h"
-typedef struct alcp_prov_ccm_st
-{
-    Uint32                  isTagSet;
-    Uint32                  isLenSet : 1;
-    size_t                  l, m;
-    alc_prov_cipher_data_t* prov_cipher_data;
-    alc_cipher_handle_t     handle;
-} ALCP_PROV_CCM_CTX;
 
 OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_ccm_einit;
 OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_ccm_dinit;
