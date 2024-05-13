@@ -82,7 +82,7 @@ namespace aes {
                   T*             p_out_x,
                   Uint64         blocks,
                   const __m128i* pkey128,
-                  const Uint8*   pIv,
+                  Uint8*         pIv,
                   int            nRounds,
                   Uint8          factor)
     {
@@ -192,6 +192,11 @@ namespace aes {
             p_in_x  = (T*)(((__uint128_t*)p_in_x) + 1);
             p_out_x = (T*)(((__uint128_t*)p_out_x) + 1);
         }
+
+        // Store back IV
+        c1 = alcp_shuffle_epi8(c1, swap_ctr);
+        alcp_storeu_128(reinterpret_cast<T*>(pIv), c1);
+
         return blocks;
     }
 

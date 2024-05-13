@@ -45,7 +45,7 @@ namespace vaes {
                             Uint64       len,
                             const Uint8* pKey,
                             int          nRounds,
-                            const Uint8* pIv)
+                            Uint8*       pIv)
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
@@ -62,7 +62,7 @@ namespace vaes {
                             Uint64       len,   // message length in bytes
                             const Uint8* pKey,  // ptr to Key
                             int          nRounds, // No. of rounds
-                            const Uint8* pIv // ptr to Initialization Vector
+                            Uint8*       pIv // ptr to Initialization Vector
     )
     {
         alc_error_t err     = ALC_ERROR_NONE;
@@ -83,7 +83,7 @@ namespace vaes {
         Uint64       len,        // message length in bytes
         const Uint8* pKey,       // ptr to Key
         int          nRounds,    // No. of rounds
-        const Uint8* pIv         // ptr to Initialization Vector
+        Uint8*       pIv         // ptr to Initialization Vector
     )
     {
         alc_error_t err     = ALC_ERROR_NONE;
@@ -105,7 +105,7 @@ namespace aesni {
                             Uint64       len,
                             const Uint8* pKey,
                             int          nRounds,
-                            const Uint8* pIv)
+                            Uint8*       pIv)
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
@@ -121,7 +121,7 @@ namespace aesni {
                             Uint64       len,
                             const Uint8* pKey,
                             int          nRounds,
-                            const Uint8* pIv)
+                            Uint8*       pIv)
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
@@ -138,7 +138,7 @@ namespace aesni {
                             Uint64       len,
                             const Uint8* pKey,
                             int          nRounds,
-                            const Uint8* pIv)
+                            Uint8*       pIv)
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;

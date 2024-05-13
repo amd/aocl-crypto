@@ -94,7 +94,7 @@ ctrBlk128(const __m512i* p_in_x,
           __m512i*       p_out_x,
           Uint64         len,
           const __m128i* pkey128,
-          const Uint8*   pIv,
+          Uint8*         pIv,
           int            nRounds)
 {
     __m512i a1, a2, a3, a4;
@@ -214,6 +214,8 @@ ctrBlk128(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_10rounds(keys);
+    c1 = alcp_shuffle_epi8(c1, swap_ctr);
+    alcp_storeu_128(reinterpret_cast<__m512i*>(pIv), c1);
 }
 
 static inline void
@@ -476,7 +478,7 @@ CryptCtr128(const Uint8* p_in_x,
             Uint64       len,
             const Uint8* pKey,
             int          nRounds,
-            const Uint8* pIv)
+            Uint8*       pIv)
 {
 
     auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
@@ -492,7 +494,7 @@ CryptCtr192(const Uint8* p_in_x,
             Uint64       len,
             const Uint8* pKey,
             int          nRounds,
-            const Uint8* pIv)
+            Uint8*       pIv)
 {
 
     auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
@@ -509,7 +511,7 @@ CryptCtr256(const Uint8* p_in_x,
             Uint64       len,
             const Uint8* pKey,
             int          nRounds,
-            const Uint8* pIv)
+            Uint8*       pIv)
 {
 
     auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);

@@ -80,7 +80,7 @@ ctrProcessAvx256(const Uint8*   p_in_x,
                  Uint8*         p_out_x,
                  Uint64         blocks,
                  const __m128i* pkey128,
-                 const Uint8*   pIv,
+                 Uint8*         pIv,
                  int            nRounds)
 {
     auto p_in_256  = reinterpret_cast<const __m256i*>(p_in_x);
