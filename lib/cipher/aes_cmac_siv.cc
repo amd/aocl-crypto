@@ -300,17 +300,21 @@ SivHash::init(alc_cipher_data_t* ctx,
               Uint64             ivLen)
 {
     Uint64 keyLength = keyLen;
+    if (pIv != nullptr) {
+        m_iv = pIv;
+    }
     if (ctx == nullptr) {
         return ALC_ERROR_INVALID_ARG;
     }
     if (pKey != nullptr) {
-        m_key1 = pKey;
-        m_key2 = pKey + keyLength / 8;
+        m_key1   = pKey;
+        m_key2   = pKey + keyLength / 8;
+        Status s = setKeys(m_key1, m_key2, keyLength);
+        if (!s.ok()) {
+            return ALC_ERROR_INVALID_ARG;
+        }
     }
-    if (pIv != nullptr) {
-        m_iv = pIv;
-    }
-    setKeys(m_key1, m_key2, keyLength);
+
     return ALC_ERROR_NONE;
 }
 
