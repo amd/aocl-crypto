@@ -28,6 +28,7 @@
 
 #include "alcp/cipher/aesni.hh"
 
+#include "avx2.hh"
 #include <cstdint>
 #include <immintrin.h>
 
@@ -48,7 +49,7 @@ namespace alcp::cipher { namespace aesni {
                                   Uint64       len,
                                   const Uint8* pKey,
                                   int          nRounds,
-                                  const Uint8* pIv)
+                                  Uint8*       pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
         auto        p_key128  = reinterpret_cast<const __m128i*>(pKey);
@@ -110,8 +111,15 @@ namespace alcp::cipher { namespace aesni {
 
             _mm_storeu_si128(p_dest128, blk);
 
+            p_src128 += 1;
+            p_dest128 += 1;
             blocks--;
         }
+
+        // IV is no longer needed hence we can write the old ciphertext back to
+        // IV
+        alcp_storeu_128(reinterpret_cast<__m128i*>(pIv),
+                        alcp_loadu_128(p_src128 - 1));
 
         assert(blocks == 0);
 
@@ -125,7 +133,7 @@ namespace alcp::cipher { namespace aesni {
                                   Uint64       len,
                                   const Uint8* pKey,
                                   int          nRounds,
-                                  const Uint8* pIv)
+                                  Uint8*       pIv)
     {
         auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
@@ -184,10 +192,16 @@ namespace alcp::cipher { namespace aesni {
             /* TODO: Store blocks using ERMS/FSRM or similar */
             _mm_storeu_si128(p_dest128, tmpblk);
 
+            iv128 = tmpblk;
+
             blocks--;
         }
 
         assert(blocks == 0);
+
+        // IV is no longer needed hence we can write the old ciphertext back to
+        // IV
+        alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), iv128);
 
         return ALC_ERROR_NONE;
     }
@@ -198,7 +212,7 @@ namespace alcp::cipher { namespace aesni {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return EncryptCfb<aesni::AesEncrypt>(
             pSrc, pDest, len, pKey, nRounds, pIv);
@@ -210,7 +224,7 @@ namespace alcp::cipher { namespace aesni {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return EncryptCfb<aesni::AesEncrypt>(
             pSrc, pDest, len, pKey, nRounds, pIv);
@@ -222,7 +236,7 @@ namespace alcp::cipher { namespace aesni {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return EncryptCfb<aesni::AesEncrypt>(
             pSrc, pDest, len, pKey, nRounds, pIv);
@@ -235,7 +249,7 @@ namespace alcp::cipher { namespace aesni {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<aesni::AesEncrypt,
                           aesni::AesEncrypt,
@@ -249,7 +263,7 @@ namespace alcp::cipher { namespace aesni {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<aesni::AesEncrypt,
                           aesni::AesEncrypt,
@@ -263,7 +277,7 @@ namespace alcp::cipher { namespace aesni {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<aesni::AesEncrypt,
                           aesni::AesEncrypt,

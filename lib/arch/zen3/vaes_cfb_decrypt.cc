@@ -30,6 +30,7 @@
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/types.hh"
+#include "avx256.hh"
 
 #include <immintrin.h>
 
@@ -49,15 +50,16 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
                               Uint64       len,     // message length in bytes
                               const Uint8* pKey,    // ptr to Key
                               int          nRounds, // No. of rounds
-                              const Uint8* pIv // ptr to Initialization Vector
+                              Uint8*       pIv // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    Uint64*  p_iv64   = (Uint64*)pIv;
+    Uint64*  p_iv64   = reinterpret_cast<Uint64*>(pIv);
     __m128i* p_key128 = (__m128i*)pKey;
     __m256i* p_ct256  = (__m256i*)pCipherText;
     __m256i* p_pt256  = (__m256i*)pPlainText;
+    __m128i* p_ct128  = (__m128i*)pCipherText;
 
     __m256i iv256 = _mm256_set_epi64x(0, 0, p_iv64[1], p_iv64[0]);
 
@@ -153,6 +155,7 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     /* process single block of 128-bit */
+    p_ct128 = reinterpret_cast<__m128i*>(p_ct256);
     if (blocks) {
         Uint64* p_iv64  = (Uint64*)p_ct256;
         __m256i mask_lo = _mm256_set_epi64x(0,
@@ -169,8 +172,13 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         blk0 = _mm256_xor_si256(tmpblk, y0);
         _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);
 
+        p_ct128 += 1;
         blocks--;
     }
+
+    // Load last CT from cache
+    alcp_storeu_128(reinterpret_cast<__m256i*>(pIv),
+                    alcp_loadu_128(reinterpret_cast<__m256i*>(p_ct128 - 1)));
 
     return err;
 }
@@ -181,7 +189,7 @@ DecryptCfb128(const Uint8* pSrc,
               Uint64       len,
               const Uint8* pKey,
               int          nRounds,
-              const Uint8* pIv)
+              Uint8*       pIv)
 {
     return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
         pSrc, pDest, len, pKey, nRounds, pIv);
@@ -193,7 +201,7 @@ DecryptCfb192(const Uint8* pSrc,
               Uint64       len,
               const Uint8* pKey,
               int          nRounds,
-              const Uint8* pIv)
+              Uint8*       pIv)
 {
     return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
         pSrc, pDest, len, pKey, nRounds, pIv);
@@ -205,7 +213,7 @@ DecryptCfb256(const Uint8* pSrc,
               Uint64       len,
               const Uint8* pKey,
               int          nRounds,
-              const Uint8* pIv)
+              Uint8*       pIv)
 {
     return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
         pSrc, pDest, len, pKey, nRounds, pIv);

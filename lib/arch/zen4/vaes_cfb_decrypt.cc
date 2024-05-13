@@ -49,7 +49,7 @@ namespace alcp::cipher { namespace vaes512 {
                                   Uint64       len,
                                   const Uint8* pKey,
                                   int          nRounds,
-                                  const Uint8* pIv)
+                                  Uint8*       pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
         auto        pkey128   = reinterpret_cast<const __m128i*>(pKey);
@@ -178,6 +178,10 @@ namespace alcp::cipher { namespace vaes512 {
             p_out_128++;
         }
 
+        // Store nth ciphertext to iv
+        alcp_storeu_128(reinterpret_cast<__m512i*>(pIv),
+                        alcp_loadu_128(((const __m512i*)(p_in_128 - 1))));
+
         // clear all keys in registers.
         alcp_clear_keys_zmm(keys);
 
@@ -191,7 +195,7 @@ namespace alcp::cipher { namespace vaes512 {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<AesEncryptNoLoad_1x512Rounds10,
                           AesEncryptNoLoad_2x512Rounds10,
@@ -206,7 +210,7 @@ namespace alcp::cipher { namespace vaes512 {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<AesEncryptNoLoad_1x512Rounds12,
                           AesEncryptNoLoad_2x512Rounds12,
@@ -221,7 +225,7 @@ namespace alcp::cipher { namespace vaes512 {
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<AesEncryptNoLoad_1x512Rounds14,
                           AesEncryptNoLoad_2x512Rounds14,

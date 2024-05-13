@@ -104,6 +104,13 @@ out:
     return -1;
 }
 
+void
+end_demo_session(alc_cipher_handle_p handle)
+{
+    alcp_cipher_finish(handle);
+    free(handle->ch_context);
+}
+
 int
 encrypt_demo(alc_cipher_handle_p handle,
              const Uint8*        plaintxt,
@@ -150,8 +157,8 @@ decrypt_demo(alc_cipher_handle_p handle,
 
 // Plain text to encrypt, it should be 128bits (16bytes) multiple.
 // 128bits is the block size for AES
-static Uint8* sample_plaintxt =
-    (Uint8*)"Happy and Fantastic New Year from AOCL Crypto !!";
+static Uint8 sample_plaintxt[] =
+    "Happy and Fantastic New Year from AOCL Crypto !!";
 
 // Key can be 128bits, 192bits, 256bits. Currently its 128bits
 static const Uint8 sample_key[] = {
@@ -165,19 +172,17 @@ static const Uint8 sample_iv[] = {
     0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0,
 };
 
-// Buffer to write encrypted message into
-// It should have size greater than or equal to plaintext as there is no padding
-static Uint8 sample_ciphertxt[512] = {
-    0,
-};
-
 int
 main(void)
 {
     int retval = 0;
+    // Buffer to write encrypted message into
+    // It should have size greater than or equal to plaintext as there is no
+    // padding
+    Uint8 sample_ciphertxt[256] = { 0 };
     // Buffer to write plain text into.
     // It should have size greater than or equal to the plaintext.
-    Uint8     sample_output[512] = { 0 };
+    Uint8     sample_output[256] = { 0 };
     const int cPlaintextSize     = strlen((const char*)sample_plaintxt);
     const int cCiphertextSize    = cPlaintextSize; // No padding
 
@@ -201,6 +206,13 @@ main(void)
         goto out;
     printf("CipherText:");
     dump_hex(sample_ciphertxt, cCiphertextSize);
+
+    end_demo_session(&handle);
+
+    retval =
+        create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
+    if (retval != 0)
+        goto out;
 
     // Decrypt the ciphertext into the plaintext.
     retval =
