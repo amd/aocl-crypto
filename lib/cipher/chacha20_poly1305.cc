@@ -205,7 +205,7 @@ ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::setKey(const Uint8 key[],
     std::cout << "Key Stream generated for Poly" << std::endl;
     BIO_dump_fp(stdout, m_poly1305_key, 32);
 #endif
-    alcp::base::Status s      = Poly1305::setKey(m_poly1305_key, 256);
+    alcp::base::Status s      = Poly1305::init(m_poly1305_key, 256);
     m_len_input_processed.u64 = 0;
     m_len_aad_processed.u64   = 0;
     if (!s.ok()) {

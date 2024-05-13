@@ -46,17 +46,16 @@ alcp_mac_context_size(void)
 }
 
 alc_error_t
-alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pcMacInfo)
+alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pcMacInfo, err);
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
     new (p_ctx) mac::Context;
-    p_ctx->status = mac::MacBuilder::build(*pcMacInfo, *p_ctx);
+    p_ctx->status = mac::MacBuilder::build(mi_type, p_ctx);
 
     // TODO: Convert status to proper alc_error_t code and return
     if (!p_ctx->status.ok()) {
@@ -159,7 +158,10 @@ alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* pBuff, Uint64 size)
 }
 
 alc_error_t
-alcp_mac_init(alc_mac_handle_p pMacHandle, const Uint8* key, Uint64 size)
+alcp_mac_init(alc_mac_handle_p pMacHandle,
+              const Uint8*     key,
+              Uint64           size,
+              alc_mac_info_t*  info)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -168,7 +170,7 @@ alcp_mac_init(alc_mac_handle_p pMacHandle, const Uint8* key, Uint64 size)
     ALCP_BAD_PTR_ERR_RET(key, err);
 
     auto   p_ctx  = static_cast<mac::Context*>(pMacHandle->ch_context);
-    Status status = p_ctx->init(p_ctx->m_mac, key, size, p_ctx->m_digest);
+    Status status = p_ctx->init(p_ctx, key, size, info);
     // TODO: Convert status to proper alc_error_t code and return
     if (!status.ok()) {
         err = ALC_ERROR_EXISTS;
@@ -195,7 +197,7 @@ alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
     ALCP_BAD_PTR_ERR_RET(src_ctx->m_digest, err);
     new (dest_ctx) mac::Context;
 
-    Status status = mac::MacBuilder::BuildWithCopy(*src_ctx, *dest_ctx);
+    Status status = mac::MacBuilder::BuildWithCopy(src_ctx, dest_ctx);
     // TODO: Convert status to proper alc_error_t code and return
     if (!status.ok()) {
         err = ALC_ERROR_EXISTS;

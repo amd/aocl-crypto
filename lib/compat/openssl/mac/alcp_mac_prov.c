@@ -50,7 +50,7 @@ alcp_prov_mac_freectx(void* vctx)
 }
 
 void*
-alcp_prov_mac_newctx(const alc_mac_info_p macinfo)
+alcp_prov_mac_newctx(alc_mac_type_t mac_type)
 {
     ENTER();
 
@@ -58,10 +58,9 @@ alcp_prov_mac_newctx(const alc_mac_info_p macinfo)
     mac_ctx = OPENSSL_zalloc(sizeof(*mac_ctx));
 
     if (mac_ctx != NULL) {
-        mac_ctx->pc_mac_info       = *macinfo;
         Uint64 size                = alcp_mac_context_size();
         mac_ctx->handle.ch_context = OPENSSL_malloc(size);
-        alc_error_t err = alcp_mac_request(&(mac_ctx->handle), macinfo);
+        alc_error_t err = alcp_mac_request(&(mac_ctx->handle), mac_type);
         if (alcp_is_error(err)) {
             printf("MAC Provider: Request Failed\n");
             OPENSSL_clear_free(mac_ctx->handle.ch_context, size);
@@ -145,54 +144,11 @@ alcp_prov_mac_get_ctx_params(void* vctx, OSSL_PARAM params[])
 }
 
 int
-HMAC_init(char* digest, alc_mac_info_p macinfo)
-{
-    ENTER();
-    if (digest == NULL) {
-        return 0;
-    }
-
-    alc_digest_mode_t digest_mode;
-
-    if (!strcasecmp(digest, "sha256")) {
-        digest_mode = ALC_SHA2_256;
-    } else if (!strcasecmp(digest, "sha224")) {
-        digest_mode = ALC_SHA2_224;
-    } else if (!strcasecmp(digest, "sha384")) {
-        digest_mode = ALC_SHA2_384;
-    } else if (!strcasecmp(digest, "sha512")) {
-        digest_mode = ALC_SHA2_512;
-    } else if (!strcasecmp(digest, "sha3-224")) {
-        digest_mode = ALC_SHA3_224;
-    } else if (!strcasecmp(digest, "sha3-256")) {
-        digest_mode = ALC_SHA3_256;
-    } else if (!strcasecmp(digest, "sha3-384")) {
-        digest_mode = ALC_SHA3_384;
-    } else if (!strcasecmp(digest, "sha3-512")) {
-        digest_mode = ALC_SHA3_512;
-    } else {
-        printf("HMAC Provider: Digest '%s' Not Supported", digest);
-        EXIT();
-        return 0;
-    }
-
-    macinfo->mi_algoinfo.hmac.digest_mode = digest_mode;
-    EXIT();
-    return 1;
-}
-
-int
 alcp_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
-    int               ret = 0;
-    const OSSL_PARAM* p_digest =
-        OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_DIGEST);
-    if (p_digest != NULL) {
-        char* digest = p_digest->data;
-        ret = HMAC_init(digest, &(((alc_prov_mac_ctx_p)vctx)->pc_mac_info));
-        return ret;
-    }
+    int ret = 0;
+
     const OSSL_PARAM* p_cipher =
         OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_CIPHER);
     if (p_cipher != NULL) {
@@ -219,31 +175,6 @@ alcp_prov_mac_init(void*                vctx,
 {
     ENTER();
 
-    alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                             .len  = keylen * 8,
-                             .key  = key };
-    // Handling OpenSSL Speed Initial Init Request
-    if (keylen == 0 && key == NULL) {
-        kinfo.key = OPENSSL_malloc(128);
-        kinfo.len = 128;
-    }
-    alc_prov_mac_ctx_p cctx    = vctx;
-    alc_mac_info_p     macinfo = &cctx->pc_mac_info;
-
-    macinfo->mi_keyinfo = kinfo;
-
-    if (params != NULL) {
-        const OSSL_PARAM* p =
-            OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_DIGEST);
-        if (p != NULL) {
-            char* digest = (char*)p->data;
-            if (digest != NULL) {
-                if (!HMAC_init(digest, macinfo)) {
-                    return 0;
-                };
-            }
-        }
-    }
     EXIT();
     return 1;
 }

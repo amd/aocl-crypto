@@ -37,12 +37,18 @@ using namespace alcp::base::status;
 class CmacBuilder
 {
   public:
-    static Status build(const alc_mac_info_t& macInfo,
-                        const alc_key_info_t& keyInfo,
-                        Context&              ctx);
-    static Uint64 getSize(const alc_mac_info_t& macInfo);
-    static Status isSupported(const alc_mac_info_t& macInfo);
+    static Status build(Context* ctx);
 };
+
+static Status
+__cmac_wrapperInit(Context*        ctx,
+                   const Uint8*    key,
+                   Uint64          size,
+                   alc_mac_info_t* info)
+{
+    auto p_cmac = static_cast<Cmac*>(ctx->m_mac);
+    return p_cmac->init(key, size);
+}
 
 static Status
 __cmac_wrapperUpdate(void* cmac, const Uint8* buff, Uint64 size)
@@ -74,57 +80,23 @@ __cmac_wrapperReset(void* cmac)
     return p_cmac->reset();
 }
 
-static Status
-__build_cmac(const alc_cipher_info_t& cipherInfo,
-             const alc_key_info_t&    cKinfo,
-             Context&                 ctx)
+Status
+CmacBuilder::build(Context* ctx)
 {
-    using namespace status;
-    Status status                 = StatusOk();
-    ctx.data.alcp_keyLen_in_bytes = cKinfo.len / 8;
-    auto p_algo                   = new Cmac(&ctx.data);
+    Status status = StatusOk();
+    auto   p_algo = new Cmac(&ctx->data);
 
-    auto p_key = cKinfo.key;
-    auto len   = cKinfo.len;
-    p_algo->setKey(p_key, len);
     if (p_algo == nullptr) {
         return InternalError("Unable to Allocate Memory for CMAC Object");
     }
-    ctx.m_mac = static_cast<void*>(p_algo);
-
-    ctx.update    = __cmac_wrapperUpdate;
-    ctx.finalize  = __cmac_wrapperFinalize;
-    ctx.finish    = __cmac_wrapperFinish;
-    ctx.reset     = __cmac_wrapperReset;
-    ctx.duplicate = nullptr;
+    ctx->m_mac     = static_cast<void*>(p_algo);
+    ctx->init      = __cmac_wrapperInit;
+    ctx->update    = __cmac_wrapperUpdate;
+    ctx->finalize  = __cmac_wrapperFinalize;
+    ctx->finish    = __cmac_wrapperFinish;
+    ctx->reset     = __cmac_wrapperReset;
+    ctx->duplicate = nullptr;
     return status;
 }
-Status
-CmacBuilder::build(const alc_mac_info_t& macInfo,
-                   const alc_key_info_t& keyInfo,
-                   Context&              ctx)
-{
-    return __build_cmac(macInfo.mi_algoinfo.cmac.cmac_cipher, keyInfo, ctx);
-}
 
-Uint64
-CmacBuilder::getSize(const alc_mac_info_t& macInfo)
-{
-    return sizeof(Cmac);
-}
-
-Status
-CmacBuilder::isSupported(const alc_mac_info_t& macInfo)
-{
-    Status status{ StatusOk() };
-    if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_type == ALC_CIPHER_TYPE_AES) {
-        if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_mode != ALC_AES_MODE_NONE) {
-            return InvalidArgument("CMAC: Unsupported AES Cipher Mode");
-        }
-    } else {
-        return InvalidArgument(
-            "CMAC: Unsupported Cipher. Only AES is supported.");
-    }
-    return status;
-}
 } // namespace alcp::mac

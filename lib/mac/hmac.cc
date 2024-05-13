@@ -205,15 +205,15 @@ Hmac::reset()
 }
 
 Status
-Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest)
+Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest)
 {
     Status status = StatusOk();
 
-    if (key == nullptr || keylen == 0) {
+    if (key == nullptr || keylen == 0 || digest == nullptr) {
         return InitError("");
     }
 
-    m_pDigest = &digest;
+    m_pDigest = digest;
     m_pDigest->init();
 
     m_input_block_length = m_pDigest->getInputBlockSize();

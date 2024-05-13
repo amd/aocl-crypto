@@ -303,7 +303,7 @@ HmacDrbg::Impl::HMAC_Wrapper(const Uint8  cIn1[],
                              const Uint64 cOutLen)
 {
 
-    m_hmac_obj.init(&m_key[0], m_key.size(), *m_digest);
+    m_hmac_obj.init(&m_key[0], m_key.size(), m_digest.get());
     m_hmac_obj.update(cIn1, cIn1Len);
     if (cIn2 != nullptr && cIn2Len != 0)
         m_hmac_obj.update(cIn2, cIn2Len);

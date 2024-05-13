@@ -26,8 +26,9 @@
  *
  */
 
-#include "alcp_mac_cmac.h"
-DEFINE_CMAC_CONTEXT("CBC")
+#include "alcp/alcp.h"
+#include "alcp_mac_prov.h"
+#include "debug.h"
 
 int
 alcp_prov_cmac_get_ctx_params(void* vctx, OSSL_PARAM params[])

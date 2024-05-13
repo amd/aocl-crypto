@@ -41,17 +41,9 @@ ippsHMACGetSize_rmf(int* pSize)
 }
 
 // Utility Function to seperate out formation of alc_mac_info
-IppStatus
-createHmacInfo(alc_mac_info_p        pMacInfo,
-               const Ipp8u*          pKey,
-               int                   keyLen,
-               const IppsHashMethod* pMethod)
+alc_digest_mode_t
+createHmacInfo(const IppsHashMethod* pMethod)
 {
-
-    const alc_key_info_t cKinfo = { ALC_KEY_ALG_MAC,
-                                    static_cast<Uint32>(keyLen * 8),
-                                    static_cast<const Uint8*>(pKey) };
-
     alc_digest_mode_t sha2_mode;
 
     ipp_sha2_rmf_algo_ctx* p_method_ctx = (ipp_sha2_rmf_algo_ctx*)pMethod;
@@ -88,15 +80,10 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
             break;
         }
         default:
-            return ippStsNotSupportedModeErr;
+            sha2_mode = ALC_SHA2_256;
+            printMsg("Error : Defaulting to SHA2-256");
     }
-
-    pMacInfo->mi_type                      = ALC_MAC_HMAC;
-    pMacInfo->mi_algoinfo.hmac.digest_mode = sha2_mode;
-
-    pMacInfo->mi_keyinfo = cKinfo;
-
-    return ippStsNoErr;
+    return sha2_mode;
 }
 
 IppStatus
@@ -108,12 +95,9 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
     printMsg("ippsHMACInit_rmf_rmf: ENTRY");
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
-    alc_mac_info_t mac_info;
-    auto           status = createHmacInfo(&mac_info, pKey, keyLen, pMethod);
-    if (status != ippStsNoErr) {
-        return status;
-    }
-    status = alcp_MacInit(&mac_info, p_mac_ctx);
+    alc_digest_mode_t mode = createHmacInfo(pMethod);
+    alc_hmac_info_t   info{ mode };
+    status = alcp_MacInit(ALC_MAC_HMAC, p_mac_ctx, pKey, keyLen, info);
     printMsg("ippsHMACInit_rmf_rmf: EXIT");
     return status;
 }

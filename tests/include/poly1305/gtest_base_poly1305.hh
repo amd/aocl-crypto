@@ -71,20 +71,19 @@ PrintmacTestData(std::vector<Uint8>   key,
 
 /* cross test function */
 void
-Poly_Cross(alc_mac_info_t info)
+Poly_Cross()
 {
-    const int macSize      = 16;
-    info.mi_type           = ALC_MAC_POLY1305;
+    const int   macSize    = 16;
     std::string LibStrMain = "ALCP", LibStrExt = "";
 
-    AlcpPoly1305Base apb(info);
+    AlcpPoly1305Base apb;
     RngBase          rb;
     Poly1305Base *   pb_main, *pb_ext = nullptr;
 
     pb_main = &apb;
 
 #ifdef USE_OSSL
-    OpenSSLPoly1305Base opb(info);
+    OpenSSLPoly1305Base opb;
     if ((useossl == true) || (pb_ext == nullptr)) {
         pb_ext    = &opb;
         LibStrExt = "OpenSSL";
@@ -139,7 +138,7 @@ Poly_Cross(alc_mac_info_t info)
         data_main.m_msg_len = data_ext.m_msg_len = msg.size() - 1;
 
         /* run test with main lib */
-        if (!pb_main->init(info, key_full)) {
+        if (!pb_main->init(key_full)) {
             printf("Error in mac init\n");
             FAIL();
         }
@@ -151,7 +150,7 @@ Poly_Cross(alc_mac_info_t info)
             PrintmacTestData(key_full, data_main, LibStrMain);
 
         /* run test with ext lib */
-        if (!pb_ext->init(info, key_full)) {
+        if (!pb_ext->init(key_full)) {
             printf("Error in mac ext init function\n");
             FAIL();
         }
@@ -169,15 +168,13 @@ Poly_Cross(alc_mac_info_t info)
 }
 
 void
-Poly_Kat(alc_mac_info_t info)
+Poly_Kat()
 {
     alcp_poly1305_data_t data    = {};
     const int            macSize = 16;
     std::string          LibStr  = "ALCP";
 
-    info.mi_type = ALC_MAC_POLY1305;
-
-    AlcpPoly1305Base apb(info);
+    AlcpPoly1305Base apb;
     Poly1305Base*    pb;
     pb = &apb;
 
@@ -190,7 +187,7 @@ Poly_Kat(alc_mac_info_t info)
     }
 
 #ifdef USE_OSSL
-    OpenSSLPoly1305Base opb(info);
+    OpenSSLPoly1305Base opb;
     if (useossl == true) {
         pb     = &opb;
         LibStr = "OpenSSL";
@@ -211,7 +208,7 @@ Poly_Kat(alc_mac_info_t info)
         data.m_mac_len = mac.size();
         data.m_key_len = key.size();
 
-        if (!pb->init(info, key)) {
+        if (!pb->init(key)) {
             std::cout << "Error in mac init function" << std::endl;
             FAIL();
         }

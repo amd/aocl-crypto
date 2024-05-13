@@ -31,28 +31,14 @@
 
 namespace alcp::testing {
 
-AlcpHmacBase::AlcpHmacBase(const alc_mac_info_t& info) {}
-
 bool
 AlcpHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
+    alc_error_t err;
 
-bool
-AlcpHmacBase::init()
-{
-    alc_error_t    err;
-    alc_mac_info_t dinfo = m_info;
-
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = m_key_len * 8,
-                                   .key  = m_key };
-
-    dinfo.mi_keyinfo = kinfo;
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
         m_handle->ch_context = malloc(alcp_mac_context_size());
@@ -62,15 +48,15 @@ AlcpHmacBase::init()
         alcp_mac_finish(m_handle);
     }
 
-    err = alcp_mac_request(m_handle, &dinfo);
+    err = alcp_mac_request(m_handle, ALC_MAC_HMAC);
     if (alcp_is_error(err)) {
         printf("Error code in alcp_mac_request: %ld\n", err);
         return false;
     }
 
-    err = alcp_mac_init(m_handle, m_key, m_key_len);
+    err = alcp_mac_init(m_handle, m_key, m_key_len, &m_info);
     if (alcp_is_error(err)) {
-        printf("Error code in alcp_mac_request: %ld\n", err);
+        printf("Error code in alcp_mac_init: %ld\n", err);
         return false;
     }
     return true;

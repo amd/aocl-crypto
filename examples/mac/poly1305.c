@@ -34,11 +34,12 @@
 static alc_mac_handle_t handle;
 
 alc_error_t
-poly1305_demo(const alc_mac_info_p macInfo,
-              Uint8*               data,
-              Uint32               dataLen,
-              Uint8*               mac,
-              Uint32               mac_size)
+poly1305_demo(Uint8*       data,
+              Uint32       dataLen,
+              Uint8*       mac,
+              Uint32       mac_size,
+              const Uint8* key,
+              Uint64       key_size)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
@@ -49,12 +50,22 @@ poly1305_demo(const alc_mac_info_p macInfo,
         return ALC_ERROR_GENERIC;
     }
 
-    err = alcp_mac_request(&handle, macInfo);
+    err = alcp_mac_request(&handle, ALC_MAC_POLY1305);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request - %lu\n", err);
         return err;
     }
+
     printf("Request Success!\n");
+
+    err = alcp_mac_init(&handle, key, key_size, NULL);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Init - %lu\n", err);
+        return err;
+    }
+
+    printf("Init Success!\n");
+
     // Update can be called multiple times with smaller chunks of the data
     err = alcp_mac_update(&handle, data, dataLen);
     if (alcp_is_error(err)) {
@@ -91,16 +102,9 @@ main(int argc, char const* argv[])
     Uint8 expectedMac[] = { 0xfd, 0x86, 0x1c, 0x71, 0x84, 0xf9, 0x8f, 0x45,
                             0xdc, 0x6d, 0x5b, 0x4d, 0xc6, 0xc0, 0x81, 0xe4 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = { .mi_type    = ALC_MAC_POLY1305,
-                               .mi_keyinfo = kinfo };
-
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
-    err = poly1305_demo(&macinfo, data, sizeof(data), mac, mac_size);
+    err = poly1305_demo(data, sizeof(data), mac, mac_size, key, sizeof(key));
     if (alcp_is_error(err)) {
         printf("Error in CMAC\n");
         return -1;

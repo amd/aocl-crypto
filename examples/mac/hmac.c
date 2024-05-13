@@ -56,11 +56,13 @@ compareArray(Uint8* a1, int a1_len, Uint8* a2, int a2_len)
 static alc_mac_handle_t handle;
 
 alc_error_t
-run_hmac(const alc_mac_info_p macInfo,
-         Uint8*               cipherText,
-         Uint32               cipherTextLen,
-         Uint8*               mac,
-         Uint32               mac_size)
+run_hmac(Uint8*            cipherText,
+         Uint32            cipherTextLen,
+         Uint8*            mac,
+         Uint32            mac_size,
+         const Uint8*      key,
+         Uint64            size,
+         alc_digest_mode_t mode)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
@@ -72,14 +74,15 @@ run_hmac(const alc_mac_info_p macInfo,
     }
 
     Uint8 error_message[1024] = "";
-    err                       = alcp_mac_request(&handle, macInfo);
+    err                       = alcp_mac_request(&handle, ALC_MAC_HMAC);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request - %lu\n", err);
         goto out;
     }
 
-    err = alcp_mac_init(
-        &handle, macInfo->mi_keyinfo.key, macInfo->mi_keyinfo.len / 8);
+    alc_mac_info_t info = { mode };
+    // info.hmac.digest_mode = mode;
+    err = alcp_mac_init(&handle, key, size, &info);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Init - %lu\n", err);
         goto out;
@@ -169,25 +172,15 @@ demo_Hmac_Sha256()
                             0xd1, 0x74, 0xd5, 0x9e, 0x13, 0xdc, 0x4d, 0x01,
                             0x69, 0xc9, 0x05, 0x7b, 0x13, 0x3e, 0x1d, 0x62 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA2_256,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64 mac_size = 32;
     Uint8  mac[mac_size];
-    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    err = run_hmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   ALC_SHA2_256);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA2-256\n");
         return -1;
@@ -240,25 +233,15 @@ demo_Hmac_Sha224()
                             0x52, 0x92, 0x72, 0xa0, 0x17, 0xc2, 0x90,
                             0x03, 0x9a, 0x9d, 0xfe, 0xa4, 0x34, 0x9b };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA2_224,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64 mac_size = ALC_DIGEST_LEN_224 / 8;
     Uint8  mac[mac_size];
-    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    err = run_hmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   ALC_SHA2_224);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA2-224\n");
         return -1;
@@ -319,25 +302,17 @@ demo_Hmac_Sha512()
                             0x6e, 0x6b, 0x10, 0x48, 0x16, 0xb7, 0x2d, 0xe6,
                             0x26, 0x9e, 0x04, 0x5a, 0x1f, 0x44, 0x29, 0xd4 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA2_512,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64 mac_size = ALC_DIGEST_LEN_512 / 8;
     Uint8  mac[mac_size];
-    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+
+    err = run_hmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   ALC_SHA2_512);
+
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA2-512\n");
         return -1;
@@ -376,25 +351,16 @@ demo_Hmac_Sha3_224()
                             0xab, 0xa2, 0xd6, 0xdc, 0x53, 0x11, 0x7b,
                             0x3b, 0xfb, 0x52, 0xc6, 0xd1, 0x8c, 0x04 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA3_224,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64 mac_size = ALC_DIGEST_LEN_224 / 8;
     Uint8  mac[mac_size];
-    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    err = run_hmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   ALC_SHA3_224);
+
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA3-224\n");
         return -1;
@@ -434,26 +400,15 @@ demo_Hmac_Sha3_256()
                             0x43, 0xe2, 0x35, 0x55, 0xe2, 0x4f, 0xc2, 0xf0,
                             0x25, 0xd5, 0x98, 0xf5, 0x58, 0xf6, 0x72, 0x05 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA3_256,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64      mac_size = ALC_DIGEST_LEN_256 / 8;
     Uint8       mac[mac_size];
-    alc_error_t err =
-        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    alc_error_t err = run_hmac(cipherText,
+                               sizeof(cipherText),
+                               mac,
+                               mac_size,
+                               key,
+                               sizeof(key),
+                               ALC_SHA3_256);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA3-256\n");
         return -1;
@@ -499,26 +454,15 @@ demo_Hmac_Sha3_512()
                             0x3f, 0x65, 0x7a, 0x89, 0x96, 0xc8, 0x6a, 0x2f,
                             0x65, 0x27, 0xe3, 0x07, 0xf0, 0x21, 0x31, 0x96 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA3_512,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64      mac_size = ALC_DIGEST_LEN_512 / 8;
     Uint8       mac[mac_size];
-    alc_error_t err =
-        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    alc_error_t err = run_hmac(cipherText,
+                               sizeof(cipherText),
+                               mac,
+                               mac_size,
+                               key,
+                               sizeof(key),
+                               ALC_SHA3_512);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA3-512\n");
         return -1;
@@ -572,26 +516,15 @@ demo_Hmac_Sha384()
                             0xa4, 0x19, 0xb0, 0x7d, 0xea, 0xb3, 0xb5, 0xf8,
                             0xea, 0x23, 0x1c, 0x5b, 0x03, 0x6f, 0x88, 0x75 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA2_384,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64      mac_size = ALC_DIGEST_LEN_384 / 8;
     Uint8       mac[mac_size];
-    alc_error_t err =
-        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    alc_error_t err = run_hmac(cipherText,
+                               sizeof(cipherText),
+                               mac,
+                               mac_size,
+                               key,
+                               sizeof(key),
+                               ALC_SHA2_384);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA2-384\n");
         return -1;
@@ -634,26 +567,15 @@ demo_Hmac_Sha3_384()
                             0xbc, 0x99, 0x98, 0x7f, 0x79, 0xb2, 0x2a, 0x55,
                             0x7b, 0x65, 0x20, 0xdb, 0x71, 0x0b, 0x7f, 0x42 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA3_384,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64      mac_size = ALC_DIGEST_LEN_384 / 8;
     Uint8       mac[mac_size];
-    alc_error_t err =
-        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    alc_error_t err = run_hmac(cipherText,
+                               sizeof(cipherText),
+                               mac,
+                               mac_size,
+                               key,
+                               sizeof(key),
+                               ALC_SHA3_384);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA3-384\n");
         return -1;
@@ -696,34 +618,19 @@ demo_Hmac_Sha3_384_Reset()
                             0xbc, 0x99, 0x98, 0x7f, 0x79, 0xb2, 0x2a, 0x55,
                             0x7b, 0x65, 0x20, 0xdb, 0x71, 0x0b, 0x7f, 0x42 };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =  
-                     ALC_SHA3_384,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64 mac_size = ALC_DIGEST_LEN_384 / 8;
     Uint8  mac[mac_size];
 
     handle.ch_context = malloc(alcp_mac_context_size());
     alc_error_t err   = ALC_ERROR_NONE;
-    err               = alcp_mac_request(&handle, &macinfo);
+    err               = alcp_mac_request(&handle, ALC_MAC_HMAC);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request");
         return -1;
     }
-    err = alcp_mac_init(
-        &handle, macinfo.mi_keyinfo.key, macinfo.mi_keyinfo.len / 8);
+    alc_mac_info_t hmac_info = { ALC_SHA3_384 };
+
+    err = alcp_mac_init(&handle, key, sizeof(key), &hmac_info);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Init - %lu\n", err);
         return -1;
@@ -789,24 +696,15 @@ demo_Hmac_Sha512_224()
                             0xb5, 0xf5, 0x08, 0x41, 0x0c, 0x69, 0x76,
                             0x51, 0x2b, 0x24, 0x10, 0x35, 0x70, 0x9a };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .digest_mode =     ALC_SHA2_512_224,
-                
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     Uint64 mac_size = ALC_DIGEST_LEN_224 / 8;
     Uint8  mac[mac_size];
-    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    err = run_hmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   ALC_SHA2_512_224);
     if (alcp_is_error(err)) {
         printf("Error Occurred in HMAC SHA2-512_224\n");
         return -1;

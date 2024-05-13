@@ -47,7 +47,6 @@
 struct _alc_prov_mac_ctx
 {
     alc_mac_handle_t handle;
-    alc_mac_info_t   pc_mac_info;
 };
 typedef struct _alc_prov_mac_ctx alc_prov_mac_ctx_t, *alc_prov_mac_ctx_p;
 
@@ -65,7 +64,7 @@ extern const OSSL_ALGORITHM ALC_prov_macs[];
 typedef void (*fptr_t)(void);
 
 extern void*
-alcp_prov_mac_newctx(const alc_mac_info_p cinfo);
+alcp_prov_mac_newctx(alc_mac_type_t mac_type);
 void
 alcp_prov_mac_freectx(void* vctx);
 

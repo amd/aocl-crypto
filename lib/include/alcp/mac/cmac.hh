@@ -65,7 +65,7 @@ class Cmac final : public IMac
      * @param key   pointer to CMAC Key to be used
      * @param len   Length of the key in bits
      */
-    ALCP_API_EXPORT Status setKey(const Uint8 key[], Uint64 len);
+    ALCP_API_EXPORT Status init(const Uint8 key[], Uint64 len);
 
     /**
      * @brief Reset CMAC. After resetting update can be called by the same key

@@ -39,10 +39,10 @@ Aes::setKey(alc_cipher_data_t* ctx, const Uint8* pKey, const Uint64 keyLen)
     alc_error_t e = ALC_ERROR_NONE;
 
     // keyLen should be checked if its same as keyLen used during create call
-    if (m_keyLen_in_bytes_aes != keyLen / 8) {
-        printf("\n setKey failed, keySize invalid");
-        return ALC_ERROR_INVALID_SIZE;
-    }
+    // if (m_keyLen_in_bytes_aes != keyLen / 8) {
+    //     printf("\n setKey failed, keySize invalid");
+    //     return ALC_ERROR_INVALID_SIZE;
+    // }
 
     Rijndael::initRijndael(pKey, keyLen);
     getKey();

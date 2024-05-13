@@ -95,7 +95,7 @@ class ALCP_API_EXPORT Poly1305 : public IMac
      * @param len - Key Length 32 Byte, anything else wont work
      * @return Status/Result of the operation
      */
-    Status setKey(const Uint8 key[], Uint64 len);
+    Status init(const Uint8 key[], Uint64 len);
     /**
      * @brief Resets the temporary buffers without clearing key
      * @return Status/Result of the operation

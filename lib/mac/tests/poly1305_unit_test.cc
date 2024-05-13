@@ -74,7 +74,7 @@ TEST(POLY1305, BLK0)
 
     Poly1305<CpuArchFeature::eDynamic> poly;
     std::vector<Uint8>                 mac(16);
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     poly.update(blk, 16);
     poly.finalize(&mac[0], 16);
     EXPECT_EQ(mac, out);
@@ -96,7 +96,7 @@ TEST(POLY1305, BLK_ALL)
 
     Poly1305<CpuArchFeature::eDynamic> poly;
     std::vector<Uint8>                 mac(16);
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     poly.update(blk, sizeof(blk));
     poly.finalize(&mac[0], 16);
 
@@ -118,7 +118,7 @@ TEST(POLY1305, BLK_ALL_UPDATE_16)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305<CpuArchFeature::eDynamic> poly;
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, 16);
     poly.update(blk + 16, 16);
@@ -143,7 +143,7 @@ TEST(POLY1305, BLK_ALL_UPDATE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305<CpuArchFeature::eDynamic> poly;
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, sizeof(blk));
     poly.finalize(&mac[0], 16);
@@ -167,7 +167,7 @@ TEST(POLY1305, BLK_ALL_UPDATE_RESET)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305<CpuArchFeature::eDynamic> poly;
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, 16);
     poly.reset();
@@ -193,7 +193,7 @@ TEST(POLY1305, BLK_ALL_FINALIZE_RESET_FINALIZE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305<CpuArchFeature::eDynamic> poly;
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, sizeof(blk));
     poly.reset();
@@ -219,7 +219,7 @@ TEST(POLY1305, BLK_ALL_FINALIZE_UPDATE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305<CpuArchFeature::eDynamic> poly;
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, sizeof(blk));
     poly.finalize(&mac[0], 16);
@@ -243,7 +243,7 @@ TEST(POLY1305, BLK_ALL_FINALIZE_FINALIZE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305<CpuArchFeature::eDynamic> poly;
-    poly.setKey(key, 256);
+    poly.init(key, 256);
     std::vector<Uint8> mac(16);
     poly.finalize(blk, sizeof(blk));
     alcp::Status s = poly.finalize(blk, sizeof(blk));

@@ -30,8 +30,6 @@
 
 namespace alcp::testing {
 
-IPPCmacBase::IPPCmacBase(const alc_mac_info_t& info) {}
-
 IPPCmacBase::~IPPCmacBase()
 {
     if (m_handle != nullptr) {
@@ -43,15 +41,9 @@ IPPCmacBase::~IPPCmacBase()
 bool
 IPPCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
-    m_info    = info;
-    m_key     = &Key[0];
-    m_key_len = Key.size();
-    return init();
-}
-
-bool
-IPPCmacBase::init()
-{
+    m_info           = info;
+    m_key            = &Key[0];
+    m_key_len        = Key.size();
     IppStatus status = ippStsNoErr;
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);

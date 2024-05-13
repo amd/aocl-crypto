@@ -39,8 +39,6 @@ std::map<alc_digest_mode_t, const char*> OpenSSLDigestStringMap = {
 
 namespace alcp::testing {
 
-OpenSSLHmacBase::OpenSSLHmacBase(const alc_mac_info_t& info) {}
-
 OpenSSLHmacBase::~OpenSSLHmacBase()
 {
     EVP_MAC_CTX_free(m_handle);
@@ -50,19 +48,13 @@ OpenSSLHmacBase::~OpenSSLHmacBase()
 bool
 OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
-    m_info    = info;
-    m_key     = &Key[0];
-    m_key_len = Key.size();
-    return init();
-}
-
-bool
-OpenSSLHmacBase::init()
-{
+    m_info               = info;
+    m_key                = &Key[0];
+    m_key_len            = Key.size();
     size_t      params_n = 0;
     const char* digest   = NULL;
 
-    digest = OpenSSLDigestStringMap[m_info.mi_algoinfo.hmac.digest_mode];
+    digest = OpenSSLDigestStringMap[m_info.hmac.digest_mode];
 
     if (m_mac != nullptr) {
         EVP_MAC_free(m_mac);

@@ -31,8 +31,6 @@
 
 namespace alcp::testing {
 
-OpenSSLCmacBase::OpenSSLCmacBase(const alc_mac_info_t& info) {}
-
 OpenSSLCmacBase::~OpenSSLCmacBase()
 {
     if (m_handle != nullptr) {
@@ -49,12 +47,7 @@ OpenSSLCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
     m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
 
-bool
-OpenSSLCmacBase::init()
-{
     OSSL_PARAM  params[3] = {};
     size_t      params_n  = 0;
     const char* cipher    = NULL;

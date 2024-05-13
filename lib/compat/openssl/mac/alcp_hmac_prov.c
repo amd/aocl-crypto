@@ -47,14 +47,14 @@ struct alcp_hmac_data_st
 {
     void*               provctx;
     alc_prov_mac_ctx_t* ctx;
-    // PROV_DIGEST         digest;
-    Uint8*        key;
-    size_t        keylen;
-    size_t        tls_data_size;
-    unsigned char tls_header[13];
-    int           tls_header_set;
-    unsigned char tls_mac_out[EVP_MAX_MD_SIZE];
-    size_t        tls_mac_out_size;
+    alc_digest_mode_t   mode;
+    Uint8*              key;
+    size_t              keylen;
+    size_t              tls_data_size;
+    unsigned char       tls_header[13];
+    int                 tls_header_set;
+    unsigned char       tls_mac_out[EVP_MAX_MD_SIZE];
+    size_t              tls_mac_out_size;
 };
 
 static void*
@@ -62,9 +62,8 @@ alcp_prov_hmac_new(void* provctx)
 {
     struct alcp_hmac_data_st* macctx;
 
-    alc_mac_info_t s_mac_hmac_info = { .mi_type = ALC_MAC_HMAC };
     if ((macctx = OPENSSL_zalloc(sizeof(*macctx))) == NULL
-        || (macctx->ctx = alcp_prov_mac_newctx(&s_mac_hmac_info)) == NULL) {
+        || (macctx->ctx = alcp_prov_mac_newctx(ALC_MAC_HMAC)) == NULL) {
         OPENSSL_free(macctx);
         return NULL;
     }
@@ -124,7 +123,7 @@ static inline size_t
 alcp_hmac_size(struct alcp_hmac_data_st* macctx)
 {
     Uint64 len = 0;
-    switch (macctx->ctx->pc_mac_info.mi_algoinfo.hmac.digest_mode) {
+    switch (macctx->mode) {
         case ALC_SHAKE_128:
             len = ALC_DIGEST_LEN_128;
             break;
@@ -157,7 +156,7 @@ static inline int
 alcp_hmac_block_size(struct alcp_hmac_data_st* macctx)
 {
     Uint64 len = 0;
-    switch (macctx->ctx->pc_mac_info.mi_algoinfo.hmac.digest_mode) {
+    switch (macctx->mode) {
         case ALC_SHA2_224:
         case ALC_SHA2_256:
             len = ALC_DIGEST_BLOCK_SIZE_SHA2_256;
@@ -192,6 +191,46 @@ alcp_hmac_block_size(struct alcp_hmac_data_st* macctx)
     return len / 8;
 }
 
+static inline alc_digest_mode_t
+alcp_hmac_get_digest_mode(char* str)
+{
+    ENTER();
+    alc_digest_mode_t digest_mode;
+    if (str == NULL) {
+        EXIT();
+        printf("Error : Digest string is null.Using the default Sha256 mode");
+        digest_mode = ALC_SHA2_256;
+        return digest_mode;
+    }
+
+    if (!strcasecmp(str, "sha256")) {
+        digest_mode = ALC_SHA2_256;
+    } else if (!strcasecmp(str, "sha224")) {
+        digest_mode = ALC_SHA2_224;
+    } else if (!strcasecmp(str, "sha384")) {
+        digest_mode = ALC_SHA2_384;
+    } else if (!strcasecmp(str, "sha512")) {
+        digest_mode = ALC_SHA2_512;
+    } else if (!strcasecmp(str, "sha3-224")) {
+        digest_mode = ALC_SHA3_224;
+    } else if (!strcasecmp(str, "sha3-256")) {
+        digest_mode = ALC_SHA3_256;
+    } else if (!strcasecmp(str, "sha3-384")) {
+        digest_mode = ALC_SHA3_384;
+    } else if (!strcasecmp(str, "sha3-512")) {
+        digest_mode = ALC_SHA3_512;
+    } else {
+        digest_mode = ALC_SHA2_256;
+        printf("HMAC Provider: Digest '%s' Not Supported.Using the default "
+               "Sha256 mode",
+               str);
+        EXIT();
+    }
+
+    EXIT();
+    return digest_mode;
+}
+
 static int
 alcp_hmac_setkey(struct alcp_hmac_data_st* macctx,
                  const unsigned char*      key,
@@ -204,10 +243,10 @@ alcp_hmac_setkey(struct alcp_hmac_data_st* macctx,
     if (macctx->key == NULL)
         return 0;
     memcpy(macctx->key, key, keylen);
-    macctx->keylen = keylen;
-
+    macctx->keylen      = keylen;
+    alc_mac_info_t info = { { macctx->mode } };
     if (key != NULL || (macctx->tls_data_size == 0))
-        return alcp_mac_init(&macctx->ctx->handle, key, keylen);
+        return alcp_mac_init(&macctx->ctx->handle, key, keylen, &info);
     return 1;
 }
 
@@ -224,7 +263,9 @@ alcp_prov_hmac_init(void*                ctx,
 
     if (key != NULL)
         return alcp_hmac_setkey(macctx, key, keylen);
-    return 0;
+
+    alc_error_t err = alcp_mac_reset(&macctx->ctx->handle);
+    return err == ALC_ERROR_NONE ? 1 : 0;
 }
 
 static int
@@ -301,9 +342,12 @@ alcp_prov_hmac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         return 1;
     }
 
-    // ToDO : check how to implement this
-    // if (!ossl_prov_digest_load_from_params(&macctx->digest, params, ctx))
-    //     return 0;
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_DIGEST)) != NULL) {
+        if (p->data_type != OSSL_PARAM_UTF8_STRING) {
+            return 0;
+        }
+        macctx->mode = alcp_hmac_get_digest_mode(p->data);
+    }
 
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_KEY)) != NULL) {
         if (p->data_type != OSSL_PARAM_OCTET_STRING)

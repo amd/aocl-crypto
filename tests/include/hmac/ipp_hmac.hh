@@ -27,8 +27,8 @@
  */
 #pragma once
 
-#include "hmac.hh"
 #include "alcp/alcp.h"
+#include "hmac.hh"
 #include <iostream>
 #include <ippcp.h>
 #include <stdio.h>
@@ -45,11 +45,9 @@ class IPPHmacBase : public HmacBase
     Uint32             m_key_len;
 
   public:
-    IPPHmacBase(const alc_mac_info_t& info);
+    IPPHmacBase() = default;
 
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
 
     ~IPPHmacBase();
 

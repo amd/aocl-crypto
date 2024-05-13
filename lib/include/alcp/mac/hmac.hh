@@ -97,7 +97,7 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @param digest: Digest class to be used by HMAC.
      * @returns Status
      */
-    Status init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest);
+    Status init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest);
 
     /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with

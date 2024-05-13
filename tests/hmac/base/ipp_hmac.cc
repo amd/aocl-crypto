@@ -40,7 +40,12 @@ std::map<alc_digest_mode_t, const IppsHashMethod*> IPPDigestMap = {
 
 namespace alcp::testing {
 
-IPPHmacBase::IPPHmacBase(const alc_mac_info_t& info) {}
+// A helper function to convert ALCP alc_digest_mode_t to IPPHashMethod
+const IppsHashMethod*
+getIppHashMethod(alc_digest_mode_t pDigestMode)
+{
+    return IPPDigestMap[pDigestMode];
+}
 
 IPPHmacBase::~IPPHmacBase()
 {
@@ -52,22 +57,9 @@ IPPHmacBase::~IPPHmacBase()
 bool
 IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
-    m_info    = info;
-    m_key     = &Key[0];
-    m_key_len = Key.size();
-    return init();
-}
-
-// A helper function to convert ALCP digestinfo to IPPHashMethod
-const IppsHashMethod*
-getIppHashMethod(alc_digest_mode_t pDigestMode)
-{
-    return IPPDigestMap[pDigestMode];
-}
-
-bool
-IPPHmacBase::init()
-{
+    m_info           = info;
+    m_key            = &Key[0];
+    m_key_len        = Key.size();
     IppStatus status = ippStsNoErr;
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
@@ -79,7 +71,7 @@ IPPHmacBase::init()
     m_handle = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
 
     /* IPPCP Doesnt have HMAC SHA3 supported */
-    switch (m_info.mi_algoinfo.hmac.digest_mode) {
+    switch (m_info.hmac.digest_mode) {
         case ALC_SHA3_224:
         case ALC_SHA3_256:
         case ALC_SHA3_384:
@@ -92,7 +84,7 @@ IPPHmacBase::init()
             break;
     }
     const IppsHashMethod* p_hash_method =
-        getIppHashMethod(m_info.mi_algoinfo.hmac.digest_mode);
+        getIppHashMethod(m_info.hmac.digest_mode);
     if (p_hash_method == nullptr) {
         std::cout << "IPPCP: Provided Digest Not Supported" << std::endl;
         return false;

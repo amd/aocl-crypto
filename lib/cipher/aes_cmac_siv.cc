@@ -163,12 +163,11 @@ Siv::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
     m_key1 = key1;
     m_key2 = key2;
 
-    s = m_cmac.setKey(m_key1, length);
+    s = m_cmac.init(m_key1, length);
     if (!s.ok()) {
         return s;
     }
 
-    // T::setKey(m_key2, m_keyLength);
     return s;
 }
 

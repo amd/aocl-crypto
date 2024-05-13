@@ -89,10 +89,10 @@ class Cmac::Impl : public cipher::Aes
         reset();
     }
 
-    Status setKey(const Uint8 key[], Uint64 len)
+    Status init(const Uint8 key[], Uint64 len)
     {
         Status s{ StatusOk() };
-        if (Aes::setKey(&m_cdata, key, len) != ALC_ERROR_NONE) {
+        if (Aes::setKey(&m_cdata, key, len * 8) != ALC_ERROR_NONE) {
             // FIXME: Need to create another error function
             s = status::EmptyKeyError("Invalid Key Size");
             return s;
@@ -101,7 +101,7 @@ class Cmac::Impl : public cipher::Aes
         // FIXME: Check if this is required, looks like not required
         // data.keyLen_in_bytes = len / 8;
 
-        init(&data, key, len, nullptr, 0);
+        // Aes::init(&data, key, len, nullptr, 0);
         m_encrypt_keys = m_cipher_key_data.m_enc_key;
         m_rounds       = getRounds();
         getSubkeys();
@@ -323,9 +323,9 @@ Cmac::finalize(Uint8 pMsgBuf[], Uint64 size)
 }
 
 Status
-Cmac::setKey(const Uint8 key[], Uint64 len)
+Cmac::init(const Uint8 key[], Uint64 len)
 {
-    return m_pImpl->setKey(key, len);
+    return m_pImpl->init(key, len);
 }
 
 Cmac::~Cmac() {}

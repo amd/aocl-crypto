@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,4 +36,8 @@ IppStatus
 alcp_MacFinalize(Ipp8u* pMD, int len, ipp_wrp_mac_ctx* p_mac_ctx);
 
 IppStatus
-alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx);
+alcp_MacInit(alc_mac_type_t   mac_type,
+             ipp_wrp_mac_ctx* p_mac_ctx,
+             const Ipp8u*     pKey,
+             int              keyLen,
+             alc_mac_info_t   info);

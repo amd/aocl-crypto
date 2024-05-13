@@ -40,8 +40,7 @@ TEST(POLY1305, CROSS)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have Poly1305 Mac implemented yet";
-    alc_mac_info_t info;
-    Poly_Cross(info);
+    Poly_Cross();
 }
 
 int

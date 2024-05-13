@@ -30,8 +30,6 @@
 
 namespace alcp::testing {
 
-OpenSSLPoly1305Base::OpenSSLPoly1305Base(const alc_mac_info_t& info) {}
-
 OpenSSLPoly1305Base::~OpenSSLPoly1305Base()
 {
     EVP_MAC_CTX_free(m_handle);
@@ -39,17 +37,10 @@ OpenSSLPoly1305Base::~OpenSSLPoly1305Base()
 }
 
 bool
-OpenSSLPoly1305Base::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+OpenSSLPoly1305Base::init(std::vector<Uint8>& Key)
 {
-    m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
-
-bool
-OpenSSLPoly1305Base::init()
-{
     if (m_mac != nullptr)
         EVP_MAC_free(m_mac);
     m_mac = EVP_MAC_fetch(NULL, "POLY1305", "provider=default");

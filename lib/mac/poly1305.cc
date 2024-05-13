@@ -65,7 +65,7 @@ Poly1305<feature>::Poly1305()
 
 template<utils::CpuArchFeature feature>
 Status
-Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
+Poly1305<feature>::init(const Uint8 key[], Uint64 len)
 {
     if constexpr ((utils::CpuArchFeature::eReference == feature)
                   || (utils::CpuArchFeature::eAvx2 == feature)) {
