@@ -30,6 +30,7 @@
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/types.hh"
+#include "avx256.hh"
 
 #include <immintrin.h>
 
@@ -50,7 +51,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
            int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+           Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     Uint64      blocks = len / Rijndael::cBlockSize;
@@ -185,6 +186,9 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         p_out_128++;
     }
 
+    // IV is no longer needed hence we can write the old ciphertext back to IV
+    alcp_storeu_128(reinterpret_cast<__m256i*>(pIv), b1);
+
     return err;
 }
 
@@ -194,7 +198,7 @@ DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
               Uint64       len,     // message length in bytes
               const Uint8* pKey,    // ptr to Key
               int          nRounds, // No. of rounds
-              const Uint8* pIv      // ptr to Initialization Vector
+              Uint8*       pIv      // ptr to Initialization Vector
 )
 {
     return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
@@ -207,7 +211,7 @@ DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
               Uint64       len,     // message length in bytes
               const Uint8* pKey,    // ptr to Key
               int          nRounds, // No. of rounds
-              const Uint8* pIv      // ptr to Initialization Vector
+              Uint8*       pIv      // ptr to Initialization Vector
 )
 {
     return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
@@ -220,7 +224,7 @@ DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
               Uint64       len,     // message length in bytes
               const Uint8* pKey,    // ptr to Key
               int          nRounds, // No. of rounds
-              const Uint8* pIv      // ptr to Initialization Vector
+              Uint8*       pIv      // ptr to Initialization Vector
 )
 {
     return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
