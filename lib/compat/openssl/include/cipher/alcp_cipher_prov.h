@@ -71,6 +71,9 @@ extern const OSSL_DISPATCH ALCP_prov_aes256gcm_functions[];
 
 extern const OSSL_DISPATCH ALCP_prov_aes128xts_functions[];
 extern const OSSL_DISPATCH ALCP_prov_aes256xts_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes128siv_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes192siv_functions[];
+extern const OSSL_DISPATCH ALCP_prov_aes256siv_functions[];
 #if 0
 
  extern const OSSL_DISPATCH ccm_functions_128[];
