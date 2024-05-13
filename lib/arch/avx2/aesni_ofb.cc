@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aesni.hh"
 #include "alcp/cipher/aesni_core.hh"
+#include "avx2.hh"
 
 #include <immintrin.h>
 
@@ -44,7 +45,7 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
             Uint64       len,         // message length in bytes
             const Uint8* pKey,        // ptr to Key
             int          nRounds,     // No. of rounds
-            const Uint8* pIv          // ptr to Initialization Vector
+            Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err    = ALC_ERROR_NONE;
@@ -150,6 +151,8 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
         }
     }
 
+    alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), b1);
+
     return err;
 }
 
@@ -207,7 +210,7 @@ EncryptOfb(const Uint8* pPlainText,  // ptr to plaintext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
            int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+           Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -235,7 +238,7 @@ DecryptOfb(const Uint8* pCipherText, // ptr to ciphertext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
            int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+           Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
