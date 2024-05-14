@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -117,8 +117,9 @@
 #define ALCP_PROV_NAMES_SEED_SRC  "SEED-SRC"
 
 // MAC
-#define ALCP_PROV_NAMES_HMAC "HMAC"
-#define ALCP_PROV_NAMES_CMAC "CMAC"
+#define ALCP_PROV_NAMES_HMAC     "HMAC"
+#define ALCP_PROV_NAMES_CMAC     "CMAC"
+#define ALCP_PROV_NAMES_POLY1305 "POLY1305"
 // FIXME: Add provider for below
 // #define ALCP_PROV_DESCS_HMAC_SIGN "OpenSSL HMAC via EVP_PKEY implementation"
 // #define ALCP_PROV_DESCS_CMAC_SIGN "OpenSSL CMAC via EVP_PKEY implementation"

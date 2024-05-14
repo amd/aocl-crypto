@@ -26,7 +26,9 @@
  *
  */
 
-#include "alcp_hmac_prov.h"
+#include "alcp/alcp.h"
+#include "alcp_mac_prov.h"
+#include "debug.h"
 
 /*
  * Forward declaration for providing assurance that the signatures
@@ -317,13 +319,6 @@ alcp_prov_hmac_final(void*          cctx,
         memcpy(out, macctx->tls_mac_out, macctx->tls_mac_out_size);
         return 1;
     }
-    alc_error_t err =
-        alcp_mac_finalize(&(macctx->ctx->handle), out, (Uint64)outsize);
-    if (alcp_is_error(err)) {
-        printf("MAC Provider: Failed to Finalize\n");
-        return 0;
-    }
-
     return alcp_prov_mac_final(macctx->ctx, out, outl, outsize);
 }
 
@@ -413,7 +408,7 @@ alcp_prov_hmac_settable_ctx_params(ossl_unused void* ctx,
 }
 
 /* HMAC dispatchers */
-const OSSL_DISPATCH hmac_functions[] = {
+const OSSL_DISPATCH alcp_hmac_functions[] = {
     { OSSL_FUNC_MAC_NEWCTX, (fptr_t)alcp_prov_hmac_new },
     { OSSL_FUNC_MAC_DUPCTX, (fptr_t)alcp_prov_hmac_dup },
     { OSSL_FUNC_MAC_FREECTX, (fptr_t)alcp_prov_hmac_free },

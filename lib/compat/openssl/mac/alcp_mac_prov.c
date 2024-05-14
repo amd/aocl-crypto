@@ -221,10 +221,12 @@ alcp_prov_mac_final(void*          vctx,
 static const char MAC_DEF_PROP[] = "provider=alcp,fips=no";
 
 // extern const OSSL_DISPATCH cmac_functions[];
-extern const OSSL_DISPATCH hmac_functions[];
+extern const OSSL_DISPATCH alcp_hmac_functions[];
+extern const OSSL_DISPATCH alcp_poly1305_functions[];
 
 const OSSL_ALGORITHM ALC_prov_macs[] = {
     //{ alcp_PROV_NAMES_CMAC, MAC_DEF_PROP, cmac_functions },
-    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, hmac_functions },
+    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, alcp_hmac_functions },
+    //{ ALCP_PROV_NAMES_POLY1305, "provider=default", alcp_poly1305_functions },
     { NULL, NULL, NULL },
 };
