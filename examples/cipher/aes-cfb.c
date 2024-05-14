@@ -78,7 +78,7 @@ create_demo_session(alc_cipher_handle_p handle,
         goto out;
     }
 
-    /* Request a context with mode and key */
+    // Request a cipher session with AES mode and key/
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle);
     if (alcp_is_error(err)) {
         free(handle->ch_context);
@@ -87,6 +87,7 @@ create_demo_session(alc_cipher_handle_p handle,
     }
     printf("Request Succeeded\n");
 
+    // Initialize the session handle with proper key and iv.
     err = alcp_cipher_init(
         handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
     if (alcp_is_error(err)) {
@@ -97,7 +98,7 @@ create_demo_session(alc_cipher_handle_p handle,
 
     return 0;
 
-    // Incase of error, program execution will come here
+    // Incase of error, program execution will jump here
 out:
     alcp_error_str(err, err_buf, cErrSize);
     printf("%s\n", err_buf);
@@ -107,7 +108,9 @@ out:
 void
 end_demo_session(alc_cipher_handle_p handle)
 {
+    // Complete the session
     alcp_cipher_finish(handle);
+    // Free the allocated memory for session context
     free(handle->ch_context);
 }
 
@@ -121,6 +124,7 @@ encrypt_demo(alc_cipher_handle_p handle,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
+    // Encrypt the plaintext with the initialized key and iv
     err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Encrypt \n");
@@ -143,6 +147,7 @@ decrypt_demo(alc_cipher_handle_p handle,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
+    // Decrypt the ciphertext with the initialized key and iv
     err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Decrypt \n");
@@ -191,24 +196,35 @@ main(void)
     // Create the handle, this handle will be used for encrypt and decrypt
     // operations
     alc_cipher_handle_t handle;
+
+    // Request a demo session with cipher mode as ALC_AES_MODE_CFB, and
+    // initialize it
     retval =
         create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
-    if (retval != 0)
+
+    // Make sure the demo session creation was a success
+    if (alcp_is_error(retval))
         goto out;
 
-    // Encrypt the plaintext into the ciphertext
+    // Encrypt the plaintext into the ciphertext and end the demo session
     retval =
         encrypt_demo(&handle,
                      sample_plaintxt,
                      cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
                      sample_ciphertxt);
-    if (retval != 0)
+
+    // Make sure the encryption process was successful
+    if (alcp_is_error(retval))
         goto out;
+
+    // Close the current session as a new session is needed for decryption
+    end_demo_session(&handle);
+
+    // Print out the ciphertext in hex mode
     printf("CipherText:");
     dump_hex(sample_ciphertxt, cCiphertextSize);
 
-    end_demo_session(&handle);
-
+    // New session needs to be established for decryption
     retval =
         create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
     if (retval != 0)
@@ -217,17 +233,15 @@ main(void)
     // Decrypt the ciphertext into the plaintext.
     retval =
         decrypt_demo(&handle, sample_ciphertxt, cCiphertextSize, sample_output);
+
+    // Make sure the decryption process was successful
     if (retval != 0)
         goto out;
     printf("Decrypted Text: %s\n", sample_output);
 
-    /*
-     * Complete the transaction
-     */
-    alcp_cipher_finish(&handle);
-
-    // Free the memory allocated by create_demo_session.
-    free(handle.ch_context);
+    // Close the current session and free up related memory
+    end_demo_session(
+        &handle); // End the session, new session needed for decryption
 
     return 0;
 out:
