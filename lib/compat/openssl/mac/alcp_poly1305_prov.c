@@ -62,7 +62,7 @@ alcp_prov_poly1305_new(void* provctx)
 static void
 alcp_prov_poly1305_free(void* ctx)
 {
-    return alcp_prov_mac_freectx(ctx);
+    alcp_prov_mac_freectx(ctx);
 }
 
 static void*
@@ -79,12 +79,11 @@ alcp_prov_poly1305_dup(void* ctx)
         return NULL;
     }
 
-    alc_error_t err =
-        alcp_mac_context_copy(&src->ctx->handle, &dst->ctx->handle);
+    alc_error_t err = alcp_mac_context_copy(&src->handle, &dst->handle);
     if (err != ALC_ERROR_NONE) {
         printf("Provider: poly copy failed in dupctx\n");
-        OPENSSL_clear_free(dst->ctx->handle.ch_context, size);
-        OPENSSL_clear_free(dst->ctx, sizeof(*(dst->ctx)));
+        OPENSSL_clear_free(dst->handle.ch_context, size);
+        OPENSSL_clear_free(dst, sizeof(*(dst)));
         return NULL;
     }
 
@@ -98,7 +97,7 @@ alcp_poly1305_setkey(alc_prov_mac_ctx_t* ctx, const Uint8* key, Uint64 size)
         printf("Provider poly1305: key size not correct\n");
         return 0;
     }
-    return alcp_mac_init(ctx->handle, key, size, NULL);
+    return alcp_mac_init(&ctx->handle, key, size, NULL);
 }
 
 static int
@@ -164,7 +163,7 @@ alcp_prov_poly1305_set_ctx_params(void* ctx, const OSSL_PARAM* params)
     const OSSL_PARAM* p;
 
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_KEY)) != NULL
-        && !alcp_poly1305_setkey(ctx, p->buff, p->data_size))
+        && !alcp_poly1305_setkey(ctx, p->data, p->data_size))
         return 0;
     return 1;
 }

@@ -92,6 +92,8 @@ class Cmac::Impl : public cipher::Aes
     Status init(const Uint8 key[], Uint64 len)
     {
         Status s{ StatusOk() };
+        m_keyLen_in_bytes_aes = len;
+
         if (Aes::setKey(&m_cdata, key, len * 8) != ALC_ERROR_NONE) {
             // FIXME: Need to create another error function
             s = status::EmptyKeyError("Invalid Key Size");

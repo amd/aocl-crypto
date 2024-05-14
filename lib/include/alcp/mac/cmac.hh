@@ -63,7 +63,7 @@ class Cmac final : public IMac
      * @brief Update CMAC Key
      *
      * @param key   pointer to CMAC Key to be used
-     * @param len   Length of the key in bits
+     * @param len   Length of the key in bytes
      */
     ALCP_API_EXPORT Status init(const Uint8 key[], Uint64 len);
 
