@@ -87,7 +87,7 @@ alcp_prov_aes_xts_newctx(void*        provctx,
                                                  provctx);
             }
         } else {
-            PRINT("CIPHER PROVIDER: Error in alcp_cipher_request")
+            PRINT("CIPHER PROVIDER: Error in alcp_cipher_request");
             OPENSSL_clear_free(ctx, sizeof(*ctx));
         }
     }
@@ -153,7 +153,7 @@ alc_prov_aes_xts_init(void*                vctx,
                              cipherctx->iv_buff,
                              cipherctx->ivLen);
         if (alcp_is_error(err)) {
-            PRINT("CIPHER PROVIDER: Error in alcp_cipher_init")
+            PRINT("CIPHER PROVIDER: Error in alcp_cipher_init");
             return 0;
         }
     }
@@ -219,8 +219,8 @@ alc_prov_aes_xts_cipher(void*                vctx,
         err = alcp_cipher_decrypt(&(ctx->handle), in, out, inl);
     }
     if (alcp_is_error(err)) {
-        PRINT(
-            "CIPHER PROVIDER: Error in alcp_cipher_encrypt/alcp_cipher_decrypt")
+        PRINT("CIPHER PROVIDER: Error in "
+              "alcp_cipher_encrypt/alcp_cipher_decrypt");
         ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
         return 0;
     }
