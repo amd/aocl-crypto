@@ -97,7 +97,8 @@ alcp_poly1305_setkey(alc_prov_mac_ctx_t* ctx, const Uint8* key, Uint64 size)
         printf("Provider poly1305: key size not correct\n");
         return 0;
     }
-    return alcp_mac_init(&ctx->handle, key, size, NULL);
+    return (ALC_ERROR_NONE == alcp_mac_init(&ctx->handle, key, size, NULL)) ? 1
+                                                                            : 0;
 }
 
 static int
@@ -123,9 +124,9 @@ alcp_prov_poly1305_update(void* ctx, const Uint8* buff, Uint64 size)
 }
 
 static int
-alcp_prov_poly1305_final(void* vmacctx, Uint8* out, Uint64* outl, Uint64 size)
+alcp_prov_poly1305_final(void* ctx, Uint8* out, Uint64* outl, Uint64 size)
 {
-    return alcp_prov_mac_final(vmacctx, out, outl, size);
+    return alcp_prov_mac_final(ctx, out, outl, size);
 }
 
 static const OSSL_PARAM alcp_known_gettable_params[] = {

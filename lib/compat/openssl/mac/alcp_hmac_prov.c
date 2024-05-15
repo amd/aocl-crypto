@@ -58,11 +58,12 @@ struct alcp_hmac_data_st
     unsigned char       tls_mac_out[EVP_MAX_MD_SIZE];
     size_t              tls_mac_out_size;
 };
+typedef struct alcp_hmac_data_st alcp_hmac_data_st_t;
 
 static void*
 alcp_prov_hmac_new(void* provctx)
 {
-    struct alcp_hmac_data_st* macctx;
+    alcp_hmac_data_st_t* macctx;
 
     if ((macctx = OPENSSL_zalloc(sizeof(*macctx))) == NULL
         || (macctx->ctx = alcp_prov_mac_newctx(ALC_MAC_HMAC)) == NULL) {
@@ -76,7 +77,7 @@ alcp_prov_hmac_new(void* provctx)
 static void
 alcp_prov_hmac_free(void* ctx)
 {
-    struct alcp_hmac_data_st* macctx = ctx;
+    alcp_hmac_data_st_t* macctx = ctx;
 
     if (macctx != NULL) {
         alcp_prov_mac_freectx(macctx->ctx);
@@ -89,8 +90,8 @@ alcp_prov_hmac_free(void* ctx)
 static void*
 alcp_prov_hmac_dup(void* vsrc)
 {
-    struct alcp_hmac_data_st* src = vsrc;
-    struct alcp_hmac_data_st* dst = OPENSSL_memdup(src, sizeof(*src));
+    alcp_hmac_data_st_t* src = vsrc;
+    alcp_hmac_data_st_t* dst = OPENSSL_memdup(src, sizeof(*src));
 
     Uint64 size;
     if (dst != NULL) {
@@ -122,7 +123,7 @@ alcp_prov_hmac_dup(void* vsrc)
 }
 
 static inline size_t
-alcp_hmac_size(struct alcp_hmac_data_st* macctx)
+alcp_hmac_size(alcp_hmac_data_st_t* macctx)
 {
     Uint64 len = 0;
     switch (macctx->mode) {
@@ -155,7 +156,7 @@ alcp_hmac_size(struct alcp_hmac_data_st* macctx)
 }
 
 static inline int
-alcp_hmac_block_size(struct alcp_hmac_data_st* macctx)
+alcp_hmac_block_size(alcp_hmac_data_st_t* macctx)
 {
     Uint64 len = 0;
     switch (macctx->mode) {
@@ -234,9 +235,9 @@ alcp_hmac_get_digest_mode(char* str)
 }
 
 static int
-alcp_hmac_setkey(struct alcp_hmac_data_st* macctx,
-                 const unsigned char*      key,
-                 size_t                    keylen)
+alcp_hmac_setkey(alcp_hmac_data_st_t* macctx,
+                 const unsigned char* key,
+                 size_t               keylen)
 {
     if (macctx->key != NULL)
         OPENSSL_secure_clear_free(macctx->key, macctx->keylen);
@@ -258,7 +259,7 @@ alcp_prov_hmac_init(void*                ctx,
                     size_t               keylen,
                     const OSSL_PARAM     params[])
 {
-    struct alcp_hmac_data_st* macctx = ctx;
+    alcp_hmac_data_st_t* macctx = ctx;
 
     if (!alcp_prov_hmac_set_ctx_params(macctx, params))
         return 0;
@@ -273,7 +274,7 @@ alcp_prov_hmac_init(void*                ctx,
 static int
 alcp_prov_hmac_update(void* vmacctx, const unsigned char* data, size_t datalen)
 {
-    struct alcp_hmac_data_st* macctx = vmacctx;
+    alcp_hmac_data_st_t* macctx = vmacctx;
 
     if (macctx->tls_data_size > 0) {
         if (!macctx->tls_header_set) {
@@ -309,7 +310,7 @@ alcp_prov_hmac_final(void*          cctx,
                      size_t*        outl,
                      size_t         outsize)
 {
-    struct alcp_hmac_data_st* macctx = cctx;
+    alcp_hmac_data_st_t* macctx = cctx;
 
     if (macctx->tls_data_size > 0) {
         if (macctx->tls_mac_out_size == 0)
@@ -327,11 +328,8 @@ alcp_prov_hmac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
 
-    struct alcp_hmac_data_st* macctx = vctx;
-    // ToDO : check how to implement this
-    // OSSL_LIB_CTX*     ctx = macctx->provctx ? macctx->provctx->libctx :
-    // NULL;
-    const OSSL_PARAM* p;
+    alcp_hmac_data_st_t* macctx = vctx;
+    const OSSL_PARAM*    p;
 
     if (params == NULL) {
         return 1;
@@ -377,8 +375,8 @@ alcp_prov_hmac_gettable_ctx_params(ossl_unused void* ctx,
 static int
 alcp_prov_hmac_get_ctx_params(void* vmacctx, OSSL_PARAM params[])
 {
-    struct alcp_hmac_data_st* macctx = vmacctx;
-    OSSL_PARAM*               p;
+    alcp_hmac_data_st_t* macctx = vmacctx;
+    OSSL_PARAM*          p;
 
     if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_SIZE)) != NULL
         && !OSSL_PARAM_set_size_t(p, alcp_hmac_size(macctx)))
