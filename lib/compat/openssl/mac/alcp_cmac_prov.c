@@ -152,8 +152,7 @@ static const OSSL_PARAM alcp_known_gettable_ctx_params[] = {
     OSSL_PARAM_END
 };
 static const OSSL_PARAM*
-alcp_prov_cmac_gettable_ctx_params(ossl_unused void* ctx,
-                                   ossl_unused void* provctx)
+alcp_prov_cmac_gettable_ctx_params(void* ctx, void* provctx)
 {
     return alcp_known_gettable_ctx_params;
 }
@@ -180,8 +179,7 @@ static const OSSL_PARAM alcp_known_settable_ctx_params[] = {
     OSSL_PARAM_END
 };
 static const OSSL_PARAM*
-alcp_prov_cmac_settable_ctx_params(ossl_unused void* ctx,
-                                   ossl_unused void* provctx)
+alcp_prov_cmac_settable_ctx_params(void* ctx, void* provctx)
 {
     return alcp_known_settable_ctx_params;
 }
@@ -214,7 +212,7 @@ alcp_prov_cmac_set_ctx_params(void* ctx, const OSSL_PARAM params[])
     return 1;
 }
 
-const OSSL_DISPATCH ossl_cmac_functions[] = {
+const OSSL_DISPATCH alcp_cmac_functions[] = {
     { OSSL_FUNC_MAC_NEWCTX, (void (*)(void))alcp_prov_cmac_new },
     { OSSL_FUNC_MAC_DUPCTX, (void (*)(void))alcp_prov_cmac_dup },
     { OSSL_FUNC_MAC_FREECTX, (void (*)(void))alcp_prov_cmac_free },
