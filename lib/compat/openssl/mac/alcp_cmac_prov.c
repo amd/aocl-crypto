@@ -143,7 +143,7 @@ alcp_prov_cmac_final(void* ctx, Uint8* out, Uint64* outl, Uint64 size)
 {
     alcp_cmac_data_st_t* macctx = ctx;
 
-    return alcp_prov_mac_final(macctx->ctx, out, outl, size);
+    return alcp_prov_mac_final(macctx->ctx, out, outl, ALCP_CMAC_BLOCK_SIZE);
 }
 
 static const OSSL_PARAM alcp_known_gettable_ctx_params[] = {
