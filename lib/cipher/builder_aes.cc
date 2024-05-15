@@ -64,12 +64,10 @@ _build_aes_cipher(const Uint64 keyLen, Context& ctx)
     CIPHERMODE* algo = new CIPHERMODE(&(ctx.m_alcp_cipher_data));
 
     ctx.m_cipher = static_cast<void*>(algo);
-
-    ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
-    ctx.encrypt = __aes_wrapper<CIPHERMODE, true>;
-    ctx.init    = __aes_wrapperInit<CIPHERMODE>;
-
-    ctx.finish = __aes_dtor<CIPHERMODE>;
+    ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
+    ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
+    ctx.init     = __aes_wrapperInit<CIPHERMODE>;
+    ctx.finish   = __aes_dtor<CIPHERMODE>;
 }
 
 // For XTS and Some modes

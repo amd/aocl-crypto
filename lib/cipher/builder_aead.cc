@@ -75,7 +75,7 @@ _build_aead_wrapper(Context& ctx)
 }
 
 /**
- * @brief Builder specific to GCM AEAD Mode with Dispatcher
+ * @brief Builder specific to AEAD Mode with Dispatcher
  *
  * Takes the params and builds the appropriate path given size info
  * @param keyLen    Length of the key
@@ -83,9 +83,9 @@ _build_aead_wrapper(Context& ctx)
  * @return Status
  */
 
-// FIXMEL pKey and keyLen to be removed.
+template<typename T1, typename T2, typename T3>
 static Status
-__build_GcmAead(const Uint64 keyLen, Context& ctx)
+__build_Aead(const Uint64 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
@@ -94,105 +94,29 @@ __build_GcmAead(const Uint64 keyLen, Context& ctx)
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<GcmAEAD128>(ctx);
+            _build_aead_wrapper<T1>(ctx);
         } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<GcmAEAD192>(ctx);
+            _build_aead_wrapper<T2>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<GcmAEAD256>(ctx);
+            _build_aead_wrapper<T3>(ctx);
         }
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<GcmAEAD128>(ctx);
+            _build_aead_wrapper<T1>(ctx);
         } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<GcmAEAD192>(ctx);
+            _build_aead_wrapper<T2>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<GcmAEAD256>(ctx);
+            _build_aead_wrapper<T3>(ctx);
         }
     } else {
         using namespace aesni;
         if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<GcmAEAD128>(ctx);
+            _build_aead_wrapper<T1>(ctx);
         } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<GcmAEAD192>(ctx);
+            _build_aead_wrapper<T2>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<GcmAEAD256>(ctx);
-        }
-    }
-    return sts;
-}
-
-static Status
-__build_CcmAead(const Uint64 keyLen, Context& ctx)
-{
-    Status sts = StatusOk();
-
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
-        using namespace vaes512;
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<CcmAead128>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<CcmAead192>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<CcmAead256>(ctx);
-        }
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
-        using namespace vaes;
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<CcmAead128>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<CcmAead192>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<CcmAead256>(ctx);
-        }
-    } else {
-        using namespace aesni;
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<CcmAead128>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<CcmAead192>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<CcmAead256>(ctx);
-        }
-    }
-    return sts;
-}
-
-static Status
-__build_aesSiv(const Uint64 keyLen, Context& ctx)
-{
-    Status sts = StatusOk();
-
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
-        using namespace vaes512;
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<SivAead128>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<SivAead192>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<SivAead256>(ctx);
-        }
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
-        using namespace vaes;
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<SivAead128>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<SivAead192>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<SivAead256>(ctx);
-        }
-    } else {
-        using namespace aesni;
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<SivAead128>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<SivAead192>(ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<SivAead256>(ctx);
+            _build_aead_wrapper<T3>(ctx);
         }
     }
     return sts;
@@ -237,23 +161,62 @@ AesAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
         return ALC_ERROR_INVALID_SIZE; // FIXME set appropriate sts
     }
 
-    ctx.m_alcp_cipher_data.alcp_keyLen_in_bytes =
-        keyLen / 8; // keyLen_in_bytes is used to verify keyLen during setKey
-    // call in init
+    // keyLen_in_bytes is used to verify keyLen during setKey call in init
+    ctx.m_alcp_cipher_data.alcp_keyLen_in_bytes = keyLen / 8;
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
 
     switch (cipherMode) {
         case ALC_AES_MODE_GCM:
-            sts = __build_GcmAead(keyLen, ctx);
+            if (cpu_feature == CpuCipherFeatures::eVaes512) {
+                using namespace vaes512;
+                sts = __build_Aead<GcmAEAD128, GcmAEAD192, GcmAEAD256>(keyLen,
+                                                                       ctx);
+            } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+                using namespace vaes;
+                sts = __build_Aead<GcmAEAD128, GcmAEAD192, GcmAEAD256>(keyLen,
+                                                                       ctx);
+            } else {
+                using namespace aesni;
+                sts = __build_Aead<GcmAEAD128, GcmAEAD192, GcmAEAD256>(keyLen,
+                                                                       ctx);
+            }
             break;
         case ALC_AES_MODE_SIV:
-            sts = __build_aesSiv(keyLen, ctx);
+            if (cpu_feature == CpuCipherFeatures::eVaes512) {
+                using namespace vaes512;
+                sts = __build_Aead<SivAead128, SivAead192, SivAead256>(keyLen,
+                                                                       ctx);
+            } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+                using namespace vaes;
+                sts = __build_Aead<SivAead128, SivAead192, SivAead256>(keyLen,
+                                                                       ctx);
+            } else {
+                using namespace aesni;
+                sts = __build_Aead<SivAead128, SivAead192, SivAead256>(keyLen,
+                                                                       ctx);
+            }
+
             break;
         case ALC_AES_MODE_CCM:
-            sts = __build_CcmAead(keyLen, ctx);
+            if (cpu_feature == CpuCipherFeatures::eVaes512) {
+                using namespace vaes512;
+                sts = __build_Aead<CcmAead128, CcmAead192, CcmAead256>(keyLen,
+                                                                       ctx);
+            } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+                using namespace vaes;
+                sts = __build_Aead<CcmAead128, CcmAead192, CcmAead256>(keyLen,
+                                                                       ctx);
+            } else {
+                using namespace aesni;
+                sts = __build_Aead<CcmAead128, CcmAead192, CcmAead256>(keyLen,
+                                                                       ctx);
+            }
             break;
         default:
             break;
     }
+
     return (alc_error_t)sts.code();
 }
 
