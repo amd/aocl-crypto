@@ -43,7 +43,7 @@ OpenSSLPoly1305Base::init(std::vector<Uint8>& Key)
     m_key_len = Key.size();
     if (m_mac != nullptr)
         EVP_MAC_free(m_mac);
-    m_mac = EVP_MAC_fetch(NULL, "POLY1305", "provider=default");
+    m_mac = EVP_MAC_fetch(NULL, "POLY1305", NULL);
     if (m_mac == nullptr) {
         std::cout << "EVP_MAC_fetch returned nullptr: "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;

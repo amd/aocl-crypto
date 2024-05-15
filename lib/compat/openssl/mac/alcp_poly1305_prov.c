@@ -53,10 +53,7 @@ static OSSL_FUNC_mac_final_fn          alcp_prov_poly1305_final;
 static void*
 alcp_prov_poly1305_new(void* provctx)
 {
-    alc_prov_mac_ctx_t* ctx;
-
-    ctx = OPENSSL_zalloc(sizeof(*ctx));
-    return ctx;
+    return alcp_prov_mac_newctx(ALC_MAC_POLY1305);
 }
 
 static void
