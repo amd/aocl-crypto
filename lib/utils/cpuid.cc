@@ -205,7 +205,7 @@ CpuId::Impl::cpuHasAvx512f()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512F);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_AVX512F);
 #else
     static bool state = false;
 #endif
@@ -220,7 +220,7 @@ CpuId::Impl::cpuHasAvx512dq()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512DQ);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_AVX512DQ);
 #else
     static bool state = false;
 #endif
@@ -235,7 +235,7 @@ CpuId::Impl::cpuHasAvx512bw()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512BW);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_AVX512BW);
 #else
     static bool state = false;
 #endif
@@ -270,7 +270,7 @@ CpuId::Impl::cpuHasVaes()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_VAES);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_VAES);
 #else
     static bool state = false;
 #endif
@@ -284,7 +284,7 @@ CpuId::Impl::cpuHasAesni()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AES);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_AES);
 #else
     static bool state = true;
 #endif
@@ -298,7 +298,7 @@ CpuId::Impl::cpuHasShani()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_SHA);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_SHA);
 #else
     static bool state = true;
 #endif
@@ -312,7 +312,7 @@ CpuId::Impl::cpuHasAvx2()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX2);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_AVX2);
 #else
     static bool state = true;
 #endif
@@ -326,7 +326,7 @@ CpuId::Impl::cpuHasRdRand()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDRAND);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_RDRAND);
 #else
     static bool state = true;
 #endif
@@ -340,7 +340,7 @@ CpuId::Impl::cpuHasRdSeed()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDSEED);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_RDSEED);
 #else
     static bool state = true;
 #endif
@@ -354,7 +354,7 @@ CpuId::Impl::cpuHasAdx()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_ADX);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_ADX);
 #else
     static bool state = true;
 #endif
@@ -368,7 +368,7 @@ CpuId::Impl::cpuHasBmi2()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_BMI2);
+    static bool state = Impl::m_cpu.hasFlag(ALC_E_FLAG_BMI2);
 #else
     static bool state = true;
 #endif
