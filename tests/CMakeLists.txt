@@ -79,6 +79,8 @@ ADD_SUBDIRECTORY(poly1305)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(rsa)
 ADD_SUBDIRECTORY(cipher_experimental)
+ADD_SUBDIRECTORY(Fuzz)
+
 # FIXME: Enable this once this test is up and running on windows
 IF(UNIX)
 ADD_SUBDIRECTORY(dl_load)
