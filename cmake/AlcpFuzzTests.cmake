@@ -23,15 +23,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
+SET(LIBS ${LIBS} gtest alcp)
 
-#FIXME, add a function to generate target from target name
+SET (ALCP_FUZZ_FLAGS -g -O1 -fsanitize=fuzzer,address)
+SET (ALCP_FUZZ_LINK_FLAGS -fsanitize=fuzzer,address)
 
-ADD_EXECUTABLE(test_fuzz_digest test_fuzz_digest.cc)
+FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
 
-TARGET_INCLUDE_DIRECTORIES(test_fuzz_digest PRIVATE ${ALC_FUZZER_INCLUDES})
-TARGET_COMPILE_OPTIONS(test_fuzz_digest PUBLIC ${ALCP_FUZZ_FLAGS})
-TARGET_LINK_OPTIONS(test_fuzz_digest PUBLIC ${ALCP_FUZZ_LINK_FLAGS})
-TARGET_LINK_LIBRARIES(test_fuzz_digest ${LIBS})
-
-gtest_add_tests(TARGET test_fuzz_digest)
+SET(ALC_FUZZER_INCLUDES "${CMAKE_SOURCE_DIR}/tests/Fuzz/include"
+    "${CMAKE_SOURCE_DIR}/tests/include"
+    "${CMAKE_SOURCE_DIR}/tests/common/include"
+    "${ALCP_INCLUDES}")

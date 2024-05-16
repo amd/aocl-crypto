@@ -23,24 +23,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-SET(LIBS ${LIBS} gtest alcp)
-
-#FIXME: a lot of these stuff should go into a common cmake file
-SET (ALCP_FUZZ_FLAGS -g -O1 -fsanitize=fuzzer,address)
-SET (ALCP_FUZZ_LINK_FLAGS -fsanitize=fuzzer,address)
-
-FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_EXECUTABLE(test_fuzz_aes_cbc test_fuzz_aes_cbc.cc ${ALC_BASE_FILES})
 
-TARGET_INCLUDE_DIRECTORIES(test_fuzz_aes_cbc PRIVATE
-    "${CMAKE_SOURCE_DIR}/tests/Fuzz/include"
-    "${CMAKE_SOURCE_DIR}/tests/include"
-    "${CMAKE_SOURCE_DIR}/tests/common/include"
-    "${ALCP_INCLUDES}"
-    )
-
+TARGET_INCLUDE_DIRECTORIES(test_fuzz_aes_cbc PRIVATE ${ALC_FUZZER_INCLUDES})
 TARGET_COMPILE_OPTIONS(test_fuzz_aes_cbc PUBLIC ${ALCP_FUZZ_FLAGS})
 TARGET_LINK_OPTIONS(test_fuzz_aes_cbc PUBLIC ${ALCP_FUZZ_LINK_FLAGS})
 TARGET_LINK_LIBRARIES(test_fuzz_aes_cbc ${LIBS})

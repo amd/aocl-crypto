@@ -26,7 +26,7 @@
  *
  */
 
-#include "../../include/Fuzz/alcp_fuzz_test.hh"
+#include "Fuzz/alcp_fuzz_test.hh"
 #include "cipher/alc_cipher.hh"
 #include <cipher/cipher.hh>
 
