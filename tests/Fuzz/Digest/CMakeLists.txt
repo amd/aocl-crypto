@@ -26,3 +26,4 @@
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_FUZZ_TARGET(test_fuzz_digest test_fuzz_digest.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_neg test_fuzz_digest_neg.cc)

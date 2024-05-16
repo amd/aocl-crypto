@@ -42,6 +42,13 @@
 #include <stdio.h>
 #include <unordered_map>
 
+std::unordered_map<alc_digest_mode_t, Uint64> MODE_SIZE = {
+    { ALC_SHA2_224, 28 }, { ALC_SHA2_256, 32 },     { ALC_SHA2_384, 48 },
+    { ALC_SHA2_512, 64 }, { ALC_SHA2_512_224, 28 }, { ALC_SHA2_512_224, 32 },
+    { ALC_SHA3_224, 28 }, { ALC_SHA3_256, 32 },     { ALC_SHA3_384, 48 },
+    { ALC_SHA3_512, 64 }, { ALC_SHAKE_128, 1 },     { ALC_SHAKE_256, 1 }
+};
+
 const int ERR_SIZE = 256;
 Uint8     err_buf[ERR_SIZE];
 void

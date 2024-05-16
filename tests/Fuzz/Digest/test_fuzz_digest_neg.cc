@@ -37,6 +37,8 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
     /* Initializing digest info */
     alc_error_t         err;
     alc_digest_handle_p m_handle = new alc_digest_handle_t;
+    alc_digest_handle_p m_handle_dst =
+        new alc_digest_handle_t; // For context_copy()
 
     // Change the digest mode here to run SHA2 and SHA3 variants
     alc_digest_mode_t mode     = ALC_SHAKE_256;
@@ -47,40 +49,76 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
     } else if (out_size == 1) { // SHAKE Variants
         FuzzedDataProvider stream(buf, len);
         out_size = stream.ConsumeIntegral<Uint32>();
+        // std::cout << "SHAKE: Digest_Size: " << out_size << std::endl;
     }
     Uint8 output1[out_size], output2[out_size];
 
     /* Start to Fuzz Digest APIs */
     FuzzedDataProvider stream(buf, len);
     Uint64 context_size = alcp_digest_context_size(); // Context_size = 96
+    // std::cout << mode <<"\t" << context_size << std::endl;
 
-    if (m_handle == nullptr) {
+    if ((m_handle == nullptr) || (m_handle_dst == nullptr)) {
         std::cout << "Error: Mem alloc for digest handle" << std::endl;
-        goto OUT;
+        // goto OUT;
     }
     /* Request a context with dinfo */
-    m_handle->context = malloc(context_size);
-    if (m_handle->context == nullptr) {
+    m_handle->context     = malloc(context_size);
+    m_handle_dst->context = malloc(context_size); // For context_copy()
+    if ((m_handle->context == nullptr) || (m_handle_dst->context == nullptr)) {
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         goto OUT;
     }
-    /*FIXME: add lifecycle changes here*/
+
+    /* 1. Call context_copy without request() and init()   */
+    //    err = alcp_digest_context_copy(m_handle, m_handle_dst);
+    //    Check_Error(err);
+    /* END 1. Call context_copy without request() and init()   */
+
+    /* 2. Call update without init()   */
+    //    err = alcp_digest_request(mode, m_handle);
+    //    Check_Error(err);
+
+    //    err = alcp_digest_update(m_handle, src, srcSize);
+    //    Check_Error(err);
+    /* END 2. Call update without init()   */
+
+    /* 3. Call shake_squeeze()   */
     err = alcp_digest_request(mode, m_handle);
     Check_Error(err);
+
     err = alcp_digest_init(m_handle);
     Check_Error(err);
+
     err = alcp_digest_update(m_handle, src, srcSize);
     Check_Error(err);
+    err = alcp_digest_context_copy(m_handle, m_handle_dst);
+
     err = alcp_digest_finalize(m_handle, output1, out_size);
     Check_Error(err);
 
+    err = alcp_digest_shake_squeeze(m_handle_dst, output2, out_size);
+    Check_Error(err);
+
+    for (int i = 0; i < out_size; i++) {
+        if (output1[i] != output2[i]) {
+            std::cout << "Outputs are NOT equal" << std::endl;
+            break;
+        }
+    }
     goto CLOSE;
+    /* END 3. Call shake_squeeze()   */
 
 CLOSE:
     if (m_handle != nullptr) {
         alcp_digest_finish(m_handle);
         free(m_handle->context);
         delete m_handle;
+    }
+    if (m_handle_dst != nullptr) {
+        alcp_digest_finish(m_handle_dst);
+        free(m_handle_dst->context);
+        delete m_handle_dst;
     }
 
 OUT:
