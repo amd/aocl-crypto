@@ -23,12 +23,9 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
 #include "Fuzz/alcp_fuzz_test.hh"
-
-using namespace alcp::testing;
 
 int
 FuzzerTestOneInput(const Uint8* buf, size_t len)
@@ -66,20 +63,20 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
     data.m_ivl  = fuzz_in4.size();
 
     alc_cipher_type_t type = ALC_CIPHER_TYPE_AES;
-    alc_cipher_mode_t mode = ALC_AES_MODE_CBC;
+    alc_cipher_mode_t mode = ALC_AES_MODE_GCM;
 
     std::unique_ptr<CipherBase> cb =
         std::make_unique<AlcpCipherBase>(type, mode, iv);
 
     bool ret = cb->init(key, keySize);
     if (!ret) {
-        std::cout << "ERROR: CBC_Init failed." << std::endl;
+        std::cout << "ERROR: GCM_Init failed." << std::endl;
         goto OUT;
     }
 
     ret = cb->encrypt(data);
     if (!ret) {
-        std::cout << "ERROR: CBC_Encrypt failed." << std::endl;
+        std::cout << "ERROR: GCM_Encrypt failed." << std::endl;
         goto OUT;
     }
 
@@ -87,7 +84,7 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
 
     ret = cb->decrypt(data);
     if (!ret) {
-        std::cout << "ERROR: CBC_Decrypt failed." << std::endl;
+        std::cout << "ERROR: GCM_Decrypt failed." << std::endl;
         goto OUT;
     }
 

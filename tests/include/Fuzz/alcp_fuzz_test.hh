@@ -29,7 +29,9 @@
 #pragma once
 
 #include "alcp/alcp.h"
+#include "cipher/alc_cipher.hh"
 #include "config.h"
+#include <cipher/cipher.hh>
 #include <cstddef>
 #include <cstdint>
 #include <dlfcn.h>
@@ -41,6 +43,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <unordered_map>
+
+using namespace alcp::testing;
 
 std::unordered_map<alc_digest_mode_t, Uint64> MODE_SIZE = {
     { ALC_SHA2_224, 28 }, { ALC_SHA2_256, 32 },     { ALC_SHA2_384, 48 },
