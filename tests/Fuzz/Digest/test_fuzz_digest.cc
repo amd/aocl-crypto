@@ -47,15 +47,9 @@ Uint8     err_buf[ERR_SIZE];
 void
 Check_Error(alc_error_t err)
 {
-    if (alcp_is_error(err)) {
+    if (alcp_is_error(err))
         alcp_error_str(err, err_buf, ERR_SIZE);
-    }
 }
-
-// TEST(ALCP, FUZZ_DIGEST)
-// {
-//     EXPECT_TRUE(true);
-// }
 
 int
 FuzzerTestOneInput(const Uint8* buf, size_t len)
@@ -83,16 +77,17 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
     FuzzedDataProvider stream(buf, len);
     Uint64 context_size = alcp_digest_context_size(); // Context_size = 96
 
-    if ((m_handle == nullptr)) {
+    if (m_handle == nullptr) {
         std::cout << "Error: Mem alloc for digest handle" << std::endl;
         goto OUT;
     }
     /* Request a context with dinfo */
     m_handle->context = malloc(context_size);
-    if ((m_handle->context == nullptr)) {
+    if (m_handle->context == nullptr) {
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         goto OUT;
     }
+    /*FIXME: add lifecycle changes here*/
     err = alcp_digest_request(mode, m_handle);
     Check_Error(err);
     err = alcp_digest_init(m_handle);
@@ -118,14 +113,5 @@ OUT:
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    // DoSomethingInterestingWithMyAPI(Data, Size);
     return FuzzerTestOneInput(Data, Size);
-    // return 0;  // Values other than 0 and -1 are reserved for future use.
 }
-
-// int
-// main(int argc, char** argv)
-// {
-//     ::testing::InitGoogleTest(&argc, argv);
-//     return RUN_ALL_TESTS();
-// }
