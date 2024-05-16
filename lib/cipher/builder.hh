@@ -177,6 +177,20 @@ __aes_wrapperSetTagLength(void* ctx, Uint64 len)
 
 template<typename CIPHERMODE>
 static alc_error_t
+__aes_wrapperSetPlainTextLength(void* ctx, Uint64 len)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ctxp = static_cast<cipher::Context*>(ctx);
+    auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
+
+    e = ap->setPlainTextLength(&(ctxp->m_alcp_cipher_data), len);
+
+    return e;
+}
+
+template<typename CIPHERMODE>
+static alc_error_t
 __aes_wrapperSetAad(void* ctx, const Uint8* pAad, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;

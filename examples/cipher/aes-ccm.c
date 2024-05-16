@@ -71,6 +71,13 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     return 0;
 }
 
+int
+close_demo_session()
+{
+    alcp_cipher_aead_finish(&handle);
+    free(handle.ch_context);
+}
+
 static Uint8* sample_plaintxt =
     (Uint8*)"Happy and Fantastic Diwali from AOCL Crypto !!";
 
@@ -160,6 +167,14 @@ aclp_aes_ccm_encrypt_demo(
         return -1;
     }
 
+    // set plaintext length
+    err = alcp_cipher_aead_set_plaintext_length(&handle, len);
+    if (alcp_is_error(err)) {
+        printf("Error: unable setting plaintext Length \n");
+        alcp_error_str(err, err_buf, err_size);
+        return -1;
+    }
+
     // CCM init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
@@ -183,6 +198,15 @@ aclp_aes_ccm_encrypt_demo(
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
+
+    // err = alcp_cipher_aead_encrypt_update(
+    //     &handle, plaintxt + (len / 2), ciphertxt + (len / 2), len - (len /
+    //     2));
+    // if (alcp_is_error(err)) {
+    //     printf("Error: unable encrypt \n");
+    //     alcp_error_str(err, err_buf, err_size);
+    //     return -1;
+    // }
 
     // get tag
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
@@ -217,6 +241,14 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
+        alcp_error_str(err, err_buf, err_size);
+        return -1;
+    }
+
+    // set plaintext length
+    err = alcp_cipher_aead_set_plaintext_length(&handle, len);
+    if (alcp_is_error(err)) {
+        printf("Error: unable setting Plaintext Length \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
@@ -314,7 +346,10 @@ main(void)
     free(hex_sample_output);
     free(hex_sample_input);
     free(hex_sample_tag_output);
-
+    close_demo_session();
+    retval = create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
+    if (retval != 0)
+        goto out;
     retval = aclp_aes_ccm_decrypt_demo(sample_ciphertxt,
                                        size,
                                        sample_output,
@@ -330,12 +365,10 @@ main(void)
         goto out;
     printf("sample_output: %s\n", sample_output);
 
-    // /*
-    //  * Complete the transaction
-    //  */
-    alcp_cipher_aead_finish(&handle);
-
-    free(handle.ch_context);
+    /*
+     * Complete the transaction
+     */
+    close_demo_session();
 
     return 0;
 

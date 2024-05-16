@@ -70,6 +70,14 @@ _build_aead_wrapper(Context& ctx)
         ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
     }
 
+    if constexpr (std::is_same_v<AEADMODE, Ccm>) {
+        ctx.setPlainTextLength = __aes_wrapperSetPlainTextLength<AEADMODE>;
+    }
+
+    if constexpr (std::is_base_of<Ccm, AEADMODE>::value) {
+        ctx.setPlainTextLength = __aes_wrapperSetPlainTextLength<AEADMODE>;
+    }
+
     ctx.finish = __aes_dtor<AEADMODE>;
 }
 

@@ -206,6 +206,22 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
     return err;
 }
 
+alc_error_t
+alcp_cipher_aead_set_plaintext_length(const alc_cipher_handle_p pCipherHandle,
+                                      Uint64                    plaintextLength)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->setPlainTextLength(ctx, plaintextLength);
+
+    return err;
+}
+
 void
 alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
 {

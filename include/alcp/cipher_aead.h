@@ -308,6 +308,10 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
                                 Uint64                    tagLen);
 
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_aead_set_plaintext_length(const alc_cipher_handle_p pCipherHandle,
+                                      Uint64 plaintextLength);
+
 /**
  * FIXME: Need to fix return type of API
  * @brief       Release resources allocated by alcp_cipher_aead_request.

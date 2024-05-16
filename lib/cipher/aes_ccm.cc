@@ -35,6 +35,25 @@
 #include <wmmintrin.h>
 
 using alcp::utils::CpuId;
+std::string
+parseBytesToHexStr(const Uint8* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int               charRep;
+        std::stringstream il;
+        charRep = bytes[i];
+        // Convert int to hex
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
+    }
+    return ss.str();
+}
 namespace alcp::cipher {
 
 // Macros
@@ -69,6 +88,15 @@ Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
 {}
 
+alc_error_t
+Ccm::setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len)
+{
+    m_plainTextLength = len;
+    m_updatedLength   = 0;
+
+    return ALC_ERROR_NONE;
+}
+
 // FIXME: nRounds needs to be constexpr to be more efficient
 Status
 Ccm::cryptUpdate(const Uint8 pInput[],
@@ -76,24 +104,37 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                  Uint64      dataLen,
                  bool        isEncrypt)
 {
+
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
 
+        if (m_updatedLength + dataLen > m_plainTextLength) {
+            return status::EncryptFailed(
+                "Unable to Process more than established Plaintext Length");
+        }
         const Uint8* p_keys  = getEncryptKeys();
         const Uint32 cRounds = m_nrounds;
         m_ccm_data.key       = p_keys;
         m_ccm_data.rounds    = cRounds;
 
         // Below Operations has to be done in order
-        s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
+        // s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
+
+        s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, m_plainTextLength));
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
-            aesni::ccm::SetAad(
-                &m_ccm_data, m_additionalData, m_additionalDataLen);
+            if (m_updatedLength == 0) {
+                aesni::ccm::SetAad(&m_ccm_data,
+                                   m_additionalData,
+                                   m_additionalDataLen,
+                                   m_plainTextLength);
+
+                m_updatedLength += dataLen;
+            }
             if (isEncrypt) {
-                CCM_ERROR err =
-                    aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, dataLen);
+                CCM_ERROR err = aesni::ccm::Encrypt(
+                    &m_ccm_data, pInput, pOutput, dataLen, m_plainTextLength);
                 switch (err) {
                     case CCM_ERROR::LEN_MISMATCH:
                         s = status::EncryptFailed(
@@ -411,6 +452,10 @@ Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
 {
     // Retrieve the tag length
     Status s = StatusOk();
+#ifdef DEBUG
+    std::cout << "getTagRef Nonce : " << parseBytesToHexStr(ctx->nonce, 16)
+              << std::endl;
+#endif
     if (ctx == nullptr || ptag == nullptr) {
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;

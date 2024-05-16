@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,9 +43,36 @@
 #define EXITG()
 #define EXITB()
 #endif
+#include <iomanip>
+
+// #define DEBUG
+
+inline std::string
+parseBytesToHexStr(const Uint8* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int               charRep;
+        std::stringstream il;
+        charRep = bytes[i];
+        // Convert int to hex
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
+    }
+    return ss.str();
+}
+
 namespace alcp::cipher::aesni { namespace ccm {
 
-    void SetAad(ccm_data_t* ccm_data, const Uint8 paad[], size_t alen)
+    CCM_ERROR SetAad(ccm_data_t* ccm_data,
+                     const Uint8 paad[],
+                     size_t      alen,
+                     size_t      plen)
     {
         ENTER();
         __m128i p_blk0   = { 0 };
@@ -53,93 +80,153 @@ namespace alcp::cipher::aesni { namespace ccm {
         Uint8*  p_blk0_8 = reinterpret_cast<Uint8*>(&p_blk0);
         Uint64  i        = 0;
 
-        if (alen == 0) {
-            EXITB();
-            return;
-        }
+        if (alen != 0) {
+            ccm_data->nonce[0] |= 0x40; /* set Adata flag */
 
-        ccm_data->nonce[0] |= 0x40; /* set Adata flag */
+            p_blk0 = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(ccm_data->nonce));
 
-        p_blk0 =
-            _mm_loadu_si128(reinterpret_cast<const __m128i*>(ccm_data->nonce));
-
-        // ccm_data->cmac should be inside p_blk0
-        AesEncrypt(&p_blk0,
-                   reinterpret_cast<const __m128i*>(ccm_data->key),
-                   ccm_data->rounds);
-        ccm_data->blocks++;
-
-        if (alen < (0x10000 - 0x100)) {
-            // alen < (2^16 - 2^8)
-            *(p_blk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
-            *(p_blk0_8 + 1) ^= static_cast<Uint8>(alen);
-            i = 2;
-        } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
-            // alen > what 32 bits can hold.
-            *(p_blk0_8 + 0) ^= 0xFF;
-            *(p_blk0_8 + 1) ^= 0xFF;
-            *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 56);
-            *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 48);
-            *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 40);
-            *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen >> 32);
-            *(p_blk0_8 + 6) ^= static_cast<Uint8>(alen >> 24);
-            *(p_blk0_8 + 7) ^= static_cast<Uint8>(alen >> 16);
-            *(p_blk0_8 + 8) ^= static_cast<Uint8>(alen >> 8);
-            *(p_blk0_8 + 9) ^= static_cast<Uint8>(alen);
-            i = 10;
-        } else {
-            // alen is represented by 32 bits but larger than
-            // what 16 bits can hold
-            *(p_blk0_8 + 0) ^= 0xFF;
-            *(p_blk0_8 + 1) ^= 0xFE;
-            *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 24);
-            *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 16);
-            *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 8);
-            *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen);
-            i = 6;
-        }
-
-        // i=2,6,10 to i=16 do the CBC operation
-        for (; i < 16 && alen; ++i, ++paad, --alen)
-            *(p_blk0_8 + i) ^= *paad;
-
-        AesEncrypt(&p_blk0,
-                   reinterpret_cast<const __m128i*>(ccm_data->key),
-                   ccm_data->rounds);
-        ccm_data->blocks++;
-
-        Uint64 alen_16 = alen / 16;
-        for (Uint64 j = 0; j < alen_16; j++) {
-            aad_128 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(paad));
-            // CBC XOR operation
-            p_blk0 = _mm_xor_si128(p_blk0, aad_128);
-            // CBC Encrypt operation
+            // ccm_data->cmac should be inside p_blk0
             AesEncrypt(&p_blk0,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             ccm_data->blocks++;
-            paad += 16;
-        }
 
-        // Reduce already processed value from alen
-        alen -= alen_16 * 16;
+            if (alen < (0x10000 - 0x100)) {
+                // alen < (2^16 - 2^8)
+                *(p_blk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
+                *(p_blk0_8 + 1) ^= static_cast<Uint8>(alen);
+                i = 2;
+            } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
+                // alen > what 32 bits can hold.
+                *(p_blk0_8 + 0) ^= 0xFF;
+                *(p_blk0_8 + 1) ^= 0xFF;
+                *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 56);
+                *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 48);
+                *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 40);
+                *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen >> 32);
+                *(p_blk0_8 + 6) ^= static_cast<Uint8>(alen >> 24);
+                *(p_blk0_8 + 7) ^= static_cast<Uint8>(alen >> 16);
+                *(p_blk0_8 + 8) ^= static_cast<Uint8>(alen >> 8);
+                *(p_blk0_8 + 9) ^= static_cast<Uint8>(alen);
+                i = 10;
+            } else {
+                // alen is represented by 32 bits but larger than
+                // what 16 bits can hold
+                *(p_blk0_8 + 0) ^= 0xFF;
+                *(p_blk0_8 + 1) ^= 0xFE;
+                *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 24);
+                *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 16);
+                *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 8);
+                *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen);
+                i = 6;
+            }
 
-        if (alen != 0) {
-            // Process the rest in default way
-            for (i = 0; i < 16 && alen; i++, paad++, alen--)
+            // i=2,6,10 to i=16 do the CBC operation
+            for (; i < 16 && alen; ++i, ++paad, --alen)
                 *(p_blk0_8 + i) ^= *paad;
 
-            // CBC Encrypt last block
             AesEncrypt(&p_blk0,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             ccm_data->blocks++;
+
+            Uint64 alen_16 = alen / 16;
+            for (Uint64 j = 0; j < alen_16; j++) {
+                aad_128 =
+                    _mm_loadu_si128(reinterpret_cast<const __m128i*>(paad));
+                // CBC XOR operation
+                p_blk0 = _mm_xor_si128(p_blk0, aad_128);
+                // CBC Encrypt operation
+                AesEncrypt(&p_blk0,
+                           reinterpret_cast<const __m128i*>(ccm_data->key),
+                           ccm_data->rounds);
+                ccm_data->blocks++;
+                paad += 16;
+            }
+
+            // Reduce already processed value from alen
+            alen -= alen_16 * 16;
+
+            if (alen != 0) {
+                // Process the rest in default way
+                for (i = 0; i < 16 && alen; i++, paad++, alen--)
+                    *(p_blk0_8 + i) ^= *paad;
+
+                // CBC Encrypt last block
+                AesEncrypt(&p_blk0,
+                           reinterpret_cast<const __m128i*>(ccm_data->key),
+                           ccm_data->rounds);
+                ccm_data->blocks++;
+            }
+
+            // Store generated partial tag (cmac)
+            _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), p_blk0);
         }
 
-        // Store generated partial tag (cmac)
-        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), p_blk0);
+#if 1
+        __m128i cmac, nonce;
+        // Uint8*  p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
+        Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
 
+        // Load nonce to process
+        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+        unsigned char flags0 = ccm_data->flags0 = ccm_data->nonce[0];
+        // No additonal data, so encrypt nonce and set it as cmac
+        const Uint8* p_key = ccm_data->key;
+        if (!(flags0 & 0x40)) {
+            cmac = nonce;
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(p_key),
+                       ccm_data->rounds);
+
+            ccm_data->blocks++;
+        } else {
+            // Additional data exists so load the cmac (already done in encrypt
+            // aad)
+            cmac = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
+        }
+
+        // Set nonce to just length to store size of plain text
+        size_t       n;
+        unsigned int q;
+        p_nonce_8[0] = q = flags0 & 7;
+
+        // Reconstruct length of plain text
+        for (n = 0, i = 15 - q; i < 15; ++i) {
+            n |= p_nonce_8[i];
+            p_nonce_8[i] = 0;
+            n <<= 8;
+        }
+        n |= p_nonce_8[15]; /* reconstructed length */
+        p_nonce_8[15] = 1;
+
+        // Check if input length matches the intialized length
+        if (n != plen) {
+            EXITB();
+            return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
+        }
+        // Check with everything combined we won't have too many blocks to
+        // encrypt
+
+#if 0
+        ccm_data->blocks += ((plaintextLen + 15) >> 3) | 1;
+        if (ccm_data->blocks > (Uint64(1) << 61)) {
+            EXITB();
+            return CCM_ERROR::DATA_OVERFLOW; /* too much data */
+        }
+#endif
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
+#ifdef DEBUG
+        std::cout << "CMAC: " << parseBytesToHexStr(ccm_data->cmac, 16)
+                  << std::endl;
+        std::cout << "NONCE: " << parseBytesToHexStr(ccm_data->nonce, 16)
+                  << std::endl;
+#endif
+#endif
         EXIT();
+        return CCM_ERROR::NO_ERROR;
     }
 
     inline void CtrInc(__m128i* ctr)
@@ -157,20 +244,25 @@ namespace alcp::cipher::aesni { namespace ccm {
     CCM_ERROR Encrypt(ccm_data_t* ccm_data,
                       const Uint8 pinp[],
                       Uint8       pout[],
-                      size_t      len)
+                      size_t      dataLen,
+                      size_t      plaintextLen)
     {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
         ENTER();
-        size_t        n;
         unsigned int  i, q;
-        unsigned char flags0 = ccm_data->nonce[0];
-        const Uint8*  p_key  = ccm_data->key;
-        __m128i       cmac, nonce, in_reg, temp_reg;
+        unsigned char flags0;
+        __m128i       cmac, nonce;
+        __m128i       in_reg, temp_reg;
         Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
         Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
         Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(&temp_reg);
-
+        cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
+        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+#if 0
+        flags0 = ccm_data->nonce[0];
+        size_t       n;
+        const Uint8* p_key = ccm_data->key;
         // Load nonce to process
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
@@ -180,6 +272,7 @@ namespace alcp::cipher::aesni { namespace ccm {
             AesEncrypt(&cmac,
                        reinterpret_cast<const __m128i*>(p_key),
                        ccm_data->rounds);
+
             ccm_data->blocks++;
         } else {
             // Additional data exists so load the cmac (already done in encrypt
@@ -189,6 +282,7 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         // Set nonce to just length to store size of plain text
         // extracted from flags
+
         p_nonce_8[0] = q = flags0 & 7;
 
         // Reconstruct length of plain text
@@ -201,19 +295,30 @@ namespace alcp::cipher::aesni { namespace ccm {
         p_nonce_8[15] = 1;
 
         // Check if input length matches the intialized length
-        if (n != len) {
+        if (n != plaintextLen) {
             EXITB();
             return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
         }
-
         // Check with everything combined we won't have too many blocks to
         // encrypt
-        ccm_data->blocks += ((len + 15) >> 3) | 1;
+
+        ccm_data->blocks += ((plaintextLen + 15) >> 3) | 1;
         if (ccm_data->blocks > (Uint64(1) << 61)) {
             EXITB();
             return CCM_ERROR::DATA_OVERFLOW; /* too much data */
         }
-        while (len >= 16) {
+#else
+        flags0 = ccm_data->flags0;
+#endif
+#ifdef DEBUG
+        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
+        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
+                  << std::endl;
+        std::cout << "flags0  = " << std::hex << std::setfill('0')
+                  << std::setw(2) << flags0 << std::endl;
+#endif
+        q = flags0 & 7;
+        while (dataLen >= 16) {
             // Load the PlainText
             in_reg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pinp));
 
@@ -236,13 +341,13 @@ namespace alcp::cipher::aesni { namespace ccm {
 
             pinp += 16;
             pout += 16;
-            len -= 16;
+            dataLen -= 16;
         }
 
-        if (len) {
+        if (dataLen) {
             /* CBC */
             // For what ever is left, generate block to encrypt using ctr
-            for (i = 0; i < len; ++i)
+            for (i = 0; i < dataLen; ++i)
                 p_cmac_8[i] ^= pinp[i];
             AesEncrypt(&cmac,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
@@ -253,10 +358,12 @@ namespace alcp::cipher::aesni { namespace ccm {
             AesEncrypt(&temp_reg,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
-            for (i = 0; i < len; ++i)
+            for (i = 0; i < dataLen; ++i)
                 pout[i] = p_temp_8[i] ^ pinp[i];
         }
-
+#ifdef DEBUG
+        std::cout << "Q = " << q << std::endl;
+#endif
         // Zero out counter part
         for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
             p_nonce_8[i] = 0;
@@ -268,14 +375,22 @@ namespace alcp::cipher::aesni { namespace ccm {
                    reinterpret_cast<const __m128i*>(ccm_data->key),
                    ccm_data->rounds);
         cmac = _mm_xor_si128(temp_reg, cmac);
-
+#ifdef DEBUG
+        std::cout << "flags0  = " << std::hex << std::setfill('0')
+                  << std::setw(2) << flags0 << std::endl;
+#endif
         // Restore flags into nonce to restore nonce to original state
         p_nonce_8[0] = flags0;
 
         // Copy the current state of cmac and nonce back to memory.
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
-
+#ifdef DEBUG
+        std::cout << "AT LAST" << std::endl;
+        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
+        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
+                  << std::endl;
+#endif
         // Encryption cannot proceed after this.
         EXITG();
         return CCM_ERROR::NO_ERROR;
@@ -289,51 +404,23 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
         ENTER();
-        size_t        n;
         unsigned int  i, q;
-        unsigned char flags0 = ccm_data->nonce[0];
-        const Uint8*  p_key  = ccm_data->key;
-        __m128i       cmac, nonce, in_reg, temp_reg;
+        unsigned char flags0 = ccm_data->flags0;
+        __m128i       cmac, nonce;
+        __m128i       in_reg, temp_reg;
         Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
         Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
         Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(&temp_reg);
-
-        // Load nonce to process
+        cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
-
-        // No additonal data, so encrypt nonce and set it as cmac
-        if (!(flags0 & 0x40)) {
-            cmac = nonce;
-            AesEncrypt(&cmac,
-                       reinterpret_cast<const __m128i*>(p_key),
-                       ccm_data->rounds);
-            ccm_data->blocks++;
-        } else {
-            // Additional data exists so load the cmac (already done in encrypt
-            // aad)
-            cmac = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
-        }
-
-        // Set nonce to just length to store size of plain text
-        // extracted from flags
-        p_nonce_8[0] = q = flags0 & 7;
-
-        // Reconstruct length of plain text
-        for (n = 0, i = 15 - q; i < 15; ++i) {
-            n |= p_nonce_8[i];
-            p_nonce_8[i] = 0;
-            n <<= 8;
-        }
-        n |= p_nonce_8[15]; /* reconstructed length */
-        p_nonce_8[15] = 1;
-
-        // Check if input length matches the intialized length
-        if (n != len) {
-            EXITB();
-            return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
-        }
-
+#ifdef DEBUG
+        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
+        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
+                  << std::endl;
+        std::cout << "flags0  = " << flags0 << std::endl;
+#endif
 #if 1
+        q = flags0 & 7;
         while (len >= 32) {
             /* CTR */
             temp_reg = nonce; // Copy Counter

@@ -48,9 +48,10 @@ struct ccm_data_t
 {
     alignas(16) Uint8 nonce[16];
     alignas(16) Uint8 cmac[16];
-    const Uint8* key    = nullptr;
-    Uint64       blocks = 0;
-    Uint32       rounds = 0;
+    const Uint8*  key    = nullptr;
+    Uint64        blocks = 0;
+    Uint32        rounds = 0;
+    unsigned char flags0;
 };
 
 enum class CCM_ERROR
@@ -62,12 +63,16 @@ enum class CCM_ERROR
 
 namespace aesni::ccm {
     // Defined in arch/zen3
-    void SetAad(ccm_data_t* ctx, const Uint8 aad[], size_t alen);
+    CCM_ERROR SetAad(ccm_data_t* ctx,
+                     const Uint8 aad[],
+                     size_t      alen,
+                     size_t      plen);
 
     CCM_ERROR Encrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
                       Uint8       out[],
-                      size_t      len);
+                      size_t      dataLen,
+                      size_t      plaintextLen);
 
     CCM_ERROR Decrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
@@ -81,6 +86,8 @@ class ALCP_API_EXPORT Ccm : public Aes
     Uint64       m_tagLen            = 0;
     Uint64       m_additionalDataLen = 0;
     const Uint8* m_additionalData;
+    Uint64       m_plainTextLength = 0;
+    Uint64       m_updatedLength   = 0;
 
     ccm_data_t m_ccm_data;
 
@@ -103,6 +110,26 @@ class ALCP_API_EXPORT Ccm : public Aes
 
     Ccm()  = default;
     ~Ccm() = default;
+
+    /**
+     * @brief Set tag length to adjust nonce value
+     *
+     *
+     * @param ctx  - Context
+     * @param len  - Length of Tag
+     * @return
+     */
+    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen);
+
+    /**
+     * @brief Set plaintext length
+     *
+     *
+     * @param ctx  - Context
+     * @param len  - Length of plaintext
+     * @return
+     */
+    alc_error_t setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len);
 
     // FIXME: This internal function needs to be protected/private
     // as there is 2 levels of inheritance down which this function

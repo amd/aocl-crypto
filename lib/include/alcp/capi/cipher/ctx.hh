@@ -75,6 +75,8 @@ typedef struct Context
 
     alc_error_t (*setTagLength)(void* ctx, Uint64 tagLen);
 
+    alc_error_t (*setPlainTextLength)(void* ctx, Uint64 plainTextLength);
+
     alc_error_t (*finish)(const void*);
 
     Status status{ StatusOk() };

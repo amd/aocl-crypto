@@ -316,6 +316,13 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
+    // set plaintext length
+    err = alcp_cipher_aead_set_plaintext_length(m_handle, aead_data.m_inl);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error: Setting the plaintext Length\n");
+        alcp_error_str(err, err_buff, cErrSize);
+        return -1;
+    }
 
     err =
         alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
@@ -345,7 +352,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             err = alcp_cipher_aead_encrypt(m_handle, &a, &a, 0);
         }
         if (alcp_is_error(err)) {
-            printf("Encrypt Error\n");
+            printf("Encrypt Update Error\n");
             alcp_error_str(err, err_buff, cErrSize);
             std::cout << "Error:" << err_buff << std::endl;
             return false;
