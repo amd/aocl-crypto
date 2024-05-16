@@ -25,11 +25,4 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_EXECUTABLE(test_fuzz_aes_cbc test_fuzz_aes_cbc.cc ${ALC_BASE_FILES})
-
-TARGET_INCLUDE_DIRECTORIES(test_fuzz_aes_cbc PRIVATE ${ALC_FUZZER_INCLUDES})
-TARGET_COMPILE_OPTIONS(test_fuzz_aes_cbc PUBLIC ${ALCP_FUZZ_FLAGS})
-TARGET_LINK_OPTIONS(test_fuzz_aes_cbc PUBLIC ${ALCP_FUZZ_LINK_FLAGS})
-TARGET_LINK_LIBRARIES(test_fuzz_aes_cbc ${LIBS})
-
-gtest_add_tests(TARGET test_fuzz_aes_cbc)
+ADD_FUZZ_TARGET(test_fuzz_aes_cbc test_fuzz_aes_cbc.cc)

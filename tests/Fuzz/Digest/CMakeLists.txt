@@ -25,13 +25,4 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-#FIXME, add a function to generate target from target name
-
-ADD_EXECUTABLE(test_fuzz_digest test_fuzz_digest.cc)
-
-TARGET_INCLUDE_DIRECTORIES(test_fuzz_digest PRIVATE ${ALC_FUZZER_INCLUDES})
-TARGET_COMPILE_OPTIONS(test_fuzz_digest PUBLIC ${ALCP_FUZZ_FLAGS})
-TARGET_LINK_OPTIONS(test_fuzz_digest PUBLIC ${ALCP_FUZZ_LINK_FLAGS})
-TARGET_LINK_LIBRARIES(test_fuzz_digest ${LIBS})
-
-gtest_add_tests(TARGET test_fuzz_digest)
+ADD_FUZZ_TARGET(test_fuzz_digest test_fuzz_digest.cc)
