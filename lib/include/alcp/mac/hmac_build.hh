@@ -83,6 +83,10 @@ __hmac_wrapperInit(Context*        ctx,
 {
     auto hmac_algo = static_cast<Hmac*>(ctx->m_mac);
 
+    if (ctx->m_digest) {
+        delete static_cast<digest::IDigest*>(ctx->m_digest);
+    }
+
     alc_digest_mode_t mode   = info->hmac.digest_mode;
     void*             digest = nullptr;
     switch (mode) {
@@ -139,9 +143,47 @@ __hmac_wrapperInit(Context*        ctx,
 static Status
 __build_with_copy_hmac(Context* srcCtx, Context* destCtx)
 {
-
+    using namespace digest;
     auto hmac_algo = new Hmac(*reinterpret_cast<Hmac*>(srcCtx->m_mac));
-    destCtx->m_mac = static_cast<void*>(hmac_algo);
+
+    IDigest* src_digest  = static_cast<digest::IDigest*>(srcCtx->m_digest);
+    IDigest* dest_digest = nullptr;
+
+    if (dest_digest = dynamic_cast<Sha256*>(src_digest);
+        dest_digest != nullptr) {
+        dest_digest = new Sha256(*static_cast<Sha256*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<Sha224*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha224(*static_cast<Sha224*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha384*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha384(*static_cast<Sha384*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha512*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha512(*static_cast<Sha512*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha512_224*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha512_224(*static_cast<Sha512_224*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha512_256*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha512_256(*static_cast<Sha512_256*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_224*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_224(*static_cast<Sha3_224*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_256*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_256(*static_cast<Sha3_256*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_384*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_384(*static_cast<Sha3_384*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_512*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_512(*static_cast<Sha3_512*>(dest_digest));
+    }
+
+    hmac_algo->setDigest(dest_digest);
+    destCtx->m_mac    = static_cast<void*>(hmac_algo);
+    destCtx->m_digest = dest_digest;
 
     destCtx->update    = srcCtx->update;
     destCtx->finalize  = srcCtx->finalize;

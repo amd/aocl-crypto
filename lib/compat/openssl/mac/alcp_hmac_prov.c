@@ -105,7 +105,7 @@ alcp_prov_hmac_dup(void* vsrc)
     return dst;
 }
 
-static inline size_t
+static inline Uint64
 alcp_hmac_size(alcp_hmac_data_st_t* macctx)
 {
     Uint64 len = 0;
@@ -189,17 +189,19 @@ alcp_hmac_get_digest_mode(char* str)
         return digest_mode;
     }
 
-    if (!strcasecmp(str, "sha256")) {
+    if (!strcasecmp(str, "sha256") || !strcasecmp(str, "SHA2-256")) {
         digest_mode = ALC_SHA2_256;
-    } else if (!strcasecmp(str, "sha224")) {
+    } else if (!strcasecmp(str, "sha224") || !strcasecmp(str, "SHA2-224")) {
         digest_mode = ALC_SHA2_224;
-    } else if (!strcasecmp(str, "sha384")) {
+    } else if (!strcasecmp(str, "sha384") || !strcasecmp(str, "SHA2-384")) {
         digest_mode = ALC_SHA2_384;
-    } else if (!strcasecmp(str, "sha512")) {
+    } else if (!strcasecmp(str, "sha512") || !strcasecmp(str, "SHA2-512")) {
         digest_mode = ALC_SHA2_512;
-    } else if (!strcasecmp(str, "sha512-224")) {
+    } else if (!strcasecmp(str, "sha512-224")
+               || !strcasecmp(str, "SHA2-512/224")) {
         digest_mode = ALC_SHA2_512_224;
-    } else if (!strcasecmp(str, "sha512-256")) {
+    } else if (!strcasecmp(str, "sha512-256")
+               || !strcasecmp(str, "SHA2-512/256")) {
         digest_mode = ALC_SHA2_512_256;
     } else if (!strcasecmp(str, "sha3-224")) {
         digest_mode = ALC_SHA3_224;
@@ -220,21 +222,21 @@ alcp_hmac_get_digest_mode(char* str)
 }
 
 static int
-alcp_hmac_setkey(alcp_hmac_data_st_t* macctx,
-                 const unsigned char* key,
-                 size_t               keylen)
+alcp_hmac_setkey(alcp_hmac_data_st_t* macctx, const Uint8* key, Uint64 size)
 {
     alc_mac_info_t info = { { macctx->mode } };
-    if (key != NULL)
-        return alcp_mac_init(&macctx->ctx->handle, key, keylen, &info);
+    if (key != NULL) {
+        alc_error_t err = alcp_mac_init(&macctx->ctx->handle, key, size, &info);
+        return (err == ALC_ERROR_NONE) ? 1 : 0;
+    }
     return 1;
 }
 
 int
-alcp_prov_hmac_init(void*                ctx,
-                    const unsigned char* key,
-                    size_t               keylen,
-                    const OSSL_PARAM     params[])
+alcp_prov_hmac_init(void*            ctx,
+                    const Uint8*     key,
+                    Uint64           size,
+                    const OSSL_PARAM params[])
 {
     alcp_hmac_data_st_t* macctx = ctx;
 
@@ -243,15 +245,14 @@ alcp_prov_hmac_init(void*                ctx,
 
     alc_error_t err;
     if (key != NULL) {
-        err = alcp_hmac_setkey(macctx, key, keylen);
-        return err == ALC_ERROR_NONE ? 1 : 0;
+        return alcp_hmac_setkey(macctx, key, size);
     }
     err = alcp_mac_reset(&macctx->ctx->handle);
     return err == ALC_ERROR_NONE ? 1 : 0;
 }
 
 static int
-alcp_prov_hmac_update(void* vmacctx, const unsigned char* data, size_t datalen)
+alcp_prov_hmac_update(void* vmacctx, const Uint8* data, Uint64 datalen)
 {
     alcp_hmac_data_st_t* macctx = vmacctx;
 
@@ -259,13 +260,10 @@ alcp_prov_hmac_update(void* vmacctx, const unsigned char* data, size_t datalen)
 }
 
 static int
-alcp_prov_hmac_final(void*          cctx,
-                     unsigned char* out,
-                     size_t*        outl,
-                     size_t         outsize)
+alcp_prov_hmac_final(void* cctx, Uint8* out, Uint64* outl, Uint64 outsize)
 {
     alcp_hmac_data_st_t* macctx = cctx;
-    return alcp_prov_mac_final(macctx->ctx, out, outl, outsize);
+    return alcp_prov_mac_final(macctx->ctx, out, outl, alcp_hmac_size(macctx));
 }
 
 int

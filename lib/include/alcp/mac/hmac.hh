@@ -105,6 +105,8 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @returns Status
      */
     Status reset() override;
+
+    void setDigest(digest::IDigest* digest);
 };
 
 namespace avx2 {

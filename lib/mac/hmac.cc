@@ -245,4 +245,10 @@ Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest)
     return status;
 }
 
+void
+Hmac::setDigest(digest::IDigest* digest)
+{
+    m_pDigest = digest;
+}
+
 } // namespace alcp::mac
