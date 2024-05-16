@@ -151,7 +151,8 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
         }
     }
 
-    alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), b1);
+    // Disabling multi update, too high performance hit
+    // alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), b1);
 
     return err;
 }
