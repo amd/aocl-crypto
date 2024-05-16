@@ -50,13 +50,6 @@ struct alcp_hmac_data_st
     void*               provctx;
     alc_prov_mac_ctx_t* ctx;
     alc_digest_mode_t   mode;
-    Uint8*              key;
-    size_t              keylen;
-    size_t              tls_data_size;
-    unsigned char       tls_header[13];
-    int                 tls_header_set;
-    unsigned char       tls_mac_out[EVP_MAX_MD_SIZE];
-    size_t              tls_mac_out_size;
 };
 typedef struct alcp_hmac_data_st alcp_hmac_data_st_t;
 
@@ -81,8 +74,6 @@ alcp_prov_hmac_free(void* ctx)
 
     if (macctx != NULL) {
         alcp_prov_mac_freectx(macctx->ctx);
-        // TODO : free the digest object if kept inside the alcp_hmac_data_st
-        OPENSSL_secure_clear_free(macctx->key, macctx->keylen);
         OPENSSL_free(macctx);
     }
 }
@@ -111,14 +102,6 @@ alcp_prov_hmac_dup(void* vsrc)
         return NULL;
     }
 
-    if (src->key != NULL) {
-        dst->key = OPENSSL_secure_malloc(src->keylen > 0 ? src->keylen : 1);
-        if (dst->key == NULL) {
-            alcp_prov_hmac_free(dst);
-            return 0;
-        }
-        memcpy(dst->key, src->key, src->keylen);
-    }
     return dst;
 }
 
@@ -237,16 +220,8 @@ alcp_hmac_setkey(alcp_hmac_data_st_t* macctx,
                  const unsigned char* key,
                  size_t               keylen)
 {
-    if (macctx->key != NULL)
-        OPENSSL_secure_clear_free(macctx->key, macctx->keylen);
-    /* Keep a copy of the key in case we need it for TLS HMAC */
-    macctx->key = OPENSSL_secure_malloc(keylen > 0 ? keylen : 1);
-    if (macctx->key == NULL)
-        return 0;
-    memcpy(macctx->key, key, keylen);
-    macctx->keylen      = keylen;
     alc_mac_info_t info = { { macctx->mode } };
-    if (key != NULL || (macctx->tls_data_size == 0))
+    if (key != NULL)
         return alcp_mac_init(&macctx->ctx->handle, key, keylen, &info);
     return 1;
 }
@@ -274,31 +249,6 @@ alcp_prov_hmac_update(void* vmacctx, const unsigned char* data, size_t datalen)
 {
     alcp_hmac_data_st_t* macctx = vmacctx;
 
-    if (macctx->tls_data_size > 0) {
-        if (!macctx->tls_header_set) {
-            if (datalen != sizeof(macctx->tls_header))
-                return 0;
-            memcpy(macctx->tls_header, data, datalen);
-            macctx->tls_header_set = 1;
-            return 1;
-        }
-        /* macctx->tls_data_size is datalen plus the padding length */
-        if (macctx->tls_data_size < datalen)
-            return 0;
-
-        return 1;
-        // ssl3_cbc_digest_record(ossl_prov_digest_md(&macctx->digest),
-        //                               macctx->tls_mac_out,
-        //                               &macctx->tls_mac_out_size,
-        //                               macctx->tls_header,
-        //                               data,
-        //                               datalen,
-        //                               macctx->tls_data_size,
-        //                               macctx->key,
-        //                               macctx->keylen,
-        //                               0);
-    }
-
     return alcp_prov_mac_update(macctx->ctx, data, datalen);
 }
 
@@ -309,15 +259,6 @@ alcp_prov_hmac_final(void*          cctx,
                      size_t         outsize)
 {
     alcp_hmac_data_st_t* macctx = cctx;
-
-    if (macctx->tls_data_size > 0) {
-        if (macctx->tls_mac_out_size == 0)
-            return 0;
-        if (outl != NULL)
-            *outl = macctx->tls_mac_out_size;
-        memcpy(out, macctx->tls_mac_out, macctx->tls_mac_out_size);
-        return 1;
-    }
     return alcp_prov_mac_final(macctx->ctx, out, outl, outsize);
 }
 
@@ -350,13 +291,6 @@ alcp_prov_hmac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         if (!alcp_hmac_setkey(macctx, p->data, p->data_size))
             return 0;
     }
-
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_TLS_DATA_SIZE))
-        != NULL) {
-        if (!OSSL_PARAM_get_size_t(p, &macctx->tls_data_size))
-            return 0;
-    }
-    return 1;
 
     EXIT();
     return 1;
@@ -398,7 +332,6 @@ static const OSSL_PARAM known_settable_ctx_params[] = {
     OSSL_PARAM_octet_string(OSSL_MAC_PARAM_KEY, NULL, 0),
     OSSL_PARAM_int(OSSL_MAC_PARAM_DIGEST_NOINIT, NULL),
     OSSL_PARAM_int(OSSL_MAC_PARAM_DIGEST_ONESHOT, NULL),
-    OSSL_PARAM_size_t(OSSL_MAC_PARAM_TLS_DATA_SIZE, NULL),
     OSSL_PARAM_END
 };
 
