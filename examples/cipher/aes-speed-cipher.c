@@ -175,6 +175,14 @@ out:
     return -1;
 }
 
+void end_aes_session(){
+    /*
+     * Complete the transaction
+     */
+    alcp_cipher_finish(&handle);
+    free(handle.ch_context);
+}
+
 /* AES modes: Encryption Demo */
 void
 aclp_aes_encrypt_demo(
@@ -226,6 +234,7 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
                      alc_cipher_mode_t m,
                      int i)
 {
+    int retval = 0;
     unsigned int keybits;
     Uint8      key[32];
     int          ret = 0;
@@ -266,14 +275,14 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
         printText(inputText, inputLen, "inputText");
 
 
-        int retval = create_aes_session(key, iv, keybits, m);
-        if (retval != 0)
-            goto out;
-
-
         //Encrypt speed test
         totalTimeElapsed = 0.0;
+        retval           = create_aes_session(key, iv, keybits, m);
         for (int k = 0; k < 100000000; k++) {
+            // FIXME: We need a reset API to remove this
+            // Create the session
+            if (retval != 0)
+                goto out;
 
             ALCP_CRYPT_TIMER_START
             aclp_aes_encrypt_demo(inputText, inputLen, cipherText);
@@ -290,11 +299,16 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
                 break;
             }
         }
-
+        end_aes_session();
 
         //Decrypt speed test
         totalTimeElapsed = 0.0;
+        retval           = create_aes_session(key, iv, keybits, m);
         for (int k = 0; k < 100000000; k++) {
+            // FIXME: We need a reset API to remove this
+            if (retval != 0)
+                goto out;
+
 
             ALCP_CRYPT_TIMER_START
             aclp_aes_decrypt_demo(
@@ -315,17 +329,7 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
                 break;
             }
         }
-
-
-        if (memcmp(inputText, outputText, (long unsigned int)inputLen) != 0) {
-            printf("\n\t\t\t\t input->enc->dec->input FAILED \n");
-        }
-
-        /*
-         * Complete the transaction
-         */
-        alcp_cipher_finish(&handle);
-        free(handle.ch_context);
+        end_aes_session();
     }
 
     out:
