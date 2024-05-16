@@ -197,6 +197,10 @@ alcp_hmac_get_digest_mode(char* str)
         digest_mode = ALC_SHA2_384;
     } else if (!strcasecmp(str, "sha512")) {
         digest_mode = ALC_SHA2_512;
+    } else if (!strcasecmp(str, "sha512-224")) {
+        digest_mode = ALC_SHA2_512_224;
+    } else if (!strcasecmp(str, "sha512-256")) {
+        digest_mode = ALC_SHA2_512_256;
     } else if (!strcasecmp(str, "sha3-224")) {
         digest_mode = ALC_SHA3_224;
     } else if (!strcasecmp(str, "sha3-256")) {
@@ -237,10 +241,12 @@ alcp_prov_hmac_init(void*                ctx,
     if (!alcp_prov_hmac_set_ctx_params(macctx, params))
         return 0;
 
-    if (key != NULL)
-        return alcp_hmac_setkey(macctx, key, keylen);
-
-    alc_error_t err = alcp_mac_reset(&macctx->ctx->handle);
+    alc_error_t err;
+    if (key != NULL) {
+        err = alcp_hmac_setkey(macctx, key, keylen);
+        return err == ALC_ERROR_NONE ? 1 : 0;
+    }
+    err = alcp_mac_reset(&macctx->ctx->handle);
     return err == ALC_ERROR_NONE ? 1 : 0;
 }
 
