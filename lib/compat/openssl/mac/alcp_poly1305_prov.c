@@ -194,18 +194,17 @@ alcp_prov_poly1305_set_ctx_params(void* ctx, const OSSL_PARAM* params)
 }
 
 const OSSL_DISPATCH alcp_poly1305_functions[] = {
-    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void))alcp_prov_poly1305_new },
-    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void))alcp_prov_poly1305_dup },
-    { OSSL_FUNC_MAC_FREECTX, (void (*)(void))alcp_prov_poly1305_free },
-    { OSSL_FUNC_MAC_INIT, (void (*)(void))alcp_prov_poly1305_init },
-    { OSSL_FUNC_MAC_UPDATE, (void (*)(void))alcp_prov_poly1305_update },
-    { OSSL_FUNC_MAC_FINAL, (void (*)(void))alcp_prov_poly1305_final },
+    { OSSL_FUNC_MAC_NEWCTX, (fptr_t)alcp_prov_poly1305_new },
+    { OSSL_FUNC_MAC_DUPCTX, (fptr_t)alcp_prov_poly1305_dup },
+    { OSSL_FUNC_MAC_FREECTX, (fptr_t)alcp_prov_poly1305_free },
+    { OSSL_FUNC_MAC_INIT, (fptr_t)alcp_prov_poly1305_init },
+    { OSSL_FUNC_MAC_UPDATE, (fptr_t)alcp_prov_poly1305_update },
+    { OSSL_FUNC_MAC_FINAL, (fptr_t)alcp_prov_poly1305_final },
     { OSSL_FUNC_MAC_GETTABLE_PARAMS,
-      (void (*)(void))alcp_prov_poly1305_gettable_params },
-    { OSSL_FUNC_MAC_GET_PARAMS, (void (*)(void))alcp_prov_poly1305_get_params },
+      (fptr_t)alcp_prov_poly1305_gettable_params },
+    { OSSL_FUNC_MAC_GET_PARAMS, (fptr_t)alcp_prov_poly1305_get_params },
     { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,
-      (void (*)(void))alcp_prov_poly1305_settable_ctx_params },
-    { OSSL_FUNC_MAC_SET_CTX_PARAMS,
-      (void (*)(void))alcp_prov_poly1305_set_ctx_params },
+      (fptr_t)alcp_prov_poly1305_settable_ctx_params },
+    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (fptr_t)alcp_prov_poly1305_set_ctx_params },
     OSSL_DISPATCH_END
 };

@@ -194,7 +194,7 @@ alcp_hmac_block_size(alcp_hmac_data_st_t* macctx)
     return len / 8;
 }
 
-static inline alc_digest_mode_t
+static inline int
 alcp_hmac_get_digest_mode(char* str)
 {
     ENTER();
@@ -223,10 +223,8 @@ alcp_hmac_get_digest_mode(char* str)
     } else if (!strcasecmp(str, "sha3-512")) {
         digest_mode = ALC_SHA3_512;
     } else {
-        digest_mode = ALC_SHA2_256;
-        printf("HMAC Provider: Digest '%s' Not Supported.Using the default "
-               "Sha256 mode",
-               str);
+        digest_mode = -1;
+        printf("HMAC Provider: Digest '%s' not Supported", str);
         EXIT();
     }
 
@@ -339,7 +337,11 @@ alcp_prov_hmac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         if (p->data_type != OSSL_PARAM_UTF8_STRING) {
             return 0;
         }
-        macctx->mode = alcp_hmac_get_digest_mode(p->data);
+        int ret = alcp_hmac_get_digest_mode(p->data);
+        if (ret < 0) {
+            return 0;
+        }
+        macctx->mode = ret;
     }
 
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_KEY)) != NULL) {
@@ -390,6 +392,7 @@ alcp_prov_hmac_get_ctx_params(void* vmacctx, OSSL_PARAM params[])
 }
 
 static const OSSL_PARAM known_settable_ctx_params[] = {
+
     OSSL_PARAM_utf8_string(OSSL_MAC_PARAM_DIGEST, NULL, 0),
     OSSL_PARAM_utf8_string(OSSL_MAC_PARAM_PROPERTIES, NULL, 0),
     OSSL_PARAM_octet_string(OSSL_MAC_PARAM_KEY, NULL, 0),
@@ -398,7 +401,9 @@ static const OSSL_PARAM known_settable_ctx_params[] = {
     OSSL_PARAM_size_t(OSSL_MAC_PARAM_TLS_DATA_SIZE, NULL),
     OSSL_PARAM_END
 };
+
 static const OSSL_PARAM*
+
 alcp_prov_hmac_settable_ctx_params(ossl_unused void* ctx,
                                    ossl_unused void* provctx)
 {

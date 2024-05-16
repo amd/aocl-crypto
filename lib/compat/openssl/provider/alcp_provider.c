@@ -146,8 +146,6 @@ ALCP_teardown(void* vctx)
     ALCP_prov_freectx(vctx);
 }
 
-typedef void (*fptr_t)(void);
-
 static const OSSL_DISPATCH ALC_dispatch_table[] = {
     { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (fptr_t)ALCP_query_operation },
     { OSSL_FUNC_PROVIDER_GET_REASON_STRINGS, (fptr_t)ALCP_get_reason_strings },

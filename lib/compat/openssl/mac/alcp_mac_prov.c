@@ -73,114 +73,8 @@ alcp_prov_mac_newctx(alc_mac_type_t mac_type)
     return mac_ctx;
 }
 
-void*
-alcp_prov_mac_dupctx(void* vctx)
-{
-    ENTER();
-    // FIXME: Implementation pending for context copy
-    alc_prov_mac_ctx_p csrc = vctx;
-
-    EXIT();
-    return csrc;
-}
-
-/*-
- * Generic mac functions for OSSL_PARAM gettables and settables
- */
-static const OSSL_PARAM mac_known_gettable_params[] = {
-    OSSL_PARAM_size_t(OSSL_MAC_PARAM_DIGEST, NULL),
-    OSSL_PARAM_size_t(OSSL_MAC_PARAM_CIPHER, NULL),
-    OSSL_PARAM_END
-};
-
-const OSSL_PARAM*
-alcp_prov_mac_gettable_params(void* provctx)
-{
-    ENTER();
-
-    EXIT();
-    return mac_known_gettable_params;
-}
-
 int
-alcp_prov_mac_get_params(OSSL_PARAM params[])
-{
-    ENTER();
-    EXIT();
-    return 0;
-}
-
-const OSSL_PARAM*
-alcp_prov_mac_gettable_ctx_params(void* cctx, void* provctx)
-{
-    ENTER();
-    EXIT();
-    return 0;
-}
-
-/* Parameters that libcrypto can send to this implementation */
-const OSSL_PARAM*
-alcp_prov_mac_settable_ctx_params(void* cctx, void* provctx)
-{
-    ENTER();
-    EXIT();
-    return 0;
-}
-
-int
-alcp_prov_mac_set_params(const OSSL_PARAM params[])
-{
-    ENTER();
-    EXIT();
-    return 0;
-}
-
-int
-alcp_prov_mac_get_ctx_params(void* vctx, OSSL_PARAM params[])
-{
-    ENTER();
-    EXIT();
-    return 0;
-}
-
-int
-alcp_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
-{
-    ENTER();
-    int ret = 0;
-
-    const OSSL_PARAM* p_cipher =
-        OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_CIPHER);
-    if (p_cipher != NULL) {
-        char* cipher = p_cipher->data;
-        if (!strcasecmp(cipher, "aes128") || !strcasecmp(cipher, "aes192")
-            || !strcasecmp(cipher, "aes256")
-            || !strcasecmp(cipher, "aes-128-cbc")
-            || !strcasecmp(cipher, "aes-192-cbc")
-            || !strcasecmp(cipher, "aes-256-cbc")) {
-            return 1;
-        } else {
-            printf("CMAC Provider: Cipher '%s' not supported\n", cipher);
-        }
-    }
-
-    EXIT();
-    return ret;
-}
-int
-alcp_prov_mac_init(void*                vctx,
-                   const unsigned char* key,
-                   size_t               keylen,
-                   const OSSL_PARAM     params[])
-{
-    ENTER();
-
-    EXIT();
-    return 1;
-}
-
-int
-alcp_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
+alcp_prov_mac_update(void* vctx, const Uint8* in, Uint64 inl)
 {
     ENTER();
 
@@ -197,10 +91,7 @@ alcp_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
 }
 
 int
-alcp_prov_mac_final(void*          vctx,
-                    unsigned char* out,
-                    size_t*        outl,
-                    size_t         outsize)
+alcp_prov_mac_final(void* vctx, Uint8* out, Uint64* outl, Uint64 outsize)
 {
     ENTER();
     alc_error_t        err  = ALC_ERROR_NONE;
@@ -210,8 +101,6 @@ alcp_prov_mac_final(void*          vctx,
         printf("MAC Provider: Failed to Finalize\n");
         return 0;
     }
-
-    // alcp_mac_reset(&(mctx->handle));
 
     *outl = outsize;
     EXIT();
@@ -226,7 +115,7 @@ extern const OSSL_DISPATCH alcp_poly1305_functions[];
 
 const OSSL_ALGORITHM ALC_prov_macs[] = {
     { ALCP_PROV_NAMES_CMAC, MAC_DEF_PROP, alcp_cmac_functions },
-    //{ ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, alcp_hmac_functions },
+    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, alcp_hmac_functions },
     { ALCP_PROV_NAMES_POLY1305, MAC_DEF_PROP, alcp_poly1305_functions },
     { NULL, NULL, NULL },
 };

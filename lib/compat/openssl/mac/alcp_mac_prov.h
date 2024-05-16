@@ -49,84 +49,23 @@ struct _alc_prov_mac_ctx
     alc_mac_handle_t handle;
 };
 typedef struct _alc_prov_mac_ctx alc_prov_mac_ctx_t, *alc_prov_mac_ctx_p;
+extern const OSSL_ALGORITHM      ALC_prov_macs[];
 
-EVP_MAC*
-alcp_prov_init_mac(alc_prov_mac_ctx_p c);
 int
 alcp_prov_mac_init(void*                vctx,
                    const unsigned char* key,
                    size_t               keylen,
                    const OSSL_PARAM     params[]);
-
-extern const OSSL_ALGORITHM ALC_prov_macs[];
-
-/* TODO: ugly hack for openssl table */
-typedef void (*fptr_t)(void);
-
-extern void*
+void*
 alcp_prov_mac_newctx(alc_mac_type_t mac_type);
 void
 alcp_prov_mac_freectx(void* vctx);
-
 int
-alcp_prov_mac_get_ctx_params(void* vctx, OSSL_PARAM params[]);
+alcp_prov_mac_update(void* vctx, const unsigned char* in, size_t inl);
 int
-alcp_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[]);
-const OSSL_PARAM*
-alcp_prov_mac_gettable_ctx_params(void* cctx, void* provctx);
-const OSSL_PARAM*
-alcp_prov_mac_settable_ctx_params(void* cctx, void* provctx);
-const OSSL_PARAM*
-alcp_prov_mac_gettable_params(void* provctx);
-int
-alcp_prov_mac_get_params(OSSL_PARAM params[]);
-int
-alcp_prov_mac_set_params(const OSSL_PARAM params[]);
-
-extern OSSL_FUNC_mac_dupctx_fn         alcp_prov_mac_dupctx;
-extern OSSL_FUNC_mac_freectx_fn        alcp_prov_mac_freectx;
-extern OSSL_FUNC_mac_get_ctx_params_fn alcp_prov_mac_get_ctx_params;
-extern OSSL_FUNC_mac_set_ctx_params_fn alcp_prov_mac_set_ctx_params;
-extern OSSL_FUNC_mac_update_fn         alcp_prov_mac_update;
-extern OSSL_FUNC_mac_final_fn          alcp_prov_mac_final;
-
-#define CREATE_MAC_DISPATCHERS(mactype, subtype)                               \
-    static OSSL_FUNC_mac_get_params_fn alcp_prov_##mactype##_get_params;       \
-    static int alcp_prov_##mactype##_get_params(OSSL_PARAM* params)            \
-    {                                                                          \
-        ENTER();                                                               \
-        int ret = alcp_prov_mac_get_params(params);                            \
-        EXIT();                                                                \
-        return ret;                                                            \
-    }                                                                          \
-                                                                               \
-    static OSSL_FUNC_mac_newctx_fn alcp_prov_##mactype##_newctx;               \
-    static void*                   alcp_prov_##mactype##_newctx(void* provctx) \
-    {                                                                          \
-        ENTER();                                                               \
-        void* ret = alcp_prov_mac_newctx(&s_mac_##mactype##_##subtype##_info); \
-        EXIT();                                                                \
-        return ret;                                                            \
-    }                                                                          \
-    const OSSL_DISPATCH mac_##mactype##_functions[] = {                        \
-        { OSSL_FUNC_MAC_GET_PARAMS,                                            \
-          (fptr_t)alcp_prov_##mactype##_get_params },                          \
-        { OSSL_FUNC_MAC_NEWCTX, (fptr_t)alcp_prov_##mactype##_newctx },        \
-        { OSSL_FUNC_MAC_DUPCTX, (fptr_t)alcp_prov_mac_dupctx },                \
-        { OSSL_FUNC_MAC_FREECTX, (fptr_t)alcp_prov_mac_freectx },              \
-        { OSSL_FUNC_MAC_GETTABLE_PARAMS,                                       \
-          (fptr_t)alcp_prov_mac_gettable_params },                             \
-        { OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS,                                   \
-          (fptr_t)alcp_prov_mac_gettable_params },                             \
-        { OSSL_FUNC_MAC_GET_CTX_PARAMS,                                        \
-          (fptr_t)alcp_prov_##mactype##_get_ctx_params },                      \
-        { OSSL_FUNC_MAC_INIT, (fptr_t)alcp_prov_mac_init },                    \
-        { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,                                   \
-          (fptr_t)alcp_prov_mac_settable_ctx_params },                         \
-        { OSSL_FUNC_MAC_SET_CTX_PARAMS,                                        \
-          (fptr_t)alcp_prov_##mactype##_set_ctx_params },                      \
-        { OSSL_FUNC_MAC_UPDATE, (fptr_t)alcp_prov_mac_update },                \
-        { OSSL_FUNC_MAC_FINAL, (fptr_t)alcp_prov_mac_final },                  \
-    }
+alcp_prov_mac_final(void*          vctx,
+                    unsigned char* out,
+                    size_t*        outl,
+                    size_t         outsize);
 
 #endif /* _OPENSSL_alcp_prov_MAC_PROV_H */
