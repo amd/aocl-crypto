@@ -29,13 +29,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 SET(LIBS ${LIBS} gtest alcp)
 
  SET(EXTRA_INCLUDES "")
- SET(ALCP_INCLUDES
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/common/include"
-    ${EXTRA_INCLUDES}
-)
 
 IF(ENABLE_TESTS_IPP_API)
 ADD_COMPILE_OPTIONS("-DUSE_IPP")
@@ -67,8 +60,15 @@ ENDIF(WIN32)
 SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
-
 add_openssl()
+
+ SET(ALCP_INCLUDES
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/include"
+    ${EXTRA_INCLUDES}
+)
 
 ADD_SUBDIRECTORY(cipher)
 ADD_SUBDIRECTORY(digest)
