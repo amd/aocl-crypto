@@ -28,10 +28,25 @@
 
 #pragma once
 
+#include "alcp/alcp.h"
 #include "config.h"
 #include <cstddef>
 #include <cstdint>
 #include <dlfcn.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <memory>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <unordered_map>
+
+const int ERR_SIZE = 256;
+Uint8     err_buf[ERR_SIZE];
+void
+Check_Error(alc_error_t err)
+{
+    if (alcp_is_error(err))
+        alcp_error_str(err, err_buf, ERR_SIZE);
+}

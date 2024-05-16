@@ -27,14 +27,6 @@
  */
 
 #include "../../include/Fuzz/alcp_fuzz_test.hh"
-#include "alcp/alcp.h"
-#include <cstddef>
-#include <cstdint>
-#include <fuzzer/FuzzedDataProvider.h>
-#include <iostream>
-#include <stddef.h>
-#include <stdint.h>
-#include <unordered_map>
 
 std::unordered_map<alc_digest_mode_t, Uint64> MODE_SIZE = {
     { ALC_SHA2_224, 28 }, { ALC_SHA2_256, 32 },     { ALC_SHA2_384, 48 },
@@ -42,14 +34,6 @@ std::unordered_map<alc_digest_mode_t, Uint64> MODE_SIZE = {
     { ALC_SHA3_224, 28 }, { ALC_SHA3_256, 32 },     { ALC_SHA3_384, 48 },
     { ALC_SHA3_512, 64 }, { ALC_SHAKE_128, 1 },     { ALC_SHAKE_256, 1 }
 };
-const int ERR_SIZE = 256;
-Uint8     err_buf[ERR_SIZE];
-void
-Check_Error(alc_error_t err)
-{
-    if (alcp_is_error(err))
-        alcp_error_str(err, err_buf, ERR_SIZE);
-}
 
 int
 FuzzerTestOneInput(const Uint8* buf, size_t len)

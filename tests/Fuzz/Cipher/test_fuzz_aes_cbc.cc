@@ -27,15 +27,8 @@
  */
 
 #include "../../include/Fuzz/alcp_fuzz_test.hh"
-#include "alcp/alcp.h"
 #include "cipher/alc_cipher.hh"
 #include <cipher/cipher.hh>
-#include <cstddef>
-#include <cstdint>
-#include <fuzzer/FuzzedDataProvider.h>
-#include <iostream>
-#include <stddef.h>
-#include <stdint.h>
 
 using namespace alcp::testing;
 
