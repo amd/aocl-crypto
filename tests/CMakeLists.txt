@@ -81,11 +81,13 @@ ADD_SUBDIRECTORY(rsa)
 ADD_SUBDIRECTORY(cipher_experimental)
 
 # FUZZ Testing is enabled only for Clang
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    ADD_SUBDIRECTORY(Fuzz)
-else()
-    message("Skipping compilation of Fuzz Tests as LibFuzzer is NOT supported for non-Clang compilers \n")
-endif()
+if(ALCP_ENABLE_FUZZ_TESTS)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND UNIX)
+        ADD_SUBDIRECTORY(Fuzz)
+    else()
+        message("Skipping compilation of Fuzz Tests as LibFuzzer is NOT supported with non-Clang compilers \n")
+    endif()
+endif(ALCP_ENABLE_FUZZ_TESTS)
 
 # FIXME: Enable this once this test is up and running on windows
 IF(UNIX)
