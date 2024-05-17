@@ -379,7 +379,7 @@ err:
     return rv;
 }
 
-void
+int
 alcp_prov_ccm_cipher_set_plaintext_length(ALCP_PROV_CIPHER_CTX* ctx, size_t len)
 {
     alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
@@ -389,6 +389,11 @@ alcp_prov_ccm_cipher_set_plaintext_length(ALCP_PROV_CIPHER_CTX* ctx, size_t len)
     // multiple calls to CCM update might fail
     cipherctx->ccm.l        = len;
     cipherctx->ccm.isLenSet = 1;
+    if (alcp_cipher_aead_set_plaintext_length(&(ctx->handle), len)) {
+        return 0;
+    } else {
+        return 1;
+    };
 }
 static int
 alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
@@ -416,7 +421,9 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
 
     if (out == NULL) {
         if (in == NULL) {
-            alcp_prov_ccm_cipher_set_plaintext_length(ctx, len);
+            if (alcp_prov_ccm_cipher_set_plaintext_length(ctx, len)) {
+                goto err;
+            };
         } else {
 
             if (!cipherctx->ccm.isLenSet && len)
@@ -426,7 +433,9 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
         }
     } else {
         if (!cipherctx->ccm.isLenSet) {
-            alcp_prov_ccm_cipher_set_plaintext_length(ctx, len);
+            if (alcp_prov_ccm_cipher_set_plaintext_length(ctx, len)) {
+                goto err;
+            };
         }
 
         if (cipherctx->enc) {
