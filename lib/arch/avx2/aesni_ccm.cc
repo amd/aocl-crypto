@@ -45,28 +45,6 @@
 #endif
 #include <iomanip>
 
-// #define DEBUG
-
-inline std::string
-parseBytesToHexStr(const Uint8* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    return ss.str();
-}
-
 namespace alcp::cipher::aesni { namespace ccm {
 
     CCM_ERROR SetAad(ccm_data_t* ccm_data,
@@ -164,7 +142,6 @@ namespace alcp::cipher::aesni { namespace ccm {
             _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), p_blk0);
         }
 
-#if 1
         __m128i cmac, nonce;
         // Uint8*  p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
         Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
@@ -208,24 +185,14 @@ namespace alcp::cipher::aesni { namespace ccm {
         }
         // Check with everything combined we won't have too many blocks to
         // encrypt
-
-#if 0
-        ccm_data->blocks += ((plaintextLen + 15) >> 3) | 1;
+        ccm_data->blocks += ((plen + 15) >> 3) | 1;
         if (ccm_data->blocks > (Uint64(1) << 61)) {
             EXITB();
             return CCM_ERROR::DATA_OVERFLOW; /* too much data */
         }
-#endif
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
-#ifdef DEBUG
-        std::cout << "END OF AAD" << std::endl;
-        std::cout << "CMAC: " << parseBytesToHexStr(ccm_data->cmac, 16)
-                  << std::endl;
-        std::cout << "NONCE: " << parseBytesToHexStr(ccm_data->nonce, 16)
-                  << std::endl;
-#endif
-#endif
+
         EXIT();
         return CCM_ERROR::NO_ERROR;
     }
@@ -253,16 +220,7 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
-#ifdef DEBUG
-        std::cout << "Finalize" << std::endl;
-        std::cout << "flags0  = " << std::hex << std::setfill('0')
-                  << std::setw(2) << flags0 << std::endl;
-        std::cout << "Q = " << q << std::endl;
-        std::cout << "CMAC: " << parseBytesToHexStr(ccm_data->cmac, 16)
-                  << std::endl;
-        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
-                  << std::endl;
-#endif
+
         // Zero out counter part
         for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
             p_nonce_8[i] = 0;
@@ -274,10 +232,7 @@ namespace alcp::cipher::aesni { namespace ccm {
                    reinterpret_cast<const __m128i*>(ccm_data->key),
                    ccm_data->rounds);
         cmac = _mm_xor_si128(temp_reg, cmac);
-#ifdef DEBUG
-        std::cout << "flags0  = " << std::hex << std::setfill('0')
-                  << std::setw(2) << flags0 << std::endl;
-#endif
+
         // Restore flags into nonce to restore nonce to original state
         p_nonce_8[0] = flags0;
         // Copy the current state of cmac and nonce back to memory.
@@ -302,14 +257,6 @@ namespace alcp::cipher::aesni { namespace ccm {
         Uint8*       p_temp_8 = reinterpret_cast<Uint8*>(&temp_reg);
         cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
-
-#ifdef DEBUG
-        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
-        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
-                  << std::endl;
-        std::cout << "flags0  = " << std::hex << std::setfill('0')
-                  << std::setw(2) << flags0 << std::endl;
-#endif
 
         while (dataLen >= 16) {
             // Load the PlainText
@@ -358,12 +305,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Copy the current state of cmac and nonce back to memory.
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
-#ifdef DEBUG
-        std::cout << "AT LAST" << std::endl;
-        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
-        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
-                  << std::endl;
-#endif
+
         // Encryption cannot proceed after this.
         EXITG();
         return CCM_ERROR::NO_ERROR;
@@ -384,13 +326,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         Uint8*       p_temp_8 = reinterpret_cast<Uint8*>(&temp_reg);
         cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
-#ifdef DEBUG
-        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
-        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
-                  << std::endl;
-        std::cout << "flags0  = " << flags0 << std::endl;
-#endif
-#if 1
+
         while (len >= 32) {
             /* CTR */
             temp_reg = nonce; // Copy Counter
@@ -436,7 +372,6 @@ namespace alcp::cipher::aesni { namespace ccm {
             pout += 32;
             len -= 32;
         }
-#endif
 
         while (len >= 16) {
 
@@ -494,14 +429,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Copy the current state of cmac and nonce back to memory.
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
-#ifdef DEBUG
-        std::cout << "AT LAST" << std::endl;
-        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
-        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
-                  << std::endl;
-#endif
+
         EXITG();
         return CCM_ERROR::NO_ERROR;
     }
-
 }} // namespace alcp::cipher::aesni::ccm

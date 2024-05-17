@@ -122,7 +122,7 @@ class ALCP_API_EXPORT Ccm : public Aes
      *
      * @param ctx  - Context
      * @param len  - Length of Tag
-     * @return
+     * @return Error code
      */
     alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen);
 
@@ -132,7 +132,7 @@ class ALCP_API_EXPORT Ccm : public Aes
      *
      * @param ctx  - Context
      * @param len  - Length of plaintext
-     * @return
+     * @return Error code
      */
     alc_error_t setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len);
 
@@ -184,7 +184,10 @@ class ALCP_API_EXPORT Ccm : public Aes
                      const Uint8 paad[],
                      size_t      aadLen,
                      size_t      plen);
-
+    /**
+     * @brief Finalize the encrypt/decrypt operations for Reference Algorithm
+     * @param pccm_data Intermediate Data
+     */
     Status finalizeRef(ccm_data_t* pccm_data);
     /**
      * @brief Reference encryption function

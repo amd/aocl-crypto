@@ -35,25 +35,6 @@
 #include <wmmintrin.h>
 
 using alcp::utils::CpuId;
-std::string
-parseBytesToHexStr(const Uint8* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    return ss.str();
-}
 namespace alcp::cipher {
 
 // Macros
@@ -108,17 +89,12 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
 
-        // if (m_updatedLength + dataLen > m_plainTextLength) {
-        //     return status::EncryptFailed(
-        //         "Unable to Process more than established Plaintext Length");
-        // }
         const Uint8* p_keys  = getEncryptKeys();
         const Uint32 cRounds = m_nrounds;
         m_ccm_data.key       = p_keys;
         m_ccm_data.rounds    = cRounds;
 
         // Below Operations has to be done in order
-        // s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
         if (m_updatedLength == 0) {
             s.update(
                 setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, m_plainTextLength));
@@ -208,64 +184,15 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
     Status       s = StatusOk();
-    size_t       n;
-    unsigned int i, q;
+    unsigned int i;
     if (pPlainText == nullptr || pCipherText == nullptr
         || pccm_data == nullptr) {
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
-    Uint32        cmac[4], nonce[4], in_reg[4], temp_reg[4];
-    unsigned char flags0    = pccm_data->flags0;
-    const Uint8*  p_key     = pccm_data->key;
-    Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(cmac);
-    Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
-    Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(temp_reg);
-#if 0
-
-    utils::CopyBytes(nonce, pccm_data->nonce, 16);
-
-    if (!(flags0 & 0x40)) {
-        utils::CopyBytes(cmac, nonce, 16);
-        encryptBlock(cmac, p_key, pccm_data->rounds);
-        pccm_data->blocks++;
-    } else {
-        // Additional data exists so load the cmac (already done in encrypt
-        // aad)
-        utils::CopyBytes(cmac, pccm_data->cmac, 16);
-    }
-
-    // Set nonce to just length to store size of plain text
-    // extracted from flags
-    p_nonce_8[0] = q = flags0 & 7;
-
-    // Reconstruct length of plain text
-    for (n = 0, i = 15 - q; i < 15; ++i) {
-        n |= p_nonce_8[i];
-        p_nonce_8[i] = 0;
-        n <<= 8;
-    }
-
-    // Extract Length
-    n |= p_nonce_8[15];
-    p_nonce_8[15] = 1;
-
-    // Check if input length matches the intialized length
-    if (n != ptLen) {
-        // EXITB();
-        s = status::EncryptFailed("Length of plainText mismatch!");
-        return s;
-    }
-
-    // Check with everything combined we won't have too many blocks to
-    // encrypt
-    pccm_data->blocks += ((ptLen + 15) >> 3) | 1;
-    if (pccm_data->blocks > (Uint64(1) << 61)) {
-        // EXITB();
-        s = status::EncryptFailed("Overload of plaintext. Please reduce it!");
-        return s;
-    }
-#endif
+    Uint32 cmac[4], nonce[4], in_reg[4], temp_reg[4];
+    Uint8* p_cmac_8 = reinterpret_cast<Uint8*>(cmac);
+    Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp_reg);
 
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
     utils::CopyBytes(cmac, pccm_data->cmac, 16);
@@ -311,24 +238,7 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         for (i = 0; i < ptLen; ++i)
             pCipherText[i] = p_temp_8[i] ^ pPlainText[i];
     }
-#if 0
-    q = flags0 & 7;
-    // Zero out counter part
-    for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
-        p_nonce_8[i] = 0;
 
-    // CTR encrypt first counter and XOR with the partial tag to generate
-    // the real tag
-    utils::CopyBytes(temp_reg, nonce, 16);
-    encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-
-    for (int i = 0; i < 4; i++) {
-        cmac[i] ^= temp_reg[i];
-    }
-
-    // Restore flags into nonce to restore nonce to original state
-    p_nonce_8[0] = pccm_data->flags0;
-#endif
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBytes(pccm_data->cmac, cmac, 16);
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
@@ -345,52 +255,16 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
     Status       s = StatusOk();
-    unsigned int i, q;
-    size_t       n;
+    unsigned int i;
     if (pPlainText == nullptr || pCipherText == nullptr
         || pccm_data == nullptr) {
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
-    Uint32        cmac[4], nonce[4], in_reg[4], temp_reg[4];
-    unsigned char flags0    = pccm_data->flags0;
-    const Uint8*  p_key     = pccm_data->key;
-    Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(cmac);
-    Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
-    Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(temp_reg);
-#if 0
-    utils::CopyBytes(nonce, pccm_data->nonce, 16);
+    Uint32 cmac[4], nonce[4], in_reg[4], temp_reg[4];
+    Uint8* p_cmac_8 = reinterpret_cast<Uint8*>(cmac);
+    Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp_reg);
 
-    if (!(flags0 & 0x40)) {
-        utils::CopyBytes(cmac, nonce, 16);
-        encryptBlock(cmac, p_key, pccm_data->rounds);
-        pccm_data->blocks++;
-    } else {
-        // Additional data exists so load the cmac (already done in encrypt
-        // aad)
-        utils::CopyBytes(cmac, pccm_data->cmac, 16);
-    }
-
-    // Set nonce to just length to store size of plain text
-    // extracted from flags
-    p_nonce_8[0] = q = flags0 & 7;
-
-    // Reconstruct length of plain text
-    for (n = 0, i = 15 - q; i < 15; ++i) {
-        n |= p_nonce_8[i];
-        p_nonce_8[i] = 0;
-        n <<= 8;
-    }
-    n |= p_nonce_8[15]; /* reconstructed length */
-    p_nonce_8[15] = 1;
-
-    // Check if input length matches the intialized length
-    if (n != ctLen) {
-        // EXITB();
-        s = status::DecryptFailed("Length of plainText mismatch!");
-        return s;
-    }
-#endif
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
     utils::CopyBytes(cmac, pccm_data->cmac, 16);
 
@@ -440,24 +314,7 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
         // tag
         encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
     }
-#if 0 
-    q = flags0 & 7;
-    // Zero out counter part
-    for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
-        p_nonce_8[i] = 0;
 
-    // CTR encrypt first counter and XOR with the partial tag to generate
-    // the real tag
-    utils::CopyBlock(temp_reg, nonce, 16);
-    encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-
-    for (int i = 0; i < 4; i++) {
-        cmac[i] ^= temp_reg[i];
-    }
-
-    // Restore flags into nonce to restore nonce to original state
-    p_nonce_8[0] = pccm_data->flags0;
-#endif
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBlock(pccm_data->cmac, cmac, 16);
     utils::CopyBlock(pccm_data->nonce, nonce, 16);
@@ -502,10 +359,6 @@ Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
     // Retrieve the tag length
     Status s = StatusOk();
 
-#ifdef DEBUG
-    std::cout << "getTagRef Nonce : " << parseBytesToHexStr(ctx->nonce, 16)
-              << std::endl;
-#endif
     if (ctx == nullptr || ptag == nullptr) {
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
@@ -659,14 +512,12 @@ Ccm::setAadRef(ccm_data_t* pccm_data,
         utils::CopyBlock(pccm_data->cmac, p_blk0_8, 16);
     }
 
-#if 1
     size_t       n;
     unsigned int q;
     const Uint8* p_key = pccm_data->key;
-    Uint32       cmac[4], nonce[4], in_reg[4], temp_reg[4];
-    Uint8*       p_cmac_8  = reinterpret_cast<Uint8*>(cmac);
-    Uint8*       p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
-    Uint8*       p_temp_8  = reinterpret_cast<Uint8*>(temp_reg);
+    Uint32       cmac[4], nonce[4];
+
+    Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
 
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
     unsigned char flags0 = pccm_data->flags0 = pccm_data->nonce[0];
@@ -713,7 +564,7 @@ Ccm::setAadRef(ccm_data_t* pccm_data,
 
     utils::CopyBytes(pccm_data->cmac, cmac, 16);
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
-#endif
+
     return s;
 }
 
@@ -753,6 +604,12 @@ CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
         s = status::InvalidValue("Null Pointer is not expected!");
         return s.code();
     }
+    // Check if total updated data so far has exceeded the preestablished
+    // plaintext Length. This check is here rather than in encrypt/decrypt to
+    // allow multiupdate calls in benchmarking.
+    if (m_updatedLength > m_plainTextLength) {
+        return ALC_ERROR_INVALID_DATA;
+    }
     if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
         s = status::InvalidValue(
             "Tag length is not what we agreed upon during start!");
@@ -763,6 +620,7 @@ CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
         s = status::InvalidValue(
             "Tag length is unknown!, need to agree on tag before hand!");
     } else {
+
         if (CpuId::cpuHasAesni()) {
             aesni::ccm::Finalize(&m_ccm_data);
         } else {

@@ -383,12 +383,8 @@ int
 alcp_prov_ccm_cipher_set_plaintext_length(ALCP_PROV_CIPHER_CTX* ctx, size_t len)
 {
     alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
-    // FIXME: Requires API to set the Length for multi update. Here it
-    // is saved to context.
-    // Until its fixed, plaintext length cannot be reset from inside CCM hence
-    // multiple calls to CCM update might fail
-    cipherctx->ccm.l        = len;
-    cipherctx->ccm.isLenSet = 1;
+    cipherctx->ccm.l                  = len;
+    cipherctx->ccm.isLenSet           = 1;
     if (alcp_cipher_aead_set_plaintext_length(&(ctx->handle), len)) {
         return 0;
     } else {
@@ -421,7 +417,7 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
 
     if (out == NULL) {
         if (in == NULL) {
-            if (alcp_prov_ccm_cipher_set_plaintext_length(ctx, len)) {
+            if (!alcp_prov_ccm_cipher_set_plaintext_length(ctx, len)) {
                 goto err;
             };
         } else {
