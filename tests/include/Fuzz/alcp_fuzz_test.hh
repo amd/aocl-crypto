@@ -46,11 +46,25 @@
 
 using namespace alcp::testing;
 
-std::unordered_map<alc_digest_mode_t, Uint64> MODE_SIZE = {
-    { ALC_SHA2_224, 28 }, { ALC_SHA2_256, 32 },     { ALC_SHA2_384, 48 },
-    { ALC_SHA2_512, 64 }, { ALC_SHA2_512_224, 28 }, { ALC_SHA2_512_224, 32 },
-    { ALC_SHA3_224, 28 }, { ALC_SHA3_256, 32 },     { ALC_SHA3_384, 48 },
-    { ALC_SHA3_512, 64 }, { ALC_SHAKE_128, 1 },     { ALC_SHAKE_256, 1 }
+std::map<alc_digest_mode_t, alc_digest_len_t> sha2_mode_len_map = {
+    { ALC_SHA2_224, ALC_DIGEST_LEN_224 },
+    { ALC_SHA2_256, ALC_DIGEST_LEN_256 },
+    { ALC_SHA2_384, ALC_DIGEST_LEN_384 },
+    { ALC_SHA2_512, ALC_DIGEST_LEN_512 },
+    { ALC_SHA3_224, ALC_DIGEST_LEN_224 },
+    { ALC_SHA3_256, ALC_DIGEST_LEN_256 },
+    { ALC_SHA3_384, ALC_DIGEST_LEN_384 },
+    { ALC_SHA3_512, ALC_DIGEST_LEN_512 },
+    { ALC_SHAKE_128, ALC_DIGEST_LEN_CUSTOM_SHAKE_128 },
+    { ALC_SHAKE_256, ALC_DIGEST_LEN_CUSTOM_SHAKE_256 }
+};
+
+std::map<alc_digest_mode_t, std::string> sha2_mode_string_map = {
+    { ALC_SHA2_224, "ALC_SHA2_224" },   { ALC_SHA2_256, "ALC_SHA2_256" },
+    { ALC_SHA2_384, "ALC_SHA2_384" },   { ALC_SHA2_512, "ALC_SHA2_512" },
+    { ALC_SHA3_224, "ALC_SHA3_224" },   { ALC_SHA3_256, "ALC_SHA3_256" },
+    { ALC_SHA3_384, "ALC_SHA3_384" },   { ALC_SHA3_512, "ALC_SHA3_512" },
+    { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
 const int ERR_SIZE = 256;

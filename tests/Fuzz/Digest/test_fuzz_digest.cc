@@ -29,30 +29,35 @@
 #include "Fuzz/alcp_fuzz_test.hh"
 
 int
-FuzzerTestOneInput(const Uint8* buf, size_t len)
+FuzzerTestOneInput(alc_digest_mode_t mode, const Uint8* buf, size_t len)
 {
-    const Uint8* src     = buf;
-    Uint32       srcSize = len;
+    Uint32 srcSize = len;
 
     /* Initializing digest info */
     alc_error_t         err;
     alc_digest_handle_p m_handle = new alc_digest_handle_t;
 
-    // Change the digest mode here to run SHA2 and SHA3 variants
-    alc_digest_mode_t mode     = ALC_SHAKE_256;
-    Uint32            out_size = MODE_SIZE[mode];
-    if (out_size == 0) { // For modes that are not part of MODE_SIZE
-        std::cout << mode << " is not supported. Exiting.." << std::endl;
-        return 0;
-    } else if (out_size == 1) { // SHAKE Variants
+    Uint32 out_size = sha2_mode_len_map[mode];
+
+    /* for non-shake variants */
+    if (out_size % 8 == 0) {
+        out_size = out_size / 8;
+    }
+    /* for shake variants */
+    else if (out_size == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
+             || out_size == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
         FuzzedDataProvider stream(buf, len);
         out_size = stream.ConsumeIntegral<Uint32>();
+    } else {
+        std::cout << sha2_mode_string_map[mode]
+                  << " is not supported. Exiting.." << std::endl;
+        return 0;
     }
     Uint8 output1[out_size], output2[out_size];
 
     /* Start to Fuzz Digest APIs */
     FuzzedDataProvider stream(buf, len);
-    Uint64 context_size = alcp_digest_context_size(); // Context_size = 96
+    Uint64             context_size = alcp_digest_context_size();
 
     if (m_handle == nullptr) {
         std::cout << "Error: Mem alloc for digest handle" << std::endl;
@@ -64,12 +69,12 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         goto OUT;
     }
-    /*FIXME: add lifecycle changes here*/
+    /*FIXME: add lifecycle changes here, and randomize the order of the calls */
     err = alcp_digest_request(mode, m_handle);
     Check_Error(err);
     err = alcp_digest_init(m_handle);
     Check_Error(err);
-    err = alcp_digest_update(m_handle, src, srcSize);
+    err = alcp_digest_update(m_handle, buf, srcSize);
     Check_Error(err);
     err = alcp_digest_finalize(m_handle, output1, out_size);
     Check_Error(err);
@@ -90,5 +95,13 @@ OUT:
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    return FuzzerTestOneInput(Data, Size);
+    int retval = 0;
+    for (auto const& [Mode, Len] : sha2_mode_len_map) {
+        if (FuzzerTestOneInput(Mode, Data, Size) != 0) {
+            std::cout << "Digest fuzz test failed for Mode"
+                      << sha2_mode_string_map[Mode] << std::endl;
+            return retval;
+        }
+    }
+    return retval;
 }
