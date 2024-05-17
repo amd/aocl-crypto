@@ -108,10 +108,10 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
 
-        if (m_updatedLength + dataLen > m_plainTextLength) {
-            return status::EncryptFailed(
-                "Unable to Process more than established Plaintext Length");
-        }
+        // if (m_updatedLength + dataLen > m_plainTextLength) {
+        //     return status::EncryptFailed(
+        //         "Unable to Process more than established Plaintext Length");
+        // }
         const Uint8* p_keys  = getEncryptKeys();
         const Uint32 cRounds = m_nrounds;
         m_ccm_data.key       = p_keys;
@@ -170,9 +170,14 @@ Ccm::cryptUpdate(const Uint8 pInput[],
             }
             return s;
         }
-
-        // Fallback to reference
-        setAadRef(&m_ccm_data, m_additionalData, m_additionalDataLen);
+        if (m_updatedLength == 0) {
+            // Fallback to reference
+            setAadRef(&m_ccm_data,
+                      m_additionalData,
+                      m_additionalDataLen,
+                      m_plainTextLength);
+            m_updatedLength += dataLen;
+        }
         // FIXME: Encrypt and Decrypt needs to be defined.
         if (isEncrypt) {
             s.update(encryptRef(&m_ccm_data, pInput, pOutput, dataLen));
@@ -210,12 +215,13 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
-    unsigned char flags0 = pccm_data->nonce[0];
-    const Uint8*  p_key  = pccm_data->key;
     Uint32        cmac[4], nonce[4], in_reg[4], temp_reg[4];
+    unsigned char flags0    = pccm_data->flags0;
+    const Uint8*  p_key     = pccm_data->key;
     Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(cmac);
     Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
     Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(temp_reg);
+#if 0
 
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
 
@@ -259,6 +265,10 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         s = status::EncryptFailed("Overload of plaintext. Please reduce it!");
         return s;
     }
+#endif
+
+    utils::CopyBytes(nonce, pccm_data->nonce, 16);
+    utils::CopyBytes(cmac, pccm_data->cmac, 16);
 
     while (ptLen >= 16) {
         // Load the PlainText
@@ -301,6 +311,8 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         for (i = 0; i < ptLen; ++i)
             pCipherText[i] = p_temp_8[i] ^ pPlainText[i];
     }
+#if 0
+    q = flags0 & 7;
     // Zero out counter part
     for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
         p_nonce_8[i] = 0;
@@ -315,8 +327,8 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
     }
 
     // Restore flags into nonce to restore nonce to original state
-    p_nonce_8[0] = flags0;
-
+    p_nonce_8[0] = pccm_data->flags0;
+#endif
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBytes(pccm_data->cmac, cmac, 16);
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
@@ -340,13 +352,13 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
-    unsigned char flags0 = pccm_data->nonce[0];
-    const Uint8*  p_key  = pccm_data->key;
     Uint32        cmac[4], nonce[4], in_reg[4], temp_reg[4];
+    unsigned char flags0    = pccm_data->flags0;
+    const Uint8*  p_key     = pccm_data->key;
     Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(cmac);
     Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
     Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(temp_reg);
-
+#if 0
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
 
     if (!(flags0 & 0x40)) {
@@ -378,6 +390,9 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
         s = status::DecryptFailed("Length of plainText mismatch!");
         return s;
     }
+#endif
+    utils::CopyBytes(nonce, pccm_data->nonce, 16);
+    utils::CopyBytes(cmac, pccm_data->cmac, 16);
 
     while (ctLen >= 16) {
 
@@ -425,7 +440,8 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
         // tag
         encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
     }
-
+#if 0 
+    q = flags0 & 7;
     // Zero out counter part
     for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
         p_nonce_8[i] = 0;
@@ -440,21 +456,51 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
     }
 
     // Restore flags into nonce to restore nonce to original state
-    p_nonce_8[0] = flags0;
-
+    p_nonce_8[0] = pccm_data->flags0;
+#endif
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBlock(pccm_data->cmac, cmac, 16);
     utils::CopyBlock(pccm_data->nonce, nonce, 16);
 
     return s;
 }
+Status
+Ccm::finalizeRef(ccm_data_t* pccm_data)
+{
+    Status        s = StatusOk();
+    unsigned int  q;
+    unsigned char flags0 = pccm_data->flags0;
+    q                    = flags0 & 7;
+    Uint32 cmac[4], nonce[4], temp_reg[4];
+    utils::CopyBytes(nonce, pccm_data->nonce, 16);
+    utils::CopyBytes(cmac, pccm_data->cmac, 16);
+    Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
 
+    // Zero out counter part
+    for (int i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
+        p_nonce_8[i] = 0;
+
+    // CTR encrypt first counter and XOR with the partial tag to generate
+    // the real tag
+    utils::CopyBytes(temp_reg, nonce, 16);
+    encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
+
+    for (int i = 0; i < 4; i++) {
+        cmac[i] ^= temp_reg[i];
+    }
+
+    // Restore flags into nonce to restore nonce to original state
+    p_nonce_8[0] = pccm_data->flags0;
+    // Copy the current state of cmac and nonce back to memory.
+    utils::CopyBytes(pccm_data->cmac, cmac, 16);
+    utils::CopyBytes(pccm_data->nonce, nonce, 16);
+    return s;
+}
 Status
 Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
 {
     // Retrieve the tag length
     Status s = StatusOk();
-    aesni::ccm::Finalize(ctx);
 
 #ifdef DEBUG
     std::cout << "getTagRef Nonce : " << parseBytesToHexStr(ctx->nonce, 16)
@@ -518,7 +564,10 @@ Ccm::setIv(ccm_data_t* ccm_data,
 }
 
 Status
-Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
+Ccm::setAadRef(ccm_data_t* pccm_data,
+               const Uint8 paad[],
+               size_t      aadLen,
+               size_t      plen)
 {
     Status s         = StatusOk();
     Uint32 p_blk0[4] = {};
@@ -527,90 +576,144 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
     Uint64 i         = {};
 
     // FIXME: Should we let paad be null when aadLen is 0
-    if (paad == nullptr || pccm_data == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
+    // if (paad == nullptr || pccm_data == nullptr) {
+    //     s = status::InvalidValue("Null Pointer is not expected!");
+    //     return s;
+    // }
+
+    if (aadLen != 0) {
+        // Set Adata Available Flag
+        pccm_data->nonce[0] |= 0x40;
+
+        utils::CopyBytes(p_blk0, pccm_data->nonce, 16);
+
+        encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+
+        pccm_data->blocks++;
+
+        if (aadLen < (0x10000 - 0x100)) {
+            // alen < (2^16 - 2^8)
+            *(p_blk0_8 + 0) ^= static_cast<Uint8>(aadLen >> 8);
+            *(p_blk0_8 + 1) ^= static_cast<Uint8>(aadLen);
+            i = 2;
+        } else if (sizeof(aadLen) == 8 && aadLen >= ((size_t)1 << 32)) {
+            // alen > what 32 bits can hold.
+            *(p_blk0_8 + 0) ^= 0xFF;
+            *(p_blk0_8 + 1) ^= 0xFF;
+            *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 56);
+            *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 48);
+            *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 40);
+            *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen >> 32);
+            *(p_blk0_8 + 6) ^= static_cast<Uint8>(aadLen >> 24);
+            *(p_blk0_8 + 7) ^= static_cast<Uint8>(aadLen >> 16);
+            *(p_blk0_8 + 8) ^= static_cast<Uint8>(aadLen >> 8);
+            *(p_blk0_8 + 9) ^= static_cast<Uint8>(aadLen);
+            i = 10;
+        } else {
+            // alen is represented by 32 bits but larger than
+            // what 16 bits can hold
+            *(p_blk0_8 + 0) ^= 0xFF;
+            *(p_blk0_8 + 1) ^= 0xFE;
+            *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 24);
+            *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 16);
+            *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 8);
+            *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen);
+            i = 6;
+        }
+
+        // i=2,6,10 to i=16 do the CBC operation
+        for (; i < 16 && aadLen; ++i, ++paad, --aadLen)
+            *(p_blk0_8 + i) ^= *paad;
+
+        encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+        pccm_data->blocks++;
+
+        Uint64 alen_16 = aadLen / 16;
+        for (Uint64 j = 0; j < alen_16; j++) {
+            utils::CopyBytes(aad_32, paad, 16);
+            // CBC XOR Operation
+            for (int i = 0; i < 4; i++) {
+                p_blk0[i] ^= aad_32[i];
+            }
+            // CBC Encrypt Operation
+            encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+            pccm_data->blocks++;
+            paad += 16;
+        }
+
+        // Reduce already processed value from alen
+        aadLen -= alen_16 * 16;
+
+        if (aadLen != 0) {
+            // Process the rest in the default way
+            for (i = 0; i < 16 && aadLen; i++, paad++, aadLen--) {
+                *(p_blk0_8 + i) ^= *paad;
+            }
+
+            // CBC Encrypt last block
+            encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+            pccm_data->blocks++;
+        }
+
+        // Store generated partial tag (cmac)
+        utils::CopyBlock(pccm_data->cmac, p_blk0_8, 16);
+    }
+
+#if 1
+    size_t       n;
+    unsigned int q;
+    const Uint8* p_key = pccm_data->key;
+    Uint32       cmac[4], nonce[4], in_reg[4], temp_reg[4];
+    Uint8*       p_cmac_8  = reinterpret_cast<Uint8*>(cmac);
+    Uint8*       p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
+    Uint8*       p_temp_8  = reinterpret_cast<Uint8*>(temp_reg);
+
+    utils::CopyBytes(nonce, pccm_data->nonce, 16);
+    unsigned char flags0 = pccm_data->flags0 = pccm_data->nonce[0];
+    if (!(flags0 & 0x40)) {
+        utils::CopyBytes(cmac, nonce, 16);
+        encryptBlock(cmac, p_key, pccm_data->rounds);
+        pccm_data->blocks++;
+    } else {
+        // Additional data exists so load the cmac (already done in encrypt
+        // aad)
+        utils::CopyBytes(cmac, pccm_data->cmac, 16);
+    }
+
+    // Set nonce to just length to store size of plain text
+    // extracted from flags
+    p_nonce_8[0] = q = flags0 & 7;
+
+    // Reconstruct length of plain text
+    for (n = 0, i = 15 - q; i < 15; ++i) {
+        n |= p_nonce_8[i];
+        p_nonce_8[i] = 0;
+        n <<= 8;
+    }
+
+    // Extract Length
+    n |= p_nonce_8[15];
+    p_nonce_8[15] = 1;
+
+    // Check if input length matches the intialized length
+    if (n != plen) {
+        // EXITB();
+        s = status::EncryptFailed("Length of plainText mismatch!");
         return s;
     }
 
-    if (aadLen == 0) {
-        return s; // Nothing to be done
+    // Check with everything combined we won't have too many blocks to
+    // encrypt
+    pccm_data->blocks += ((plen + 15) >> 3) | 1;
+    if (pccm_data->blocks > (Uint64(1) << 61)) {
+        // EXITB();
+        s = status::EncryptFailed("Overload of plaintext. Please reduce it!");
+        return s;
     }
 
-    // Set Adata Available Flag
-    pccm_data->nonce[0] |= 0x40;
-
-    utils::CopyBytes(p_blk0, pccm_data->nonce, 16);
-
-    encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
-
-    pccm_data->blocks++;
-
-    if (aadLen < (0x10000 - 0x100)) {
-        // alen < (2^16 - 2^8)
-        *(p_blk0_8 + 0) ^= static_cast<Uint8>(aadLen >> 8);
-        *(p_blk0_8 + 1) ^= static_cast<Uint8>(aadLen);
-        i = 2;
-    } else if (sizeof(aadLen) == 8 && aadLen >= ((size_t)1 << 32)) {
-        // alen > what 32 bits can hold.
-        *(p_blk0_8 + 0) ^= 0xFF;
-        *(p_blk0_8 + 1) ^= 0xFF;
-        *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 56);
-        *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 48);
-        *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 40);
-        *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen >> 32);
-        *(p_blk0_8 + 6) ^= static_cast<Uint8>(aadLen >> 24);
-        *(p_blk0_8 + 7) ^= static_cast<Uint8>(aadLen >> 16);
-        *(p_blk0_8 + 8) ^= static_cast<Uint8>(aadLen >> 8);
-        *(p_blk0_8 + 9) ^= static_cast<Uint8>(aadLen);
-        i = 10;
-    } else {
-        // alen is represented by 32 bits but larger than
-        // what 16 bits can hold
-        *(p_blk0_8 + 0) ^= 0xFF;
-        *(p_blk0_8 + 1) ^= 0xFE;
-        *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 24);
-        *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 16);
-        *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 8);
-        *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen);
-        i = 6;
-    }
-
-    // i=2,6,10 to i=16 do the CBC operation
-    for (; i < 16 && aadLen; ++i, ++paad, --aadLen)
-        *(p_blk0_8 + i) ^= *paad;
-
-    encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
-    pccm_data->blocks++;
-
-    Uint64 alen_16 = aadLen / 16;
-    for (Uint64 j = 0; j < alen_16; j++) {
-        utils::CopyBytes(aad_32, paad, 16);
-        // CBC XOR Operation
-        for (int i = 0; i < 4; i++) {
-            p_blk0[i] ^= aad_32[i];
-        }
-        // CBC Encrypt Operation
-        encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
-        pccm_data->blocks++;
-        paad += 16;
-    }
-
-    // Reduce already processed value from alen
-    aadLen -= alen_16 * 16;
-
-    if (aadLen != 0) {
-        // Process the rest in the default way
-        for (i = 0; i < 16 && aadLen; i++, paad++, aadLen--) {
-            *(p_blk0_8 + i) ^= *paad;
-        }
-
-        // CBC Encrypt last block
-        encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
-        pccm_data->blocks++;
-    }
-
-    // Store generated partial tag (cmac)
-    utils::CopyBlock(pccm_data->cmac, p_blk0_8, 16);
+    utils::CopyBytes(pccm_data->cmac, cmac, 16);
+    utils::CopyBytes(pccm_data->nonce, nonce, 16);
+#endif
     return s;
 }
 
@@ -660,6 +763,11 @@ CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
         s = status::InvalidValue(
             "Tag length is unknown!, need to agree on tag before hand!");
     } else {
+        if (CpuId::cpuHasAesni()) {
+            aesni::ccm::Finalize(&m_ccm_data);
+        } else {
+            s.update(Ccm::finalizeRef(&m_ccm_data));
+        }
         s.update(Ccm::getTagRef(&m_ccm_data, pOutput, tagLen));
     }
     return s.code();

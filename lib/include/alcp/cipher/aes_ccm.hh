@@ -180,8 +180,12 @@ class ALCP_API_EXPORT Ccm : public Aes
      * @param paad Additional Data Pointer
      * @param alen Length of additional data
      */
-    Status setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen);
+    Status setAadRef(ccm_data_t* pccm_data,
+                     const Uint8 paad[],
+                     size_t      aadLen,
+                     size_t      plen);
 
+    Status finalizeRef(ccm_data_t* pccm_data);
     /**
      * @brief Reference encryption function
      *
