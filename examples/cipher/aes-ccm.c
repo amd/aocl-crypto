@@ -78,8 +78,9 @@ close_demo_session()
     free(handle.ch_context);
 }
 
+// Here its a 48 Byte plaintext message
 static Uint8* sample_plaintxt =
-    (Uint8*)"Happy and Fantastic Diwali from AOCL Crypto !!";
+    (Uint8*)"Happy and Fantastic Diwali from AOCL Crypto !!!!";
 
 static const Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -192,21 +193,20 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // CCM encrypt
-    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len - 16);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
-    // err = alcp_cipher_aead_encrypt_update(
-    //     &handle, plaintxt + (len / 2), ciphertxt + (len / 2), len - (len /
-    //     2));
-    // if (alcp_is_error(err)) {
-    //     printf("Error: unable encrypt \n");
-    //     alcp_error_str(err, err_buf, err_size);
-    //     return -1;
-    // }
+    err = alcp_cipher_aead_encrypt(
+        &handle, plaintxt + (len - 16), ciphertxt + (len - 16), 16);
+    if (alcp_is_error(err)) {
+        printf("Error: unable encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return -1;
+    }
 
     // get tag
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
@@ -264,13 +264,21 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     // Additional Data
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
-        printf("Error: unable gcm add data processing \n");
+        printf("Error: unable ccm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
-    // GCM decrypt
-    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
+    // CCM decrypt
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, 16);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return -1;
+    }
+
+    err = alcp_cipher_aead_decrypt(
+        &handle, ciphertxt + 16, plaintxt + 16, len - 16);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
