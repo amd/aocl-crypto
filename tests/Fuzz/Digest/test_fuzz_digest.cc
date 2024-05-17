@@ -29,13 +29,14 @@
 #include "Fuzz/alcp_fuzz_test.hh"
 
 int
-FuzzerTestOneInput(alc_digest_mode_t mode, const Uint8* buf, size_t len)
+ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
 {
     Uint32 srcSize = len;
 
     /* Initializing digest info */
     alc_error_t         err;
-    alc_digest_handle_p m_handle = new alc_digest_handle_t;
+    alc_digest_handle_p m_handle     = new alc_digest_handle_t;
+    alc_digest_handle_p m_handle_dup = new alc_digest_handle_t;
 
     Uint32 out_size = sha2_mode_len_map[mode];
 
@@ -59,13 +60,14 @@ FuzzerTestOneInput(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     FuzzedDataProvider stream(buf, len);
     Uint64             context_size = alcp_digest_context_size();
 
-    if (m_handle == nullptr) {
+    if (m_handle == nullptr || m_handle_dup == nullptr) {
         std::cout << "Error: Mem alloc for digest handle" << std::endl;
         goto OUT;
     }
     /* Request a context with dinfo */
-    m_handle->context = malloc(context_size);
-    if (m_handle->context == nullptr) {
+    m_handle->context     = malloc(context_size);
+    m_handle_dup->context = malloc(context_size);
+    if (m_handle->context == nullptr || m_handle_dup->context == nullptr) {
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         goto OUT;
     }
@@ -76,7 +78,19 @@ FuzzerTestOneInput(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     Check_Error(err);
     err = alcp_digest_update(m_handle, buf, srcSize);
     Check_Error(err);
+    err = alcp_digest_update(m_handle, buf, srcSize);
+    Check_Error(err);
+    /* context copy */
+    err = alcp_digest_context_copy(m_handle, m_handle_dup);
+    Check_Error(err);
+    /* for shake variants */
+    if (sha2_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+        err = alcp_digest_shake_squeeze(m_handle_dup, output2, out_size);
+        Check_Error(err);
+    }
     err = alcp_digest_finalize(m_handle, output1, out_size);
+    Check_Error(err);
+    err = alcp_digest_finalize(m_handle_dup, output2, out_size);
     Check_Error(err);
 
     goto CLOSE;
@@ -86,6 +100,11 @@ CLOSE:
         alcp_digest_finish(m_handle);
         free(m_handle->context);
         delete m_handle;
+    }
+    if (m_handle_dup != nullptr) {
+        alcp_digest_finish(m_handle_dup);
+        free(m_handle_dup->context);
+        delete m_handle_dup;
     }
 
 OUT:
@@ -97,7 +116,7 @@ LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
     int retval = 0;
     for (auto const& [Mode, Len] : sha2_mode_len_map) {
-        if (FuzzerTestOneInput(Mode, Data, Size) != 0) {
+        if (ALCP_Fuzz_Digest(Mode, Data, Size) != 0) {
             std::cout << "Digest fuzz test failed for Mode"
                       << sha2_mode_string_map[Mode] << std::endl;
             return retval;
