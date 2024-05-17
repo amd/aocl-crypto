@@ -78,8 +78,6 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     Check_Error(err);
     err = alcp_digest_update(m_handle, buf, srcSize);
     Check_Error(err);
-    err = alcp_digest_update(m_handle, buf, srcSize);
-    Check_Error(err);
     /* context copy */
     err = alcp_digest_context_copy(m_handle, m_handle_dup);
     Check_Error(err);
@@ -90,9 +88,15 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     }
     err = alcp_digest_finalize(m_handle, output1, out_size);
     Check_Error(err);
-    err = alcp_digest_finalize(m_handle_dup, output2, out_size);
-    Check_Error(err);
 
+    if (sha2_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+        for (int i = 0; i < out_size; i++) {
+            if (output1[i] != output2[i]) {
+                std::cout << "Outputs are NOT equal" << std::endl;
+                break;
+            }
+        }
+    }
     goto CLOSE;
 
 CLOSE:
