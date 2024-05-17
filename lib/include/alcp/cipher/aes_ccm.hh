@@ -84,8 +84,11 @@ namespace aesni::ccm {
 
 class ALCP_API_EXPORT Ccm : public Aes
 {
-  protected: // Needs to be protected as class CcmHash should use it
-    Uint64       m_tagLen            = 0;
+    // Needs to be protected as class CcmHash should use it
+  protected:
+    // For AES CCM set default taglen as 12. When init is called and if tag
+    // length is not set then default tag length will be assumed.
+    Uint64       m_tagLen            = 12;
     Uint64       m_additionalDataLen = 0;
     const Uint8* m_additionalData;
     Uint64       m_plainTextLength = 0;
