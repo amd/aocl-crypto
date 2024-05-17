@@ -42,7 +42,7 @@ IF(ENABLE_AOCL_UTILS)
 			GIT_TAG amd-main
 			SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
 			CMAKE_ARGS  -DALCI_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
- 			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libaoclutils.so ${CMAKE_BINARY_DIR}/external/lib/libaoclutils.a
+ 			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so
 		)
 		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
@@ -59,8 +59,8 @@ IF(ENABLE_AOCL_UTILS)
 
 			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.lib)
 		ELSE()
-			TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.so)
-			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.a)
+			TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libau_cpuid.so)
+			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libau_cpuid.a)
 		ENDIF()
 	ELSE(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
 		MESSAGE(FATAL_ERROR "AOCL UTILS fallback error, external directory not found!")
