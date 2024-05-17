@@ -294,9 +294,8 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
 /**
  * @brief AEAD set the tag length.
  * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_aead_request is called.
- * It's meant for CCM mode, should be called before @ref
- * alcp_cipher_aead_init.</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_aead_request. It's
+ * meant for CCM mode, should be called before @ref alcp_cipher_aead_init.</b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] tagLen       Length in bytes of Tag in bytes
@@ -308,6 +307,18 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
                                 Uint64                    tagLen);
 
+/**
+ * @brief AEAD set the total plaintext length which is to be encrypted.
+ * @parblock <br> &nbsp;
+ * <b>This AEAD API can be called after @ref alcp_cipher_aead_request. It's
+ * meant for CCM mode, should be called before @ref alcp_cipher_aead_init.</b>
+ * @endparblock
+ * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[in] plaintextLength       Length in bytes of plaintext in bytes
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str
+ * needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_aead_set_plaintext_length(const alc_cipher_handle_p pCipherHandle,
                                       Uint64 plaintextLength);
