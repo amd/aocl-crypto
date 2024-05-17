@@ -68,6 +68,8 @@ namespace aesni::ccm {
                      size_t      alen,
                      size_t      plen);
 
+    CCM_ERROR Finalize(ccm_data_t* ctx);
+
     CCM_ERROR Encrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
                       Uint8       out[],

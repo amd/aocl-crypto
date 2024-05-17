@@ -119,8 +119,10 @@ Ccm::cryptUpdate(const Uint8 pInput[],
 
         // Below Operations has to be done in order
         // s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
-
-        s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, m_plainTextLength));
+        if (m_updatedLength == 0) {
+            s.update(
+                setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, m_plainTextLength));
+        }
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
@@ -452,6 +454,8 @@ Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
 {
     // Retrieve the tag length
     Status s = StatusOk();
+    aesni::ccm::Finalize(ctx);
+
 #ifdef DEBUG
     std::cout << "getTagRef Nonce : " << parseBytesToHexStr(ctx->nonce, 16)
               << std::endl;

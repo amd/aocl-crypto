@@ -219,6 +219,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
 #ifdef DEBUG
+        std::cout << "END OF AAD" << std::endl;
         std::cout << "CMAC: " << parseBytesToHexStr(ccm_data->cmac, 16)
                   << std::endl;
         std::cout << "NONCE: " << parseBytesToHexStr(ccm_data->nonce, 16)
@@ -241,6 +242,50 @@ namespace alcp::cipher::aesni { namespace ccm {
         EXITG();
     }
 
+    CCM_ERROR Finalize(ccm_data_t* ccm_data)
+    {
+        __m128i       nonce;
+        Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
+        unsigned char flags0    = ccm_data->flags0;
+        unsigned int  i;
+        __m128i       temp_reg, cmac;
+        unsigned int  q = flags0 & 7;
+
+        cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
+        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+#ifdef DEBUG
+        std::cout << "Finalize" << std::endl;
+        std::cout << "flags0  = " << std::hex << std::setfill('0')
+                  << std::setw(2) << flags0 << std::endl;
+        std::cout << "Q = " << q << std::endl;
+        std::cout << "CMAC: " << parseBytesToHexStr(ccm_data->cmac, 16)
+                  << std::endl;
+        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
+                  << std::endl;
+#endif
+        // Zero out counter part
+        for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
+            p_nonce_8[i] = 0;
+
+        // CTR encrypt first counter and XOR with the partial tag to generate
+        // the real tag
+        temp_reg = nonce; // Copy counter
+        AesEncrypt(&temp_reg,
+                   reinterpret_cast<const __m128i*>(ccm_data->key),
+                   ccm_data->rounds);
+        cmac = _mm_xor_si128(temp_reg, cmac);
+#ifdef DEBUG
+        std::cout << "flags0  = " << std::hex << std::setfill('0')
+                  << std::setw(2) << flags0 << std::endl;
+#endif
+        // Restore flags into nonce to restore nonce to original state
+        p_nonce_8[0] = flags0;
+        // Copy the current state of cmac and nonce back to memory.
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
+        return CCM_ERROR::NO_ERROR;
+    }
+
     CCM_ERROR Encrypt(ccm_data_t* ccm_data,
                       const Uint8 pinp[],
                       Uint8       pout[],
@@ -250,66 +295,14 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
         ENTER();
-        unsigned int  i, q;
-        unsigned char flags0;
-        __m128i       cmac, nonce;
-        __m128i       in_reg, temp_reg;
-        Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
-        Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
-        Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(&temp_reg);
+        unsigned int i;
+        __m128i      cmac, nonce;
+        __m128i      in_reg, temp_reg;
+        Uint8*       p_cmac_8 = reinterpret_cast<Uint8*>(&cmac);
+        Uint8*       p_temp_8 = reinterpret_cast<Uint8*>(&temp_reg);
         cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
-#if 0
-        flags0 = ccm_data->nonce[0];
-        size_t       n;
-        const Uint8* p_key = ccm_data->key;
-        // Load nonce to process
-        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
-        // No additonal data, so encrypt nonce and set it as cmac
-        if (!(flags0 & 0x40)) {
-            cmac = nonce;
-            AesEncrypt(&cmac,
-                       reinterpret_cast<const __m128i*>(p_key),
-                       ccm_data->rounds);
-
-            ccm_data->blocks++;
-        } else {
-            // Additional data exists so load the cmac (already done in encrypt
-            // aad)
-            cmac = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
-        }
-
-        // Set nonce to just length to store size of plain text
-        // extracted from flags
-
-        p_nonce_8[0] = q = flags0 & 7;
-
-        // Reconstruct length of plain text
-        for (n = 0, i = 15 - q; i < 15; ++i) {
-            n |= p_nonce_8[i];
-            p_nonce_8[i] = 0;
-            n <<= 8;
-        }
-        n |= p_nonce_8[15]; /* reconstructed length */
-        p_nonce_8[15] = 1;
-
-        // Check if input length matches the intialized length
-        if (n != plaintextLen) {
-            EXITB();
-            return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
-        }
-        // Check with everything combined we won't have too many blocks to
-        // encrypt
-
-        ccm_data->blocks += ((plaintextLen + 15) >> 3) | 1;
-        if (ccm_data->blocks > (Uint64(1) << 61)) {
-            EXITB();
-            return CCM_ERROR::DATA_OVERFLOW; /* too much data */
-        }
-#else
-        flags0 = ccm_data->flags0;
-#endif
 #ifdef DEBUG
         std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
         std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
@@ -317,7 +310,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         std::cout << "flags0  = " << std::hex << std::setfill('0')
                   << std::setw(2) << flags0 << std::endl;
 #endif
-        q = flags0 & 7;
+
         while (dataLen >= 16) {
             // Load the PlainText
             in_reg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pinp));
@@ -361,26 +354,6 @@ namespace alcp::cipher::aesni { namespace ccm {
             for (i = 0; i < dataLen; ++i)
                 pout[i] = p_temp_8[i] ^ pinp[i];
         }
-#ifdef DEBUG
-        std::cout << "Q = " << q << std::endl;
-#endif
-        // Zero out counter part
-        for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
-            p_nonce_8[i] = 0;
-
-        // CTR encrypt first counter and XOR with the partial tag to generate
-        // the real tag
-        temp_reg = nonce; // Copy counter
-        AesEncrypt(&temp_reg,
-                   reinterpret_cast<const __m128i*>(ccm_data->key),
-                   ccm_data->rounds);
-        cmac = _mm_xor_si128(temp_reg, cmac);
-#ifdef DEBUG
-        std::cout << "flags0  = " << std::hex << std::setfill('0')
-                  << std::setw(2) << flags0 << std::endl;
-#endif
-        // Restore flags into nonce to restore nonce to original state
-        p_nonce_8[0] = flags0;
 
         // Copy the current state of cmac and nonce back to memory.
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
@@ -404,13 +377,11 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
         ENTER();
-        unsigned int  i, q;
-        unsigned char flags0 = ccm_data->flags0;
-        __m128i       cmac, nonce;
-        __m128i       in_reg, temp_reg;
-        Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
-        Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
-        Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(&temp_reg);
+        unsigned int i;
+        __m128i      cmac, nonce;
+        __m128i      in_reg, temp_reg;
+        Uint8*       p_cmac_8 = reinterpret_cast<Uint8*>(&cmac);
+        Uint8*       p_temp_8 = reinterpret_cast<Uint8*>(&temp_reg);
         cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 #ifdef DEBUG
@@ -420,7 +391,6 @@ namespace alcp::cipher::aesni { namespace ccm {
         std::cout << "flags0  = " << flags0 << std::endl;
 #endif
 #if 1
-        q = flags0 & 7;
         while (len >= 32) {
             /* CTR */
             temp_reg = nonce; // Copy Counter
@@ -521,25 +491,15 @@ namespace alcp::cipher::aesni { namespace ccm {
                        ccm_data->rounds);
         }
 
-        // Zero out counter part
-        for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
-            p_nonce_8[i] = 0;
-
-        // CTR encrypt first counter and XOR with the partial tag to generate
-        // the real tag
-        temp_reg = nonce;
-        AesEncrypt(&temp_reg,
-                   reinterpret_cast<const __m128i*>(ccm_data->key),
-                   ccm_data->rounds);
-        cmac = _mm_xor_si128(cmac, temp_reg);
-
-        // Restore flags into nonce to restore nonce to original state
-        p_nonce_8[0] = flags0;
-
         // Copy the current state of cmac and nonce back to memory.
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
-
+#ifdef DEBUG
+        std::cout << "AT LAST" << std::endl;
+        std::cout << "CMAC: " << parseBytesToHexStr(p_cmac_8, 16) << std::endl;
+        std::cout << "NONCE: " << parseBytesToHexStr(p_nonce_8, 16)
+                  << std::endl;
+#endif
         EXITG();
         return CCM_ERROR::NO_ERROR;
     }
