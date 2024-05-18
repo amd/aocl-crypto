@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,24 @@
 
 #include <alcp/alcp.h>
 #include <stdio.h>
+
+/* Workaround for AOCL-Utils segault */
+#if 1
+#include <malloc.h>
+static Uint64* dummy_var;
+
+int
+dummy()
+{
+    dummy_var = malloc(1);
+    if (!dummy_var) {
+        return 0;
+    }
+    free(dummy_var);
+    return 1;
+}
+#else
+#endif
 
 int
 main()
