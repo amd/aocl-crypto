@@ -25,7 +25,6 @@
  
 ADD_EXAMPLE(rng-demo rng-demo.c)
 ADD_EXAMPLE(hmac_drbg-demo hmac_drbg-demo.c)
-#FIXME: remove this once CTR DRBG bug is fixed
-#ADD_EXAMPLE(drbg-test drbg-test.c)
-#ADD_EXAMPLE(ctr_drbg-demo ctr_drbg-demo.c)
+ADD_EXAMPLE(drbg-test drbg-test.c)
+ADD_EXAMPLE(ctr_drbg-demo ctr_drbg-demo.c)
 
