@@ -53,19 +53,20 @@ namespace alcp::cipher::aesni { namespace ccm {
                      size_t      plen)
     {
         ENTER();
-        __m128i p_blk0   = { 0 };
+        __m128i cmac     = { 0 };
         __m128i aad_128  = { 0 };
-        Uint8*  p_blk0_8 = reinterpret_cast<Uint8*>(&p_blk0);
+        Uint8*  p_blk0_8 = reinterpret_cast<Uint8*>(&cmac);
         Uint64  i        = 0;
+        __m128i nonce;
 
         if (alen != 0) {
             ccm_data->nonce[0] |= 0x40; /* set Adata flag */
 
-            p_blk0 = _mm_loadu_si128(
+            cmac = _mm_load_si128(
                 reinterpret_cast<const __m128i*>(ccm_data->nonce));
 
-            // ccm_data->cmac should be inside p_blk0
-            AesEncrypt(&p_blk0,
+            // ccm_data->cmac should be inside cmac
+            AesEncrypt(&cmac,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             ccm_data->blocks++;
@@ -104,7 +105,7 @@ namespace alcp::cipher::aesni { namespace ccm {
             for (; i < 16 && alen; ++i, ++paad, --alen)
                 *(p_blk0_8 + i) ^= *paad;
 
-            AesEncrypt(&p_blk0,
+            AesEncrypt(&cmac,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             ccm_data->blocks++;
@@ -114,9 +115,9 @@ namespace alcp::cipher::aesni { namespace ccm {
                 aad_128 =
                     _mm_loadu_si128(reinterpret_cast<const __m128i*>(paad));
                 // CBC XOR operation
-                p_blk0 = _mm_xor_si128(p_blk0, aad_128);
+                cmac = _mm_xor_si128(cmac, aad_128);
                 // CBC Encrypt operation
-                AesEncrypt(&p_blk0,
+                AesEncrypt(&cmac,
                            reinterpret_cast<const __m128i*>(ccm_data->key),
                            ccm_data->rounds);
                 ccm_data->blocks++;
@@ -132,22 +133,17 @@ namespace alcp::cipher::aesni { namespace ccm {
                     *(p_blk0_8 + i) ^= *paad;
 
                 // CBC Encrypt last block
-                AesEncrypt(&p_blk0,
+                AesEncrypt(&cmac,
                            reinterpret_cast<const __m128i*>(ccm_data->key),
                            ccm_data->rounds);
                 ccm_data->blocks++;
             }
-
-            // Store generated partial tag (cmac)
-            _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), p_blk0);
         }
 
-        __m128i cmac, nonce;
-        // Uint8*  p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
         Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
 
         // Load nonce to process
-        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+        nonce = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
         unsigned char flags0 = ccm_data->flags0 = ccm_data->nonce[0];
         // No additonal data, so encrypt nonce and set it as cmac
         const Uint8* p_key = ccm_data->key;
@@ -158,12 +154,7 @@ namespace alcp::cipher::aesni { namespace ccm {
                        ccm_data->rounds);
 
             ccm_data->blocks++;
-        } else {
-            // Additional data exists so load the cmac (already done in encrypt
-            // aad)
-            cmac = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         }
-
         // Set nonce to just length to store size of plain text
         size_t       n;
         unsigned int q;
@@ -190,8 +181,8 @@ namespace alcp::cipher::aesni { namespace ccm {
             EXITB();
             return CCM_ERROR::DATA_OVERFLOW; /* too much data */
         }
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
 
         EXIT();
         return CCM_ERROR::NO_ERROR;
@@ -218,8 +209,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         __m128i       temp_reg, cmac;
         unsigned int  q = flags0 & 7;
 
-        cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
-        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+        cmac  = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
+        nonce = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
         // Zero out counter part
         for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
@@ -236,8 +227,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Restore flags into nonce to restore nonce to original state
         p_nonce_8[0] = flags0;
         // Copy the current state of cmac and nonce back to memory.
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
         return CCM_ERROR::NO_ERROR;
     }
 
@@ -255,8 +246,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         __m128i      in_reg, temp_reg;
         Uint8*       p_cmac_8 = reinterpret_cast<Uint8*>(&cmac);
         Uint8*       p_temp_8 = reinterpret_cast<Uint8*>(&temp_reg);
-        cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
-        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+        cmac  = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
+        nonce = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
         while (dataLen >= 16) {
             // Load the PlainText
@@ -303,8 +294,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         }
 
         // Copy the current state of cmac and nonce back to memory.
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
 
         // Encryption cannot proceed after this.
         EXITG();
@@ -324,8 +315,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         __m128i      in_reg, temp_reg;
         Uint8*       p_cmac_8 = reinterpret_cast<Uint8*>(&cmac);
         Uint8*       p_temp_8 = reinterpret_cast<Uint8*>(&temp_reg);
-        cmac  = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
-        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+        cmac  = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
+        nonce = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
         while (len >= 32) {
             /* CTR */
@@ -427,8 +418,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         }
 
         // Copy the current state of cmac and nonce back to memory.
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), cmac);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
 
         EXITG();
         return CCM_ERROR::NO_ERROR;
