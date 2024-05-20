@@ -67,6 +67,13 @@ std::map<alc_digest_mode_t, std::string> sha2_mode_string_map = {
     { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
+/* for all the AES non-AEAD modes */
+alc_cipher_mode_t AES_Modes[2] = { ALC_AES_MODE_CFB, ALC_AES_MODE_CBC };
+std::map<alc_cipher_mode_t, std::string> aes_mode_string_map = {
+    { ALC_AES_MODE_CFB, "AES_CFB" },
+    { ALC_AES_MODE_CBC, "AES_CBC" },
+};
+
 const int ERR_SIZE = 256;
 Uint8     err_buf[ERR_SIZE];
 void
