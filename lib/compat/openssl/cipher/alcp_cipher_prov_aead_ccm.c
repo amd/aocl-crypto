@@ -249,7 +249,7 @@ ALCP_prov_ccm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             return 0;
         }
     }
-
+    EXIT();
     return 1;
 }
 
@@ -380,16 +380,22 @@ err:
 }
 
 int
-alcp_prov_ccm_cipher_set_plaintext_length(ALCP_PROV_CIPHER_CTX* ctx, size_t len)
+ccm_set_iv_mlen(ALCP_PROV_CIPHER_CTX* ctx, size_t mlen)
 {
-    alc_prov_cipher_data_t* cipherctx = &(ctx->prov_cipher_data);
-    cipherctx->ccm.l                  = len;
-    cipherctx->ccm.isLenSet           = 1;
-    if (alcp_cipher_aead_set_plaintext_length(&(ctx->handle), len)) {
+    if (alcp_cipher_aead_init(&(ctx->handle),
+                              NULL,
+                              0,
+                              ctx->prov_cipher_data.iv_buff,
+                              ccm_get_ivlen(ctx))) {
+        printf("Provider:CCM: Error in Setting IV\n");
         return 0;
-    } else {
-        return 1;
-    };
+    }
+    if (alcp_cipher_aead_set_plaintext_length(&(ctx->handle), mlen)) {
+        printf("Provider:CCM: Error in Setting Plaintext Length\n");
+        return 0;
+    }
+    ctx->prov_cipher_data.ccm.isLenSet = 1;
+    return 1;
 }
 static int
 alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
@@ -417,9 +423,9 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
 
     if (out == NULL) {
         if (in == NULL) {
-            if (!alcp_prov_ccm_cipher_set_plaintext_length(ctx, len)) {
+            if (!ccm_set_iv_mlen(ctx, len))
                 goto err;
-            };
+
         } else {
 
             if (!cipherctx->ccm.isLenSet && len)
@@ -428,10 +434,8 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
                 goto err;
         }
     } else {
-        if (!cipherctx->ccm.isLenSet) {
-            if (alcp_prov_ccm_cipher_set_plaintext_length(ctx, len)) {
-                goto err;
-            };
+        if (!cipherctx->ccm.isLenSet && !ccm_set_iv_mlen(ctx, len)) {
+            goto err;
         }
 
         if (cipherctx->enc) {
@@ -465,6 +469,7 @@ finish:
     rv = 1;
 err:
     *padlen = olen;
+    EXIT();
     return rv;
 }
 int
