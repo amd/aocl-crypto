@@ -100,10 +100,10 @@ typedef enum _alc_cipher_mode
 #define IV_STATE_COPIED        2 /* iv has been copied from the iv buffer */
 #define IV_STATE_FINISHED      3 /* the iv has been used - so don't reuse it */
 
-#define MAX_NUM_512_BLKS      8
-#define MAX_CIPHER_IV_SIZE    (1024 / 8)
-#define __RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
-#define AES_BLOCK_SIZE        16
+#define MAX_NUM_512_BLKS    8
+#define MAX_CIPHER_IV_SIZE  (1024 / 8)
+#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+#define AES_BLOCK_SIZE      16
 
 typedef struct _alc_cipher_gcm_data
 {
@@ -117,7 +117,7 @@ typedef struct _alc_cipher_xts_data
 {
     __attribute__((aligned(64))) Uint8 m_iv_xts[16];
     __attribute__((aligned(64))) Uint8 m_tweak_block[16];
-    Uint8  m_tweak_round_key[(__RIJ_SIZE_ALIGNED(32) * (16))];
+    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
     Uint8* m_pTweak_key; // this pointer can be removed.
     Int64  m_aes_block_id;
 

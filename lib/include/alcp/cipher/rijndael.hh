@@ -41,9 +41,6 @@ using Status = alcp::base::Status;
 
 // aes and Rijndael can be unified?
 
-#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
-#define RIJ_ALIGN           (16)
-
 /* Message size, key size, etc */
 enum BlockSize : Uint32
 {
@@ -77,10 +74,10 @@ class ALCP_API_EXPORT Rijndael
     static Uint32 constexpr cMaxRounds = 14;
 
   private:
-    __attribute__((aligned(64))) Uint8
-        m_round_key_enc[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
-    __attribute__((aligned(64))) Uint8
-        m_round_key_dec[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(64)))
+    Uint8 m_round_key_enc[cMaxKeySize * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(64)))
+    Uint8 m_round_key_dec[cMaxKeySize * (cMaxRounds + 2)] = {};
 
     Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
     Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
