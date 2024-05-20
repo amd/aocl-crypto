@@ -255,7 +255,7 @@ if (alcp_is_error(err)) {
 
 /* Step 3 Encrypt stage, tag gets generated here */
 // Memory for IV can be memory for tag, its unused by the API
-err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
 if (alcp_is_error(err)) {
     printf("Error: unable to encrypt \n");
     alcp_error_str(err, err_buf, err_size);

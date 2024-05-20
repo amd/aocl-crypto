@@ -272,7 +272,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     // IV is not needed for encrypt, but still should not be NullPtr
     {
         std::vector<Uint8> fakeDest = std::vector<Uint8>(ADlen[numAD - 1]);
-        err                         = alcp_cipher_aead_encrypt(
+        err                         = alcp_cipher_aead_encrypt_update(
             &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size());
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");

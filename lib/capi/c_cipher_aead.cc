@@ -66,31 +66,6 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
 }
 
 alc_error_t
-alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
-                         const Uint8*              pPlainText,
-                         Uint8*                    pCipherText,
-                         Uint64                    len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
-    ALCP_BAD_PTR_ERR_RET(pPlainText, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherText, err);
-
-    ALCP_ZERO_LEN_ERR_RET(len, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    // FIXME: Modify Encrypt to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->encrypt, err);
-    err = ctx->encrypt(ctx, pPlainText, pCipherText, len);
-
-    return err;
-}
-
-alc_error_t
 alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
                                 const Uint8*              pInput,
                                 Uint8*                    pOutput,
@@ -110,30 +85,6 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     ALCP_BAD_PTR_ERR_RET(ctx->encryptUpdate, err);
     err = ctx->encryptUpdate(ctx, pInput, pOutput, len);
-
-    return err;
-}
-
-alc_error_t
-alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
-                         const Uint8*              pCipherText,
-                         Uint8*                    pPlainText,
-                         Uint64                    len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
-    ALCP_BAD_PTR_ERR_RET(pPlainText, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherText, err);
-    ALCP_ZERO_LEN_ERR_RET(len, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    // FIXME: Modify decrypt to return Status and assign to context status
-    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->decrypt, err);
-    err = ctx->decrypt(ctx, pCipherText, pPlainText, len);
 
     return err;
 }
