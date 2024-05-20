@@ -55,7 +55,7 @@ namespace alcp::cipher::chacha20 {
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);    \
     };
 
-#define AEAD_CLASS_GEN(CHILD_NEW, PARENT)                                      \
+#define AES_CLASS_GEN(CHILD_NEW, PARENT)                                       \
     class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
     {                                                                          \
       public:                                                                  \
@@ -157,7 +157,7 @@ namespace vaes512 {
                            Uint64             aadLen);
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
     };
-    AEAD_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
+    AES_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
 } // namespace vaes512
 
 namespace ref {
@@ -185,7 +185,7 @@ namespace ref {
                            Uint64             aadLen);
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
     };
-    AEAD_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
+    AES_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
 } // namespace ref
 
 } // namespace alcp::cipher::chacha20

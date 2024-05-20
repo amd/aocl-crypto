@@ -160,26 +160,6 @@ class Aes : public Rijndael
 
 AES_CLASS_GEN(Ofb, Aes)
 
-// class  for all AEAD cipher modes
-#define AEAD_CLASS_GEN(CHILD_NEW, PARENT)                                      \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW() {}                                                        \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pInput,                         \
-                            Uint8*             pOutput,                        \
-                            Uint64             len);                                       \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
-    };
-
 #define AEAD_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                     \
     class ALCP_API_EXPORT CHILD_NEW                                            \
         : private PARENT1                                                      \
