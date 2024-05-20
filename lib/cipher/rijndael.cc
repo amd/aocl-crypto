@@ -135,22 +135,6 @@ inv_mix_column_last_exchange(Uint8* inp, Uint8* out)
 }
 namespace alcp::cipher {
 
-/* Message size, key size, etc */
-enum BlockSize : Uint32
-{
-    eBits0   = 0,
-    eBits128 = 128,
-    eBits192 = 192,
-    eBits256 = 256,
-};
-
-struct Params
-{
-    Uint32 Nk;
-    Uint32 Nb;
-    Uint32 Nr;
-};
-
 /*
  * FIPS-197  Chapter5, Figure-4
  *                Key Length         Block Size     No. of Rounds
@@ -182,70 +166,6 @@ BitsToBlockSize(int iVal)
     // clang-format on
     return bs;
 }
-
-class alignas(16) Rijndael::Impl
-{
-  private:
-    void expandKeys(const Uint8* pUserKey) noexcept;
-
-    void addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept;
-
-#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
-#define RIJ_ALIGN           (16)
-
-  private:
-    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
-
-    Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
-    Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
-
-    Uint32    m_nrounds    = 0; /* no of rounds */
-    Uint32    m_ncolumns   = 0; /* no of columns in matrix */
-    Uint32    m_key_size   = 0; /* key size in bytes */
-    BlockSize m_block_size = eBits0;
-
-    // duplicate of aes, to be removed
-    const Uint8* m_pKey_rij   = NULL; /* User input key*/
-    Uint32       m_keyLen_rij = 0;    /* key len*/
-
-  public:
-    ~Impl() = default;
-    void setKeyLen(Uint32 keyLen) { m_keyLen_rij = keyLen; }
-    void setKey(const Uint8* pKey) { m_pKey_rij = pKey; }
-
-    Uint32       getRounds() const { return m_nrounds; }
-    Uint32       getKeySize() const { return m_key_size; }
-    const Uint8* getEncryptKeys() const { return m_enc_key; }
-    const Uint8* getDecryptKeys() const { return m_dec_key; }
-
-    void encryptBlock(const Uint32 (&blk0)[4],
-                      Uint32 (&dst)[4],
-                      const Uint8* pkey,
-                      int          nr) const;
-
-    alc_error_t decrypt(const Uint8* pSrc, Uint8* pDst, Uint64 len) const;
-
-    void AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
-
-    void AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
-
-    void setUp() { setKey(m_pKey_rij, m_keyLen_rij); }
-
-    void setKey(const Uint8* key, int len)
-    {
-        m_block_size      = BitsToBlockSize(len);
-        const Params& prm = ParamsMap.at(m_block_size);
-        m_nrounds         = prm.Nr;
-        m_key_size        = len / utils::BitsPerByte;
-
-        /* Encryption and Decryption key offsets */
-        m_enc_key = &m_round_key[0];
-        /* +2 as the actual key is also stored  */
-        m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
-
-        expandKeys(key);
-    }
-};
 
 static Uint8
 GetSbox(Uint8 offset, bool use_invsbox = false)
@@ -410,6 +330,22 @@ AddRoundKey(Uint32 input, Uint32 key)
     return input ^ key;
 }
 
+void
+Rijndael::setKey(const Uint8* key, int len)
+{
+    m_block_size      = BitsToBlockSize(len);
+    const Params& prm = ParamsMap.at(m_block_size);
+    m_nrounds         = prm.Nr;
+    m_key_size        = len / utils::BitsPerByte;
+
+    /* Encryption and Decryption key offsets */
+    m_enc_key = &m_round_key[0];
+    /* +2 as the actual key is also stored  */
+    m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
+
+    expandKeys(key);
+}
+
 /*
  * FIPS-197 Section 5.1 Psuedo-code for Encryption
  *
@@ -437,11 +373,11 @@ AddRoundKey(Uint32 input, Uint32 key)
  *
  *  end
  */
-void
-Rijndael::Impl::encryptBlock(const Uint32 (&blk0)[4],
-                             Uint32 (&dst)[4],
-                             const Uint8* pkey,
-                             int          nr) const
+static void
+encryptBlockKernel(const Uint32 (&blk0)[4],
+                   Uint32 (&dst)[4],
+                   const Uint8* pkey,
+                   int          nr)
 {
 
     using utils::MakeWord;
@@ -518,7 +454,7 @@ Rijndael::Impl::encryptBlock(const Uint32 (&blk0)[4],
  */
 
 void
-Rijndael::Impl::AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
+Rijndael::AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 {
 
     using utils::MakeWord;
@@ -597,7 +533,10 @@ Rijndael::Impl::AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
  *  end
  */
 alc_error_t
-Rijndael::Impl::decrypt(const Uint8* pSrc, Uint8* pDst, Uint64 len) const
+Rijndael::decrypt(alc_cipher_data_t* ctx,
+                  const Uint8*       pSrc,
+                  Uint8*             pDst,
+                  Uint64             len) const
 {
 #if 0
     Uint32 nb = cBlockSizeWord;
@@ -639,7 +578,7 @@ Rijndael::Impl::decrypt(const Uint8* pSrc, Uint8* pDst, Uint64 len) const
  * conciseness.
  */
 void
-Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
+Rijndael::expandKeys(const Uint8* pUserKey) noexcept
 {
     using utils::GetByte, utils::MakeWord;
 
@@ -704,32 +643,15 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     (p_dec_key128)[0] = ((__m128i*)p_enc_key32)[nr];
 }
 
-Rijndael::Rijndael()
-    : m_pimpl{ std::make_unique<Rijndael::Impl>() }
-{}
-
 void
 Rijndael::initRijndael(const Uint8* pKey, const Uint64 keyLen)
 {
-    // Impl to be removed.
-    pImpl()->setKeyLen(keyLen);
-    pImpl()->setKey(pKey);
-    pImpl()->setUp();
+    setKeyLen(keyLen);
+    setKey(pKey);
+    setUp();
 }
 
 Rijndael::~Rijndael() {}
-
-const Uint8*
-Rijndael::getEncryptKeys() const
-{
-    return pImpl()->getEncryptKeys();
-}
-
-const Uint8*
-Rijndael::getDecryptKeys() const
-{
-    return pImpl()->getDecryptKeys();
-}
 
 #define BYTE0O_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
@@ -748,57 +670,21 @@ Rijndael::setEncryptKey(const Uint8*, Uint64)
 Uint32
 Rijndael::getNr() const
 {
-    return pImpl()->getRounds();
+    return getRounds();
 }
 
 Uint32
 Rijndael::getNk() const
 {
     /* getKeySize() returns length in bytes */
-    return pImpl()->getKeySize() / utils::BytesPerWord;
+    return getKeySize() / utils::BytesPerWord;
 }
-
-Uint32
-Rijndael::getKeySize() const
-{
-    /* getKeySize() returns length in bytes */
-    return pImpl()->getKeySize();
-}
-
-Uint32
-Rijndael::getRounds() const
-{
-    return pImpl()->getRounds();
-}
-
-#if 0
-template<typename T, size_t N>
-struct ArrayRef
-{
-    typedef std::array<T, N> Array;
-    typedef T                ArrayT[N];
-    typedef ArrayT&          ArrayR;
-    typedef ArrayT*          ArrayP;
-
-    static ArrayP to_arrayP(const Array& arr)
-    {
-        return (ArrayP) const_cast<T*>(arr.data());
-    }
-    static ArrayR to_arrayR(const Array& arr)
-    {
-        return *(ArrayP) const_cast<T*>(arr.data());
-    }
-
-    static ArrayP to_arrayP(const Array&& arr) = delete;
-    static ArrayR to_arrayR(const Array&& arr) = delete;
-};
-#endif
 
 alc_error_t
 Rijndael::encrypt(alc_cipher_data_t* ctx,
                   const Uint8*       pPlaintxt,
                   Uint8*             pCiphertxt,
-                  Uint64             len)
+                  Uint64             len) const
 {
     auto n_words = len / Rijndael::cBlockSizeWord;
 
@@ -809,7 +695,7 @@ Rijndael::encrypt(alc_cipher_data_t* ctx,
         auto   pt = reinterpret_cast<const Uint32(*)[4]>(&pPlaintxt);
         Uint32 ct[4];
 
-        pImpl()->encryptBlock(*pt, ct, getEncryptKeys(), getRounds());
+        encryptBlockKernel(*pt, ct, getEncryptKeys(), getRounds());
         utils::CopyBytes(pCiphertxt, ct, sizeof(ct));
 
         pPlaintxt += cBlockSize;
@@ -822,40 +708,7 @@ Rijndael::encrypt(alc_cipher_data_t* ctx,
 
 void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
-    pImpl()->encryptBlock(blk0, blk0, pkey, nr);
+    encryptBlockKernel(blk0, blk0, pkey, nr);
 }
-
-void
-Rijndael::AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
-{
-    pImpl()->AESDecrypt(blk0, pkey, nr);
-}
-
-alc_error_t
-Rijndael::decrypt(alc_cipher_data_t* ctx,
-                  const Uint8*       pCiphertxt,
-                  Uint8*             pPlaintxt,
-                  Uint64             len)
-{
-    return pImpl()->decrypt(pCiphertxt, pPlaintxt, len);
-}
-
-#if 0
-alc_error_t
-Rijndael::encryptUpdate(const Uint8* pPlaintxt,
-                        Uint8*       pCihpertxt,
-                        Uint64       len)
-{
-    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len);
-}
-
-alc_error_t
-Rijndael::decryptUpdate(const Uint8* pCihpertxt,
-                        Uint8*       pPlaintxt,
-                        Uint64       len)
-{
-    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len);
-}
-#endif
 
 } // namespace alcp::cipher

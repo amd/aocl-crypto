@@ -40,6 +40,26 @@ namespace alcp::cipher {
 using Status = alcp::base::Status;
 
 // aes and Rijndael can be unified?
+
+#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+#define RIJ_ALIGN           (16)
+
+/* Message size, key size, etc */
+enum BlockSize : Uint32
+{
+    eBits0   = 0,
+    eBits128 = 128,
+    eBits192 = 192,
+    eBits256 = 256,
+};
+
+struct Params
+{
+    Uint32 Nk;
+    Uint32 Nb;
+    Uint32 Nr;
+};
+
 class ALCP_API_EXPORT Rijndael
 {
 
@@ -59,6 +79,69 @@ class ALCP_API_EXPORT Rijndael
     static Uint32 constexpr cMaxRounds = 14;
 
   private:
+    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
+
+    Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
+    Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
+
+    Uint32    m_nrounds    = 0; /* no of rounds */
+    Uint32    m_ncolumns   = 0; /* no of columns in matrix */
+    Uint32    m_key_size   = 0; /* key size in bytes */
+    BlockSize m_block_size = eBits0;
+
+    // duplicate of aes, to be removed
+    const Uint8* m_pKey_rij   = NULL; /* User input key*/
+    Uint32       m_keyLen_rij = 0;    /* key len*/
+
+  public:
+    Rijndael() {}
+    ~Rijndael();
+
+    /**
+     * FIPS-197 compatible getters
+     */
+
+    Uint32 getNk() const; /* Nk - number of words in key128/key192/key256 */
+    Uint32 getNr() const; /* Nr - Number of rounds */
+    Uint32 getNb()
+        const /* Nb - No of words in a block (block is always 128-bits) */
+    {
+        return cBlockSizeWord;
+    };
+
+    void initRijndael(const Uint8* pKey, const Uint64 keyLen);
+    void setEncryptKey(const Uint8* pEncKey, Uint64 len);
+    void setDecryptKey(const Uint8* pDecKey, Uint64 len);
+
+    // this should move to aes
+    alc_error_t encrypt(alc_cipher_data_t* ctx,
+                        const Uint8*       pSrc,
+                        Uint8*             pDst,
+                        Uint64             len) const;
+
+    // this should move to aes
+    alc_error_t decrypt(alc_cipher_data_t* ctx,
+                        const Uint8*       pSrc,
+                        Uint8*             pDst,
+                        Uint64             len) const;
+
+    void encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const;
+    void encryptBlock(Uint32 (*blk0)[4], const Uint8* pkey, int nr) const;
+    void AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
+    void AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
+
+    void setKeyLen(Uint32 keyLen) { m_keyLen_rij = keyLen; }
+    void setKey(const Uint8* pKey) { m_pKey_rij = pKey; }
+
+    Uint32       getRounds() const { return m_nrounds; }
+    Uint32       getKeySize() const { return m_key_size; }
+    const Uint8* getEncryptKeys() const { return m_enc_key; }
+    const Uint8* getDecryptKeys() const { return m_dec_key; }
+
+    void setUp() { setKey(m_pKey_rij, m_keyLen_rij); }
+    void setKey(const Uint8* key, int len);
+
+  private:
     // non-movable:
     Rijndael(Rijndael&& rhs) noexcept;
     Rijndael& operator=(Rijndael&& rhs) noexcept;
@@ -67,58 +150,9 @@ class ALCP_API_EXPORT Rijndael
     Rijndael(const Rijndael& rhs);
     Rijndael& operator=(const Rijndael& rhs);
 
-  public:
-    /**
-     * FIPS-197 compatible getters
-     */
-    /* Nk - number of words in key128/key192/key256 */
-    Uint32 getNk() const;
-
-    /* Nr - Number of rounds */
-    Uint32 getNr() const;
-
-    /* Nb - No of words in a block (block is always 128-bits) */
-    Uint32 getNb() const { return cBlockSizeWord; };
-
-  public:
-    Uint32       getRounds() const;
-    Uint32       getKeySize() const;
-    const Uint8* getEncryptKeys() const;
-    const Uint8* getDecryptKeys() const;
-
-    void initRijndael(const Uint8* pKey, const Uint64 keyLen);
-
-    virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
-    virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
-
-    // this should move to aes
-    virtual alc_error_t encrypt(alc_cipher_data_t* ctx,
-                                const Uint8*       pSrc,
-                                Uint8*             pDst,
-                                Uint64             len);
-
-    // this should move to aes
-    virtual alc_error_t decrypt(alc_cipher_data_t* ctx,
-                                const Uint8*       pSrc,
-                                Uint8*             pDst,
-                                Uint64             len);
-
-    void encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const;
-
-    void encryptBlock(Uint32 (*blk0)[4], const Uint8* pkey, int nr) const;
-
-    virtual void AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
-
-  protected:
-    Rijndael();
-    explicit Rijndael(const Uint8* pKey, const Uint32 keyLen);
-    virtual ~Rijndael();
-
-  private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
+    //
+    void expandKeys(const Uint8* pUserKey) noexcept;
+    void addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept;
 };
 
 } // namespace alcp::cipher
