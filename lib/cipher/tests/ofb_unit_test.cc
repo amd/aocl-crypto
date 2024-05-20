@@ -153,6 +153,9 @@ TEST(OFB, BasicDecryption)
 
 TEST(OFB, MultiUpdateEncryption)
 {
+#ifndef OFB_MULTI_UPDATE
+    GTEST_SKIP() << "Multi Update functionality unavailable!";
+#endif
     alc_cipher_data_t data;
     data.alcp_keyLen_in_bytes = key.size();
     Ofb ofb                   = Ofb(&data);
@@ -188,6 +191,9 @@ TEST(OFB, MultiUpdateEncryption)
 
 TEST(OFB, MultiUpdateDecryption)
 {
+#ifndef OFB_MULTI_UPDATE
+    GTEST_SKIP() << "Multi Update functionality unavailable!";
+#endif
     alc_cipher_data_t data;
     data.alcp_keyLen_in_bytes = key.size();
     Ofb ofb                   = Ofb(&data);

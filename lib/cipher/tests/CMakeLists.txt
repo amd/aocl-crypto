@@ -33,6 +33,10 @@ alcp_module("Cipher")
 
 file(GLOB UNIT_TEST_COMMON_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc")
 
+IF(ALCP_ENABLE_OFB_MULTI_UPDATE)
+	SET_SOURCE_FILES_PROPERTIES(ofb_unit_test.cc PROPERTIES COMPILE_FLAGS "-DOFB_MULTI_UPDATE")
+ENDIF(ALCP_ENABLE_OFB_MULTI_UPDATE)
+
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)
