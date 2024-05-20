@@ -44,8 +44,9 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
     std::vector<Uint8> fuzz_in2 =
         stream.ConsumeBytes<Uint8>(size2); // Plain_Text
     std::vector<Uint8> fuzz_in3 =
-        stream.ConsumeBytes<Uint8>(size2); // Cipher_Text
-    std::vector<Uint8> fuzz_in4 = stream.ConsumeRemainingBytes<Uint8>(); // IV
+        stream.ConsumeBytes<Uint8>(size2);                     // Cipher_Text
+    std::vector<Uint8> fuzz_in4 = std::vector<Uint8>{ 16, 0 }; // IV
+    fuzz_in4.reserve(16);
 
     /* Initializing the fuzz seeds  */
     const Uint8* key       = fuzz_in1.data();
@@ -59,9 +60,9 @@ FuzzerTestOneInput(const Uint8* buf, size_t len)
 
     alcp_dc_ex_t data;
     data.m_in   = plaintxt;
-    data.m_inl  = PT_len;
+    data.m_inl  = fuzz_in2.size();
     data.m_out  = CT.get();
-    data.m_outl = PT_len;
+    data.m_outl = fuzz_in2.size();
     data.m_iv   = iv;
     data.m_ivl  = fuzz_in4.size();
 
