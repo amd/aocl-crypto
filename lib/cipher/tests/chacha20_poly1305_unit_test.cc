@@ -130,16 +130,16 @@ class ChaCha20Poly1305Test : public testing::Test
         alc_error_t err = ALC_ERROR_NONE;
 
         if (isEncryptTest) {
-            err = chacha_poly->encryptupdate(&expected_plaintext[0],
-                                             expected_plaintext.size(),
-                                             &ciphertext[0]);
+            err = chacha_poly->encrypt(&expected_plaintext[0],
+                                       expected_plaintext.size(),
+                                       &ciphertext[0]);
             ASSERT_EQ(err, ALC_ERROR_NONE);
             EXPECT_EQ(ciphertext, expected_ciphertext)
                 << "Failed Encryption: Input Size" << size << std::endl;
         } else {
-            err = chacha_poly->decryptupdate(&expected_ciphertext[0],
-                                             expected_ciphertext.size(),
-                                             &plaintext[0]);
+            err = chacha_poly->decrypt(&expected_ciphertext[0],
+                                       expected_ciphertext.size(),
+                                       &plaintext[0]);
             ASSERT_EQ(err, ALC_ERROR_NONE);
             EXPECT_EQ(plaintext, expected_plaintext)
                 << "Failed Encryption: Input Size" << size << std::endl;
@@ -220,8 +220,7 @@ TEST(Chacha20Poly1305, PerformanceTest)
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha_poly.encryptupdate(
-            &plaintext[0], plaintext.size(), &ciphertext[0]);
+        chacha_poly.encrypt(&plaintext[0], plaintext.size(), &ciphertext[0]);
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"

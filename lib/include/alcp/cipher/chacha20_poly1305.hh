@@ -28,51 +28,12 @@
 
 #pragma once
 
+#include "alcp/cipher/aes.hh" //FIXME: dependency of aes.hh to be removed
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/cipher_common.hh"
 #include "alcp/mac/poly1305.hh"
 
 namespace alcp::cipher::chacha20 {
-
-#define CHACHA_POLY_AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                     \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW() {}                                                        \
-                                                                               \
-        alc_error_t getTag(alc_cipher_data_t* ctx,                             \
-                           Uint8*             pOutput,                         \
-                           Uint64             tagLen);                                     \
-        alc_error_t init(alc_cipher_data_t* ctx,                               \
-                         const Uint8*       pKey,                              \
-                         Uint64             keyLen,                            \
-                         const Uint8*       pIv,                               \
-                         Uint64             ivLen);                                        \
-        alc_error_t setAad(alc_cipher_data_t* ctx,                             \
-                           const Uint8*       pInput,                          \
-                           Uint64             aadLen);                                     \
-        alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);    \
-    };
-
-#define AES_CLASS_GEN(CHILD_NEW, PARENT)                                       \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW() {}                                                        \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pInput,                         \
-                            Uint8*             pOutput,                        \
-                            Uint64             len);                                       \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
-    };
 
 // These will be used to store the length of the ciphertext
 union len_input_processed
@@ -121,21 +82,23 @@ class ALCP_API_EXPORT ChaCha20Poly1305
     alc_error_t processInput(const Uint8 inputBuffer[],
                              Uint64      bufferLength,
                              Uint8       outputBuffer[]);
-    alc_error_t encryptupdate(const Uint8 plaintext[],
-                              Uint64      plaintextLength,
-                              Uint8       ciphertext[]);
-    alc_error_t decryptupdate(const Uint8 ciphertext[],
-                              Uint64      ciphertextLength,
-                              Uint8       plaintext[]);
+    alc_error_t encrypt(const Uint8 plaintext[],
+                        Uint64      plaintextLength,
+                        Uint8       ciphertext[]);
+    alc_error_t decrypt(const Uint8 ciphertext[],
+                        Uint64      ciphertextLength,
+                        Uint8       plaintext[]);
     alc_error_t setTagLength(Uint64 tagLength);
 
     alc_error_t getTag(Uint8* pOutput, Uint64 len);
 };
 
 namespace vaes512 {
-    // CHACHA_POLY_AEAD_AUTH_CLASS_GEN(
-    //     ChaCha20Poly1305Hash,
-    //     ChaCha20Poly1305<CpuCipherFeatures::eVaes512, ChaCha256>);
+#if 0 // To be enabled after refactoring poly1305
+    AEAD_AUTH_CLASS_GEN(
+        ChaCha20Poly1305Hash,
+        ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>);
+#else
     class ALCP_API_EXPORT ChaCha20Poly1305Hash
         : public ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>
     {
@@ -157,11 +120,12 @@ namespace vaes512 {
                            Uint64             aadLen);
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
     };
-    AES_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
+#endif
+    CIPHER_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
 } // namespace vaes512
 
 namespace ref {
-    // CHACHA_POLY_AEAD_AUTH_CLASS_GEN(
+    // AEAD_AUTH_CLASS_GEN(
     //     ChaCha20Poly1305Hash,
     //     ChaCha20Poly1305<CpuCipherFeatures::eReference, ChaCha256>);
     class ALCP_API_EXPORT ChaCha20Poly1305Hash
@@ -185,7 +149,7 @@ namespace ref {
                            Uint64             aadLen);
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
     };
-    AES_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
+    CIPHER_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
 } // namespace ref
 
 } // namespace alcp::cipher::chacha20

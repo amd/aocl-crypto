@@ -33,6 +33,7 @@
 #include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/cipher/aes_ctr.hh"
+#include "alcp/cipher/aes_ofb.hh"
 #include "alcp/cipher/aes_xts.hh"
 
 // FIXME: to be moved out

@@ -76,7 +76,7 @@ ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::init(alc_cipher_data_t* ctx,
 
 template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::encryptupdate(
+ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::encrypt(
     const Uint8 plaintext[], Uint64 plaintextLength, Uint8 ciphertext[])
 {
     return ChaCha20Poly1305::processInput<true>(
@@ -85,7 +85,7 @@ ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::encryptupdate(
 
 template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::decryptupdate(
+ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::decrypt(
     const Uint8 ciphertext[], Uint64 ciphertextLength, Uint8 plaintext[])
 {
     return ChaCha20Poly1305::processInput<false>(
@@ -268,8 +268,10 @@ namespace vaes512 {
                                               Uint8*             pOutput,
                                               Uint64             len)
     {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::
-            encryptupdate(pInput, len, pOutput);
+        return ChaCha20Poly1305<ChaCha256,
+                                CpuCipherFeatures::eVaes512>::encrypt(pInput,
+                                                                      len,
+                                                                      pOutput);
     }
     alc_error_t ChaCha20Poly1305AEAD::decrypt(alc_cipher_data_t* ctx,
                                               const Uint8*       pCipherText,
@@ -277,7 +279,7 @@ namespace vaes512 {
                                               Uint64             len)
     {
         return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::
-            decryptupdate(pCipherText, len, pPlainText);
+            decrypt(pCipherText, len, pPlainText);
     }
 } // namespace vaes512
 
@@ -321,7 +323,7 @@ namespace ref {
                                               Uint64             len)
     {
         return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>::
-            encryptupdate(pInput, len, pOutput);
+            encrypt(pInput, len, pOutput);
     }
     alc_error_t ChaCha20Poly1305AEAD::decrypt(alc_cipher_data_t* ctx,
                                               const Uint8*       pCipherText,
@@ -329,7 +331,7 @@ namespace ref {
                                               Uint64             len)
     {
         return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>::
-            decryptupdate(pCipherText, len, pPlainText);
+            decrypt(pCipherText, len, pPlainText);
     }
 } // namespace ref
 

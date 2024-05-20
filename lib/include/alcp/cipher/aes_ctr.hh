@@ -53,23 +53,23 @@ class ALCP_API_EXPORT Ctr : public Aes
 };
 
 namespace vaes512 {
-    AES_CLASS_GEN(Ctr128, Ctr)
-    AES_CLASS_GEN(Ctr192, Ctr)
-    AES_CLASS_GEN(Ctr256, Ctr)
+    CIPHER_CLASS_GEN(Ctr128, Ctr)
+    CIPHER_CLASS_GEN(Ctr192, Ctr)
+    CIPHER_CLASS_GEN(Ctr256, Ctr)
 } // namespace vaes512
 
 // duplicate of vaes512 namespace, to be removed
 namespace vaes {
-    AES_CLASS_GEN(Ctr128, Ctr)
-    AES_CLASS_GEN(Ctr192, Ctr)
-    AES_CLASS_GEN(Ctr256, Ctr)
+    CIPHER_CLASS_GEN(Ctr128, Ctr)
+    CIPHER_CLASS_GEN(Ctr192, Ctr)
+    CIPHER_CLASS_GEN(Ctr256, Ctr)
 } // namespace vaes
 
 // duplicate of vaes512 namespace, to be removed
 namespace aesni {
-    AES_CLASS_GEN(Ctr128, Ctr)
-    AES_CLASS_GEN(Ctr192, Ctr)
-    AES_CLASS_GEN(Ctr256, Ctr)
+    CIPHER_CLASS_GEN(Ctr128, Ctr)
+    CIPHER_CLASS_GEN(Ctr192, Ctr)
+    CIPHER_CLASS_GEN(Ctr256, Ctr)
 } // namespace aesni
 
 namespace aes {

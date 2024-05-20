@@ -32,6 +32,8 @@
 #include "alcp/cipher.h"
 #include "alcp/utils/cpuid.hh"
 
+#include "alcp/cipher/cipher_common.hh"
+
 namespace alcp::cipher::chacha20 {
 using utils::CpuCipherFeatures;
 using utils::CpuId;
@@ -118,6 +120,7 @@ class ALCP_API_EXPORT ChaCha20
     static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
 
   public:
+    // ChaCha20(alc_cipher_data_t* ctx){};
     alc_error_t init(alc_cipher_data_t* ctx,
                      const Uint8*       pKey,
                      const Uint64       keyLen,

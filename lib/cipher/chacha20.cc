@@ -32,7 +32,7 @@
 
 namespace alcp::cipher::chacha20 {
 
-#define CRYPT_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)                \
+#define CHACHA_CRYPT_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)         \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
                                          const Uint8*       pInput,            \
                                          Uint8*             pOutput,           \
@@ -111,13 +111,13 @@ ChaCha20::setIv(const Uint8 iv[], Uint64 ivlen)
 }
 
 namespace vaes512 {
-    CRYPT_WRAPPER_FUNC(ChaCha256, encrypt, zen4::ProcessInput);
-    CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, zen4::ProcessInput);
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, encrypt, zen4::ProcessInput);
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, zen4::ProcessInput);
 } // namespace vaes512
 
 namespace ref {
-    CRYPT_WRAPPER_FUNC(ChaCha256, encrypt, ProcessInput);
-    CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, ProcessInput);
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, encrypt, ProcessInput);
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, ProcessInput);
 } // namespace ref
 
 } // namespace alcp::cipher::chacha20

@@ -31,9 +31,9 @@
 
 #include "alcp/cipher.h"
 
-// #include "algorithm.hh"
 #include "alcp/base.hh"
 #include "alcp/cipher.hh"
+#include "alcp/cipher/cipher_common.hh"
 #include "alcp/cipher/rijndael.hh"
 #include "alcp/utils/bits.hh"
 
@@ -136,30 +136,6 @@ class Aes : public Rijndael
     void*             m_this;
 };
 
-// class  for all AES cipher modes
-#define AES_CLASS_GEN(CHILD_NEW, PARENT)                                       \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-                                                                               \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW(){};                                                        \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pPlainText,                     \
-                            Uint8*             pCipherText,                    \
-                            Uint64             len);                                       \
-                                                                               \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
-    };
-
-AES_CLASS_GEN(Ofb, Aes)
-
 #define AEAD_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                     \
     class ALCP_API_EXPORT CHILD_NEW                                            \
         : private PARENT1                                                      \
@@ -186,28 +162,6 @@ AES_CLASS_GEN(Ofb, Aes)
                             const Uint8*       pCipherText,                    \
                             Uint8*             pPlainText,                     \
                             Uint64             len);                                       \
-    };
-
-// Macro to generate authentication class
-#define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                                 \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW() {}                                                        \
-                                                                               \
-        alc_error_t getTag(alc_cipher_data_t* ctx,                             \
-                           Uint8*             pOutput,                         \
-                           Uint64             tagLen);                                     \
-        alc_error_t init(alc_cipher_data_t* ctx,                               \
-                         const Uint8*       pKey,                              \
-                         Uint64             keyLen,                            \
-                         const Uint8*       pIv,                               \
-                         Uint64             ivLen);                                        \
-        alc_error_t setAad(alc_cipher_data_t* ctx,                             \
-                           const Uint8*       pInput,                          \
-                           Uint64             aadLen);                                     \
     };
 
 #define CRYPT_WRAPPER_FUNC(                                                    \

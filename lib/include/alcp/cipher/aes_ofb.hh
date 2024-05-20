@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,51 +26,24 @@
  *
  */
 
-#include "alcp/base.hh"
-#include "alcp/cipher.h"
-#include "alcp/cipher.hh"
+#ifndef _CIPHER_AES_OFB_HH_
+#define _CIPHER_AES_OFB_HH_ 2
+
+#include <cstdint>
+
+#include "alcp/error.h"
+
+#include "alcp/base/error.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
-#include "alcp/cipher/rijndael.hh"
-#include "alcp/utils/bits.hh"
+
 #include "alcp/utils/cpuid.hh"
 
-#include <immintrin.h>
-#include <wmmintrin.h>
-
 using alcp::utils::CpuId;
-
 namespace alcp::cipher {
 
-/*
- * @brief        AES Encryption in CBC(Cipher block chaining)
- */
-class ALCP_API_EXPORT Cbc : public Aes
-{
-  public:
-    Cbc(alc_cipher_data_t* ctx)
-        : Aes(ctx)
-    {
-        setMode(ALC_AES_MODE_CBC);
-    };
-    ~Cbc() {}
-};
+CIPHER_CLASS_GEN(Ofb, Aes);
 
-namespace vaes512 {
-    CIPHER_CLASS_GEN(Cbc128, Cbc)
-    CIPHER_CLASS_GEN(Cbc192, Cbc)
-    CIPHER_CLASS_GEN(Cbc256, Cbc)
-} // namespace vaes512
-
-namespace vaes {
-    CIPHER_CLASS_GEN(Cbc128, Cbc)
-    CIPHER_CLASS_GEN(Cbc192, Cbc)
-    CIPHER_CLASS_GEN(Cbc256, Cbc)
-} // namespace vaes
-
-namespace aesni {
-    CIPHER_CLASS_GEN(Cbc128, Cbc)
-    CIPHER_CLASS_GEN(Cbc192, Cbc)
-    CIPHER_CLASS_GEN(Cbc256, Cbc)
-} // namespace aesni
 } // namespace alcp::cipher
+
+#endif /* _CIPHER_AES_OFB_HH_ */

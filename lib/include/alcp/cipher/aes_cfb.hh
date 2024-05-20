@@ -54,21 +54,21 @@ class ALCP_API_EXPORT Cfb : public Aes
 };
 
 namespace vaes512 {
-    AES_CLASS_GEN(Cfb128, Cfb)
-    AES_CLASS_GEN(Cfb192, Cfb)
-    AES_CLASS_GEN(Cfb256, Cfb)
+    CIPHER_CLASS_GEN(Cfb128, Cfb)
+    CIPHER_CLASS_GEN(Cfb192, Cfb)
+    CIPHER_CLASS_GEN(Cfb256, Cfb)
 } // namespace vaes512
 
 namespace vaes {
-    AES_CLASS_GEN(Cfb128, Cfb)
-    AES_CLASS_GEN(Cfb192, Cfb)
-    AES_CLASS_GEN(Cfb256, Cfb)
+    CIPHER_CLASS_GEN(Cfb128, Cfb)
+    CIPHER_CLASS_GEN(Cfb192, Cfb)
+    CIPHER_CLASS_GEN(Cfb256, Cfb)
 } // namespace vaes
 
 namespace aesni {
-    AES_CLASS_GEN(Cfb128, Cfb)
-    AES_CLASS_GEN(Cfb192, Cfb)
-    AES_CLASS_GEN(Cfb256, Cfb)
+    CIPHER_CLASS_GEN(Cfb128, Cfb)
+    CIPHER_CLASS_GEN(Cfb192, Cfb)
+    CIPHER_CLASS_GEN(Cfb256, Cfb)
 } // namespace aesni
 
 } // namespace alcp::cipher

@@ -186,21 +186,21 @@ class ALCP_API_EXPORT Ccm : public Aes
 AEAD_AUTH_CLASS_GEN(CcmHash, Ccm);
 
 namespace vaes512 {
-    AES_CLASS_GEN(CcmAead128, CcmHash);
-    AES_CLASS_GEN(CcmAead192, CcmHash);
-    AES_CLASS_GEN(CcmAead256, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead128, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead192, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead256, CcmHash);
 } // namespace vaes512
 
 namespace vaes {
-    AES_CLASS_GEN(CcmAead128, CcmHash);
-    AES_CLASS_GEN(CcmAead192, CcmHash);
-    AES_CLASS_GEN(CcmAead256, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead128, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead192, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead256, CcmHash);
 } // namespace vaes
 
 namespace aesni {
-    AES_CLASS_GEN(CcmAead128, CcmHash);
-    AES_CLASS_GEN(CcmAead192, CcmHash);
-    AES_CLASS_GEN(CcmAead256, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead128, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead192, CcmHash);
+    CIPHER_CLASS_GEN(CcmAead256, CcmHash);
 } // namespace aesni
 
 } // namespace alcp::cipher

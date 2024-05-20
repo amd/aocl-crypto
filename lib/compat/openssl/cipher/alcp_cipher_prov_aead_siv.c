@@ -222,9 +222,9 @@ siv_cipher(void*                vctx,
 
         alc_error_t err = ALC_ERROR_NONE;
         if (cipherctx->enc) {
-            err = alcp_cipher_aead_encrypt_update(&(ctx->handle), in, out, inl);
+            err = alcp_cipher_aead_encrypt(&(ctx->handle), in, out, inl);
         } else {
-            err = alcp_cipher_aead_decrypt_update(&(ctx->handle), in, out, inl);
+            err = alcp_cipher_aead_decrypt(&(ctx->handle), in, out, inl);
         }
         if (alcp_is_error(err)) {
             return 0;

@@ -27,6 +27,8 @@
  */
 
 #include "alcp/cipher/aes.hh"
+
+#include "alcp/cipher/aes_ofb.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
 
