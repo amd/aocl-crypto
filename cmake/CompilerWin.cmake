@@ -38,7 +38,7 @@ endfunction(alcp_get_build_environment)
 
 # check compiler version
 function(alcp_check_compiler_version)
-    set(CLANG_MIN_REQ "12.0.0")
+    set(CLANG_MIN_REQ "14.0.0")
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         if(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
             message(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
