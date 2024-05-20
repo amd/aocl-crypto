@@ -44,7 +44,6 @@ ifeq ($(LIB_TYPE), static)
 endif
 
 # Add more targets as they come.
-# FIXME: enable ctr-drbg examples rng/ctr_drbg-demo and rng/drbg-test back once DRBG bug is fixed
 TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/aes-siv cipher/aes-xts cipher/aes-ccm \
 			cipher/chacha20 \
 			digest/sha2_224_example digest/sha2_256_example digest/sha2_384_example digest/sha2_512_example \
@@ -53,6 +52,8 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 			digest/shake_128_example digest/shake_256_example \
 			rng/rng-demo \
 			rng/hmac_drbg-demo \
+			rng/ctr_drbg-demo \
+			rng/drbg-test \
 			mac/hmac mac/cmac mac/poly1305 \
 			ecdh/x25519_example ecdh/p256_example \
 			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt rsa/rsa_2048 rsa/rsa_oaep_2048 rsa/rsa_oaep \
