@@ -66,14 +66,13 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
-    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
     new (ctx) cipher::Context;
 
-    err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
+    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
+    err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
     return err;
 }
 
@@ -225,8 +224,10 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
     if (pCipherHandle == nullptr || pCipherHandle->ch_context == nullptr)
         return;
 
-    cipher::Context* ctx =
-        reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    if (ctx->finish == nullptr)
+        return;
 
     ctx->finish(ctx);
 

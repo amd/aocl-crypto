@@ -89,6 +89,19 @@ typedef struct Context
     alc_error_t (*finish)(const void*);
 
     Status status{ StatusOk() };
+
+    Context()
+        : decrypt{ nullptr }
+        , encrypt{ nullptr }
+        , encryptBlocksXts{ nullptr }
+        , decryptBlocksXts{ nullptr }
+        , decryptUpdate{ nullptr }
+        , encryptUpdate{ nullptr }
+        , init{ nullptr }
+        , setAad{ nullptr }
+        , getTag{ nullptr }
+        , setTagLength{ nullptr }
+        , finish{ nullptr } {};
 } alcp_cipher_ctx_t;
 
 } // namespace alcp::cipher
