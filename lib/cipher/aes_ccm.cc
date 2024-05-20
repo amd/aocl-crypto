@@ -111,8 +111,8 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                 m_updatedLength += dataLen;
             }
             if (isEncrypt) {
-                CCM_ERROR err = aesni::ccm::Encrypt(
-                    &m_ccm_data, pInput, pOutput, dataLen, m_plainTextLength);
+                CCM_ERROR err =
+                    aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, dataLen);
                 switch (err) {
                     case CCM_ERROR::LEN_MISMATCH:
                         s = status::EncryptFailed(

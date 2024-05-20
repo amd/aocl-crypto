@@ -73,8 +73,7 @@ namespace aesni::ccm {
     CCM_ERROR Encrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
                       Uint8       out[],
-                      size_t      dataLen,
-                      size_t      plaintextLen);
+                      size_t      dataLen);
 
     CCM_ERROR Decrypt(ccm_data_t* ctx,
                       const Uint8 inp[],

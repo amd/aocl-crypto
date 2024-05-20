@@ -58,7 +58,10 @@ namespace alcp::cipher::aesni { namespace ccm {
         Uint8*  p_blk0_8 = reinterpret_cast<Uint8*>(&cmac);
         Uint64  i        = 0;
         __m128i nonce;
-
+        Uint8*  p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
+        // Load nonce to process
+        nonce = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
+        unsigned char flags0 = ccm_data->flags0 = ccm_data->nonce[0];
         if (alen != 0) {
             ccm_data->nonce[0] |= 0x40; /* set Adata flag */
 
@@ -138,16 +141,10 @@ namespace alcp::cipher::aesni { namespace ccm {
                            ccm_data->rounds);
                 ccm_data->blocks++;
             }
-        }
-
-        Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
-
-        // Load nonce to process
-        nonce = _mm_load_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
-        unsigned char flags0 = ccm_data->flags0 = ccm_data->nonce[0];
+        } else {
         // No additonal data, so encrypt nonce and set it as cmac
         const Uint8* p_key = ccm_data->key;
-        if (!(flags0 & 0x40)) {
+
             cmac = nonce;
             AesEncrypt(&cmac,
                        reinterpret_cast<const __m128i*>(p_key),
@@ -155,6 +152,7 @@ namespace alcp::cipher::aesni { namespace ccm {
 
             ccm_data->blocks++;
         }
+
         // Set nonce to just length to store size of plain text
         size_t       n;
         unsigned int q;
@@ -235,8 +233,7 @@ namespace alcp::cipher::aesni { namespace ccm {
     CCM_ERROR Encrypt(ccm_data_t* ccm_data,
                       const Uint8 pinp[],
                       Uint8       pout[],
-                      size_t      dataLen,
-                      size_t      plaintextLen)
+                      size_t      dataLen)
     {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
