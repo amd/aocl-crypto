@@ -39,8 +39,6 @@ namespace alcp::cipher {
 
 /**
  * @brief CCM mode (Copy of GCM class)
- * Uses encryptUpdate and decryptUpdate instead of
- * encrypt and decrypt.
  * @struct ccm_data_t
  */
 

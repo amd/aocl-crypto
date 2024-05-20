@@ -102,7 +102,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt_update(&handle, pSrc, pDst, len);
+    err = alcp_cipher_aead_encrypt(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -198,7 +198,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_decrypt_update(&handle, pSrc, pDst, len);
+    err = alcp_cipher_aead_decrypt(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: Tag Verification Failed \n");
         *pAuthPassed = false;
@@ -272,7 +272,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     // IV is not needed for encrypt, but still should not be NullPtr
     {
         std::vector<Uint8> fakeDest = std::vector<Uint8>(ADlen[numAD - 1]);
-        err                         = alcp_cipher_aead_encrypt_update(
+        err                         = alcp_cipher_aead_encrypt(
             &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size());
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");

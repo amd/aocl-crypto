@@ -27,8 +27,6 @@ Functions
 .. doxygenfunction:: alcp_cipher_aead_context_size
 .. doxygenfunction:: alcp_cipher_aead_request
 .. doxygenfunction:: alcp_cipher_aead_encrypt
-.. doxygenfunction:: alcp_cipher_aead_encrypt_update
-.. doxygenfunction:: alcp_cipher_aead_decrypt_update
 .. doxygenfunction:: alcp_cipher_aead_decrypt
 .. doxygenfunction:: alcp_cipher_aead_init
 .. doxygenfunction:: alcp_cipher_aead_set_aad

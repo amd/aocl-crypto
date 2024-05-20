@@ -330,10 +330,10 @@ namespace aesni {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead128::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead128::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -369,10 +369,10 @@ namespace aesni {
         return s.code();
     }
 
-    alc_error_t SivAead128::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead128::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -431,10 +431,10 @@ namespace aesni {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead192::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead192::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -470,10 +470,10 @@ namespace aesni {
         return s.code();
     }
 
-    alc_error_t SivAead192::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead192::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -532,10 +532,10 @@ namespace aesni {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead256::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead256::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -571,10 +571,10 @@ namespace aesni {
         return s.code();
     }
 
-    alc_error_t SivAead256::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead256::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -635,10 +635,10 @@ namespace vaes {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead128::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead128::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -674,10 +674,10 @@ namespace vaes {
         return s.code();
     }
 
-    alc_error_t SivAead128::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead128::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -736,10 +736,10 @@ namespace vaes {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead192::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead192::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -775,10 +775,10 @@ namespace vaes {
         return s.code();
     }
 
-    alc_error_t SivAead192::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead192::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -837,10 +837,10 @@ namespace vaes {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead256::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead256::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -876,10 +876,10 @@ namespace vaes {
         return s.code();
     }
 
-    alc_error_t SivAead256::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead256::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -940,10 +940,10 @@ namespace vaes512 {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead128::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead128::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -979,10 +979,10 @@ namespace vaes512 {
         return s.code();
     }
 
-    alc_error_t SivAead128::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead128::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -1041,10 +1041,10 @@ namespace vaes512 {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead192::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead192::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -1080,10 +1080,10 @@ namespace vaes512 {
         return s.code();
     }
 
-    alc_error_t SivAead192::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead192::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();
@@ -1142,10 +1142,10 @@ namespace vaes512 {
         Aes::setMode(ALC_AES_MODE_SIV);
     }
 
-    alc_error_t SivAead256::encryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pPlainText,
-                                          Uint8*             pCipherText,
-                                          Uint64             len)
+    alc_error_t SivAead256::encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pPlainText,
+                                    Uint8*             pCipherText,
+                                    Uint64             len)
     {
         Status s = StatusOk();
 
@@ -1181,10 +1181,10 @@ namespace vaes512 {
         return s.code();
     }
 
-    alc_error_t SivAead256::decryptUpdate(alc_cipher_data_t* ctx,
-                                          const Uint8*       pCipherText,
-                                          Uint8*             pPlainText,
-                                          Uint64             len)
+    alc_error_t SivAead256::decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pCipherText,
+                                    Uint8*             pPlainText,
+                                    Uint64             len)
 
     {
         Status      s   = StatusOk();

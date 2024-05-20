@@ -55,9 +55,9 @@ _build_aead_wrapper(Context& ctx)
 {
     auto algo = new AEADMODE(&(ctx.m_alcp_cipher_data));
 
-    ctx.m_cipher      = static_cast<void*>(algo);
-    ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
-    ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
+    ctx.m_cipher = static_cast<void*>(algo);
+    ctx.decrypt  = __aes_wrapperUpdate<AEADMODE, false>;
+    ctx.encrypt  = __aes_wrapperUpdate<AEADMODE, true>;
 
     ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
     ctx.init   = __aes_wrapperInit<AEADMODE>;

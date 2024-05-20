@@ -100,10 +100,10 @@ class Aes : public Rijndael
     // Please change to protected if needed in future
   public:
     ALCP_API_EXPORT alc_error_t init(alc_cipher_data_t* ctx,
-                     const Uint8*       pKey,
-                     const Uint64       keyLen,
-                     const Uint8*       pIv,
-                     const Uint64       ivLen);
+                                     const Uint8*       pKey,
+                                     const Uint64       keyLen,
+                                     const Uint8*       pIv,
+                                     const Uint64       ivLen);
 
     static bool isSupported(const Uint32 keyLen)
     {
@@ -170,14 +170,14 @@ AES_CLASS_GEN(Ofb, Aes)
         ~CHILD_NEW() {}                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encryptUpdate(alc_cipher_data_t* ctx,                      \
-                                  const Uint8*       pInput,                   \
-                                  Uint8*             pOutput,                  \
-                                  Uint64             len);                                 \
-        alc_error_t decryptUpdate(alc_cipher_data_t* ctx,                      \
-                                  const Uint8*       pCipherText,              \
-                                  Uint8*             pPlainText,               \
-                                  Uint64             len);                                 \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pInput,                         \
+                            Uint8*             pOutput,                        \
+                            Uint64             len);                                       \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len);                                       \
     };
 
 #define AEAD_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                     \
@@ -198,14 +198,14 @@ AES_CLASS_GEN(Ofb, Aes)
         {                                                                      \
             return PARENT2::init(ctx, pKey, keyLen, pIv, ivLen);               \
         }                                                                      \
-        alc_error_t encryptUpdate(alc_cipher_data_t* ctx,                      \
-                                  const Uint8*       pInput,                   \
-                                  Uint8*             pOutput,                  \
-                                  Uint64             len);                                 \
-        alc_error_t decryptUpdate(alc_cipher_data_t* ctx,                      \
-                                  const Uint8*       pCipherText,              \
-                                  Uint8*             pPlainText,               \
-                                  Uint64             len);                                 \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pInput,                         \
+                            Uint8*             pOutput,                        \
+                            Uint64             len);                                       \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len);                                       \
     };
 
 // Macro to generate authentication class

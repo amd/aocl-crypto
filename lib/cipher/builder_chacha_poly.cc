@@ -45,9 +45,9 @@ __chacha_poly_wrapperUpdate(void*        ctx,
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e = ap->encryptUpdate(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
+        e = ap->encrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
     else
-        e = ap->decryptUpdate(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
+        e = ap->decrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
 
     return e;
 }
@@ -129,9 +129,9 @@ _build_chach20_poly1305_wrapper(Context& ctx)
 {
     auto algo = new AEADMODE(&(ctx.m_alcp_cipher_data));
 
-    ctx.m_cipher      = static_cast<void*>(algo);
-    ctx.decryptUpdate = __chacha_poly_wrapperUpdate<AEADMODE, false>;
-    ctx.encryptUpdate = __chacha_poly_wrapperUpdate<AEADMODE, true>;
+    ctx.m_cipher = static_cast<void*>(algo);
+    ctx.decrypt  = __chacha_poly_wrapperUpdate<AEADMODE, false>;
+    ctx.encrypt  = __chacha_poly_wrapperUpdate<AEADMODE, true>;
 
     ctx.setAad = __chacha_poly_wrapperSetAad<AEADMODE>;
     ctx.init   = __chacha_poly_wrapperInit<AEADMODE>;

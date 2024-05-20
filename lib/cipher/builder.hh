@@ -94,9 +94,9 @@ __aes_wrapperUpdate(void* ctx, const Uint8* pSrc, Uint8* pDest, Uint64 len)
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e = ap->encryptUpdate(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
+        e = ap->encrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
     else
-        e = ap->decryptUpdate(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
+        e = ap->decrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
 
     return e;
 }

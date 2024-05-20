@@ -375,7 +375,7 @@ TEST(CCM, ZeroLEN)
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     err = ccm_obj.setAad(reinterpret_cast<Uint8*>(ad), 0);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
-    err = ccm_obj.encryptUpdate(
+    err = ccm_obj.encrypt(
         reinterpret_cast<Uint8*>(message), output_ct, 0, iv);
     EXPECT_EQ(err, ALC_ERROR_NONE);
     err = ccm_obj.getTag(tagbuff, 0);
@@ -406,7 +406,7 @@ TEST_P(CCM_KAT, Encrypt)
 
     // Encrypt the plaintext into ciphertext.
     if (!m_plaintext.empty()) {
-        err = pCcmObj->encryptUpdate(&(m_plaintext.at(0)),
+        err = pCcmObj->encrypt(&(m_plaintext.at(0)),
                                      &(out_ciphertext.at(0)),
                                      m_plaintext.size(),
                                      &(m_nonce.at(0)));
@@ -414,7 +414,7 @@ TEST_P(CCM_KAT, Encrypt)
     } else {
         // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = pCcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        err = pCcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -455,7 +455,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
 
         // Encrypt the plaintext into ciphertext.
         if (!m_plaintext.empty()) {
-            err = pCcmObj->encryptUpdate(&(m_plaintext.at(0)),
+            err = pCcmObj->encrypt(&(m_plaintext.at(0)),
                                          &(out_ciphertext.at(0)),
                                          m_plaintext.size(),
                                          &(m_nonce.at(0)));
@@ -463,7 +463,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
         } else {
             // Call encrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -501,7 +501,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
 
         // Encrypt the plaintext into ciphertext.
         if (!m_plaintext.empty()) {
-            err = pCcmObj->encryptUpdate(&(m_plaintext.at(0)),
+            err = pCcmObj->encrypt(&(m_plaintext.at(0)),
                                          &(out_ciphertext.at(0)),
                                          m_plaintext.size(),
                                          &(m_nonce.at(0)));
@@ -509,7 +509,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
         } else {
             // Call encrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -551,7 +551,7 @@ TEST_P(CCM_KAT, Decrypt)
 
     // Decrypt the ciphertext into plaintext
     if (!m_ciphertext.empty()) {
-        err = pCcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+        err = pCcmObj->decrypt(&(m_ciphertext.at(0)),
                                      &(out_plaintext.at(0)),
                                      m_ciphertext.size(),
                                      &(m_nonce.at(0)));
@@ -559,7 +559,7 @@ TEST_P(CCM_KAT, Decrypt)
     } else {
         // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = pCcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        err = pCcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -600,7 +600,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
 
         // Decrypt the ciphertext into plaintext
         if (!m_ciphertext.empty()) {
-            err = pCcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+            err = pCcmObj->decrypt(&(m_ciphertext.at(0)),
                                          &(out_plaintext.at(0)),
                                          m_ciphertext.size(),
                                          &(m_nonce.at(0)));
@@ -608,7 +608,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
         } else {
             // Call decrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -647,7 +647,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
 
         // Decrypt the ciphertext into plaintext
         if (!m_ciphertext.empty()) {
-            err = pCcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+            err = pCcmObj->decrypt(&(m_ciphertext.at(0)),
                                          &(out_plaintext.at(0)),
                                          m_ciphertext.size(),
                                          &(m_nonce.at(0)));
@@ -655,7 +655,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
         } else {
             // Call decrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 

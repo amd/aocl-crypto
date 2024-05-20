@@ -116,7 +116,7 @@ AlcpChacha20Poly1305EncryptDemo(
     }
 
     // Chacha20-Poly1305 encrypt
-    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -179,7 +179,7 @@ AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
     // FIXME: init call needs to be added to set key and iv.
 
     // Chacha20-Poly1305 decrypt
-    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len);
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, cErrSize);

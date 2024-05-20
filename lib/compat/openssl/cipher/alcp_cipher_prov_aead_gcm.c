@@ -623,16 +623,14 @@ gcm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
 #if PROV_GCM_DEBUG
                 printf(" enc %lu ", len);
 #endif
-                err = alcp_cipher_aead_encrypt_update(
-                    &(ctx->handle), in, out, len);
+                err = alcp_cipher_aead_encrypt(&(ctx->handle), in, out, len);
             } else {
 #if PROV_GCM_DEBUG
                 printf("\n");
                 printf(" dec %lu dec_counter %d ", len, dec_counter);
                 dec_counter++;
 #endif
-                err = alcp_cipher_aead_decrypt_update(
-                    &(ctx->handle), in, out, len);
+                err = alcp_cipher_aead_decrypt(&(ctx->handle), in, out, len);
             }
 
             if (alcp_is_error(err)) {
@@ -754,9 +752,9 @@ alcp_gcm_one_shot(ALCP_PROV_CIPHER_CTX* ctx,
     }
 
     if (cipherctx->enc) {
-        err = alcp_cipher_aead_encrypt_update(&(ctx->handle), in, out, in_len);
+        err = alcp_cipher_aead_encrypt(&(ctx->handle), in, out, in_len);
     } else {
-        err = alcp_cipher_aead_decrypt_update(&(ctx->handle), in, out, in_len);
+        err = alcp_cipher_aead_decrypt(&(ctx->handle), in, out, in_len);
     }
     if (alcp_is_error(err)) {
         printf("Error: gcm cipherUpdate \n");

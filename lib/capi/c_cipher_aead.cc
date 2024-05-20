@@ -66,10 +66,10 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
 }
 
 alc_error_t
-alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
-                                const Uint8*              pInput,
-                                Uint8*                    pOutput,
-                                Uint64                    len)
+alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pInput,
+                         Uint8*                    pOutput,
+                         Uint64                    len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -80,20 +80,19 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify encryptUpdate to return Status and assign to context
     // status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->encryptUpdate, err);
-    err = ctx->encryptUpdate(ctx, pInput, pOutput, len);
+    ALCP_BAD_PTR_ERR_RET(ctx->encrypt, err);
+    err = ctx->encrypt(ctx, pInput, pOutput, len);
 
     return err;
 }
 
 alc_error_t
-alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
-                                const Uint8*              pInput,
-                                Uint8*                    pOutput,
-                                Uint64                    len)
+alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pInput,
+                         Uint8*                    pOutput,
+                         Uint64                    len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -104,11 +103,10 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify decryptUpdate to return Status and assign to context
     // status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    ALCP_BAD_PTR_ERR_RET(ctx->decryptUpdate, err);
-    err = ctx->decryptUpdate(ctx, pInput, pOutput, len);
+    ALCP_BAD_PTR_ERR_RET(ctx->decrypt, err);
+    err = ctx->decrypt(ctx, pInput, pOutput, len);
 
     return err;
 }

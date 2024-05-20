@@ -116,7 +116,7 @@ encrypt_demo(const Uint8* plaintxt,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -165,7 +165,7 @@ decrypt_demo(const Uint8* ciphertxt,
         return false;
     }
 
-    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len);
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);

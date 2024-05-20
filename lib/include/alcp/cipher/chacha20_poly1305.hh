@@ -64,14 +64,14 @@ namespace alcp::cipher::chacha20 {
         ~CHILD_NEW() {}                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encryptUpdate(alc_cipher_data_t* ctx,                      \
-                                  const Uint8*       pInput,                   \
-                                  Uint8*             pOutput,                  \
-                                  Uint64             len);                                 \
-        alc_error_t decryptUpdate(alc_cipher_data_t* ctx,                      \
-                                  const Uint8*       pCipherText,              \
-                                  Uint8*             pPlainText,               \
-                                  Uint64             len);                                 \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pInput,                         \
+                            Uint8*             pOutput,                        \
+                            Uint64             len);                                       \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len);                                       \
     };
 
 // These will be used to store the length of the ciphertext

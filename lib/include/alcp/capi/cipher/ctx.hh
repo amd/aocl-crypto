@@ -63,17 +63,6 @@ typedef struct Context
                                     Uint64       currCipherTextLen,
                                     Uint64       startBlockNum);
 
-    alc_error_t (*decryptUpdate)(void*        ctx,
-                                 const Uint8* pSrc,
-                                 Uint8*       pDst,
-                                 Uint64       len);
-
-    alc_error_t (*encryptUpdate)(void*        ctx,
-                                 const Uint8* pSrc,
-                                 Uint8*       pDst,
-
-                                 Uint64 len){ nullptr };
-
     alc_error_t (*init)(void*        ctx,
                         const Uint8* pKey,
                         Uint64       keyLen,

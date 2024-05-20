@@ -94,20 +94,20 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
     const int   err_size = 256;
     Uint8       err_buf[err_size];
     if constexpr (encryptor == true) {
-        err = alcp_cipher_aead_encrypt_update(&m_handle,
-                                              p_gcm_update_data->m_input,
-                                              p_gcm_update_data->m_output,
-                                              p_gcm_update_data->m_input_len);
+        err = alcp_cipher_aead_encrypt(&m_handle,
+                                       p_gcm_update_data->m_input,
+                                       p_gcm_update_data->m_output,
+                                       p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable encrypt \n");
             alcp_error_str(err, err_buf, err_size);
             return false;
         }
     } else {
-        err = alcp_cipher_aead_decrypt_update(&m_handle,
-                                              p_gcm_update_data->m_input,
-                                              p_gcm_update_data->m_output,
-                                              p_gcm_update_data->m_input_len);
+        err = alcp_cipher_aead_decrypt(&m_handle,
+                                       p_gcm_update_data->m_input,
+                                       p_gcm_update_data->m_output,
+                                       p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable decrypt \n");
             alcp_error_str(err, err_buf, err_size);

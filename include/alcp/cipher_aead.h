@@ -199,10 +199,10 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
-                                const Uint8*              pInput,
-                                Uint8*                    pOutput,
-                                Uint64                    len);
+alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pInput,
+                         Uint8*                    pOutput,
+                         Uint64                    len);
 
 /**
  * @brief    AEAD decryption of cipher text and write it to plain text with
@@ -225,10 +225,10 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
-                                const Uint8*              pInput,
-                                Uint8*                    pOutput,
-                                Uint64                    len);
+alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pInput,
+                         Uint8*                    pOutput,
+                         Uint64                    len);
 
 /**
  * @brief  Cipher aead init.

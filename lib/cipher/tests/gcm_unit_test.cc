@@ -301,7 +301,7 @@ TEST(GCM, InputOverload)
     err             = pGcmObj.setIv(iv, sizeof(iv));
     EXPECT_EQ(err, ALC_ERROR_NONE);
     printf("%p %p\n", pwrite, pread);
-    err = pGcmObj.encryptUpdate(
+    err = pGcmObj.encrypt(
         (const Uint8*)pread, (Uint8*)pwrite, pow(2, 39) - 256 + 1, iv);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
@@ -315,7 +315,7 @@ TEST_P(GCM_KAT, Encrypt)
 
     // Encrypt the plaintext into ciphertext.
     if (!m_plaintext.empty()) {
-        m_err = pGcmObj->encryptUpdate(&(m_plaintext.at(0)),
+        m_err = pGcmObj->encrypt(&(m_plaintext.at(0)),
                                        &(out_ciphertext.at(0)),
                                        m_plaintext.size(),
                                        &(m_nonce.at(0)));
@@ -323,7 +323,7 @@ TEST_P(GCM_KAT, Encrypt)
     } else {
         // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
-        m_err = pGcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        m_err = pGcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
     }
     EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
@@ -347,7 +347,7 @@ TEST_P(GCM_KAT, Decrypt)
 
     // Decrypt the ciphertext into plaintext
     if (!m_ciphertext.empty()) {
-        m_err = pGcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+        m_err = pGcmObj->decrypt(&(m_ciphertext.at(0)),
                                        &(out_plaintext.at(0)),
                                        m_ciphertext.size(),
                                        &(m_nonce.at(0)));
@@ -355,7 +355,7 @@ TEST_P(GCM_KAT, Decrypt)
     } else {
         // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
-        m_err = pGcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        m_err = pGcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
     }
     EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
@@ -438,7 +438,7 @@ TEST(GCM, EncryptUpdateSingle)
 
     pGcmObj.setAad(&aad[0], aad.size());
 
-    pGcmObj.encryptUpdate(&ptext[0], &out[0], ptext.size(), &nonce[0]);
+    pGcmObj.encrypt(&ptext[0], &out[0], ptext.size(), &nonce[0]);
 
     ASSERT_EQ(out, ctext);
 
@@ -482,9 +482,9 @@ TEST(GCM, EncryptUpdateMultiple)
 
     pGcmObj.setAad(&aad[0], aad.size());
 
-    pGcmObj.encryptUpdate(&ptext[0], &out[0], ptext.size() - 16, &nonce[0]);
+    pGcmObj.encrypt(&ptext[0], &out[0], ptext.size() - 16, &nonce[0]);
 
-    pGcmObj.encryptUpdate(&ptext[0] + ptext.size() - 16,
+    pGcmObj.encrypt(&ptext[0] + ptext.size() - 16,
                           &out[0] + ptext.size() - 16,
                           16,
                           &nonce[0]);
@@ -531,7 +531,7 @@ TEST(GCM, DecryptUpdateSingle)
 
     pGcmObj.setAad(&aad[0], aad.size());
 
-    pGcmObj.decryptUpdate(&ctext[0], &out[0], ptext.size(), &nonce[0]);
+    pGcmObj.decrypt(&ctext[0], &out[0], ptext.size(), &nonce[0]);
 
     ASSERT_EQ(out, ptext);
 
@@ -575,9 +575,9 @@ TEST(GCM, DecryptUpdateMultiple)
 
     pGcmObj.setAad(&aad[0], aad.size());
 
-    pGcmObj.decryptUpdate(&ctext[0], &out[0], ctext.size() - 16, &nonce[0]);
+    pGcmObj.decrypt(&ctext[0], &out[0], ctext.size() - 16, &nonce[0]);
 
-    pGcmObj.decryptUpdate(&ctext[0] + ctext.size() - 16,
+    pGcmObj.decrypt(&ctext[0] + ctext.size() - 16,
                           &out[0] + ctext.size() - 16,
                           16,
                           &nonce[0]);
