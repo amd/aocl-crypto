@@ -23,13 +23,12 @@ Highlights of AOCL Crypto version 4.2.1
 AOCL-May2024
 ---------------------------------------------------------------------------
   - OpenSSL Provider:
-      - Enabled support for Cipher and Digest Algorithms
-	    - Various Bug fixes in provider path.
+    - Enabled support for Cipher and Digest Algorithms
+    - Various Bug fixes in provider path.
   - Cipher:
-      - Chacha20: Performance Improvements and bug fixes.
-	    - Chacha20-Poly1305 Cipher Algorithm.
-	    - GCM: Bug fixes and performance improvements
- 
+    - Chacha20: Performance Improvements and bug fixes.
+    - Chacha20-Poly1305 Cipher Algorithm.
+    - GCM: Bug fixes and performance improvements
   - RSA:
       - Bug fixes in Encrypt & Decrypt algorithms.
       - Sign & Verify APIs for PSS and PKCS Padding schemes
@@ -38,14 +37,15 @@ AOCL-May2024
       - SHA3 Shake Squeeze,Digest Context Copy support
       - Performance improvements in SHA2, SHA3 algorithms.
   - Tests and Benchmarks:
-	    - Misaligned pointer tests for all the modules
-	    - HMAC: Support for Digest Truncated variants and bug fixes
-	    - Digest: SHA3 Shake Squeeze and Context copy support in integration tests.
-	    - RSA: Test and bench support for Signature generation and verification (PSS)
-	    - Cleanup and refactoring in all modules.
+      - Misaligned pointer tests for all the modules
+      - Fuzz Testing: Initial level of fuzzing framework enabled for few Cipher and Digest modules.
+      - HMAC: Support for Digest Truncated variants and bug fixes
+      - Digest: SHA3 Shake Squeeze and Context copy support in integration tests.
+      - RSA: Test and bench support for Signature generation and verification (PSS)
+      - Cleanup and refactoring in all modules.
   - Build system updates:
-	    - Make test covering all unit tests, all kat and cross tests for all libraries (ipp, openssl)
-	    - Make test supporting valgrind runs.
+      - Make test covering all unit tests, all kat and cross tests for all libraries (ipp, openssl)
+      - Make test supporting valgrind runs.
   - Packaging:
       - Packaging: Compilation issues fixed in all the example sources
   - Bug fixes in dynamic dispatcher.
