@@ -29,22 +29,17 @@
 #pragma once
 
 #include "alcp/alcp.h"
-#include "cipher/alc_cipher.hh"
 #include "config.h"
-#include <cipher/cipher.hh>
 #include <cstddef>
 #include <cstdint>
 #include <dlfcn.h>
 #include <fuzzer/FuzzedDataProvider.h>
-#include <gtest/gtest.h>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unordered_map>
-
-using namespace alcp::testing;
 
 std::map<alc_digest_mode_t, alc_digest_len_t> sha2_mode_len_map = {
     { ALC_SHA2_224, ALC_DIGEST_LEN_224 },
@@ -67,7 +62,7 @@ std::map<alc_digest_mode_t, std::string> sha2_mode_string_map = {
     { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
-/* for all the AES non-AEAD modes */
+/* FIXME: add for all the AES non-AEAD modes */
 alc_cipher_mode_t AES_Modes[2] = { ALC_AES_MODE_CFB, ALC_AES_MODE_CBC };
 std::map<alc_cipher_mode_t, std::string> aes_mode_string_map = {
     { ALC_AES_MODE_CFB, "AES_CFB" },

@@ -28,8 +28,6 @@
 
 #include "Fuzz/alcp_fuzz_test.hh"
 
-using namespace alcp::testing;
-
 /* For all Non AEAD Ciphers */
 int
 ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
@@ -133,8 +131,6 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     const Uint32       PT_len    = size2;
     const Uint8*       iv        = fuzz_in4.data();
     std::vector<Uint8> decrypted_output(size2);
-
-    std::unique_ptr<Uint8[]> CT = std::make_unique<Uint8[]>(PT_len);
 
     alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
                                 .ci_mode   = Mode,
