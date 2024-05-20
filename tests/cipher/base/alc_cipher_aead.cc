@@ -317,7 +317,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         return false;
     }
     // set plaintext length
-    err = alcp_cipher_aead_set_plaintext_length(m_handle, aead_data.m_inl);
+    err = alcp_cipher_aead_set_ccm_plaintext_length(m_handle, aead_data.m_inl);
     if (err != ALC_ERROR_NONE) {
         printf("Error: Setting the plaintext Length\n");
         alcp_error_str(err, err_buff, cErrSize);

@@ -390,7 +390,7 @@ ccm_set_iv_mlen(ALCP_PROV_CIPHER_CTX* ctx, size_t mlen)
         printf("Provider:CCM: Error in Setting IV\n");
         return 0;
     }
-    if (alcp_cipher_aead_set_plaintext_length(&(ctx->handle), mlen)) {
+    if (alcp_cipher_aead_set_ccm_plaintext_length(&(ctx->handle), mlen)) {
         printf("Provider:CCM: Error in Setting Plaintext Length\n");
         return 0;
     }

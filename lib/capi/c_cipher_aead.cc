@@ -207,7 +207,7 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_aead_set_plaintext_length(const alc_cipher_handle_p pCipherHandle,
+alcp_cipher_aead_set_ccm_plaintext_length(const alc_cipher_handle_p pCipherHandle,
                                       Uint64                    plaintextLength)
 {
     alc_error_t err = ALC_ERROR_NONE;
