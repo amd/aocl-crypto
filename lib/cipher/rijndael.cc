@@ -338,11 +338,9 @@ Rijndael::setKey(const Uint8* key, int len)
     m_nrounds         = prm.Nr;
     m_key_size        = len / utils::BitsPerByte;
 
-    /* Encryption and Decryption key offsets */
-    m_enc_key = &m_round_key[0];
-    /* +2 as the actual key is also stored  */
-    m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
-
+    /* Encryption and Decryption keys */
+    m_enc_key = m_round_key_enc;
+    m_dec_key = m_round_key_dec;
     expandKeys(key);
 }
 

@@ -67,9 +67,7 @@ class ALCP_API_EXPORT Rijndael
     static Uint32 constexpr cAlignment     = 16;
     static Uint32 constexpr cAlignmentWord = cAlignment / utils::BytesPerWord;
 
-    static Uint32 constexpr cMinKeySizeBits = 128;
     static Uint32 constexpr cMaxKeySizeBits = 256;
-    static Uint32 constexpr cMinKeySize = cMinKeySizeBits / utils::BitsPerByte;
     static Uint32 constexpr cMaxKeySize = cMaxKeySizeBits / utils::BitsPerByte;
 
     static Uint32 constexpr cBlockSizeBits = 128;
@@ -79,7 +77,10 @@ class ALCP_API_EXPORT Rijndael
     static Uint32 constexpr cMaxRounds = 14;
 
   private:
-    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(64))) Uint8
+        m_round_key_enc[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(64))) Uint8
+        m_round_key_dec[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
 
     Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
     Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
@@ -142,15 +143,6 @@ class ALCP_API_EXPORT Rijndael
     void setKey(const Uint8* key, int len);
 
   private:
-    // non-movable:
-    Rijndael(Rijndael&& rhs) noexcept;
-    Rijndael& operator=(Rijndael&& rhs) noexcept;
-
-    // and non-copyable
-    Rijndael(const Rijndael& rhs);
-    Rijndael& operator=(const Rijndael& rhs);
-
-    //
     void expandKeys(const Uint8* pUserKey) noexcept;
     void addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept;
 };
