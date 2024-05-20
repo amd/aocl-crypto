@@ -27,7 +27,5 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_FUZZ_TARGET(test_fuzz_aes_non_aead test_fuzz_aes_non_aead.cc)
 #FIXME: AEAD is WIP
-#ADD_FUZZ_TARGET(test_fuzz_aes_gcm test_fuzz_aes_gcm.cc)
-#ADD_FUZZ_TARGET(test_fuzz_aes_xts test_fuzz_aes_xts.cc)
 
 
