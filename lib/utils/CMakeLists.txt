@@ -42,7 +42,7 @@ IF(ENABLE_AOCL_UTILS)
 			GIT_TAG amd-main
 			SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
 			CMAKE_ARGS  -DALCI_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
- 			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so
+ 			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.a
 		)
 		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
