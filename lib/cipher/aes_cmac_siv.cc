@@ -27,6 +27,7 @@
  */
 
 #include "alcp/cipher/aes_cmac_siv.hh"
+#include "alcp/utils/compare.hh"
 
 namespace alcp::cipher {
 
@@ -34,7 +35,8 @@ namespace alcp::cipher {
 
 Siv::Siv(alc_cipher_data_t* ctx)
     : m_cmac{ Cmac(ctx) }
-{}
+{
+}
 
 Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
@@ -406,7 +408,7 @@ namespace aesni {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -507,7 +509,7 @@ namespace aesni {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -608,7 +610,7 @@ namespace aesni {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -711,7 +713,7 @@ namespace vaes {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -812,7 +814,7 @@ namespace vaes {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -913,7 +915,7 @@ namespace vaes {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -1016,7 +1018,7 @@ namespace vaes512 {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -1117,7 +1119,7 @@ namespace vaes512 {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -1218,7 +1220,7 @@ namespace vaes512 {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (memcmp(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) != 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
