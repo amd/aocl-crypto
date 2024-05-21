@@ -78,32 +78,8 @@ namespace alcp::cipher {
         alc_error_t setAad(alc_cipher_data_t* ctx,                             \
                            const Uint8*       pInput,                          \
                            Uint64             aadLen);                                     \
-        alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength)     \
-        {                                                                      \
-            return ALC_ERROR_NONE;                                             \
-        }                                                                      \
+        alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);    \
     };
-
-#if 0 // WIP
-class Cipher : public Aes // and other non-aes ciphers
-{
-
-  public:
-    Cipher(alc_cipher_data_t* ctx) {}
-    ~Cipher() {}
-
-  public:
-    alc_error_t encrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pPlainText,
-                        Uint8*             pCipherText,
-                        Uint64             len){};
-
-    alc_error_t decrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pCipherText,
-                        Uint8*             pPlainText,
-                        Uint64             len){};
-};
-#endif
 
 } // namespace alcp::cipher
 

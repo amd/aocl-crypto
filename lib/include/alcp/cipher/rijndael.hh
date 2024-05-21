@@ -79,8 +79,8 @@ class ALCP_API_EXPORT Rijndael
     __attribute__((aligned(64)))
     Uint8 m_round_key_dec[cMaxKeySize * (cMaxRounds + 2)] = {};
 
-    Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
-    Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
+    Uint8* m_enc_key = NULL;
+    Uint8* m_dec_key = NULL;
 
     Uint32    m_nrounds    = 0; /* no of rounds */
     Uint32    m_ncolumns   = 0; /* no of columns in matrix */

@@ -102,16 +102,6 @@ class ALCP_API_EXPORT Ccm : public Aes
     Ccm()  = default;
     ~Ccm() = default;
 
-    /**
-     * @brief Set tag length to adjust nonce value
-     *
-     *
-     * @param ctx  - Context
-     * @param len  - Length of Tag
-     * @return
-     */
-    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen);
-
     // FIXME: This internal function needs to be protected/private
     // as there is 2 levels of inheritance down which this function
     // needs to be used, there is no way to make it protected/private

@@ -468,23 +468,6 @@ Ccm::setIv(ccm_data_t* ccm_data,
     return s;
 }
 
-alc_error_t
-Ccm::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
-{
-    Status s = StatusOk();
-    if (ctx == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s.code();
-    }
-    if (tagLen < 4 || tagLen > 16) {
-        s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
-        return s.code();
-    }
-    // Stored to verify in the getTagLength API
-    m_tagLen = tagLen;
-    return s.code();
-}
-
 Status
 Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
 {
@@ -583,6 +566,22 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
 }
 
 // Auth class definitions
+alc_error_t
+CcmHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
+{
+    Status s = StatusOk();
+    if (ctx == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s.code();
+    }
+    if (tagLen < 4 || tagLen > 16) {
+        s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
+        return s.code();
+    }
+    // Stored to verify in the getTagLength API
+    m_tagLen = tagLen;
+    return s.code();
+}
 
 alc_error_t
 CcmHash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
