@@ -84,8 +84,6 @@ typedef struct Context
         , encrypt{ nullptr }
         , encryptBlocksXts{ nullptr }
         , decryptBlocksXts{ nullptr }
-        , decryptUpdate{ nullptr }
-        , encryptUpdate{ nullptr }
         , init{ nullptr }
         , setAad{ nullptr }
         , getTag{ nullptr }
