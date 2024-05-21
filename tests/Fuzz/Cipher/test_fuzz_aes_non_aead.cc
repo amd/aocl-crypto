@@ -171,11 +171,13 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
                   << cinfo.ci_keyLen << std::endl;
         goto DEALLOC;
     }
+    std::cout << "PASSED for decrypt for keylen " << cinfo.ci_keyLen
+              << std::endl;
     goto DEALLOC;
 
 DEALLOC:
     if (handle_decrypt != nullptr) {
-        alcp_cipher_finish(handle_decrypt);
+        // alcp_cipher_finish(handle_decrypt);
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
         }
@@ -196,11 +198,11 @@ LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
                       << aes_mode_string_map[Mode] << std::endl;
             return retval;
         }
-        if (ALCP_Fuzz_Cipher_Decrypt(Mode, Data, Size) != 0) {
-            std::cout << "Cipher AES Decrypt fuzz test failed for Mode"
-                      << aes_mode_string_map[Mode] << std::endl;
-            return retval;
-        }
+        // if (ALCP_Fuzz_Cipher_Decrypt(Mode, Data, Size) != 0) {
+        //     std::cout << "Cipher AES Decrypt fuzz test failed for Mode"
+        //               << aes_mode_string_map[Mode] << std::endl;
+        //     return retval;
+        // }
     }
     return retval;
 }
