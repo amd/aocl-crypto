@@ -76,7 +76,7 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
     return err;
 }
 
-// is separate encrypt and encrypt init required?
+#if 0 // WIP: disabling encrypt/decrypt init for now.
 alc_error_t
 alcp_cipher_encrypt_init(const alc_cipher_handle_p pCipherHandle,
                          const Uint8*              pKey,
@@ -100,6 +100,7 @@ alcp_cipher_decrypt_init(const alc_cipher_handle_p pCipherHandle,
 
     return err;
 }
+#endif
 
 alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
