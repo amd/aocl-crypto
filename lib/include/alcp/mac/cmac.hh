@@ -29,6 +29,7 @@
 #pragma once
 #include "alcp/alcp.h"
 #include "alcp/base.hh"
+#include "alcp/cipher/aes.hh"
 #include "mac.hh"
 #include <immintrin.h>
 #include <memory>
@@ -45,12 +46,14 @@ union reg_128
 };
 
 namespace alcp::mac {
-class Cmac final : public IMac
+class Cmac final
+    : public IMac
+    , public cipher::Aes
 {
   public:
     ALCP_API_EXPORT Cmac();
-    ALCP_API_EXPORT Cmac(alc_cipher_data_t* data);
     ALCP_API_EXPORT ~Cmac();
+    ALCP_API_EXPORT Cmac(const Cmac& cmac);
     /**
      * @brief Update CMAC with plaintext Message
      *
@@ -80,10 +83,27 @@ class Cmac final : public IMac
     ALCP_API_EXPORT Status finalize(Uint8 pMsgBuf[], Uint64 size) override;
 
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pImpl;
-    const Impl*           pImpl() const { return m_pImpl.get(); }
-    Impl*                 pImpl() { return m_pImpl.get(); }
+    void                 getSubkeys();
+    static constexpr int cAESBlockSize = 16;
+    alignas(16) Uint8 m_k1[cAESBlockSize]{};
+    alignas(16) Uint8 m_k2[cAESBlockSize]{};
+
+    // Pointer to expanded keys
+    const Uint8* m_encrypt_keys = nullptr;
+    // Number of Aes Rounds based set based on the key
+    int m_rounds{ 0 };
+
+    // Temporary Storage Buffer to keep the plaintext data for processing
+    alignas(16) Uint8 m_storage_buffer[cAESBlockSize]{};
+    // No. of bytes of valid data currently stored in n_storage_buffer
+    int m_storage_buffer_offset{ 0 };
+
+    // Temporary Buffer to storage Encryption Result
+    alignas(16) Uint32 m_temp_enc_result_32[cAESBlockSize / 4]{};
+    Uint8* m_temp_enc_result_8 = reinterpret_cast<Uint8*>(m_temp_enc_result_32);
+
+    // Variable to keep track of whether CMAC has been finalized or not
+    bool m_finalized = false;
 };
 
 namespace avx2 {

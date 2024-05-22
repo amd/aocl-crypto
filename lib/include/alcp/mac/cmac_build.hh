@@ -84,7 +84,7 @@ Status
 CmacBuilder::build(Context* ctx)
 {
     Status status = StatusOk();
-    auto   p_algo = new Cmac(&ctx->data);
+    auto   p_algo = new Cmac();
 
     if (p_algo == nullptr) {
         return InternalError("Unable to Allocate Memory for CMAC Object");

@@ -96,8 +96,10 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
     alc_digest_mode_t mode = createHmacInfo(pMethod);
-    alc_hmac_info_t   info{ mode };
-    status = alcp_MacInit(ALC_MAC_HMAC, p_mac_ctx, pKey, keyLen, info);
+    alc_mac_info_t    info;
+    info.hmac = { mode };
+    IppStatus status =
+        alcp_MacInit(ALC_MAC_HMAC, p_mac_ctx, pKey, keyLen, info);
     printMsg("ippsHMACInit_rmf_rmf: EXIT");
     return status;
 }

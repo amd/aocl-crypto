@@ -236,9 +236,7 @@ class CMACFuncionalityTest
         auto       tuple_values = cParams.second;
 
         tie(m_key, m_plain_text, m_expected_mac) = tuple_values;
-        alc_cipher_data_t data;
-        data.alcp_keyLen_in_bytes = m_key.size();
-        m_cmac                    = std::make_unique<Cmac>(&data);
+        m_cmac                                   = std::make_unique<Cmac>();
         m_cmac->init(&m_key[0], static_cast<Uint64>(m_key.size()));
         m_mac = std::vector<Uint8>(m_expected_mac.size());
         SetReserve(m_plain_text);
@@ -344,10 +342,8 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
 
 TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 {
-    alc_cipher_data_t data;
-    Uint8             key[16]{};
-    data.alcp_keyLen_in_bytes = sizeof(key);
-    Cmac cmac2(&data);
+    Uint8 key[16]{};
+    Cmac  cmac2;
 
     Status s = cmac2.init(key, sizeof(key));
     ASSERT_TRUE(s.ok());
@@ -360,10 +356,8 @@ TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 {
-    alc_cipher_data_t data;
-    Uint8             key[16]{};
-    data.alcp_keyLen_in_bytes = sizeof(key);
-    Cmac cmac2(&data);
+    Uint8 key[16]{};
+    Cmac  cmac2;
 
     Status s = cmac2.init(key, sizeof(key));
     ASSERT_TRUE(s.ok());
@@ -378,10 +372,9 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)
 {
     GTEST_SKIP() << "Skipping the test due to failure in Rijindael";
-    alc_cipher_data_t data;
-    Uint8             key[30]{};
-    data.alcp_keyLen_in_bytes = sizeof(key);
-    Cmac cmac2(&data);
+    Uint8 key[30]{};
+
+    Cmac cmac2;
 
     // FIXME: Rijindael init should be returning proper error status and this
     // should not be passing

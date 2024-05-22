@@ -64,6 +64,10 @@ Poly1305<feature>::Poly1305()
 }
 
 template<utils::CpuArchFeature feature>
+Poly1305<feature>::Poly1305(const Poly1305& src)
+{}
+
+template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::init(const Uint8 key[], Uint64 len)
 {

@@ -112,5 +112,6 @@ class ALCP_API_EXPORT Poly1305 : public IMac
     // msgLen);
     Poly1305();
     virtual ~Poly1305() = default;
+    Poly1305(const Poly1305& src);
 };
 } // namespace alcp::mac::poly1305

@@ -107,7 +107,7 @@ getK0XorPad(Uint32 input_block_length,
     }
 }
 
-Hmac::Hmac(Hmac& hmac)
+Hmac::Hmac(const Hmac& hmac)
 {
     m_input_block_length = hmac.m_input_block_length;
     m_output_hash_size   = hmac.m_output_hash_size;

@@ -47,7 +47,7 @@ alcp_MacInit(alc_mac_type_t   macType,
         return ippStsErr;
     }
 
-    err = alcp_mac_init(&p_mac_ctx->handle, pKey, keyLen, info);
+    err = alcp_mac_init(&p_mac_ctx->handle, pKey, keyLen, &info);
     if (err != ALC_ERROR_NONE) {
         printErr("ALCP MAC Provider:  Init failed\n");
         return ippStsErr;

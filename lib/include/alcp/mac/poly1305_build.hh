@@ -96,6 +96,25 @@ __poly1305_wrapperReset(void* poly1305)
 
 template<CpuArchFeature feature>
 static Status
+__poly1305_build_with_copy(Context* srcCtx, Context* destCtx)
+{
+    auto poly1305_algo = new Poly1305<feature>(
+        *reinterpret_cast<Poly1305<feature>*>(srcCtx->m_mac));
+
+    destCtx->m_mac = static_cast<void*>(poly1305_algo);
+
+    destCtx->init      = srcCtx->init;
+    destCtx->update    = srcCtx->update;
+    destCtx->finalize  = srcCtx->finalize;
+    destCtx->finish    = srcCtx->finish;
+    destCtx->reset     = srcCtx->reset;
+    destCtx->duplicate = srcCtx->duplicate;
+
+    return StatusOk();
+}
+
+template<CpuArchFeature feature>
+static Status
 __build_poly1305_arch(Context* ctx)
 {
     using namespace status;
@@ -113,7 +132,7 @@ __build_poly1305_arch(Context* ctx)
     ctx->finalize  = __poly1305_wrapperFinalize<feature>;
     ctx->finish    = __poly1305_wrapperFinish<feature>;
     ctx->reset     = __poly1305_wrapperReset<feature>;
-    ctx->duplicate = nullptr;
+    ctx->duplicate = __poly1305_build_with_copy<feature>;
 
     return status;
 }

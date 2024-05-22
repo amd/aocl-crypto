@@ -33,9 +33,7 @@ namespace alcp::cipher {
 
 // Class Siv functions
 
-Siv::Siv(alc_cipher_data_t* ctx)
-    : m_cmac{ Cmac(ctx) }
-{}
+Siv::Siv(alc_cipher_data_t* ctx) {}
 
 Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)

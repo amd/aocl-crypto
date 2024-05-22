@@ -49,7 +49,8 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
 
-    alc_cmac_info_t info{ ALC_CIPHER_TYPE_AES, ALC_AES_MODE_NONE };
+    alc_mac_info_t info;
+    info.cmac   = { ALC_CIPHER_TYPE_AES, ALC_AES_MODE_NONE };
     auto status = alcp_MacInit(ALC_MAC_CMAC, p_mac_ctx, pKey, keyLen, info);
     printMsg("ippsAES_CMACInit: EXIT ");
     return status;

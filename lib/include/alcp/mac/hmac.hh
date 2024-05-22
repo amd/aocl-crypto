@@ -69,7 +69,7 @@ class ALCP_API_EXPORT Hmac final : public IMac
   public:
     Hmac()  = default;
     ~Hmac() = default;
-    Hmac(Hmac& hmac);
+    Hmac(const Hmac& hmac);
 
     /**
      * @brief Can be called continously to update message on small chunks
