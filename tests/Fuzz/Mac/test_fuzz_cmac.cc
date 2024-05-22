@@ -29,7 +29,7 @@
 #include "Fuzz/alcp_fuzz_test.hh"
 
 int
-ALCP_Fuzz_Poly1305(const Uint8* buf, size_t len)
+ALCP_Fuzz_Cmac(const Uint8* buf, size_t len)
 {
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
@@ -44,18 +44,24 @@ ALCP_Fuzz_Poly1305(const Uint8* buf, size_t len)
     const Uint8* input      = fuzz_input.data();
     Uint32       input_size = fuzz_input.size();
 
-    std::cout << "Running for Input size: " << input_size << " and Key size "
-              << keySize << std::endl;
-
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
 
+    std::cout << "Running for Input size: " << input_size << " and Key size "
+              << keySize << std::endl;
+
     const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = keySize * 8,
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
-    alc_mac_info_t macinfo = { .mi_type    = ALC_MAC_POLY1305,
-                               .mi_keyinfo = kinfo };
+    alc_mac_info_t macinfo = {
+        .mi_type     = ALC_MAC_CMAC,
+        .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
+                                                        ALC_CIPHER_TYPE_AES,
+                                                    .ci_mode =
+                                                        ALC_AES_MODE_NONE } } },
+        .mi_keyinfo  = kinfo
+    };
 
     alc_mac_handle_t handle;
     handle.ch_context = malloc(alcp_mac_context_size());
@@ -87,8 +93,8 @@ extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
     int retval = 0;
-    if (ALCP_Fuzz_Poly1305(Data, Size) != 0) {
-        std::cout << "Poly1305 fuzz test failed" << std::endl;
+    if (ALCP_Fuzz_Cmac(Data, Size) != 0) {
+        std::cout << "CMAC fuzz test failed" << std::endl;
         return retval;
     }
     return retval;

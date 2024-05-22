@@ -26,3 +26,4 @@
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_FUZZ_TARGET(test_fuzz_poly1305 test_fuzz_poly1305.cc)
+ADD_FUZZ_TARGET(test_fuzz_cmac test_fuzz_cmac.cc)
