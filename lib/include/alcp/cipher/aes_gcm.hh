@@ -31,6 +31,7 @@
 #include "alcp/error.h"
 
 #include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_common.hh"
 
 #include <cstdint>
 #include <immintrin.h>

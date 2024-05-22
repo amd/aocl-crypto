@@ -33,7 +33,6 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher.hh"
-#include "alcp/cipher/cipher_common.hh"
 #include "alcp/cipher/rijndael.hh"
 #include "alcp/utils/bits.hh"
 
@@ -67,9 +66,7 @@ using Status = alcp::base::Status;
 class Aes : public Rijndael
 {
   protected:
-    // rounds based on keysize
-    Uint32 m_nrounds = 0;
-
+    Uint32                m_nrounds = 0;
     alc_cipher_key_data_t m_cipher_key_data;
 
     Uint32                             m_keyLen_in_bytes_aes;
@@ -135,47 +132,6 @@ class Aes : public Rijndael
     alc_cipher_mode_t m_mode;
     void*             m_this;
 };
-
-#define AEAD_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                     \
-    class ALCP_API_EXPORT CHILD_NEW                                            \
-        : private PARENT1                                                      \
-        , public PARENT2                                                       \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx);                                     \
-        ~CHILD_NEW() {}                                                        \
-                                                                               \
-      public:                                                                  \
-        alc_error_t init(alc_cipher_data_t* ctx,                               \
-                         const Uint8*       pKey,                              \
-                         Uint64             keyLen,                            \
-                         const Uint8*       pIv,                               \
-                         Uint64             ivLen)                             \
-        {                                                                      \
-            return PARENT2::init(ctx, pKey, keyLen, pIv, ivLen);               \
-        }                                                                      \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pInput,                         \
-                            Uint8*             pOutput,                        \
-                            Uint64             len);                                       \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
-    };
-
-#define CRYPT_WRAPPER_FUNC(                                                    \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)             \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
-                                         const Uint8*       pinput,            \
-                                         Uint8*             pOutput,           \
-                                         Uint64             len)               \
-    {                                                                          \
-        alc_error_t err = ALC_ERROR_NONE;                                      \
-        m_isEnc_aes     = IS_ENC;                                              \
-        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
-        return err;                                                            \
-    }
 
 } // namespace alcp::cipher
 

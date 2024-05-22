@@ -28,7 +28,6 @@
 #if 0
 
 #include "alcp/cipher.hh"
-#include "alcp/cipher/aes_build.hh"
 
 #include "alcp/cipher/aes_ccm.hh"
 #include "alcp/cipher/cipher_error.hh"

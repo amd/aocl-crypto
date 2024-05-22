@@ -26,13 +26,10 @@
  *
  */
 
-#ifndef _CIPHER_CIPHER_COMMON_HH_
-#define _CIPHER_CIPHER_COMMON_HH_ 2
+#pragma once
 
 #include "alcp/cipher.h"
-
 #include "alcp/cipher.hh"
-#include "alcp/cipher/aes.hh"
 
 namespace alcp::cipher {
 
@@ -81,6 +78,45 @@ namespace alcp::cipher {
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);    \
     };
 
-} // namespace alcp::cipher
+#define AEAD_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                     \
+    class ALCP_API_EXPORT CHILD_NEW                                            \
+        : private PARENT1                                                      \
+        , public PARENT2                                                       \
+    {                                                                          \
+      public:                                                                  \
+        CHILD_NEW(alc_cipher_data_t* ctx);                                     \
+        ~CHILD_NEW() {}                                                        \
+                                                                               \
+      public:                                                                  \
+        alc_error_t init(alc_cipher_data_t* ctx,                               \
+                         const Uint8*       pKey,                              \
+                         Uint64             keyLen,                            \
+                         const Uint8*       pIv,                               \
+                         Uint64             ivLen)                             \
+        {                                                                      \
+            return PARENT2::init(ctx, pKey, keyLen, pIv, ivLen);               \
+        }                                                                      \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pInput,                         \
+                            Uint8*             pOutput,                        \
+                            Uint64             len);                                       \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len);                                       \
+    };
 
-#endif /* _CIPHER_CIPHER_COMMON_HH_ */
+#define CRYPT_WRAPPER_FUNC(                                                    \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)             \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
+                                         const Uint8*       pinput,            \
+                                         Uint8*             pOutput,           \
+                                         Uint64             len)               \
+    {                                                                          \
+        alc_error_t err = ALC_ERROR_NONE;                                      \
+        m_isEnc_aes     = IS_ENC;                                              \
+        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
+        return err;                                                            \
+    }
+
+} // namespace alcp::cipher

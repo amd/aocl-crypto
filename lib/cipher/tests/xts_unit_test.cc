@@ -32,7 +32,6 @@
 #if 0
 
 #include "alcp/capi/cipher/ctx.hh"
-#include "alcp/cipher/aes_build.hh"
 #include "alcp/cipher/aes_xts.hh"
 #include "alcp/utils/cpuid.hh"
 #include "cipher/gtest_base_cipher.hh"

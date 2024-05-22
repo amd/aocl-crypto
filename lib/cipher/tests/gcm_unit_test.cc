@@ -28,7 +28,6 @@
 
 #include "alcp/capi/cipher/builder.hh"
 #include "alcp/cipher.hh"
-#include "alcp/cipher/aes_build.hh"
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_gcm.hh"

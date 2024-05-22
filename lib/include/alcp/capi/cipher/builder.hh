@@ -42,13 +42,9 @@ getCpuCipherfeature();
 class CipherBuilder
 {
   public:
-    // FIXME: to be removed after cleanup in other AES modes
     static alc_error_t Build(const alc_cipher_mode_t cipherMode,
                              const Uint64            keyLen,
                              alcp::cipher::Context&  ctx);
-
-    static bool Supported(const alc_cipher_mode_t cipherMode,
-                          const Uint64            keyLen);
 };
 
 class CipherAeadBuilder

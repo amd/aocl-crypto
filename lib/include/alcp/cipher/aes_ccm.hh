@@ -35,6 +35,8 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "alcp/cipher/cipher_common.hh"
+
 namespace alcp::cipher {
 
 /**
