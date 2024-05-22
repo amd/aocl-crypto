@@ -27,4 +27,6 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_FUZZ_TARGET(test_fuzz_aes_non_aead test_fuzz_aes_non_aead.cc)
 ADD_FUZZ_TARGET(test_fuzz_aes_aead test_fuzz_aes_aead.cc)
+ADD_FUZZ_TARGET(test_fuzz_chacha20 test_fuzz_chacha20.cc)
+
 
