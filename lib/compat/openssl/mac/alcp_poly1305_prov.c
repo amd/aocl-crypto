@@ -206,5 +206,5 @@ const OSSL_DISPATCH alcp_poly1305_functions[] = {
     { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,
       (fptr_t)alcp_prov_poly1305_settable_ctx_params },
     { OSSL_FUNC_MAC_SET_CTX_PARAMS, (fptr_t)alcp_prov_poly1305_set_ctx_params },
-    OSSL_DISPATCH_END
+    { 0, NULL }
 };
