@@ -28,8 +28,14 @@
 
 #include "alcp/utils/cpuid.hh"
 #include <alcp/base.hh>
+#ifdef __linux__
 #include <sched.h>
 #include <unistd.h>
+#else
+#include <direct.h>
+#include <io.h>
+#include <Windows.h>
+#endif
 #ifdef ALCP_ENABLE_AOCL_UTILS
 #include <alci/alci.h>
 #include <alci/cxx/cpu.hh>
@@ -212,7 +218,18 @@ CpuId::Impl::Impl()
         std::cout << "CPU AFFINITY FAILURE!" << std::endl;
     }
 #else
-    m_cpu = std::make_unique<Cpu>();
+    HANDLE    hProcess = GetCurrentProcess();
+
+    DWORD_PTR procAffinity, sysAffinity;
+    if(!GetProcessAffinityMask(hProcess, &procAffinity, &sysAffinity))
+        std::cout << "CPU AFFINITY FAILURE!" << std::endl;
+
+    m_cpu = std::make_unique<Cpu>(0);
+
+    bool result = SetProcessAffinityMask(hProcess, procAffinity);
+    if (result == 0) {
+        std::cout << "CPU AFFINITY FAILURE!" << std::endl;
+    }
 #endif
 
 #ifndef ALCP_ENABLE_AOCL_UTILS
