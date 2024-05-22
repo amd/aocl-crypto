@@ -138,6 +138,16 @@ set(IPP_INSTALL_DIR "" CACHE STRING "IPPCP INSTALLED DIRECTORY FOR TESTING AND B
 
 # misc options
 OPTION(ALCP_SANITIZE "COMPILE WITH SANITIZER SUPPORT TO DETECT MEMORY ERRORS" OFF)
+
+# Due to a known issue with GCC13 and 14 with google benchmark sources, disabling Sanitizers while compiling _deps/benchmarks
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=114789
+if(CMAKE_COMPILER_IS_GCC AND ALCP_ENABLE_BENCH)
+ 	if(CMAKE_COMPILER_GCC_VERSION MATCHES "13" OR CMAKE_COMPILER_GCC_VERSION MATCHES "14")
+    	SET (ALCP_SANITIZE OFF)
+    	MESSAGE(STATUS "Due to a known bug with GCC14, skipping compilation of ALCP Benchmarks")
+	endif()
+endif()
+
 if(ALCP_SANITIZE)
 	alcp_add_sanitize_flags()
 endif()
