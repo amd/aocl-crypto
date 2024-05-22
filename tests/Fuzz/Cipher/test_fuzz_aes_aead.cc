@@ -103,8 +103,7 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
         goto DEALLOC;
     }
 
-    err = alcp_cipher_aead_encrypt_update(
-        handle_encrypt, plaintxt, ciphertxt, len);
+    err = alcp_cipher_aead_encrypt(handle_encrypt, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_encrypt_update failed for keylen "
                   << cinfo.ci_keyLen << std::endl;
@@ -200,7 +199,7 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
                   << cinfo.ci_keyLen << std::endl;
         goto DEALLOC;
     }
-    err = alcp_cipher_aead_decrypt_update(
+    err = alcp_cipher_aead_decrypt(
         handle_decrypt, ciphertxt, &decrypted_output[0], size2);
     if (alcp_is_error(err)) {
         std::cout
@@ -236,7 +235,7 @@ LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
     int retval = 0;
     /* for AEAD Ciphers, we will have another fuzz target altogether */
     for (const alc_cipher_mode_t& Mode : AES_AEAD_Modes) {
-        if (ALCP_Fuzz_AEAD_Cipher_Decrypt(Mode, Data, Size) != 0) {
+        if (ALCP_Fuzz_AEAD_Cipher_Encrypt(Mode, Data, Size) != 0) {
             std::cout << "Cipher AES AEAD Encrypt fuzz test failed for Mode"
                       << aes_aead_mode_string_map[Mode] << std::endl;
             return retval;
