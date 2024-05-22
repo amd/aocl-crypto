@@ -240,6 +240,11 @@ LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
                       << aes_aead_mode_string_map[Mode] << std::endl;
             return retval;
         }
+        if (ALCP_Fuzz_AEAD_Cipher_Decrypt(Mode, Data, Size) != 0) {
+            std::cout << "Cipher AES AEAD decrypt fuzz test failed for Mode"
+                      << aes_aead_mode_string_map[Mode] << std::endl;
+            return retval;
+        }
     }
     return retval;
 }
