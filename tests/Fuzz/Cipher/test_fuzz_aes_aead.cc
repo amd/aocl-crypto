@@ -37,33 +37,32 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    Uint32 size1 = stream.ConsumeIntegral<Uint16>();
-    size_t size2 = stream.ConsumeIntegral<Uint16>();
+    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_pt  = stream.ConsumeIntegralInRange<Uint16>(1, 1024);
+    size_t size_ad  = stream.ConsumeIntegralInRange<Uint16>(128, 256);
 
-    /* Splitting the fuzzed input into 3 parts   */
-    std::vector<Uint8> fuzz_in1 = stream.ConsumeBytes<Uint8>(size1);
-    std::vector<Uint8> fuzz_in2 = stream.ConsumeBytes<Uint8>(size2);
-    std::vector<Uint8> fuzz_in3 = stream.ConsumeBytes<Uint8>(size2);
-    std::vector<Uint8> fuzz_in4 = std::vector<Uint8>{ 16, 0 };
-    fuzz_in4.reserve(16);
-    std::vector<Uint8> fuzz_in5 = std::vector<Uint8>{ 16, 0 };
-    fuzz_in5.reserve(16);
-    std::vector<Uint8> fuzz_in6 = std::vector<Uint8>{ 16, 0 };
-    fuzz_in6.reserve(16);
+    size_t size_iv  = stream.ConsumeIntegral<Uint16>();
+    size_t size_tag = 16;
+
+    std::vector<Uint8> fuzz_key = stream.ConsumeBytes<Uint8>(size_key);
+    std::vector<Uint8> fuzz_pt  = stream.ConsumeBytes<Uint8>(size_pt);
+    std::vector<Uint8> fuzz_iv  = stream.ConsumeBytes<Uint8>(size_iv);
+    std::vector<Uint8> fuzz_ad  = stream.ConsumeBytes<Uint8>(size_ad);
+
+    std::vector<Uint8> tag(size_tag, 0);
+    std::vector<Uint8> ciphertxt(size_pt, 0);
 
     /* Initializing the fuzz seeds  */
-    const Uint8* key       = fuzz_in1.data();
-    Uint32       keySize   = size1;
-    const Uint8* plaintxt  = fuzz_in2.data();
-    Uint8*       ciphertxt = fuzz_in3.data();
-    const Uint32 PT_len    = size2;
-    const Uint8* iv        = fuzz_in4.data();
-    const Uint8* ad        = fuzz_in5.data();
-    Uint32       adl       = fuzz_in5.size();
-    Uint8*       tag       = fuzz_in6.data();
-    Uint32       tagl      = fuzz_in6.size();
+    const Uint8* key      = fuzz_key.data();
+    const Uint32 keySize  = fuzz_key.size();
+    const Uint8* plaintxt = fuzz_pt.data();
+    const Uint32 pt_len   = fuzz_pt.size();
 
-    std::unique_ptr<Uint8[]> CT = std::make_unique<Uint8[]>(PT_len);
+    const Uint8* iv   = fuzz_iv.data();
+    Uint32       ivl  = fuzz_iv.size();
+    const Uint8* ad   = fuzz_ad.data();
+    Uint32       adl  = fuzz_ad.size();
+    Uint32       tagl = tag.size();
 
     alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
                                 .ci_mode   = Mode,
@@ -82,49 +81,49 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
         std::cout << "Error: Memory Allocation Failed" << std::endl;
         return -1;
     }
+
+    std::cout << "Running for Input size: " << pt_len << " and Key size "
+              << keySize << " and IV Len " << ivl << " And ADL: " << adl
+              << std::endl;
+
     err = alcp_cipher_aead_request(
         cinfo.ci_mode, cinfo.ci_keyLen, handle_encrypt);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_request failed for encrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_request failed for encrypt "
+                  << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_aead_init(
         handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_init failed for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_init failed" << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_aead_set_aad(handle_encrypt, ad, adl);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_set_aad failed for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_set_aad failed" << std::endl;
         goto DEALLOC;
     }
-
-    err = alcp_cipher_aead_encrypt(handle_encrypt, plaintxt, ciphertxt, len);
+    err =
+        alcp_cipher_aead_encrypt(handle_encrypt, plaintxt, &ciphertxt[0], len);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_encrypt_update failed for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_encrypt failed" << std::endl;
         goto DEALLOC;
     }
-    err = alcp_cipher_aead_get_tag(handle_encrypt, tag, tagl);
+    err = alcp_cipher_aead_get_tag(handle_encrypt, &tag[0], tagl);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_get_tag failed for keylen " << std::endl;
+        std::cout << "alcp_cipher_aead_get_tag failed" << std::endl;
         goto DEALLOC;
     }
     goto DEALLOC;
 
 DEALLOC:
     if (handle_encrypt != nullptr) {
-        // alcp_cipher_aead_finish(handle_encrypt);
         if (handle_encrypt->ch_context != nullptr) {
             free(handle_encrypt->ch_context);
         }
         delete handle_encrypt;
     }
-
     return 0;
 }
 
@@ -136,35 +135,34 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    Uint32 size1 = stream.ConsumeIntegral<Uint16>(); // Key
-    size_t size2 = stream.ConsumeIntegral<Uint16>(); // PT and CT
+    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_ct  = stream.ConsumeIntegralInRange<Uint16>(1, 1024);
+    size_t size_iv  = stream.ConsumeIntegral<Uint16>();
+    size_t size_ad  = stream.ConsumeIntegral<Uint16>();
+    size_t size_tag = 16;
 
-    /* Splitting the fuzzed input into 3 parts   */
-    std::vector<Uint8> fuzz_in1 = stream.ConsumeBytes<Uint8>(size1); // Key
-    std::vector<Uint8> fuzz_in2 =
-        stream.ConsumeBytes<Uint8>(size2); // Plain_Text
-    std::vector<Uint8> fuzz_in3 =
-        stream.ConsumeBytes<Uint8>(size2);                     // Cipher_Text
-    std::vector<Uint8> fuzz_in4 = std::vector<Uint8>{ 16, 0 }; // IV
-    fuzz_in4.reserve(16);
+    std::vector<Uint8> fuzz_ct  = stream.ConsumeBytes<Uint8>(size_ct);
+    std::vector<Uint8> fuzz_key = stream.ConsumeBytes<Uint8>(size_key);
+    std::vector<Uint8> fuzz_iv  = stream.ConsumeBytes<Uint8>(size_iv);
+    std::vector<Uint8> fuzz_ad  = stream.ConsumeBytes<Uint8>(size_ad);
 
-    std::vector<Uint8> ad   = std::vector<Uint8>{ 16, 0 };
-    Uint32             adl  = ad.size();
-    std::vector<Uint8> tag  = std::vector<Uint8>{ 16, 0 };
-    Uint32             tagl = tag.size();
+    std::vector<Uint8> decrypted_tag(size_tag, 0);
+    std::vector<Uint8> plaintxt(size_ct, 0);
+
     /* Initializing the fuzz seeds  */
-    const Uint8*       key       = fuzz_in1.data();
-    Uint32             keySize   = size1;
-    const Uint8*       plaintxt  = fuzz_in2.data();
-    Uint8*             ciphertxt = fuzz_in3.data();
-    const Uint32       PT_len    = size2;
-    const Uint8*       iv        = fuzz_in4.data();
-    std::vector<Uint8> decrypted_output(size2);
-    alc_cipher_info_t  cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
-                                 .ci_mode   = Mode,
-                                 .ci_keyLen = keySize,
-                                 .ci_key    = key,
-                                 .ci_iv     = iv };
+    const Uint8* key       = fuzz_key.data();
+    const Uint32 keySize   = fuzz_key.size();
+    Uint8*       ciphertxt = fuzz_ct.data();
+    const Uint32 ct_len    = fuzz_ct.size();
+    const Uint8* iv        = fuzz_iv.data();
+    const Uint8* ad        = fuzz_ad.data();
+    const Uint32 adl       = fuzz_ad.size();
+
+    alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
+                                .ci_mode   = Mode,
+                                .ci_keyLen = keySize,
+                                .ci_key    = key,
+                                .ci_iv     = iv };
 
     alc_cipher_handle_p handle_decrypt = new alc_cipher_handle_t;
 
@@ -179,38 +177,36 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
         std::cout << "Error: Memory Allocation Failed" << std::endl;
         return -1;
     }
+
+    std::cout << "Running for Input size:" << ct_len << ",Key size:" << keySize
+              << ",IV Len:" << fuzz_iv.size() << ",ADL:" << adl << std::endl;
+
     err = alcp_cipher_aead_request(
         cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_request failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_request failed for decrypt" << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_aead_init(
         handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_init failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_init failed for decrypt" << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_aead_set_aad(handle_decrypt, &ad[0], adl);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_decrypt failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_set_aad failed for decrypt" << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_aead_decrypt(
-        handle_decrypt, ciphertxt, &decrypted_output[0], size2);
+        handle_decrypt, ciphertxt, &plaintxt[0], ct_len);
     if (alcp_is_error(err)) {
-        std::cout
-            << "alcp_cipher_aead_decrypt_update failed for decrypt for keylen "
-            << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_decrypt failed" << std::endl;
         goto DEALLOC;
     }
-    err = alcp_cipher_aead_get_tag(handle_decrypt, &tag[0], tagl);
+    err = alcp_cipher_aead_get_tag(handle_decrypt, &decrypted_tag[0], size_tag);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_aead_get_tag failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_aead_get_tag failed for decrypt" << std::endl;
         goto DEALLOC;
     }
     std::cout << "Operation passed for decrypt for keylen " << cinfo.ci_keyLen
@@ -219,7 +215,6 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
 DEALLOC:
     if (handle_decrypt != nullptr) {
-        // alcp_cipher_finish(handle_decrypt);
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
         }

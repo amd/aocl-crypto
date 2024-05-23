@@ -35,25 +35,22 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    Uint32 size1 = stream.ConsumeIntegral<Uint16>();
-    size_t size2 = stream.ConsumeIntegral<Uint16>();
+    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_pt  = stream.ConsumeIntegral<Uint16>();
+    size_t size_iv  = stream.ConsumeIntegral<Uint16>();
 
-    /* Splitting the fuzzed input into 3 parts   */
-    std::vector<Uint8> fuzz_in1 = stream.ConsumeBytes<Uint8>(size1);
-    std::vector<Uint8> fuzz_in2 = stream.ConsumeBytes<Uint8>(size2);
-    std::vector<Uint8> fuzz_in3 = stream.ConsumeBytes<Uint8>(size2);
-    std::vector<Uint8> fuzz_in4 = std::vector<Uint8>{ 16, 0 };
-    fuzz_in4.reserve(16);
+    std::vector<Uint8> fuzz_key = stream.ConsumeBytes<Uint8>(size_key);
+    std::vector<Uint8> fuzz_pt  = stream.ConsumeBytes<Uint8>(size_pt);
+    std::vector<Uint8> fuzz_iv  = stream.ConsumeBytes<Uint8>(size_iv);
 
-    /* Initializing the fuzz seeds  */
-    const Uint8* key       = fuzz_in1.data();
-    Uint32       keySize   = size1;
-    const Uint8* plaintxt  = fuzz_in2.data();
-    Uint8*       ciphertxt = fuzz_in3.data();
-    const Uint32 PT_len    = size2;
-    const Uint8* iv        = fuzz_in4.data();
+    std::vector<Uint8> ciphertxt(size_pt, 0);
 
-    std::unique_ptr<Uint8[]> CT = std::make_unique<Uint8[]>(PT_len);
+    const Uint8* key      = fuzz_key.data();
+    const Uint32 keySize  = fuzz_key.size();
+    const Uint8* plaintxt = fuzz_pt.data();
+    const Uint32 pt_len   = fuzz_pt.size();
+    const Uint8* iv       = fuzz_iv.data();
+    const Uint32 ivl      = fuzz_iv.size();
 
     alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
                                 .ci_mode   = Mode,
@@ -72,23 +69,24 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
         std::cout << "Error: Memory Allocation Failed" << std::endl;
         return -1;
     }
+
+    std::cout << "Running for Inputsize:" << pt_len << ",Keysize:" << keySize
+              << ",IVLen:" << ivl << std::endl;
+
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_encrypt);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_request failed for encrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_request failed for encrypt" << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_init(
-        handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+        handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_init failed for keylen " << cinfo.ci_keyLen
-                  << std::endl;
+        std::cout << "alcp_cipher_init failed" << std::endl;
         goto DEALLOC;
     }
-    err = alcp_cipher_encrypt(handle_encrypt, plaintxt, ciphertxt, len);
+    err = alcp_cipher_encrypt(handle_encrypt, plaintxt, &ciphertxt[0], pt_len);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_encrypt failed for keylen " << cinfo.ci_keyLen
-                  << std::endl;
+        std::cout << "alcp_cipher_encrypt failed" << std::endl;
         goto DEALLOC;
     }
     goto DEALLOC;
@@ -111,26 +109,21 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    Uint32 size1 = stream.ConsumeIntegral<Uint16>(); // Key
-    size_t size2 = stream.ConsumeIntegral<Uint16>(); // PT and CT
+    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_ct  = stream.ConsumeIntegral<Uint16>();
+    size_t size_iv  = stream.ConsumeIntegral<Uint16>();
 
-    /* Splitting the fuzzed input into 3 parts   */
-    std::vector<Uint8> fuzz_in1 = stream.ConsumeBytes<Uint8>(size1); // Key
-    std::vector<Uint8> fuzz_in2 =
-        stream.ConsumeBytes<Uint8>(size2); // Plain_Text
-    std::vector<Uint8> fuzz_in3 =
-        stream.ConsumeBytes<Uint8>(size2);                     // Cipher_Text
-    std::vector<Uint8> fuzz_in4 = std::vector<Uint8>{ 16, 0 }; // IV
-    fuzz_in4.reserve(16);
+    std::vector<Uint8> fuzz_key = stream.ConsumeBytes<Uint8>(size_key);
+    std::vector<Uint8> fuzz_ct  = stream.ConsumeBytes<Uint8>(size_ct);
+    std::vector<Uint8> fuzz_iv  = stream.ConsumeBytes<Uint8>(size_iv);
 
-    /* Initializing the fuzz seeds  */
-    const Uint8*       key       = fuzz_in1.data();
-    Uint32             keySize   = size1;
-    const Uint8*       plaintxt  = fuzz_in2.data();
-    Uint8*             ciphertxt = fuzz_in3.data();
-    const Uint32       PT_len    = size2;
-    const Uint8*       iv        = fuzz_in4.data();
-    std::vector<Uint8> decrypted_output(size2);
+    std::vector<Uint8> plaintxt(size_ct, 0);
+
+    const Uint8* key     = fuzz_key.data();
+    const Uint32 keySize = fuzz_key.size();
+    const Uint32 pt_len  = fuzz_ct.size();
+    const Uint8* iv      = fuzz_iv.data();
+    const Uint32 ivl     = fuzz_iv.size();
 
     alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
                                 .ci_mode   = Mode,
@@ -151,24 +144,25 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
         std::cout << "Error: Memory Allocation Failed" << std::endl;
         return -1;
     }
+
+    std::cout << "Running for InputSize:" << pt_len << ",KeySize:" << keySize
+              << ",IVLen:" << ivl << std::endl;
+
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_request failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_request failed for decrypt" << std::endl;
         goto DEALLOC;
     }
     err = alcp_cipher_init(
-        handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+        handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_init failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_init failed for decrypt" << std::endl;
         goto DEALLOC;
     }
-    err = alcp_cipher_decrypt(
-        handle_decrypt, ciphertxt, &decrypted_output[0], len);
+    err =
+        alcp_cipher_decrypt(handle_decrypt, &fuzz_ct[0], &plaintxt[0], pt_len);
     if (alcp_is_error(err)) {
-        std::cout << "alcp_cipher_decrypt failed for decrypt for keylen "
-                  << cinfo.ci_keyLen << std::endl;
+        std::cout << "alcp_cipher_decrypt failed for decrypt" << std::endl;
         goto DEALLOC;
     }
     std::cout << "PASSED for decrypt for keylen " << cinfo.ci_keyLen
@@ -177,7 +171,6 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
 
 DEALLOC:
     if (handle_decrypt != nullptr) {
-        // alcp_cipher_finish(handle_decrypt);
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
         }
@@ -191,18 +184,17 @@ extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
     int retval = 0;
-    /* for AEAD Ciphers, we will have another fuzz target altogether */
     for (const alc_cipher_mode_t& Mode : AES_Modes) {
         if (ALCP_Fuzz_Cipher_Encrypt(Mode, Data, Size) != 0) {
             std::cout << "Cipher AES Encrypt fuzz test failed for Mode"
                       << aes_mode_string_map[Mode] << std::endl;
             return retval;
         }
-        // if (ALCP_Fuzz_Cipher_Decrypt(Mode, Data, Size) != 0) {
-        //     std::cout << "Cipher AES Decrypt fuzz test failed for Mode"
-        //               << aes_mode_string_map[Mode] << std::endl;
-        //     return retval;
-        // }
+        if (ALCP_Fuzz_Cipher_Decrypt(Mode, Data, Size) != 0) {
+            std::cout << "Cipher AES Decrypt fuzz test failed for Mode"
+                      << aes_mode_string_map[Mode] << std::endl;
+            return retval;
+        }
     }
     return retval;
 }

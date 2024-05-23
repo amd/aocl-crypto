@@ -41,7 +41,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-std::map<alc_digest_mode_t, alc_digest_len_t> sha2_mode_len_map = {
+std::map<alc_digest_mode_t, alc_digest_len_t> sha_mode_len_map = {
     { ALC_SHA2_224, ALC_DIGEST_LEN_224 },
     { ALC_SHA2_256, ALC_DIGEST_LEN_256 },
     { ALC_SHA2_384, ALC_DIGEST_LEN_384 },
@@ -54,7 +54,7 @@ std::map<alc_digest_mode_t, alc_digest_len_t> sha2_mode_len_map = {
     { ALC_SHAKE_256, ALC_DIGEST_LEN_CUSTOM_SHAKE_256 }
 };
 
-std::map<alc_digest_mode_t, std::string> sha2_mode_string_map = {
+std::map<alc_digest_mode_t, std::string> sha_mode_string_map = {
     { ALC_SHA2_224, "ALC_SHA2_224" },   { ALC_SHA2_256, "ALC_SHA2_256" },
     { ALC_SHA2_384, "ALC_SHA2_384" },   { ALC_SHA2_512, "ALC_SHA2_512" },
     { ALC_SHA3_224, "ALC_SHA3_224" },   { ALC_SHA3_256, "ALC_SHA3_256" },
@@ -62,10 +62,17 @@ std::map<alc_digest_mode_t, std::string> sha2_mode_string_map = {
     { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
-alc_cipher_mode_t AES_Modes[2] = { ALC_AES_MODE_CFB, ALC_AES_MODE_CBC };
+alc_cipher_mode_t AES_Modes[5] = {
+    ALC_AES_MODE_CFB,
+    ALC_AES_MODE_CBC,
+    ALC_AES_MODE_OFB,
+    ALC_AES_MODE_CTR,
+};
 std::map<alc_cipher_mode_t, std::string> aes_mode_string_map = {
     { ALC_AES_MODE_CFB, "AES_CFB" },
     { ALC_AES_MODE_CBC, "AES_CBC" },
+    { ALC_AES_MODE_OFB, "AES_OFB" },
+    { ALC_AES_MODE_CTR, "AES_CTR" },
 };
 
 alc_cipher_mode_t AES_AEAD_Modes[2] = { ALC_AES_MODE_GCM };

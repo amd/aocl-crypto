@@ -31,14 +31,17 @@
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
 {
-    Uint32 srcSize = len;
+    FuzzedDataProvider stream(buf, len);
+
+    size_t size_input = stream.ConsumeIntegralInRange<Uint16>(1, 1024);
+    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
     /* Initializing digest info */
     alc_error_t         err;
     alc_digest_handle_p m_handle     = new alc_digest_handle_t;
     alc_digest_handle_p m_handle_dup = new alc_digest_handle_t;
 
-    Uint32 out_size = sha2_mode_len_map[mode];
+    Uint32 out_size = sha_mode_len_map[mode];
 
     /* for non-shake variants */
     if (out_size % 8 == 0) {
@@ -47,49 +50,50 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     /* for shake variants */
     else if (out_size == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
              || out_size == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
-        FuzzedDataProvider stream(buf, len);
         out_size = stream.ConsumeIntegral<Uint32>();
     } else {
-        std::cout << sha2_mode_string_map[mode]
-                  << " is not supported. Exiting.." << std::endl;
+        std::cout << sha_mode_len_map[mode] << " is not supported. Exiting.."
+                  << std::endl;
         return 0;
     }
+
+    /* output2 is to store digest data from duplicate handle */
     Uint8 output1[out_size], output2[out_size];
 
-    /* Start to Fuzz Digest APIs */
-    FuzzedDataProvider stream(buf, len);
-    Uint64             context_size = alcp_digest_context_size();
+    Uint64 context_size = alcp_digest_context_size();
 
     if (m_handle == nullptr || m_handle_dup == nullptr) {
         std::cout << "Error: Mem alloc for digest handle" << std::endl;
         goto OUT;
     }
-    /* Request a context with dinfo */
+
     m_handle->context     = malloc(context_size);
     m_handle_dup->context = malloc(context_size);
     if (m_handle->context == nullptr || m_handle_dup->context == nullptr) {
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         goto OUT;
     }
+
+    std::cout << "Running for Input size:" << size_input << std::endl;
     /*FIXME: add lifecycle changes here, and randomize the order of the calls */
     err = alcp_digest_request(mode, m_handle);
     Check_Error(err);
     err = alcp_digest_init(m_handle);
     Check_Error(err);
-    err = alcp_digest_update(m_handle, buf, srcSize);
+    err = alcp_digest_update(m_handle, &fuzz_input[0], fuzz_input.size());
     Check_Error(err);
     /* context copy */
     err = alcp_digest_context_copy(m_handle, m_handle_dup);
     Check_Error(err);
     /* for shake variants */
-    if (sha2_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
         err = alcp_digest_shake_squeeze(m_handle_dup, output2, out_size);
         Check_Error(err);
     }
     err = alcp_digest_finalize(m_handle, output1, out_size);
     Check_Error(err);
 
-    if (sha2_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
         for (int i = 0; i < out_size; i++) {
             if (output1[i] != output2[i]) {
                 std::cout << "Outputs are NOT equal" << std::endl;
@@ -97,6 +101,8 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
             }
         }
     }
+    std::cout << "Passed " << sha_mode_len_map[mode]
+              << " for Input size:" << size_input << std::endl;
     goto CLOSE;
 
 CLOSE:
@@ -119,10 +125,10 @@ extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
     int retval = 0;
-    for (auto const& [Mode, Len] : sha2_mode_len_map) {
+    for (auto const& [Mode, Len] : sha_mode_len_map) {
         if (ALCP_Fuzz_Digest(Mode, Data, Size) != 0) {
             std::cout << "Digest fuzz test failed for Mode"
-                      << sha2_mode_string_map[Mode] << std::endl;
+                      << sha_mode_len_map[Mode] << std::endl;
             return retval;
         }
     }
