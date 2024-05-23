@@ -35,8 +35,7 @@ namespace alcp::cipher {
 
 Siv::Siv(alc_cipher_data_t* ctx)
     : m_cmac{ Cmac(ctx) }
-{
-}
+{}
 
 Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
@@ -303,7 +302,7 @@ SivHash::init(alc_cipher_data_t* ctx,
 {
     Uint64 keyLength = keyLen;
     if (pIv != nullptr) {
-        m_iv = pIv;
+        memcpy(m_iv, pIv, ivLen);
     }
     if (ctx == nullptr) {
         return ALC_ERROR_INVALID_ARG;

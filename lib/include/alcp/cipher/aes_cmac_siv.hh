@@ -66,7 +66,7 @@ class ALCP_API_EXPORT Siv
     const Uint8* m_key2                        = {};
     Uint64       m_keyLength                   = {};
     Uint64       m_padLen                      = {};
-    const Uint8* m_iv                          = {};
+    Uint8        m_iv[16]                      = {};
     Cmac         m_cmac;
     alignas(16) Uint8 m_cmacTemp[SIZE_CMAC] = {};
 
@@ -123,7 +123,7 @@ class ALCP_API_EXPORT Siv
      * @return Status, is failure or success status object
      */
     Status s2v(const Uint8 plainText[], Uint64 size);
-    
+
     Siv() = default;
     Siv(alc_cipher_data_t* ctx);
 };
