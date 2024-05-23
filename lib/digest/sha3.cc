@@ -128,7 +128,6 @@ template<alc_digest_len_t digest_len>
 inline void
 Sha3<digest_len>::squeezeChunk(Uint8* pBuf, Uint64 size)
 {
-    Uint64      hash_copied    = 0;
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
                                  || CpuId::cpuIsZen5();
