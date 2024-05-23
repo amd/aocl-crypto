@@ -128,9 +128,9 @@ template<alc_digest_len_t digest_len>
 inline void
 Sha3<digest_len>::squeezeChunk(Uint8* pBuf, Uint64 size)
 {
-    Uint64      hash_copied    = 0;
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
+                                 || CpuId::cpuIsZen5();
     if (zen3_available) {
         return zen3::Sha3Finalize(
             (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
@@ -141,20 +141,28 @@ Sha3<digest_len>::squeezeChunk(Uint8* pBuf, Uint64 size)
             (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
     }
 
-    while (m_block_len <= size - hash_copied) {
-        Uint64 data_chunk_copied = std::min(size, m_block_len);
+    Uint64 rem = m_block_len - m_shake_index;
 
-        utils::CopyBlock(pBuf, (Uint8*)m_state_flat, data_chunk_copied);
-        hash_copied += data_chunk_copied;
-
-        if (hash_copied < size) {
-            fFunction(m_state_flat);
-        }
+    if (size <= rem) {
+        utils::CopyBlock(pBuf, (Uint8*)m_state_flat + m_shake_index, size);
+        m_shake_index += size;
+        return;
     }
+    utils::CopyBlock(pBuf, (Uint8*)m_state_flat + m_shake_index, rem);
+    size -= rem;
+    pBuf += rem;
+    m_shake_index = 0;
 
-    if (size > hash_copied) {
-        utils::CopyBlock(
-            pBuf + hash_copied, (Uint8*)m_state_flat, size - hash_copied);
+    while (size) {
+        fFunction(m_state_flat);
+        if (size <= m_block_len) {
+            utils::CopyBlock(pBuf, (Uint8*)m_state_flat + m_shake_index, size);
+            m_shake_index = (m_shake_index + size);
+            return;
+        }
+        utils::CopyBlock(pBuf, (Uint8*)m_state_flat, m_block_len);
+        size -= m_block_len;
+        pBuf += m_block_len;
     }
 }
 
@@ -167,7 +175,8 @@ Sha3<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
     Uint64  chunk_size_u64 = m_block_len / 8;
 
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
+                                 || CpuId::cpuIsZen5();
 
     if (zen3_available) {
         return zen3::Sha3Update(
