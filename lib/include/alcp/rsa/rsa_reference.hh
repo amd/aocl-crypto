@@ -43,6 +43,8 @@ MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 }
 #define _mulx_u64(x, y, z) MUL64(x, y, z);
 
+// This function is getting optimized incorrectly in static builds on reference
+// algorithm path for RSA
 NO_OPTIMIZE
 Uint8
 ADD64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
