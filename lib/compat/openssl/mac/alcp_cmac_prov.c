@@ -199,7 +199,10 @@ alcp_prov_cmac_set_ctx_params(void* ctx, const OSSL_PARAM params[])
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_CIPHER)) != NULL) {
         if (strcasecmp(p->data, "AES-128-CBC")
             && strcasecmp(p->data, "AES-192-CBC")
-            && strcasecmp(p->data, "AES-256-CBC")) {
+            && strcasecmp(p->data, "AES-256-CBC")
+            && strcasecmp(p->data, "AES128") && strcasecmp(p->data, "AES192")
+            && strcasecmp(p->data, "AES256")) {
+            printf("CMAC Provider: Cipher '%s' not Supported\n", p->data);
             return 0;
         }
     }

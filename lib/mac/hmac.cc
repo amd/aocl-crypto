@@ -209,7 +209,7 @@ Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest)
 {
     Status status = StatusOk();
 
-    if (key == nullptr || keylen == 0 || digest == nullptr) {
+    if (key == nullptr || digest == nullptr) {
         return InitError("");
     }
 

@@ -213,7 +213,7 @@ alcp_hmac_get_digest_mode(char* str)
         digest_mode = ALC_SHA3_512;
     } else {
         digest_mode = -1;
-        printf("HMAC Provider: Digest '%s' not Supported", str);
+        printf("HMAC Provider: Digest '%s' not Supported\n", str);
         EXIT();
     }
 
