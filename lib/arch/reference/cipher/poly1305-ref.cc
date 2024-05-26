@@ -306,7 +306,6 @@ Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
         s.update(status::InternalError("Cannot setKey after finalized!"));
         return s;
     }
-    keyLen = keyLen / 8;
     if (keyLen != 32) {
         s.update(status::InvalidArgument("Length does not match"));
         return s;
