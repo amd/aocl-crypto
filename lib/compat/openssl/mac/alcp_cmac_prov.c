@@ -202,7 +202,8 @@ alcp_prov_cmac_set_ctx_params(void* ctx, const OSSL_PARAM params[])
             && strcasecmp(p->data, "AES-256-CBC")
             && strcasecmp(p->data, "AES128") && strcasecmp(p->data, "AES192")
             && strcasecmp(p->data, "AES256")) {
-            printf("CMAC Provider: Cipher '%s' not Supported\n", p->data);
+            printf("CMAC Provider: Cipher '%s' not Supported\n",
+                   (Uint8*)p->data);
             return 0;
         }
     }
