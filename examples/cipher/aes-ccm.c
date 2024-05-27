@@ -168,7 +168,7 @@ aclp_aes_ccm_encrypt_demo(
         return -1;
     }
 
-    // set plaintext length
+    // set plaintext length before init with iv
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting plaintext Length \n");
@@ -245,7 +245,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         return -1;
     }
 
-    // set plaintext length
+    // set plaintext length only before init with iv
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting Plaintext Length \n");

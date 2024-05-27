@@ -36,7 +36,8 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{}
+{
+}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const alc_cipher_mode_t cMode,
@@ -316,6 +317,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
+
     // set plaintext length
     err = alcp_cipher_aead_set_ccm_plaintext_length(m_handle, aead_data.m_inl);
     if (err != ALC_ERROR_NONE) {
@@ -323,7 +325,6 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         alcp_error_str(err, err_buff, cErrSize);
         return -1;
     }
-
     err =
         alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {

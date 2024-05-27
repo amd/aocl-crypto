@@ -67,15 +67,52 @@ ctrInc(Uint8 ctr[])
 
 Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
-{}
+{
+}
 
 alc_error_t
 Ccm::setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len)
 {
-    m_plainTextLength = len;
-    m_updatedLength   = 0;
-
+    m_plainTextLength      = len;
+    m_updatedLength        = 0;
+    m_is_plaintext_len_set = true;
     return ALC_ERROR_NONE;
+#if 0
+
+
+    Status       s = StatusOk();
+    unsigned int q = m_ccm_data.nonce[0] & 7;
+
+    if (m_iv_aes == nullptr) {
+        // s = status::InvalidValue("Null Pointer is not expected!");
+        return ALC_ERROR_EXISTS;
+    }
+
+    if (m_ivLen_aes < (14 - q)) {
+        // s = status::InvalidValue("Length of nonce is too small!");
+        return ALC_ERROR_EXISTS;
+    }
+    if (sizeof(len) == 8 && q >= 3) {
+        m_ccm_data.nonce[8]  = static_cast<Uint8>(len >> 56);
+        m_ccm_data.nonce[9]  = static_cast<Uint8>(len >> 48);
+        m_ccm_data.nonce[10] = static_cast<Uint8>(len >> 40);
+        m_ccm_data.nonce[11] = static_cast<Uint8>(len >> 32);
+    } else {
+        memset(m_ccm_data.nonce + 8, 0, 8);
+    }
+
+    m_ccm_data.nonce[12] = static_cast<Uint8>(len >> 24);
+    m_ccm_data.nonce[13] = static_cast<Uint8>(len >> 16);
+    m_ccm_data.nonce[14] = static_cast<Uint8>(len >> 8);
+    m_ccm_data.nonce[15] = static_cast<Uint8>(len);
+
+    m_ccm_data.nonce[0] &= ~0x40; /* clear Adata flag */
+    utils::CopyBytes(&m_ccm_data.nonce[1], m_iv_aes, 14 - q);
+    if (!s.ok()) {
+        return ALC_ERROR_EXISTS;
+    }
+    return ALC_ERROR_NONE;
+#endif
 }
 
 // FIXME: nRounds needs to be constexpr to be more efficient
@@ -85,21 +122,11 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                  Uint64      dataLen,
                  bool        isEncrypt)
 {
-
+    if (!m_ccm_data.key) {
+        return status::InvalidValue("Key has to be set before update");
+    }
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
-
-        const Uint8* p_keys  = getEncryptKeys();
-        const Uint32 cRounds = m_nrounds;
-        m_ccm_data.key       = p_keys;
-        m_ccm_data.rounds    = cRounds;
-
-        // Below Operations has to be done in order
-        if (m_updatedLength == 0) {
-            s.update(
-                setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, m_plainTextLength));
-        }
-
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
             if (m_updatedLength == 0) {
@@ -107,8 +134,6 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                                    m_additionalData,
                                    m_additionalDataLen,
                                    m_plainTextLength);
-
-                m_updatedLength += dataLen;
             }
             if (isEncrypt) {
                 CCM_ERROR err =
@@ -144,6 +169,9 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                 memset(pOutput, 0, dataLen);
                 return s;
             }
+            if (s.ok()) {
+                m_updatedLength += dataLen;
+            }
             return s;
         }
         if (m_updatedLength == 0) {
@@ -152,7 +180,6 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                       m_additionalData,
                       m_additionalDataLen,
                       m_plainTextLength);
-            m_updatedLength += dataLen;
         }
         // FIXME: Encrypt and Decrypt needs to be defined.
         if (isEncrypt) {
@@ -171,6 +198,9 @@ Ccm::cryptUpdate(const Uint8 pInput[],
         }
     } else {
         s = status::InvalidValue("Input or Output Null Pointer!");
+    }
+    if (s.ok()) {
+        m_updatedLength += dataLen;
     }
     return s;
 }
@@ -321,6 +351,41 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
 
     return s;
 }
+
+Status
+Ccm::setIv(ccm_data_t* ccm_data, const Uint8 pIv[], size_t ivLen)
+{
+    Status       s = StatusOk();
+    unsigned int q = ccm_data->nonce[0] & 7;
+
+    if (ccm_data == nullptr || pIv == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
+
+    if (ivLen < (14 - q)) {
+        s = status::InvalidValue("Length of nonce is too small!");
+        return s;
+    }
+    if (sizeof(m_plainTextLength) == 8 && q >= 3) {
+        ccm_data->nonce[8]  = static_cast<Uint8>(m_plainTextLength >> 56);
+        ccm_data->nonce[9]  = static_cast<Uint8>(m_plainTextLength >> 48);
+        ccm_data->nonce[10] = static_cast<Uint8>(m_plainTextLength >> 40);
+        ccm_data->nonce[11] = static_cast<Uint8>(m_plainTextLength >> 32);
+    } else {
+        memset(ccm_data->nonce + 8, 0, 8);
+    }
+
+    ccm_data->nonce[12] = static_cast<Uint8>(m_plainTextLength >> 24);
+    ccm_data->nonce[13] = static_cast<Uint8>(m_plainTextLength >> 16);
+    ccm_data->nonce[14] = static_cast<Uint8>(m_plainTextLength >> 8);
+    ccm_data->nonce[15] = static_cast<Uint8>(m_plainTextLength);
+
+    ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
+    utils::CopyBytes(&ccm_data->nonce[1], pIv, 14 - q);
+    // EXITG();
+    return s;
+}
 Status
 Ccm::finalizeRef(ccm_data_t* pccm_data)
 {
@@ -374,44 +439,6 @@ Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
     }
     utils::CopyBytes(ptag, ctx->cmac, t);
     memset(ctx->cmac, 0, tagLen);
-    // EXITG();
-    return s;
-}
-
-Status
-Ccm::setIv(ccm_data_t* ccm_data,
-           const Uint8 pIv[],
-           size_t      ivLen,
-           size_t      dataLen)
-{
-    Status       s = StatusOk();
-    unsigned int q = ccm_data->nonce[0] & 7;
-
-    if (ccm_data == nullptr || pIv == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
-    }
-
-    if (ivLen < (14 - q)) {
-        s = status::InvalidValue("Length of nonce is too small!");
-        return s;
-    }
-    if (sizeof(dataLen) == 8 && q >= 3) {
-        ccm_data->nonce[8]  = static_cast<Uint8>(dataLen >> 56);
-        ccm_data->nonce[9]  = static_cast<Uint8>(dataLen >> 48);
-        ccm_data->nonce[10] = static_cast<Uint8>(dataLen >> 40);
-        ccm_data->nonce[11] = static_cast<Uint8>(dataLen >> 32);
-    } else {
-        memset(ccm_data->nonce + 8, 0, 8);
-    }
-
-    ccm_data->nonce[12] = static_cast<Uint8>(dataLen >> 24);
-    ccm_data->nonce[13] = static_cast<Uint8>(dataLen >> 16);
-    ccm_data->nonce[14] = static_cast<Uint8>(dataLen >> 8);
-    ccm_data->nonce[15] = static_cast<Uint8>(dataLen);
-
-    ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
-    utils::CopyBytes(&ccm_data->nonce[1], pIv, 14 - q);
     // EXITG();
     return s;
 }
@@ -649,6 +676,13 @@ CcmHash::init(alc_cipher_data_t* ctx,
     if (alcp_is_error(err)) {
         return err;
     }
+    if (pKey != nullptr) {
+
+        const Uint8* p_keys  = getEncryptKeys();
+        const Uint32 cRounds = m_nrounds;
+        m_ccm_data.key       = p_keys;
+        m_ccm_data.rounds    = cRounds;
+    }
 
     // if (pKey != nullptr) {
     //     Aes::init(ctx, pKey, keyLen, nullptr, 0);
@@ -656,6 +690,9 @@ CcmHash::init(alc_cipher_data_t* ctx,
     // if (pIv != nullptr) {
     //     Aes::init(ctx, nullptr, 0, pIv, ivLen)
     // }
+    if (ivLen != 0 && (m_is_plaintext_len_set == false)) {
+        return ALC_ERROR_BAD_STATE;
+    }
     if (ivLen != 0 && m_tagLen != 0) {
         if (ivLen < 7 || ivLen > 13) {
             // s = status::InvalidValue(
@@ -663,9 +700,9 @@ CcmHash::init(alc_cipher_data_t* ctx,
             return ALC_ERROR_INVALID_SIZE;
         }
         // Initialize ccm_data
-        m_ccm_data.blocks = 0;
-        m_ccm_data.key    = nullptr;
-        m_ccm_data.rounds = 0;
+        // m_ccm_data.blocks = 0;
+        // m_ccm_data.key    = nullptr;
+        // m_ccm_data.rounds = 0;
         memset(m_ccm_data.cmac, 0, 16);
         memset(m_ccm_data.nonce, 0, 16);
         // 15 = n + q where n is size of nonce (iv) and q is the size of
@@ -678,6 +715,7 @@ CcmHash::init(alc_cipher_data_t* ctx,
             m_ccm_data.cmac, m_ccm_data.cmac + sizeof(m_ccm_data.cmac), 0);
         m_ccm_data.nonce[0] = (static_cast<Uint8>(q - 1) & 7)
                               | static_cast<Uint8>(((t - 2) / 2) & 7) << 3;
+        setIv(&(m_ccm_data), pIv, ivLen);
     }
     m_ccm_data.blocks = 0;
     return ALC_ERROR_NONE;

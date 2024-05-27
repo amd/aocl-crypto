@@ -274,12 +274,6 @@ ALCP_prov_ccm_init(void*                vctx,
         }
         memcpy(cipherctx->iv_buff, iv, ivlen);
         cipherctx->ivState = IV_STATE_BUFFERED;
-
-        alc_error_t err = alcp_cipher_aead_init(
-            &(ctx->handle), NULL, 0, cipherctx->iv_buff, ivlen);
-        if (alcp_is_error(err)) {
-            return 0;
-        }
     }
     if (key != NULL) {
         if (keylen != cipherctx->keyLen_in_bytes) {
@@ -382,16 +376,17 @@ err:
 int
 ccm_set_iv_mlen(ALCP_PROV_CIPHER_CTX* ctx, size_t mlen)
 {
+    if (alcp_cipher_aead_set_ccm_plaintext_length(&(ctx->handle), mlen)) {
+        printf("Provider:CCM: Error in Setting Plaintext Length\n");
+        return 0;
+    }
+
     if (alcp_cipher_aead_init(&(ctx->handle),
                               NULL,
                               0,
                               ctx->prov_cipher_data.iv_buff,
                               ccm_get_ivlen(ctx))) {
         printf("Provider:CCM: Error in Setting IV\n");
-        return 0;
-    }
-    if (alcp_cipher_aead_set_ccm_plaintext_length(&(ctx->handle), mlen)) {
-        printf("Provider:CCM: Error in Setting Plaintext Length\n");
         return 0;
     }
     ctx->prov_cipher_data.ccm.isLenSet = 1;

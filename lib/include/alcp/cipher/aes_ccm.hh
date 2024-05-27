@@ -90,12 +90,12 @@ class ALCP_API_EXPORT Ccm : public Aes
     Uint64       m_tagLen            = 12;
     Uint64       m_additionalDataLen = 0;
     const Uint8* m_additionalData;
-    Uint64       m_plainTextLength = 0;
-    Uint64       m_updatedLength   = 0;
+    Uint64       m_plainTextLength      = 0;
+    bool         m_is_plaintext_len_set = false;
+    Uint64       m_updatedLength        = 0;
+    ccm_data_t   m_ccm_data;
 
-    ccm_data_t m_ccm_data;
-
-  private:
+  protected:
     /**
      * @brief Set IV(nonce)
      * @param ccm_data Intermediate Data
@@ -104,10 +104,7 @@ class ALCP_API_EXPORT Ccm : public Aes
      * @param mlen Message length
      * @return
      */
-    Status setIv(ccm_data_t* ccm_data,
-                 const Uint8 pIv[],
-                 size_t      nlen,
-                 size_t      mlen);
+    Status setIv(ccm_data_t* ccm_data, const Uint8 pIv[], size_t nlen);
 
   public:
     explicit Ccm(alc_cipher_data_t* ctx);
