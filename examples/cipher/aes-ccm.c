@@ -34,7 +34,7 @@
 
 #include "alcp/alcp.h"
 
-#define MULTI_UPDATE_ENABLED 1
+#define MULTI_UPDATE_ENABLED 0
 
 static alc_cipher_handle_t handle;
 
