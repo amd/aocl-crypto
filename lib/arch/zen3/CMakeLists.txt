@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -46,6 +46,9 @@ ADD_LIBRARY(arch_zen3
 	OBJECT
 	${ZEN3_SRCS})
 
+IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
+	TARGET_COMPILE_DEFINITIONS(arch_zen3 PRIVATE "AES_MULTI_UPDATE")	
+ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 
 TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen3)
 TARGET_LINK_LIBRARIES(alcp_static PRIVATE arch_zen3)

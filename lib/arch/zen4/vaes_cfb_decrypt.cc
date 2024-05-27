@@ -178,9 +178,11 @@ namespace alcp::cipher { namespace vaes512 {
             p_out_128++;
         }
 
+#ifdef AES_MULTI_UPDATE
         // Store nth ciphertext to iv
         alcp_storeu_128(reinterpret_cast<__m512i*>(pIv),
                         alcp_loadu_128(((const __m512i*)(p_in_128 - 1))));
+#endif
 
         // clear all keys in registers.
         alcp_clear_keys_zmm(keys);

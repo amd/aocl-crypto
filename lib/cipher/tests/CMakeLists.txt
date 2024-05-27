@@ -45,4 +45,7 @@ foreach(testFile IN LISTS TEST_FILES)
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}
     )
+    IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
+	    SET_SOURCE_FILES_PROPERTIES(${currentTestFile} PROPERTIES COMPILE_FLAGS "-DAES_MULTI_UPDATE")
+    ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 endforeach()

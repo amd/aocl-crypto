@@ -116,10 +116,12 @@ namespace alcp::cipher { namespace aesni {
             blocks--;
         }
 
+#ifdef AES_MULTI_UPDATE
         // IV is no longer needed hence we can write the old ciphertext back to
         // IV
         alcp_storeu_128(reinterpret_cast<__m128i*>(pIv),
                         alcp_loadu_128(p_src128 - 1));
+#endif
 
         assert(blocks == 0);
 
@@ -199,9 +201,11 @@ namespace alcp::cipher { namespace aesni {
 
         assert(blocks == 0);
 
+#ifdef AES_MULTI_UPDATE
         // IV is no longer needed hence we can write the old ciphertext back to
         // IV
         alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), iv128);
+#endif
 
         return ALC_ERROR_NONE;
     }

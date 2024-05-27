@@ -59,7 +59,9 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     __m128i* p_key128 = (__m128i*)pKey;
     __m256i* p_ct256  = (__m256i*)pCipherText;
     __m256i* p_pt256  = (__m256i*)pPlainText;
-    __m128i* p_ct128  = (__m128i*)pCipherText;
+#ifdef AES_MULTI_UPDATE
+    __m128i* p_ct128 = (__m128i*)pCipherText;
+#endif
 
     __m256i iv256 = _mm256_set_epi64x(0, 0, p_iv64[1], p_iv64[0]);
 
@@ -155,7 +157,9 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     /* process single block of 128-bit */
+#ifdef AES_MULTI_UPDATE
     p_ct128 = reinterpret_cast<__m128i*>(p_ct256);
+#endif
     if (blocks) {
         Uint64* p_iv64  = (Uint64*)p_ct256;
         __m256i mask_lo = _mm256_set_epi64x(0,
@@ -172,13 +176,17 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         blk0 = _mm256_xor_si256(tmpblk, y0);
         _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);
 
+#ifdef AES_MULTI_UPDATE
         p_ct128 += 1;
+#endif
         blocks--;
     }
 
+#ifdef AES_MULTI_UPDATE
     // Load last CT from cache
     alcp_storeu_128(reinterpret_cast<__m256i*>(pIv),
                     alcp_loadu_128(reinterpret_cast<__m256i*>(p_ct128 - 1)));
+#endif
 
     return err;
 }
