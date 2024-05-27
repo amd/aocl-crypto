@@ -79,18 +79,12 @@ OpenSSLPoly1305Base::mac(const alcp_poly1305_data_t& data)
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    reset();
     return true;
 }
 
 bool
 OpenSSLPoly1305Base::reset()
 {
-    if (EVP_MAC_init(m_handle, m_key, m_key_len, nullptr) != 1) {
-        std::cout << "EVP_MAC_init failed, error : "
-                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
-    }
     return true;
 }
 
