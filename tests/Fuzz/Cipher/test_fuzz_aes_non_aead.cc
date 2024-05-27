@@ -76,22 +76,22 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_encrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_request failed for encrypt" << std::endl;
-        goto DEALLOC;
+        goto DEALLOC_ENC;
     }
     err = alcp_cipher_init(
         handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_init failed" << std::endl;
-        goto DEALLOC;
+        goto DEALLOC_ENC;
     }
     err = alcp_cipher_encrypt(handle_encrypt, plaintxt, &ciphertxt[0], pt_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_encrypt failed" << std::endl;
-        goto DEALLOC;
+        goto DEALLOC_ENC;
     }
-    goto DEALLOC;
+    goto DEALLOC_ENC;
 
-DEALLOC:
+DEALLOC_ENC:
     if (handle_encrypt != nullptr) {
         alcp_cipher_finish(handle_encrypt);
         if (handle_encrypt->ch_context != nullptr) {
@@ -151,25 +151,25 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_request failed for decrypt" << std::endl;
-        goto DEALLOC;
+        goto DEALLOC_DEC;
     }
     err = alcp_cipher_init(
         handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_init failed for decrypt" << std::endl;
-        goto DEALLOC;
+        goto DEALLOC_DEC;
     }
     err =
         alcp_cipher_decrypt(handle_decrypt, &fuzz_ct[0], &plaintxt[0], pt_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_decrypt failed for decrypt" << std::endl;
-        goto DEALLOC;
+        goto DEALLOC_DEC;
     }
     std::cout << "PASSED for decrypt for keylen " << cinfo.ci_keyLen
               << std::endl;
-    goto DEALLOC;
+    goto DEALLOC_DEC;
 
-DEALLOC:
+DEALLOC_DEC:
     if (handle_decrypt != nullptr) {
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
