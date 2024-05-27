@@ -34,6 +34,8 @@
 
 #include "alcp/alcp.h"
 
+#define MULTI_UPDATE_ENABLED 1
+
 static alc_cipher_handle_t handle;
 
 char*
@@ -168,13 +170,14 @@ aclp_aes_ccm_encrypt_demo(
         return -1;
     }
 
-    // set plaintext length before init with iv
+#if MULTI_UPDATE_ENABLED
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting plaintext Length \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
+#endif
 
     // CCM init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
@@ -191,6 +194,7 @@ aclp_aes_ccm_encrypt_demo(
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
+#if MULTI_UPDATE_ENABLED
 
     // CCM encrypt
     err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len - 16);
@@ -207,6 +211,14 @@ aclp_aes_ccm_encrypt_demo(
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
+#else
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
+    if (alcp_is_error(err)) {
+        printf("Error: unable encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return -1;
+    }
+#endif
 
     // get tag
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
@@ -244,14 +256,15 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
-
-    // set plaintext length only before init with iv
+#if MULTI_UPDATE_ENABLED
+    // set plaintext length only after key and iv has both set with init
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting Plaintext Length \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
+#endif
 
     // ccm init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
@@ -269,6 +282,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         return -1;
     }
 
+#if MULTI_UPDATE_ENABLED
     // CCM decrypt
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, 16);
     if (alcp_is_error(err)) {
@@ -284,7 +298,14 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
-
+#else
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return -1;
+    }
+#endif
     // get tag
     err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
     if (alcp_is_error(err)) {
