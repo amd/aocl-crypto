@@ -61,14 +61,14 @@ class ALCP_API_EXPORT Siv
 */
     std::vector<std::vector<Uint8>> m_additionalDataProcessed =
         std::vector<std::vector<Uint8>>(10);
+    alignas(16) Uint8 m_iv[MAX_CIPHER_IV_SIZE] = {};
+    alignas(16) Uint8 m_cmacTemp[SIZE_CMAC]    = {};
     Uint64       m_additionalDataProcessedSize = {};
     const Uint8* m_key1                        = {};
     const Uint8* m_key2                        = {};
     Uint64       m_keyLength                   = {};
     Uint64       m_padLen                      = {};
-    Uint8        m_iv[16]                      = {};
     Cmac         m_cmac;
-    alignas(16) Uint8 m_cmacTemp[SIZE_CMAC] = {};
 
     /**
      * @brief Do Cmac implementation
