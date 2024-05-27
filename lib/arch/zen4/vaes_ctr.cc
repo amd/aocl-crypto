@@ -214,8 +214,11 @@ ctrBlk128(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_10rounds(keys);
+
+#ifdef AES_MULTI_UPDATE
     c1 = alcp_shuffle_epi8(c1, swap_ctr);
     alcp_storeu_128(reinterpret_cast<__m512i*>(pIv), c1);
+#endif
 }
 
 static inline void
@@ -223,7 +226,7 @@ ctrBlk192(const __m512i* p_in_x,
           __m512i*       p_out_x,
           Uint64         len,
           const __m128i* pkey128,
-          const Uint8*   pIv,
+          Uint8*         pIv,
           int            nRounds)
 {
     __m512i a1, a2, a3, a4;
@@ -343,6 +346,11 @@ ctrBlk192(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_12rounds(keys);
+
+#ifdef AES_MULTI_UPDATE
+    c1 = alcp_shuffle_epi8(c1, swap_ctr);
+    alcp_storeu_128(reinterpret_cast<__m512i*>(pIv), c1);
+#endif
 }
 
 static inline void
@@ -350,7 +358,7 @@ ctrBlk256(const __m512i* p_in_x,
           __m512i*       p_out_x,
           Uint64         len,
           const __m128i* pkey128,
-          const Uint8*   pIv,
+          Uint8*         pIv,
           int            nRounds)
 {
     __m512i a1, a2, a3, a4;
@@ -470,6 +478,11 @@ ctrBlk256(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_14rounds(keys);
+
+#ifdef AES_MULTI_UPDATE
+    c1 = alcp_shuffle_epi8(c1, swap_ctr);
+    alcp_storeu_128(reinterpret_cast<__m512i*>(pIv), c1);
+#endif
 }
 
 alc_error_t

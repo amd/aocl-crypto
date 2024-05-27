@@ -193,9 +193,11 @@ namespace aes {
             p_out_x = (T*)(((__uint128_t*)p_out_x) + 1);
         }
 
+#ifdef AES_MULTI_UPDATE
         // Store back IV
         c1 = alcp_shuffle_epi8(c1, swap_ctr);
         alcp_storeu_128(reinterpret_cast<T*>(pIv), c1);
+#endif
 
         return blocks;
     }
