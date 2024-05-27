@@ -175,6 +175,8 @@ __aes_wrapperSetTagLength(void* ctx, Uint64 len)
     return e;
 }
 
+#ifdef CCM_MULTI_UPDATE
+
 template<typename CIPHERMODE>
 static alc_error_t
 __aes_wrapperSetPlainTextLength(void* ctx, Uint64 len)
@@ -188,6 +190,7 @@ __aes_wrapperSetPlainTextLength(void* ctx, Uint64 len)
 
     return e;
 }
+#endif
 
 template<typename CIPHERMODE>
 static alc_error_t

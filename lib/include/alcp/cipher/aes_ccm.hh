@@ -68,10 +68,10 @@ namespace aesni::ccm {
                      const Uint8 aad[],
                      size_t      alen,
                      size_t      plen);
+    CCM_ERROR Finalize(ccm_data_t* ctx);
 #else
     void SetAad(ccm_data_t* ccm_data, const Uint8 paad[], size_t alen);
 #endif
-    CCM_ERROR Finalize(ccm_data_t* ctx);
 
     CCM_ERROR Encrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
@@ -131,6 +131,7 @@ class ALCP_API_EXPORT Ccm : public Aes
      */
     alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen);
 
+#ifdef CCM_MULTI_UPDATE
     /**
      * @brief Set plaintext length
      *
@@ -140,6 +141,7 @@ class ALCP_API_EXPORT Ccm : public Aes
      * @return Error code
      */
     alc_error_t setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len);
+#endif
 
     // FIXME: This internal function needs to be protected/private
     // as there is 2 levels of inheritance down which this function
@@ -178,6 +180,7 @@ class ALCP_API_EXPORT Ccm : public Aes
                       Uint8       pPlainText[],
                       Uint64      ctLen);
 
+#ifdef CCM_MULTI_UPDATE
     /**
      * @brief Set Ad
      * ditional Data.
@@ -189,11 +192,18 @@ class ALCP_API_EXPORT Ccm : public Aes
                      const Uint8 paad[],
                      size_t      aadLen,
                      size_t      plen);
+#else
+    Status setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen);
+#endif
+
+#ifdef CCM_MULTI_UPDATE
     /**
      * @brief Finalize the encrypt/decrypt operations for Reference Algorithm
      * @param pccm_data Intermediate Data
      */
     Status finalizeRef(ccm_data_t* pccm_data);
+
+#endif
     /**
      * @brief Reference encryption function
      *

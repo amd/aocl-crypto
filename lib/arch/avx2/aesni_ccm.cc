@@ -299,6 +299,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         EXITG();
     }
 
+#ifdef CCM_MULTI_UPDATE
     CCM_ERROR
     Finalize(ccm_data_t* ccm_data)
     {
@@ -331,7 +332,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
         return CCM_ERROR::NO_ERROR;
     }
-
+#endif
     CCM_ERROR
     Encrypt(ccm_data_t* ccm_data, const Uint8 pinp[], Uint8 pout[], size_t len)
     {

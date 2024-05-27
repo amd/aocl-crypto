@@ -318,6 +318,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         return false;
     }
 
+#ifdef CCM_MULTI_UPDATE
     // set plaintext length
     err = alcp_cipher_aead_set_ccm_plaintext_length(m_handle, aead_data.m_inl);
     if (err != ALC_ERROR_NONE) {
@@ -325,6 +326,8 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         alcp_error_str(err, err_buff, cErrSize);
         return -1;
     }
+#endif
+
     err =
         alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {

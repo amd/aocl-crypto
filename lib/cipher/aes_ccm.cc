@@ -69,7 +69,7 @@ Ccm::Ccm(alc_cipher_data_t* ctx)
     : Aes(ctx)
 {
 }
-
+#ifdef CCM_MULTI_UPDATE
 alc_error_t
 Ccm::setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len)
 {
@@ -78,6 +78,7 @@ Ccm::setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len)
     m_is_plaintext_len_set = true;
     return ALC_ERROR_NONE;
 }
+#endif
 
 // FIXME: nRounds needs to be constexpr to be more efficient
 Status
@@ -224,23 +225,23 @@ Ccm::cryptUpdate(const Uint8 pInput[],
             return s;
         }
 
-        /*         // Fallback to reference
-                setAadRef(&m_ccm_data, m_additionalData, m_additionalDataLen);
-                // FIXME: Encrypt and Decrypt needs to be defined.
-                if (isEncrypt) {
-                    s.update(encryptRef(&m_ccm_data, pInput, pOutput, dataLen));
-                } else {
-                    s.update(decryptRef(&m_ccm_data, pInput, pOutput, dataLen));
-                }
-                if (s.ok() != true) {
-                    // Burn everything
-                    // FIXME: Need to clear key when errors
-                    // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
-                    memset(m_ccm_data.nonce, 0, 16);
-                    memset(m_ccm_data.cmac, 0, 16);
-                    memset(pOutput, 0, dataLen);
-                    return s;
-                } */
+        // Fallback to reference
+        setAadRef(&m_ccm_data, m_additionalData, m_additionalDataLen);
+        // FIXME: Encrypt and Decrypt needs to be defined.
+        if (isEncrypt) {
+            s.update(encryptRef(&m_ccm_data, pInput, pOutput, dataLen));
+        } else {
+            s.update(decryptRef(&m_ccm_data, pInput, pOutput, dataLen));
+        }
+        if (s.ok() != true) {
+            // Burn everything
+            // FIXME: Need to clear key when errors
+            // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
+            memset(m_ccm_data.nonce, 0, 16);
+            memset(m_ccm_data.cmac, 0, 16);
+            memset(pOutput, 0, dataLen);
+            return s;
+        }
     } else {
         s = status::InvalidValue("Input or Output Null Pointer!");
     }
@@ -470,6 +471,7 @@ Ccm::setIv(ccm_data_t* ccm_data,
 }
 
 #endif
+#if CCM_MULTI_UPDATE
 Status
 Ccm::finalizeRef(ccm_data_t* pccm_data)
 {
@@ -502,6 +504,7 @@ Ccm::finalizeRef(ccm_data_t* pccm_data)
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
     return s;
 }
+#endif
 Status
 Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
 {
@@ -527,6 +530,7 @@ Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
     return s;
 }
 
+#ifdef CCM_MUTLI_UPDATE
 Status
 Ccm::setAadRef(ccm_data_t* pccm_data,
                const Uint8 paad[],
@@ -678,7 +682,105 @@ Ccm::setAadRef(ccm_data_t* pccm_data,
 
     return s;
 }
+#else
 
+Status
+Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
+{
+    Status s         = StatusOk();
+    Uint32 p_blk0[4] = {};
+    Uint32 aad_32[4] = {};
+    Uint8* p_blk0_8  = reinterpret_cast<Uint8*>(&p_blk0);
+    Uint64 i         = {};
+
+    // FIXME: Should we let paad be null when aadLen is 0
+    if (paad == nullptr || pccm_data == nullptr) {
+        s = status::InvalidValue("Null Pointer is not expected!");
+        return s;
+    }
+
+    if (aadLen == 0) {
+        return s; // Nothing to be done
+    }
+
+    // Set Adata Available Flag
+    pccm_data->nonce[0] |= 0x40;
+
+    utils::CopyBytes(p_blk0, pccm_data->nonce, 16);
+
+    encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+
+    pccm_data->blocks++;
+
+    if (aadLen < (0x10000 - 0x100)) {
+        // alen < (2^16 - 2^8)
+        *(p_blk0_8 + 0) ^= static_cast<Uint8>(aadLen >> 8);
+        *(p_blk0_8 + 1) ^= static_cast<Uint8>(aadLen);
+        i = 2;
+    } else if (sizeof(aadLen) == 8 && aadLen >= ((size_t)1 << 32)) {
+        // alen > what 32 bits can hold.
+        *(p_blk0_8 + 0) ^= 0xFF;
+        *(p_blk0_8 + 1) ^= 0xFF;
+        *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 56);
+        *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 48);
+        *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 40);
+        *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen >> 32);
+        *(p_blk0_8 + 6) ^= static_cast<Uint8>(aadLen >> 24);
+        *(p_blk0_8 + 7) ^= static_cast<Uint8>(aadLen >> 16);
+        *(p_blk0_8 + 8) ^= static_cast<Uint8>(aadLen >> 8);
+        *(p_blk0_8 + 9) ^= static_cast<Uint8>(aadLen);
+        i = 10;
+    } else {
+        // alen is represented by 32 bits but larger than
+        // what 16 bits can hold
+        *(p_blk0_8 + 0) ^= 0xFF;
+        *(p_blk0_8 + 1) ^= 0xFE;
+        *(p_blk0_8 + 2) ^= static_cast<Uint8>(aadLen >> 24);
+        *(p_blk0_8 + 3) ^= static_cast<Uint8>(aadLen >> 16);
+        *(p_blk0_8 + 4) ^= static_cast<Uint8>(aadLen >> 8);
+        *(p_blk0_8 + 5) ^= static_cast<Uint8>(aadLen);
+        i = 6;
+    }
+
+    // i=2,6,10 to i=16 do the CBC operation
+    for (; i < 16 && aadLen; ++i, ++paad, --aadLen)
+        *(p_blk0_8 + i) ^= *paad;
+
+    encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+    pccm_data->blocks++;
+
+    Uint64 alen_16 = aadLen / 16;
+    for (Uint64 j = 0; j < alen_16; j++) {
+        utils::CopyBytes(aad_32, paad, 16);
+        // CBC XOR Operation
+        for (int i = 0; i < 4; i++) {
+            p_blk0[i] ^= aad_32[i];
+        }
+        // CBC Encrypt Operation
+        encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+        pccm_data->blocks++;
+        paad += 16;
+    }
+
+    // Reduce already processed value from alen
+    aadLen -= alen_16 * 16;
+
+    if (aadLen != 0) {
+        // Process the rest in the default way
+        for (i = 0; i < 16 && aadLen; i++, paad++, aadLen--) {
+            *(p_blk0_8 + i) ^= *paad;
+        }
+
+        // CBC Encrypt last block
+        encryptBlock(p_blk0, pccm_data->key, pccm_data->rounds);
+        pccm_data->blocks++;
+    }
+
+    // Store generated partial tag (cmac)
+    utils::CopyBlock(pccm_data->cmac, p_blk0_8, 16);
+    return s;
+}
+#endif
 // Auth class definitions
 alc_error_t
 CcmHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)

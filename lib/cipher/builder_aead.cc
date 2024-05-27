@@ -69,7 +69,7 @@ _build_aead_wrapper(Context& ctx)
     if constexpr (std::is_base_of<Ccm, AEADMODE>::value) {
         ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
     }
-
+#ifdef CCM_MULTI_UPDATE
     if constexpr (std::is_same_v<AEADMODE, Ccm>) {
         ctx.setPlainTextLength = __aes_wrapperSetPlainTextLength<AEADMODE>;
     }
@@ -77,6 +77,7 @@ _build_aead_wrapper(Context& ctx)
     if constexpr (std::is_base_of<Ccm, AEADMODE>::value) {
         ctx.setPlainTextLength = __aes_wrapperSetPlainTextLength<AEADMODE>;
     }
+#endif
 
     ctx.finish = __aes_dtor<AEADMODE>;
 }
