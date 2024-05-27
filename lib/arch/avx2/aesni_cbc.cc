@@ -69,8 +69,10 @@ EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
         p_out_128++;
     }
 
+#ifdef AES_MULTI_UPDATE
     // IV is no longer needed hence we can write the old ciphertext back to IV
     alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), b1);
+#endif
 
     return err;
 }
@@ -204,8 +206,10 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         p_out_128++;
     }
 
+#ifdef AES_MULTI_UPDATE
     // IV is no longer needed hence we can write the old ciphertext back to IV
     alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), b1);
+#endif
 
     return err;
 }
