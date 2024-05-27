@@ -115,7 +115,7 @@ extern const OSSL_DISPATCH alcp_poly1305_functions[];
 
 const OSSL_ALGORITHM ALC_prov_macs[] = {
     { ALCP_PROV_NAMES_CMAC, MAC_DEF_PROP, alcp_cmac_functions },
-    //{ ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, alcp_hmac_functions },
+    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, alcp_hmac_functions },
     { ALCP_PROV_NAMES_POLY1305, MAC_DEF_PROP, alcp_poly1305_functions },
     { NULL, NULL, NULL },
 };
