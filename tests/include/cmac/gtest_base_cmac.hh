@@ -107,7 +107,9 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
         std::vector<Uint8> cmac(CmacSize, 0);
 
         auto msg = csv.getVect("MESSAGE");
+        msg.reserve(1);
         auto key = csv.getVect("KEY");
+        msg.reserve(1);
 
         data.m_msg  = &(msg[0]);
         data.m_key  = &(key[0]);
