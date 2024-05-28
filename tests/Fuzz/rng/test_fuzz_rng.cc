@@ -73,8 +73,10 @@ ALCP_Fuzz_Rng(const Uint8* buf, size_t len)
         free(handle.rh_context);
         handle.rh_context = nullptr;
     }
-    /* Check if Output is not null */
-    if (output.empty()) {
+    /* Check if Output is not null/all zeros */
+    bool zeros =
+        std::all_of(output.begin(), output.end(), [](int i) { return i == 0; });
+    if (output.empty() || zeros) {
         std::cout << "Error! Empty output generated for size: " << size_output
                   << std::endl;
         return -1;
