@@ -34,9 +34,8 @@ ALCP_Fuzz_Rng(const Uint8* buf, size_t len)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_output = stream.ConsumeIntegral<Uint16>();
-    Uint8  output[size_output];
-    memset(output, 0, size_output);
+    size_t             size_output = stream.ConsumeIntegral<Uint16>();
+    std::vector<Uint8> output(size_output, 0);
 
     std::cout << "Generating for output size: " << size_output << std::endl;
 
@@ -61,7 +60,8 @@ ALCP_Fuzz_Rng(const Uint8* buf, size_t len)
         std::cout << "Error: alcp_rng_request" << std::endl;
         return -1;
     }
-    if (alcp_rng_gen_random(&handle, output, size_output) != ALC_ERROR_NONE) {
+    if (alcp_rng_gen_random(&handle, &output[0], size_output)
+        != ALC_ERROR_NONE) {
         std::cout << "Error: alcp_rng_gen_random" << std::endl;
         return -1;
     }
@@ -72,6 +72,12 @@ ALCP_Fuzz_Rng(const Uint8* buf, size_t len)
     if (handle.rh_context) {
         free(handle.rh_context);
         handle.rh_context = nullptr;
+    }
+    /* Check if Output is not null */
+    if (output.empty()) {
+        std::cout << "Error! Empty output generated for size: " << size_output
+                  << std::endl;
+        return -1;
     }
     std::cout << "Passed for output size: " << size_output << std::endl;
 
