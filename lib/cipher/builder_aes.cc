@@ -36,7 +36,6 @@
 #include "alcp/cipher/aes_xts.hh"
 
 // FIXME: to be moved out
-#include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/chacha20_build.hh"
 
 #include "builder.hh"
@@ -93,6 +92,8 @@ __build_aes_cipher_xts(const Uint32 keyLen, Context& ctx)
         ctx.encryptBlocksXts = __aes_wrapper_crypt_block_xts<T256, true>;
         ctx.decryptBlocksXts = __aes_wrapper_crypt_block_xts<T256, false>;
         ctx.init             = __aes_wrapperInit<T256>;
+    } else {
+        err = ALC_ERROR_INVALID_SIZE;
     }
     return err;
 }
@@ -109,7 +110,7 @@ __build_aes_cipher(const Uint32 keyLen, Context& ctx)
     } else if (keyLen == ALC_KEY_LEN_256) {
         _build_aes_cipher<T256>(keyLen, ctx);
     } else {
-        err = ALC_ERROR_NOT_SUPPORTED;
+        err = ALC_ERROR_INVALID_SIZE;
     }
     return err;
 }
@@ -142,10 +143,13 @@ CipherBuilder::Build(const alc_cipher_mode_t cipherMode,
             } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
                 using namespace vaes;
                 err = __build_aes_cipher<Ctr128, Ctr192, Ctr256>(keyLen, ctx);
-            } else {
+            } else if (cpu_feature == CpuCipherFeatures::eAesni) {
                 using namespace aesni;
                 err = __build_aes_cipher<Ctr128, Ctr192, Ctr256>(keyLen, ctx);
+            } else {
+                return ALC_ERROR_NOT_SUPPORTED;
             }
+
             break;
         case ALC_AES_MODE_CBC:
             if (cpu_feature == CpuCipherFeatures::eVaes512) {
@@ -154,9 +158,11 @@ CipherBuilder::Build(const alc_cipher_mode_t cipherMode,
             } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
                 using namespace vaes;
                 err = __build_aes_cipher<Cbc128, Cbc192, Cbc256>(keyLen, ctx);
-            } else {
+            } else if (cpu_feature == CpuCipherFeatures::eAesni) {
                 using namespace aesni;
                 err = __build_aes_cipher<Cbc128, Cbc192, Cbc256>(keyLen, ctx);
+            } else {
+                return ALC_ERROR_NOT_SUPPORTED;
             }
             break;
         case ALC_AES_MODE_CFB:
@@ -166,9 +172,11 @@ CipherBuilder::Build(const alc_cipher_mode_t cipherMode,
             } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
                 using namespace vaes;
                 err = __build_aes_cipher<Cfb128, Cfb192, Cfb256>(keyLen, ctx);
-            } else {
+            } else if (cpu_feature == CpuCipherFeatures::eAesni) {
                 using namespace aesni;
                 err = __build_aes_cipher<Cfb128, Cfb192, Cfb256>(keyLen, ctx);
+            } else {
+                return ALC_ERROR_NOT_SUPPORTED;
             }
             break;
         case ALC_AES_MODE_XTS:
@@ -178,13 +186,21 @@ CipherBuilder::Build(const alc_cipher_mode_t cipherMode,
             } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
                 using namespace vaes;
                 err = __build_aes_cipher_xts<Xts128, Xts256>(keyLen, ctx);
-            } else {
+            } else if (cpu_feature == CpuCipherFeatures::eAesni) {
                 using namespace aesni;
                 err = __build_aes_cipher_xts<Xts128, Xts256>(keyLen, ctx);
+            } else {
+                return ALC_ERROR_NOT_SUPPORTED;
             }
             break;
         case ALC_AES_MODE_OFB:
-            err = __build_aes_cipher<Ofb, Ofb, Ofb>(keyLen, ctx);
+            if ((cpu_feature == CpuCipherFeatures::eVaes512)
+                || (cpu_feature == CpuCipherFeatures::eVaes256)
+                || (cpu_feature == CpuCipherFeatures::eAesni)) {
+                err = __build_aes_cipher<Ofb, Ofb, Ofb>(keyLen, ctx);
+            } else {
+                return ALC_ERROR_NOT_SUPPORTED;
+            }
             break;
         case ALC_CHACHA20:
             err = chacha20::Chacha20Builder::Build(cipherMode, keyLen, ctx);

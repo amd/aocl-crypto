@@ -108,8 +108,14 @@ CipherAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (!Aes::isSupported(keyLen)) {
-        return ALC_ERROR_INVALID_SIZE;
+    if (cipherMode == ALC_CHACHA20_POLY1305) {
+        if (!Chacha20Poly1305Builder::Supported(cipherMode, keyLen)) {
+            return ALC_ERROR_INVALID_SIZE;
+        }
+    } else {
+        if (!Aes::isSupported(keyLen)) {
+            return ALC_ERROR_INVALID_SIZE;
+        }
     }
 
     // keyLen_in_bytes is used to verify keyLen during setKey call in init
