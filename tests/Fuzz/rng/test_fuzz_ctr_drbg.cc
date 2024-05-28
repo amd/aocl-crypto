@@ -37,9 +37,13 @@ ALCP_Fuzz_CtrDrbg(const Uint8* buf, size_t len)
     Uint8              output[size_output];
     size_t             size_max_entropy_len = stream.ConsumeIntegral<Uint16>();
     size_t             size_max_nonce_len   = stream.ConsumeIntegral<Uint16>();
-    /* FIXME should we randomize key size as well? */
+    std::vector<Uint8> fuzz_custom_entropy =
+        stream.ConsumeBytes<Uint8>(size_max_entropy_len);
+    std::vector<Uint8> fuzz_custom_nonce =
+        stream.ConsumeBytes<Uint8>(size_max_entropy_len);
 
     alc_drbg_handle_t handle;
+
     alc_drbg_info_t
         drbg_info = { .di_type           = ALC_DRBG_CTR,
                       .max_entropy_len   = size_max_entropy_len,
@@ -48,14 +52,17 @@ ALCP_Fuzz_CtrDrbg(const Uint8* buf, size_t len)
                                                            .use_derivation_function =
                                                                true } },
                       .di_rng_sourceinfo = {
-                          .custom_rng    = false,
+                          .custom_rng    = true,
                           .di_sourceinfo = {
-                              .rng_info = {
-                                  .ri_distrib = ALC_RNG_DISTRIB_UNIFORM,
-                                  .ri_source  = ALC_RNG_SOURCE_ARCH,
-                                  .ri_type    = ALC_RNG_TYPE_DISCRETE } } } };
+                              .custom_rng_info = {
+                                  .entropy    = &fuzz_custom_entropy[0],
+                                  .entropylen = size_max_entropy_len,
+                                  .nonce      = &fuzz_custom_nonce[0],
+                                  .noncelen   = size_max_entropy_len } } } };
 
-    std::cout << "Generating for size: " << size_output << std::endl;
+    std::cout << "Generating for output size: " << size_output
+              << " Entropy len " << size_max_entropy_len << " Nonce len "
+              << size_max_nonce_len << std::endl;
 
     err = alcp_drbg_supported(&drbg_info);
     if (alcp_is_error(err)) {
@@ -102,7 +109,9 @@ ALCP_Fuzz_CtrDrbg(const Uint8* buf, size_t len)
         free(handle.ch_context);
         handle.ch_context = nullptr;
     }
-    std::cout << "Passed for size: " << size_output << std::endl;
+    std::cout << "Generating for output size: " << size_output
+              << " Entropy len " << size_max_entropy_len << " Nonce len "
+              << size_max_nonce_len << std::endl;
 
     return 0;
 }
