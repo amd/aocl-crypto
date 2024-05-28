@@ -103,7 +103,8 @@ template<alc_rsa_key_size T>
 Rsa<T>::Rsa()
     : m_key_size{ T / 8 }
     , m_digest_info_index{ SHA_UNKNOWN }
-{}
+{
+}
 
 template<alc_rsa_key_size T>
 void
@@ -493,7 +494,8 @@ Rsa<T>::signPrivatePss(bool         check,
     auto message_tmp = std::make_unique<Uint8[]>(m_hash_len + saltSize + 8);
     auto p_message   = message_tmp.get();
     utils::CopyBytes(p_message + 8, hash, m_hash_len);
-    utils::CopyBytes(p_message + 8 + m_hash_len, salt, saltSize);
+    if (salt != nullptr)
+        utils::CopyBytes(p_message + 8 + m_hash_len, salt, saltSize);
 
     m_digest->init();
     m_digest->update(p_message, m_hash_len + saltSize + 8);
@@ -505,7 +507,9 @@ Rsa<T>::signPrivatePss(bool         check,
 
     Uint64 pos = T / 8 - saltSize - m_hash_len - 2;
     p_db[pos]  = 0x01;
-    utils::CopyBytes(p_db + pos + 1, salt, saltSize);
+
+    if (salt != nullptr)
+        utils::CopyBytes(p_db + pos + 1, salt, saltSize);
 
     auto db_mask   = std::make_unique<Uint8[]>(p_db_size);
     auto p_db_mask = db_mask.get();

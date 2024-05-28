@@ -176,16 +176,23 @@ Rsa_KAT(int                     padding_mode,
     while (csv.readNext()) {
         /* input text to be loaded */
         std::vector<Uint8> input_data = csv.getVect("INPUT");
+        input_data.reserve(1);
         /*FIXME: reading expected encrypted data is currently only for
          * non-padded modes */
         std::vector<Uint8> encrypted_data_expected =
             csv.getVect("ENCRYPTEDDATA");
+        encrypted_data_expected.reserve(1);
         std::vector<Uint8> encrypted_data(KeySize);
+        encrypted_data.reserve(1);
         std::vector<Uint8> decrypted_data(KeySize); /* keysize for padded */
+        decrypted_data.reserve(1);
         std::vector<Uint8> PubKeyKeyMod(KeySize);
+        PubKeyKeyMod.reserve(1);
         std::vector<Uint8> signature(KeySize);
+        signature.reserve(1);
         std::vector<Uint8> expected_signature(KeySize);
-        Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
+        expected_signature.reserve(1);
+        Uint8 salt[] = { 'h', 'e', 'l', 'l', 'o' };
 
         /* for signature generation and verification*/
         if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
@@ -212,8 +219,10 @@ Rsa_KAT(int                     padding_mode,
 
         /* seed and label */
         std::vector<Uint8> seed(rb->m_hash_len);
+        seed.reserve(1);
         data.m_pseed = &(seed[0]);
         std::vector<Uint8> label(5);
+        label.reserve(1);
         data.m_label      = &(label[0]);
         data.m_label_size = label.size();
 
