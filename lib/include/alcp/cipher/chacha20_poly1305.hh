@@ -69,6 +69,7 @@ class ALCP_API_EXPORT ChaCha20Poly1305
   public:
     ChaCha20Poly1305() = default;
     ChaCha20Poly1305(alc_cipher_data_t* ctx);
+    virtual ~ChaCha20Poly1305() = default;
     alc_error_t init(alc_cipher_data_t* ctx,
                      const Uint8*       pKey,
                      Uint64             keyLen,

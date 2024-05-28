@@ -46,9 +46,7 @@ class Chacha20Builder
 class Chacha20Poly1305Builder
 {
   public:
-    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
-                             const Uint64            keyLen,
-                             Context&                ctx);
+    static alc_error_t Build(Context& ctx);
 
     static bool Supported(const alc_cipher_mode_t cipherMode,
                           const Uint64            keyLen);

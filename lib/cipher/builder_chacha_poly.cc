@@ -142,11 +142,9 @@ _build_chach20_poly1305_wrapper(Context& ctx)
     ctx.finish = __chacha_poly_dtor<AEADMODE>;
 }
 
-static Status
-__build_ChaCha20_Poly1305Aead(const Uint64 keyLen, Context& ctx)
+static alc_error_t
+__build_ChaCha20_Poly1305Aead(Context& ctx)
 {
-    Status sts = StatusOk();
-
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
 
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
@@ -156,17 +154,13 @@ __build_ChaCha20_Poly1305Aead(const Uint64 keyLen, Context& ctx)
         using namespace chacha20::ref;
         _build_chach20_poly1305_wrapper<ChaCha20Poly1305AEAD>(ctx);
     }
-    return sts;
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t
-chacha20::Chacha20Poly1305Builder::Build(const alc_cipher_mode_t cipherMode,
-                                         const Uint64            keyLen,
-                                         Context&                ctx)
+chacha20::Chacha20Poly1305Builder::Build(Context& ctx)
 {
-    Status s = __build_ChaCha20_Poly1305Aead(keyLen, ctx);
-
-    return s.code();
+    return __build_ChaCha20_Poly1305Aead(ctx);
 }
 
 bool

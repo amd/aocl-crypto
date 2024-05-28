@@ -30,45 +30,12 @@
 #include <array>
 #include <tuple>
 
-#include "mac/poly1305-ref.hh"
+#include "alcp/mac/poly1305-ref.hh"
 
 namespace alcp::mac::poly1305::reference {
 
-#ifdef DEBUG
 void
-debug_dump(std::string str, BIGNUM* z)
-{
-    std::cout << str << "\t";
-    BN_print_fp(stdout, z);
-    std::cout << std::endl;
-}
-#else
-void
-debug_dump(std::string str, BIGNUM* z)
-{}
-#endif
-
-/*
-    Class Poly1305Common Functions
-*/
-
-void
-Poly1305Common::clamp_rev(Uint8 in[16])
-{
-    constexpr std::array<std::tuple<int, int>, 7> cIndex = {
-        std::tuple<int, int>({ 3, 15 }),  std::tuple<int, int>({ 7, 15 }),
-        std::tuple<int, int>({ 11, 15 }), std::tuple<int, int>({ 15, 15 }),
-        std::tuple<int, int>({ 4, 252 }), std::tuple<int, int>({ 8, 252 }),
-        std::tuple<int, int>({ 12, 252 })
-    };
-
-    for (const auto& i : cIndex) {
-        in[15 - std::get<0>(i)] &= std::get<1>(i);
-    }
-}
-
-void
-Poly1305Common::clamp(Uint8 in[16])
+clamp(Uint8 in[16])
 {
     constexpr std::array<std::tuple<int, int>, 7> cIndex = {
         std::tuple<int, int>({ 3, 15 }),  std::tuple<int, int>({ 7, 15 }),
@@ -80,204 +47,6 @@ Poly1305Common::clamp(Uint8 in[16])
     for (const auto& i : cIndex) {
         in[std::get<0>(i)] &= std::get<1>(i);
     }
-}
-
-/*
-    Class Poly1305BNRef Functions
-
-    Some insights into the implementation
-        Implemented directly from RFC-8439 ChaCha20-Poly1305 for IETF Protocols
-        OpenSSL bignum is used to implement the core algorithm on as it is basis
-*/
-
-Status
-Poly1305BNRef::init(const Uint8 key[], Uint64 keyLen)
-{
-    Status s = StatusOk();
-    if (m_finalized) {
-        s.update(status::InternalError("Cannot setKey after finalized!"));
-        return s;
-    }
-    keyLen = keyLen / 8;
-    if (keyLen != 32) {
-        s.update(status::InvalidArgument("Length does not match"));
-        return s;
-    }
-
-    // Reverse bytes to make it a big number represntation
-    std::reverse_copy(key, key + 16, m_key);
-    std::reverse_copy(key + 16, key + 32, m_key + 16);
-    clamp_rev(m_key); // Clamp to ploynomial
-
-    // Continue with initialization
-
-    if (m_r_bn != nullptr) {
-        BN_free(m_r_bn);
-        m_r_bn = nullptr;
-    }
-    // r = k[0..16];
-    m_r_bn = BN_bin2bn(m_key, 16, m_r_bn);
-
-    debug_dump("R KE2:", m_r_bn);
-    if (m_s_bn != nullptr) {
-        BN_free(m_s_bn);
-        m_s_bn = nullptr;
-    }
-    // s = k[17..32];
-    m_s_bn = BN_bin2bn(m_key + 16, 16, m_s_bn);
-
-    if (m_a_bn != nullptr) {
-        BN_free(m_a_bn);
-        m_a_bn = nullptr;
-    }
-    // a = 0;
-    m_a_bn = BN_bin2bn(m_accumulator, 16, m_a_bn);
-
-    debug_dump("A CRT:", m_a_bn);
-    if (m_p_bn != nullptr) {
-        BN_free(m_p_bn);
-        m_p_bn = nullptr;
-    }
-    // p = (1<<130)-5
-    m_p_bn = BN_bin2bn(cP, sizeof(cP), m_p_bn);
-
-    debug_dump("P SHL:", m_p_bn);
-    if (m_bn_temp_ctx != nullptr) {
-        BN_CTX_free(m_bn_temp_ctx);
-        m_bn_temp_ctx = nullptr;
-    }
-
-    // Create a temporary BigNumber context
-    m_bn_temp_ctx = BN_CTX_new();
-
-    return s;
-}
-
-// This blk can handle partial blocks also
-Status
-Poly1305BNRef::blk(const Uint8 pMsg[], Uint64 msgLen)
-{
-    Status       s             = StatusOk();
-    const Uint8* p_msg_ptr_cpy = pMsg;
-    BIGNUM*      p_n           = BN_new();
-
-    // For loop until ceil of msgLen/16
-    for (Uint64 i = 0; i < ((msgLen + (16 - 1)) / 16); i++) {
-        Uint8 n_buff[17] = {};
-
-        // Find if we are in the last block, if we are, then only do left
-        // bytes
-        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i)*16) : 16;
-#ifdef DEBUG
-        std::cout << "Current Block Length:" << curr_blocklen << std::endl;
-#endif
-        std::reverse_copy(
-            p_msg_ptr_cpy, p_msg_ptr_cpy + curr_blocklen, n_buff + 1);
-        n_buff[0] = 0x01;
-        p_n       = BN_bin2bn(n_buff, curr_blocklen + 1, p_n);
-        debug_dump("N BLK:", p_n);
-
-        // We select the next block
-        p_msg_ptr_cpy += curr_blocklen;
-        // a+=n
-        BN_add(m_a_bn, m_a_bn, p_n);
-        debug_dump("A ADD:", m_a_bn);
-        // a = (a * r) % p
-        BN_mod_mul(m_a_bn, m_a_bn, m_r_bn, m_p_bn, m_bn_temp_ctx);
-        debug_dump("A END:", m_a_bn);
-    }
-    BN_free(p_n);
-    return s;
-}
-
-Status
-Poly1305BNRef::update(const Uint8 pMsg[], Uint64 msgLen)
-{
-    Status s = StatusOk();
-    if (pMsg == nullptr || msgLen == 0) {
-        return s;
-    }
-
-    if (m_finalized) {
-        s.update(status::InternalError("Cannot update after finalized!"));
-        return s;
-    }
-
-    if (m_msg_buffer_len != 0) {
-        // We need to process the m_msg_buffer first
-        Uint64 msg_buffer_left = (16 - m_msg_buffer_len);
-        if (msgLen < msg_buffer_left) {
-            std::copy(pMsg, pMsg + msgLen, m_msg_buffer + m_msg_buffer_len);
-            m_msg_buffer_len += msgLen;
-            // We ran out of the buffer to read
-            return s;
-        }
-        std::copy(
-            pMsg, pMsg + msg_buffer_left, m_msg_buffer + m_msg_buffer_len);
-
-        pMsg += msg_buffer_left;
-        msgLen -= msg_buffer_left;
-
-        m_msg_buffer_len = 0;
-        blk(m_msg_buffer, 16);
-    }
-
-    Uint64 overflow = msgLen % 16;
-    blk(pMsg, msgLen - overflow);
-
-    // If there is something left then put it into msg buffer
-    pMsg   = pMsg + msgLen - overflow;
-    msgLen = overflow;
-    if (msgLen) {
-        std::copy(pMsg, pMsg + msgLen, m_msg_buffer);
-        m_msg_buffer_len = msgLen;
-    }
-
-    return s;
-}
-Status
-Poly1305BNRef::finish(Uint8 digest[], Uint64 length)
-{
-    Status s = StatusOk();
-    if (m_finalized) {
-        s.update(status::InternalError("Already finalized!"));
-        return s;
-    }
-
-    if (length != 16) {
-        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
-        return s;
-    }
-
-    blk(m_msg_buffer, m_msg_buffer_len);
-
-    // a+=s;
-    BN_add(m_a_bn, m_a_bn, m_s_bn);
-    debug_dump("A FIN:", m_a_bn);
-    BN_bn2bin(m_a_bn, m_accumulator);
-    m_finalized = true;
-
-    int offset = 0;
-    if (BN_num_bytes(m_a_bn) > static_cast<int>(length)) {
-        offset = BN_num_bytes(m_a_bn) - static_cast<int>(length);
-    }
-    std::reverse_copy(
-        m_accumulator + offset, m_accumulator + BN_num_bytes(m_a_bn), digest);
-
-    return s;
-    // Erasing will be taken care by the "State" destructor
-}
-
-Status
-Poly1305BNRef::reset()
-{
-    Status s = StatusOk();
-    std::fill(m_accumulator, m_accumulator + 18, 0);
-    // Wipe the accumulator
-    m_a_bn           = BN_bin2bn(m_accumulator, 16, m_a_bn);
-    m_msg_buffer_len = 0;
-    m_finalized      = false;
-    return s;
 }
 
 /*
@@ -563,7 +332,14 @@ Status
 Poly1305Ref::reset()
 {
     Status s = StatusOk();
-    resetState();
+
+    // Erase all the internal update buffers
+    std::fill(m_msg_buffer, m_msg_buffer + m_cMsgSize_bytes, 0);
+    std::fill(
+        m_accumulator, m_accumulator + (m_cAccSize_bytes / sizeof(Uint64)), 0);
+    m_msg_buffer_len = 0;
+    m_finalized      = false;
+
     return s;
 }
 

@@ -25,7 +25,7 @@
 
 FILE(GLOB REFERENCE_SRCS "*.cc")
 
-ADD_SUBDIRECTORY(cipher)
+ADD_SUBDIRECTORY(mac)
 
 alcp_get_arch_cflags_reference()
 if(ALCP_SANITIZE)
