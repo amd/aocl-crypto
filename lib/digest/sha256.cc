@@ -86,14 +86,24 @@ Sha2<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
         return avx2::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
     }
 
-    Uint64  msg_size       = len;
-    Uint32* p_msg_buffer32 = (Uint32*)pSrc;
+    Uint64 msg_size = len;
 
     Uint32 w[cNumRounds];
 
     while (msg_size) {
-        utils::CopyBlockWith<Uint32>(
-            w, p_msg_buffer32, cChunkSize, utils::ToBigEndian<Uint32>);
+#if 1
+        utils::CopyBytes(reinterpret_cast<Uint8*>(w), pSrc, cChunkSize);
+        for (Uint64 i = 0; i < cChunkSize; i++) {
+            w[i] = utils::ToBigEndian(w[i]);
+        }
+#else
+        // pSrc not aligned to 32 bits.. its aligned to 8bits possible memory
+        // errors.
+        utils::CopyBlockWith<Uint32>(w,
+                                     reinterpret_cast<const Uint32*>(pSrc),
+                                     cChunkSize,
+                                     utils::ToBigEndian<Uint32>);
+#endif
 
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
@@ -102,7 +112,7 @@ Sha2<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
         // Compress the message
         alcp::digest::CompressMsg(w, m_hash, cRoundConstants);
 
-        p_msg_buffer32 += cChunkSizeWords;
+        pSrc += cChunkSize;
         msg_size -= cChunkSize;
     }
 
