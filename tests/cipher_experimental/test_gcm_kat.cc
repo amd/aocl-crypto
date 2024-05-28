@@ -57,6 +57,14 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
         std::vector<Uint8> datasetAddData    = csv.getVect("ADDITIONAL_DATA");
         std::vector<Uint8> datasetTag        = csv.getVect("TAG");
 
+        // In case of 0 size we need to allocate atleast 1 byte
+        datasetPlainText.reserve(1);
+        datasetInitvector.reserve(1);
+        datasetKey.reserve(1);
+        datasetCipherText.reserve(1);
+        datasetAddData.reserve(1);
+        datasetTag.reserve(1);
+
         // Output Buffers
         std::vector<Uint8> output(
             std::max(datasetPlainText.size(), datasetCipherText.size()), 1);
