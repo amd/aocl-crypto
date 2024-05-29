@@ -81,8 +81,7 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
-    ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eReference>*
-        chacha_poly;
+    ChaCha20Poly1305<ref::ChaCha256>* chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
     void                            SetUp() override

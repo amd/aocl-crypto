@@ -48,7 +48,7 @@ union len_aad_processed
 
 using utils::CpuArchFeature;
 
-template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
+template<class ChaChaKey>
 class ALCP_API_EXPORT ChaCha20Poly1305
     : public ChaChaKey
     , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
@@ -97,8 +97,7 @@ namespace vaes512 {
 #else
 #endif
     class ALCP_API_EXPORT ChaCha20Poly1305AEAD
-        : public ChaCha20Poly1305<vaes512::ChaCha256,
-                                  CpuCipherFeatures::eVaes512>
+        : public ChaCha20Poly1305<vaes512::ChaCha256>
 
     {
       public:
@@ -121,7 +120,7 @@ namespace ref {
     //     ChaCha20Poly1305Hash,
     //     ChaCha20Poly1305<CpuCipherFeatures::eReference, ChaCha256>);
     class ALCP_API_EXPORT ChaCha20Poly1305AEAD
-        : public ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eReference>
+        : public ChaCha20Poly1305<ref::ChaCha256>
     {
       public:
         ChaCha20Poly1305AEAD()  = default;
