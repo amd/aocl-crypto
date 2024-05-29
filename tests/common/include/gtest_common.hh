@@ -29,6 +29,7 @@
 #pragma once
 #include "colors.hh"
 #include "csv.hh"
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <memory>
 #include <random>

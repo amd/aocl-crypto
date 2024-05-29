@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -41,6 +41,11 @@ TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
 IF(IPP_INSTALL_DIR)
 	TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${IPP_INSTALL_DIR}/include)
 ENDIF(IPP_INSTALL_DIR)
+
+if(CMAKE_COMPILER_IS_GCC AND CMAKE_COMPILER_GCC_VERSION MATCHES "14")
+	TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-maybe-uninitialized)
+    MESSAGE(STATUS "Due to a known bug with GCC14, enforcing -Wno-maybe-uninitialized on compilation of ipp compat library")
+endif()
 
 IF(WIN32)
 	TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
