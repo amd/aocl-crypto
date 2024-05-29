@@ -45,9 +45,9 @@ __chacha_poly_wrapperUpdate(void*        ctx,
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
     if constexpr (encrypt)
-        e = ap->encrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
+        e = ap->encrypt(pSrc, pDest, len);
     else
-        e = ap->decrypt(&(ctxp->m_alcp_cipher_data), pSrc, pDest, len);
+        e = ap->decrypt(pSrc, pDest, len);
 
     return e;
 }
@@ -61,7 +61,7 @@ __chacha_poly_wrapperSetAad(void* ctx, const Uint8* pAad, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setAad(&(ctxp->m_alcp_cipher_data), pAad, len);
+    e = ap->setAad(pAad, len);
 
     return e;
 }
@@ -79,7 +79,7 @@ __chacha_poly_wrapperInit(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->init(&(ctxp->m_alcp_cipher_data), pKey, keyLen / 8, pIv, ivLen);
+    e = ap->init(pKey, keyLen / 8, pIv, ivLen);
 
     return e;
 }
@@ -93,7 +93,7 @@ __chacha_poly_wrapperGetTag(void* ctx, Uint8* pTag, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->getTag(&(ctxp->m_alcp_cipher_data), pTag, len);
+    e = ap->getTag(pTag, len);
 
     return e;
 }
@@ -107,7 +107,7 @@ __chacha_poly_wrapperSetTagLength(void* ctx, Uint64 len)
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->setTagLength(&(ctxp->m_alcp_cipher_data), len);
+    e = ap->setTagLength(len);
 
     return e;
 }
@@ -127,7 +127,7 @@ template<typename AEADMODE>
 void
 _build_chach20_poly1305_wrapper(Context& ctx)
 {
-    auto algo = new AEADMODE(&(ctx.m_alcp_cipher_data));
+    auto algo = new AEADMODE();
 
     ctx.m_cipher = static_cast<void*>(algo);
     ctx.decrypt  = __chacha_poly_wrapperUpdate<AEADMODE, false>;

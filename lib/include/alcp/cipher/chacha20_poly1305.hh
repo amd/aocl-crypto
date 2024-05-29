@@ -28,9 +28,7 @@
 
 #pragma once
 
-#include "alcp/cipher/aes.hh" //FIXME: dependency of aes.hh to be removed
 #include "alcp/cipher/chacha20.hh"
-#include "alcp/cipher/cipher_common.hh"
 #include "alcp/mac/poly1305.hh"
 
 namespace alcp::cipher::chacha20 {
@@ -50,8 +48,7 @@ union len_aad_processed
 
 using utils::CpuArchFeature;
 
-template<class ChaChaKey,
-         CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
+template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
 class ALCP_API_EXPORT ChaCha20Poly1305
     : public ChaChaKey
     , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
@@ -67,15 +64,13 @@ class ALCP_API_EXPORT ChaCha20Poly1305
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
 
   public:
-    ChaCha20Poly1305() = default;
-    ChaCha20Poly1305(alc_cipher_data_t* ctx);
+    ChaCha20Poly1305()          = default;
     virtual ~ChaCha20Poly1305() = default;
-    alc_error_t init(alc_cipher_data_t* ctx,
-                     const Uint8*       pKey,
-                     Uint64             keyLen,
-                     const Uint8*       pIv,
-                     Uint64             ivLen);
-    alc_error_t setAad(const Uint8* pInput, Uint64 len);
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen);
+    alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);
 
     // Depending on the context(encrypt/decrypt) the inputBuffer and
     // outputBuffer will switch between ciphertext and plaintext buffers
@@ -100,57 +95,46 @@ namespace vaes512 {
         ChaCha20Poly1305Hash,
         ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>);
 #else
-    class ALCP_API_EXPORT ChaCha20Poly1305Hash
-        : public ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>
+#endif
+    class ALCP_API_EXPORT ChaCha20Poly1305AEAD
+        : public ChaCha20Poly1305<vaes512::ChaCha256,
+                                  CpuCipherFeatures::eVaes512>
+
     {
       public:
-        ChaCha20Poly1305Hash(alc_cipher_data_t* ctx)
-            : ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>(ctx){};
-        ~ChaCha20Poly1305Hash() {}
+        ChaCha20Poly1305AEAD()  = default;
+        ~ChaCha20Poly1305AEAD() = default;
 
-        alc_error_t getTag(alc_cipher_data_t* ctx,
-                           Uint8*             pOutput,
-                           Uint64             tagLen);
-        alc_error_t init(alc_cipher_data_t* ctx,
-                         const Uint8*       pKey,
-                         Uint64             keyLen,
-                         const Uint8*       pIv,
-                         Uint64             ivLen);
-        alc_error_t setAad(alc_cipher_data_t* ctx,
-                           const Uint8*       pInput,
-                           Uint64             aadLen);
-        alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
+      public:
+        alc_error_t encrypt(const Uint8* pPlainText,
+                            Uint8*       pCipherText,
+                            Uint64       len);
+
+        alc_error_t decrypt(const Uint8* pCipherText,
+                            Uint8*       pPlainText,
+                            Uint64       len);
     };
-#endif
-    CIPHER_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
 } // namespace vaes512
 
 namespace ref {
     // AEAD_AUTH_CLASS_GEN(
     //     ChaCha20Poly1305Hash,
     //     ChaCha20Poly1305<CpuCipherFeatures::eReference, ChaCha256>);
-    class ALCP_API_EXPORT ChaCha20Poly1305Hash
-        : public ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>
+    class ALCP_API_EXPORT ChaCha20Poly1305AEAD
+        : public ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eReference>
     {
       public:
-        ChaCha20Poly1305Hash(alc_cipher_data_t* ctx)
-            : ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>(ctx){};
-        ~ChaCha20Poly1305Hash() {}
+        ChaCha20Poly1305AEAD()  = default;
+        ~ChaCha20Poly1305AEAD() = default;
 
-        alc_error_t getTag(alc_cipher_data_t* ctx,
-                           Uint8*             pOutput,
-                           Uint64             tagLen);
-        alc_error_t init(alc_cipher_data_t* ctx,
-                         const Uint8*       pKey,
-                         Uint64             keyLen,
-                         const Uint8*       pIv,
-                         Uint64             ivLen);
-        alc_error_t setAad(alc_cipher_data_t* ctx,
-                           const Uint8*       pInput,
-                           Uint64             aadLen);
-        alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
+        alc_error_t encrypt(const Uint8* pPlainText,
+                            Uint8*       pCipherText,
+                            Uint64       len);
+
+        alc_error_t decrypt(const Uint8* pCipherText,
+                            Uint8*       pPlainText,
+                            Uint64       len);
     };
-    CIPHER_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305Hash);
 } // namespace ref
 
 } // namespace alcp::cipher::chacha20

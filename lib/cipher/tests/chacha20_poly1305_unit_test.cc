@@ -81,7 +81,8 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
-    ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eDynamic>* chacha_poly;
+    ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eReference>*
+        chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
     void                            SetUp() override
@@ -103,8 +104,7 @@ class ChaCha20Poly1305Test : public testing::Test
 
     void createChachaPolyObject()
     {
-        chacha_poly =
-            new ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eDynamic>();
+        chacha_poly = new ref::ChaCha20Poly1305AEAD;
     }
     void destroyChachaPolyObject() { delete chacha_poly; }
 
@@ -197,7 +197,7 @@ TEST_F(ChaCha20Poly1305Test, MultiBytesDecryptTest)
 
 TEST(Chacha20Poly1305, PerformanceTest)
 {
-    ChaCha20Poly1305<ref::ChaCha256> chacha_poly;
+    ref::ChaCha20Poly1305AEAD chacha_poly;
     Uint8 key[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
                     0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
                     0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97,
@@ -220,7 +220,7 @@ TEST(Chacha20Poly1305, PerformanceTest)
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha_poly.encrypt(&plaintext[0], plaintext.size(), &ciphertext[0]);
+        chacha_poly.encrypt(&plaintext[0], &ciphertext[0], plaintext.size());
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"

@@ -37,11 +37,6 @@ namespace alcp::cipher::chacha20 {
 using mac::poly1305::Poly1305;
 
 template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
-ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::ChaCha20Poly1305(
-    alc_cipher_data_t* ctx)
-{}
-
-template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::setIv(const Uint8* iv,
                                                        Uint64       ivLen)
@@ -59,11 +54,10 @@ ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::setIv(const Uint8* iv,
 
 template<class ChaChaKey, CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::init(alc_cipher_data_t* ctx,
-                                                      const Uint8*       pKey,
-                                                      Uint64             keyLen,
-                                                      const Uint8*       pIv,
-                                                      Uint64             ivLen)
+ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::init(const Uint8* pKey,
+                                                      Uint64       keyLen,
+                                                      const Uint8* pIv,
+                                                      Uint64       ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
     err             = setIv(pIv, ivLen);
@@ -220,63 +214,22 @@ ChaCha20Poly1305<ChaChaKey, cpu_cipher_feature>::setKey(const Uint8 key[],
 
 template class ChaCha20Poly1305<vaes512::ChaCha256,
                                 CpuCipherFeatures::eVaes512>;
-// template class ChaCha20Poly1305<CpuCipherFeatures::eVaes256>;
-template class ChaCha20Poly1305<vaes512::ChaCha256,
-                                CpuCipherFeatures::eReference>;
-template class ChaCha20Poly1305<vaes512::ChaCha256,
-                                CpuCipherFeatures::eDynamic>;
-
-template class ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eVaes512>;
-// template class ChaCha20Poly1305<CpuCipherFeatures::eVaes256>;
 template class ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eReference>;
-template class ChaCha20Poly1305<ref::ChaCha256, CpuCipherFeatures::eDynamic>;
 
 namespace vaes512 {
-    alc_error_t ChaCha20Poly1305Hash::getTag(alc_cipher_data_t* ctx,
-                                             Uint8*             pOutput,
-                                             Uint64             tagLen)
-    {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::getTag(
-            pOutput, tagLen);
-    }
-    alc_error_t ChaCha20Poly1305Hash::init(alc_cipher_data_t* ctx,
-                                           const Uint8*       pKey,
-                                           Uint64             keyLen,
-                                           const Uint8*       pIv,
-                                           Uint64             ivLen)
-    {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::init(
-            ctx, pKey, keyLen, pIv, ivLen);
-    }
-    alc_error_t ChaCha20Poly1305Hash::setAad(alc_cipher_data_t* ctx,
-                                             const Uint8*       pInput,
-                                             Uint64             aadLen)
-    {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::setAad(
-            pInput, aadLen);
-    }
 
-    alc_error_t ChaCha20Poly1305Hash::setTagLength(alc_cipher_data_t* ctx,
-                                                   Uint64             tagLength)
-    {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::
-            setTagLength(tagLength);
-    }
-
-    alc_error_t ChaCha20Poly1305AEAD::encrypt(alc_cipher_data_t* ctx,
-                                              const Uint8*       pInput,
-                                              Uint8*             pOutput,
-                                              Uint64             len)
+    alc_error_t ChaCha20Poly1305AEAD::encrypt(const Uint8* pInput,
+                                              Uint8*       pOutput,
+                                              Uint64       len)
     {
         return ChaCha20Poly1305<ChaCha256,
                                 CpuCipherFeatures::eVaes512>::encrypt(pInput,
                                                                       len,
                                                                       pOutput);
     }
-    alc_error_t ChaCha20Poly1305AEAD::decrypt(alc_cipher_data_t* ctx,
-                                              const Uint8*       pCipherText,
-                                              Uint8*             pPlainText,
-                                              Uint64             len)
+    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pCipherText,
+                                              Uint8*       pPlainText,
+                                              Uint64       len)
     {
         return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>::
             decrypt(pCipherText, len, pPlainText);
@@ -284,51 +237,17 @@ namespace vaes512 {
 } // namespace vaes512
 
 namespace ref {
-    alc_error_t ChaCha20Poly1305Hash::getTag(alc_cipher_data_t* ctx,
-                                             Uint8*             pOutput,
-                                             Uint64             tagLen)
-    {
-        return ChaCha20Poly1305<ChaCha256,
-                                CpuCipherFeatures::eReference>::getTag(pOutput,
-                                                                       tagLen);
-    }
-    alc_error_t ChaCha20Poly1305Hash::init(alc_cipher_data_t* ctx,
-                                           const Uint8*       pKey,
-                                           Uint64             keyLen,
-                                           const Uint8*       pIv,
-                                           Uint64             ivLen)
-    {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>::init(
-            ctx, pKey, keyLen, pIv, ivLen);
-    }
-    alc_error_t ChaCha20Poly1305Hash::setAad(alc_cipher_data_t* ctx,
-                                             const Uint8*       pInput,
-                                             Uint64             aadLen)
-    {
-        return ChaCha20Poly1305<ChaCha256,
-                                CpuCipherFeatures::eReference>::setAad(pInput,
-                                                                       aadLen);
-    }
 
-    alc_error_t ChaCha20Poly1305Hash::setTagLength(alc_cipher_data_t* ctx,
-                                                   Uint64             tagLength)
-    {
-        return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>::
-            setTagLength(tagLength);
-    }
-
-    alc_error_t ChaCha20Poly1305AEAD::encrypt(alc_cipher_data_t* ctx,
-                                              const Uint8*       pInput,
-                                              Uint8*             pOutput,
-                                              Uint64             len)
+    alc_error_t ChaCha20Poly1305AEAD::encrypt(const Uint8* pInput,
+                                              Uint8*       pOutput,
+                                              Uint64       len)
     {
         return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>::
             encrypt(pInput, len, pOutput);
     }
-    alc_error_t ChaCha20Poly1305AEAD::decrypt(alc_cipher_data_t* ctx,
-                                              const Uint8*       pCipherText,
-                                              Uint8*             pPlainText,
-                                              Uint64             len)
+    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pCipherText,
+                                              Uint8*       pPlainText,
+                                              Uint64       len)
     {
         return ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eReference>::
             decrypt(pCipherText, len, pPlainText);
