@@ -81,7 +81,7 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
-    ChaCha20Poly1305<ref::ChaCha256>* chacha_poly;
+    ref::ChaCha20Poly1305AEAD* chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
     void                            SetUp() override
@@ -130,15 +130,15 @@ class ChaCha20Poly1305Test : public testing::Test
 
         if (isEncryptTest) {
             err = chacha_poly->encrypt(&expected_plaintext[0],
-                                       expected_plaintext.size(),
-                                       &ciphertext[0]);
+                                       &ciphertext[0],
+                                       expected_plaintext.size());
             ASSERT_EQ(err, ALC_ERROR_NONE);
             EXPECT_EQ(ciphertext, expected_ciphertext)
                 << "Failed Encryption: Input Size" << size << std::endl;
         } else {
             err = chacha_poly->decrypt(&expected_ciphertext[0],
-                                       expected_ciphertext.size(),
-                                       &plaintext[0]);
+                                       &plaintext[0],
+                                       expected_ciphertext.size());
             ASSERT_EQ(err, ALC_ERROR_NONE);
             EXPECT_EQ(plaintext, expected_plaintext)
                 << "Failed Encryption: Input Size" << size << std::endl;

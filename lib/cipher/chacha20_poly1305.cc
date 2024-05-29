@@ -36,214 +36,37 @@ namespace alcp::cipher::chacha20 {
 
 using mac::poly1305::Poly1305;
 
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::setIv(const Uint8* iv, Uint64 ivLen)
-{
-
-    if (ivLen != 12) {
-        return ALC_ERROR_INVALID_SIZE;
-    }
-    memset(ChaCha20Poly1305<ChaChaKey>::m_iv, 0, 4);
-    memcpy(ChaCha20Poly1305<ChaChaKey>::m_iv + 4, iv, ivLen);
-
-    return ALC_ERROR_NONE;
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::init(const Uint8* pKey,
-                                  Uint64       keyLen,
-                                  const Uint8* pIv,
-                                  Uint64       ivLen)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = setIv(pIv, ivLen);
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-    err = setKey(pKey, keyLen);
-    return err;
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::encrypt(const Uint8 plaintext[],
-                                     Uint64      plaintextLength,
-                                     Uint8       ciphertext[])
-{
-    return ChaCha20Poly1305::processInput<true>(
-        plaintext, plaintextLength, ciphertext);
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::decrypt(const Uint8 ciphertext[],
-                                     Uint64      ciphertextLength,
-                                     Uint8       plaintext[])
-{
-    return ChaCha20Poly1305::processInput<false>(
-        ciphertext, ciphertextLength, plaintext);
-}
-
-template<class ChaChaKey>
-template<bool is_encrypt>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::processInput(const Uint8 inputBuffer[],
-                                          Uint64      bufferLength,
-                                          Uint8       outputBuffer[])
-{
-
-    alcp::base::Status s{ alcp::base::StatusOk() };
-    // set  Counter to 1
-    (*(reinterpret_cast<Uint32*>(ChaChaKey::m_iv))) += 1;
-    alc_error_t err =
-        ChaChaKey::encrypt(nullptr, inputBuffer, outputBuffer, bufferLength);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    m_len_input_processed.u64 += bufferLength;
-
-    Uint64 padding_length = ((m_len_aad_processed.u64 % 16) == 0)
-                                ? 0
-                                : (16 - (m_len_aad_processed.u64 % 16));
-    if (padding_length != 0) {
-        s = Poly1305::update(m_zero_padding, padding_length);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
-        }
-    }
-    if constexpr (is_encrypt) {
-
-        s = Poly1305::update(outputBuffer, bufferLength);
-    } else {
-        //  In case of decryption one should change the order of updation i.e
-        //  input (which is the ciphertext) should be updated
-        s = Poly1305::update(inputBuffer, bufferLength);
-    }
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-    padding_length = ((m_len_input_processed.u64 % 16) == 0)
-                         ? 0
-                         : (16 - (m_len_input_processed.u64 % 16));
-    if (padding_length != 0) {
-        s = Poly1305::update(m_zero_padding, padding_length);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
-        }
-    }
-
-    constexpr Uint64 cSizeLength = sizeof(Uint64);
-    s = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-    s = Poly1305::update(m_len_input_processed.u8, cSizeLength);
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-    return ALC_ERROR_NONE;
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::setAad(const Uint8* pInput, Uint64 len)
-{
-    alcp::base::Status s = Poly1305::update(pInput, len);
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-    m_len_aad_processed.u64 += len;
-    return ALC_ERROR_NONE;
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::getTag(Uint8* pOutput, Uint64 len)
-{
-    alcp::base::Status s = Poly1305::finalize(pOutput, len);
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-    return ALC_ERROR_NONE;
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::setTagLength(Uint64 tagLength)
-{
-    if (tagLength != 16) {
-        return ALC_ERROR_INVALID_SIZE;
-    }
-    return ALC_ERROR_NONE;
-}
-
-template<class ChaChaKey>
-alc_error_t
-ChaCha20Poly1305<ChaChaKey>::setKey(const Uint8 key[], Uint64 keylen)
-{
-
-    alc_error_t err = ChaChaKey::setKey(key, keylen);
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-    // err = ChaChaKey::getKeyStream(m_poly1305_key, 32);
-    std::fill(m_poly1305_key, m_poly1305_key + 32, 0);
-    err = ChaChaKey::encrypt(nullptr, m_poly1305_key, m_poly1305_key, 32);
-#ifdef DEBUG
-    std::cout << "Key Stream generated for Poly" << std::endl;
-    BIO_dump_fp(stdout, m_poly1305_key, 32);
-#endif
-    alcp::base::Status s      = Poly1305::init(m_poly1305_key, 32);
-    m_len_input_processed.u64 = 0;
-    m_len_aad_processed.u64   = 0;
-    if (!s.ok()) {
-        return ALC_ERROR_EXISTS;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-    return ALC_ERROR_NONE;
-}
-
-template class ChaCha20Poly1305<vaes512::ChaCha256>;
-template class ChaCha20Poly1305<ref::ChaCha256>;
-
 namespace vaes512 {
+#include "chacha20_poly1305.cc.inc"
 
     alc_error_t ChaCha20Poly1305AEAD::encrypt(const Uint8* pInput,
                                               Uint8*       pOutput,
                                               Uint64       len)
     {
-        return ChaCha20Poly1305<ChaCha256>::encrypt(pInput, len, pOutput);
+        return ChaCha20Poly1305::processInput<true>(pInput, len, pOutput);
     }
-    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pCipherText,
-                                              Uint8*       pPlainText,
+    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pInput,
+                                              Uint8*       pOutput,
                                               Uint64       len)
     {
-        return ChaCha20Poly1305<ChaCha256>::decrypt(
-            pCipherText, len, pPlainText);
+        return ChaCha20Poly1305::processInput<false>(pInput, len, pOutput);
     }
 } // namespace vaes512
 
 namespace ref {
+#include "chacha20_poly1305.cc.inc"
 
     alc_error_t ChaCha20Poly1305AEAD::encrypt(const Uint8* pInput,
                                               Uint8*       pOutput,
                                               Uint64       len)
     {
-        return ChaCha20Poly1305<ChaCha256>::encrypt(pInput, len, pOutput);
+        return ChaCha20Poly1305::processInput<true>(pInput, len, pOutput);
     }
-    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pCipherText,
-                                              Uint8*       pPlainText,
+    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pInput,
+                                              Uint8*       pOutput,
                                               Uint64       len)
     {
-        return ChaCha20Poly1305<ChaCha256>::decrypt(
-            pCipherText, len, pPlainText);
+        return ChaCha20Poly1305::processInput<false>(pInput, len, pOutput);
     }
 } // namespace ref
 
