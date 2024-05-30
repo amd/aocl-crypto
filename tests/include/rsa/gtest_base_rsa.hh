@@ -176,39 +176,32 @@ Rsa_KAT(int                     padding_mode,
     while (csv.readNext()) {
         /* input text to be loaded */
         std::vector<Uint8> input_data = csv.getVect("INPUT");
-        input_data.reserve(1);
         /*FIXME: reading expected encrypted data is currently only for
          * non-padded modes */
         std::vector<Uint8> encrypted_data_expected =
             csv.getVect("ENCRYPTEDDATA");
-        encrypted_data_expected.reserve(1);
         std::vector<Uint8> encrypted_data(KeySize);
-        encrypted_data.reserve(1);
         std::vector<Uint8> decrypted_data(KeySize); /* keysize for padded */
-        decrypted_data.reserve(1);
         std::vector<Uint8> PubKeyKeyMod(KeySize);
-        PubKeyKeyMod.reserve(1);
         std::vector<Uint8> signature(KeySize);
-        signature.reserve(1);
         std::vector<Uint8> expected_signature(KeySize);
-        expected_signature.reserve(1);
-        Uint8 salt[] = { 'h', 'e', 'l', 'l', 'o' };
+        Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
 
         /* for signature generation and verification*/
         if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
             || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
             expected_signature = csv.getVect("SIGNATURE");
-            data.m_signature   = &(signature[0]);
-            // data.m_salt      = &(salt[0]);
+            data.m_signature   = getPtr(signature);
+            // data.m_salt      = getAddress(salt);
             // data.m_salt_len  = 5;
             /*FIXME: experimenting with Zero length salt for RSA PSS*/
             data.m_salt     = nullptr;
             data.m_salt_len = 0;
         }
-        data.m_msg            = &(input_data[0]);
-        data.m_pub_key_mod    = &(PubKeyKeyMod[0]);
-        data.m_encrypted_data = &(encrypted_data[0]);
-        data.m_decrypted_data = &(decrypted_data[0]);
+        data.m_msg            = getPtr(input_data);
+        data.m_pub_key_mod    = getPtr(PubKeyKeyMod);
+        data.m_encrypted_data = getPtr(encrypted_data);
+        data.m_decrypted_data = getPtr(decrypted_data);
         data.m_msg_len        = input_data.size();
         data.m_key_len        = KeySize;
 
@@ -219,11 +212,9 @@ Rsa_KAT(int                     padding_mode,
 
         /* seed and label */
         std::vector<Uint8> seed(rb->m_hash_len);
-        seed.reserve(1);
-        data.m_pseed = &(seed[0]);
+        data.m_pseed = getPtr(seed);
         std::vector<Uint8> label(5);
-        label.reserve(1);
-        data.m_label      = &(label[0]);
+        data.m_label      = getPtr(label);
         data.m_label_size = label.size();
 
         int ret_val = 0;
@@ -276,7 +267,7 @@ Rsa_KAT(int                     padding_mode,
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data, input_data, input_data.size()));
                 data.m_msg_len = KeySize;
-                data.m_msg     = &(input_data[0]);
+                data.m_msg     = getPtr(input_data);
             } else {
                 EXPECT_TRUE(ArraysMatch(
                     decrypted_data, input_data, csv, std::string("RSA")));

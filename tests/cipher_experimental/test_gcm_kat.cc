@@ -57,47 +57,39 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
         std::vector<Uint8> datasetAddData    = csv.getVect("ADDITIONAL_DATA");
         std::vector<Uint8> datasetTag        = csv.getVect("TAG");
 
-        // In case of 0 size we need to allocate atleast 1 byte
-        datasetPlainText.reserve(1);
-        datasetInitvector.reserve(1);
-        datasetKey.reserve(1);
-        datasetCipherText.reserve(1);
-        datasetAddData.reserve(1);
-        datasetTag.reserve(1);
-
         // Output Buffers
         std::vector<Uint8> output(
             std::max(datasetPlainText.size(), datasetCipherText.size()), 1);
         std::vector<Uint8> tagbuff(datasetTag.size());
 
         alc_test_gcm_init_data_t dataInit;
-        dataInit.m_iv      = &datasetInitvector[0];
+        dataInit.m_iv      = utils::getPtr(datasetInitvector);
         dataInit.m_iv_len  = datasetInitvector.size();
-        dataInit.m_aad     = &datasetAddData[0];
+        dataInit.m_aad     = utils::getPtr(datasetAddData);
         dataInit.m_aad_len = datasetAddData.size();
-        dataInit.m_key     = &datasetKey[0];
+        dataInit.m_key     = utils::getPtr(datasetKey);
         dataInit.m_key_len = datasetKey.size();
 
         alc_test_gcm_update_data_t   dataUpdate;
         alc_test_gcm_finalize_data_t dataFinalize;
 
-        dataUpdate.m_iv         = &datasetInitvector[0];
+        dataUpdate.m_iv         = utils::getPtr(datasetInitvector);
         dataUpdate.m_iv_len     = datasetInitvector.size();
-        dataUpdate.m_output     = &output[0];
+        dataUpdate.m_output     = utils::getPtr(output);
         dataUpdate.m_output_len = output.size();
 
         if constexpr (encryptor) { // Encrypt
-            dataUpdate.m_input     = &datasetPlainText[0];
+            dataUpdate.m_input     = utils::getPtr(datasetPlainText);
             dataUpdate.m_input_len = datasetPlainText.size();
-            dataFinalize.m_tag     = &tagbuff[0];
+            dataFinalize.m_tag     = utils::getPtr(tagbuff);
         } else { // Decrypt
-            dataUpdate.m_input     = &datasetCipherText[0];
+            dataUpdate.m_input     = utils::getPtr(datasetCipherText);
             dataUpdate.m_input_len = datasetCipherText.size();
             dataFinalize.m_tag = &datasetTag[0]; // encrypt Tag or expectedTag
                                                  // is input for decrypt
         }
 
-        dataFinalize.m_tag_expected = &datasetTag[0];
+        dataFinalize.m_tag_expected = utils::getPtr(datasetTag);
         dataFinalize.m_tag_len      = datasetTag.size();
 
         dataFinalize.m_out    = dataUpdate.m_output; // If needed for padding

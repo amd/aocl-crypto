@@ -235,3 +235,14 @@ parseArgs(int argc, char** argv)
         }
     }
 }
+
+template<typename T>
+T*
+getPtr(std::vector<T>& vect)
+{
+    if (vect.size() == 0) {
+        return nullptr;
+    } else {
+        return &vect[0];
+    }
+}
