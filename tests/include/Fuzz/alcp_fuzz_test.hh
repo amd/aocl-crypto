@@ -81,8 +81,6 @@ std::map<alc_cipher_mode_t, std::string> aes_aead_mode_string_map = {
     { ALC_AES_MODE_GCM, "AES_GCM" },
 };
 
-const Uint64 PublicKeyExponent = 0x10001;
-
 const int ERR_SIZE = 256;
 Uint8     err_buf[ERR_SIZE];
 void
