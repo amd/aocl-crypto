@@ -114,7 +114,7 @@ hash_to_string(char string[65], const Uint8 hash[DIGEST_SIZE])
     for (i = 0; i < DIGEST_SIZE; i++) {
         string += sprintf(string, "%02x", hash[i]);
     }
-    string[65] = '\0';
+    string[0] = '\0';
 }
 
 int
