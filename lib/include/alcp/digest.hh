@@ -81,7 +81,6 @@ class IDigest
     bool   m_finished   = false;
     Uint64 m_msg_len    = 0;
     /* index to m_buffer of previously unprocessed bytes */
-    Uint32            m_idx = 0;
-    alc_digest_mode_t m_mode;
+    Uint32 m_idx = 0;
 };
 } // namespace alcp::digest

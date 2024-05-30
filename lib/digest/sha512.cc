@@ -135,7 +135,6 @@ template<alc_digest_len_t digest_len>
 Sha2_512<digest_len>::Sha2_512(const Sha2_512& src)
 {
     m_msg_len = src.m_msg_len;
-    m_mode    = src.m_mode;
     memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
     memcpy(m_hash, src.m_hash, sizeof(m_hash));
     m_idx        = src.m_idx;
@@ -333,11 +332,11 @@ Sha2_512<digest_len>::finalize(Uint8* pBuf, Uint64 size)
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
         len_in_bits_high = m_msg_len >> 61;
-        len_in_bits = m_msg_len << 3;
+        len_in_bits      = m_msg_len << 3;
 
     } else {
         len_in_bits_high = 0;
-        len_in_bits = m_msg_len * 8;
+        len_in_bits      = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
         reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));
