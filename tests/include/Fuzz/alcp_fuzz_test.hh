@@ -81,6 +81,17 @@ std::map<alc_cipher_mode_t, std::string> aes_aead_mode_string_map = {
     { ALC_AES_MODE_GCM, "AES_GCM" },
 };
 
+alc_digest_info_t dinfo = {
+    .dt_type = ALC_DIGEST_TYPE_SHA2,
+    .dt_len  = ALC_DIGEST_LEN_256,
+    .dt_mode = ALC_SHA2_256,
+};
+alc_digest_info_t mgf_info = {
+    .dt_type = ALC_DIGEST_TYPE_SHA2,
+    .dt_len  = ALC_DIGEST_LEN_256,
+    .dt_mode = ALC_SHA2_256,
+};
+
 const int ERR_SIZE = 256;
 Uint8     err_buf[ERR_SIZE];
 void
