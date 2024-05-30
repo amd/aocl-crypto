@@ -31,7 +31,7 @@
 #include "alcp/base.hh"
 #include <alcp/error.h>
 
-namespace alcp::cipher::chacha20::zen4 {
+namespace alcp::cipher::zen4 {
 alc_error_t
 ProcessInput(const Uint8 key[],
              Uint64      keylen,
@@ -41,4 +41,4 @@ ProcessInput(const Uint8 key[],
              Uint8       ciphertext[],
              Uint64      blocks,
              int         remBytes);
-} // namespace alcp::cipher::chacha20::zen4
+} // namespace alcp::cipher::zen4

@@ -28,7 +28,6 @@
 #pragma once
 
 #include "alcp/cipher.h"
-#include "alcp/cipher.hh"
 
 #include <functional>
 
@@ -36,7 +35,8 @@ namespace alcp::cipher {
 
 typedef struct Context
 {
-    void* m_cipher = nullptr;
+    void* m_cipher         = nullptr;
+    void* m_cipher_factory = nullptr;
 
     alc_cipher_data_t m_alcp_cipher_data;
     Uint8             destructed;
@@ -79,8 +79,6 @@ typedef struct Context
     alc_error_t (*setPlainTextLength)(void* ctx, Uint64 plainTextLength);
 
     alc_error_t (*finish)(const void*);
-
-    Status status{ StatusOk() };
 
     Context()
         : destructed{ 0 }

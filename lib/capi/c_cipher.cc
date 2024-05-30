@@ -31,17 +31,19 @@
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
 
-#include "alcp/capi/cipher/builder.hh"
+#include "alcp/capi/cipher/ctx.hh"
 #include "alcp/capi/defs.hh"
 
-using namespace alcp;
+#include "alcp/capi/cipher/builder.hh"
+
+using namespace alcp::cipher;
 
 EXTERN_C_BEGIN
 
 Uint64
 alcp_cipher_context_size()
 {
-    Uint64 size = sizeof(cipher::Context);
+    Uint64 size = sizeof(Context);
     return size;
 }
 
@@ -57,6 +59,19 @@ validateKeys(const Uint8* tweakKey, const Uint8* encKey, Uint32 len)
     return true;
 }
 
+// temporary duplicate, c_cipher.cc and c_cipher_aead.cc to be unified.
+static CipherKeyLen
+getKeyLen(const Uint64 keyLen)
+{
+    enum CipherKeyLen key_size = KEY_128_BIT;
+    if (keyLen == 192) {
+        key_size = KEY_192_BIT;
+    } else if (keyLen == 256) {
+        key_size = KEY_256_BIT;
+    }
+    return key_size;
+}
+
 alc_error_t
 alcp_cipher_request(const alc_cipher_mode_t cipherMode,
                     const Uint64            keyLen,
@@ -67,40 +82,25 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-    new (ctx) cipher::Context;
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    new (ctx) Context;
 
     ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
-    err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
-    return err;
-}
+    auto alcpCipher       = new CipherFactory<CipherInterface>;
+    ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
 
-#if 0 // WIP: disabling encrypt/decrypt init for now.
-alc_error_t
-alcp_cipher_encrypt_init(const alc_cipher_handle_p pCipherHandle,
-                         const Uint8*              pKey,
-                         Uint64                    keyLen,
-                         const Uint8*              pIv,
-                         Uint64                    ivLen)
-{
-    alc_error_t err = ALC_ERROR_NONE;
+    auto aead = alcpCipher->create(
+        cipherMode, getKeyLen(keyLen), CpuCipherFeatures::eVaes512);
+
+    if (aead == nullptr) {
+        printf("\n cipher algo create failed");
+        return ALC_ERROR_GENERIC;
+    }
+    ctx->m_cipher = static_cast<void*>(aead);
 
     return err;
 }
-
-alc_error_t
-alcp_cipher_decrypt_init(const alc_cipher_handle_p pCipherHandle,
-                         const Uint8*              pKey,
-                         Uint64                    keyLen,
-                         const Uint8*              pIv,
-                         Uint64                    ivLen)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    return err;
-}
-#endif
 
 alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
@@ -117,9 +117,11 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
 
-    err = ctx->encrypt(ctx, pPlainText, pCipherText, len);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
+    err = i->encrypt(NULL, pPlainText, pCipherText, len);
 
     return err;
 }
@@ -140,7 +142,7 @@ alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
 
     ALCP_ZERO_LEN_ERR_RET(currPlainTextLen, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
 
     err = ctx->encryptBlocksXts(
         ctx, pPlainText, pCipherText, currPlainTextLen, startBlockNum);
@@ -162,10 +164,11 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
 
-    // FIXME: Modify decrypt to return Status and assign to context status
-    err = ctx->decrypt(ctx, pCipherText, pPlainText, len);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
+    err = i->decrypt(NULL, pCipherText, pPlainText, len);
 
     return err;
 }
@@ -186,7 +189,7 @@ alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
 
     ALCP_ZERO_LEN_ERR_RET(currCipherTextLen, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     ALCP_BAD_PTR_ERR_RET(ctx->decryptBlocksXts, err);
@@ -208,11 +211,14 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
+
+    ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
 
     // init can be called to setKey or setIv or both
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {
-        err = ctx->init(ctx, pKey, keyLen, pIv, ivLen);
+        err = i->init(pKey, keyLen, pIv, ivLen);
     } else {
         err = ALC_ERROR_INVALID_ARG;
     }
@@ -225,12 +231,13 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
     if (pCipherHandle == nullptr || pCipherHandle->ch_context == nullptr)
         return;
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    auto alcpCipher =
+        static_cast<CipherFactory<CipherInterface>*>(ctx->m_cipher_factory);
 
-    if (ctx->finish == nullptr)
-        return;
-
-    ctx->finish(ctx);
+    if (alcpCipher != nullptr) {
+        delete alcpCipher;
+    }
 
     ctx->~Context();
 }

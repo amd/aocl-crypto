@@ -28,7 +28,7 @@
 
 #include "alcp/error.h"
 #include <alcp/types.h>
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 inline alc_error_t
 ValidateKey(const Uint8* key, Uint64 keylen);
 inline alc_error_t
@@ -69,4 +69,4 @@ ProcessInput(const Uint8 key[],
              Uint64      plaintextLength,
              Uint8       ciphertext[]);
 
-} // namespace alcp::cipher::chacha20
+} // namespace alcp::cipher

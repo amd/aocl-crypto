@@ -26,9 +26,6 @@
  *
  */
 
-#include "alcp/capi/cipher/builder.hh"
-#include "alcp/cipher.hh"
-
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_gcm.hh"
 // FIXME: Remove all the includes from gtest_base related to capi
@@ -190,7 +187,7 @@ class GCM_KAT
 {
   public:
     // GCM_KAT() {}
-    GcmAEAD128*        pGcmObj = nullptr;
+    Gcm128*        pGcmObj = nullptr;
     std::vector<Uint8> m_key, m_nonce, m_aad, m_plaintext, m_ciphertext, m_tag;
     std::string        m_test_name;
     alc_error_t        m_err;
@@ -224,7 +221,7 @@ class GCM_KAT
         // clang-format on
 
         // Setup GCM Object
-        pGcmObj = new GcmAEAD128();
+        pGcmObj = new Gcm128();
         pGcmObj->setKey(keyInfo.key, keyInfo.len);
 
         // Nonce
@@ -254,7 +251,7 @@ TEST(GCM, Instantiation)
 
     keyInfo.len = 128;
     {
-        GcmAEAD128 pGcmObj = GcmAEAD128();
+        Gcm128 pGcmObj = Gcm128();
         pGcmObj.setKey(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 10U);
         EXPECT_EQ(pGcmObj.getNr(), 10U);
@@ -388,7 +385,7 @@ TEST(GCM, InvalidTagLen)
     Uint8 tag[17];
     Uint8 cipherText[sizeof(pt)];
 
-    GcmAEAD128  pGcmObj = GcmAEAD128(); //(key, 128);
+    Gcm128  pGcmObj = Gcm128(); //(key, 128);
     alc_error_t err;
     pGcmObj.setKey(key, 128);
     pGcmObj.setIv(iv, 7);
@@ -431,7 +428,7 @@ TEST(GCM, EncryptUpdateSingle)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128();
+    Gcm128 pGcmObj = Gcm128();
     pGcmObj.setKey(&key[0], 128);
     pGcmObj.setIv(&nonce[0], nonce.size());
 
@@ -475,7 +472,7 @@ TEST(GCM, EncryptUpdateMultiple)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128(); //(&key[0], 128);
+    Gcm128 pGcmObj = Gcm128(); //(&key[0], 128);
     pGcmObj.setKey(&key[0], 128);
     pGcmObj.setIv(&nonce[0], nonce.size());
 
@@ -524,7 +521,7 @@ TEST(GCM, DecryptUpdateSingle)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128();
+    Gcm128 pGcmObj = Gcm128();
     pGcmObj.setKey(&key[0], 128);
     pGcmObj.setIv(&nonce[0], nonce.size());
 
@@ -568,7 +565,7 @@ TEST(GCM, DecryptUpdateMultiple)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128();
+    Gcm128 pGcmObj = Gcm128();
     pGcmObj.setKey(&key[0], 128);
     pGcmObj.setIv(&nonce[0], nonce.size());
 

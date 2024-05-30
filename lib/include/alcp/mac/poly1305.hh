@@ -42,11 +42,7 @@ class ALCP_API_EXPORT Poly1305 : public IMac
 {
   private:
     std::unique_ptr<reference::Poly1305Ref> poly1305_impl;
-#if POLY1305_RADIX_26
-    Poly1305State26 state;
-#else
-    Poly1305State44 state;
-#endif
+    Poly1305State44                         state;
 
   public:
     /**
@@ -75,8 +71,7 @@ class ALCP_API_EXPORT Poly1305 : public IMac
      * @return Status/Result of the operation
      */
     Status finalize(Uint8 digest[], Uint64 digestLen) override;
-    // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
-    // msgLen);
+
     Poly1305();
     virtual ~Poly1305() = default;
     Poly1305(const Poly1305& src);

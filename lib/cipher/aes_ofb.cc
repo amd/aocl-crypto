@@ -35,60 +35,50 @@
 using alcp::utils::CpuId;
 
 namespace alcp::cipher {
-#define IMPLEMENT_OFB(CLASS_NAME)                                              \
-    alc_error_t CLASS_NAME::decrypt(alc_cipher_data_t* ctx,                    \
-                                    const Uint8*       pCipherText,            \
-                                    Uint8*             pPlainText,             \
-                                    Uint64             len)                    \
-    {                                                                          \
-        alc_error_t err = ALC_ERROR_NONE;                                      \
-                                                                               \
-        if (m_ivState_aes != IV_STATE_COPIED) {                                \
-            err = ALC_ERROR_BAD_STATE;                                         \
-            return err;                                                        \
-        }                                                                      \
-                                                                               \
-        if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {                     \
-            err = aesni::DecryptOfb(pCipherText,                               \
-                                    pPlainText,                                \
-                                    len,                                       \
-                                    getEncryptKeys(),                          \
-                                    getRounds(),                               \
-                                    m_pIv_aes);                                \
-                                                                               \
-            return err;                                                        \
-        }                                                                      \
-        return err;                                                            \
-    }                                                                          \
-                                                                               \
-    alc_error_t CLASS_NAME::encrypt(alc_cipher_data_t* ctx,                    \
-                                    const Uint8*       pPlainText,             \
-                                    Uint8*             pCipherText,            \
-                                    Uint64             len)                    \
-    {                                                                          \
-        alc_error_t err = ALC_ERROR_NONE;                                      \
-        if (m_ivState_aes != IV_STATE_COPIED) {                                \
-            err = ALC_ERROR_BAD_STATE;                                         \
-            return err;                                                        \
-        }                                                                      \
-                                                                               \
-        if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {                     \
-            err = aesni::EncryptOfb(pPlainText,                                \
-                                    pCipherText,                               \
-                                    len,                                       \
-                                    getEncryptKeys(),                          \
-                                    getRounds(),                               \
-                                    m_pIv_aes);                                \
-                                                                               \
-            return err;                                                        \
-        }                                                                      \
-                                                                               \
-        return err;                                                            \
-    }
+// aesni member functions
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb128,
+                   encrypt,
+                   aesni::EncryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   10,
+                   ALCP_ENC)
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb128,
+                   decrypt,
+                   aesni::DecryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   10,
+                   ALCP_DEC)
 
-namespace aesni {
-    IMPLEMENT_OFB(Ofb128);
-    IMPLEMENT_OFB(Ofb192);
-    IMPLEMENT_OFB(Ofb256);
-} // namespace aesni
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb192,
+                   encrypt,
+                   aesni::EncryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   12,
+                   ALCP_ENC)
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb192,
+                   decrypt,
+                   aesni::DecryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   12,
+                   ALCP_DEC)
+
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb256,
+                   encrypt,
+                   aesni::EncryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   14,
+                   ALCP_ENC)
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb256,
+                   decrypt,
+                   aesni::DecryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   14,
+                   ALCP_DEC)
+
 } // namespace alcp::cipher

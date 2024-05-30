@@ -77,18 +77,20 @@ typedef enum _alc_cipher_mode
 {
     ALC_AES_MODE_NONE = 0,
 
+    // aes ciphers
     ALC_AES_MODE_ECB,
     ALC_AES_MODE_CBC,
     ALC_AES_MODE_OFB,
     ALC_AES_MODE_CTR,
     ALC_AES_MODE_CFB,
     ALC_AES_MODE_XTS,
+    // non-aes ciphers
+    ALC_CHACHA20,
+    // aes aead ciphers
     ALC_AES_MODE_GCM,
     ALC_AES_MODE_CCM,
     ALC_AES_MODE_SIV,
-
-    // FIXME: This needs to be handled better
-    ALC_CHACHA20,
+    // non-aes aead ciphers
     ALC_CHACHA20_POLY1305,
 
     ALC_AES_MODE_MAX,

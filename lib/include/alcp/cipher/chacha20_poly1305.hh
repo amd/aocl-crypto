@@ -29,9 +29,10 @@
 #pragma once
 
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/cipher_common.hh"
 #include "alcp/mac/poly1305.hh"
 
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 
 // These will be used to store the length of the ciphertext
 union len_input_processed
@@ -48,58 +49,56 @@ union len_aad_processed
 
 using utils::CpuArchFeature;
 
-#define CHACHA20POLY1305_CLASS_GEN(ns)                                         \
-    class ALCP_API_EXPORT ChaCha20Poly1305                                     \
-        : public ns::ChaCha256                                                 \
-        , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>       \
-    {                                                                          \
-      private:                                                                 \
-        Uint8               m_poly1305_key[32]{};                              \
-        const Uint8         m_zero_padding[16]{};                              \
-        len_input_processed m_len_input_processed{};                           \
-        len_aad_processed   m_len_aad_processed{};                             \
-                                                                               \
-      public:                                                                  \
-        ChaCha20Poly1305(alc_cipher_data_t* cipher_data){};                    \
-        virtual ~ChaCha20Poly1305() = default;                                 \
-        alc_error_t init(alc_cipher_data_t* cipher_data,                       \
-                         const Uint8*       pKey,                              \
-                         Uint64             keyLen,                            \
-                         const Uint8*       pIv,                               \
-                         Uint64             ivLen);                                        \
-        alc_error_t setAad(alc_cipher_data_t* cipher_data,                     \
-                           const Uint8*       pInput,                          \
-                           Uint64             aadLen);                                     \
-                                                                               \
-        template<bool is_encrypt>                                              \
-        alc_error_t processInput(const Uint8 inputBuffer[],                    \
-                                 Uint64      bufferLength,                     \
-                                 Uint8       outputBuffer[]);                        \
-        alc_error_t setTagLength(alc_cipher_data_t* cipher_data,               \
-                                 Uint64             tagLength);                            \
-        alc_error_t getTag(alc_cipher_data_t* cipher_data,                     \
-                           Uint8*             pOutput,                         \
-                           Uint64             len);                                        \
-        alc_error_t setIv(const Uint8* iv, Uint64 ivLen);                      \
-        alc_error_t setKey(const Uint8 key[], Uint64 keylen);                  \
-    } // namespace alcp::cipher::chacha20
-
 namespace vaes512 {
-#if 0 // To be enabled after refactoring poly1305
-    AEAD_AUTH_CLASS_GEN(
-        ChaCha20Poly1305Hash,
-        ChaCha20Poly1305<ChaCha256, CpuCipherFeatures::eVaes512>);
-#endif
-    CHACHA20POLY1305_CLASS_GEN(vaes512);
-    CIPHER_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305);
+
+    class ALCP_API_EXPORT ChaChaPlusPoly
+        : public ChaCha256
+        , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
+    {
+      protected:
+        Uint8               m_poly1305_key[32]{};
+        const Uint8         m_zero_padding[16]{};
+        len_input_processed m_len_input_processed{};
+        len_aad_processed   m_len_aad_processed{};
+
+      public:
+        ChaChaPlusPoly(Uint32 keyLen_in_bytes){};
+        virtual ~ChaChaPlusPoly() = default;
+
+        alc_error_t setIv(const Uint8* iv, Uint64 ivLen);
+        alc_error_t setKey(const Uint8* key, Uint64 keylen);
+    };
+
+    class ALCP_API_EXPORT ChaChaPoly : public ChaChaPlusPoly
+    {
+
+      public:
+        ChaChaPoly(Uint32 keyLen_in_bytes)
+            : ChaChaPlusPoly(keyLen_in_bytes){}; /* fixed keyLen*/
+        virtual ~ChaChaPoly() = default;
+        alc_error_t init(alc_cipher_data_t* cipher_data,
+                         const Uint8*       pKey,
+                         Uint64             keyLen,
+                         const Uint8*       pIv,
+                         Uint64             ivLen);
+    };
+
+    AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual CipherAuth);
+
+    CIPHER_CLASS_GEN_(ChaChaPoly256,
+                      ChaChaPolyAuth,
+                      virtual CipherAEADInterface,
+                      256 / 8);
+
 } // namespace vaes512
 
+#if 0
+
 namespace ref {
-    // AEAD_AUTH_CLASS_GEN(
-    //     ChaCha20Poly1305Hash,
-    //     ChaCha20Poly1305<CpuCipherFeatures::eReference, ChaCha256>);
-    CHACHA20POLY1305_CLASS_GEN(ref);
-    CIPHER_CLASS_GEN(ChaCha20Poly1305AEAD, ChaCha20Poly1305);
+
+
 } // namespace ref
 
-} // namespace alcp::cipher::chacha20
+#endif
+
+} // namespace alcp::cipher

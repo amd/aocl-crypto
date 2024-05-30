@@ -30,15 +30,10 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher.h"
-#include "alcp/cipher.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
-#include "alcp/cipher/rijndael.hh"
-#include "alcp/utils/bits.hh"
-#include "alcp/utils/cpuid.hh"
 
-#include <immintrin.h>
-#include <wmmintrin.h>
+#include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
 
@@ -47,34 +42,40 @@ namespace alcp::cipher {
 /*
  * @brief        AES Encryption in CBC(Cipher block chaining)
  */
-class ALCP_API_EXPORT Cbc : public Aes
+class ALCP_API_EXPORT Cbc
+    : public Aes
+    , public virtual CipherInterface
 {
   public:
-    Cbc(alc_cipher_data_t* ctx)
-        : Aes(ctx)
+    Cbc(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
         setMode(ALC_AES_MODE_CBC);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
     ~Cbc() {}
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override
+    {
+        return Aes::init(pKey, keyLen, pIv, ivLen);
+    }
 };
 
-namespace vaes512 {
-    CIPHER_CLASS_GEN(Cbc128, Cbc)
-    CIPHER_CLASS_GEN(Cbc192, Cbc)
-    CIPHER_CLASS_GEN(Cbc256, Cbc)
-} // namespace vaes512
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Cbc128, Cbc, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc192, Cbc, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc256, Cbc, virtual CipherInterface, 256 / 8)
 
-namespace vaes {
-    CIPHER_CLASS_GEN(Cbc128, Cbc)
-    CIPHER_CLASS_GEN(Cbc192, Cbc)
-    CIPHER_CLASS_GEN(Cbc256, Cbc)
-} // namespace vaes
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Cbc128, Cbc, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc192, Cbc, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc256, Cbc, virtual CipherInterface, 256 / 8)
 
-namespace aesni {
-    CIPHER_CLASS_GEN(Cbc128, Cbc)
-    CIPHER_CLASS_GEN(Cbc192, Cbc)
-    CIPHER_CLASS_GEN(Cbc256, Cbc)
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Cbc128, Cbc, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc192, Cbc, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc256, Cbc, virtual CipherInterface, 256 / 8)
 } // namespace alcp::cipher

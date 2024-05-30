@@ -30,7 +30,7 @@
 #include "alcp/cipher/chacha20_zen4.hh"
 #include "chacha20_inplace.cc.inc"
 
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 
 #define CHACHA_CRYPT_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)         \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
@@ -62,7 +62,7 @@ ChaCha20::init(const Uint8* pKey,
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(pKey, keyLen);
+        err = setKey(pKey, keyLen / 8);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
@@ -119,4 +119,4 @@ namespace ref {
     CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, ProcessInput);
 } // namespace ref
 
-} // namespace alcp::cipher::chacha20
+} // namespace alcp::cipher

@@ -46,7 +46,9 @@ namespace alcp::cipher {
  * @brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
  * Stealing Mode)
  */
-class ALCP_API_EXPORT Xts : public Aes
+class ALCP_API_EXPORT Xts
+    : public Aes
+    , public virtual CipherInterface
 {
   public:
     Uint8* m_pIv_xts;
@@ -56,10 +58,14 @@ class ALCP_API_EXPORT Xts : public Aes
 
     _alc_cipher_xts_data_t m_xts;
 
-    Xts(alc_cipher_data_t* ctx)
-        : Aes(ctx)
+    Xts(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
-        m_pIv_xts     = m_xts.m_iv_xts; // ctx->m_xts.m_iv_xts;
+        setMode(ALC_AES_MODE_CTR);
+        m_ivLen_max = 16;
+        m_ivLen_min = 16;
+
+        m_pIv_xts     = m_xts.m_iv_xts;
         m_iv_xts_size = sizeof(m_xts.m_iv_xts);
 
         m_ptweak_round_key     = m_xts.m_tweak_round_key;
@@ -71,22 +77,20 @@ class ALCP_API_EXPORT Xts : public Aes
         memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
     };
     ~Xts()
-    {
-        // clear keys
+    { // clear keys
         memset(m_pIv_xts, 0, m_iv_xts_size);
         memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
-    };
+    }
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override;
 
-    // functions unique to Xts class
-    void expandTweakKeys(const Uint8* pUserKey, int len);
     void tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId);
 
-    // overriden functions
-    alc_error_t init(const Uint8* pKey,
-                     const Uint64 keyLen,
-                     const Uint8* pIv,
-                     const Uint64 ivLen);
-
+  private:
+    // functions unique to Xts class
+    void        expandTweakKeys(const Uint8* pUserKey, int len);
     alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
 };
 
@@ -128,19 +132,16 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
                                 Uint64             startBlockNum);                         \
     };
 
-namespace vaes512 {
-    AES_XTS_CLASS_GEN(Xts128, Xts)
-    AES_XTS_CLASS_GEN(Xts256, Xts)
-} // namespace vaes512
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Xts128, Xts, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Xts256, Xts, virtual CipherInterface, 256 / 8)
 
-namespace vaes {
-    AES_XTS_CLASS_GEN(Xts128, Xts)
-    AES_XTS_CLASS_GEN(Xts256, Xts)
-} // namespace vaes
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Xts128, Xts, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Xts256, Xts, virtual CipherInterface, 256 / 8)
 
-namespace aesni {
-    AES_XTS_CLASS_GEN(Xts128, Xts)
-    AES_XTS_CLASS_GEN(Xts256, Xts)
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Xts128, Xts, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Xts256, Xts, virtual CipherInterface, 256 / 8)
 
 } // namespace alcp::cipher

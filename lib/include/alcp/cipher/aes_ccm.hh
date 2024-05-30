@@ -28,14 +28,14 @@
 #pragma once
 
 #include "aes.hh"
-#include "alcp/base.hh"
+
 #include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_common.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
+
 #include <cstdint>
 #include <immintrin.h>
-
-#include "alcp/cipher/cipher_common.hh"
 
 namespace alcp::cipher {
 
@@ -80,7 +80,9 @@ namespace aesni::ccm {
                       Uint64      len);
 } // namespace aesni::ccm
 
-class ALCP_API_EXPORT Ccm : public Aes
+class ALCP_API_EXPORT Ccm
+    : public Aes
+    , public virtual CipherInterface
 {
     // Needs to be protected as class CcmHash should use it
   protected:
@@ -99,7 +101,9 @@ class ALCP_API_EXPORT Ccm : public Aes
                  Uint64      dataLen);
 
   public:
-    explicit Ccm(alc_cipher_data_t* ctx);
+    Ccm(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
+    {}
 
     Ccm()  = default;
     ~Ccm() = default;
@@ -107,7 +111,7 @@ class ALCP_API_EXPORT Ccm : public Aes
     alc_error_t init(const Uint8* pKey,
                      Uint64       keyLen,
                      const Uint8* pIv,
-                     Uint64       ivLen);
+                     Uint64       ivLen) override;
 
     Status cryptUpdate(const Uint8 pInput[],
                        Uint8       pOutput[],
@@ -115,38 +119,48 @@ class ALCP_API_EXPORT Ccm : public Aes
                        bool        isEncrypt);
 };
 
-// AEAD_AUTH_CLASS_GEN(CcmHash, Ccm);
-class CcmHash : public Ccm
+// AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual CipherAuth);
+class CcmHash
+    : public Ccm
+    , public virtual CipherAuth
 {
   public:
-    CcmHash(alc_cipher_data_t* ctx)
-        : Ccm(ctx)
+    CcmHash(Uint32 keyLen_in_bytes)
+        : Ccm(keyLen_in_bytes)
     {}
     ~CcmHash() {}
-    alc_error_t getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen);
+
     alc_error_t setAad(alc_cipher_data_t* ctx,
                        const Uint8*       pInput,
-                       Uint64             aadLen);
-    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
+                       Uint64             aadLen) override;
+    alc_error_t getTag(alc_cipher_data_t* ctx,
+                       Uint8*             pOutput,
+                       Uint64             tagLen) override;
+    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength) override;
+
     alc_error_t setPlainTextLength(alc_cipher_data_t* ctx,
                                    Uint64 len); // used in multiupdate case only
 };
-namespace vaes512 {
-    CIPHER_CLASS_GEN(CcmAead128, CcmHash);
-    CIPHER_CLASS_GEN(CcmAead192, CcmHash);
-    CIPHER_CLASS_GEN(CcmAead256, CcmHash);
-} // namespace vaes512
 
-namespace vaes {
-    CIPHER_CLASS_GEN(CcmAead128, CcmHash);
-    CIPHER_CLASS_GEN(CcmAead192, CcmHash);
-    CIPHER_CLASS_GEN(CcmAead256, CcmHash);
-} // namespace vaes
+// vaes512 classes
+CIPHER_CLASS_GEN_N(
+    vaes512, Ccm128, CcmHash, virtual CipherAEADInterface, 128 / 8);
+CIPHER_CLASS_GEN_N(
+    vaes512, Ccm192, CcmHash, virtual CipherAEADInterface, 192 / 8);
+CIPHER_CLASS_GEN_N(
+    vaes512, Ccm256, CcmHash, virtual CipherAEADInterface, 256 / 8);
 
-namespace aesni {
-    CIPHER_CLASS_GEN(CcmAead128, CcmHash);
-    CIPHER_CLASS_GEN(CcmAead192, CcmHash);
-    CIPHER_CLASS_GEN(CcmAead256, CcmHash);
-} // namespace aesni
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Ccm128, CcmHash, virtual CipherAEADInterface, 128 / 8);
+CIPHER_CLASS_GEN_N(vaes, Ccm192, CcmHash, virtual CipherAEADInterface, 192 / 8);
+CIPHER_CLASS_GEN_N(vaes, Ccm256, CcmHash, virtual CipherAEADInterface, 256 / 8);
+
+// aesni classes
+CIPHER_CLASS_GEN_N(
+    aesni, Ccm128, CcmHash, virtual CipherAEADInterface, 128 / 8);
+CIPHER_CLASS_GEN_N(
+    aesni, Ccm192, CcmHash, virtual CipherAEADInterface, 192 / 8);
+CIPHER_CLASS_GEN_N(
+    aesni, Ccm256, CcmHash, virtual CipherAEADInterface, 256 / 8);
 
 } // namespace alcp::cipher

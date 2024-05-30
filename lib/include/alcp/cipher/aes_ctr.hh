@@ -25,15 +25,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #pragma once
 
-#include "alcp/error.h"
+#include <cstdint>
 
 #include "alcp/cipher/aes.hh"
-
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "alcp/error.h"
 
-#include <cstdint>
 #include <immintrin.h>
 namespace alcp::cipher {
 
@@ -41,38 +41,42 @@ namespace alcp::cipher {
  * @brief        AES Encryption in Ctr(Counter mode)
  * @note        TODO: Move this to a aes_Ctr.hh or other
  */
-class ALCP_API_EXPORT Ctr : public Aes
+class ALCP_API_EXPORT Ctr
+    : public Aes
+    , public virtual CipherInterface
 {
   public:
-    Ctr(alc_cipher_data_t* ctx)
-        : Aes(ctx)
+    Ctr(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
         setMode(ALC_AES_MODE_CTR);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
     ~Ctr() {}
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override
+    {
+        return Aes::init(pKey, keyLen, pIv, ivLen);
+    }
 };
 
-namespace vaes512 {
-    CIPHER_CLASS_GEN(Ctr128, Ctr)
-    CIPHER_CLASS_GEN(Ctr192, Ctr)
-    CIPHER_CLASS_GEN(Ctr256, Ctr)
-} // namespace vaes512
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Ctr128, Ctr, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Ctr192, Ctr, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Ctr256, Ctr, virtual CipherInterface, 256 / 8)
 
-// duplicate of vaes512 namespace, to be removed
-namespace vaes {
-    CIPHER_CLASS_GEN(Ctr128, Ctr)
-    CIPHER_CLASS_GEN(Ctr192, Ctr)
-    CIPHER_CLASS_GEN(Ctr256, Ctr)
-} // namespace vaes
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Ctr128, Ctr, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Ctr192, Ctr, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Ctr256, Ctr, virtual CipherInterface, 256 / 8)
 
-// duplicate of vaes512 namespace, to be removed
-namespace aesni {
-    CIPHER_CLASS_GEN(Ctr128, Ctr)
-    CIPHER_CLASS_GEN(Ctr192, Ctr)
-    CIPHER_CLASS_GEN(Ctr256, Ctr)
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Ctr128, Ctr, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ctr192, Ctr, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ctr256, Ctr, virtual CipherInterface, 256 / 8)
 
 namespace aes {
 

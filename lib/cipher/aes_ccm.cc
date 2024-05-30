@@ -37,13 +37,12 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
-// Macros
-// FIXME: Better to use template instead of this.
-#define CRYPT_AEAD_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, IS_ENC)   \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
-                                         const Uint8*       pInput,            \
-                                         Uint8*             pOutput,           \
-                                         Uint64             len)               \
+#define CRYPT_AEAD_WRAPPER_FUNC_N(                                             \
+    NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, IS_ENC)                    \
+    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(alc_cipher_data_t* ctx, \
+                                                       const Uint8* pInput,    \
+                                                       Uint8*       pOutput,   \
+                                                       Uint64       len)       \
     {                                                                          \
         Status s    = StatusOk();                                              \
         m_isEnc_aes = IS_ENC;                                                  \
@@ -64,10 +63,6 @@ ctrInc(Uint8 ctr[])
         ind--;
     }
 }
-
-Ccm::Ccm(alc_cipher_data_t* ctx)
-    : Aes(ctx)
-{}
 
 alc_error_t
 Ccm::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
@@ -129,7 +124,7 @@ copyTag(ccm_data_t* ctx, Uint8 ptag[], Uint64 tagLen)
     // Retrieve the tag length
     Status s = StatusOk();
 
-    if (ctx == nullptr || ptag == nullptr) {
+    if (ptag == nullptr) {
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
@@ -277,10 +272,6 @@ alc_error_t
 CcmHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
 {
     Status s = StatusOk();
-    if (ctx == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s.code();
-    }
     if (tagLen < 4 || tagLen > 16) {
         s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
         return s.code();
@@ -314,10 +305,6 @@ CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
 {
 #ifdef CCM_MULTI_UPDATE
     Status s = StatusOk();
-    if (ctx == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s.code();
-    }
     // Check if total updated data so far has exceeded the preestablished
     // plaintext Length. This check is here rather than in encrypt/decrypt
     // to allow multiupdate calls in benchmarking.
@@ -340,10 +327,6 @@ CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
     return s.code();
 #else
     Status s = StatusOk();
-    if (ctx == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s.code();
-    }
     if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
         s = status::InvalidValue(
             "Tag length is not what we agreed upon during start!");
@@ -361,37 +344,15 @@ CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
 }
 
 // Aead class definitions
-namespace vaes512 {
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decrypt, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decrypt, cryptUpdate, ALCP_DEC)
+// aesni member functions
+CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm128, encrypt, cryptUpdate, ALCP_ENC)
+CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm128, decrypt, cryptUpdate, ALCP_DEC)
 
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decrypt, cryptUpdate, ALCP_DEC)
-} // namespace vaes512
+CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm192, encrypt, cryptUpdate, ALCP_ENC)
+CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm192, decrypt, cryptUpdate, ALCP_DEC)
 
-namespace vaes {
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decrypt, cryptUpdate, ALCP_DEC)
-
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decrypt, cryptUpdate, ALCP_DEC)
-
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decrypt, cryptUpdate, ALCP_DEC)
-} // namespace vaes
-
-namespace aesni {
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead128, decrypt, cryptUpdate, ALCP_DEC)
-
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead192, decrypt, cryptUpdate, ALCP_DEC)
-
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, encrypt, cryptUpdate, ALCP_ENC)
-    CRYPT_AEAD_WRAPPER_FUNC(CcmAead256, decrypt, cryptUpdate, ALCP_DEC)
-} // namespace aesni
+CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm256, encrypt, cryptUpdate, ALCP_ENC)
+CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm256, decrypt, cryptUpdate, ALCP_DEC)
 
 } // namespace alcp::cipher

@@ -52,13 +52,15 @@ using utils::CpuId;
 
 //#define MAX_ADD_SIZE_SIV (126 * 16) // 126*16
 
-class ALCP_API_EXPORT Siv : public Aes
+class ALCP_API_EXPORT Siv
+    : public Aes
+    , public virtual CipherInterface
 {
   public:
     alc_error_t init(const Uint8* pKey,
                      Uint64       keyLen,
                      const Uint8* pIv,
-                     Uint64       ivLen);
+                     Uint64       ivLen) override;
 
   protected:
     // FIXME: simplify the vector code, unnecessary complication! Just allocate
@@ -89,28 +91,54 @@ class ALCP_API_EXPORT Siv : public Aes
     Status      s2v(const Uint8 plainText[], Uint64 size);
 
     Siv() = default;
-    Siv(alc_cipher_data_t* ctx);
+    Siv(Uint32 keyLen_in_bytes) {}
 };
 
-AEAD_AUTH_CLASS_GEN(SivHash, Siv);
+// AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual CipherAuth);
+
+// GCM authentication class
+class SivHash
+    : public Siv
+    , public virtual CipherAuth
+{
+  public:
+    SivHash(Uint32 keyLen_in_bytes)
+        : Siv(keyLen_in_bytes)
+    {}
+    ~SivHash() {}
+
+    alc_error_t setAad(alc_cipher_data_t* ctx,
+                       const Uint8*       pInput,
+                       Uint64             aadLen) override;
+    alc_error_t getTag(alc_cipher_data_t* ctx,
+                       Uint8*             pTag,
+                       Uint64             tagLen) override;
+    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen) override;
+};
 
 // Declare AEAD Classes
-namespace aesni {
-    CIPHER_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
-    CIPHER_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
-    CIPHER_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
-} // namespace aesni
+// vaes512 classes
+CIPHER_CLASS_GEN_DOUBLE(
+    vaes512, Siv128, Ctr128, SivHash, virtual CipherAEADInterface, 128 / 8);
+CIPHER_CLASS_GEN_DOUBLE(
+    vaes512, Siv192, Ctr192, SivHash, virtual CipherAEADInterface, 192 / 8);
+CIPHER_CLASS_GEN_DOUBLE(
+    vaes512, Siv256, Ctr256, SivHash, virtual CipherAEADInterface, 256 / 8);
 
-namespace vaes {
-    CIPHER_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
-    CIPHER_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
-    CIPHER_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
-} // namespace vaes
+// vaes classes
+CIPHER_CLASS_GEN_DOUBLE(
+    vaes, Siv128, Ctr128, SivHash, virtual CipherAEADInterface, 128 / 8);
+CIPHER_CLASS_GEN_DOUBLE(
+    vaes, Siv192, Ctr192, SivHash, virtual CipherAEADInterface, 192 / 8);
+CIPHER_CLASS_GEN_DOUBLE(
+    vaes, Siv256, Ctr256, SivHash, virtual CipherAEADInterface, 256 / 8);
 
-namespace vaes512 {
-    CIPHER_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
-    CIPHER_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
-    CIPHER_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
-} // namespace vaes512
+// aesni classes
+CIPHER_CLASS_GEN_DOUBLE(
+    aesni, Siv128, Ctr128, SivHash, virtual CipherAEADInterface, 128 / 8);
+CIPHER_CLASS_GEN_DOUBLE(
+    aesni, Siv192, Ctr192, SivHash, virtual CipherAEADInterface, 192 / 8);
+CIPHER_CLASS_GEN_DOUBLE(
+    aesni, Siv256, Ctr256, SivHash, virtual CipherAEADInterface, 256 / 8);
 
 } // namespace alcp::cipher

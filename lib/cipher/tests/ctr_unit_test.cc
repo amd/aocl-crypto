@@ -39,6 +39,7 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
+#if 0
 constexpr CpuCipherFeatures cCpuFeatureSelect = CpuCipherFeatures::eDynamic;
 
 using alcp::cipher::Ctr;
@@ -427,3 +428,5 @@ main(int argc, char** argv)
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+#endif

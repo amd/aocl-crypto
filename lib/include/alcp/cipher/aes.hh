@@ -32,7 +32,6 @@
 #include "alcp/cipher.h"
 
 #include "alcp/base.hh"
-#include "alcp/cipher.hh"
 #include "alcp/cipher/rijndael.hh"
 #include "alcp/utils/bits.hh"
 
@@ -97,8 +96,7 @@ class Aes : public Rijndael
     // this constructor to be removed.
     Aes()
         : Rijndael()
-    {
-    }
+    {}
 
   protected:
     virtual ~Aes() {}

@@ -34,7 +34,7 @@
 
 #include "alcp/cipher/cipher_common.hh"
 
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 using utils::CpuCipherFeatures;
 using utils::CpuId;
 
@@ -64,17 +64,14 @@ static constexpr Uint32 Chacha20Constants[4] = {
                             Uint64             pInputLen);                                 \
     };
 
-class ALCP_API_EXPORT ChaCha20
+class ALCP_API_EXPORT ChaCha20 : public virtual CipherInterface
 {
     // ChaCha256 should be able to access this
   protected:
-    // Key Length of Chacha20 is fixed as 256 bits
-    static constexpr Uint64 cMKeylen = 256 / 8;
-    // array to store the key
-    alignas(16) Uint8 m_key[cMKeylen];
-
+    static constexpr Uint64 cMKeylen    = 256 / 8;
     static constexpr Uint64 cMIvlen     = (128 / 8);
     static constexpr int    cMBlockSize = CHACHA20_BLOCK_SIZE;
+    alignas(16) Uint8 m_key[cMKeylen];
 
   protected:
     alignas(16) Uint8 m_iv[cMIvlen];
@@ -82,57 +79,28 @@ class ALCP_API_EXPORT ChaCha20
     // FIXME: Needs to be private or protected after chacha20-poly1305
     // integration
   public:
-    /**
-     * @brief Method to set the Chacha20 Key.
-     * @param [in] key Chacha20 key for encryption/decryption
-     * @param [in] keylen keylength of the Chacha20 Key in bytes . It must be 16
-     * bytes.
-     * @return Error code
-     */
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
-
-    /**
-     * @brief Method to set the Chacha20 Iv.
-     * @param [in] iv Chacha20 iv for encryption/decryption
-     * @param [in] ivlen Length of the Chacha20 iv provided in bytes. Iv length
-     * must be 16 bytes.
-     * @return Error code
-     */
     alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);
 
   private:
-    /**
-     * @brief Validates Chacha20 Key and returns an error code for invalid Key.
-     * @param [in] key Chacha20 key for encryption/decryption
-     * @param [in] keylen keylength of the Chacha20 Key in bytes . It must be 16
-     * bytes.
-     * @return Error code
-     */
     static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
-
-    /**
-     * @brief Validates Chacha20 Iv and returns an error code for invalid Iv.
-     * @param [in] iv Chacha20 iv for encryption/decryption
-     * @param [in] ivlen ivlength of the Chacha20 Iv in bytes . It must be 16
-     * bytes.
-     * @return Error code
-     */
     static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
 
   public:
-    // ChaCha20(alc_cipher_data_t* ctx){};
+    ChaCha20(Uint32 keyLen_in_bytes){};
     alc_error_t init(const Uint8* pKey,
                      const Uint64 keyLen,
                      const Uint8* pIv,
-                     const Uint64 ivLen);
+                     const Uint64 ivLen) override;
 };
 
 namespace vaes512 {
-    CHACHA_CLASS_GEN(ChaCha256, ChaCha20);
+    CIPHER_CLASS_GEN_(ChaCha256, ChaCha20, virtual CipherInterface, 256 / 8)
+
 } // namespace vaes512
 
 namespace ref {
-    CHACHA_CLASS_GEN(ChaCha256, ChaCha20);
+    CIPHER_CLASS_GEN_(ChaCha256, ChaCha20, virtual CipherInterface, 256 / 8)
 } // namespace ref
 
-} // namespace alcp::cipher::chacha20
+} // namespace alcp::cipher

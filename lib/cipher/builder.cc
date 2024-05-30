@@ -27,12 +27,348 @@
  */
 
 #include "alcp/capi/cipher/builder.hh"
+
 #include "alcp/cipher/aes.hh"
+
+#include "alcp/cipher/aes_cbc.hh"
+#include "alcp/cipher/aes_cfb.hh"
+#include "alcp/cipher/aes_cmac_siv.hh"
+#include "alcp/cipher/aes_ctr.hh"
+#include "alcp/cipher/aes_gcm.hh"
+#include "alcp/cipher/aes_ofb.hh"
+#include "alcp/cipher/aes_xts.hh"
+#include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/chacha20_poly1305.hh"
 
 using alcp::utils::CpuId;
 namespace alcp::cipher {
+
+using alcp::utils::CpuCipherFeatures;
+
+template<typename INTERFACE, class CLASS_128, class CLASS_192, class CLASS_256>
+INTERFACE*
+pickKeyLen(CipherKeyLen keyLen)
+{
+    switch (keyLen) {
+        case KEY_128_BIT:
+            return new CLASS_128();
+        case KEY_192_BIT:
+            return new CLASS_192();
+        case KEY_256_BIT:
+            return new CLASS_256();
+        default:
+            printf("\n Error: key length not supported ");
+            return nullptr;
+    }
+}
+
+template<typename INTERFACE, class CLASS_128, class CLASS_256>
+INTERFACE*
+pickKeyLen(CipherKeyLen keyLen)
+{
+    switch (keyLen) {
+        case KEY_128_BIT:
+            return new CLASS_128();
+        case KEY_256_BIT:
+            return new CLASS_256();
+        default:
+            printf("\n Error: key length not supported ");
+            return nullptr;
+    }
+}
+
+template<typename INTERFACE,
+         class CLASS_128_VAES512,
+         class CLASS_192_VAES512,
+         class CLASS_256_VAES512,
+         class CLASS_128_VAES,
+         class CLASS_192_VAES,
+         class CLASS_256_VAES,
+         class CLASS_128_AESNI,
+         class CLASS_192_AESNI,
+         class CLASS_256_AESNI>
+INTERFACE*
+getMode(CipherKeyLen keyLen, CpuCipherFeatures arch)
+{
+    switch (arch) {
+        case CpuCipherFeatures::eVaes512:
+            return pickKeyLen<INTERFACE,
+                              CLASS_128_VAES512,
+                              CLASS_192_VAES512,
+                              CLASS_256_VAES512>(keyLen);
+        case CpuCipherFeatures::eVaes256:
+            return pickKeyLen<INTERFACE,
+                              CLASS_128_VAES,
+                              CLASS_192_VAES,
+                              CLASS_256_VAES>(keyLen);
+        case CpuCipherFeatures::eAesni:
+            return pickKeyLen<INTERFACE,
+                              CLASS_128_AESNI,
+                              CLASS_192_AESNI,
+                              CLASS_256_AESNI>(keyLen);
+        case CpuCipherFeatures::eReference:
+            printf("\n Error: Reference kernel not supported ");
+            return nullptr;
+        default:
+            return nullptr;
+    }
+}
+
+template<typename INTERFACE,
+         class CLASS_128_VAES512,
+         class CLASS_256_VAES512,
+         class CLASS_128_VAES,
+         class CLASS_256_VAES,
+         class CLASS_128_AESNI,
+         class CLASS_256_AESNI>
+INTERFACE*
+getMode(CipherKeyLen keyLen, CpuCipherFeatures arch)
+{
+    switch (arch) {
+        case CpuCipherFeatures::eVaes512:
+            return pickKeyLen<INTERFACE, CLASS_128_VAES512, CLASS_256_VAES512>(
+                keyLen);
+        case CpuCipherFeatures::eVaes256:
+            return pickKeyLen<INTERFACE, CLASS_128_VAES, CLASS_256_VAES>(
+                keyLen);
+        case CpuCipherFeatures::eAesni:
+            return pickKeyLen<INTERFACE, CLASS_128_AESNI, CLASS_256_AESNI>(
+                keyLen);
+        case CpuCipherFeatures::eReference:
+            printf("\n Error: Reference kernel not supported ");
+            return nullptr;
+        default:
+            return nullptr;
+    }
+}
+
+template<>
+void
+CipherFactory<CipherInterface>::getCipher()
+{
+    // Non-AEAD ciphers
+    switch (m_mode) {
+        case ALC_AES_MODE_CBC:
+            m_iCipher = getMode<CipherInterface,
+                                Cbc128_vaes512,
+                                Cbc192_vaes512,
+                                Cbc256_vaes512,
+                                Cbc128_vaes,
+                                Cbc192_vaes,
+                                Cbc256_vaes,
+                                Cbc128_aesni,
+                                Cbc192_aesni,
+                                Cbc256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_AES_MODE_OFB:
+            m_iCipher = getMode<CipherInterface,
+                                Ofb128_aesni,
+                                Ofb192_aesni,
+                                Ofb256_aesni,
+                                Ofb128_aesni,
+                                Ofb192_aesni,
+                                Ofb256_aesni,
+                                Ofb128_aesni,
+                                Ofb192_aesni,
+                                Ofb256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_AES_MODE_CTR:
+            m_iCipher = getMode<CipherInterface,
+                                Ctr128_vaes512,
+                                Ctr192_vaes512,
+                                Ctr256_vaes512,
+                                Ctr128_vaes,
+                                Ctr192_vaes,
+                                Ctr256_vaes,
+                                Ctr128_aesni,
+                                Ctr192_aesni,
+                                Ctr256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_AES_MODE_CFB:
+            m_iCipher = getMode<CipherInterface,
+                                Cfb128_vaes512,
+                                Cfb192_vaes512,
+                                Cfb256_vaes512,
+                                Cfb128_vaes,
+                                Cfb192_vaes,
+                                Cfb256_vaes,
+                                Cfb128_aesni,
+                                Cfb192_aesni,
+                                Cfb256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_AES_MODE_XTS:
+            m_iCipher = getMode<CipherInterface,
+                                Xts128_vaes512,
+                                Xts256_vaes512,
+                                Xts128_vaes,
+                                Xts256_vaes,
+                                Xts128_aesni,
+                                Xts256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_CHACHA20:
+            if (m_arch == CpuCipherFeatures::eVaes512) {
+                using namespace vaes512;
+                m_iCipher = new ChaCha256();
+            } else {
+                m_iCipher = nullptr;
+                printf("\n Error: only avx512 kernels are supported ");
+            }
+            break;
+        default:
+            m_iCipher = nullptr;
+            break;
+    }
+}
+
+template<>
+void
+CipherFactory<CipherAEADInterface>::getCipher()
+{
+    // AEAD ciphers
+    switch (m_mode) {
+        case ALC_AES_MODE_GCM:
+            m_iCipher = getMode<CipherAEADInterface,
+                                Gcm128_vaes512,
+                                Gcm192_vaes512,
+                                Gcm256_vaes512,
+                                Gcm128_vaes,
+                                Gcm192_vaes,
+                                Gcm256_vaes,
+                                Gcm128_aesni,
+                                Gcm192_aesni,
+                                Gcm256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_AES_MODE_CCM:
+            m_iCipher = getMode<CipherAEADInterface,
+                                Ccm128_aesni,
+                                Ccm192_aesni,
+                                Ccm256_aesni,
+                                Ccm128_aesni,
+                                Ccm192_aesni,
+                                Ccm256_aesni,
+                                Ccm128_aesni,
+                                Ccm192_aesni,
+                                Ccm256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_AES_MODE_SIV:
+            m_iCipher = getMode<CipherAEADInterface,
+                                Siv128_vaes512,
+                                Siv192_vaes512,
+                                Siv256_vaes512,
+                                Siv128_vaes,
+                                Siv192_vaes,
+                                Siv256_vaes,
+                                Siv128_aesni,
+                                Siv192_aesni,
+                                Siv256_aesni>(m_keyLen, m_arch);
+            break;
+        case ALC_CHACHA20_POLY1305:
+            if (m_arch == CpuCipherFeatures::eVaes512) {
+                using namespace vaes512;
+                m_iCipher = new ChaChaPoly256();
+            } else {
+                m_iCipher = nullptr;
+                printf("\n Error: only avx512 kernels are supported ");
+            }
+            break;
+        default:
+            m_iCipher = nullptr;
+            break;
+    }
+}
+
+template<>
+CipherAEADInterface*
+CipherFactory<CipherAEADInterface>::create(const string& name)
+{
+    cipherAlgoMap::iterator it = m_cipherAeadMap.find(name);
+    if (it == m_cipherAeadMap.end()) {
+        std::cout << "\n error " << name << " cipher AEAD mode not supported "
+                  << std::endl;
+        return nullptr;
+    }
+    cipherKeyLenTuple t = it->second;
+    return create(std::get<0>(t), std::get<1>(t));
+}
+
+template<>
+CipherInterface*
+CipherFactory<CipherInterface>::create(const string& name)
+{
+    cipherAlgoMap::iterator it = m_cipherMap.find(name);
+    if (it == m_cipherMap.end()) {
+        std::cout << "\n error " << name << " cipher mode not supported "
+                  << std::endl;
+        return nullptr;
+    }
+    cipherKeyLenTuple t = it->second;
+    return create(std::get<0>(t), std::get<1>(t));
+}
+
+template<>
+CipherAEADInterface*
+CipherFactory<CipherAEADInterface>::create(const string&     name,
+                                           CpuCipherFeatures arch)
+{
+    cipherAlgoMap::iterator it = m_cipherAeadMap.find(name);
+    cipherKeyLenTuple       t  = it->second;
+    if (it == m_cipherAeadMap.end()) {
+        std::cout << "\n error " << name << " cipher AEAD mode not supported "
+                  << std::endl;
+        return nullptr;
+    }
+    return create(std::get<0>(t), std::get<1>(t), arch);
+}
+
+template<>
+CipherInterface*
+CipherFactory<CipherInterface>::create(const string&     name,
+                                       CpuCipherFeatures arch)
+{
+    cipherAlgoMap::iterator it = m_cipherMap.find(name);
+    cipherKeyLenTuple       t  = it->second;
+    if (it == m_cipherMap.end()) {
+        std::cout << "\n error " << name << " cipher AEAD mode not supported "
+                  << std::endl;
+        return nullptr;
+    }
+    return create(std::get<0>(t), std::get<1>(t), arch);
+}
+
+template<class INTERFACE>
+INTERFACE*
+CipherFactory<INTERFACE>::create(alc_cipher_mode_t mode, CipherKeyLen keyLen)
+{
+    m_mode   = mode;
+    m_keyLen = keyLen;
+    m_arch   = m_currentArch;
+    getCipher();
+    return m_iCipher;
+};
+
+template<class INTERFACE>
+INTERFACE*
+CipherFactory<INTERFACE>::create(alc_cipher_mode_t mode,
+                                 CipherKeyLen      keyLen,
+                                 CpuCipherFeatures arch)
+{
+    m_mode   = mode;
+    m_keyLen = keyLen;
+    // limit based on arch available in the cpu.
+    if (arch > m_currentArch) {
+        std::cout << "\n warning! requested ISA is not supported by platform, "
+                     "lowering to ISA supported "
+                  << std::endl;
+        arch = m_currentArch;
+    }
+    m_arch = arch;
+    getCipher();
+    return m_iCipher;
+}
+
+template<class INTERFACE>
 CpuCipherFeatures
-getCpuCipherfeature()
+CipherFactory<INTERFACE>::getCpuCipher()
 {
     CpuCipherFeatures cpu_feature =
         CpuCipherFeatures::eReference; // If no arch features present,means
@@ -54,4 +390,8 @@ getCpuCipherfeature()
     }
     return cpu_feature;
 }
+
+template class CipherFactory<CipherAEADInterface>;
+template class CipherFactory<CipherInterface>;
+
 } // namespace alcp::cipher

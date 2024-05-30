@@ -43,15 +43,40 @@ namespace alcp::cipher {
  * @note
  */
 
-class ALCP_API_EXPORT Gcm : public Aes
+#define ALCP_GCM_TAG_MAX_SIZE 16
+
+typedef struct _alc_gcm_local_data
+{
+    // gcm specific params
+    Int32 m_num_512blks_precomputed;
+    Int32 m_num_256blks_precomputed;
+
+    __m128i m_hash_subKey_128;
+    __m128i m_gHash_128;
+    __m128i m_counter_128;
+
+    __m128i m_reverse_mask_128;
+
+    Uint64* m_pHashSubkeyTable_global;
+
+    __m128i m_tag_128;
+    Uint64  m_additionalDataLen;
+
+    _alc_cipher_gcm_data_t m_gcm;
+
+} alc_gcm_local_data_t;
+class ALCP_API_EXPORT Gcm
+    : public Aes
+    , public virtual CipherInterface
 {
   protected:
     alc_gcm_local_data_t m_gcm_local_data;
 
   public:
-    Gcm(alc_cipher_data_t* ctx)
-        : Aes(ctx)
+    Gcm(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
+        setMode(ALC_AES_MODE_GCM);
         // default ivLength is 12 bytes or 96bits
         m_ivLen_aes = 12;
 
@@ -80,43 +105,49 @@ class ALCP_API_EXPORT Gcm : public Aes
                0,
                sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
     }
+
     alc_error_t init(const Uint8* pKey,
                      Uint64       keyLen,
                      const Uint8* pIv,
-                     Uint64       ivLen);
+                     Uint64       ivLen) override;
 };
 
-class GcmGhash : public Gcm
+// GCM authentication class
+class GcmAuth
+    : public Gcm
+    , public virtual CipherAuth
 {
   public:
-    GcmGhash(alc_cipher_data_t* ctx)
-        : Gcm(ctx)
+    GcmAuth(Uint32 keyLen_in_bytes)
+        : Gcm(keyLen_in_bytes)
     {}
-    ~GcmGhash() {}
+    ~GcmAuth() {}
 
     alc_error_t setAad(alc_cipher_data_t* ctx,
                        const Uint8*       pInput,
-                       Uint64             aadLen);
-    alc_error_t getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen);
-    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);
+                       Uint64             aadLen) override;
+    alc_error_t getTag(alc_cipher_data_t* ctx,
+                       Uint8*             pTag,
+                       Uint64             tagLen) override;
+    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen) override;
 };
 
-namespace vaes512 {
-    CIPHER_CLASS_GEN(GcmAEAD128, GcmGhash)
-    CIPHER_CLASS_GEN(GcmAEAD192, GcmGhash)
-    CIPHER_CLASS_GEN(GcmAEAD256, GcmGhash)
-} // namespace vaes512
+// vaes512 classes
+CIPHER_CLASS_GEN_N(
+    vaes512, Gcm128, GcmAuth, virtual CipherAEADInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(
+    vaes512, Gcm192, GcmAuth, virtual CipherAEADInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(
+    vaes512, Gcm256, GcmAuth, virtual CipherAEADInterface, 256 / 8)
 
-namespace vaes {
-    CIPHER_CLASS_GEN(GcmAEAD128, GcmGhash)
-    CIPHER_CLASS_GEN(GcmAEAD192, GcmGhash)
-    CIPHER_CLASS_GEN(GcmAEAD256, GcmGhash)
-} // namespace vaes
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Gcm128, GcmAuth, virtual CipherAEADInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm192, GcmAuth, virtual CipherAEADInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm256, GcmAuth, virtual CipherAEADInterface, 256 / 8)
 
-namespace aesni {
-    CIPHER_CLASS_GEN(GcmAEAD128, GcmGhash)
-    CIPHER_CLASS_GEN(GcmAEAD192, GcmGhash)
-    CIPHER_CLASS_GEN(GcmAEAD256, GcmGhash)
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Gcm128, GcmAuth, virtual CipherAEADInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm192, GcmAuth, virtual CipherAEADInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm256, GcmAuth, virtual CipherAEADInterface, 256 / 8)
 
 } // namespace alcp::cipher

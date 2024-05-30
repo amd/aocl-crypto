@@ -40,26 +40,32 @@ namespace alcp::cipher {
 #define UNROLL_8 _Pragma("GCC unroll 8")
 #define UNROLL_4 _Pragma("GCC unroll 4")
 
-typedef struct _alc_gcm_local_data
-{
-    // gcm specific params
-    Int32 m_num_512blks_precomputed;
-    Int32 m_num_256blks_precomputed;
-
-    __m128i m_hash_subKey_128;
-    __m128i m_gHash_128;
-    __m128i m_counter_128;
-
-    __m128i m_reverse_mask_128;
-
-    Uint64* m_pHashSubkeyTable_global;
-
-    __m128i m_tag_128;
-    Uint64  m_additionalDataLen;
-
-    _alc_cipher_gcm_data_t m_gcm;
-
-} alc_gcm_local_data_t;
+// class generator with interface
+#define CIPHER_CLASS_GEN_N(                                                    \
+    NAMESPACE, CHILD_NEW, PARENT, INTERFACE, KEYLEN_IN_BYTES)                  \
+    class ALCP_API_EXPORT CHILD_NEW##_##NAMESPACE                              \
+        : public PARENT                                                        \
+        , public INTERFACE                                                     \
+                                                                               \
+    {                                                                          \
+      public:                                                                  \
+        CHILD_NEW##_##NAMESPACE()                                              \
+            : PARENT(KEYLEN_IN_BYTES)                                          \
+        {}                                                                     \
+        ~CHILD_NEW##_##NAMESPACE() = default;                                  \
+                                                                               \
+      public:                                                                  \
+        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pPlainText,                     \
+                            Uint8*             pCipherText,                    \
+                            Uint64             len) override;                              \
+                                                                               \
+        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
+                            const Uint8*       pCipherText,                    \
+                            Uint8*             pPlainText,                     \
+                            Uint64             len) override;                              \
+        alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
+    };
 
 // class generator with interface
 #define CIPHER_CLASS_GEN_(CHILD_NEW, PARENT, INTERFACE, KEYLEN_IN_BYTES)       \
@@ -84,81 +90,65 @@ typedef struct _alc_gcm_local_data
                             const Uint8*       pCipherText,                    \
                             Uint8*             pPlainText,                     \
                             Uint64             len) override;                              \
+        alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
     };
 
-// class generator  for all ciphers
-#define CIPHER_CLASS_GEN(CHILD_NEW, PARENT)                                    \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-                                                                               \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx = nullptr)                            \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW(){};                                                        \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pPlainText,                     \
-                            Uint8*             pCipherText,                    \
-                            Uint64             len);                                       \
-                                                                               \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
-    };
-
-#define CIPHER_CLASS_GEN_DOUBLE(CHILD_NEW, PARENT1, PARENT2)                   \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT2                           \
+#define CIPHER_CLASS_GEN_DOUBLE(                                               \
+    NAMESPACE, CHILD_NEW, PARENT1, PARENT2, INTERFACE, KEYLEN_IN_BYTES)        \
+    class ALCP_API_EXPORT CHILD_NEW##_##NAMESPACE                              \
+        : public PARENT2                                                       \
+        , public INTERFACE                                                     \
     {                                                                          \
       private:                                                                 \
-        PARENT1* ctrobj;                                                       \
+        PARENT1##_##NAMESPACE* ctrobj;                                         \
                                                                                \
       public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT2(ctx)                                                     \
+        CHILD_NEW##_##NAMESPACE()                                              \
+            : PARENT2(KEYLEN_IN_BYTES)                                         \
         {                                                                      \
-            ctrobj = new PARENT1(ctx);                                         \
-            /*ctrobj->setMode(ALC_AES_MODE_SIV);*/                             \
+            ctrobj = new PARENT1##_##NAMESPACE();                              \
         }                                                                      \
-        ~CHILD_NEW() { delete ctrobj; }                                        \
+        ~CHILD_NEW##_##NAMESPACE() { delete ctrobj; }                          \
                                                                                \
       public:                                                                  \
         alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
                             const Uint8*       pInput,                         \
                             Uint8*             pOutput,                        \
-                            Uint64             len);                                       \
+                            Uint64             len) override;                              \
         alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
                             const Uint8*       pCipherText,                    \
                             Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
+                            Uint64             len) override;                              \
+        alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
     };
 
 // Macro to generate cipher authentication class
-#define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                                 \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
+#define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT, INTERFACE)                      \
+    class ALCP_API_EXPORT CHILD_NEW                                            \
+        : public PARENT                                                        \
+        , public INTERFACE                                                     \
     {                                                                          \
       public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx)                                                      \
+        CHILD_NEW(Uint32 keyLen_in_bytes)                                      \
+            : PARENT(keyLen_in_bytes)                                          \
         {}                                                                     \
-        ~CHILD_NEW() {}                                                        \
+        virtual ~CHILD_NEW() = default;                                        \
                                                                                \
-        alc_error_t getTag(alc_cipher_data_t* ctx,                             \
-                           Uint8*             pOutput,                         \
-                           Uint64             tagLen);                                     \
         alc_error_t setAad(alc_cipher_data_t* ctx,                             \
                            const Uint8*       pInput,                          \
                            Uint64             aadLen);                                     \
         alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);    \
+        alc_error_t getTag(alc_cipher_data_t* ctx,                             \
+                           Uint8*             pOutput,                         \
+                           Uint64             tagLen);                                     \
     };
 
 #define CRYPT_WRAPPER_FUNC(                                                    \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)             \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
-                                         const Uint8*       pinput,            \
-                                         Uint8*             pOutput,           \
-                                         Uint64             len)               \
+    NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)  \
+    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(alc_cipher_data_t* ctx, \
+                                                       const Uint8* pinput,    \
+                                                       Uint8*       pOutput,   \
+                                                       Uint64       len)       \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         m_isEnc_aes     = IS_ENC;                                              \

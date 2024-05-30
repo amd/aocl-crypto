@@ -26,53 +26,54 @@
  *
  */
 
-#ifndef _CIPHER_AES_CFB_HH_
-#define _CIPHER_AES_CFB_HH_ 2
+#pragma once
 
 #include <cstdint>
 
-#include "alcp/error.h"
-
-#include "alcp/base/error.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "alcp/error.h"
 
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
-class ALCP_API_EXPORT Cfb : public Aes
+class ALCP_API_EXPORT Cfb
+    : public Aes
+    , public virtual CipherInterface
 {
   public:
-    Cfb(alc_cipher_data_t* ctx)
-        : Aes(ctx)
+    Cfb(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
         setMode(ALC_AES_MODE_CFB);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
     ~Cfb() {}
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override
+    {
+        return Aes::init(pKey, keyLen, pIv, ivLen);
+    }
 };
 
-namespace vaes512 {
-    CIPHER_CLASS_GEN(Cfb128, Cfb)
-    CIPHER_CLASS_GEN(Cfb192, Cfb)
-    CIPHER_CLASS_GEN(Cfb256, Cfb)
-} // namespace vaes512
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Cfb128, Cfb, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cfb192, Cfb, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cfb256, Cfb, virtual CipherInterface, 256 / 8)
 
-namespace vaes {
-    CIPHER_CLASS_GEN(Cfb128, Cfb)
-    CIPHER_CLASS_GEN(Cfb192, Cfb)
-    CIPHER_CLASS_GEN(Cfb256, Cfb)
-} // namespace vaes
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Cfb128, Cfb, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cfb192, Cfb, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cfb256, Cfb, virtual CipherInterface, 256 / 8)
 
-namespace aesni {
-    CIPHER_CLASS_GEN(Cfb128, Cfb)
-    CIPHER_CLASS_GEN(Cfb192, Cfb)
-    CIPHER_CLASS_GEN(Cfb256, Cfb)
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Cfb128, Cfb, virtual CipherInterface, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cfb192, Cfb, virtual CipherInterface, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cfb256, Cfb, virtual CipherInterface, 256 / 8)
 
 } // namespace alcp::cipher
-
-#endif /* _CIPHER_AES_CFB_HH_ */

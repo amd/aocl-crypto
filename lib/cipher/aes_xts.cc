@@ -151,6 +151,8 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
     }
 }
 
+#if 0
+
 #define CRYPT_BLOCKS_XTS_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)     \
     Status CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,                    \
                                     const Uint8*       pinput,                 \
@@ -169,6 +171,7 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
         return s;                                                              \
     }
 
+
 namespace vaes512 {
     CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocksXts, encrypt)
     CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocksXts, encrypt)
@@ -193,14 +196,16 @@ namespace aesni {
     CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocksXts, decrypt)
 } // namespace aesni
 
+#endif
+
 // pIv arg to be removed and this is made same as other ciper wrapper func
 // length check to be converted to generic function for all cipher modes
 #define CRYPT_XTS_WRAPPER_FUNC(                                                        \
-    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                             \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,                       \
-                                         const Uint8*       pinput,                    \
-                                         Uint8*             pOutput,                   \
-                                         Uint64             len)                       \
+    NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                  \
+    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(alc_cipher_data_t* ctx,         \
+                                                       const Uint8* pinput,            \
+                                                       Uint8*       pOutput,           \
+                                                       Uint64       len)               \
     {                                                                                  \
         alc_error_t err = ALC_ERROR_NONE;                                              \
                                                                                        \
@@ -209,46 +214,43 @@ namespace aesni {
             return err;                                                                \
         }                                                                              \
         Uint64 blocks_in = len / 16;                                                   \
-        err              = FUNC_NAME(                                                  \
+        err              = NAMESPACE::FUNC_NAME(                                       \
             pinput, pOutput, len, PKEY, NUM_ROUNDS, m_xts.m_tweak_block); \
         m_xts.m_aes_block_id += blocks_in;                                             \
         return err;                                                                    \
-    }
+    };
 
-namespace vaes512 {
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
+// vaes512 functions
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes512, Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes512, Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
 
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
-} // namespace vaes512
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes512, Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes512, Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
 
-namespace vaes {
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
+// vaes functions
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes, Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes, Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
 
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
-} // namespace vaes
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes, Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
+CRYPT_XTS_WRAPPER_FUNC(
+    vaes, Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
 
-namespace aesni {
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
+// aesni functions
+CRYPT_XTS_WRAPPER_FUNC(
+    aesni, Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
+CRYPT_XTS_WRAPPER_FUNC(
+    aesni, Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
 
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(
-        Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
-} // namespace aesni
+CRYPT_XTS_WRAPPER_FUNC(
+    aesni, Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
+CRYPT_XTS_WRAPPER_FUNC(
+    aesni, Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
 
 } // namespace alcp::cipher

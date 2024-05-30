@@ -39,4 +39,61 @@
 #include <iostream>
 
 namespace alcp { namespace cipher {
-}}
+    // Different implementation of crypt class required based on ISA support in
+    // hardware
+    class Crypter
+    {
+      public:
+        virtual ~Crypter()                      = default;
+        virtual alc_error_t decrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pSrc,
+                                    Uint8*             pDst,
+                                    Uint64             len) = 0;
+        virtual alc_error_t encrypt(alc_cipher_data_t* ctx,
+                                    const Uint8*       pSrt,
+                                    Uint8*             pDrc,
+                                    Uint64             len) = 0;
+        virtual alc_error_t finish(const void*) = 0;
+    };
+
+    class CipherInterface : public Crypter
+    {
+
+      public:
+        virtual ~CipherInterface() = default;
+
+        // Set key & iv
+        virtual alc_error_t init(const Uint8* pKey,
+                                 Uint64       keyLen,
+                                 const Uint8* pIv,
+                                 Uint64       ivLen) = 0;
+    };
+
+    // Additional Authentication functionality used for AEAD schemes
+    class CipherAuth
+    {
+      public:
+        virtual ~CipherAuth()                     = default;
+        virtual alc_error_t setAad(alc_cipher_data_t* ctx,
+                                   const Uint8*       pAad,
+                                   Uint64             aadLen) = 0;
+        virtual alc_error_t getTag(alc_cipher_data_t* ctx,
+                                   Uint8*             pTag,
+                                   Uint64             tagLen) = 0;
+
+        /* setPlaintextLength and setTageLength to be one single api */
+        /* setLength(void*ctx, typeofLen, Uint64 len) */
+        virtual alc_error_t setTagLength(alc_cipher_data_t* ctx,
+                                         Uint64             tagLen) = 0;
+    };
+
+    class CipherAEADInterface
+        : public virtual CipherInterface // cipherInterface class
+        , public virtual CipherAuth // authenication class - optional based on
+                                    // cipher mode
+    {
+      public:
+        virtual ~CipherAEADInterface() = default;
+    };
+
+}} // namespace alcp::cipher

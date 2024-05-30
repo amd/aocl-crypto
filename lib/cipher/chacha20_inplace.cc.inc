@@ -32,7 +32,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 using alcp::utils::RotateLeft;
 inline void
 DisplayState(Uint32 state[16])
@@ -193,4 +193,4 @@ ProcessInput(const Uint8 key[],
     }
     return ALC_ERROR_NONE;
 }
-} // namespace alcp::cipher::chacha20
+} // namespace alcp::cipher

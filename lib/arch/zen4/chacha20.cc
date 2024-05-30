@@ -32,7 +32,7 @@
 #include <cstring>
 #include <immintrin.h>
 
-namespace alcp::cipher::chacha20::zen4 {
+namespace alcp::cipher::zen4 {
 
 // Reference: Vectorization on ChaCha Stream Cipher
 // Authors: Martin Goll and Shay Gueron
@@ -510,7 +510,7 @@ ProcessChacha20ParallelBlocks4(const Uint8   key[],
     // -- Setup Registers for First Row Round Function
     // a
     __m512i s_1_0_3_2_prev = _mm512_broadcast_i32x4(
-        *reinterpret_cast<const __m128i*>(chacha20::Chacha20Constants));
+        *reinterpret_cast<const __m128i*>(Chacha20Constants));
     // b
     __m512i s_5_4_7_6_prev =
         _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
@@ -662,4 +662,4 @@ ProcessInput(const Uint8  key[],
     return ALC_ERROR_NONE;
 }
 
-} // namespace alcp::cipher::chacha20::zen4
+} // namespace alcp::cipher::zen4
