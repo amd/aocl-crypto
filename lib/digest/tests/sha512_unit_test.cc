@@ -26,6 +26,8 @@
  *
  */
 
+#include <memory>
+
 #include "alcp/digest/sha512.hh"
 #include "gtest/gtest.h"
 #include <unordered_map>
@@ -103,16 +105,18 @@ TEST_P(Sha512Test, digest_generation_test)
                                     DigestSha512::DIGEST_SHA_512_512 }) {
         auto digest                           = digests[enum_digest];
         const auto [digest_type, digest_size] = DigestSizes.at(enum_digest);
-        IDigest* digest_obj                   = nullptr;
+        std::unique_ptr<IDigest> digest_obj; // Change to unique_ptr
         switch (digest_type) {
             case ALC_DIGEST_LEN_224:
-                digest_obj = new Sha512_224;
+                digest_obj =
+                    std::make_unique<Sha512_224>(); // Change to unique_ptr
                 break;
             case ALC_DIGEST_LEN_256:
-                digest_obj = new Sha512_256;
+                digest_obj =
+                    std::make_unique<Sha512_256>(); // Change to unique_ptr
                 break;
             case ALC_DIGEST_LEN_512:
-                digest_obj = new Sha512;
+                digest_obj = std::make_unique<Sha512>(); // Change to unique_ptr
                 break;
             default:
                 break;
@@ -134,7 +138,6 @@ TEST_P(Sha512Test, digest_generation_test)
 
         std::string hash_string = ss.str();
         EXPECT_TRUE(hash_string == digest);
-        delete digest_obj;
     }
 }
 
@@ -148,91 +151,104 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(Sha512Test, invalid_input_update_test)
 {
-    Sha512 sha512;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.update(nullptr, 0));
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512->update(nullptr, 0));
 }
 
 TEST(Sha512Test, zero_size_update_test)
 {
-    Sha512      sha512;
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
     const Uint8 src[DigestSize] = { 0 };
-    EXPECT_EQ(ALC_ERROR_NONE, sha512.update(src, 0));
+    EXPECT_EQ(ALC_ERROR_NONE, sha512->update(src, 0));
 }
 
 TEST(Sha512Test, invalid_output_copy_hash_test)
 {
-    Sha512 sha512;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(nullptr, DigestSize));
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512->finalize(nullptr, DigestSize));
 }
 
 TEST(Sha512Test, zero_size_hash_copy_test)
 {
-    Sha512 sha512;
-    Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(hash, 0));
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
+    Uint8 hash[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512->finalize(hash, 0));
 }
 
 TEST(Sha512Test, over_size_hash_copy_test)
 {
-    Sha512 sha512;
-    Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.finalize(hash, DigestSize + 1));
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
+    Uint8 hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512->finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha512Test, getInputBlockSizeTest)
 {
-    Sha512 sha512;
-    EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
+    EXPECT_EQ(sha512->getInputBlockSize() * 8, InputBlockLen);
 }
 TEST(Sha512Test, getHashSizeTest)
 {
-    Sha512 sha512;
-    EXPECT_EQ(sha512.getHashSize() * 8, 512U);
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
+    EXPECT_EQ(sha512->getHashSize() * 8, 512U);
 }
 
 TEST(Sha512Test, Sha512_224_getInputBlockLenTest)
 {
-    Sha512 sha512;
-    EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
+    std::unique_ptr<Sha512_224> sha512 =
+        std::make_unique<Sha512_224>(); // Change to unique_ptr
+    EXPECT_EQ(sha512->getInputBlockSize() * 8, InputBlockLen);
 }
 
 TEST(Sha512Test, Sha512_224_getHashSizeTest)
 {
-    Sha512_224 sha512;
-    EXPECT_EQ(sha512.getHashSize() * 8, 224U);
+    std::unique_ptr<Sha512_224> sha512 =
+        std::make_unique<Sha512_224>(); // Change to unique_ptr
+    EXPECT_EQ(sha512->getHashSize() * 8, 224U);
 }
 
 TEST(Sha512Test, Sha512_256_getInputBlockLenTest)
 {
-    Sha512_256 sha512;
-    EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
+    std::unique_ptr<Sha512_256> sha512 =
+        std::make_unique<Sha512_256>(); // Change to unique_ptr
+    EXPECT_EQ(sha512->getInputBlockSize() * 8, InputBlockLen);
 }
 
 TEST(Sha512Test, Sha512_256_getHashSizeTest)
 {
-    Sha512_256 sha512;
-    EXPECT_EQ(sha512.getHashSize() * 8, 256U);
+    std::unique_ptr<Sha512_256> sha512 =
+        std::make_unique<Sha512_256>(); // Change to unique_ptr
+    EXPECT_EQ(sha512->getHashSize() * 8, 256U);
 }
 
 TEST(Sha512Test, object_copy_test)
 {
-    string            plaintext("1111");
-    Sha512            sha512;
+    string                  plaintext("1111");
+    std::unique_ptr<Sha512> sha512 =
+        std::make_unique<Sha512>(); // Change to unique_ptr
     Uint8             hash[DigestSize], hash_dup[DigestSize];
     std::stringstream ss, ss_dup;
 
-    sha512.init();
-    ASSERT_EQ(sha512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+    sha512->init();
+    ASSERT_EQ(sha512->update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
 
-    Sha512 sha512_dup = sha512;
+    std::unique_ptr<Sha512> sha512_dup =
+        std::make_unique<Sha512>(*sha512); // Change to unique_ptr
 
-    ASSERT_EQ(sha512.finalize(hash, DigestSize), ALC_ERROR_NONE);
-    ASSERT_EQ(sha512_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha512->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha512_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     ss_dup << std::hex << std::setfill('0');
-    ;
+
     for (Uint16 i = 0; i < DigestSize; ++i) {
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
         ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);

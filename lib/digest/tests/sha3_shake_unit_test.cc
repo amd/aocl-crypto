@@ -26,6 +26,8 @@
  *
  */
 
+#include <memory>
+
 #include "alcp/digest/sha3.hh"
 #include "gtest/gtest.h"
 
@@ -87,7 +89,7 @@ TEST_P(Shake, digest_generation_test)
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
         auto digest = digests[enum_digest];
 
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));
@@ -125,7 +127,7 @@ TEST(Shake, invalid_input_update_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));
@@ -140,7 +142,7 @@ TEST(Shake, zero_size_update_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));
@@ -156,7 +158,7 @@ TEST(Shake, invalid_output_copy_hash_test)
 {
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));
@@ -173,7 +175,7 @@ TEST(Shake, zero_size_hash_copy_test)
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
 
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));
@@ -195,7 +197,7 @@ TEST(Shake, digest_correction_with_reset_test)
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
         auto digest = digests[enum_digest];
 
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));
@@ -232,47 +234,53 @@ TEST(Shake, digest_correction_with_reset_test)
 
 TEST(Shake, Shake128_getInputBlockLenTest)
 {
-    Shake128 sha3_shake;
-    sha3_shake.init();
-    EXPECT_EQ(sha3_shake.getInputBlockSize(), Shake128_InputBlockSize);
+    std::unique_ptr<Shake128> sha3_shake_ptr(new Shake128);
+    Shake128*                 sha3_shake = sha3_shake_ptr.get();
+    sha3_shake->init();
+    EXPECT_EQ(sha3_shake->getInputBlockSize(), Shake128_InputBlockSize);
 }
 
 TEST(Shake, Shake256_getInputBlockLenTest)
 {
-    Shake256 sha3_shake;
-    sha3_shake.init();
-    EXPECT_EQ(sha3_shake.getInputBlockSize(), Shake256_InputBlockSize);
+    std::unique_ptr<Shake256> sha3_shake_ptr(new Shake256);
+    Shake256*                 sha3_shake = sha3_shake_ptr.get();
+    sha3_shake->init();
+    EXPECT_EQ(sha3_shake->getInputBlockSize(), Shake256_InputBlockSize);
 }
 
 TEST(Shake, Shake128_getHashSizeTest)
 {
-    Shake128 sha3_shake;
-    sha3_shake.init();
-    EXPECT_EQ(sha3_shake.getHashSize(), ALC_DIGEST_LEN_128 / 8);
+    std::unique_ptr<Shake128> sha3_shake_ptr(new Shake128);
+    Shake128*                 sha3_shake = sha3_shake_ptr.get();
+    sha3_shake->init();
+    EXPECT_EQ(sha3_shake->getHashSize(), ALC_DIGEST_LEN_128 / 8);
 }
 TEST(Shake, Shake256_getHashSizeTest)
 {
-    Shake256 sha3_shake;
-    sha3_shake.init();
-    EXPECT_EQ(sha3_shake.getHashSize(), ALC_DIGEST_LEN_256 / 8);
+    std::unique_ptr<Shake256> sha3_shake_ptr(new Shake256);
+    Shake256*                 sha3_shake = sha3_shake_ptr.get();
+    sha3_shake->init();
+    EXPECT_EQ(sha3_shake->getHashSize(), ALC_DIGEST_LEN_256 / 8);
 }
 
 TEST(Sha3_512_Test, object_copy_test)
 {
-    string            plaintext("1111");
-    Shake256          shake256;
-    Uint8             hash[DigestSize], hash_dup[DigestSize];
-    std::stringstream ss, ss_dup;
+    string                    plaintext("1111");
+    std::unique_ptr<Shake256> shake256_ptr(new Shake256);
+    Shake256*                 shake256 = shake256_ptr.get();
+    Uint8                     hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream         ss, ss_dup;
 
-    shake256.init();
+    shake256->init();
     ASSERT_EQ(
-        shake256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        shake256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
 
-    Shake256 shake256_dup = shake256;
+    std::unique_ptr<Shake256> shake256_dup_ptr(new Shake256(*shake256));
+    Shake256*                 shake256_dup = shake256_dup_ptr.get();
 
-    ASSERT_EQ(shake256.finalize(hash, DigestSize), ALC_ERROR_NONE);
-    ASSERT_EQ(shake256_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(shake256->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(shake256_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     ss_dup << std::hex << std::setfill('0');
@@ -287,22 +295,24 @@ TEST(Sha3_512_Test, object_copy_test)
 
 TEST(Sha3_512_Test, sqeeze_test)
 {
-    string            plaintext("1111");
-    Shake256          shake256;
-    Uint8             hash[DigestSize], hash_dup[DigestSize];
-    std::stringstream ss, ss_dup;
+    string                    plaintext("1111");
+    std::unique_ptr<Shake256> shake256_ptr(new Shake256);
+    Shake256*                 shake256 = shake256_ptr.get();
+    Uint8                     hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream         ss, ss_dup;
 
-    shake256.init();
+    shake256->init();
     ASSERT_EQ(
-        shake256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        shake256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
 
-    Shake256 shake256_dup = shake256;
+    std::unique_ptr<Shake256> shake256_dup_ptr(new Shake256(*shake256));
+    Shake256*                 shake256_dup = shake256_dup_ptr.get();
 
-    ASSERT_EQ(shake256.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(shake256->finalize(hash, DigestSize), ALC_ERROR_NONE);
     Uint8* hash_dup_p = hash_dup;
     for (Uint16 i = 0; i < DigestSize; i++) {
-        ASSERT_EQ(shake256_dup.shakeSqueeze(hash_dup_p, 1), ALC_ERROR_NONE);
+        ASSERT_EQ(shake256_dup->shakeSqueeze(hash_dup_p, 1), ALC_ERROR_NONE);
         ++hash_dup_p;
     }
     ss << std::hex << std::setfill('0');
@@ -324,7 +334,7 @@ TEST_P(Shake, setShakeLength_digest_generation_test)
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
         auto digest = digests[enum_digest];
 
-        shared_ptr<IDigest> sha3_shake_ptr(
+        std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
                  ? static_cast<IDigest*>(new Shake128)
                  : static_cast<IDigest*>(new Shake256)));

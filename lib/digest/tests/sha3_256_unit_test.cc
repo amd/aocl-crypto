@@ -26,6 +26,8 @@
  *
  */
 
+#include <memory>
+
 #include "alcp/digest/sha3.hh"
 #include "gtest/gtest.h"
 
@@ -71,16 +73,16 @@ class Sha3_256_Test
 
 TEST_P(Sha3_256_Test, digest_generation_test)
 {
-    const auto [plaintext, digest] = GetParam().second;
-    Sha3_256          sha3_256;
-    Uint8             hash[DigestSize];
-    std::stringstream ss;
+    const auto [plaintext, digest]     = GetParam().second;
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    Uint8*                    hash     = new Uint8[DigestSize];
+    std::stringstream         ss;
 
-    sha3_256.init();
+    sha3_256->init();
     ASSERT_EQ(
-        sha3_256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        sha3_256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_256.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_256->finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -88,6 +90,8 @@ TEST_P(Sha3_256_Test, digest_generation_test)
 
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
+
+    delete[] hash;
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -100,69 +104,72 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(Sha3_256_Test, invalid_input_update_test)
 {
-    Sha3_256 sha3_256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256.update(nullptr, 0));
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256->update(nullptr, 0));
 }
 
 TEST(Sha3_256_Test, zero_size_update_test)
 {
-    Sha3_256    sha3_256;
-    const Uint8 src[DigestSize] = { 0 };
-    EXPECT_EQ(ALC_ERROR_NONE, sha3_256.update(src, 0));
+    std::unique_ptr<Sha3_256> sha3_256        = std::make_unique<Sha3_256>();
+    const Uint8               src[DigestSize] = { 0 };
+    EXPECT_EQ(ALC_ERROR_NONE, sha3_256->update(src, 0));
 }
 
 TEST(Sha3_256_Test, invalid_output_copy_hash_test)
 {
-    Sha3_256 sha3_256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256.finalize(nullptr, DigestSize));
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256->finalize(nullptr, DigestSize));
 }
 
 TEST(Sha3_256_Test, zero_size_hash_copy_test)
 {
-    Sha3_256 sha3_256;
-    Uint8    hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256.finalize(hash, 0));
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    Uint8*                    hash     = new Uint8[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256->finalize(hash, 0));
+    delete[] hash;
 }
 
 TEST(Sha3_256_Test, over_size_hash_copy_test)
 {
-    Sha3_256 sha3_256;
-    Uint8    hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256.finalize(hash, DigestSize + 1));
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    Uint8*                    hash     = new Uint8[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_256->finalize(hash, DigestSize + 1));
+    delete[] hash;
 }
 
 TEST(Sha3_256_Test, getInputBlockSizeTest)
 {
-    Sha3_256 sha3_256;
-    EXPECT_EQ(sha3_256.getInputBlockSize(), InputBlockSize);
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    EXPECT_EQ(sha3_256->getInputBlockSize(), InputBlockSize);
 }
 
 TEST(Sha3_256_Test, getHashSizeTest)
 {
-    Sha3_256 sha3_256;
-    EXPECT_EQ(sha3_256.getHashSize(), DigestSize);
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    EXPECT_EQ(sha3_256->getHashSize(), DigestSize);
 }
 
 TEST(Sha3_256_Test, object_copy_test)
 {
-    string            plaintext("1111");
-    Sha3_256          sha3_256;
-    Uint8             hash[DigestSize], hash_dup[DigestSize];
-    std::stringstream ss, ss_dup;
+    string                    plaintext("1111");
+    std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
+    Uint8                     hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream         ss, ss_dup;
 
-    sha3_256.init();
+    sha3_256->init();
     ASSERT_EQ(
-        sha3_256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        sha3_256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
 
-    Sha3_256 sha3_256_dup = sha3_256;
+    std::unique_ptr<Sha3_256> sha3_256_dup =
+        std::make_unique<Sha3_256>(*sha3_256);
 
-    ASSERT_EQ(sha3_256.finalize(hash, DigestSize), ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_256_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_256->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_256_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     ss_dup << std::hex << std::setfill('0');
-    ;
+
     for (Uint16 i = 0; i < DigestSize; ++i) {
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
         ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);

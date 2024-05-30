@@ -107,37 +107,33 @@ class Sha224Kat
     : public testing::TestWithParam<std::pair<const string, ParamTuple2>>
 {
   public:
-    Sha224*            sha224{};
-    std::vector<Uint8> m_message, m_digest;
-    void               SetUp() override
+    std::unique_ptr<Sha224> sha224{};
+    std::vector<Uint8>      m_message, m_digest;
+    void                    SetUp() override
     {
         const auto params            = GetParam();
         const auto [message, digest] = params.second;
         const auto test_name         = params.first;
         m_message                    = message;
         m_digest                     = digest;
-        sha224                       = new Sha224;
+        sha224                       = std::make_unique<Sha224>();
         sha224->init();
     }
 
-    void TearDown() override
-    {
-        delete sha224;
-        sha224 = nullptr;
-    }
+    void TearDown() override { sha224.reset(); }
 };
 
 TEST_P(Sha224Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha224            sha224;
-    Uint8             hash[DigestSize];
-    std::stringstream ss;
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    Uint8                   hash[DigestSize];
+    std::stringstream       ss;
 
-    sha224.init();
-    ASSERT_EQ(sha224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+    sha224->init();
+    ASSERT_EQ(sha224->update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
-    ASSERT_EQ(sha224.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha224->finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -157,72 +153,72 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(Sha224Test, invalid_input_update_test)
 {
-    Sha224 sha224;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224.update(nullptr, 0));
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224->update(nullptr, 0));
 }
 
 TEST(Sha224Test, zero_size_update_test)
 {
-    Sha224      sha224;
-    const Uint8 src[DigestSize] = { 0 };
-    EXPECT_EQ(ALC_ERROR_NONE, sha224.update(src, 0));
+    std::unique_ptr<Sha224> sha224          = std::make_unique<Sha224>();
+    const Uint8             src[DigestSize] = { 0 };
+    EXPECT_EQ(ALC_ERROR_NONE, sha224->update(src, 0));
 }
 
 TEST(Sha224Test, invalid_output_copy_hash_test)
 {
-    Sha224 sha224;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224.finalize(nullptr, DigestSize));
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224->finalize(nullptr, DigestSize));
 }
 
 TEST(Sha224Test, zero_size_hash_copy_test)
 {
-    Sha224 sha224;
-    Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224.finalize(hash, 0));
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    Uint8                   hash[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224->finalize(hash, 0));
 }
 
 TEST(Sha224Test, over_size_hash_copy_test)
 {
-    Sha224 sha224;
-    Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224.finalize(hash, DigestSize + 1));
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    Uint8                   hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha224->finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha224Test, call_finalize_twice_test)
 {
-    Sha224 sha224;
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
     // calling finalize multiple times shoud not result in error
     Uint8 hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_NONE, sha224.finalize(hash, DigestSize));
-    EXPECT_EQ(ALC_ERROR_NONE, sha224.finalize(hash, DigestSize));
+    EXPECT_EQ(ALC_ERROR_NONE, sha224->finalize(hash, DigestSize));
+    EXPECT_EQ(ALC_ERROR_NONE, sha224->finalize(hash, DigestSize));
 }
 
 TEST(Sha224Test, getInputBlockSizeTest)
 {
-    Sha224 sha224;
-    EXPECT_EQ(sha224.getInputBlockSize(), InputBlockSize);
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    EXPECT_EQ(sha224->getInputBlockSize(), InputBlockSize);
 }
 TEST(Sha224Test, getHashSizeTest)
 {
-    Sha224 sha224;
-    EXPECT_EQ(sha224.getHashSize(), DigestSize);
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    EXPECT_EQ(sha224->getHashSize(), DigestSize);
 }
 
 TEST(Sha224Test, object_copy_test)
 {
-    string            plaintext("1111");
-    Sha224            sha224;
-    Uint8             hash[DigestSize], hash_dup[DigestSize];
-    std::stringstream ss, ss_dup;
+    string                  plaintext("1111");
+    std::unique_ptr<Sha224> sha224 = std::make_unique<Sha224>();
+    Uint8                   hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream       ss, ss_dup;
 
-    sha224.init();
-    ASSERT_EQ(sha224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+    sha224->init();
+    ASSERT_EQ(sha224->update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
 
-    Sha224 sha224_dup = sha224;
+    std::unique_ptr<Sha224> sha224_dup = std::make_unique<Sha224>(*sha224);
 
-    ASSERT_EQ(sha224.finalize(hash, DigestSize), ALC_ERROR_NONE);
-    ASSERT_EQ(sha224_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha224->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha224_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     ss_dup << std::hex << std::setfill('0');

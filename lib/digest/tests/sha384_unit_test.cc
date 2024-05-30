@@ -75,13 +75,13 @@ class Sha384Test
 TEST_P(Sha384Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha384            sha384;
-    Uint8             hash[DigestSize];
-    std::stringstream ss;
-    sha384.init();
-    ASSERT_EQ(sha384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    Uint8                   hash[DigestSize];
+    std::stringstream       ss;
+    sha384->init();
+    ASSERT_EQ(sha384->update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
-    ASSERT_EQ(sha384.finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha384->finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -101,66 +101,66 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(Sha384Test, invalid_input_update_test)
 {
-    Sha384 sha384;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.update(nullptr, 0));
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384->update(nullptr, 0));
 }
 
 TEST(Sha384Test, zero_size_update_test)
 {
-    Sha384      sha384;
-    const Uint8 src[DigestSize] = { 0 };
-    EXPECT_EQ(ALC_ERROR_NONE, sha384.update(src, 0));
+    std::unique_ptr<Sha384> sha384          = std::make_unique<Sha384>();
+    const Uint8             src[DigestSize] = { 0 };
+    EXPECT_EQ(ALC_ERROR_NONE, sha384->update(src, 0));
 }
 
 TEST(Sha384Test, invalid_output_copy_hash_test)
 {
-    Sha384 sha384;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.finalize(nullptr, DigestSize));
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384->finalize(nullptr, DigestSize));
 }
 
 TEST(Sha384Test, zero_size_hash_copy_test)
 {
-    Sha384 sha384;
-    Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.finalize(hash, 0));
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    Uint8                   hash[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384->finalize(hash, 0));
 }
 
 TEST(Sha384Test, over_size_hash_copy_test)
 {
-    Sha384 sha384;
-    Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384.finalize(hash, DigestSize + 1));
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    Uint8                   hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha384->finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha384Test, getInputBlockSizeTest)
 {
-    Sha384 sha384;
-    EXPECT_EQ(sha384.getInputBlockSize(), InputBlockSize);
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    EXPECT_EQ(sha384->getInputBlockSize(), InputBlockSize);
 }
 TEST(Sha384Test, getHashSizeTest)
 {
-    Sha384 sha384;
-    EXPECT_EQ(sha384.getHashSize(), DigestSize);
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    EXPECT_EQ(sha384->getHashSize(), DigestSize);
 }
 TEST(Sha384Test, object_copy_test)
 {
-    string            plaintext("1111");
-    Sha384            sha384;
-    Uint8             hash[DigestSize], hash_dup[DigestSize];
-    std::stringstream ss, ss_dup;
+    string                  plaintext("1111");
+    std::unique_ptr<Sha384> sha384 = std::make_unique<Sha384>();
+    Uint8                   hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream       ss, ss_dup;
 
-    sha384.init();
-    ASSERT_EQ(sha384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+    sha384->init();
+    ASSERT_EQ(sha384->update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
 
-    Sha384 sha384_dup = sha384;
+    std::unique_ptr<Sha384> sha384_dup = std::make_unique<Sha384>(*sha384);
 
-    ASSERT_EQ(sha384.finalize(hash, DigestSize), ALC_ERROR_NONE);
-    ASSERT_EQ(sha384_dup.finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha384->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha384_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     ss_dup << std::hex << std::setfill('0');
-    ;
+
     for (Uint16 i = 0; i < DigestSize; ++i) {
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
         ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
