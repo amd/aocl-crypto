@@ -39,7 +39,7 @@ namespace alcp::cipher {
 
 // over AES init, for tweakKey operation
 alc_error_t
-Xts::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
+Xts::setIv(const Uint8* pIv, const Uint64 ivLen)
 {
     Status s = StatusOk();
     utils::CopyBytes(m_xts.m_iv_xts, pIv, ivLen); // Keep a copy of iv
@@ -54,28 +54,27 @@ Xts::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
 }
 
 alc_error_t
-Xts::init(alc_cipher_data_t* ctx,
-          const Uint8*       pKey,
-          const Uint64       keyLen,
-          const Uint8*       pIv,
-          const Uint64       ivLen)
+Xts::init(const Uint8* pKey,
+          const Uint64 keyLen,
+          const Uint8* pIv,
+          const Uint64 ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(ctx, pKey, keyLen);
+        err = setKey(pKey, keyLen);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
 
         m_xts.m_pTweak_key = &(m_xts.m_tweak_round_key[0]);
-        expandTweakKeys(ctx, pKey + keyLen / 8, keyLen);
+        expandTweakKeys(pKey + keyLen / 8, keyLen);
 
         m_isKeySet_aes = 1;
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err           = Xts::setIv(ctx, pIv, ivLen);
+        err           = Xts::setIv(pIv, ivLen);
         m_ivState_aes = 1;
     }
 
@@ -106,7 +105,7 @@ Xts::tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId)
 }
 
 void
-Xts::expandTweakKeys(alc_cipher_data_t* ctx, const Uint8* pKey, int len)
+Xts::expandTweakKeys(const Uint8* pKey, int len)
 {
     using utils::GetByte, utils::MakeWord;
     Uint8 dummy_key[32] = { 0 };

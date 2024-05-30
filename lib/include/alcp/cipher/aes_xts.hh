@@ -78,21 +78,16 @@ class ALCP_API_EXPORT Xts : public Aes
     };
 
     // functions unique to Xts class
-    void expandTweakKeys(alc_cipher_data_t* ctx,
-                         const Uint8*       pUserKey,
-                         int                len);
+    void expandTweakKeys(const Uint8* pUserKey, int len);
     void tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId);
 
     // overriden functions
-    alc_error_t init(alc_cipher_data_t* ctx,
-                     const Uint8*       pKey,
-                     const Uint64       keyLen,
-                     const Uint8*       pIv,
-                     const Uint64       ivLen);
+    alc_error_t init(const Uint8* pKey,
+                     const Uint64 keyLen,
+                     const Uint8* pIv,
+                     const Uint64 ivLen);
 
-    alc_error_t setIv(alc_cipher_data_t* ctx,
-                      const Uint8*       pIv,
-                      const Uint64       ivLen);
+    alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
 };
 
 static inline Uint8

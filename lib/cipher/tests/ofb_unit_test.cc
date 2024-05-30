@@ -42,9 +42,9 @@
 using alcp::cipher::Ofb;
 namespace alcp::cipher::unittest::ofb {
 std::vector<Uint8> key       = { 0x0d, 0x3c, 0x13, 0x53, 0xea, 0x0f, 0x01, 0x06,
-                                 0x83, 0x47, 0x98, 0xc8, 0x6d, 0x3d, 0xc7, 0x4e };
+                           0x83, 0x47, 0x98, 0xc8, 0x6d, 0x3d, 0xc7, 0x4e };
 std::vector<Uint8> iv        = { 0xf6, 0xe5, 0x25, 0x16, 0x7d, 0xca, 0x50, 0xbf,
-                                 0x1b, 0x9f, 0xb8, 0x13, 0xd2, 0xec, 0xab, 0x5e };
+                          0x1b, 0x9f, 0xb8, 0x13, 0xd2, 0xec, 0xab, 0x5e };
 std::vector<Uint8> plainText = {
     0x12, 0xb0, 0xe9, 0x9b, 0x7f, 0xf8, 0xc4, 0x6a, 0xb0, 0xae, 0x00, 0xf7,
     0xfb, 0x7a, 0xa7, 0x19, 0x3d, 0x0c, 0x87, 0xe9, 0x14, 0x01, 0x02, 0x62,
@@ -127,7 +127,7 @@ TEST(OFB, BasicEncryption)
 
     std::vector<Uint8> output(cipherText.size());
 
-    ofb->init(&data, &key[0], key.size() * 8, &iv[0], iv.size());
+    ofb->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
     ofb->encrypt(&data, &plainText[0], &output[0], plainText.size());
 
@@ -144,7 +144,7 @@ TEST(OFB, BasicDecryption)
 
     std::vector<Uint8> output(plainText.size());
 
-    ofb->init(&data, &key[0], key.size() * 8, &iv[0], iv.size());
+    ofb->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
     ofb->decrypt(&data, &cipherText[0], &output[0], cipherText.size());
 
@@ -168,8 +168,7 @@ TEST(OFB, MultiUpdateEncryption)
     // ctr->setKey(128, &key[0]);  or
     // ctr->setKey(128, &key[0]);
 
-    alc_error_t err =
-        ofb->init(&data, &key[0], key.size() * 8, &iv[0], iv.size());
+    alc_error_t err = ofb->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
     if (alcp_is_error(err)) {
         std::cout << "Init failed!" << std::endl;
@@ -202,8 +201,7 @@ TEST(OFB, MultiUpdateDecryption)
 
     std::vector<Uint8> output(cipherText.size());
 
-    alc_error_t err =
-        ofb->init(&data, &key[0], key.size() * 8, &iv[0], iv.size());
+    alc_error_t err = ofb->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
     if (alcp_is_error(err)) {
         std::cout << "Init failed!" << std::endl;
@@ -248,14 +246,14 @@ TEST(OFB, RandomEncryptDecryptTest)
 
         EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 
-        ofb->init(&data, &key[0], key.size() * 8, &iv[0], sizeof(iv));
+        ofb->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
 
         ofb->encrypt(&data,
                      &plainTextVect[0],
                      &cipherText_vect[0],
                      plainTextVect.size());
 
-        ofb->init(&data, &key[0], key.size() * 8, &iv[0], sizeof(iv));
+        ofb->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
 
         ofb->decrypt(
             &data, &cipherText_vect[0], &plainTextOut[0], plainTextVect.size());

@@ -49,7 +49,7 @@ __chacha20_wrapperInit(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CHACHA*>(ctxp->m_cipher);
 
-    e = ap->init(&(ctxp->m_alcp_cipher_data), pKey, keyLen / 8, pIv, ivLen);
+    e = ap->init(pKey, keyLen / 8, pIv, ivLen);
 
     return e;
 }

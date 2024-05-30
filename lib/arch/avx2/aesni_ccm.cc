@@ -52,8 +52,8 @@ namespace ccm {
 
     CCM_ERROR SetAad(ccm_data_t* ccm_data,
                      const Uint8 paad[],
-                     size_t      alen,
-                     size_t      plen)
+                     Uint64      alen,
+                     Uint64      plen)
     {
 #ifdef CCM_MULTI_UPDATE
         ENTER();
@@ -83,7 +83,7 @@ namespace ccm {
                 *(p_blk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
                 *(p_blk0_8 + 1) ^= static_cast<Uint8>(alen);
                 i = 2;
-            } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
+            } else if (sizeof(alen) == 8 && alen >= ((Uint64)1 << 32)) {
                 // alen > what 32 bits can hold.
                 *(p_blk0_8 + 0) ^= 0xFF;
                 *(p_blk0_8 + 1) ^= 0xFF;
@@ -158,7 +158,7 @@ namespace ccm {
         }
 
         // Set nonce to just length to store size of plain text
-        size_t       n;
+        Uint64       n;
         unsigned int q;
         p_nonce_8[0] = q = flags0 & 7;
 
@@ -217,7 +217,7 @@ namespace ccm {
             *(p_blk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
             *(p_blk0_8 + 1) ^= static_cast<Uint8>(alen);
             i = 2;
-        } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
+        } else if (sizeof(alen) == 8 && alen >= ((Uint64)1 << 32)) {
             // alen > what 32 bits can hold.
             *(p_blk0_8 + 0) ^= 0xFF;
             *(p_blk0_8 + 1) ^= 0xFF;
@@ -299,7 +299,6 @@ namespace ccm {
         EXITG();
     }
 
-#ifdef CCM_MULTI_UPDATE
     CCM_ERROR
     Finalize(ccm_data_t* ccm_data)
     {
@@ -332,9 +331,9 @@ namespace ccm {
         _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
         return CCM_ERROR::NO_ERROR;
     }
-#endif
+
     CCM_ERROR
-    Encrypt(ccm_data_t* ccm_data, const Uint8 pinp[], Uint8 pout[], size_t len)
+    Encrypt(ccm_data_t* ccm_data, const Uint8 pinp[], Uint8 pout[], Uint64 len)
     {
 #ifdef CCM_MULTI_UPDATE
         // Implementation block diagram
@@ -404,7 +403,7 @@ namespace ccm {
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
         ENTER();
 
-        size_t        n;
+        Uint64        n;
         unsigned int  i, q;
         unsigned char flags0 = ccm_data->nonce[0];
         const Uint8*  p_key  = ccm_data->key;
@@ -525,7 +524,7 @@ namespace ccm {
     }
 
     CCM_ERROR
-    Decrypt(ccm_data_t* ccm_data, const Uint8 pinp[], Uint8 pout[], size_t len)
+    Decrypt(ccm_data_t* ccm_data, const Uint8 pinp[], Uint8 pout[], Uint64 len)
     {
 #ifdef CCM_MULTI_UPDATE
         // Implementation block diagram
@@ -650,7 +649,7 @@ namespace ccm {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
         ENTER();
-        size_t        n;
+        Uint64        n;
         unsigned int  i, q;
         unsigned char flags0 = ccm_data->nonce[0];
         const Uint8*  p_key  = ccm_data->key;
@@ -694,7 +693,6 @@ namespace ccm {
             return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
         }
 
-#if 1
         while (len >= 32) {
             /* CTR */
             temp_reg = nonce; // Copy Counter
@@ -740,7 +738,6 @@ namespace ccm {
             pout += 32;
             len -= 32;
         }
-#endif
 
         while (len >= 16) {
 

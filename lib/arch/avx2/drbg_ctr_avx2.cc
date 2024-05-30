@@ -93,7 +93,8 @@ CtrDrbgUpdate(const Uint8  pProvidedData[],
 
     std::unique_ptr<EncryptAes> aes =
         std::make_unique<EncryptAes>(&cipher_data);
-    aes->setKey(&cipher_data, &pKey[0], cKeyLen * 8);
+
+    aes->setKey(&pKey[0], cKeyLen * 8);
     const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =
         reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
@@ -190,7 +191,7 @@ DrbgCtrGenerate(const Uint8  pcAdditionalInput[],
 
     std::unique_ptr<EncryptAes> aes =
         std::make_unique<EncryptAes>(&cipher_data);
-    aes->setKey(&cipher_data, &pKey[0], cKeyLen * 8);
+    aes->setKey(&pKey[0], cKeyLen * 8);
     const Uint32 cAesRounds = aes->getRounds();
     auto p_key = reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
     for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
@@ -243,7 +244,7 @@ BCC(const Uint8* pcKey,
 
     std::unique_ptr<EncryptAes> aes =
         std::make_unique<EncryptAes>(&cipher_data);
-    aes->setKey(&cipher_data, &pcKey[0], cKeyLength * 8);
+    aes->setKey(&pcKey[0], cKeyLength * 8);
     const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =
         reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
@@ -342,7 +343,7 @@ BlockCipherDf(const Uint8* pcInputString,
 
     std::unique_ptr<EncryptAes> aes =
         std::make_unique<EncryptAes>(&cipher_data);
-    aes->setKey(&cipher_data, &temp[0], cKeyLen * 8);
+    aes->setKey(&temp[0], cKeyLen * 8);
     // K = leftmost (temp, keylen).
     const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =

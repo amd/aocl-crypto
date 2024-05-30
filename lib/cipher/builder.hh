@@ -128,7 +128,7 @@ __aes_wrapperInit(void*        ctx,
     auto ctxp = static_cast<cipher::Context*>(ctx);
     auto ap   = static_cast<CIPHERMODE*>(ctxp->m_cipher);
 
-    e = ap->init(&(ctxp->m_alcp_cipher_data), pKey, keyLen, pIv, ivLen);
+    e = ap->init(pKey, keyLen, pIv, ivLen);
 
     return e;
 }

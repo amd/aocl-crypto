@@ -121,11 +121,10 @@ class ALCP_API_EXPORT ChaCha20
 
   public:
     // ChaCha20(alc_cipher_data_t* ctx){};
-    alc_error_t init(alc_cipher_data_t* ctx,
-                     const Uint8*       pKey,
-                     const Uint64       keyLen,
-                     const Uint8*       pIv,
-                     const Uint64       ivLen);
+    alc_error_t init(const Uint8* pKey,
+                     const Uint64 keyLen,
+                     const Uint8* pIv,
+                     const Uint64 ivLen);
 };
 
 namespace vaes512 {

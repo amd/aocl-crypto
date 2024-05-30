@@ -65,7 +65,7 @@ using Status = alcp::base::Status;
  */
 class Aes : public Rijndael
 {
-  protected:
+  public:
     Uint32                m_nrounds = 0;
     alc_cipher_key_data_t m_cipher_key_data{};
 
@@ -84,6 +84,12 @@ class Aes : public Rijndael
         m_keyLen_in_bytes_aes = ctx->alcp_keyLen_in_bytes;
     }
 
+    Aes(Uint32 keyLen_in_bytes)
+        : Rijndael()
+    {
+        m_keyLen_in_bytes_aes = keyLen_in_bytes;
+    }
+
     // this constructor to be removed.
     Aes()
         : Rijndael()
@@ -96,11 +102,10 @@ class Aes : public Rijndael
     // Without CMAC-SIV extending AES, we cannot access it with protected,
     // Please change to protected if needed in future
   public:
-    ALCP_API_EXPORT alc_error_t init(alc_cipher_data_t* ctx,
-                                     const Uint8*       pKey,
-                                     const Uint64       keyLen,
-                                     const Uint8*       pIv,
-                                     const Uint64       ivLen);
+    ALCP_API_EXPORT alc_error_t init(const Uint8* pKey,
+                                     const Uint64 keyLen,
+                                     const Uint8* pIv,
+                                     const Uint64 ivLen);
 
     static bool isSupported(const Uint32 keyLen)
     {
@@ -111,14 +116,10 @@ class Aes : public Rijndael
         return false;
     }
 
-    alc_error_t setKey(alc_cipher_data_t* ctx,
-                       const Uint8*       pKey,
-                       const Uint64       keyLen);
+    alc_error_t setKey(const Uint8* pKey, const Uint64 keyLen);
+    alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
 
-    alc_error_t setIv(alc_cipher_data_t* ctx,
-                      const Uint8*       pIv,
-                      const Uint64       ivLen);
-    void        getKey()
+    void getKey()
     {
         m_cipher_key_data.m_enc_key = getEncryptKeys();
         m_cipher_key_data.m_dec_key = getDecryptKeys();

@@ -54,11 +54,10 @@ namespace alcp::cipher::chacha20 {
     }
 
 alc_error_t
-ChaCha20::init(alc_cipher_data_t* ctx,
-               const Uint8*       pKey,
-               const Uint64       keyLen,
-               const Uint8*       pIv,
-               const Uint64       ivLen)
+ChaCha20::init(const Uint8* pKey,
+               const Uint64 keyLen,
+               const Uint8* pIv,
+               const Uint64 ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 

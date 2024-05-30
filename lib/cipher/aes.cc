@@ -34,7 +34,7 @@
 namespace alcp::cipher {
 
 alc_error_t
-Aes::setKey(alc_cipher_data_t* ctx, const Uint8* pKey, const Uint64 keyLen)
+Aes::setKey(const Uint8* pKey, const Uint64 keyLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -47,12 +47,11 @@ Aes::setKey(alc_cipher_data_t* ctx, const Uint8* pKey, const Uint64 keyLen)
     Rijndael::initRijndael(pKey, keyLen);
     getKey();
     m_isKeySet_aes = 1; // FIXME: use enum instead
-    // ctx->isKeySet  = 1;
     return e;
 }
 
 alc_error_t
-Aes::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
+Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
     m_ivLen_aes   = ivLen;
@@ -75,24 +74,23 @@ Aes::setIv(alc_cipher_data_t* ctx, const Uint8* pIv, const Uint64 ivLen)
 }
 
 alc_error_t
-Aes::init(alc_cipher_data_t* ctx,
-          const Uint8*       pKey,
-          const Uint64       keyLen,
-          const Uint8*       pIv,
-          const Uint64       ivLen)
+Aes::init(const Uint8* pKey,
+          const Uint64 keyLen,
+          const Uint8* pIv,
+          const Uint64 ivLen)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(ctx, pKey, keyLen);
+        err = setKey(pKey, keyLen);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err = setIv(ctx, pIv, ivLen);
+        err = setIv(pIv, ivLen);
     }
 
     return err;

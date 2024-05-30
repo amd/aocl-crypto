@@ -35,6 +35,57 @@ namespace alcp::cipher {
 
 Siv::Siv(alc_cipher_data_t* ctx) {}
 
+alc_error_t
+Siv::setKeys(const Uint8 key1[], Uint64 length)
+{
+
+    if (key1 == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+
+    // Block all unknown keysizes
+    switch (length) {
+        case 128:
+        case 192:
+        case 256:
+            break;
+        default:
+            return ALC_ERROR_INVALID_SIZE;
+    }
+
+    m_key1 = key1;
+
+    alc_error_t err = m_cmac.init(
+        m_key1, length / 8); // m_cmac.init(m_key1, length, NULL, 0);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
+
+    return err;
+}
+
+alc_error_t
+Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
+{
+    alc_error_t err       = ALC_ERROR_NONE;
+    Uint64      keyLength = keyLen; // 128/8 = 16
+    if (pIv != nullptr) {
+        memcpy(m_iv_aes, pIv, ivLen);
+    }
+
+    if (pKey != nullptr) {
+        m_key1 = pKey;
+        m_key2 = pKey + keyLength / 8;
+        err    = setKeys(m_key1, keyLength);
+        if (err != ALC_ERROR_NONE) {
+            return ALC_ERROR_INVALID_ARG;
+        }
+    }
+
+    return ALC_ERROR_NONE;
+}
+
 Status
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
 {
@@ -91,11 +142,11 @@ Siv::cmacWrapperMultiData(const Uint8 data1[],
 }
 
 Status
-Siv::addAdditionalInput(const Uint8 memory[], Uint64 length)
+Siv::addAdditionalInput(const Uint8* pAad, Uint64 aadLen)
 {
     Status s = StatusOk();
 
-    if (memory == nullptr) {
+    if (pAad == nullptr) {
         s = status::InvalidValue("Null Pointer is not expected!");
         return s;
     }
@@ -122,8 +173,8 @@ Siv::addAdditionalInput(const Uint8 memory[], Uint64 length)
 
     // Do cmac for additional data and set it to the proceed data.
     s = cmacWrapper(
-        memory,
-        length,
+        pAad,
+        aadLen,
         &((m_additionalDataProcessed.at(m_additionalDataProcessedSize)).at(0)),
         SIZE_CMAC);
 
@@ -133,39 +184,6 @@ Siv::addAdditionalInput(const Uint8 memory[], Uint64 length)
 
     // Increment the size of Data Processed if no errors
     m_additionalDataProcessedSize += 1;
-    return s;
-}
-
-Status
-Siv::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
-{
-    Status s = StatusOk();
-
-    if (key1 == nullptr || key2 == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
-    }
-
-    // Block all unknown keysizes
-    switch (length) {
-        case 128:
-        case 192:
-        case 256:
-            break;
-        default:
-            auto cer = cipher::CipherError(cipher::ErrorCode::eInvaidValue);
-            s.update(cer, cer.message());
-            return s;
-    }
-
-    m_key1 = key1;
-    m_key2 = key2;
-
-    s = m_cmac.init(m_key1, length / 8);
-    if (!s.ok()) {
-        return s;
-    }
-
     return s;
 }
 
@@ -187,31 +205,8 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
         return s;
     }
 
-    // std::cout << "ZERO_VECT:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
-
-    Uint8 rb[16] = {};
-    rb[15]       = 0x87;
-
-    // For each user provided additional data do the dbl and xor to complete
-    // processing
-    if (CpuId::cpuHasAvx2()) {
-        avx2::processAad(m_cmacTemp,
-                         m_additionalDataProcessed,
-                         m_additionalDataProcessedSize);
-    } else {
-        for (Uint64 i = 0; i < m_additionalDataProcessedSize; i++) {
-
-            alcp::cipher::dbl(&(m_cmacTemp[0]), rb);
-
-            // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) <<
-            // std::endl;
-
-            alcp::cipher::xor_a_b(&m_cmacTemp[0],
-                                  &(m_additionalDataProcessed.at(i).at(0)),
-                                  &m_cmacTemp[0],
-                                  SIZE_CMAC);
-        }
-    }
+    avx2::processAad(
+        m_cmacTemp, m_additionalDataProcessed, m_additionalDataProcessedSize);
 
     // If the size of plaintext is lower there is special case
     if (size >= SIZE_CMAC) {
@@ -239,12 +234,8 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
         Uint8 temp_bytes[16] = {};
         // Padding Hack
         temp_bytes[0] = 0x80;
-        // Speical case size lower for plain text need to do double and padding
-        if (CpuId::cpuHasAvx2()) {
-            avx2::dbl(&(m_cmacTemp[0]));
-        }
-        // alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
-        // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
+        // Special case size lower for plain text need to do double and padding
+        avx2::dbl(&(m_cmacTemp[0]));
 
         xor_a_b(plainText, m_cmacTemp, m_cmacTemp, size);
         // Padding
@@ -258,8 +249,7 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
     if (!s.ok()) {
         return s;
     }
-    // std::cout << "V:  " << parseBytesToHexStr(m_cmacTemp) << std::endl;
-    // Now m_cmacTemp is the offical SIV
+
     return s;
 }
 
@@ -281,52 +271,24 @@ SivHash::getTag(alc_cipher_data_t* ctx, Uint8 out[], Uint64 len)
 }
 
 alc_error_t
-SivHash::setAad(alc_cipher_data_t* ctx, const Uint8 memory[], Uint64 length)
+SivHash::setAad(alc_cipher_data_t* ctx, const Uint8* pAad, Uint64 aadLen)
 {
-    if (ctx == nullptr || memory == nullptr) {
+    if (ctx == nullptr || pAad == nullptr) {
         return ALC_ERROR_INVALID_ARG;
     }
-    Status s = addAdditionalInput(memory, length);
+    Status s = addAdditionalInput(pAad, aadLen);
     return s.code();
 }
 
 alc_error_t
-SivHash::init(alc_cipher_data_t* ctx,
-              const Uint8*       pKey,
-              Uint64             keyLen,
-              const Uint8*       pIv,
-              Uint64             ivLen)
+SivHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength)
 {
-    Uint64 keyLength = keyLen;
-    if (pIv != nullptr) {
-        memcpy(m_iv, pIv, ivLen);
-    }
-    if (ctx == nullptr) {
-        return ALC_ERROR_INVALID_ARG;
-    }
-    if (pKey != nullptr) {
-        m_key1   = pKey;
-        m_key2   = pKey + keyLength / 8;
-        Status s = setKeys(m_key1, m_key2, keyLength);
-        if (!s.ok()) {
-            return ALC_ERROR_INVALID_ARG;
-        }
-    }
-
     return ALC_ERROR_NONE;
 }
 
 // class SivAead Functions
 
 namespace aesni {
-
-    SivAead128::SivAead128(alc_cipher_data_t* ctx)
-        : Ctr128(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
-    }
 
     alc_error_t SivAead128::encrypt(alc_cipher_data_t* ctx,
                                     const Uint8*       pPlainText,
@@ -350,14 +312,10 @@ namespace aesni {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr128::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 128, q, 16);
 
         alc_error_t err =
-            Ctr128::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -382,14 +340,14 @@ namespace aesni {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
         // Do the CTR
         // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
         // false);
-        Ctr128::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr128::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 128, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -404,7 +362,8 @@ namespace aesni {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -419,14 +378,6 @@ namespace aesni {
             }
         }
         return s.code();
-    }
-
-    SivAead192::SivAead192(alc_cipher_data_t* ctx)
-        : Ctr192(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
     }
 
     alc_error_t SivAead192::encrypt(alc_cipher_data_t* ctx,
@@ -451,14 +402,10 @@ namespace aesni {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr192::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 192, q, 16);
 
         alc_error_t err =
-            Ctr192::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -483,14 +430,11 @@ namespace aesni {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr192::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr192::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 192, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -505,7 +449,8 @@ namespace aesni {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -520,14 +465,6 @@ namespace aesni {
             }
         }
         return s.code();
-    }
-
-    SivAead256::SivAead256(alc_cipher_data_t* ctx)
-        : Ctr256(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
     }
 
     alc_error_t SivAead256::encrypt(alc_cipher_data_t* ctx,
@@ -552,14 +489,10 @@ namespace aesni {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr256::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 256, q, 16);
 
         alc_error_t err =
-            Ctr256::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -584,14 +517,11 @@ namespace aesni {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr256::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr256::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 256, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -606,7 +536,8 @@ namespace aesni {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -625,13 +556,6 @@ namespace aesni {
 } // namespace aesni
 
 namespace vaes {
-    SivAead128::SivAead128(alc_cipher_data_t* ctx)
-        : Ctr128(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
-    }
 
     alc_error_t SivAead128::encrypt(alc_cipher_data_t* ctx,
                                     const Uint8*       pPlainText,
@@ -655,14 +579,10 @@ namespace vaes {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr128::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 128, q, 16);
 
         alc_error_t err =
-            Ctr128::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -687,14 +607,11 @@ namespace vaes {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr128::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr128::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 128, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -709,7 +626,8 @@ namespace vaes {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -724,14 +642,6 @@ namespace vaes {
             }
         }
         return s.code();
-    }
-
-    SivAead192::SivAead192(alc_cipher_data_t* ctx)
-        : Ctr192(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
     }
 
     alc_error_t SivAead192::encrypt(alc_cipher_data_t* ctx,
@@ -756,14 +666,10 @@ namespace vaes {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr192::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 192, q, 16);
 
         alc_error_t err =
-            Ctr192::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -788,14 +694,11 @@ namespace vaes {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr192::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr192::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 192, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -810,7 +713,8 @@ namespace vaes {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -825,14 +729,6 @@ namespace vaes {
             }
         }
         return s.code();
-    }
-
-    SivAead256::SivAead256(alc_cipher_data_t* ctx)
-        : Ctr256(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
     }
 
     alc_error_t SivAead256::encrypt(alc_cipher_data_t* ctx,
@@ -857,14 +753,10 @@ namespace vaes {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr256::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 256, q, 16);
 
         alc_error_t err =
-            Ctr256::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -889,14 +781,11 @@ namespace vaes {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr256::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr256::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 256, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -911,7 +800,8 @@ namespace vaes {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -930,13 +820,6 @@ namespace vaes {
 } // namespace vaes
 
 namespace vaes512 {
-    SivAead128::SivAead128(alc_cipher_data_t* ctx)
-        : Ctr128(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
-    }
 
     alc_error_t SivAead128::encrypt(alc_cipher_data_t* ctx,
                                     const Uint8*       pPlainText,
@@ -960,14 +843,10 @@ namespace vaes512 {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr128::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 128, q, 16);
 
         alc_error_t err =
-            Ctr128::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -992,14 +871,11 @@ namespace vaes512 {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr128::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr128::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 128, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -1014,7 +890,8 @@ namespace vaes512 {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -1029,14 +906,6 @@ namespace vaes512 {
             }
         }
         return s.code();
-    }
-
-    SivAead192::SivAead192(alc_cipher_data_t* ctx)
-        : Ctr192(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
     }
 
     alc_error_t SivAead192::encrypt(alc_cipher_data_t* ctx,
@@ -1061,14 +930,10 @@ namespace vaes512 {
             q[i] = m_cmacTemp[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
-        // true);
-
-        Ctr192::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 192, q, 16);
 
         alc_error_t err =
-            Ctr192::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -1093,14 +958,11 @@ namespace vaes512 {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
-        // Do the CTR
-        // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-        // false);
-        Ctr192::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr192::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 192, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -1115,7 +977,8 @@ namespace vaes512 {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =
@@ -1130,14 +993,6 @@ namespace vaes512 {
             }
         }
         return s.code();
-    }
-
-    SivAead256::SivAead256(alc_cipher_data_t* ctx)
-        : Ctr256(ctx)
-        , SivHash(ctx)
-    {
-        // Set current mode to AES-SIV
-        Aes::setMode(ALC_AES_MODE_SIV);
     }
 
     alc_error_t SivAead256::encrypt(alc_cipher_data_t* ctx,
@@ -1166,10 +1021,10 @@ namespace vaes512 {
         // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
         // true);
 
-        Ctr256::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
+        ctrobj->init(m_key2, 256, q, 16);
 
         alc_error_t err =
-            Ctr256::encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+            ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -1194,14 +1049,14 @@ namespace vaes512 {
 
         // Apply the mask and make q the IV
         for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-            q[i] = m_iv[i] & q[i];
+            q[i] = m_iv_aes[i] & q[i];
         }
 
         // Do the CTR
         // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
         // false);
-        Ctr256::init(ctx, m_key2, Aes::m_keyLen_in_bytes_aes * 8, q, 16);
-        err = Ctr256::decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+        ctrobj->init(m_key2, 256, q, 16);
+        err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
@@ -1216,7 +1071,8 @@ namespace vaes512 {
         s = s2v(pPlainText, len);
 
         // Verify tag, which just got generated
-        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv, SIZE_CMAC) == 0) {
+        if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC)
+            == 0) {
 // FIXME: Initiate Wipedown!
 #if 0
         auto cer =

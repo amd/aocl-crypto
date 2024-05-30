@@ -52,23 +52,12 @@ Cmac::~Cmac()
 void
 Cmac::getSubkeys()
 {
-    if (CpuId::cpuHasAvx2()) {
-        avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, m_rounds);
-        return;
-    }
-
-    // Reference algorithm for Subkey Derivation
-    Uint32 temp[4]{};
-    encryptBlock(temp, m_encrypt_keys, m_rounds);
-    Uint8 rb[16]{};
-    rb[15] = 0x87;
-
-    cipher::dbl(reinterpret_cast<Uint8*>(temp), rb, m_k1);
-    cipher::dbl(m_k1, rb, m_k2);
+    avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, m_nrounds);
+    return;
 }
 
 Status
-Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
+Cmac::update(const Uint8* pMsgBuf, Uint64 size)
 {
     if (m_finalized) {
         return UpdateAfterFinalzeError("");
@@ -89,10 +78,9 @@ Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
     /* Internal Storage buffer and Plaintext combined should be greater than
     block size to process it. Otherwise copy pMsgBuf also to internal
     buffer for later processing */
-    if ((m_storage_buffer_offset + size) <= cAESBlockSize) {
-        utils::CopyBlock<Uint64>(
-            m_storage_buffer + m_storage_buffer_offset, pMsgBuf, size);
-        m_storage_buffer_offset += size;
+    if ((m_buff_offset + size) <= cAESBlockSize) {
+        utils::CopyBlock<Uint64>(m_buff + m_buff_offset, pMsgBuf, size);
+        m_buff_offset += size;
         return status;
     }
 
@@ -103,11 +91,10 @@ Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
     /* For processing, it is assumed storage buffer is always complete. So
     copy data from pMsgBuf buffer to internal storage buffer until it
     is complete */
-    if (m_storage_buffer_offset <= cAESBlockSize) {
-        int b = cAESBlockSize - (m_storage_buffer_offset);
-        utils::CopyBlock<Uint64>(
-            m_storage_buffer + m_storage_buffer_offset, pMsgBuf, b);
-        m_storage_buffer_offset = cAESBlockSize;
+    if (m_buff_offset <= cAESBlockSize) {
+        int b = cAESBlockSize - (m_buff_offset);
+        utils::CopyBlock<Uint64>(m_buff + m_buff_offset, pMsgBuf, b);
+        m_buff_offset = cAESBlockSize;
         pMsgBuf += b;
 
         /* Calculations to check if internal storage buffer and pMsgBuf
@@ -128,35 +115,25 @@ Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
     }
 
     if (has_avx2_aesni) {
-        avx2::update(pMsgBuf,
-                     m_storage_buffer,
-                     m_encrypt_keys,
-                     m_temp_enc_result_8,
-                     m_rounds,
-                     n_blocks);
+        avx2::update(
+            pMsgBuf, m_buff, m_encrypt_keys, m_pBuffEnc, m_nrounds, n_blocks);
     } else {
         // Using a separate pointer for pMsgBuf pointer operations so
         // original pMsgBuf pointer is unmodified
         const Uint8* p_plaintext = pMsgBuf;
         // Reference Algorithm for AES CMAC block processing
-        alcp::cipher::xor_a_b(m_temp_enc_result_8,
-                              m_storage_buffer,
-                              m_temp_enc_result_8,
-                              cAESBlockSize);
-        encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
+        alcp::cipher::xor_a_b(m_pBuffEnc, m_buff, m_pBuffEnc, cAESBlockSize);
+        encryptBlock(m_buffEnc, m_encrypt_keys, m_nrounds);
         for (int i = 0; i < n_blocks; i++) {
-            alcp::cipher::xor_a_b(m_temp_enc_result_8,
-                                  p_plaintext,
-                                  m_temp_enc_result_8,
-                                  cAESBlockSize);
-            encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
+            alcp::cipher::xor_a_b(
+                m_pBuffEnc, p_plaintext, m_pBuffEnc, cAESBlockSize);
+            encryptBlock(m_buffEnc, m_encrypt_keys, m_nrounds);
             p_plaintext += cAESBlockSize;
         }
     }
     // Copy the unprocessed pMsgBuf bytes to the internal buffer
-    utils::CopyBytes(
-        m_storage_buffer, pMsgBuf + cAESBlockSize * n_blocks, bytes_to_copy);
-    m_storage_buffer_offset = bytes_to_copy;
+    utils::CopyBytes(m_buff, pMsgBuf + cAESBlockSize * n_blocks, bytes_to_copy);
+    m_buff_offset = bytes_to_copy;
 
     return status;
 }
@@ -164,15 +141,15 @@ Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
 Status
 Cmac::reset()
 {
-    memset(m_temp_enc_result_8, 0, cAESBlockSize);
-    memset(m_storage_buffer, 0, cAESBlockSize);
-    m_storage_buffer_offset = 0;
-    m_finalized             = false;
+    memset(m_pBuffEnc, 0, cAESBlockSize);
+    memset(m_buff, 0, cAESBlockSize);
+    m_buff_offset = 0;
+    m_finalized   = false;
     return StatusOk();
 }
 
 Status
-Cmac::finalize(Uint8 pMsgBuf[], Uint64 size)
+Cmac::finalize(Uint8* pMsgBuf, Uint64 size)
 {
     if (m_finalized) {
         return AlreadyFinalizedError("");
@@ -186,74 +163,63 @@ Cmac::finalize(Uint8 pMsgBuf[], Uint64 size)
     Status s{ StatusOk() };
 
     if (has_avx2_aesni) {
-        avx2::finalize(m_storage_buffer,
-                       m_storage_buffer_offset,
+        avx2::finalize(m_buff,
+                       m_buff_offset,
                        cAESBlockSize,
                        m_k1,
                        m_k2,
-                       m_rounds,
-                       m_temp_enc_result_8,
+                       m_nrounds,
+                       m_pBuffEnc,
                        m_encrypt_keys);
-        utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
+        utils::CopyBytes(pMsgBuf, m_pBuffEnc, size);
         m_finalized = true;
         return s;
     }
     // Check if storage_buffer is complete ie, Cipher Block Size bits
-    if (m_storage_buffer_offset == cAESBlockSize) {
+    if (m_buff_offset == cAESBlockSize) {
         // XOR Subkey1 with pMsgBuf bytes in storage buffer and store it
         // back to storage bufffer
-        cipher::xor_a_b(
-            m_k1, m_storage_buffer, m_storage_buffer, cAESBlockSize);
+        cipher::xor_a_b(m_k1, m_buff, m_buff, cAESBlockSize);
     } else {
         // Storage buffer is not complete. Pad it with 1000... to make it
         // complete
-        m_storage_buffer[m_storage_buffer_offset] = 0x80;
-        m_storage_buffer_offset += 1;
-        memset(m_storage_buffer + m_storage_buffer_offset,
-               0x00,
-               cAESBlockSize - m_storage_buffer_offset);
+        m_buff[m_buff_offset] = 0x80;
+        m_buff_offset += 1;
+        memset(m_buff + m_buff_offset, 0x00, cAESBlockSize - m_buff_offset);
         // XOR Subkey2 with pMsgBuf bytes in storage buffer and store it
         // back to storage bufffer
-        cipher::xor_a_b(
-            m_k2, m_storage_buffer, m_storage_buffer, cAESBlockSize);
+        cipher::xor_a_b(m_k2, m_buff, m_buff, cAESBlockSize);
     }
-    // Xor the output from previous block (m_temp_enc_result_8) with
+    // Xor the output from previous block (m_pBuffEnc) with
     // temporary storage buffer and store it back to storage_buffer
-    cipher::xor_a_b(m_temp_enc_result_8,
-                    m_storage_buffer,
-                    m_temp_enc_result_8,
-                    cAESBlockSize);
+    cipher::xor_a_b(m_pBuffEnc, m_buff, m_pBuffEnc, cAESBlockSize);
     // Encrypt the data from temp_enc_result and store it back to
     // temp_enc_result
-    encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
+    encryptBlock(m_buffEnc, m_encrypt_keys, m_nrounds);
 
-    utils::CopyBytes(pMsgBuf, m_temp_enc_result_8, size);
+    utils::CopyBytes(pMsgBuf, m_pBuffEnc, size);
 
     m_finalized = true;
     return s;
 }
 
-Status
-Cmac::init(const Uint8 key[], Uint64 keyLen)
+alc_error_t
+Cmac::init(const Uint8* pKey, Uint64 keyLen)
 {
-
-    Status s{ StatusOk() };
+    alc_error_t err       = ALC_ERROR_NONE;
     m_keyLen_in_bytes_aes = keyLen;
 
-    if (Aes::setKey(nullptr, key, keyLen * 8) != ALC_ERROR_NONE) {
-        // FIXME: Need to create another error function
-        s = status::EmptyKeyError("Invalid Key Size");
-        return s;
+    if (Aes::setKey(pKey, keyLen * 8) != ALC_ERROR_NONE) {
+        // s = status::EmptyKeyError("Invalid Key Size");
+        return ALC_ERROR_INVALID_SIZE;
     }
-
-    // FIXME: Check if this is required, looks like not required
-    // data.keyLen_in_bytes = keyLen / 8;
 
     // Aes::init(&data, key, keyLen, nullptr, 0);
     m_encrypt_keys = m_cipher_key_data.m_enc_key;
-    m_rounds       = getRounds();
+    m_nrounds      = getRounds();
     getSubkeys();
-    s = reset();
-    return s;
+    reset();
+    return err;
 }
+
 } // namespace alcp::mac

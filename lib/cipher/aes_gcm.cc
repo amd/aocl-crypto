@@ -40,54 +40,22 @@ using alcp::utils::CpuId;
 namespace alcp::cipher {
 
 // GcmGhash common code using aesni
-alc_error_t
-GcmGhash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    /* iv is not initialized means wrong order, we
-     * will return its a bad state to call setAad*/
-    if (m_pIv_aes == nullptr) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-    // additional data processing, when input is
-    // additional data & output is NULL
-    const Uint8* pAdditionalData         = pInput;
-    m_gcm_local_data.m_additionalDataLen = aadLen;
-#if DEBUG_PROV_GCM_INIT
-    printf("\n processAad adlen %ld ", m_gcm_local_data.m_additionalDataLen);
-#endif
-    err = aesni::processAdditionalDataGcm(pAdditionalData,
-                                          m_gcm_local_data.m_additionalDataLen,
-                                          m_gcm_local_data.m_gHash_128,
-                                          m_gcm_local_data.m_hash_subKey_128,
-                                          m_gcm_local_data.m_reverse_mask_128);
-
-    return err;
-}
 
 // over AES init, since additional InitGcm() is required
 alc_error_t
-GcmGhash::init(alc_cipher_data_t* ctx,
-               const Uint8*       pKey,
-               Uint64             keyLen,
-               const Uint8*       pIv,
-               Uint64             ivLen)
+Gcm::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(ctx, pKey, keyLen);
+        err = setKey(pKey, keyLen);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
-        m_isKeySet_aes =
-            1; // FIXME: verify and remove set to 1 here, its done setKey itself
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err = setIv(ctx, pIv, ivLen);
+        err = setIv(pIv, ivLen);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
@@ -111,6 +79,34 @@ GcmGhash::init(alc_cipher_data_t* ctx,
                              m_gcm_local_data.m_counter_128,
                              m_gcm_local_data.m_reverse_mask_128);
     }
+
+    return err;
+}
+
+alc_error_t
+// authentication api implementation
+GcmGhash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    /* iv is not initialized means wrong order, we
+     * will return its a bad state to call setAad*/
+    if (m_pIv_aes == nullptr) {
+        err = ALC_ERROR_BAD_STATE;
+        return err;
+    }
+    // additional data processing, when input is
+    // additional data & output is NULL
+    const Uint8* pAdditionalData         = pInput;
+    m_gcm_local_data.m_additionalDataLen = aadLen;
+#if DEBUG_PROV_GCM_INIT
+    printf("\n processAad adlen %ld ", m_gcm_local_data.m_additionalDataLen);
+#endif
+    err = aesni::processAdditionalDataGcm(pAdditionalData,
+                                          m_gcm_local_data.m_additionalDataLen,
+                                          m_gcm_local_data.m_gHash_128,
+                                          m_gcm_local_data.m_hash_subKey_128,
+                                          m_gcm_local_data.m_reverse_mask_128);
 
     return err;
 }
@@ -165,6 +161,12 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 #endif
 
     return err;
+}
+
+alc_error_t
+GcmGhash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength)
+{
+    return ALC_ERROR_NONE;
 }
 
 // this wrapper to be refined further.

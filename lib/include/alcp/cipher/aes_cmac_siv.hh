@@ -50,79 +50,43 @@ using utils::CpuId;
 
 // RFC5297
 
-class ALCP_API_EXPORT Siv
+//#define MAX_ADD_SIZE_SIV (126 * 16) // 126*16
+
+class ALCP_API_EXPORT Siv : public Aes
 {
+  public:
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen);
+
   protected:
-    /*
- Set of preprocessed Additional Data. Its allocated in a chunk to avoid
- memory issues. Each chunk being 10 slots. Any number of addtional data
- can be given by user but most of the time it will be less than 10. So a
- default size of 10 is allocated.
-*/
+    // FIXME: simplify the vector code, unnecessary complication! Just allocate
+    // max data size
     std::vector<std::vector<Uint8>> m_additionalDataProcessed =
         std::vector<std::vector<Uint8>>(10);
-    alignas(16) Uint8 m_iv[MAX_CIPHER_IV_SIZE] = {};
+    // alignas(16) Uint8 m_additionalDataProcessed[MAX_ADD_SIZE] = {};
+
     alignas(16) Uint8 m_cmacTemp[SIZE_CMAC]    = {};
     Uint64       m_additionalDataProcessedSize = {};
     const Uint8* m_key1                        = {};
     const Uint8* m_key2                        = {};
-    Uint64       m_keyLength                   = {};
     Uint64       m_padLen                      = {};
     Cmac         m_cmac;
 
-    /**
-     * @brief Do Cmac implementation
-     * @param data Pointer to data to do cmac on
-     * @param size Size of the data
-     * @param mac OutputMac memory
-     * @param macSize Size of Mac
-     * @return Status
-     */
-    Status cmacWrapper(const Uint8 data[],
-                       Uint64      size,
-                       Uint8       mac[],
-                       Uint64      macSize);
-    /**
-     * @brief Do Cmac implementation
-     * @param data1 Pointer to data1 to do cmac on
-     * @param size1 Size of the data1
-     * @param data2 Pointer to data2 to do cmac on
-     * @param size2 Size of the data2
-     * @param mac OutputMac memory
-     * @param macSize Size of Mac
-     * @return Status
-     */
-    Status cmacWrapperMultiData(const Uint8 data1[],
-                                Uint64      size1,
-                                const Uint8 data2[],
-                                Uint64      size2,
-                                Uint8       mac[],
-                                Uint64      macSize);
-
-    /**
-     * @brief Add An additonal Input into the SIV Algorithm
-     * @param memory Pointer which points to the additional data.
-     * @param length Length of the additional data
-     * @return Status
-     */
-    Status addAdditionalInput(const Uint8 memory[], Uint64 length);
-
-    /**
-     * @brief Set Keys for SIV and CTR
-     * @param key1  Key for SIV
-     * @param key2  Key for CTR
-     * @param length  Length of each key, same length keys
-     * @return Status
-     */
-    Status setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length);
-
-    /**
-     * @brief Generate Synthetic IV from Additional Data + Plaintext
-     * @param plainText Plaintext Data Input
-     * @param size Size of Plaintext
-     * @return Status, is failure or success status object
-     */
-    Status s2v(const Uint8 plainText[], Uint64 size);
+    Status      cmacWrapper(const Uint8 data[],
+                            Uint64      size,
+                            Uint8       mac[],
+                            Uint64      macSize);
+    Status      cmacWrapperMultiData(const Uint8 data1[],
+                                     Uint64      size1,
+                                     const Uint8 data2[],
+                                     Uint64      size2,
+                                     Uint8       mac[],
+                                     Uint64      macSize);
+    Status      addAdditionalInput(const Uint8* pAad, Uint64 aadLen);
+    alc_error_t setKeys(const Uint8 key1[], Uint64 length);
+    Status      s2v(const Uint8 plainText[], Uint64 size);
 
     Siv() = default;
     Siv(alc_cipher_data_t* ctx);
@@ -132,21 +96,21 @@ AEAD_AUTH_CLASS_GEN(SivHash, Siv);
 
 // Declare AEAD Classes
 namespace aesni {
-    AEAD_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
-    AEAD_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
-    AEAD_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
 } // namespace aesni
 
 namespace vaes {
-    AEAD_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
-    AEAD_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
-    AEAD_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
 } // namespace vaes
 
 namespace vaes512 {
-    AEAD_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
-    AEAD_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
-    AEAD_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead128, Ctr128, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead192, Ctr192, SivHash);
+    CIPHER_CLASS_GEN_DOUBLE(SivAead256, Ctr256, SivHash);
 } // namespace vaes512
 
 } // namespace alcp::cipher

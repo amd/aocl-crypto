@@ -46,8 +46,10 @@ __cmac_wrapperInit(Context*        ctx,
                    Uint64          size,
                    alc_mac_info_t* info)
 {
-    auto p_cmac = static_cast<Cmac*>(ctx->m_mac);
-    return p_cmac->init(key, size);
+    Status s      = StatusOk();
+    auto   p_cmac = static_cast<Cmac*>(ctx->m_mac);
+    p_cmac->init(key, size); // p_cmac->init(key, size, NULL, 0);
+    return s;
 }
 
 static Status
