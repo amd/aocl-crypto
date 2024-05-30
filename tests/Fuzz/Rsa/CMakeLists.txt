@@ -27,4 +27,5 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_decrypt test_fuzz_rsa_encrypt_decrypt.cc)
 ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_decrypt_oaep test_fuzz_rsa_encrypt_decrypt_oaep.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_sign_verify test_fuzz_rsa_sign_verify.cc)
 

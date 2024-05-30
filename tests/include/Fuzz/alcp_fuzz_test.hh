@@ -92,6 +92,9 @@ alc_digest_info_t mgf_info = {
     .dt_mode = ALC_SHA2_256,
 };
 
+#define ALCP_TEST_RSA_PADDING_PKCS 1
+#define ALCP_TEST_RSA_PADDING_PSS  2
+
 const int ERR_SIZE = 256;
 Uint8     err_buf[ERR_SIZE];
 void
