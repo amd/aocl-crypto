@@ -34,24 +34,19 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t key_size = 32;
+    /* supported key size is 32, still this should not cause a crash */
+    size_t key_size = stream.ConsumeIntegral<Uint16>();
 
     std::vector<Uint8> fuzz_pubkey_data_peer1 =
         stream.ConsumeBytes<Uint8>(key_size);
     std::vector<Uint8> fuzz_pvtkey_data_peer1 =
         stream.ConsumeBytes<Uint8>(key_size);
 
-    fuzz_pubkey_data_peer1.reserve(key_size);
-    fuzz_pvtkey_data_peer1.reserve(key_size);
-
     /* Peer 2 */
     std::vector<Uint8> fuzz_pubkey_data_peer2 =
         stream.ConsumeBytes<Uint8>(key_size);
     std::vector<Uint8> fuzz_pvtkey_data_peer2 =
         stream.ConsumeBytes<Uint8>(key_size);
-
-    fuzz_pubkey_data_peer2.reserve(key_size);
-    fuzz_pvtkey_data_peer2.reserve(key_size);
 
     std::cout << "Generating for Key size: " << key_size << std::endl;
 
@@ -131,6 +126,8 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len)
 
     alcp_ec_finish(&handle_peer2);
     free(handle_peer2.context);
+
+    std::cout << "Passed case for Key size: " << key_size << std::endl;
 
     return 0;
 }
