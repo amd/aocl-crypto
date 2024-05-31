@@ -39,7 +39,7 @@ namespace alcp::cipher {
                                                                                \
     {                                                                          \
       public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
+        CHILD_NEW(alc_cipher_data_t* ctx = nullptr)                            \
             : PARENT(ctx){};                                                   \
         ~CHILD_NEW(){};                                                        \
                                                                                \
