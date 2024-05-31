@@ -58,7 +58,9 @@ ScriptPath = os.path.dirname(os.path.abspath(__file__))
 
 CorpusDir = os.path.abspath(os.path.join(ScriptPath, 'Corpus'))
 if not os.path.isdir(CorpusDir):
-    Error_Exit("Crash corpus directory not found!")
+    print("Crash corpus directory not found!, creating")
+    os.mkdir(CorpusDir)
+    print("Created corpus dir " + CorpusDir)
 
 # FIXME: accept this module as a param?
 Fuzz_Targets = ['Cipher','Digest', 'Ec', 'Mac', 'rng', 'Rsa',]
