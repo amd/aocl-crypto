@@ -70,7 +70,6 @@ function(add_openssl)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(OPENSSL_SOURCES ${OPENSSL_CIPHER_FWK_SRCS} PARENT_SCOPE)
     IF(UNIX)
-        INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
         IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
             INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
             SET(OPENSSL_LIBS ${OPENSSL_LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

@@ -40,10 +40,11 @@ ChaCha20Poly1305::setIv(const Uint8* iv, Uint64 ivLen)
 }
 
 alc_error_t
-ChaCha20Poly1305::init(const Uint8* pKey,
-                       Uint64       keyLen,
-                       const Uint8* pIv,
-                       Uint64       ivLen)
+ChaCha20Poly1305::init(alc_cipher_data_t* cipher_data,
+                       const Uint8*       pKey,
+                       Uint64             keyLen,
+                       const Uint8*       pIv,
+                       Uint64             ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
     err             = setIv(pIv, ivLen);
@@ -116,7 +117,9 @@ ChaCha20Poly1305::processInput(const Uint8 inputBuffer[],
 }
 
 alc_error_t
-ChaCha20Poly1305::setAad(const Uint8* pInput, Uint64 len)
+ChaCha20Poly1305::setAad(alc_cipher_data_t* cipher_data,
+                         const Uint8*       pInput,
+                         Uint64             len)
 {
     alcp::base::Status s = Poly1305::update(pInput, len);
     if (!s.ok()) {
@@ -127,7 +130,9 @@ ChaCha20Poly1305::setAad(const Uint8* pInput, Uint64 len)
 }
 
 alc_error_t
-ChaCha20Poly1305::getTag(Uint8* pOutput, Uint64 len)
+ChaCha20Poly1305::getTag(alc_cipher_data_t* cipher_data,
+                         Uint8*             pOutput,
+                         Uint64             len)
 {
     alcp::base::Status s = Poly1305::finalize(pOutput, len);
     if (!s.ok()) {
@@ -137,7 +142,7 @@ ChaCha20Poly1305::getTag(Uint8* pOutput, Uint64 len)
 }
 
 alc_error_t
-ChaCha20Poly1305::setTagLength(Uint64 tagLength)
+ChaCha20Poly1305::setTagLength(alc_cipher_data_t* cipher_data, Uint64 tagLength)
 {
     if (tagLength != 16) {
         return ALC_ERROR_INVALID_SIZE;

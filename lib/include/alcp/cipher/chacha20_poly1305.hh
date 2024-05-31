@@ -62,18 +62,24 @@ using utils::CpuArchFeature;
       public:                                                                  \
         ChaCha20Poly1305()          = default;                                 \
         virtual ~ChaCha20Poly1305() = default;                                 \
-        alc_error_t init(const Uint8* pKey,                                    \
-                         Uint64       keyLen,                                  \
-                         const Uint8* pIv,                                     \
-                         Uint64       ivLen);                                        \
-        alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);                \
+        alc_error_t init(alc_cipher_data_t* cipher_data,                       \
+                         const Uint8*       pKey,                              \
+                         Uint64             keyLen,                            \
+                         const Uint8*       pIv,                               \
+                         Uint64             ivLen);                                        \
+        alc_error_t setAad(alc_cipher_data_t* cipher_data,                     \
+                           const Uint8*       pInput,                          \
+                           Uint64             aadLen);                                     \
                                                                                \
         template<bool is_encrypt>                                              \
         alc_error_t processInput(const Uint8 inputBuffer[],                    \
                                  Uint64      bufferLength,                     \
                                  Uint8       outputBuffer[]);                        \
-        alc_error_t setTagLength(Uint64 tagLength);                            \
-        alc_error_t getTag(Uint8* pOutput, Uint64 len);                        \
+        alc_error_t setTagLength(alc_cipher_data_t* cipher_data,               \
+                                 Uint64             tagLength);                            \
+        alc_error_t getTag(alc_cipher_data_t* cipher_data,                     \
+                           Uint8*             pOutput,                         \
+                           Uint64             len);                                        \
         alc_error_t setIv(const Uint8* iv, Uint64 ivLen);                      \
         alc_error_t setKey(const Uint8 key[], Uint64 keylen);                  \
     } // namespace alcp::cipher::chacha20
@@ -89,17 +95,20 @@ namespace vaes512 {
 
     {
       public:
-        ChaCha20Poly1305AEAD()  = default;
+        ChaCha20Poly1305AEAD() = default;
+        ChaCha20Poly1305AEAD(alc_cipher_data_t* cipher_data) {}
         ~ChaCha20Poly1305AEAD() = default;
 
       public:
-        alc_error_t encrypt(const Uint8* pPlainText,
-                            Uint8*       pCipherText,
-                            Uint64       len);
+        alc_error_t encrypt(alc_cipher_data_t* cipher_data,
+                            const Uint8*       pPlainText,
+                            Uint8*             pCipherText,
+                            Uint64             len);
 
-        alc_error_t decrypt(const Uint8* pCipherText,
-                            Uint8*       pPlainText,
-                            Uint64       len);
+        alc_error_t decrypt(alc_cipher_data_t* cipher_data,
+                            const Uint8*       pCipherText,
+                            Uint8*             pPlainText,
+                            Uint64             len);
     };
 } // namespace vaes512
 
@@ -111,16 +120,19 @@ namespace ref {
     class ALCP_API_EXPORT ChaCha20Poly1305AEAD : public ChaCha20Poly1305
     {
       public:
-        ChaCha20Poly1305AEAD()  = default;
+        ChaCha20Poly1305AEAD() = default;
+        ChaCha20Poly1305AEAD(alc_cipher_data_t* cipher_data) {}
         ~ChaCha20Poly1305AEAD() = default;
 
-        alc_error_t encrypt(const Uint8* pPlainText,
-                            Uint8*       pCipherText,
-                            Uint64       len);
+        alc_error_t encrypt(alc_cipher_data_t* cipher_data,
+                            const Uint8*       pPlainText,
+                            Uint8*             pCipherText,
+                            Uint64             len);
 
-        alc_error_t decrypt(const Uint8* pCipherText,
-                            Uint8*       pPlainText,
-                            Uint64       len);
+        alc_error_t decrypt(alc_cipher_data_t* cipher_data,
+                            const Uint8*       pCipherText,
+                            Uint8*             pPlainText,
+                            Uint64             len);
     };
 } // namespace ref
 

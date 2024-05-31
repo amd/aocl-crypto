@@ -81,6 +81,7 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
+    // Todo: Add tests for zen4
     ref::ChaCha20Poly1305AEAD* chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
@@ -117,7 +118,7 @@ class ChaCha20Poly1305Test : public testing::Test
 
         err = chacha_poly->setKey(&key[0], key.size());
         ASSERT_EQ(err, ALC_ERROR_NONE);
-        err = chacha_poly->setAad(&AAD[0], AAD.size());
+        err = chacha_poly->setAad(nullptr, &AAD[0], AAD.size());
         ASSERT_EQ(err, ALC_ERROR_NONE);
     }
 
@@ -129,14 +130,16 @@ class ChaCha20Poly1305Test : public testing::Test
         alc_error_t err = ALC_ERROR_NONE;
 
         if (isEncryptTest) {
-            err = chacha_poly->encrypt(&expected_plaintext[0],
+            err = chacha_poly->encrypt(nullptr,
+                                       &expected_plaintext[0],
                                        &ciphertext[0],
                                        expected_plaintext.size());
             ASSERT_EQ(err, ALC_ERROR_NONE);
             EXPECT_EQ(ciphertext, expected_ciphertext)
                 << "Failed Encryption: Input Size" << size << std::endl;
         } else {
-            err = chacha_poly->decrypt(&expected_ciphertext[0],
+            err = chacha_poly->decrypt(nullptr,
+                                       &expected_ciphertext[0],
                                        &plaintext[0],
                                        expected_ciphertext.size());
             ASSERT_EQ(err, ALC_ERROR_NONE);
@@ -145,7 +148,7 @@ class ChaCha20Poly1305Test : public testing::Test
             ;
         }
 
-        err = chacha_poly->getTag(&tag[0], 16);
+        err = chacha_poly->getTag(nullptr, &tag[0], 16);
 #ifdef DEBUG
         std::cout << "Tag is " << std::endl;
         BIO_dump_fp(stdout, &tag[0], tag.size());
@@ -213,13 +216,14 @@ TEST(Chacha20Poly1305, PerformanceTest)
 
     chacha_poly.setIv(nonce, sizeof(nonce));
     chacha_poly.setKey(key, sizeof(key));
-    chacha_poly.setAad(AAD, sizeof(AAD));
+    chacha_poly.setAad(nullptr, AAD, sizeof(AAD));
 
     ALCP_CRYPT_TIMER_INIT
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha_poly.encrypt(&plaintext[0], &ciphertext[0], plaintext.size());
+        chacha_poly.encrypt(
+            nullptr, &plaintext[0], &ciphertext[0], plaintext.size());
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"

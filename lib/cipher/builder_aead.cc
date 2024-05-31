@@ -179,7 +179,7 @@ CipherAeadBuilder::Build(const alc_cipher_mode_t cipherMode,
             if (!Chacha20Poly1305Builder::Supported(cipherMode, keyLen)) {
                 return ALC_ERROR_INVALID_SIZE;
             }
-            err = Chacha20Poly1305Builder::Build(cipherMode, keyLen, ctx);
+            err = Chacha20Poly1305Builder::Build(ctx);
             break;
         default:
             err = ALC_ERROR_NOT_SUPPORTED;

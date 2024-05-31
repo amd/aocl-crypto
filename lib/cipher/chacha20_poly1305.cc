@@ -39,15 +39,17 @@ using mac::poly1305::Poly1305;
 namespace vaes512 {
 #include "chacha20_poly1305.cc.inc"
 
-    alc_error_t ChaCha20Poly1305AEAD::encrypt(const Uint8* pInput,
-                                              Uint8*       pOutput,
-                                              Uint64       len)
+    alc_error_t ChaCha20Poly1305AEAD::encrypt(alc_cipher_data_t* cipher_data,
+                                              const Uint8*       pInput,
+                                              Uint8*             pOutput,
+                                              Uint64             len)
     {
         return ChaCha20Poly1305::processInput<true>(pInput, len, pOutput);
     }
-    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pInput,
-                                              Uint8*       pOutput,
-                                              Uint64       len)
+    alc_error_t ChaCha20Poly1305AEAD::decrypt(alc_cipher_data_t* cipher_data,
+                                              const Uint8*       pInput,
+                                              Uint8*             pOutput,
+                                              Uint64             len)
     {
         return ChaCha20Poly1305::processInput<false>(pInput, len, pOutput);
     }
@@ -56,15 +58,17 @@ namespace vaes512 {
 namespace ref {
 #include "chacha20_poly1305.cc.inc"
 
-    alc_error_t ChaCha20Poly1305AEAD::encrypt(const Uint8* pInput,
-                                              Uint8*       pOutput,
-                                              Uint64       len)
+    alc_error_t ChaCha20Poly1305AEAD::encrypt(alc_cipher_data_t* cipher_data,
+                                              const Uint8*       pInput,
+                                              Uint8*             pOutput,
+                                              Uint64             len)
     {
         return ChaCha20Poly1305::processInput<true>(pInput, len, pOutput);
     }
-    alc_error_t ChaCha20Poly1305AEAD::decrypt(const Uint8* pInput,
-                                              Uint8*       pOutput,
-                                              Uint64       len)
+    alc_error_t ChaCha20Poly1305AEAD::decrypt(alc_cipher_data_t* cipher_data,
+                                              const Uint8*       pInput,
+                                              Uint8*             pOutput,
+                                              Uint64             len)
     {
         return ChaCha20Poly1305::processInput<false>(pInput, len, pOutput);
     }
