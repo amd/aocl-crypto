@@ -174,8 +174,12 @@ AesAeadCipher(benchmark::State& state,
         data.m_out = vec_in_arr;
         // TAG is the IV
         // cb->init(key, keylen);
-        if (alcpMode == ALC_AES_MODE_SIV)
+        if (alcpMode == ALC_AES_MODE_SIV) {
             memcpy(iv, data.m_tag, 16);
+            // Since the tag of 16 bytes is copied to iv, iv length has to be
+            // reset to 16 bytes
+            data.m_ivl = 16;
+        }
     }
 
     for (auto _ : state) {
