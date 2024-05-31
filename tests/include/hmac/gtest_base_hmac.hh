@@ -109,11 +109,9 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
     std::vector<Uint8> hmac(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    alc_mac_info_t info{};
-    info.mi_type                      = ALC_MAC_HMAC;
-    info.mi_algoinfo.hmac.digest_mode = HmacDigestMode;
+    alc_mac_info_t info{ HmacDigestMode };
 
-    AlcpHmacBase ahb(info);
+    AlcpHmacBase ahb;
     HmacBase*    hb;
     hb = &ahb;
 
@@ -126,12 +124,12 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
         FAIL();
     }
 #ifdef USE_OSSL
-    OpenSSLHmacBase ohb(info);
+    OpenSSLHmacBase ohb;
     if (useossl == true)
         hb = &ohb;
 #endif
 #ifdef USE_IPP
-    IPPHmacBase ihb(info);
+    IPPHmacBase ihb;
     if (useipp == true)
         hb = &ihb;
 #endif
@@ -184,23 +182,21 @@ Hmac_Cross(alc_digest_mode_t HmacDigestMode)
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    alc_mac_info_t info{};
-    info.mi_algoinfo.hmac.digest_mode = HmacDigestMode;
-    info.mi_type                      = ALC_MAC_HMAC;
+    alc_mac_info_t info{ HmacDigestMode };
 
-    AlcpHmacBase ahb(info);
+    AlcpHmacBase ahb;
     RngBase      rb;
     HmacBase*    hb;
     HmacBase*    extHb = nullptr;
     hb                 = &ahb;
 
 #ifdef USE_OSSL
-    OpenSSLHmacBase ohb(info);
+    OpenSSLHmacBase ohb;
     if ((useossl == true) || (extHb == nullptr))
         extHb = &ohb;
 #endif
 #ifdef USE_IPP
-    IPPHmacBase ihb(info);
+    IPPHmacBase ihb;
     if (useipp == true)
         extHb = &ihb;
 #endif

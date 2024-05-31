@@ -63,20 +63,19 @@ void inline Hmac_Bench(benchmark::State& state,
     std::vector<Uint8> Key(KeySize, 0);
 
     /* Initialize info params based on hmac type */
-    info.mi_type = ALC_MAC_HMAC;
 
-    AlcpHmacBase     ahb(info);
+    AlcpHmacBase     ahb;
     HmacBase*        hb = &ahb;
     alcp_hmac_data_t data;
 #ifdef USE_IPP
-    IPPHmacBase ihb(info);
+    IPPHmacBase ihb;
     if (useipp) {
         hb = &ihb;
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLHmacBase ohb(info);
+    OpenSSLHmacBase ohb;
     if (useossl) {
         hb = &ohb;
     }
@@ -112,29 +111,25 @@ void inline Hmac_Bench(benchmark::State& state,
 static void
 BENCH_HMAC_SHA2_224(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_224;
+    alc_mac_info_t info{ ALC_SHA2_224 };
     Hmac_Bench(state, info, state.range(0), 224);
 }
 static void
 BENCH_HMAC_SHA2_256(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_256;
+    alc_mac_info_t info{ ALC_SHA2_256 };
     Hmac_Bench(state, info, state.range(0), 256);
 }
 static void
 BENCH_HMAC_SHA2_384(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_384;
+    alc_mac_info_t info{ ALC_SHA2_384 };
     Hmac_Bench(state, info, state.range(0), 384);
 }
 static void
 BENCH_HMAC_SHA2_512(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA2_512;
+    alc_mac_info_t info{ ALC_SHA2_512 };
     Hmac_Bench(state, info, state.range(0), 512);
 }
 
@@ -142,29 +137,25 @@ BENCH_HMAC_SHA2_512(benchmark::State& state)
 static void
 BENCH_HMAC_SHA3_224(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_224;
+    alc_mac_info_t info{ ALC_SHA3_224 };
     Hmac_Bench(state, info, state.range(0), 224);
 }
 static void
 BENCH_HMAC_SHA3_256(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_256;
+    alc_mac_info_t info{ ALC_SHA3_256 };
     Hmac_Bench(state, info, state.range(0), 256);
 }
 static void
 BENCH_HMAC_SHA3_384(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_384;
+    alc_mac_info_t info{ ALC_SHA3_384 };
     Hmac_Bench(state, info, state.range(0), 384);
 }
 static void
 BENCH_HMAC_SHA3_512(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.digest_mode = ALC_SHA3_512;
+    alc_mac_info_t info{ ALC_SHA3_512 };
     Hmac_Bench(state, info, state.range(0), 512);
 }
 

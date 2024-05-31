@@ -297,7 +297,6 @@ init_radix26(const Uint8 key[],
         status.update(status::InternalError("Cannot setKey after finalized!"));
         return status;
     }
-    keyLen = keyLen / 8;
     if (keyLen != 32) {
         status.update(status::InvalidArgument("Length does not match"));
         return status;

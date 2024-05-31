@@ -48,11 +48,7 @@ class IPPCmacBase : public CmacBase
     Uint32             m_key_len = {};
 
   public:
-    IPPCmacBase(const alc_mac_info_t& info);
-
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
 
     ~IPPCmacBase();
 

@@ -52,7 +52,6 @@ class CmacBase
 {
   public:
     virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool init()                                                    = 0;
     virtual bool cmacFunction(const alcp_cmac_data_t& data)                = 0;
     virtual bool reset()                                                   = 0;
 };

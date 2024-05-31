@@ -83,45 +83,21 @@ typedef struct _alc_hmac_info
  */
 typedef struct _alc_cmac_info
 {
-    alc_cipher_info_t cmac_cipher;
+    alc_cipher_type_t ci_type; /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_mode_t ci_mode; /*! Mode: ALC_AES_MODE_CTR etc */
     // Other specific info about CMAC
 } alc_cmac_info_t, *alc_cmac_info_p;
 
 /**
- * @brief Stores details for Poly1305
+ * @brief Stores details for algo info for mac
  *
- * @struct alc_poly1305_info_t
+ * @union _mac_info
  */
-typedef struct _alc_poly1305_info
+typedef union _mac_info
 {
-    char dummy;
-} alc_poly1305_info_t, *alc_poly1305_info_p;
-
-/**
- * @brief Stores details of CMAC
- *
- * @param  mi_type      Store Type of MAC to be used
- * @param  mi_algoinfo  A Union of alc_hmac_info_t, alc_cmac_info_t
- * @param  mi_keyinfo   Store key info
- * @struct alc_mac_info_t
- *
- * @note Supported MAC algorithms HMAC, CMAC, POLY1305
- *
- */
-typedef struct _alc_mac_info_t
-{
-    alc_mac_type_t mi_type;
-    union
-    {
-        alc_hmac_info_t     hmac;
-        alc_cmac_info_t     cmac;
-        alc_poly1305_info_t poly1305;
-    } mi_algoinfo;
-
-    // any other common fields that are needed
-    alc_key_info_t    mi_keyinfo;
-    alc_cipher_mode_t ci_mode; // to be removed
-} alc_mac_info_t, *alc_mac_info_p;
+    alc_hmac_info_t hmac;
+    alc_cmac_info_t cmac;
+} alc_mac_info_t;
 
 typedef void               alc_mac_context_t;
 typedef alc_mac_context_t* alc_mac_context_p;
@@ -163,15 +139,15 @@ alcp_mac_context_size(void);
  * @endparblock
  * @note     Error needs to be checked after each call,
  *           valid only if @ref alcp_is_error (ret) is false
- * @param  [in]  pMacInfo    Description of the MAC session
- * @param [out]   pMacHandle Library populated session handle for future
+ * @param  [in]  macType     Description of the MAC session
+ * @param [out]  pMacHandle  Library populated session handle for future
  * mac operations.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_mac_error or @ref alcp_error_str needs
  * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
+alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t macType);
 
 /**
  * @brief    Allows caller to set key and initialize hmac session
@@ -188,7 +164,10 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
  * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_mac_init(alc_mac_handle_p pMacHandle, const Uint8* key, Uint64 size);
+alcp_mac_init(alc_mac_handle_p pMacHandle,
+              const Uint8*     key,
+              Uint64           size,
+              alc_mac_info_t*  info);
 
 /**
  * @brief    Allows caller to update MAC with chunk of data to be authenticated

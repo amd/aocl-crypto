@@ -50,11 +50,9 @@ class OpenSSLHmacBase : public HmacBase
     OSSL_PARAM     m_ossl_params[3] = {};
 
   public:
-    OpenSSLHmacBase(const alc_mac_info_t& info);
+    OpenSSLHmacBase() = default;
 
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
 
     ~OpenSSLHmacBase();
 

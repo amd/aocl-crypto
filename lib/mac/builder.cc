@@ -59,19 +59,19 @@ getCpuArchFeature()
 }
 
 Status
-MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
+MacBuilder::build(alc_mac_type_t mi_type, Context* ctx)
 {
     using namespace status;
     Status status = StatusOk();
-    switch (macInfo.mi_type) {
+    switch (mi_type) {
         case ALC_MAC_HMAC:
-            status = HmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = HmacBuilder::build(ctx);
             break;
         case ALC_MAC_CMAC:
-            status = CmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = CmacBuilder::build(ctx);
             break;
         case ALC_MAC_POLY1305:
-            status = Poly1305Builder::build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = Poly1305Builder::build(ctx);
             break;
         default:
             status.update(InvalidArgument("Unknown MAC Type"));
@@ -80,31 +80,12 @@ MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
     return status;
 }
 
-Uint64
-MacBuilder::getSize(const alc_mac_info_t& macInfo)
-{
-    Uint64 size = 0;
-    switch (macInfo.mi_type) {
-        case ALC_MAC_CMAC:
-            size = CmacBuilder::getSize(macInfo);
-            break;
-        case ALC_MAC_HMAC:
-            size = HmacBuilder::getSize(macInfo);
-            break;
-        case ALC_MAC_POLY1305:
-            size = Poly1305Builder::getSize(macInfo);
-        default:
-            size = 0;
-    }
-    return size;
-}
-
 Status
-MacBuilder::BuildWithCopy(mac::Context& srcCtx, mac::Context& destCtx)
+MacBuilder::BuildWithCopy(mac::Context* srcCtx, mac::Context* destCtx)
 {
     Status status = StatusOk();
-    if (srcCtx.duplicate) {
-        status = srcCtx.duplicate(srcCtx, destCtx);
+    if (srcCtx->duplicate) {
+        status = srcCtx->duplicate(srcCtx, destCtx);
     } else {
         status.update(NotImplemented("Unknown MAC Type"));
     }

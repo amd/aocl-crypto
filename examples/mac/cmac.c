@@ -51,11 +51,13 @@ compareArray(Uint8* a1, Uint64 a1_len, Uint8* a2, Uint64 a2_len)
 static alc_mac_handle_t handle;
 
 alc_error_t
-run_cmac(const alc_mac_info_p macInfo,
-         Uint8*               cipherText,
-         Uint32               cipherTextLen,
-         Uint8*               mac,
-         Uint32               mac_size)
+run_cmac(Uint8*         cipherText,
+         Uint32         cipherTextLen,
+         Uint8*         mac,
+         Uint32         mac_size,
+         const Uint8*   key,
+         Uint32         key_size,
+         alc_mac_info_t macinfo)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
@@ -66,11 +68,18 @@ run_cmac(const alc_mac_info_p macInfo,
         return ALC_ERROR_GENERIC;
     }
 
-    err = alcp_mac_request(&handle, macInfo);
+    err = alcp_mac_request(&handle, ALC_MAC_CMAC);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request - %lu\n", err);
         return err;
     }
+
+    err = alcp_mac_init(&handle, key, key_size, &macinfo);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC init - %lu\n", err);
+        return err;
+    }
+
     // Update can be called multiple times with smaller chunks of the
     // cipherText
     err = alcp_mac_update(&handle, cipherText, cipherTextLen);
@@ -84,6 +93,7 @@ run_cmac(const alc_mac_info_p macInfo,
         printf("Error Occurred on MAC Finalize\n");
         return err;
     }
+
     alcp_mac_finish(&handle);
     free(handle.ch_context);
     return err;
@@ -146,22 +156,18 @@ demo_cmac()
     Uint8 expectedMac[] = { 0x07, 0x0A, 0x16, 0xB4, 0x6B, 0x4D, 0x41, 0x44,
                             0xF7, 0x9B, 0xDD, 0x9D, 0xD0, 0x4A, 0x28, 0x7C };
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type     = ALC_MAC_CMAC,
-        .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
-                                                        ALC_CIPHER_TYPE_AES,
-                                                    .ci_mode =
-                                                        ALC_AES_MODE_NONE } } },
-        .mi_keyinfo  = kinfo
-    };
+    alc_mac_info_t macinfo = { .cmac.ci_type = ALC_CIPHER_TYPE_AES,
+                               .cmac.ci_mode = ALC_AES_MODE_NONE };
 
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
-    err = run_cmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    err = run_cmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   macinfo);
     if (alcp_is_error(err)) {
         printf("Error in CMAC\n");
         return -1;

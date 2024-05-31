@@ -57,9 +57,6 @@ typedef struct _alc_prov_rng_ctx alc_prov_rng_ctx_t, *alc_prov_rng_ctx_p;
 
 extern const OSSL_ALGORITHM ALC_prov_rng[];
 
-/* TODO: ugly hack for openssl table */
-typedef void (*fptr_t)(void);
-
 /* Function prototypes (definitions) */
 extern OSSL_FUNC_rand_newctx_fn        ALCP_prov_rng_newctx;
 extern OSSL_FUNC_rand_freectx_fn       ALCP_prov_rng_freectx;

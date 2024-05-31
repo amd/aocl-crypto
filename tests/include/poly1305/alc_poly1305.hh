@@ -41,17 +41,13 @@ namespace alcp::testing {
 class AlcpPoly1305Base : public Poly1305Base
 {
     alc_mac_handle_t* m_handle{};
-    alc_mac_info_t    m_info;
     Uint8*            m_message = {};
     Uint8*            m_key     = {};
     Uint32            m_key_len;
 
   public:
-    AlcpPoly1305Base(const alc_mac_info_t& info);
-
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
+    AlcpPoly1305Base() = default;
+    bool init(std::vector<Uint8>& Key);
 
     ~AlcpPoly1305Base();
 

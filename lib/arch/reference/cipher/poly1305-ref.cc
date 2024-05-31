@@ -302,11 +302,7 @@ Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
     Uint8* p_m_key_8 = reinterpret_cast<Uint8*>(m_key);
     // Uint8* m_acc_8 = reinterpret_cast<Uint8*>(m_accumulator);
     Status s = StatusOk();
-    if (m_finalized) {
-        s.update(status::InternalError("Cannot setKey after finalized!"));
-        return s;
-    }
-    keyLen = keyLen / 8;
+
     if (keyLen != 32) {
         s.update(status::InvalidArgument("Length does not match"));
         return s;

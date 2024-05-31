@@ -31,28 +31,13 @@
 
 namespace alcp::testing {
 
-AlcpPoly1305Base::AlcpPoly1305Base(const alc_mac_info_t& info) {}
-
 bool
-AlcpPoly1305Base::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+AlcpPoly1305Base::init(std::vector<Uint8>& Key)
 {
-    m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
+    alc_error_t err;
 
-bool
-AlcpPoly1305Base::init()
-{
-    alc_error_t    err;
-    alc_mac_info_t dinfo = m_info;
-
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = m_key_len * 8,
-                                   .key  = m_key };
-
-    dinfo.mi_keyinfo = kinfo;
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
         m_handle->ch_context = malloc(alcp_mac_context_size());
@@ -62,9 +47,15 @@ AlcpPoly1305Base::init()
         alcp_mac_finish(m_handle);
     }
 
-    err = alcp_mac_request(m_handle, &dinfo);
+    err = alcp_mac_request(m_handle, ALC_MAC_POLY1305);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_mac_request:" << err << std::endl;
+        return false;
+    }
+
+    err = alcp_mac_init(m_handle, m_key, m_key_len, NULL);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_mac_init:" << err << std::endl;
         return false;
     }
     return true;

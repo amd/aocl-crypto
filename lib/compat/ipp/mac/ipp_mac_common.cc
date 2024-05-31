@@ -29,7 +29,11 @@
 #include "mac/ipp_mac_common.hh"
 
 IppStatus
-alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
+alcp_MacInit(alc_mac_type_t   macType,
+             ipp_wrp_mac_ctx* p_mac_ctx,
+             const Ipp8u*     pKey,
+             int              keyLen,
+             alc_mac_info_t   info)
 {
     p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size());
 
@@ -37,11 +41,15 @@ alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
         return ippStsErr;
     }
 
-    p_mac_ctx->mac_info = *pcMacInfo;
-
-    auto err = alcp_mac_request(&p_mac_ctx->handle, pcMacInfo);
+    auto err = alcp_mac_request(&p_mac_ctx->handle, macType);
     if (err != ALC_ERROR_NONE) {
         printErr("ALCP MAC Provider:  Request failed\n");
+        return ippStsErr;
+    }
+
+    err = alcp_mac_init(&p_mac_ctx->handle, pKey, keyLen, &info);
+    if (err != ALC_ERROR_NONE) {
+        printErr("ALCP MAC Provider:  Init failed\n");
         return ippStsErr;
     }
 
@@ -52,9 +60,6 @@ IppStatus
 alcp_MacUpdate(const Ipp8u* pSrc, int len, ipp_wrp_mac_ctx* p_mac_ctx)
 {
 
-    if (p_mac_ctx->handle.ch_context == nullptr) {
-        alcp_MacInit(&p_mac_ctx->mac_info, p_mac_ctx);
-    }
     auto err = alcp_mac_update(&p_mac_ctx->handle,
                                static_cast<const Uint8*>(pSrc),
                                static_cast<Uint64>(len));

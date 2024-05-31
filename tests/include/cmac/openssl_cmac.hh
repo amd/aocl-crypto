@@ -51,11 +51,7 @@ class OpenSSLCmacBase : public CmacBase
     Uint32         m_key_len;
 
   public:
-    OpenSSLCmacBase(const alc_mac_info_t& info);
-
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
 
     ~OpenSSLCmacBase();
 

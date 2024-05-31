@@ -79,5 +79,6 @@ struct _alc_prov_ctx
     const OSSL_CORE_HANDLE* ap_core_handle;
 };
 typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
+typedef void (*fptr_t)(void);
 
 #endif /* _OPENSSL_ALCP_PROV_H */

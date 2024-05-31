@@ -52,8 +52,7 @@ struct alcp_poly1305_data_t
 class Poly1305Base
 {
   public:
-    virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool init()                                                    = 0;
-    virtual bool mac(const alcp_poly1305_data_t& data)                     = 0;
-    virtual bool reset()                                                   = 0;
+    virtual bool init(std::vector<Uint8>& Key)         = 0;
+    virtual bool mac(const alcp_poly1305_data_t& data) = 0;
+    virtual bool reset()                               = 0;
 };

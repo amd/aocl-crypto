@@ -48,11 +48,9 @@ class AlcpCmacBase : public CmacBase
     Uint32            m_key_len;
 
   public:
-    AlcpCmacBase(const alc_mac_info_t& info);
+    AlcpCmacBase() = default;
 
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
 
     ~AlcpCmacBase();
 

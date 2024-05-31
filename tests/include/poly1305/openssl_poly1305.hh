@@ -40,20 +40,17 @@
 namespace alcp::testing {
 class OpenSSLPoly1305Base : public Poly1305Base
 {
-    EVP_MAC_CTX*   m_handle = nullptr;
-    alc_mac_info_t m_info;
-    Uint8*         m_message;
-    Uint8*         m_key;
-    Uint8*         m_poly1305;
-    EVP_MAC*       m_mac = nullptr;
-    Uint32         m_key_len;
+    EVP_MAC_CTX* m_handle = nullptr;
+    Uint8*       m_message;
+    Uint8*       m_key;
+    Uint8*       m_poly1305;
+    EVP_MAC*     m_mac = nullptr;
+    Uint32       m_key_len;
 
   public:
-    OpenSSLPoly1305Base(const alc_mac_info_t& info);
+    OpenSSLPoly1305Base() = default;
 
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
+    bool init(std::vector<Uint8>& Key);
 
     ~OpenSSLPoly1305Base();
 

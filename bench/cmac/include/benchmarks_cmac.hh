@@ -63,22 +63,18 @@ void inline Cmac_Bench(benchmark::State& state,
     std::vector<Uint8> message(block_size, 0);
     std::vector<Uint8> Key(KeySize / 8, 0);
 
-    /* Initialize info params based on cmac type */
-    info.mi_type                            = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_iv = NULL;
-
-    AlcpCmacBase     acb(info);
+    AlcpCmacBase     acb;
     CmacBase*        cb = &acb;
     alcp_cmac_data_t data;
 #ifdef USE_IPP
-    IPPCmacBase icb(info);
+    IPPCmacBase icb;
     if (useipp) {
         cb = &icb;
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLCmacBase ocb(info);
+    OpenSSLCmacBase ocb;
     if (useossl) {
         cb = &ocb;
     }
@@ -111,8 +107,8 @@ static void
 BENCH_CMAC_AES_128(benchmark::State& state)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
+    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
+    info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 128);
 }
 
@@ -120,8 +116,8 @@ static void
 BENCH_CMAC_AES_192(benchmark::State& state)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
+    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
+    info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 192);
 }
 
@@ -129,8 +125,8 @@ static void
 BENCH_CMAC_AES_256(benchmark::State& state)
 {
     alc_mac_info_t info;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
+    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
+    info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 256);
 }
 

@@ -107,7 +107,7 @@ getK0XorPad(Uint32 input_block_length,
     }
 }
 
-Hmac::Hmac(Hmac& hmac)
+Hmac::Hmac(const Hmac& hmac)
 {
     m_input_block_length = hmac.m_input_block_length;
     m_output_hash_size   = hmac.m_output_hash_size;
@@ -205,15 +205,15 @@ Hmac::reset()
 }
 
 Status
-Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest)
+Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest)
 {
     Status status = StatusOk();
 
-    if (key == nullptr || keylen == 0) {
+    if (key == nullptr || digest == nullptr) {
         return InitError("");
     }
 
-    m_pDigest = &digest;
+    m_pDigest = digest;
     m_pDigest->init();
 
     m_input_block_length = m_pDigest->getInputBlockSize();
@@ -243,6 +243,12 @@ Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest)
     }
     m_isInit = true;
     return status;
+}
+
+void
+Hmac::setDigest(digest::IDigest* digest)
+{
+    m_pDigest = digest;
 }
 
 } // namespace alcp::mac

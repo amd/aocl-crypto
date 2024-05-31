@@ -75,10 +75,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
     alcp_cmac_data_t data     = {};
     const int        CmacSize = 16;
 
-    info.mi_type                            = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_iv = NULL;
-
-    AlcpCmacBase acb(info);
+    AlcpCmacBase acb;
     CmacBase*    cb;
     cb = &acb;
 
@@ -92,12 +89,12 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
     }
 
 #ifdef USE_OSSL
-    OpenSSLCmacBase ocb(info);
+    OpenSSLCmacBase ocb;
     if (useossl == true)
         cb = &ocb;
 #endif
 #ifdef USE_IPP
-    IPPCmacBase icb(info);
+    IPPCmacBase icb;
     if (useipp == true)
         cb = &icb;
 #endif
@@ -156,23 +153,19 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
     std::vector<Uint8> CmacAlcp(CmacSize / 8, 0);
     std::vector<Uint8> CmacExt(CmacSize / 8, 0);
 
-    /* Initialize info params based on test type */
-    info.mi_type                            = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_iv = NULL;
-
-    AlcpCmacBase acb(info);
+    AlcpCmacBase acb;
     RngBase      rb;
     CmacBase*    cb;
     CmacBase*    extCb = nullptr;
     cb                 = &acb;
 
 #ifdef USE_OSSL
-    OpenSSLCmacBase ocb(info);
+    OpenSSLCmacBase ocb;
     if ((useossl == true) || (extCb == nullptr))
         extCb = &ocb;
 #endif
 #ifdef USE_IPP
-    IPPCmacBase icb(info);
+    IPPCmacBase icb;
     if (useipp == true)
         extCb = &icb;
 #endif

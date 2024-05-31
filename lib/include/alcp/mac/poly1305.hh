@@ -43,7 +43,7 @@ class ALCP_API_EXPORT IPoly1305
     /**
      * @brief Sets the Key and Initializes the state of Poly1305
      * @param key - Key to use for Poly1305
-     * @param len - Key Length 32 Byte, anything else wont work
+     * @param keyLen - Key Length 32 Byte, anything else wont work
      * @return Status/Result of the operation
      */
     virtual Status init(const Uint8 key[], Uint64 keyLen) = 0;
@@ -92,10 +92,10 @@ class ALCP_API_EXPORT Poly1305 : public IMac
     /**
      * @brief Sets the Key and Initializes the state of Poly1305
      * @param key - Key to use for Poly1305
-     * @param len - Key Length 32 Byte, anything else wont work
+     * @param keyLen - Key Length 32 Byte, anything else wont work
      * @return Status/Result of the operation
      */
-    Status setKey(const Uint8 key[], Uint64 len);
+    Status init(const Uint8 key[], Uint64 keyLen);
     /**
      * @brief Resets the temporary buffers without clearing key
      * @return Status/Result of the operation
@@ -112,5 +112,6 @@ class ALCP_API_EXPORT Poly1305 : public IMac
     // msgLen);
     Poly1305();
     virtual ~Poly1305() = default;
+    Poly1305(const Poly1305& src);
 };
 } // namespace alcp::mac::poly1305

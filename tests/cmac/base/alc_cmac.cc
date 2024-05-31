@@ -31,30 +31,14 @@
 
 namespace alcp::testing {
 
-AlcpCmacBase::AlcpCmacBase(const alc_mac_info_t& info) {}
-
 bool
 AlcpCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
-
-bool
-AlcpCmacBase::init()
-{
-    alc_error_t    err;
-    alc_mac_info_t mac_info = m_info;
 
 #if 1 // to be fixed
-
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = m_key_len * 8,
-                                   .key  = m_key };
-
-    mac_info.mi_keyinfo = kinfo;
     // mac_info.mi_algoinfo.cmac.cmac_cipher.ci_key_info = kinfo;
 
     if (m_handle == nullptr) {
@@ -68,7 +52,13 @@ AlcpCmacBase::init()
 
 #endif
 
-    err = alcp_mac_request(m_handle, &mac_info);
+    alc_error_t err = alcp_mac_request(m_handle, ALC_MAC_CMAC);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_mac_request:" << err << std::endl;
+        return false;
+    }
+
+    err = alcp_mac_init(m_handle, m_key, m_key_len, &m_info);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_mac_request:" << err << std::endl;
         return false;

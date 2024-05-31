@@ -69,7 +69,7 @@ class ALCP_API_EXPORT Hmac final : public IMac
   public:
     Hmac()  = default;
     ~Hmac() = default;
-    Hmac(Hmac& hmac);
+    Hmac(const Hmac& hmac);
 
     /**
      * @brief Can be called continously to update message on small chunks
@@ -97,7 +97,7 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @param digest: Digest class to be used by HMAC.
      * @returns Status
      */
-    Status init(const Uint8 key[], Uint32 keylen, digest::IDigest& digest);
+    Status init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest);
 
     /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with
@@ -105,6 +105,8 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @returns Status
      */
     Status reset() override;
+
+    void setDigest(digest::IDigest* digest);
 };
 
 namespace avx2 {
