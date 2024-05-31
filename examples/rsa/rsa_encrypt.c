@@ -63,10 +63,10 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 {
     alc_error_t err;
 
-    Uint64 size           = alcp_rsa_context_size(KEY_SIZE_1024);
+    Uint64 size           = alcp_rsa_context_size();
     s_rsa_handle->context = malloc(size);
 
-    err = alcp_rsa_request(KEY_SIZE_1024, s_rsa_handle);
+    err = alcp_rsa_request(s_rsa_handle);
 
     return err;
 }
@@ -75,9 +75,8 @@ static alc_error_t
 Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 {
     alc_error_t err;
-    Uint8*      text        = NULL;
-    Uint8*      pub_key_mod = NULL;
-    Uint8*      enc_text    = NULL;
+    Uint8*      text     = NULL;
+    Uint8*      enc_text = NULL;
 
     Uint64 size = sizeof(Modulus);
 
@@ -100,25 +99,11 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     ALCP_PRINT_TEXT(text, size_key, "text_peer")
 
-    pub_key_mod = malloc(sizeof(Uint8) * size_key);
-    memset(pub_key_mod, 0, sizeof(Uint8) * size_key);
-
-    Uint64 public_exponent;
-
-    err = alcp_rsa_get_publickey(
-        ps_rsa_handle, &public_exponent, pub_key_mod, size_key);
-
-    if (alcp_is_error(err)) {
-        printf("\n publickey fetch failed");
-        goto free_pub_key_mod;
-    }
-
     // Encrypt text by using public key
     enc_text = malloc(sizeof(Uint8) * size_key);
     memset(enc_text, 0, sizeof(Uint8) * size_key);
 
-    err = alcp_rsa_publickey_encrypt(
-        ps_rsa_handle, ALCP_RSA_PADDING_NONE, text, size_key, enc_text);
+    err = alcp_rsa_publickey_encrypt(ps_rsa_handle, text, size_key, enc_text);
     if (alcp_is_error(err)) {
         printf("\n public key encrypt failed\n");
         goto free_enc_text;
@@ -128,8 +113,6 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
 free_enc_text:
     free(enc_text);
-free_pub_key_mod:
-    free(pub_key_mod);
     free(text);
 
     return err;

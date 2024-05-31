@@ -66,6 +66,20 @@ typedef enum
     KEY_SIZE_UNSUPPORTED
 } alc_rsa_key_size;
 
+enum DigestIndex
+{
+    MD_5_SHA_1,
+    MD_5,
+    SHA_1,
+    SHA_224,
+    SHA_256,
+    SHA_384,
+    SHA_512,
+    SHA_512_224,
+    SHA_512_256,
+    SHA_UNKNOWN
+};
+
 /**
  * @brief Store Context for the future operation of RSA
  *
@@ -85,6 +99,12 @@ typedef struct _alc_rsa_handle
     alc_rsa_context_p context;
 } alc_rsa_handle_t, *alc_rsa_handle_p;
 
+typedef struct
+{
+    Uint64* num;
+    Uint64  size;
+} BigNum;
+
 /**
  * @brief       Returns the context size of the interaction
  *
@@ -94,12 +114,10 @@ typedef struct _alc_rsa_handle
  * @endparblock
  *
  *
- * @param [in]  keySize     - RSA key size
- *
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
-alcp_rsa_context_size(const alc_rsa_key_size keySize);
+alcp_rsa_context_size();
 
 /**
  * @brief       Request a handle for rsa for a configuration
@@ -107,7 +125,6 @@ alcp_rsa_context_size(const alc_rsa_key_size keySize);
  *
  * @note        Only 1024 and 2048 key size supported
  *
- * @param [in]  keySize         - Supported key size
  * @param [out] pRsaHandle      - Library populated session handle for future
  * rsa operations.
  *
@@ -116,7 +133,7 @@ alcp_rsa_context_size(const alc_rsa_key_size keySize);
  * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
+alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
 
 /**
  * @brief Function encrypts text using using public key
@@ -125,7 +142,6 @@ alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
- * @param [in]  pad                - padding scheme for rsa encryption
  * @param [in]  pText              - pointer to raw bytes
  * @param [in]  textSize           - size of raw bytes
  * @param [out] pEncText           - pointer to encrypted bytes
@@ -141,7 +157,6 @@ alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
-                           alc_rsa_padding        pad,
                            const Uint8*           pText,
                            Uint64                 textSize,
                            Uint8*                 pEncText);
@@ -355,25 +370,46 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                    Uint64                 textSize,
                                    const Uint8*           pSignedBuff);
 
-/**
- * @brief Function fetches public key from handle
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
- * @endparblock
- * @param [in]    pRsaHandle - Handler of the Context for the session
- * @param [out]   pPublicKey - pointer to public exponent
- * @param [out]   pModulus   - pointer to modulus
- * @param [out]   keySize    - size of modulus
-
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
- */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pkcs1v15_without_hash(
+    const alc_rsa_handle_p pRsaHandle,
+    const Uint8*           pText,
+    Uint64                 textSize,
+    Uint8*                 pSignedText);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
-                       Uint64*                pPublicKey,
-                       Uint8*                 pModulus,
-                       Uint64                 keySize);
+alcp_rsa_publickey_verify_pkcs1v15_without_hash(
+    const alc_rsa_handle_p pRsaHandle,
+    const Uint8*           pText,
+    Uint64                 textSize,
+    const Uint8*           pEncryptText);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                    const Uint8*           pText,
+                                    Uint64                 textSize,
+                                    Uint8*                 pEncryptText,
+                                    const Uint8*           randomPad);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                     const Uint8*           pText,
+                                     Uint8*                 pDecryptText,
+                                     Uint64*                textSize);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
+                                          const Uint8*           pHash,
+                                          Uint64                 hashSize,
+                                          const Uint8*           salt,
+                                          Uint64                 saltSize,
+                                          Uint8*                 pSignedBuff);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
+                                           const Uint8*           pHash,
+                                           Uint64                 hashSize,
+                                           const Uint8*           pSignedBuff);
 
 /**
  * @brief Function sets the public key inside the handle
@@ -394,6 +430,11 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
                        Uint64                 exponent,
                        const Uint8*           pModulus,
                        Uint64                 size);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_set_public_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
+                                  const BigNum*          exponent,
+                                  const BigNum*          pModulus);
 
 /**
  * @brief Function sets the private key inside the handle
@@ -422,6 +463,15 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
                         const Uint8*           mod,
                         Uint64                 size);
 
+alc_error_t
+alcp_rsa_set_private_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
+                                   const BigNum*          dp,
+                                   const BigNum*          dq,
+                                   const BigNum*          p,
+                                   const BigNum*          q,
+                                   const BigNum*          qinv,
+                                   const BigNum*          mod);
+
 /**
  * @brief       Fetches key size
  * @parblock <br> &nbsp;
@@ -429,8 +479,6 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
  * session</b>
  * @endparblock
  *
- * @note       This size is used to allocate the modulus to be then used in
- * alcp_rsa_get_publickey
  *
  * @param [in] pRsaHandle - Handler of the Context for the session
  *
@@ -457,6 +505,10 @@ alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
  */
 ALCP_API_EXPORT void
 alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_context_copy(const alc_rsa_handle_p pSrcHandle,
+                      const alc_rsa_handle_p pDestHandle);
 
 EXTERN_C_END
 #endif /* _ALCP_RSA_H_ */

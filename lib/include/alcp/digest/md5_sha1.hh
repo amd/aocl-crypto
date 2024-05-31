@@ -26,22 +26,24 @@
  *
  */
 
+#pragma once
+
 #include "alcp/digest.hh"
 #include "alcp/digest/md5.hh"
 #include "alcp/digest/sha1.hh"
 #include <openssl/evp.h>
 namespace alcp::digest {
-class ALCP_API_EXPORT MD5_SHA1 final : public IDigest
+class ALCP_API_EXPORT Md5_Sha1 final : public IDigest
 {
 
   private:
     Sha1 m_sha1;
-    MD5  m_md5;
+    Md5  m_md5;
 
   public:
-    MD5_SHA1();
-    ~MD5_SHA1();
-    MD5_SHA1(const MD5_SHA1& src);
+    Md5_Sha1();
+    ~Md5_Sha1();
+    Md5_Sha1(const Md5_Sha1& src);
     /**
      * \brief    inits the internal state.
      *

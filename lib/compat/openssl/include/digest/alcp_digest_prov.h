@@ -52,7 +52,7 @@ struct _alc_prov_digest_ctx
 typedef struct _alc_prov_digest_ctx alc_prov_digest_ctx_t,
     *alc_prov_digest_ctx_p;
 
-extern const OSSL_ALGORITHM ALC_prov_digests[];
+// extern const OSSL_ALGORITHM ALC_prov_digests[];
 
 extern void*
 alcp_prov_digest_newctx(void* vprovctx, alc_digest_mode_t mode);

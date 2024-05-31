@@ -82,7 +82,7 @@ TEST_P(MD5_Sha1Test, digest_generation_test)
 {
     const auto [plaintext, digest]       = GetParam().second;
     auto                     digest_size = ALC_DIGEST_LEN_288 / 8;
-    std::unique_ptr<IDigest> digest_obj  = std::make_unique<MD5_SHA1>();
+    std::unique_ptr<IDigest> digest_obj  = std::make_unique<Md5_Sha1>();
     ASSERT_NE(nullptr, digest_obj);
     vector<Uint8>     hash(digest_size);
     std::stringstream ss;

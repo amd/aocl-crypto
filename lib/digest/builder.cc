@@ -174,7 +174,7 @@ class Sha2Builder
 
         switch (mode) {
             case ALC_MD5:
-                __build_sha<MD5>(rCtx);
+                __build_sha<Md5>(rCtx);
                 break;
             case ALC_SHA1:
                 __build_sha<Sha1>(rCtx);

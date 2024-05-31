@@ -42,9 +42,9 @@ AlcpRsaBase::init()
     alc_error_t err  = ALC_ERROR_NONE;
     Uint64      size = 0;
     if (m_key_len * 8 == KEY_SIZE_1024)
-        size = alcp_rsa_context_size(KEY_SIZE_1024);
+        size = alcp_rsa_context_size();
     else if (m_key_len * 8 == KEY_SIZE_2048)
-        size = alcp_rsa_context_size(KEY_SIZE_2048);
+        size = alcp_rsa_context_size();
     else {
         std::cout << "Invalid keysize in RSA Init" << std::endl;
         return false;
@@ -60,9 +60,9 @@ AlcpRsaBase::init()
     }
 
     if (m_key_len * 8 == KEY_SIZE_1024)
-        err = alcp_rsa_request(KEY_SIZE_1024, m_rsa_handle);
+        err = alcp_rsa_request(m_rsa_handle);
     else if (m_key_len * 8 == KEY_SIZE_2048)
-        err = alcp_rsa_request(KEY_SIZE_2048, m_rsa_handle);
+        err = alcp_rsa_request(m_rsa_handle);
 
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_request " << err << std::endl;
@@ -172,11 +172,8 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 
     /* no padding mode */
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
-        err = alcp_rsa_publickey_encrypt(m_rsa_handle,
-                                         ALCP_RSA_PADDING_NONE,
-                                         data.m_msg,
-                                         data.m_key_len,
-                                         data.m_encrypted_data);
+        err = alcp_rsa_publickey_encrypt(
+            m_rsa_handle, data.m_msg, data.m_key_len, data.m_encrypted_data);
         if (alcp_is_error(err)) {
             return err;
         }

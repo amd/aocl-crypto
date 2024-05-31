@@ -72,11 +72,14 @@ extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];
 extern const OSSL_ALGORITHM ALC_prov_macs[];
 extern const OSSL_ALGORITHM ALC_prov_rng[];
+extern const OSSL_ALGORITHM alc_prov_asym_ciphers[];
+extern const OSSL_ALGORITHM alc_prov_signature[];
+extern const OSSL_ALGORITHM alc_prov_keymgmt[];
 
 struct _alc_prov_ctx
 {
-    OSSL_LIB_CTX*           ap_libctx;
     const OSSL_CORE_HANDLE* ap_core_handle;
+    OSSL_LIB_CTX*           libctx;
 };
 typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
 typedef void (*fptr_t)(void);

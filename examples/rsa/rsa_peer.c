@@ -107,10 +107,10 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 {
     alc_error_t err;
 
-    Uint64 size           = alcp_rsa_context_size(KEY_SIZE_1024);
+    Uint64 size           = alcp_rsa_context_size();
     s_rsa_handle->context = malloc(size);
 
-    err = alcp_rsa_request(KEY_SIZE_1024, s_rsa_handle);
+    err = alcp_rsa_request(s_rsa_handle);
 
     return err;
 }
@@ -199,11 +199,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     enc_text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(enc_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
 
-    err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer1,
-                                     ALCP_RSA_PADDING_NONE,
-                                     text_peer_1,
-                                     size_key_peer_1,
-                                     enc_text_peer_1);
+    err = alcp_rsa_publickey_encrypt(
+        ps_rsa_handle_peer1, text_peer_1, size_key_peer_1, enc_text_peer_1);
     if (alcp_is_error(err)) {
         printf("\n peer1 publc key encrypt failed");
         goto free_enc_text_peer_1;
@@ -247,11 +244,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     enc_text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_1);
     memset(enc_text_peer_2, 0, sizeof(Uint8) * size_key_peer_1);
 
-    err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer2,
-                                     ALCP_RSA_PADDING_NONE,
-                                     text_peer_2,
-                                     size_key_peer_2,
-                                     enc_text_peer_2);
+    err = alcp_rsa_publickey_encrypt(
+        ps_rsa_handle_peer2, text_peer_2, size_key_peer_2, enc_text_peer_2);
     if (alcp_is_error(err)) {
         printf("\n peer2 publc key encrypt failed");
         goto free_enc_text_peer_2;

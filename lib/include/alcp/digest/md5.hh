@@ -26,10 +26,11 @@
  *
  */
 
+#pragma once
 #include "alcp/digest.hh"
 #include <openssl/evp.h>
 namespace alcp::digest {
-class ALCP_API_EXPORT MD5 final : public IDigest
+class ALCP_API_EXPORT Md5 final : public IDigest
 {
 
   private:
@@ -37,9 +38,9 @@ class ALCP_API_EXPORT MD5 final : public IDigest
     EVP_MD*     m_md  = nullptr;
 
   public:
-    MD5();
-    ~MD5();
-    MD5(const MD5& src);
+    Md5();
+    ~Md5();
+    Md5(const Md5& src);
     /**
      * \brief    inits the internal state.
      *

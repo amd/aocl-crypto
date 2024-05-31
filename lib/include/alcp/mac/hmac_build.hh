@@ -31,6 +31,7 @@
 #include "alcp/capi/digest/builder.hh"
 #include "alcp/capi/mac/ctx.hh"
 #include "alcp/digest/md5.hh"
+#include "alcp/digest/md5_sha1.hh"
 #include "alcp/digest/sha1.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
@@ -93,11 +94,15 @@ __hmac_wrapperInit(Context*        ctx,
     void*             digest = nullptr;
     switch (mode) {
         case ALC_MD5: {
-            digest = new digest::MD5;
+            digest = new digest::Md5;
             break;
         }
         case ALC_SHA1: {
             digest = new digest::Sha1;
+            break;
+        }
+        case ALC_MD5_SHA1: {
+            digest = new digest::Md5_Sha1;
             break;
         }
         case ALC_SHA2_256: {
@@ -197,9 +202,9 @@ __build_with_copy_hmac(Context* srcCtx, Context* destCtx)
     } else if (dest_digest = dynamic_cast<digest::Sha1*>(src_digest);
                dest_digest != nullptr) {
         dest_digest = new Sha1(*static_cast<digest::Sha1*>(dest_digest));
-    } else if (dest_digest = dynamic_cast<digest::MD5*>(src_digest);
+    } else if (dest_digest = dynamic_cast<digest::Md5*>(src_digest);
                dest_digest != nullptr) {
-        dest_digest = new MD5(*static_cast<digest::MD5*>(dest_digest));
+        dest_digest = new Md5(*static_cast<digest::Md5*>(dest_digest));
     }
 
     hmac_algo->setDigest(dest_digest);

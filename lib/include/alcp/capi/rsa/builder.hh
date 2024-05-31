@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,8 +37,8 @@ namespace alcp::rsa {
 class RsaBuilder
 {
   public:
-    static Status Build(alc_rsa_key_size keySize, Context& ctx);
-    static Uint32 getSize(alc_rsa_key_size keySize);
+    static alc_error_t Build(Context& ctx);
+    static Uint32      getSize();
 };
 
 } // namespace alcp::rsa

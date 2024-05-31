@@ -104,6 +104,7 @@ typedef enum _alc_digest_mode
 {
     ALC_MD5,
     ALC_SHA1,
+    ALC_MD5_SHA1,
     ALC_SHA2_224,
     ALC_SHA2_256,
     ALC_SHA2_384,

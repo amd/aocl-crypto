@@ -668,9 +668,9 @@ struct MontCompute
         CopyConditional(res, &inp[32], 32, ~IsZero(carry_last));
     }
 
-    static inline void CreateContext(MontContextBignum<T>& context,
-                                     Uint64*               mod,
-                                     Uint64                size)
+    static inline void CreateContext(MontContextBignum& context,
+                                     Uint64*            mod,
+                                     Uint64             size)
     {
         Uint64* r1 = context.m_r1;
         Uint64* r2 = context.m_r2;
@@ -1015,7 +1015,7 @@ struct MontCompute
 
     static inline void MontgomeryExp(Uint64*       res,
                                      const Uint64* input,
-                                     Uint64*       exp,
+                                     const Uint64* exp,
                                      Uint64        expSize,
                                      Uint64*       mod,
                                      Uint64*       r2,
@@ -1060,11 +1060,11 @@ struct MontCompute
     // currently it supports equal sizes of P and Q this is faster than the
     // unequal sizes preliminary investigation suggest no benefis on using
     // different sizes for P and Q
-    static inline void decryptUsingCRT(Uint64*                 res,
-                                       const Uint64*           inp,
-                                       RsaPrivateKeyBignum<T>& privKey,
-                                       MontContextBignum<T>&   contextP,
-                                       MontContextBignum<T>&   contextQ)
+    static inline void decryptUsingCRT(Uint64*              res,
+                                       const Uint64*        inp,
+                                       RsaPrivateKeyBignum& privKey,
+                                       MontContextBignum&   contextP,
+                                       MontContextBignum&   contextQ)
     {
         auto size = contextP.m_size;
 
@@ -1265,16 +1265,16 @@ MontCompute<KEY_SIZE_2048>::MontMultHalf(Uint64*       res,
 
 template<alc_rsa_key_size T>
 void
-archEncryptPublic(Uint8*                 pEncText,
-                  const Uint64*          pTextBignum,
-                  RsaPublicKeyBignum<T>& pubKey,
-                  MontContextBignum<T>&  context)
+archEncryptPublic(Uint8*              pEncText,
+                  const Uint64*       pTextBignum,
+                  RsaPublicKeyBignum& pubKey,
+                  MontContextBignum&  context)
 {
 
     auto mod = pubKey.m_mod;
     auto r2  = context.m_r2;
     auto k0  = context.m_k0;
-    auto exp = &pubKey.m_public_exponent;
+    auto exp = pubKey.m_public_exponent;
 
     alignas(64) Uint64 res_buffer_bignum[T / 64 * 3]{};
     mont::MontCompute<T>::MontgomeryExp(
@@ -1288,11 +1288,11 @@ archEncryptPublic(Uint8*                 pEncText,
 
 template<alc_rsa_key_size T>
 void
-archDecryptPrivate(Uint8*                  pText,
-                   const Uint64*           pEncTextBigNum,
-                   RsaPrivateKeyBignum<T>& privKey,
-                   MontContextBignum<T>&   contextP,
-                   MontContextBignum<T>&   contextQ)
+archDecryptPrivate(Uint8*               pText,
+                   const Uint64*        pEncTextBigNum,
+                   RsaPrivateKeyBignum& privKey,
+                   MontContextBignum&   contextP,
+                   MontContextBignum&   contextQ)
 {
     alignas(64) Uint64 res_buffer_bignum[T / 64];
     mont::MontCompute<T>::decryptUsingCRT(
@@ -1307,7 +1307,7 @@ archDecryptPrivate(Uint8*                  pText,
 
 template<alc_rsa_key_size T>
 void
-archCreateContext(MontContextBignum<T>& context, Uint64* mod, Uint64 size)
+archCreateContext(MontContextBignum& context, Uint64* mod, Uint64 size)
 {
     mont::MontCompute<T>::CreateContext(context, mod, size);
 }
