@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef _OPENSSL_alcp_MAC_PROV_H
-#define _OPENSSL_alcp_MAC_PROV_H 2
+#ifndef _OPENSSL_ALCP_MAC_PROV_H
+#define _OPENSSL_ALCP_MAC_PROV_H 2
 
 #if defined(WIN32) || defined(WIN64)
 #define strcasecmp _stricmp

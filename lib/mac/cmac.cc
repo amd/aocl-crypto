@@ -234,22 +234,22 @@ Cmac::finalize(Uint8 pMsgBuf[], Uint64 size)
 }
 
 Status
-Cmac::init(const Uint8 key[], Uint64 len)
+Cmac::init(const Uint8 key[], Uint64 keyLen)
 {
 
     Status s{ StatusOk() };
-    m_keyLen_in_bytes_aes = len;
+    m_keyLen_in_bytes_aes = keyLen;
 
-    if (Aes::setKey(nullptr, key, len * 8) != ALC_ERROR_NONE) {
+    if (Aes::setKey(nullptr, key, keyLen * 8) != ALC_ERROR_NONE) {
         // FIXME: Need to create another error function
         s = status::EmptyKeyError("Invalid Key Size");
         return s;
     }
 
     // FIXME: Check if this is required, looks like not required
-    // data.keyLen_in_bytes = len / 8;
+    // data.keyLen_in_bytes = keyLen / 8;
 
-    // Aes::init(&data, key, len, nullptr, 0);
+    // Aes::init(&data, key, keyLen, nullptr, 0);
     m_encrypt_keys = m_cipher_key_data.m_enc_key;
     m_rounds       = getRounds();
     getSubkeys();

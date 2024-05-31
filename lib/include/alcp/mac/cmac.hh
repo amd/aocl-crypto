@@ -66,9 +66,9 @@ class Cmac final
      * @brief Update CMAC Key
      *
      * @param key   pointer to CMAC Key to be used
-     * @param len   Length of the key in bytes
+     * @param keyLen   Length of the key in bytes
      */
-    ALCP_API_EXPORT Status init(const Uint8 key[], Uint64 len);
+    ALCP_API_EXPORT Status init(const Uint8 key[], Uint64 keyLen);
 
     /**
      * @brief Reset CMAC. After resetting update can be called by the same key

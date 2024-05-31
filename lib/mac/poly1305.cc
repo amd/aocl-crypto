@@ -69,15 +69,15 @@ Poly1305<feature>::Poly1305(const Poly1305& src)
 
 template<utils::CpuArchFeature feature>
 Status
-Poly1305<feature>::init(const Uint8 key[], Uint64 len)
+Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
 {
     if constexpr ((utils::CpuArchFeature::eReference == feature)
                   || (utils::CpuArchFeature::eAvx2 == feature)) {
-        return poly1305_impl->init(key, len);
+        return poly1305_impl->init(key, keyLen);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
 #if POLY1305_RADIX_26
         return zen4::init_radix26(key,
-                                  len,
+                                  keyLen,
                                   state.a,
                                   state.key,
                                   &state.r[0],
@@ -94,7 +94,7 @@ Poly1305<feature>::init(const Uint8 key[], Uint64 len)
             && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
 #if POLY1305_RADIX_26
             return zen4::init_radix26(key,
-                                      len,
+                                      keyLen,
                                       state.a,
                                       state.key,
                                       &state.r[0],
@@ -105,7 +105,7 @@ Poly1305<feature>::init(const Uint8 key[], Uint64 len)
             return StatusOk();
 #endif
         } else {
-            return poly1305_impl->init(key, len);
+            return poly1305_impl->init(key, keyLen);
         }
     }
     return base::status::InternalError("Dispatch Failure");
