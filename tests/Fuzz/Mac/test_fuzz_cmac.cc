@@ -34,57 +34,64 @@ ALCP_Fuzz_Cmac(const Uint8* buf, size_t len)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t             size       = stream.ConsumeIntegral<Uint16>();
-    std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size);
-    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size);
-
-    const Uint8* key        = fuzz_key.data();
-    Uint32       keySize    = fuzz_key.size();
-    const Uint8* input      = fuzz_input.data();
-    Uint32       input_size = fuzz_input.size();
+    size_t             size_input = stream.ConsumeIntegral<Uint16>();
+    size_t             size_key   = stream.ConsumeIntegral<Uint16>();
+    std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
+    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
 
-    std::cout << "Running for Input size: " << input_size << " and Key size "
-              << keySize << std::endl;
+    std::cout << "Running for Input size: " << size_input << " and Key size "
+              << size_key << std::endl;
 
-    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
+    alc_mac_info_t   macinfo{};
+    alc_mac_handle_t handle{};
 
-    alc_mac_info_t macinfo = {
-        .mi_type     = ALC_MAC_CMAC,
-        .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
-                                                        ALC_CIPHER_TYPE_AES,
-                                                    .ci_mode =
-                                                        ALC_AES_MODE_NONE } } },
-        .mi_keyinfo  = kinfo
-    };
-
-    alc_mac_handle_t handle;
+    /* allocate context */
     handle.ch_context = malloc(alcp_mac_context_size());
-    if (handle.ch_context == NULL) {
-        return ALC_ERROR_GENERIC;
-    }
-    err = alcp_mac_request(&handle, &macinfo);
-    if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %lu\n", err);
+    if (handle.ch_context == nullptr) {
+        std::cout << "Error! Handle is null" << std::endl;
         return -1;
     }
-    err = alcp_mac_update(&handle, input, input_size);
+    /* request */
+    err = alcp_mac_request(&handle, ALC_MAC_CMAC);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Update\n");
-        return -1;
+        std::cout << "Error! alcp_mac_request" << std::endl;
+        goto dealloc;
     }
+    /* initialize */
+    macinfo.cmac.ci_type = ALC_CIPHER_TYPE_AES;
+    macinfo.cmac.ci_mode = ALC_AES_MODE_NONE;
+    err = alcp_mac_init(&handle, &fuzz_key[0], size_key, &macinfo);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_mac_init" << std::endl;
+        goto dealloc;
+    }
+    /* mac update */
+    err = alcp_mac_update(&handle, &fuzz_input[0], size_input);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_mac_update" << std::endl;
+        goto dealloc;
+    }
+    /* finalize */
     err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Finalize\n");
-        return -1;
+        std::cout << "Error! alcp_mac_finalize" << std::endl;
+        goto dealloc;
     }
+    goto out;
+
+dealloc:
     alcp_mac_finish(&handle);
     free(handle.ch_context);
+    return -1;
 
+out:
+    alcp_mac_finish(&handle);
+    free(handle.ch_context);
+    std::cout << "Test passed for Input size: " << size_input
+              << " and Key size " << size_key << std::endl;
     return 0;
 }
 
