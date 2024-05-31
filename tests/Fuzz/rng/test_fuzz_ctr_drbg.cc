@@ -44,21 +44,24 @@ ALCP_Fuzz_CtrDrbg(const Uint8* buf, size_t len)
 
     alc_drbg_handle_t handle;
 
-    alc_drbg_info_t
-        drbg_info = { .di_type           = ALC_DRBG_CTR,
-                      .max_entropy_len   = size_max_entropy_len,
-                      .max_nonce_len     = size_max_nonce_len,
-                      .di_algoinfo       = { .ctr_drbg = { .di_keysize = 128,
-                                                           .use_derivation_function =
-                                                               true } },
-                      .di_rng_sourceinfo = {
-                          .custom_rng    = true,
-                          .di_sourceinfo = {
-                              .custom_rng_info = {
-                                  .entropy    = &fuzz_custom_entropy[0],
-                                  .entropylen = size_max_entropy_len,
-                                  .nonce      = &fuzz_custom_nonce[0],
-                                  .noncelen   = size_max_entropy_len } } } };
+    alc_drbg_info_t drbg_info = {
+        .di_type           = ALC_DRBG_CTR,
+        .di_algoinfo       = { .ctr_drbg = { .di_keysize              = 128,
+                                       .use_derivation_function = true } },
+        .di_rng_sourceinfo = { .custom_rng    = true,
+                               .di_sourceinfo = { .custom_rng_info = { .entropy =
+                                                                           &fuzz_custom_entropy
+                                                                               [0],
+                                                                       .entropylen =
+                                                                           size_max_entropy_len,
+                                                                       .nonce =
+                                                                           &fuzz_custom_nonce
+                                                                               [0],
+                                                                       .noncelen =
+                                                                           size_max_entropy_len } } },
+        .max_entropy_len   = size_max_entropy_len,
+        .max_nonce_len     = size_max_nonce_len
+    };
 
     std::cout << "Generating for output size: " << size_output
               << " Entropy len " << size_max_entropy_len << " Nonce len "

@@ -36,7 +36,6 @@ ALCP_Fuzz_Poly1305(const Uint8* buf, size_t len)
 
     size_t             size       = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size);
-    size_t             size_input = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size);
 
     const Uint8* key        = fuzz_key.data();

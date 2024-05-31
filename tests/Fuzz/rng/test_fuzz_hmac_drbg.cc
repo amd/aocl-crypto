@@ -50,19 +50,23 @@ ALCP_Fuzz_HmacDrbg(const Uint8* buf, size_t len)
         .dt_mode = ALC_SHA2_256,
     };
 
-    alc_drbg_info_t
-        drbg_info = { .di_type         = ALC_DRBG_HMAC,
-                      .max_entropy_len = size_max_entropy_len,
-                      .max_nonce_len   = size_max_nonce_len,
-                      .di_algoinfo = { .hmac_drbg = { .digest_info = dinfo } },
-                      .di_rng_sourceinfo = {
-                          .custom_rng    = true,
-                          .di_sourceinfo = {
-                              .custom_rng_info = {
-                                  .entropy    = &fuzz_custom_entropy[0],
-                                  .entropylen = size_max_entropy_len,
-                                  .nonce      = &fuzz_custom_nonce[0],
-                                  .noncelen   = size_max_nonce_len } } } };
+    alc_drbg_info_t drbg_info = {
+        .di_type           = ALC_DRBG_HMAC,
+        .di_algoinfo       = { .hmac_drbg = { .digest_info = dinfo } },
+        .di_rng_sourceinfo = { .custom_rng    = true,
+                               .di_sourceinfo = { .custom_rng_info = { .entropy =
+                                                                           &fuzz_custom_entropy
+                                                                               [0],
+                                                                       .entropylen =
+                                                                           size_max_entropy_len,
+                                                                       .nonce =
+                                                                           &fuzz_custom_nonce
+                                                                               [0],
+                                                                       .noncelen =
+                                                                           size_max_nonce_len } } },
+        .max_entropy_len   = size_max_entropy_len,
+        .max_nonce_len     = size_max_nonce_len
+    };
 
     std::cout << "Generating for output size: " << size_output
               << " Entropy len " << size_max_entropy_len << " Nonce len "

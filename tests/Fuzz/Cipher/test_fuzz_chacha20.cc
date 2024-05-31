@@ -51,7 +51,7 @@ ALCP_Fuzz_Chacha20(const Uint8* buf, size_t len)
                                 .ci_iv     = &fuzz_iv[0],
                                 .ci_ivLen  = fuzz_iv.size() };
 
-    alc_cipher_handle_p handle;
+    alc_cipher_handle_p handle{};
     handle->ch_context = malloc(alcp_cipher_context_size());
 
     if (handle->ch_context == nullptr) {

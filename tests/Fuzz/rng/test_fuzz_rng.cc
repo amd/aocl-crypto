@@ -31,7 +31,6 @@
 int
 ALCP_Fuzz_Rng(const Uint8* buf, size_t len)
 {
-    alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
     size_t             size_output = stream.ConsumeIntegral<Uint16>();

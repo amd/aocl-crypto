@@ -33,7 +33,6 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf, size_t len)
 {
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
-    Uint64             size_key;
     Uint64             decrypted_output_size;
     size_t             size_encrypted_data = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input =
