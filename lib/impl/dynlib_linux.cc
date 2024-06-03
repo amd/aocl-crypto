@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,12 +37,10 @@ class DynamicLibrary::Impl
   public:
     Impl(const std::string& path)
         : m_path{ path }
-    {
-    }
+    {}
     Impl(const std::string& path, int flags)
         : m_path{ path }
-    {
-    }
+    {}
     ~Impl();
 
     void               load(const std::string& path, int flags);
@@ -52,9 +50,9 @@ class DynamicLibrary::Impl
     static std::string suffix();
 
   private:
-    std::string m_path;
-    void*       m_handle;
-    std::mutex  m_mutex;
+    std::string m_path{};
+    void*       m_handle = nullptr;
+    std::mutex  m_mutex{};
 };
 
 DynamicLibrary::Impl::~Impl()

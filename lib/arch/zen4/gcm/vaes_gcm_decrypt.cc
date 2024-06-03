@@ -78,7 +78,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                              int                   remBytes,
                              Uint64*               pGcmCtxHashSubkeyTable)
 {
-    __m512i c1;
+    __m512i c1{};
 
 #if 0
     printf(" blocks %ld remBytes %d totalBytes %ld",
@@ -153,7 +153,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                             const_factor_128);
     }
 
-    __m512i a1, b1;
+    __m512i a1{}, b1{};
 
     constexpr Uint8  numBlksIn512bit  = 4;
     constexpr Uint64 blockCount_1x512 = numBlksIn512bit;
@@ -161,15 +161,15 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     constexpr Uint64 blockCount_4x512 = 4 * numBlksIn512bit;
     constexpr Uint64 blockCount_8x512 = 8 * numBlksIn512bit;
 
-    __m512i a2, a3, a4;
-    __m512i b2, b3, b4;
-    __m512i c2, c3, c4;
+    __m512i a2{}, a3{}, a4{};
+    __m512i b2{}, b3{}, b4{};
+    __m512i c2{}, c3{}, c4{};
 
     c2 = alcp_add_epi32(c1, one_x);
     c3 = alcp_add_epi32(c1, two_x);
     c4 = alcp_add_epi32(c2, two_x);
 
-    __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
+    __m512i Hsubkey_512_0{}, Hsubkey_512_1{}, Hsubkey_512_2{}, Hsubkey_512_3{};
     __m512i gHash_512 = _mm512_zextsi128_si512(gcmLocalData->m_gHash_128);
 
     // (8x512)=32 blks aesenc, 32 blks gmul and 1 reduction
@@ -388,7 +388,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
     // remaining bytes
     if (remBytes) {
-        __m128i a1; // remaining bytes handled with 128bit
+        __m128i a1{}; // remaining bytes handled with 128bit
         __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
         __m128i b1           = _mm_shuffle_epi8(c1_128, swap_ctr_128);
 

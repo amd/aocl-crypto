@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -76,7 +76,7 @@ namespace alcp::cipher { namespace aesni {
                                          __m128i* tmp1,
                                          __m128i* tmp2)
     {
-        __m128i tmp4;
+        __m128i tmp4{};
         *tmp1 = _mm_shuffle_epi32(*tmp1, 0x55);
 
         tmp4  = _mm_slli_si128(*tmp0, 0x4);
@@ -133,7 +133,7 @@ namespace alcp::cipher { namespace aesni {
     /* keys256 is equivalent to 2x128 */
     Status ExpandKeys256(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
-        __m128i  tmp[3];
+        __m128i  tmp[3]{};
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
         tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
@@ -203,7 +203,7 @@ namespace alcp::cipher { namespace aesni {
     Status ExpandKeys192(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
 
-        __m128i  tmp[3];
+        __m128i  tmp[3]{};
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
         tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));

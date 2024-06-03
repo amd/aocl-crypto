@@ -67,7 +67,7 @@ class Aes : public Rijndael
 {
   protected:
     Uint32                m_nrounds = 0;
-    alc_cipher_key_data_t m_cipher_key_data;
+    alc_cipher_key_data_t m_cipher_key_data{};
 
     Uint32                             m_keyLen_in_bytes_aes;
     __attribute__((aligned(16))) Uint8 m_iv_aes[MAX_CIPHER_IV_SIZE];
