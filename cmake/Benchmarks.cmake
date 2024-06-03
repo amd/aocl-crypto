@@ -24,6 +24,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 INCLUDE(FetchContent)
+INCLUDE(CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag(-Wno-maybe-uninitialized COMPILER_SUPPORTS_NO_MAYBE_UNINITIALIZED)
+
 FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG release-1.12.1)
@@ -32,3 +36,7 @@ FetchContent_Declare(benchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
+
+if(COMPILER_SUPPORTS_NO_MAYBE_UNINITIALIZED)
+    target_compile_options(benchmark PRIVATE -Wno-maybe-uninitialized)
+endif()
