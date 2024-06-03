@@ -55,6 +55,9 @@ PROJECT (ALCP
 		 LANGUAGES C CXX
 	    )
 
+include(GNUInstallDirs)
+
+
 # check for compiler version
 alcp_check_compiler_version()
 
@@ -92,6 +95,11 @@ OPTION(ALCP_INSTALL_COMBINED_STATIC "INSTALL ALCP+ALCI COMBINED STATIC LIB" OFF)
 IF(NOT DEFINED ENABLE_AOCL_UTILS)
  	MESSAGE(STATUS "Enabling utils as it's needs to be enabled for proper dispatching")
 ENDIF()
+
+
+# Options which should not be modified
+MARK_AS_ADVANCED(CMAKE_INSTALL_LIBDIR)
+
 
 # All the options which are avaiable with ALCP
 # These options can be listed with cmake -LH

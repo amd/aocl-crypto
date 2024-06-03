@@ -41,7 +41,7 @@ IF(ENABLE_AOCL_UTILS)
 			GIT_REPOSITORY git@github.amd.com:AOCL/aocl-utils.git
 			GIT_TAG amd-main
 			SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
-			CMAKE_ARGS  -DALCI_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
+			CMAKE_ARGS  -DAU_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
  			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.a
 		)
 		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
@@ -59,8 +59,20 @@ IF(ENABLE_AOCL_UTILS)
 
 			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.lib)
 		ELSE()
-			TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libau_cpuid.so)
-			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libau_cpuid.a)
+			# Define imported target for the shared library
+			add_library(au_cpuid SHARED IMPORTED)
+			set_target_properties(au_cpuid PROPERTIES
+				IMPORTED_LOCATION ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.so
+			)
+
+			# Define imported target for the static library
+			add_library(au_cpuid_static STATIC IMPORTED)
+			set_target_properties(au_cpuid_static PROPERTIES
+				IMPORTED_LOCATION ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a
+			)
+
+			TARGET_LINK_LIBRARIES(alcp PRIVATE au_cpuid)
+			TARGET_LINK_LIBRARIES(alcp_static PRIVATE au_cpuid_static)
 		ENDIF()
 	ELSE(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
 		MESSAGE(FATAL_ERROR "AOCL UTILS fallback error, external directory not found!")
