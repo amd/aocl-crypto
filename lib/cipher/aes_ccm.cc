@@ -91,8 +91,18 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     if (!m_ccm_data.key) {
         return status::InvalidValue("Key has to be set before update");
     }
+#endif
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
+#ifndef CCM_MULTI_UPDATE
+        const Uint8* p_keys  = getEncryptKeys();
+        const Uint32 cRounds = m_nrounds;
+        m_ccm_data.key       = p_keys;
+        m_ccm_data.rounds    = cRounds;
+
+        // Below Operations has to be done in order
+        s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
+#endif
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
             if (m_updatedLength == 0) {
@@ -135,18 +145,25 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                 memset(pOutput, 0, dataLen);
                 return s;
             }
+#ifdef CCM_MULTI_UPDATE
             if (s.ok()) {
                 m_updatedLength += dataLen;
             }
+#endif
             return s;
         }
+#ifdef CCM_MULTI_UPDATE
         if (m_updatedLength == 0) {
+#endif
             // Fallback to reference
             setAadRef(&m_ccm_data,
                       m_additionalData,
                       m_additionalDataLen,
                       m_plainTextLength);
+#ifdef CCM_MULTI_UPDATE
         }
+#endif
+
         // FIXME: Encrypt and Decrypt needs to be defined.
         if (isEncrypt) {
             s.update(encryptRef(&m_ccm_data, pInput, pOutput, dataLen));
@@ -165,91 +182,13 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     } else {
         s = status::InvalidValue("Input or Output Null Pointer!");
     }
+#ifdef CCM_MULTI_UPDATE
     if (s.ok()) {
         m_updatedLength += dataLen;
     }
-    return s;
-#else
-
-    Status s = StatusOk();
-
-    if ((pInput != NULL) && (pOutput != NULL)) {
-
-        const Uint8* p_keys  = getEncryptKeys();
-        const Uint32 cRounds = m_nrounds;
-        m_ccm_data.key       = p_keys;
-        m_ccm_data.rounds    = cRounds;
-
-        // Below Operations has to be done in order
-        s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
-
-        // Accelerate with AESNI
-        if (CpuId::cpuHasAesni()) {
-            aesni::ccm::SetAad(&m_ccm_data,
-                               m_additionalData,
-                               m_additionalDataLen,
-                               m_plainTextLength);
-            if (isEncrypt) {
-                CCM_ERROR err =
-                    aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, dataLen);
-                switch (err) {
-                    case CCM_ERROR::LEN_MISMATCH:
-                        s = status::EncryptFailed(
-                            "Length of plainText mismatch!");
-                        break;
-                    case CCM_ERROR::DATA_OVERFLOW:
-                        s = status::EncryptFailed(
-                            "Overload of plaintext. Please reduce it!");
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                CCM_ERROR err =
-                    aesni::ccm::Decrypt(&m_ccm_data, pInput, pOutput, dataLen);
-                switch (err) {
-                    case CCM_ERROR::LEN_MISMATCH:
-                        s = status::DecryptFailed(
-                            "Length of plainText mismatch!");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if (s.ok() != true) {
-                // Burn everything
-                memset(m_ccm_data.nonce, 0, 16);
-                memset(m_ccm_data.cmac, 0, 16);
-                memset(pOutput, 0, dataLen);
-                return s;
-            }
-            return s;
-        }
-
-        // Fallback to reference
-        setAadRef(&m_ccm_data, m_additionalData, m_additionalDataLen);
-        // FIXME: Encrypt and Decrypt needs to be defined.
-        if (isEncrypt) {
-            s.update(encryptRef(&m_ccm_data, pInput, pOutput, dataLen));
-        } else {
-            s.update(decryptRef(&m_ccm_data, pInput, pOutput, dataLen));
-        }
-        if (s.ok() != true) {
-            // Burn everything
-            // FIXME: Need to clear key when errors
-            // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
-            memset(m_ccm_data.nonce, 0, 16);
-            memset(m_ccm_data.cmac, 0, 16);
-            memset(pOutput, 0, dataLen);
-            return s;
-        }
-    } else {
-        s = status::InvalidValue("Input or Output Null Pointer!");
-    }
-    return s;
 #endif
+    return s;
 }
-#if CCM_MULTI_UPDATE
 Status
 Ccm::encryptRef(ccm_data_t* pccm_data,
                 const Uint8 pPlainText[],
@@ -268,85 +207,19 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
     Uint32 cmac[4], nonce[4], in_reg[4], temp_reg[4];
     Uint8* p_cmac_8 = reinterpret_cast<Uint8*>(cmac);
     Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp_reg);
-
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
+
+#ifdef CCM_MULTI_UPDATE
     utils::CopyBytes(cmac, pccm_data->cmac, 16);
-
-    while (ptLen >= 16) {
-        // Load the PlainText
-        utils::CopyBytes(in_reg, pPlainText, 16);
-
-        /* CBC */
-        // Generate CMAC given plaintext by using cbc algorithm
-        for (int i = 0; i < 4; i++) {
-            cmac[i] ^= in_reg[i];
-        }
-        encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
-
-        /* CTR */
-        // Generate ciphetext given plain text by using ctr algitrithm
-        utils::CopyBytes(temp_reg, nonce, 16);
-        encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-        ctrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
-        for (int i = 0; i < 4; i++) {
-            temp_reg[i] ^= in_reg[i];
-        }
-
-        // Store CipherText
-        utils::CopyBytes(pCipherText, temp_reg, 16);
-
-        pPlainText += 16;
-        pCipherText += 16;
-        ptLen -= 16;
-    }
-    if (ptLen) {
-        /* CBC */
-        // For what ever is left, generate block to encrypt using ctr
-        for (i = 0; i < ptLen; i++) {
-            p_cmac_8[i] ^= pPlainText[i];
-        }
-        encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
-
-        /* CTR */
-        utils::CopyBytes(temp_reg, nonce, 16);
-        encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-        for (i = 0; i < ptLen; ++i)
-            pCipherText[i] = p_temp_8[i] ^ pPlainText[i];
-    }
-
-    // Copy the current state of cmac and nonce back to memory.
-    utils::CopyBytes(pccm_data->cmac, cmac, 16);
-    utils::CopyBytes(pccm_data->nonce, nonce, 16);
-
-    return s;
-}
 #else
 
-Status
-Ccm::encryptRef(ccm_data_t* pccm_data,
-                const Uint8 pPlainText[],
-                Uint8 pCipherText[],
-                size_t ptLen)
-{
-    // Implementation block diagram
-    // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
-    Status s = StatusOk();
-    size_t n;
-    unsigned int i, q;
-    if (pPlainText == nullptr || pCipherText == nullptr
-        || pccm_data == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
-    }
-    unsigned char flags0 = pccm_data->nonce[0];
-    const Uint8* p_key = pccm_data->key;
-    Uint32 cmac[4], nonce[4], in_reg[4], temp_reg[4];
-    Uint8* p_cmac_8 = reinterpret_cast<Uint8*>(cmac);
-    Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
-    Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp_reg);
+    unsigned int  n, q;
+    unsigned char flags0    = pccm_data->nonce[0];
+    const Uint8*  p_key     = pccm_data->key;
+    Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
+#endif
 
-    utils::CopyBytes(nonce, pccm_data->nonce, 16);
-
+#ifndef CCM_MULTI_UPDATE
     if (!(flags0 & 0x40)) {
         utils::CopyBytes(cmac, nonce, 16);
         encryptBlock(cmac, p_key, pccm_data->rounds);
@@ -388,6 +261,8 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         return s;
     }
 
+#endif
+
     while (ptLen >= 16) {
         // Load the PlainText
         utils::CopyBytes(in_reg, pPlainText, 16);
@@ -429,6 +304,8 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
         for (i = 0; i < ptLen; ++i)
             pCipherText[i] = p_temp_8[i] ^ pPlainText[i];
     }
+
+#ifndef CCM_MULTI_UPDATE
     // Zero out counter part
     for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
         p_nonce_8[i] = 0;
@@ -445,15 +322,14 @@ Ccm::encryptRef(ccm_data_t* pccm_data,
     // Restore flags into nonce to restore nonce to original state
     p_nonce_8[0] = flags0;
 
+#endif
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBytes(pccm_data->cmac, cmac, 16);
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
 
     return s;
 }
-#endif
 
-#if CCM_MULTI_UPDATE
 Status
 Ccm::decryptRef(ccm_data_t* pccm_data,
                 const Uint8 pCipherText[],
@@ -473,88 +349,16 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
     Uint8* p_cmac_8 = reinterpret_cast<Uint8*>(cmac);
     Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp_reg);
 
-    utils::CopyBytes(nonce, pccm_data->nonce, 16);
-    utils::CopyBytes(cmac, pccm_data->cmac, 16);
-
-    while (ctLen >= 16) {
-
-        /* CTR */
-        utils::CopyBytes(temp_reg, nonce, 16);
-        encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-        ctrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
-
-        utils::CopyBytes(in_reg, pCipherText, 16); // Load CipherText
-        // Generate PlainText (Complete CTR)
-        for (int i = 0; i < 4; i++) {
-            temp_reg[i] ^= in_reg[i];
-        }
-
-        /* CBC */
-        // Generate Partial result
-        for (int i = 0; i < 4; i++) {
-            cmac[i] ^= temp_reg[i];
-        }
-
-        utils::CopyBytes(pPlainText, temp_reg, 16); // Store plaintext.
-
-        // Generate the partial tag, Xor of CBC is above
-        encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
-
-        pCipherText += 16;
-        pPlainText += 16;
-        ctLen -= 16;
-    }
-
-    if (ctLen) {
-        /* CTR */
-        utils::CopyBytes(temp_reg, nonce, 16); // Copy Counter
-        encryptBlock(temp_reg, pccm_data->key, pccm_data->rounds);
-
-        for (i = 0; i < ctLen; ++i) {
-            // CTR XOR operation to generate plaintext
-            pPlainText[i] = p_temp_8[i] ^ pCipherText[i];
-            // CBC XOR operation to generate cmac
-            p_cmac_8[i] ^= pPlainText[i];
-        }
-
-        /* CBC */
-        // CBC Xor is above, Encrypt the partial result to create partial
-        // tag
-        encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
-    }
-
-    // Copy the current state of cmac and nonce back to memory.
-    utils::CopyBlock(pccm_data->cmac, cmac, 16);
-    utils::CopyBlock(pccm_data->nonce, nonce, 16);
-
-    return s;
-}
-#else
-Status
-Ccm::decryptRef(ccm_data_t* pccm_data,
-                const Uint8 pCipherText[],
-                Uint8 pPlainText[],
-                size_t ctLen)
-{
-    // Implementation block diagram
-    // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
-    Status s = StatusOk();
-    unsigned int i, q;
-    size_t n;
-    if (pPlainText == nullptr || pCipherText == nullptr
-        || pccm_data == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
-    }
-    unsigned char flags0 = pccm_data->nonce[0];
-    const Uint8* p_key = pccm_data->key;
-    Uint32 cmac[4], nonce[4], in_reg[4], temp_reg[4];
-    Uint8* p_cmac_8 = reinterpret_cast<Uint8*>(cmac);
-    Uint8* p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
-    Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp_reg);
+#ifndef CCM_MULTI_UPDATE
+    unsigned int  n, q;
+    unsigned char flags0    = pccm_data->nonce[0];
+    const Uint8*  p_key     = pccm_data->key;
+    Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(nonce);
+#endif
 
     utils::CopyBytes(nonce, pccm_data->nonce, 16);
 
+#ifndef CCM_MULTI_UPDATE
     if (!(flags0 & 0x40)) {
         utils::CopyBytes(cmac, nonce, 16);
         encryptBlock(cmac, p_key, pccm_data->rounds);
@@ -584,6 +388,11 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
         s = status::DecryptFailed("Length of plainText mismatch!");
         return s;
     }
+#endif
+#if CCM_MULTI_UPDATE
+
+    utils::CopyBytes(cmac, pccm_data->cmac, 16);
+#endif
 
     while (ctLen >= 16) {
 
@@ -631,6 +440,7 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
         // tag
         encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
     }
+#ifndef CCM_MULTI_UPDATE
 
     // Zero out counter part
     for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
@@ -648,20 +458,19 @@ Ccm::decryptRef(ccm_data_t* pccm_data,
     // Restore flags into nonce to restore nonce to original state
     p_nonce_8[0] = flags0;
 
+#endif
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBlock(pccm_data->cmac, cmac, 16);
     utils::CopyBlock(pccm_data->nonce, nonce, 16);
 
     return s;
 }
-#endif
 Status
 Ccm::setIv(ccm_data_t* ccm_data,
            const Uint8 pIv[],
            size_t      ivLen,
            size_t      dataLen)
 {
-#ifdef CCM_MULTI_UPDATE
     Status       s = StatusOk();
     unsigned int q = ccm_data->nonce[0] & 7;
 
@@ -674,6 +483,7 @@ Ccm::setIv(ccm_data_t* ccm_data,
         s = status::InvalidValue("Length of nonce is too small!");
         return s;
     }
+#ifdef CCM_MULTI_UPDATE
     if (sizeof(m_plainTextLength) == 8 && q >= 3) {
         ccm_data->nonce[8]  = static_cast<Uint8>(m_plainTextLength >> 56);
         ccm_data->nonce[9]  = static_cast<Uint8>(m_plainTextLength >> 48);
@@ -688,26 +498,11 @@ Ccm::setIv(ccm_data_t* ccm_data,
     ccm_data->nonce[14] = static_cast<Uint8>(m_plainTextLength >> 8);
     ccm_data->nonce[15] = static_cast<Uint8>(m_plainTextLength);
 
-    ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
-    utils::CopyBytes(&ccm_data->nonce[1], pIv, 14 - q);
-    // EXITG();
-    return s;
 #else
-    Status s = StatusOk();
-    unsigned int q = ccm_data->nonce[0] & 7;
 
-    if (ccm_data == nullptr || pIv == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
-    }
-
-    if (ivLen < (14 - q)) {
-        s = status::InvalidValue("Length of nonce is too small!");
-        return s;
-    }
     if (sizeof(dataLen) == 8 && q >= 3) {
-        ccm_data->nonce[8] = static_cast<Uint8>(dataLen >> 56);
-        ccm_data->nonce[9] = static_cast<Uint8>(dataLen >> 48);
+        ccm_data->nonce[8]  = static_cast<Uint8>(dataLen >> 56);
+        ccm_data->nonce[9]  = static_cast<Uint8>(dataLen >> 48);
         ccm_data->nonce[10] = static_cast<Uint8>(dataLen >> 40);
         ccm_data->nonce[11] = static_cast<Uint8>(dataLen >> 32);
     } else {
@@ -718,12 +513,11 @@ Ccm::setIv(ccm_data_t* ccm_data,
     ccm_data->nonce[13] = static_cast<Uint8>(dataLen >> 16);
     ccm_data->nonce[14] = static_cast<Uint8>(dataLen >> 8);
     ccm_data->nonce[15] = static_cast<Uint8>(dataLen);
-
+#endif
     ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
     utils::CopyBytes(&ccm_data->nonce[1], pIv, 14 - q);
     // EXITG();
     return s;
-#endif
 }
 
 #if CCM_MULTI_UPDATE
@@ -785,13 +579,13 @@ Ccm::getTagRef(ccm_data_t* ctx, Uint8 ptag[], size_t tagLen)
     return s;
 }
 
-#ifdef CCM_MULTI_UPDATE
 Status
 Ccm::setAadRef(ccm_data_t* pccm_data,
                const Uint8 paad[],
                size_t      aadLen,
                size_t      plen)
 {
+#ifdef CCM_MULTI_UPDATE
     Status s         = StatusOk();
     Uint32 p_blk0[4] = {};
     Uint32 aad_32[4] = {};
@@ -936,17 +730,12 @@ Ccm::setAadRef(ccm_data_t* pccm_data,
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
 
     return s;
-}
 #else
-
-Status
-Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
-{
-    Status s = StatusOk();
-    Uint32 p_blk0[4] = {};
-    Uint32 aad_32[4] = {};
-    Uint8* p_blk0_8 = reinterpret_cast<Uint8*>(&p_blk0);
-    Uint64 i = {};
+    Status s            = StatusOk();
+    Uint32 p_blk0[4]    = {};
+    Uint32 aad_32[4]    = {};
+    Uint8* p_blk0_8     = reinterpret_cast<Uint8*>(&p_blk0);
+    Uint64 i            = {};
 
     // FIXME: Should we let paad be null when aadLen is 0
     if (paad == nullptr || pccm_data == nullptr) {
@@ -1034,8 +823,8 @@ Ccm::setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen)
     // Store generated partial tag (cmac)
     utils::CopyBlock(pccm_data->cmac, p_blk0_8, 16);
     return s;
-}
 #endif
+}
 // Auth class definitions
 alc_error_t
 CcmHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)

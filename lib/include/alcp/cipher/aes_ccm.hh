@@ -173,7 +173,6 @@ class ALCP_API_EXPORT Ccm : public Aes
                       Uint8       pPlainText[],
                       Uint64      ctLen);
 
-#ifdef CCM_MULTI_UPDATE
     /**
      * @brief Set Ad
      * ditional Data.
@@ -185,9 +184,6 @@ class ALCP_API_EXPORT Ccm : public Aes
                      const Uint8 paad[],
                      size_t      aadLen,
                      size_t      plen);
-#else
-    Status setAadRef(ccm_data_t* pccm_data, const Uint8 paad[], size_t aadLen);
-#endif
 
 #ifdef CCM_MULTI_UPDATE
     /**
