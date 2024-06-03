@@ -77,8 +77,6 @@ class AlcpDigestBase : public DigestBase
     /* duplicate context created from m_handle */
     alc_digest_handle_t* m_handle_dup = {};
     alc_digest_mode_t    m_mode       = {};
-    /* for Sha3 shake variants */
-    Int64 m_digest_len = {};
 
   public:
     AlcpDigestBase(alc_digest_mode_t mode);
