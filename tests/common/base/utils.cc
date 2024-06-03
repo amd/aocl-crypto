@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,7 @@ parseHexStrToBin(const std::string in)
     std::vector<Uint8> vector;
     int                len = in.size();
     int                ind = 0;
-    
+
     for (int i = 0; i < len; i += 2) {
         Uint8 val =
             parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
@@ -118,15 +118,6 @@ isPathExist(const std::string dir)
     } else {
         return false;
     }
-}
-
-void
-Hash_to_string(char* output_string, const Uint8* hash, int sha_len)
-{
-    for (int i = 0; i < sha_len / 8; i++) {
-        output_string += sprintf(output_string, "%02x", hash[i]);
-    }
-    output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
 std::string
