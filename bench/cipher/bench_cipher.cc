@@ -223,8 +223,6 @@ AesCipher(benchmark::State& state,
     std::unique_ptr<Uint8[]>   tag_buffer = std::make_unique<Uint8[]>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
-    Uint8                      ad[16] = {};
-    Uint8                      tag[16];
     Uint8                      tkey[keylen / 8];
     alcp::testing::CipherBase* p_cb;
 

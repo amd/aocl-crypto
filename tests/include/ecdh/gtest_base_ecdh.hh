@@ -202,25 +202,26 @@ ecdh_KAT_p256(alc_ec_info_t info)
     AlcpEcdhBase aeb_peer1(info);
     AlcpEcdhBase aeb_peer2(info);
 
-    EcdhBase *eb_peer1, *eb_peer2;
+    EcdhBase* eb_peer1;
+    // *eb_peer2; /*FIXME: use this when p256 tests are up eb_peer2;*/
 
     eb_peer1 = &aeb_peer1;
-    eb_peer2 = &aeb_peer2;
+    // eb_peer2 = &aeb_peer2;
 
     int KeySize = ECDH_KEYSIZE;
 
 #ifdef USE_OSSL
     OpenSSLEcdhBase oeb_peer1(info);
-    OpenSSLEcdhBase oeb_peer2(info);
+    // OpenSSLEcdhBase oeb_peer2(info);
     if (useossl == true) {
         eb_peer1 = &oeb_peer1;
-        eb_peer2 = &oeb_peer2;
+        // eb_peer2 = &oeb_peer2;
     }
 #endif
 
 #ifdef USE_IPP
     IPPEcdhBase ieb_peer1(info);
-    IPPEcdhBase ieb_peer2(info);
+    // IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
         if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
@@ -232,7 +233,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
             GTEST_SKIP();
         }
         eb_peer1 = &ieb_peer1;
-        eb_peer2 = &ieb_peer2;
+        // eb_peer2 = &ieb_peer2;
     }
 #endif
 

@@ -38,9 +38,7 @@ namespace alcp::testing {
 class AlcpRsaBase : public RsaBase
 {
     alc_rsa_handle_t* m_rsa_handle{};
-    int               m_keysize     = 0;
     Uint64            m_pub_key_exp = {};
-    Uint64            m_hash_len    = 0;
 
   public:
     AlcpRsaBase();

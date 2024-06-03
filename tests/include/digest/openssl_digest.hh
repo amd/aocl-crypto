@@ -47,11 +47,7 @@ class OpenSSLDigestBase : public DigestBase
     EVP_MD_CTX*       m_handle     = nullptr;
     EVP_MD_CTX*       m_handle_dup = nullptr;
     alc_digest_mode_t m_mode{};
-    Uint8*            m_message    = nullptr;
-    Uint8*            m_digest     = nullptr;
-    Uint8*            m_digest_dup = nullptr;
-    Int64             m_digest_len = 0;
-    const EVP_MD*     m_md_type    = nullptr;
+    const EVP_MD*     m_md_type = nullptr;
 
   public:
     // Class contructor and destructor

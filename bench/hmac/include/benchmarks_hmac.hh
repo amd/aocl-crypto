@@ -111,25 +111,25 @@ void inline Hmac_Bench(benchmark::State& state,
 static void
 BENCH_HMAC_SHA2_224(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA2_224 };
+    alc_mac_info_t info{ { ALC_SHA2_224 } };
     Hmac_Bench(state, info, state.range(0), 224);
 }
 static void
 BENCH_HMAC_SHA2_256(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA2_256 };
+    alc_mac_info_t info{ { ALC_SHA2_256 } };
     Hmac_Bench(state, info, state.range(0), 256);
 }
 static void
 BENCH_HMAC_SHA2_384(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA2_384 };
+    alc_mac_info_t info{ { ALC_SHA2_384 } };
     Hmac_Bench(state, info, state.range(0), 384);
 }
 static void
 BENCH_HMAC_SHA2_512(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA2_512 };
+    alc_mac_info_t info{ { ALC_SHA2_512 } };
     Hmac_Bench(state, info, state.range(0), 512);
 }
 
@@ -137,25 +137,25 @@ BENCH_HMAC_SHA2_512(benchmark::State& state)
 static void
 BENCH_HMAC_SHA3_224(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA3_224 };
+    alc_mac_info_t info{ { ALC_SHA3_224 } };
     Hmac_Bench(state, info, state.range(0), 224);
 }
 static void
 BENCH_HMAC_SHA3_256(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA3_256 };
+    alc_mac_info_t info{ { ALC_SHA3_256 } };
     Hmac_Bench(state, info, state.range(0), 256);
 }
 static void
 BENCH_HMAC_SHA3_384(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA3_384 };
+    alc_mac_info_t info{ { ALC_SHA3_384 } };
     Hmac_Bench(state, info, state.range(0), 384);
 }
 static void
 BENCH_HMAC_SHA3_512(benchmark::State& state)
 {
-    alc_mac_info_t info{ ALC_SHA3_512 };
+    alc_mac_info_t info{ { ALC_SHA3_512 } };
     Hmac_Bench(state, info, state.range(0), 512);
 }
 

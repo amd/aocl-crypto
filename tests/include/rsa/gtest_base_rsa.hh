@@ -185,7 +185,9 @@ Rsa_KAT(int                     padding_mode,
         std::vector<Uint8> PubKeyKeyMod(KeySize);
         std::vector<Uint8> signature(KeySize);
         std::vector<Uint8> expected_signature(KeySize);
-        Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
+
+        /* FIXME, randomize this or come from CSV */
+        // Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
 
         /* for signature generation and verification*/
         if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
@@ -363,13 +365,11 @@ Rsa_Cross(int                     padding_mode,
     rb_main->m_key_len = KeySize;
     rb_ext->m_key_len  = KeySize;
 
-    int loop_max = InputSize_Max, loop_start = 1;
+    int loop_start = 1;
     if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
     }
-    std::vector<Uint8>::const_iterator pos1, pos2;
-    auto                               rng = std::default_random_engine{};
 
     /* use ctr-drbg to randomize the input buffer */
     /* TO DO: maybe parameterize the DRBG type, and params in future? */

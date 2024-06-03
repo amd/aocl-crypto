@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -174,11 +174,9 @@ BenchXtsCipherExperimental(benchmark::State&            state,
     alignas(64) Uint8 output_text[cBlockSize];
     alignas(32) Uint8 key[keylen / 8 * 2];
     alignas(16) Uint8 iv[16];
-    alignas(16) Uint8 ad[16];
-    alignas(16) Uint8 tag[16];
     int               blocks = cBlockSize / 16;
 
-    for (int i = 0; i < keylen / 8 * 2; i++) {
+    for (Uint32 i = 0; i < keylen / 8 * 2; i++) {
         key[i] = i;
     }
 
@@ -251,8 +249,7 @@ BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -262,8 +259,7 @@ BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         192));
 }
 
@@ -273,8 +269,7 @@ BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -284,8 +279,7 @@ BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -295,8 +289,7 @@ BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         192));
 }
 
@@ -306,8 +299,7 @@ BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -320,8 +312,7 @@ BENCH_AES_ENCRYPT_XTS_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -331,8 +322,7 @@ BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -342,8 +332,7 @@ BENCH_AES_DECRYPT_XTS_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(XtsCipherFactory<false>(
-            static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<false>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -353,8 +342,7 @@ BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(XtsCipherFactory<false>(
-            static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<false>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 

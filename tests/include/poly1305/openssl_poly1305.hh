@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,9 +41,7 @@ namespace alcp::testing {
 class OpenSSLPoly1305Base : public Poly1305Base
 {
     EVP_MAC_CTX* m_handle = nullptr;
-    Uint8*       m_message;
     Uint8*       m_key;
-    Uint8*       m_poly1305;
     EVP_MAC*     m_mac = nullptr;
     Uint32       m_key_len;
 

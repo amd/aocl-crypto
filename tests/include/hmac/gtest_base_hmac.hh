@@ -109,7 +109,7 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
     std::vector<Uint8> hmac(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    alc_mac_info_t info{ HmacDigestMode };
+    alc_mac_info_t info{ { HmacDigestMode } };
 
     AlcpHmacBase ahb;
     HmacBase*    hb;
@@ -182,7 +182,7 @@ Hmac_Cross(alc_digest_mode_t HmacDigestMode)
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    alc_mac_info_t info{ HmacDigestMode };
+    alc_mac_info_t info{ { HmacDigestMode } };
 
     AlcpHmacBase ahb;
     RngBase      rb;

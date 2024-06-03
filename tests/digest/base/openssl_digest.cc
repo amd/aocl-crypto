@@ -158,14 +158,12 @@ OpenSSLDigestBase::digest_finalize(const alcp_digest_data_t& data)
             return false;
         }
     }
-    outsize = outsize;
     return true;
 }
 
 bool
 OpenSSLDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 {
-    unsigned int outsize = 0;
     /* This API is supported only from Openssl 3.3.0 onwards */
 #if OPENSSL_API_LEVEL >= 30300
     if (EVP_DigestSqueeze(m_handle_dup, data.m_digest_dup, data.m_digest_len)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,8 +39,7 @@ namespace alcp::testing {
 
 OpenSSLEcdhBase::OpenSSLEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{
-}
+{}
 
 OpenSSLEcdhBase::~OpenSSLEcdhBase()
 {
@@ -177,7 +176,6 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
         }
     } else if (m_st == "prime256v1") {
         OSSL_PARAM_BLD* param_bld;
-        BIGNUM*         priv;
         EVP_PKEY_CTX*   ctx_pkey;
         OSSL_PARAM*     params = nullptr;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,8 +41,7 @@ namespace alcp::testing {
 class AlcpPoly1305Base : public Poly1305Base
 {
     alc_mac_handle_t* m_handle{};
-    Uint8*            m_message = {};
-    Uint8*            m_key     = {};
+    Uint8*            m_key = {};
     Uint32            m_key_len;
 
   public:

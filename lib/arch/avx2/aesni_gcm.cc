@@ -143,11 +143,11 @@ gcmBlk(const __m128i*        p_in_x,
        bool                  isEncrypt,
        int                   remBytes)
 {
-    __m128i a1, a2, a3, a4; // Block Registers
-    __m128i b1, b2, b3, b4; // Scratch Registers
-    __m128i c1, c2, c3, c4; // Counter Registers
-    __m128i m_hash_subKey_128_2, m_hash_subKey_128_3,
-        m_hash_subKey_128_4; // Key Registers
+    __m128i a1{}, a2{}, a3{}, a4{}; // Block Registers
+    __m128i b1{}, b2{}, b3{}, b4{}; // Scratch Registers
+    __m128i c1{}, c2{}, c3{}, c4{}; // Counter Registers
+    __m128i m_hash_subKey_128_2{}, m_hash_subKey_128_3{},
+        m_hash_subKey_128_4{}; // Key Registers
 
     const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 

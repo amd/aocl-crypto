@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -370,8 +370,6 @@ IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc)
     } else {
         int    authRes           = 0;
         Ipp8u* ad_ptr_list_dec[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
-        Ipp8u* ad_ptr_list_s2v[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_out };
-        int    ad_size_list[]    = { (int)data.m_adl, (int)data.m_inl };
         int    ret               = ippsAES_SIVDecrypt(data.m_in,
                                      data.m_out,
                                      data.m_inl,

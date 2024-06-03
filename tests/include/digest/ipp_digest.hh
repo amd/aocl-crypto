@@ -43,10 +43,6 @@ class IPPDigestBase : public DigestBase
     IppsHashState_rmf* m_handle     = nullptr;
     IppsHashState_rmf* m_handle_dup = nullptr;
     alc_digest_mode_t  m_mode{};
-    Uint8*             m_message    = nullptr;
-    Uint8*             m_digest     = nullptr;
-    Uint8*             m_digest_dup = nullptr;
-    Int64              m_digest_len;
 
   public:
     IPPDigestBase(alc_digest_mode_t mode);

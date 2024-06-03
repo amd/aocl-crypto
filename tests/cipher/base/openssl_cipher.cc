@@ -100,8 +100,7 @@ OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{
-}
+{}
 
 OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
                                      const alc_cipher_mode_t cMode,

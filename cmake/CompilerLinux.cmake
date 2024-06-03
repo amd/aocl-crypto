@@ -83,8 +83,9 @@ endfunction(alcp_check_compiler_version)
 
 
 # Generic Warnings
+SET (ALCP_WARNINGS -Wall -Werror)
 function(alcp_get_cflags_warnings)
-    set(ALCP_CFLAGS_WARNINGS "-Wall" CACHE INTERNAL "")
+    set(ALCP_CFLAGS_WARNINGS ${ALCP_WARNINGS} CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)
 endfunction(alcp_get_cflags_warnings)
 

@@ -198,13 +198,14 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
                             + "_KAT")));
 
             /* for squeeze test, check digest outputs from both handles */
-            if (test_squeeze)
+            if (test_squeeze) {
                 EXPECT_TRUE(ArraysMatch(
                     digest_dup_, // output squeezed out of m_handle_dup
                     csv.getVect("DIGEST"), // expected, from the KAT test data
                     csv,
                     std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
                                 + "_KAT" + " for duplicate digest")));
+            }
         }
     } else {
         while (csv.readNext()) {

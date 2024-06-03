@@ -112,11 +112,6 @@ template<bool encryptor>
 bool
 AlcpXtsCipher<encryptor>::finalize(alc_test_finalize_data_p data)
 {
-    alc_test_xts_finalize_data_p p_xts_finalize_data =
-        reinterpret_cast<alc_test_xts_finalize_data_p>(data);
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
     alcp_cipher_finish(&m_handle);
     if (m_handle.ch_context != nullptr) {
         free(m_handle.ch_context);

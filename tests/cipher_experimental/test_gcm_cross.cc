@@ -118,7 +118,7 @@ GcmCross_KAT(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     }
 
     ASSERT_TRUE(iTestCipher->init(&data_init));
-    for (int i = 0; i < chunks; i++) {
+    for (Uint64 i = 0; i < chunks; i++) {
         ASSERT_TRUE(iTestCipher->update(&data_update));
         data_update.m_input += data.chunkSize;
         data_update.m_output += data.chunkSize;
@@ -182,7 +182,7 @@ GcmCross_REF(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     Uint64 extra_bytes = (data.plainText.size() - (chunks * data.chunkSize));
 
     ASSERT_TRUE(iTestCipher->init(&data_init));
-    for (int i = 0; i < chunks; i++) {
+    for (Uint64 i = 0; i < chunks; i++) {
         ASSERT_TRUE(iTestCipher->update(&data_update));
         data_update.m_input += data.chunkSize;
         data_update.m_output += data.chunkSize;
@@ -272,7 +272,7 @@ CrossTestGCM(std::shared_ptr<RngBase> rng,
     test_data.tag            = std::vector<Uint8>(cTagSize / 8);
     test_data.plainText      = std::vector<Uint8>(pt_max_size);
     test_data.chunkSize      = cChunkSize;
-    for (int pt_size = pt_max_size; pt_size >= pt_min_size;
+    for (Uint64 pt_size = pt_max_size; pt_size >= pt_min_size;
          pt_size -= pt_dec_size) {
 
         // Change size without reallocation

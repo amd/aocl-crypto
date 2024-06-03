@@ -39,8 +39,8 @@ AlcpRsaBase::AlcpRsaBase() {}
 bool
 AlcpRsaBase::init()
 {
-    alc_error_t err;
-    Uint64      size;
+    alc_error_t err  = ALC_ERROR_NONE;
+    Uint64      size = 0;
     if (m_key_len * 8 == KEY_SIZE_1024)
         size = alcp_rsa_context_size(KEY_SIZE_1024);
     else if (m_key_len * 8 == KEY_SIZE_2048)
@@ -127,7 +127,7 @@ AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 bool
 AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
 
     if (m_key_len * 8 == KEY_SIZE_1024) {
         err = alcp_rsa_set_privatekey(m_rsa_handle,

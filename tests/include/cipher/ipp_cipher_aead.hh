@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,13 +43,10 @@ class IPPCipherAeadBase : public CipherAeadBase
 {
   private:
     alc_cipher_mode_t m_mode;
-    _alc_cipher_type  m_cipher_type;
-    IppsAESSpec*      m_ctx       = NULL;
-    IppsAES_XTSSpec*  m_ctx_xts   = NULL;
-    IppsAES_GCMState* m_ctx_gcm   = NULL;
-    IppsAES_GCMState* m_pStateGCM = NULL;
-    IppsAES_CCMState* m_ctx_ccm   = NULL;
-    IppsAES_CCMState* m_pStateCCM = NULL;
+    IppsAESSpec*      m_ctx     = NULL;
+    IppsAES_XTSSpec*  m_ctx_xts = NULL;
+    IppsAES_GCMState* m_ctx_gcm = NULL;
+    IppsAES_CCMState* m_ctx_ccm = NULL;
 
     const Uint8* m_iv;
     const Uint8* m_key;
@@ -57,7 +54,6 @@ class IPPCipherAeadBase : public CipherAeadBase
     const Uint8* m_tkey       = NULL;
     int          m_ctxSize    = 0;
     Uint64       m_block_size = 0;
-    Uint8        m_key_final[64];
     void         PrintErrors(IppStatus status);
     bool         alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
     bool         alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc);

@@ -89,7 +89,6 @@ bool
 OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
     unsigned long Exponent = 0x10001;
-    int           ret_val;
     BIGNUM *      mod_BN = nullptr, *pvt_exponent_BN = nullptr, *P_BN = nullptr,
            *Q_BN = nullptr, *DP_BN = nullptr, *DQ_BN = nullptr,
            *QINV_BN = nullptr;
@@ -150,15 +149,15 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
     if (1 != EVP_PKEY_fromdata_init(m_rsa_handle_keyctx_pub)) {
-        std::cout << "EVP_PKEY_fromdata_init failed" << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_fromdata_init failed"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (EVP_PKEY_fromdata(
             m_rsa_handle_keyctx_pub, &m_pkey_pub, EVP_PKEY_PUBLIC_KEY, m_params)
         != 1) {
-        std::cout << "EVP_PKEY_fromdata failed" << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_fromdata failed"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (m_rsa_handle_keyctx_pub == nullptr) {
@@ -190,7 +189,6 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 bool
 OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
-    int           retval;
     EVP_PKEY_CTX* m_rsa_handle_keyctx_pvt =
         EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
     if (m_rsa_handle_keyctx_pvt == nullptr) {
@@ -199,8 +197,8 @@ OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
         return false;
     }
     if (EVP_PKEY_fromdata_init(m_rsa_handle_keyctx_pvt) != 1) {
-        std::cout << "EVP_PKEY_fromdata_init failed" << std::endl;
-        retval = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_fromdata_init failed"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (EVP_PKEY_fromdata(m_rsa_handle_keyctx_pvt,
@@ -208,8 +206,8 @@ OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
                           OSSL_KEYMGMT_SELECT_PRIVATE_KEY,
                           m_params)
         != 1) {
-        std::cout << "EVP_PKEY_fromdata failed" << std::endl;
-        retval = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_fromdata failed"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (m_pkey_pvt == nullptr) {
