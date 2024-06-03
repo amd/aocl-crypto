@@ -62,16 +62,12 @@ enum class CCM_ERROR
 };
 
 namespace aesni::ccm {
-#ifdef CCM_MULTI_UPDATE
     // Defined in arch/zen3
     CCM_ERROR SetAad(ccm_data_t* ctx,
                      const Uint8 aad[],
                      size_t      alen,
                      size_t      plen);
     CCM_ERROR Finalize(ccm_data_t* ctx);
-#else
-    void SetAad(ccm_data_t* ccm_data, const Uint8 paad[], size_t alen);
-#endif
 
     CCM_ERROR Encrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
@@ -99,7 +95,6 @@ class ALCP_API_EXPORT Ccm : public Aes
     ccm_data_t   m_ccm_data;
 
   protected:
-#if CCM_MULTI_UPDATE
     /**
      * @brief Set IV(nonce)
      * @param ccm_data Intermediate Data
@@ -108,13 +103,11 @@ class ALCP_API_EXPORT Ccm : public Aes
      * @param mlen Message length
      * @return
      */
-    Status setIv(ccm_data_t* ccm_data, const Uint8 pIv[], size_t nlen);
-#else
     Status setIv(ccm_data_t* ccm_data,
                  const Uint8 pIv[],
                  size_t      ivLen,
                  size_t      dataLen);
-#endif
+
   public:
     explicit Ccm(alc_cipher_data_t* ctx);
 

@@ -45,15 +45,17 @@
 #endif
 #include <iomanip>
 
-namespace alcp::cipher::aesni { namespace ccm {
+namespace alcp::cipher::aesni
 
-#ifdef CCM_MULTI_UPDATE
+{
+namespace ccm {
 
     CCM_ERROR SetAad(ccm_data_t* ccm_data,
                      const Uint8 paad[],
                      size_t      alen,
                      size_t      plen)
     {
+#ifdef CCM_MULTI_UPDATE
         ENTER();
         __m128i cmac     = { 0 };
         __m128i aad_128  = { 0 };
@@ -186,10 +188,7 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         EXIT();
         return CCM_ERROR::NO_ERROR;
-    }
 #else
-    void SetAad(ccm_data_t* ccm_data, const Uint8 paad[], size_t alen)
-    {
 
         ENTER();
         __m128i p_blk0   = { 0 };
@@ -199,7 +198,7 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         if (alen == 0) {
             EXITB();
-            return;
+            return CCM_ERROR::NO_ERROR;
         }
 
         ccm_data->nonce[0] |= 0x40; /* set Adata flag */
@@ -284,8 +283,9 @@ namespace alcp::cipher::aesni { namespace ccm {
         _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), p_blk0);
 
         EXIT();
-    }
+        return CCM_ERROR::NO_ERROR;
 #endif
+    }
 
     inline void CtrInc(__m128i* ctr)
     {
@@ -317,8 +317,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
             p_nonce_8[i] = 0;
 
-        // CTR encrypt first counter and XOR with the partial tag to generate
-        // the real tag
+        // CTR encrypt first counter and XOR with the partial tag to
+        // generate the real tag
         temp_reg = nonce; // Copy counter
         AesEncrypt(&temp_reg,
                    reinterpret_cast<const __m128i*>(ccm_data->key),
@@ -356,8 +356,8 @@ namespace alcp::cipher::aesni { namespace ccm {
             cmac = _mm_xor_si128(cmac, in_reg);
 
             temp_reg = nonce;
-            // CMAC is CBC's encrypt to generate tag, temp_reg is CTR's encrypt
-            // to generate CT
+            // CMAC is CBC's encrypt to generate tag, temp_reg is CTR's
+            // encrypt to generate CT
             AesEncrypt(&cmac,
                        &temp_reg,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
@@ -403,6 +403,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
         ENTER();
+
         size_t        n;
         unsigned int  i, q;
         unsigned char flags0 = ccm_data->nonce[0];
@@ -632,8 +633,8 @@ namespace alcp::cipher::aesni { namespace ccm {
             }
 
             /* CBC */
-            // CBC Xor is above, Encrypt the partial result to create partial
-            // tag
+            // CBC Xor is above, Encrypt the partial result to create
+            // partial tag
             AesEncrypt(&cmac,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
