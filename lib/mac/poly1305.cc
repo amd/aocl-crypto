@@ -31,34 +31,27 @@
 #include <iostream>
 #include <tuple>
 
-#include <openssl/bio.h>
-#include <openssl/bn.h>
-
 #include "alcp/base.hh"
 #include "alcp/mac/macerror.hh"
+#include "alcp/mac/poly1305.hh"
 #include "alcp/mac/poly1305_zen4.hh"
 #include "alcp/utils/cpuid.hh"
-#include "mac/poly1305-ref.hh"
 
-// #define DEBUG
 namespace alcp::mac::poly1305 {
 using utils::CpuId;
-
-using reference::Poly1305BNRef;
-using reference::Poly1305Ref;
 
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305()
 {
     if constexpr (utils::CpuArchFeature::eReference == feature
                   || utils::CpuArchFeature::eAvx2 == feature) {
-        poly1305_impl = std::make_unique<Poly1305Ref>();
+        poly1305_impl = std::make_unique<reference::Poly1305Ref>();
     } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // utils::CpuArchFeature::eDynamic
         if (!(CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
               && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
               && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW))) {
-            poly1305_impl = std::make_unique<Poly1305Ref>();
+            poly1305_impl = std::make_unique<reference::Poly1305Ref>();
         }
     }
 }

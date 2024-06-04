@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -11,7 +11,7 @@
  * 3. Neither the name of the copyright holder nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  * without specific prior written permission.
- *-
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -27,58 +27,57 @@
  */
 
 #pragma once
+
 #include "alcp/base.hh"
-#include "alcp/mac/mac.hh"
-#include "alcp/mac/poly1305-ref.hh"
-#include "alcp/mac/poly1305_state.hh"
-#include "alcp/utils/cpuid.hh"
 
-#define POLY1305_RADIX_26 false
+namespace alcp::mac::poly1305::reference {
 
-namespace alcp::mac::poly1305 {
-using utils::CpuArchFeature;
-template<utils::CpuArchFeature feature = CpuArchFeature::eDynamic>
-class ALCP_API_EXPORT Poly1305 : public IMac
+class Poly1305Ref
 {
+  public:
+    Poly1305Ref() = default;
+
   private:
-    std::unique_ptr<reference::Poly1305Ref> poly1305_impl;
-#if POLY1305_RADIX_26
-    Poly1305State26 state;
-#else
-    Poly1305State44 state;
-#endif
+    static const Uint32 m_cAccSize_bytes = 40;
+    static const Uint32 m_cKeySize_bytes = 32;
+    static const Uint32 m_cMsgSize_bytes = 16;
+    static const Uint32 m_limbs          = 5;
+
+    alignas(64) Uint8 m_msg_buffer[m_cMsgSize_bytes]                    = {};
+    alignas(64) Uint64 m_accumulator[m_cAccSize_bytes / sizeof(Uint64)] = {};
+    alignas(64) Uint64 m_key[m_cKeySize_bytes / sizeof(Uint64)]         = {};
+    alignas(64) Uint64 m_r[m_limbs]                                     = {};
+    alignas(64) Uint64 m_s[m_limbs - 1]                                 = {};
+    Uint64 m_msg_buffer_len                                             = {};
+    bool   m_finalized                                                  = false;
 
   public:
     /**
-     * @brief Given message, updates internal state processing the message
-     * @param pMsg  Byte addressible message
-     * @param msgLen  Length of message in bytes
-     * @return  Status/Result of the operation
-     */
-    Status update(const Uint8 pMsg[], Uint64 msgLen) override;
-    /**
      * @brief Sets the Key and Initializes the state of Poly1305
      * @param key - Key to use for Poly1305
-     * @param keyLen - Key Length 32 Byte, anything else wont work
+     * @param len - Key Length 32 Byte, anything else wont work
      * @return Status/Result of the operation
      */
     Status init(const Uint8 key[], Uint64 keyLen);
     /**
+     * @brief Given message, updates internal state processing the message
+     * @param pMsg  Byte addressible message
+     * @param msgLen  Length of message in bytes
+     * @return Status/Result of the operation
+     */
+    Status update(const Uint8 pMsg[], Uint64 msgLen);
+    /**
+     * @brief finishes internal state processing
+     * @param digest Copy the digest/mac to given buffer
+     * @param length Length of the buffer to copy into
+     * @return Status/Result of the operation
+     */
+    Status finish(Uint8 digest[], Uint64 length);
+    /**
      * @brief Resets the temporary buffers without clearing key
      * @return Status/Result of the operation
      */
-    Status reset() override;
-    /**
-     * @brief
-     * @param digest mac buffer
-     * @param digestLen Length of mac in bytes
-     * @return Status/Result of the operation
-     */
-    Status finalize(Uint8 digest[], Uint64 digestLen) override;
-    // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
-    // msgLen);
-    Poly1305();
-    virtual ~Poly1305() = default;
-    Poly1305(const Poly1305& src);
+    Status reset();
 };
-} // namespace alcp::mac::poly1305
+
+} // namespace alcp::mac::poly1305::reference

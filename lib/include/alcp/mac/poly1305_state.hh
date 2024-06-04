@@ -32,6 +32,7 @@
 #include <algorithm>
 
 namespace alcp::mac::poly1305 {
+#if POLY1305_RADIX_26
 struct Poly1305State26
 {
   private:
@@ -80,6 +81,7 @@ struct Poly1305State26
         reset();
     }
 }; // namespace alcp::mac::poly1305
+#endif
 
 struct Poly1305State44
 {
