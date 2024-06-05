@@ -83,6 +83,11 @@ void inline Poly1305_Bench(benchmark::State& state,
         if (!pb->mac(data)) {
             state.SkipWithError("Error in poly1305 bench function");
         }
+        /* FIXME: we need to change reset being called here,
+            also the test interface mac should be split into mac_update and
+           mac_finalize
+        */
+        pb->reset();
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * block_size, benchmark::Counter::kIsRate);
