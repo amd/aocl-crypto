@@ -34,7 +34,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 FetchContent_Declare(benchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.6.1)
+    GIT_TAG v1.8.3)
 FetchContent_MakeAvailable(benchmark)
 
 if(COMPILER_SUPPORTS_NO_MAYBE_UNINITIALIZED)
