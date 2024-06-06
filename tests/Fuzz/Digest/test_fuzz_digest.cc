@@ -33,7 +33,7 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
 {
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_input = stream.ConsumeIntegralInRange<Uint16>(1, 1024);
+    size_t             size_input = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
     /* Initializing digest info */
