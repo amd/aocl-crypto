@@ -92,12 +92,14 @@ void inline Hmac_Bench(benchmark::State& state,
         state.SkipWithError("Error in hmac init function");
     }
     for (auto _ : state) {
-        if (!hb->Hmac_function(data)) {
-            state.SkipWithError("Error in hmac benchmark function");
+        if (!hb->mac_update(data)) {
+            state.SkipWithError("Error in hmac mac_update");
         }
-        if (!hb->reset()) {
-            std::cout << "Error in hmac Reset function" << std::endl;
-            return;
+        if (!hb->mac_finalize(data)) {
+            state.SkipWithError("Error in hmac mac_finalize");
+        }
+        if (!hb->mac_reset()) {
+            state.SkipWithError("Error in hmac mac_reset");
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(

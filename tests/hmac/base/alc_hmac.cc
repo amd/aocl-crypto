@@ -76,27 +76,31 @@ AlcpHmacBase::~AlcpHmacBase()
 }
 
 bool
-AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
+AlcpHmacBase::mac_update(const alcp_hmac_data_t& data)
 {
     alc_error_t err;
-
     err = alcp_mac_update(m_handle, data.in.m_msg, data.in.m_msg_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
         return false;
     }
+    return true;
+}
 
+bool
+AlcpHmacBase::mac_finalize(const alcp_hmac_data_t& data)
+{
+    alc_error_t err;
     err = alcp_mac_finalize(m_handle, data.out.m_hmac, data.out.m_hmac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
         return false;
     }
-
     return true;
 }
 
 bool
-AlcpHmacBase::reset()
+AlcpHmacBase::mac_reset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

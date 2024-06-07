@@ -150,12 +150,16 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
             std::cout << "Error in hmac init function" << std::endl;
             FAIL();
         }
-        if (!hb->Hmac_function(data)) {
-            std::cout << "Error in Hmac function" << std::endl;
+        if (!hb->mac_update(data)) {
+            std::cout << "Error in Hmac mac_update" << std::endl;
             FAIL();
         }
-        if (!hb->reset()) {
-            std::cout << "Error in Hmac reset function" << std::endl;
+        if (!hb->mac_finalize(data)) {
+            std::cout << "Error in Hmac mac_finalize" << std::endl;
+            FAIL();
+        }
+        if (!hb->mac_reset()) {
+            std::cout << "Error in Hmac mac_reset" << std::endl;
             FAIL();
         }
 
@@ -274,11 +278,14 @@ Hmac_Cross(alc_digest_mode_t HmacDigestMode)
                 printf("Error in hmac init\n");
                 FAIL();
             }
-            if (!hb->Hmac_function(data_alc)) {
-                std::cout << "Error in hmac function" << std::endl;
+            if (!hb->mac_update(data_alc)) {
+                std::cout << "Error in hmac mac_update" << std::endl;
                 FAIL();
             }
-
+            if (!hb->mac_finalize(data_alc)) {
+                std::cout << "Error in hmac mac_finalize" << std::endl;
+                FAIL();
+            }
             /* run test with ext lib */
             if (verbose > 1)
                 PrintHmacTestData(key, data_ext);
@@ -286,8 +293,13 @@ Hmac_Cross(alc_digest_mode_t HmacDigestMode)
                 printf("Error in hmac ext init function\n");
                 FAIL();
             }
-            if (!extHb->Hmac_function(data_ext)) {
-                std::cout << "Error in hmac (ext lib) function" << std::endl;
+            if (!extHb->mac_update(data_ext)) {
+                std::cout << "Error in hmac (ext lib) mac_update" << std::endl;
+                FAIL();
+            }
+            if (!extHb->mac_finalize(data_ext)) {
+                std::cout << "Error in hmac (ext lib) mac_finalize"
+                          << std::endl;
                 FAIL();
             }
             EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));

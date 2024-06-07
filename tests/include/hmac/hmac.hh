@@ -76,7 +76,8 @@ struct alcp_hmac_data_t
     alcp_hmac_data_t() // Initialize in, out all values to null/0
         : in{}
         , out{}
-    {}
+    {
+    }
 };
 
 /* add mapping for HMAC mode and length */
@@ -86,8 +87,9 @@ class HmacBase
 {
   public:
     virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool Hmac_function(const alcp_hmac_data_t& data)               = 0;
-    virtual bool reset()                                                   = 0;
+    virtual bool mac_update(const alcp_hmac_data_t& data)                  = 0;
+    virtual bool mac_finalize(const alcp_hmac_data_t& data)                = 0;
+    virtual bool mac_reset()                                               = 0;
 };
 
 } // namespace alcp::testing

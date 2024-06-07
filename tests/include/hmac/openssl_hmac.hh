@@ -54,9 +54,12 @@ class OpenSSLHmacBase : public HmacBase
 
     ~OpenSSLHmacBase();
 
-    bool Hmac_function(const alcp_hmac_data_t& data);
+    bool mac_update(const alcp_hmac_data_t& data);
+
+    bool mac_finalize(const alcp_hmac_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
-    bool reset();
+    bool mac_reset();
 };
 
 } // namespace alcp::testing
