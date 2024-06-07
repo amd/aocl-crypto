@@ -41,8 +41,8 @@ namespace alcp::testing {
 class OpenSSLPoly1305Base : public Poly1305Base
 {
     EVP_MAC_CTX* m_handle = nullptr;
-    Uint8*       m_key;
-    EVP_MAC*     m_mac = nullptr;
+    Uint8*       m_key    = nullptr;
+    EVP_MAC*     m_mac    = nullptr;
     Uint32       m_key_len;
 
   public:
@@ -52,9 +52,12 @@ class OpenSSLPoly1305Base : public Poly1305Base
 
     ~OpenSSLPoly1305Base();
 
-    bool mac(const alcp_poly1305_data_t& data);
+    bool mac_update(const alcp_poly1305_data_t& data);
+
+    bool mac_finalize(const alcp_poly1305_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
-    bool reset();
+    bool mac_reset();
 };
 
 } // namespace alcp::testing

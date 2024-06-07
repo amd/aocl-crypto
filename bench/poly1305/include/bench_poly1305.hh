@@ -77,17 +77,20 @@ void inline Poly1305_Bench(benchmark::State& state,
     data.m_key_len = Key.size();
 
     if (!pb->init(Key)) {
-        state.SkipWithError("Error in poly1305 init function");
+        state.SkipWithError("Error in poly1305 init");
     }
     for (auto _ : state) {
-        if (!pb->mac(data)) {
-            state.SkipWithError("Error in poly1305 bench function");
+        if (!pb->mac_update(data)) {
+            state.SkipWithError("Error in poly1305 mac_update");
         }
-        /* FIXME: we need to change reset being called here,
-            also the test interface mac should be split into mac_update and
-           mac_finalize
-        */
-        pb->reset();
+        if (!pb->mac_finalize(data)) {
+            state.SkipWithError("Error in poly1305 mac_finalize");
+        }
+        /* without a reset call, mac will fail to reuse the same handle after
+         * finalize call without a reset */
+        if (!pb->mac_reset()) {
+            state.SkipWithError("Error in poly1305 mac_reset");
+        }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * block_size, benchmark::Counter::kIsRate);

@@ -75,29 +75,31 @@ AlcpPoly1305Base::~AlcpPoly1305Base()
 }
 
 bool
-AlcpPoly1305Base::mac(const alcp_poly1305_data_t& data)
+AlcpPoly1305Base::mac_update(const alcp_poly1305_data_t& data)
 {
     alc_error_t err;
-
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
         return false;
     }
+    return true;
+}
 
+bool
+AlcpPoly1305Base::mac_finalize(const alcp_poly1305_data_t& data)
+{
+    alc_error_t err;
     err = alcp_mac_finalize(m_handle, data.m_mac, data.m_mac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
         return false;
     }
-
-    // Without reseting it is not possible to reuse m_handle after finalizing
-    reset();
     return true;
 }
 
 bool
-AlcpPoly1305Base::reset()
+AlcpPoly1305Base::mac_reset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

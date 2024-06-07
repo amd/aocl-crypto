@@ -142,8 +142,12 @@ Poly_Cross()
             printf("Error in mac init\n");
             FAIL();
         }
-        if (!pb_main->mac(data_main)) {
-            std::cout << "Error in mac function" << std::endl;
+        if (!pb_main->mac_update(data_main)) {
+            std::cout << "Error in mac_update" << std::endl;
+            FAIL();
+        }
+        if (!pb_main->mac_finalize(data_main)) {
+            std::cout << "Error in mac_finalize" << std::endl;
             FAIL();
         }
         if (verbose > 1)
@@ -154,8 +158,12 @@ Poly_Cross()
             printf("Error in mac ext init function\n");
             FAIL();
         }
-        if (!pb_ext->mac(data_ext)) {
-            std::cout << "Error in mac (ext lib) function" << std::endl;
+        if (!pb_ext->mac_update(data_ext)) {
+            std::cout << "Error in mac_update (ext lib)" << std::endl;
+            FAIL();
+        }
+        if (!pb_ext->mac_finalize(data_ext)) {
+            std::cout << "Error in mac_finalize (ext lib)" << std::endl;
             FAIL();
         }
         if (verbose > 1)
@@ -183,6 +191,8 @@ Poly_Kat()
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
+        std::cout << "Error! csv file " << TestDataFile << " doesnt exist !"
+                  << std::endl;
         FAIL();
     }
 
@@ -209,17 +219,22 @@ Poly_Kat()
         data.m_key_len = key.size();
 
         if (!pb->init(key)) {
-            std::cout << "Error in mac init function" << std::endl;
+            std::cout << "Error in mac init" << std::endl;
             FAIL();
         }
 
-        if (!pb->mac(data)) {
-            std::cout << "Error in mac function" << std::endl;
+        if (!pb->mac_update(data)) {
+            std::cout << "Error in mac_update" << std::endl;
             FAIL();
         }
 
-        if (!pb->reset()) {
-            std::cout << "Error in mac reset function" << std::endl;
+        if (!pb->mac_finalize(data)) {
+            std::cout << "Error in mac_finalize" << std::endl;
+            FAIL();
+        }
+
+        if (!pb->mac_reset()) {
+            std::cout << "Error in mac_reset" << std::endl;
             FAIL();
         }
 
