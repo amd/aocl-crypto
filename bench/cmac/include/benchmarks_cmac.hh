@@ -91,8 +91,14 @@ void inline Cmac_Bench(benchmark::State& state,
         state.SkipWithError("Error in cmac init function");
     }
     for (auto _ : state) {
-        if (!cb->cmacFunction(data)) {
-            state.SkipWithError("Error in cmac bench function");
+        if (!cb->mac_update(data)) {
+            state.SkipWithError("Error in cmac mac_update");
+        }
+        if (!cb->mac_finalize(data)) {
+            state.SkipWithError("Error in cmac mac_finalize");
+        }
+        if (!cb->mac_reset()) {
+            state.SkipWithError("Error in cmac mac_reset");
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(

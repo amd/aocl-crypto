@@ -119,12 +119,17 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             FAIL();
         }
 
-        if (!cb->cmacFunction(data)) {
-            std::cout << "Error in cmac function" << std::endl;
+        if (!cb->mac_update(data)) {
+            std::cout << "Error in cmac mac_update" << std::endl;
             FAIL();
         }
 
-        if (!cb->reset()) {
+        if (!cb->mac_finalize(data)) {
+            std::cout << "Error in cmac mac_finalize" << std::endl;
+            FAIL();
+        }
+
+        if (!cb->mac_reset()) {
             std::cout << "Error in cmac reset function" << std::endl;
             FAIL();
         }
@@ -241,8 +246,16 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
             std::cout << "Error in cmac init function" << std::endl;
             FAIL();
         }
-        if (!cb->cmacFunction(data_alc)) {
-            std::cout << "Error in cmac function" << std::endl;
+        if (!cb->mac_update(data_alc)) {
+            std::cout << "Error in cmac mac_update" << std::endl;
+            FAIL();
+        }
+        if (!cb->mac_finalize(data_alc)) {
+            std::cout << "Error in cmac mac_finalize" << std::endl;
+            FAIL();
+        }
+        if (!cb->mac_reset()) {
+            std::cout << "Error in cmac reset function" << std::endl;
             FAIL();
         }
 
@@ -253,8 +266,16 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
             printf("Error in cmac ext init function\n");
             FAIL();
         }
-        if (!extCb->cmacFunction(data_ext)) {
-            std::cout << "Error in cmac function" << std::endl;
+        if (!extCb->mac_update(data_ext)) {
+            std::cout << "Error in cmac mac_update" << std::endl;
+            FAIL();
+        }
+        if (!extCb->mac_finalize(data_ext)) {
+            std::cout << "Error in cmac mac_finalize" << std::endl;
+            FAIL();
+        }
+        if (!extCb->mac_reset()) {
+            std::cout << "Error in cmac mac_reset" << std::endl;
             FAIL();
         }
         EXPECT_TRUE(ArraysMatch(CmacAlcp, CmacExt, i));

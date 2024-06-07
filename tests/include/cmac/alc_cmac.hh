@@ -52,9 +52,12 @@ class AlcpCmacBase : public CmacBase
 
     ~AlcpCmacBase();
 
-    bool cmacFunction(const alcp_cmac_data_t& data);
+    bool mac_update(const alcp_cmac_data_t& data);
+
+    bool mac_finalize(const alcp_cmac_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
-    bool reset();
+    bool mac_reset();
 };
 
 } // namespace alcp::testing

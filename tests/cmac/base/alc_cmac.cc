@@ -38,9 +38,6 @@ AlcpCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
     m_key     = &Key[0];
     m_key_len = Key.size();
 
-#if 1 // to be fixed
-    // mac_info.mi_algoinfo.cmac.cmac_cipher.ci_key_info = kinfo;
-
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
         m_handle->ch_context = malloc(alcp_mac_context_size());
@@ -49,8 +46,6 @@ AlcpCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
     } else {
         alcp_mac_finish(m_handle);
     }
-
-#endif
 
     alc_error_t err = alcp_mac_request(m_handle, ALC_MAC_CMAC);
     if (alcp_is_error(err)) {
@@ -80,29 +75,31 @@ AlcpCmacBase::~AlcpCmacBase()
 }
 
 bool
-AlcpCmacBase::cmacFunction(const alcp_cmac_data_t& data)
+AlcpCmacBase::mac_update(const alcp_cmac_data_t& data)
 {
     alc_error_t err;
-
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
         return false;
     }
+    return true;
+}
 
+bool
+AlcpCmacBase::mac_finalize(const alcp_cmac_data_t& data)
+{
+    alc_error_t err;
     err = alcp_mac_finalize(m_handle, data.m_cmac, data.m_cmac_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
         return false;
     }
-
-    // Without reseting it is not possible to reuse m_handle after finalizing
-    reset();
     return true;
 }
 
 bool
-AlcpCmacBase::reset()
+AlcpCmacBase::mac_reset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

@@ -102,15 +102,21 @@ OpenSSLCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 }
 
 bool
-OpenSSLCmacBase::cmacFunction(const alcp_cmac_data_t& data)
+OpenSSLCmacBase::mac_update(const alcp_cmac_data_t& data)
 {
-    size_t outsize = data.m_cmac_len;
-
     if (EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len) != 1) {
         std::cout << "EVP_MAC_update failed, error : "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
+    return true;
+}
+
+bool
+OpenSSLCmacBase::mac_finalize(const alcp_cmac_data_t& data)
+{
+    size_t outsize = data.m_cmac_len;
+
     if (EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len) != 1) {
         std::cout << "EVP_MAC_final failed, error : "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
@@ -120,7 +126,7 @@ OpenSSLCmacBase::cmacFunction(const alcp_cmac_data_t& data)
 }
 
 bool
-OpenSSLCmacBase::reset()
+OpenSSLCmacBase::mac_reset()
 {
     /* there is no reset calls for evp mac */
     return true;
