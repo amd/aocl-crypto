@@ -181,14 +181,13 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
- * @param [in]  digestInfo         - Description of the digest
+ * @param [in]  mode               - Description of the digest
 
  * @return Error Code for the API called . if alc_error_t is not zero then
  * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
-                    const alc_digest_info_p digestInfo);
+alcp_rsa_add_digest(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
 
 /**
  * @brief Function adds the digest algorithm for mask generation in oaep /
@@ -198,14 +197,13 @@ alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
- * @param [in]  digestInfo         - Description of the digest
+* @param [in]   mode               - Description of the digest
 
  * @return Error Code for the API called . if alc_error_t is not zero then
  * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
-                 const alc_digest_info_p digestInfo);
+alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
 
 /**
  * @brief Function decrypts encrypted text using private key.
