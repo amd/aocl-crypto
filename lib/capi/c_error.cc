@@ -62,17 +62,7 @@ alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
 Uint8
 alcp_is_error(alc_error_t err)
 {
-    /*FIXME: Temporary fix for coverage mode error*/
-    alc_error_t err_temp = err;
-    if (err_temp == 0)
-        return false;
-    else {
-        /*FIXME fix for memory error with ASAN*/
-#ifdef ALCP_COMPILE_OPTIONS_SANITIZE
-        printf("Error code: %ld\n", (long)err_temp);
-#endif
-        return true;
-    }
+    return err != 0;
 }
 
 EXTERN_C_END
