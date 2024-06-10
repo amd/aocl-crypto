@@ -86,10 +86,10 @@ extern std::map<alc_digest_len_t, alc_digest_mode_t> sha2_mode_len_map;
 class HmacBase
 {
   public:
-    virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool mac_update(const alcp_hmac_data_t& data)                  = 0;
-    virtual bool mac_finalize(const alcp_hmac_data_t& data)                = 0;
-    virtual bool mac_reset()                                               = 0;
+    virtual bool Init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
+    virtual bool MacUpdate(const alcp_hmac_data_t& data)                   = 0;
+    virtual bool MacFinalize(const alcp_hmac_data_t& data)                 = 0;
+    virtual bool MacReset()                                                = 0;
 };
 
 } // namespace alcp::testing

@@ -55,7 +55,7 @@ IPPHmacBase::~IPPHmacBase()
 }
 
 bool
-IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+IPPHmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info           = info;
     m_key            = &Key[0];
@@ -99,19 +99,12 @@ IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 }
 
 bool
-IPPHmacBase::mac_update(const alcp_hmac_data_t& data)
+IPPHmacBase::MacUpdate(const alcp_hmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
-
     status = ippsHMACUpdate_rmf(data.in.m_msg, data.in.m_msg_len, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "ippsHMACUpdate_rmf failed, err code: " << status
-                  << std::endl;
-        return false;
-    }
-    status = ippsHMACFinal_rmf(data.out.m_hmac, data.out.m_hmac_len, m_handle);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsHMACFinal_rmf failed, err code: " << status
                   << std::endl;
         return false;
     }
@@ -119,16 +112,10 @@ IPPHmacBase::mac_update(const alcp_hmac_data_t& data)
 }
 
 bool
-IPPHmacBase::mac_finalize(const alcp_hmac_data_t& data)
+IPPHmacBase::MacFinalize(const alcp_hmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 
-    status = ippsHMACUpdate_rmf(data.in.m_msg, data.in.m_msg_len, m_handle);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsHMACUpdate_rmf failed, err code: " << status
-                  << std::endl;
-        return false;
-    }
     status = ippsHMACFinal_rmf(data.out.m_hmac, data.out.m_hmac_len, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "ippsHMACFinal_rmf failed, err code: " << status
@@ -152,7 +139,7 @@ IPPHmacBase::mac_finalize(const alcp_hmac_data_t& data)
 }
 
 bool
-IPPHmacBase::mac_reset()
+IPPHmacBase::MacReset()
 {
     return true;
 }

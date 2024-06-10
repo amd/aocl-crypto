@@ -47,16 +47,16 @@ class AlcpPoly1305Base : public Poly1305Base
   public:
     AlcpPoly1305Base() = default;
 
-    bool init(std::vector<Uint8>& Key);
+    bool Init(std::vector<Uint8>& Key);
 
     ~AlcpPoly1305Base();
 
-    bool mac_update(const alcp_poly1305_data_t& data);
+    bool MacUpdate(const alcp_poly1305_data_t& data);
 
-    bool mac_finalize(const alcp_poly1305_data_t& data);
+    bool MacFinalize(const alcp_poly1305_data_t& data);
 
     /* Resets the context back to initial condition, reuse context */
-    bool mac_reset();
+    bool MacReset();
 };
 
 } // namespace alcp::testing

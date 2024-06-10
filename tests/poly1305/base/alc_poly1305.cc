@@ -32,7 +32,7 @@
 namespace alcp::testing {
 
 bool
-AlcpPoly1305Base::init(std::vector<Uint8>& Key)
+AlcpPoly1305Base::Init(std::vector<Uint8>& Key)
 {
     m_key     = &Key[0];
     m_key_len = Key.size();
@@ -75,7 +75,7 @@ AlcpPoly1305Base::~AlcpPoly1305Base()
 }
 
 bool
-AlcpPoly1305Base::mac_update(const alcp_poly1305_data_t& data)
+AlcpPoly1305Base::MacUpdate(const alcp_poly1305_data_t& data)
 {
     alc_error_t err;
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
@@ -87,7 +87,7 @@ AlcpPoly1305Base::mac_update(const alcp_poly1305_data_t& data)
 }
 
 bool
-AlcpPoly1305Base::mac_finalize(const alcp_poly1305_data_t& data)
+AlcpPoly1305Base::MacFinalize(const alcp_poly1305_data_t& data)
 {
     alc_error_t err;
     err = alcp_mac_finalize(m_handle, data.m_mac, data.m_mac_len);
@@ -99,7 +99,7 @@ AlcpPoly1305Base::mac_finalize(const alcp_poly1305_data_t& data)
 }
 
 bool
-AlcpPoly1305Base::mac_reset()
+AlcpPoly1305Base::MacReset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

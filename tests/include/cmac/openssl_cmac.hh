@@ -50,16 +50,16 @@ class OpenSSLCmacBase : public CmacBase
     Uint32         m_key_len;
 
   public:
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
+    bool Init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
 
     ~OpenSSLCmacBase();
 
-    bool mac_update(const alcp_cmac_data_t& data);
+    bool MacUpdate(const alcp_cmac_data_t& data);
 
-    bool mac_finalize(const alcp_cmac_data_t& data);
+    bool MacFinalize(const alcp_cmac_data_t& data);
 
     /* Resets the context back to initial condition, reuse context */
-    bool mac_reset();
+    bool MacReset();
 };
 
 } // namespace alcp::testing

@@ -32,7 +32,7 @@
 namespace alcp::testing {
 
 bool
-AlcpCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+AlcpCmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info    = info;
     m_key     = &Key[0];
@@ -75,7 +75,7 @@ AlcpCmacBase::~AlcpCmacBase()
 }
 
 bool
-AlcpCmacBase::mac_update(const alcp_cmac_data_t& data)
+AlcpCmacBase::MacUpdate(const alcp_cmac_data_t& data)
 {
     alc_error_t err;
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
@@ -87,7 +87,7 @@ AlcpCmacBase::mac_update(const alcp_cmac_data_t& data)
 }
 
 bool
-AlcpCmacBase::mac_finalize(const alcp_cmac_data_t& data)
+AlcpCmacBase::MacFinalize(const alcp_cmac_data_t& data)
 {
     alc_error_t err;
     err = alcp_mac_finalize(m_handle, data.m_cmac, data.m_cmac_len);
@@ -99,7 +99,7 @@ AlcpCmacBase::mac_finalize(const alcp_cmac_data_t& data)
 }
 
 bool
-AlcpCmacBase::mac_reset()
+AlcpCmacBase::MacReset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

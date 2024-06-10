@@ -46,7 +46,7 @@ OpenSSLHmacBase::~OpenSSLHmacBase()
 }
 
 bool
-OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+OpenSSLHmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info               = info;
     m_key                = &Key[0];
@@ -91,7 +91,7 @@ OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 }
 
 bool
-OpenSSLHmacBase::mac_update(const alcp_hmac_data_t& data)
+OpenSSLHmacBase::MacUpdate(const alcp_hmac_data_t& data)
 {
     if (EVP_MAC_update(m_handle, data.in.m_msg, data.in.m_msg_len) != 1) {
         std::cout << "EVP_MAC_update failed, error : "
@@ -102,7 +102,7 @@ OpenSSLHmacBase::mac_update(const alcp_hmac_data_t& data)
 }
 
 bool
-OpenSSLHmacBase::mac_finalize(const alcp_hmac_data_t& data)
+OpenSSLHmacBase::MacFinalize(const alcp_hmac_data_t& data)
 {
     size_t outsize = data.out.m_hmac_len;
     if (EVP_MAC_final(m_handle, data.out.m_hmac, &outsize, data.out.m_hmac_len)
@@ -115,7 +115,7 @@ OpenSSLHmacBase::mac_finalize(const alcp_hmac_data_t& data)
 }
 
 bool
-OpenSSLHmacBase::mac_reset()
+OpenSSLHmacBase::MacReset()
 {
     if (EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params) != 1) {
         std::cout << "EVP_MAC_init failed, error : "

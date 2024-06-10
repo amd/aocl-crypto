@@ -146,19 +146,19 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
         data.out.m_hmac_len = hmac.size();
         data.in.m_key_len   = key.size();
 
-        if (!hb->init(info, key)) {
+        if (!hb->Init(info, key)) {
             std::cout << "Error in hmac init function" << std::endl;
             FAIL();
         }
-        if (!hb->mac_update(data)) {
+        if (!hb->MacUpdate(data)) {
             std::cout << "Error in Hmac mac_update" << std::endl;
             FAIL();
         }
-        if (!hb->mac_finalize(data)) {
+        if (!hb->MacFinalize(data)) {
             std::cout << "Error in Hmac mac_finalize" << std::endl;
             FAIL();
         }
-        if (!hb->mac_reset()) {
+        if (!hb->MacReset()) {
             std::cout << "Error in Hmac mac_reset" << std::endl;
             FAIL();
         }
@@ -274,30 +274,30 @@ Hmac_Cross(alc_digest_mode_t HmacDigestMode)
             /* run test with main lib */
             if (verbose > 1)
                 PrintHmacTestData(key, data_alc);
-            if (!hb->init(info, key)) {
+            if (!hb->Init(info, key)) {
                 printf("Error in hmac init\n");
                 FAIL();
             }
-            if (!hb->mac_update(data_alc)) {
+            if (!hb->MacUpdate(data_alc)) {
                 std::cout << "Error in hmac mac_update" << std::endl;
                 FAIL();
             }
-            if (!hb->mac_finalize(data_alc)) {
+            if (!hb->MacFinalize(data_alc)) {
                 std::cout << "Error in hmac mac_finalize" << std::endl;
                 FAIL();
             }
             /* run test with ext lib */
             if (verbose > 1)
                 PrintHmacTestData(key, data_ext);
-            if (!extHb->init(info, key)) {
+            if (!extHb->Init(info, key)) {
                 printf("Error in hmac ext init function\n");
                 FAIL();
             }
-            if (!extHb->mac_update(data_ext)) {
+            if (!extHb->MacUpdate(data_ext)) {
                 std::cout << "Error in hmac (ext lib) mac_update" << std::endl;
                 FAIL();
             }
-            if (!extHb->mac_finalize(data_ext)) {
+            if (!extHb->MacFinalize(data_ext)) {
                 std::cout << "Error in hmac (ext lib) mac_finalize"
                           << std::endl;
                 FAIL();

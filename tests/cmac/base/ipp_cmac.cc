@@ -39,7 +39,7 @@ IPPCmacBase::~IPPCmacBase()
 }
 
 bool
-IPPCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+IPPCmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info           = info;
     m_key            = &Key[0];
@@ -69,7 +69,7 @@ IPPCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 }
 
 bool
-IPPCmacBase::mac_update(const alcp_cmac_data_t& data)
+IPPCmacBase::MacUpdate(const alcp_cmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
     status           = ippsAES_CMACUpdate(data.m_msg, data.m_msg_len, m_handle);
@@ -82,7 +82,7 @@ IPPCmacBase::mac_update(const alcp_cmac_data_t& data)
 }
 
 bool
-IPPCmacBase::mac_finalize(const alcp_cmac_data_t& data)
+IPPCmacBase::MacFinalize(const alcp_cmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
     status = ippsAES_CMACFinal(data.m_cmac, data.m_cmac_len, m_handle);
@@ -95,7 +95,7 @@ IPPCmacBase::mac_finalize(const alcp_cmac_data_t& data)
 }
 
 bool
-IPPCmacBase::mac_reset()
+IPPCmacBase::MacReset()
 {
     /* IPPCP doesnt have an explicit reset call for cmac */
     return true;

@@ -37,7 +37,7 @@ OpenSSLPoly1305Base::~OpenSSLPoly1305Base()
 }
 
 bool
-OpenSSLPoly1305Base::init(std::vector<Uint8>& Key)
+OpenSSLPoly1305Base::Init(std::vector<Uint8>& Key)
 {
     m_key     = &Key[0];
     m_key_len = Key.size();
@@ -66,7 +66,7 @@ OpenSSLPoly1305Base::init(std::vector<Uint8>& Key)
 }
 
 bool
-OpenSSLPoly1305Base::mac_update(const alcp_poly1305_data_t& data)
+OpenSSLPoly1305Base::MacUpdate(const alcp_poly1305_data_t& data)
 {
     if (EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len) != 1) {
         std::cout << "EVP_MAC_update failed, error : "
@@ -77,7 +77,7 @@ OpenSSLPoly1305Base::mac_update(const alcp_poly1305_data_t& data)
 }
 
 bool
-OpenSSLPoly1305Base::mac_finalize(const alcp_poly1305_data_t& data)
+OpenSSLPoly1305Base::MacFinalize(const alcp_poly1305_data_t& data)
 {
     size_t outsize;
     if (EVP_MAC_final(m_handle, data.m_mac, &outsize, data.m_mac_len) != 1) {
@@ -89,7 +89,7 @@ OpenSSLPoly1305Base::mac_finalize(const alcp_poly1305_data_t& data)
 }
 
 bool
-OpenSSLPoly1305Base::mac_reset()
+OpenSSLPoly1305Base::MacReset()
 {
     if (EVP_MAC_init(m_handle, m_key, m_key_len, nullptr) != 1) {
         std::cout << "EVP_MAC_init failed, error : "
