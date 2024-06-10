@@ -87,17 +87,17 @@ void inline Cmac_Bench(benchmark::State& state,
     data.m_key      = &(Key[0]);
     data.m_key_len  = Key.size();
 
-    if (!cb->init(info, Key)) {
+    if (!cb->Init(info, Key)) {
         state.SkipWithError("Error in cmac init function");
     }
     for (auto _ : state) {
-        if (!cb->mac_update(data)) {
+        if (!cb->MacUpdate(data)) {
             state.SkipWithError("Error in cmac mac_update");
         }
-        if (!cb->mac_finalize(data)) {
+        if (!cb->MacFinalize(data)) {
             state.SkipWithError("Error in cmac mac_finalize");
         }
-        if (!cb->mac_reset()) {
+        if (!cb->MacReset()) {
             state.SkipWithError("Error in cmac mac_reset");
         }
     }

@@ -88,17 +88,17 @@ void inline Hmac_Bench(benchmark::State& state,
     data.in.m_key       = &(Key[0]);
     data.in.m_key_len   = Key.size();
 
-    if (!hb->init(info, Key)) {
+    if (!hb->Init(info, Key)) {
         state.SkipWithError("Error in hmac init function");
     }
     for (auto _ : state) {
-        if (!hb->mac_update(data)) {
+        if (!hb->MacUpdate(data)) {
             state.SkipWithError("Error in hmac mac_update");
         }
-        if (!hb->mac_finalize(data)) {
+        if (!hb->MacFinalize(data)) {
             state.SkipWithError("Error in hmac mac_finalize");
         }
-        if (!hb->mac_reset()) {
+        if (!hb->MacReset()) {
             state.SkipWithError("Error in hmac mac_reset");
         }
     }

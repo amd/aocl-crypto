@@ -76,19 +76,19 @@ void inline Poly1305_Bench(benchmark::State& state,
     data.m_key     = &(Key[0]);
     data.m_key_len = Key.size();
 
-    if (!pb->init(Key)) {
+    if (!pb->Init(Key)) {
         state.SkipWithError("Error in poly1305 init");
     }
     for (auto _ : state) {
-        if (!pb->mac_update(data)) {
+        if (!pb->MacUpdate(data)) {
             state.SkipWithError("Error in poly1305 mac_update");
         }
-        if (!pb->mac_finalize(data)) {
+        if (!pb->MacFinalize(data)) {
             state.SkipWithError("Error in poly1305 mac_finalize");
         }
         /* without a reset call, mac will fail to reuse the same handle after
          * finalize call without a reset */
-        if (!pb->mac_reset()) {
+        if (!pb->MacReset()) {
             state.SkipWithError("Error in poly1305 mac_reset");
         }
     }
