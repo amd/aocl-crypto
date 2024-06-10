@@ -240,12 +240,12 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         std::cout << "EVP_PKEY_CTX_new returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         ret_val = 1;
-        goto exit;
+        goto dealloc_exit;
     }
     if (EVP_PKEY_encrypt_init(m_rsa_handle_keyctx_pub) != 1) {
         std::cout << "EVP_PKEY_encrypt_init failed" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
-        goto exit;
+        goto dealloc_exit;
     }
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         if (EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
@@ -253,7 +253,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_padding failed" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            goto exit;
+            goto dealloc_exit;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         /* set padding mode parameters */
@@ -262,33 +262,27 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_padding failed" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            goto exit;
+            goto dealloc_exit;
         }
         if (EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pub, m_md_type)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed:" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            goto exit;
+            goto dealloc_exit;
         }
         if (EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pub, m_md_type)
             != 1) {
             std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed:" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
-            goto exit;
+            goto dealloc_exit;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        goto exit;
+        ret_val = 01;
+        goto dealloc_exit;
     }
 
     /* call encrypt */
-    if (EVP_PKEY_encrypt(
-            m_rsa_handle_keyctx_pub, NULL, &outlen, data.m_msg, data.m_msg_len)
-        != 1) {
-        std::cout << "EVP_PKEY_encrypt failed: Error:" << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
-        goto exit;
-    }
     if (EVP_PKEY_encrypt(m_rsa_handle_keyctx_pub,
                          data.m_encrypted_data,
                          &outlen,
@@ -296,15 +290,14 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                          data.m_msg_len)
         != 1) {
         ret_val = ERR_GET_REASON(ERR_get_error());
-        goto exit;
+        goto dealloc_exit;
     }
 
-exit:
+dealloc_exit:
     if (m_rsa_handle_keyctx_pub != nullptr) {
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
         m_rsa_handle_keyctx_pub = nullptr;
     }
-
     return ret_val;
 }
 
@@ -319,7 +312,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         std::cout << "EVP_PKEY_decrypt_init failed: Error:" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
         std::cout << ret_val << std::endl;
-        return ret_val;
+        goto dealloc_exit;
     }
 
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
@@ -330,7 +323,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                       << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
             std::cout << ret_val << std::endl;
-            return ret_val;
+            goto dealloc_exit;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         if (EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
@@ -340,7 +333,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                       << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
             std::cout << ret_val << std::endl;
-            return ret_val;
+            goto dealloc_exit;
         }
         if (EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pvt, m_md_type)
             != 1) {
@@ -348,7 +341,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                       << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
             std::cout << ret_val << std::endl;
-            return ret_val;
+            goto dealloc_exit;
         }
         if (EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pvt, m_md_type)
             != 1) {
@@ -356,11 +349,12 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                       << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
             std::cout << ret_val << std::endl;
-            return ret_val;
+            goto dealloc_exit;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        return 1;
+        ret_val = -1;
+        goto dealloc_exit;
     }
     /* now call decrypt */
     if (EVP_PKEY_decrypt(m_rsa_handle_keyctx_pvt,
@@ -369,10 +363,9 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                          data.m_encrypted_data,
                          outlen)
         != 1) {
-        std::cout << "EVP_PKEY_decrypt failed: Error:" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
-        std::cout << ret_val << std::endl;
-        return ret_val;
+        std::cout << "EVP_PKEY_decrypt failed: Error:" << ret_val << std::endl;
+        goto dealloc_exit;
     }
     if (EVP_PKEY_decrypt(m_rsa_handle_keyctx_pvt,
                          data.m_decrypted_data,
@@ -380,16 +373,17 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                          data.m_encrypted_data,
                          outlen)
         != 1) {
-        std::cout << "EVP_PKEY_decrypt failed: Error:" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
-        std::cout << ret_val << std::endl;
-        return ret_val;
+        std::cout << "EVP_PKEY_decrypt failed: Error:" << ret_val << std::endl;
+        goto dealloc_exit;
     }
+
+dealloc_exit:
     if (m_rsa_handle_keyctx_pvt != nullptr) {
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
         m_rsa_handle_keyctx_pvt = nullptr;
     }
-    return 0;
+    return ret_val;
 }
 
 /* sign verify */

@@ -87,8 +87,8 @@ SkipTest(int ret_val, std::string LibStr)
       alcp returns ALC_ERROR_NOT_PERMITTED, IPP returns -11 */
     if ((LibStr.compare("ALCP") == 0) && ret_val == ALC_ERROR_NOT_PERMITTED) {
         if (verbose > 1)
-            std::cout << LibStr << ": Invalid case: Skipping this test"
-                      << std::endl;
+            std::cout << LibStr << ": Invalid case: ret code: " << ret_val
+                      << ".. Skipping this test" << std::endl;
         return true;
     }
 #if USE_OSSL
@@ -96,8 +96,8 @@ SkipTest(int ret_val, std::string LibStr)
         && (ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS
             || ret_val == RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE)) {
         if (verbose > 1)
-            std::cout << LibStr << ": Invalid case: Skipping this test"
-                      << std::endl;
+            std::cout << LibStr << ": Invalid case: ret code: " << ret_val
+                      << ".. Skipping this test" << std::endl;
         return true;
     }
 #endif
@@ -105,8 +105,8 @@ SkipTest(int ret_val, std::string LibStr)
 #if USE_IPP
     if ((LibStr.compare("IPP") == 0) && ret_val == -11) {
         if (verbose > 1)
-            std::cout << LibStr << ": Invalid case: Skipping this test"
-                      << std::endl;
+            std::cout << LibStr << ": Invalid case: ret code: " << ret_val
+                      << ".. Skipping this test" << std::endl;
         return true;
     }
 #endif
