@@ -93,7 +93,8 @@ SkipTest(int ret_val, std::string LibStr)
     }
 #if USE_OSSL
     if ((LibStr.compare("OpenSSL") == 0)
-        && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
+        && (ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS
+            || ret_val == RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE)) {
         if (verbose > 1)
             std::cout << LibStr << ": Invalid case: Skipping this test"
                       << std::endl;
