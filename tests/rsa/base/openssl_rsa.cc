@@ -283,6 +283,13 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     }
 
     /* call encrypt */
+    if (EVP_PKEY_encrypt(
+            m_rsa_handle_keyctx_pub, NULL, &outlen, data.m_msg, data.m_msg_len)
+        != 1) {
+        std::cout << "EVP_PKEY_encrypt failed: Error:" << std::endl;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        goto dealloc_exit;
+    }
     if (EVP_PKEY_encrypt(m_rsa_handle_keyctx_pub,
                          data.m_encrypted_data,
                          &outlen,
