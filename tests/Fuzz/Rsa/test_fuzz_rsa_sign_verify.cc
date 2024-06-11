@@ -94,12 +94,12 @@ ALCP_Fuzz_Rsa_SignVerify(int PaddingMode, const Uint8* buf, size_t len)
         goto dealloc;
     }
 
-    err = alcp_rsa_add_digest(&handle, &dinfo);
+    err = alcp_rsa_add_digest(&handle, ALC_SHA2_256);
     if (alcp_is_error(err)) {
         printf("Error: alcp_rsa_add_digest\n");
         goto dealloc;
     }
-    err = alcp_rsa_add_mgf(&handle, &mgf_info);
+    err = alcp_rsa_add_mgf(&handle, ALC_SHA2_256);
     if (alcp_is_error(err)) {
         printf("Error: alcp_rsa_add_mgf\n");
         goto dealloc;

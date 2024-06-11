@@ -166,8 +166,7 @@ fetch_digest(alc_digest_mode_t mode)
 }
 
 alc_error_t
-alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
-                    const alc_digest_info_p digestInfo)
+alcp_rsa_add_digest(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -180,7 +179,7 @@ alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
         ctx->m_digest = nullptr;
     }
 
-    ctx->m_digest = fetch_digest(digestInfo->dt_mode);
+    ctx->m_digest = fetch_digest(mode);
     if (ctx->m_digest == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }
@@ -191,8 +190,7 @@ alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
 }
 
 alc_error_t
-alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
-                 const alc_digest_info_p digestInfo)
+alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode)
 {
     using alcp::digest::IDigest;
     alc_error_t err = ALC_ERROR_NONE;
@@ -206,7 +204,7 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
         ctx->m_mgf = nullptr;
     }
 
-    ctx->m_mgf = fetch_digest(digestInfo->dt_mode);
+    ctx->m_mgf = fetch_digest(mode);
     if (ctx->m_mgf == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }

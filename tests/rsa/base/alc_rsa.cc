@@ -71,13 +71,13 @@ AlcpRsaBase::init()
 
     /* only for padding mode*/
     if (m_padding_mode != ALCP_TEST_RSA_NO_PADDING) {
-        err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
+        err = alcp_rsa_add_digest(m_rsa_handle, m_digest_info.dt_mode);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_digest" << err << std::endl;
             return err;
         }
         /*call mask gen function */
-        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
+        err = alcp_rsa_add_mgf(m_rsa_handle, m_mgf_info.dt_mode);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
             return err;

@@ -216,14 +216,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
         goto free_buff;
     }
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len  = ALC_DIGEST_LEN_256,
-        .dt_mode = ALC_SHA2_256,
-    };
-
     // Adding the digest function for generating the hash in oaep padding
-    err = alcp_rsa_add_digest(ps_rsa_handle, &dinfo);
+    err = alcp_rsa_add_digest(ps_rsa_handle, ALC_SHA2_256);
     if (alcp_is_error(err)) {
         printf("\n setting of digest for oaep failed");
         return err;

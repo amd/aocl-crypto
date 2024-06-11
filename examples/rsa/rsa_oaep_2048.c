@@ -199,27 +199,16 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
         return err;
     }
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len  = ALC_DIGEST_LEN_256,
-        .dt_mode = ALC_SHA2_256,
-    };
-
     // Adding the digest function for generating the hash in oaep padding
-    err = alcp_rsa_add_digest(ps_rsa_handle, &dinfo);
+    err = alcp_rsa_add_digest(ps_rsa_handle, ALC_SHA2_256);
     if (alcp_is_error(err)) {
         printf("\n setting of digest for oaep failed");
         return err;
     }
 
-    alc_digest_info_t mgf_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len  = ALC_DIGEST_LEN_256,
-        .dt_mode = ALC_SHA2_256,
-    };
     // Adding the mask generation function for generating the seed and data
     // block mask
-    err = alcp_rsa_add_mgf(ps_rsa_handle, &mgf_info);
+    err = alcp_rsa_add_mgf(ps_rsa_handle, ALC_SHA2_256);
     if (alcp_is_error(err)) {
         printf("\n setting of mgf for oaep failed");
         return err;
