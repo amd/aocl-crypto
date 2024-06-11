@@ -78,6 +78,10 @@ IPPRsaBase::~IPPRsaBase()
 bool
 IPPRsaBase::init()
 {
+    /* digest params to be added only for PADDED mode*/
+    if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+        return true;
+    }
     switch (m_digest_info.dt_len) {
         case ALC_DIGEST_LEN_256:
             m_md_type = ippsHashMethod_SHA256_TT();
@@ -87,6 +91,7 @@ IPPRsaBase::init()
             break;
         default:
             m_md_type = nullptr;
+            break;
     }
     if (m_md_type == nullptr) {
         std::cout << "Error, IPP Hash type returned is null!" << std::endl;
