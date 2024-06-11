@@ -89,7 +89,8 @@ IPPRsaBase::init()
             m_md_type = nullptr;
     }
     if (m_md_type == nullptr) {
-        std::cout << "Error, Hash type is null!" << std::endl;
+        std::cout << "Error, IPP Hash type returned is null!" << std::endl;
+        return false;
     }
     return true;
 }
