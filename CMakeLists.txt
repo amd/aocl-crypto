@@ -171,9 +171,6 @@ ENDIF()
 
 # Generate Configuration config.h
 GEN_CONF()
-if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    alcp_add_coverage_flags()
-endif()
 
 IF (NOT DEFINED BUILD_SHARED_LIBS)
 	SET (BUILD_SHARED_LIBS ON)

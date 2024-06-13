@@ -95,6 +95,10 @@ ADD_LIBRARY(alcp_static STATIC
 # original path which was used in linking
 TARGET_LINK_OPTIONS(alcp PUBLIC -Wl,--enable-new-dtags)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    alcp_add_coverage_flags()
+endif()
+
 IF(UNIX)
 	SET_TARGET_PROPERTIES(alcp_static PROPERTIES OUTPUT_NAME alcp)
 ENDIF(UNIX)

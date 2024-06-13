@@ -216,15 +216,29 @@ function(alcp_add_sanitize_flags)
     endif()
 endfunction(alcp_add_sanitize_flags)
 
-# coverage
+# coverage flags
 function(alcp_add_coverage_flags)
-    set(ALCP_CFLAGS_COV
+    # coverage flags supported by gcc
+    set(ALCP_CFLAGS_COV_GCC
             -O0
             -fprofile-arcs
             -ftest-coverage
             --coverage
             CACHE INTERNAL ""
-        )
-	    LINK_LIBRARIES(gcov)
-	    ADD_COMPILE_OPTIONS(${ALCP_CFLAGS_COV})
+    )
+    # coverage flags supported by clang compiler
+    set(ALCP_CFLAGS_COV_CLANG
+            -g
+            -O0
+            -fprofile-instr-generate
+            -fcoverage-mapping
+            CACHE INTERNAL ""
+    )
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	    add_compile_options(${ALCP_CFLAGS_COV_GCC})
+        link_libraries(gcov)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_link_options(alcp PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+        target_link_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+    endif()
 endfunction(alcp_add_coverage_flags)
