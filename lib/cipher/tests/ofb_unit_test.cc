@@ -39,12 +39,14 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
-using alcp::cipher::Ofb;
+using alcp::cipher::aesni::Ofb128;
+using alcp::cipher::aesni::Ofb192;
+using alcp::cipher::aesni::Ofb256;
 namespace alcp::cipher::unittest::ofb {
 std::vector<Uint8> key       = { 0x0d, 0x3c, 0x13, 0x53, 0xea, 0x0f, 0x01, 0x06,
-                           0x83, 0x47, 0x98, 0xc8, 0x6d, 0x3d, 0xc7, 0x4e };
+                                 0x83, 0x47, 0x98, 0xc8, 0x6d, 0x3d, 0xc7, 0x4e };
 std::vector<Uint8> iv        = { 0xf6, 0xe5, 0x25, 0x16, 0x7d, 0xca, 0x50, 0xbf,
-                          0x1b, 0x9f, 0xb8, 0x13, 0xd2, 0xec, 0xab, 0x5e };
+                                 0x1b, 0x9f, 0xb8, 0x13, 0xd2, 0xec, 0xab, 0x5e };
 std::vector<Uint8> plainText = {
     0x12, 0xb0, 0xe9, 0x9b, 0x7f, 0xf8, 0xc4, 0x6a, 0xb0, 0xae, 0x00, 0xf7,
     0xfb, 0x7a, 0xa7, 0x19, 0x3d, 0x0c, 0x87, 0xe9, 0x14, 0x01, 0x02, 0x62,
@@ -112,16 +114,16 @@ using namespace alcp::cipher::unittest::ofb;
 TEST(OFB, creation)
 {
     alc_cipher_data_t data;
-    data.alcp_keyLen_in_bytes = key.size();
-    std::unique_ptr<Ofb> ofb  = std::make_unique<Ofb>(&data);
+    data.alcp_keyLen_in_bytes   = key.size();
+    std::unique_ptr<Ofb128> ofb = std::make_unique<Ofb128>(&data);
     EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 }
 
 TEST(OFB, BasicEncryption)
 {
     alc_cipher_data_t data;
-    data.alcp_keyLen_in_bytes = key.size();
-    std::unique_ptr<Ofb> ofb  = std::make_unique<Ofb>(&data);
+    data.alcp_keyLen_in_bytes   = key.size();
+    std::unique_ptr<Ofb128> ofb = std::make_unique<Ofb128>(&data);
 
     EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 
@@ -137,8 +139,8 @@ TEST(OFB, BasicEncryption)
 TEST(OFB, BasicDecryption)
 {
     alc_cipher_data_t data;
-    data.alcp_keyLen_in_bytes = key.size();
-    std::unique_ptr<Ofb> ofb  = std::make_unique<Ofb>(&data);
+    data.alcp_keyLen_in_bytes   = key.size();
+    std::unique_ptr<Ofb128> ofb = std::make_unique<Ofb128>(&data);
 
     EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 
@@ -157,8 +159,8 @@ TEST(OFB, MultiUpdateEncryption)
     GTEST_SKIP() << "Multi Update functionality unavailable!";
 #endif
     alc_cipher_data_t data;
-    data.alcp_keyLen_in_bytes = key.size();
-    std::unique_ptr<Ofb> ofb  = std::make_unique<Ofb>(&data);
+    data.alcp_keyLen_in_bytes   = key.size();
+    std::unique_ptr<Ofb128> ofb = std::make_unique<Ofb128>(&data);
 
     EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 
@@ -194,8 +196,8 @@ TEST(OFB, MultiUpdateDecryption)
     GTEST_SKIP() << "Multi Update functionality unavailable!";
 #endif
     alc_cipher_data_t data;
-    data.alcp_keyLen_in_bytes = key.size();
-    std::unique_ptr<Ofb> ofb  = std::make_unique<Ofb>(&data);
+    data.alcp_keyLen_in_bytes   = key.size();
+    std::unique_ptr<Ofb128> ofb = std::make_unique<Ofb128>(&data);
 
     EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 
@@ -241,22 +243,34 @@ TEST(OFB, RandomEncryptDecryptTest)
                                                plainText_vect.end());
         std::vector<Uint8>       plainTextOut(plainTextVect.size());
         alc_cipher_data_t        data;
-        data.alcp_keyLen_in_bytes = key.size();
-        std::unique_ptr<Ofb> ofb  = std::make_unique<Ofb>(&data);
+        data.alcp_keyLen_in_bytes   = key.size();
+        std::unique_ptr<Ofb256> ofb = std::make_unique<Ofb256>(&data);
 
         EXPECT_TRUE(ofb->isSupported(key.size() * 8));
 
-        ofb->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
+        alc_error_t s = ofb->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
+        if (s != ALC_ERROR_NONE) {
+            std::cout << "RANDOM_TEST: Init Failure!" << std::endl;
+        }
 
-        ofb->encrypt(&data,
-                     &plainTextVect[0],
-                     &cipherText_vect[0],
-                     plainTextVect.size());
+        s = ofb->encrypt(&data,
+                         &plainTextVect[0],
+                         &cipherText_vect[0],
+                         plainTextVect.size());
+        if (s != ALC_ERROR_NONE) {
+            std::cout << "RANDOM_TEST: Encrypt Failure!" << std::endl;
+        }
 
-        ofb->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
+        s = ofb->init(&key[0], key.size() * 8, &iv[0], sizeof(iv));
+        if (s != ALC_ERROR_NONE) {
+            std::cout << "RANDOM_TEST: Init Failure!" << std::endl;
+        }
 
-        ofb->decrypt(
+        s = ofb->decrypt(
             &data, &cipherText_vect[0], &plainTextOut[0], plainTextVect.size());
+        if (s != ALC_ERROR_NONE) {
+            std::cout << "RANDOM_TEST: Decrypt Failure!" << std::endl;
+        }
 
         EXPECT_EQ(plainTextVect, plainTextOut);
 #ifdef DEBUG

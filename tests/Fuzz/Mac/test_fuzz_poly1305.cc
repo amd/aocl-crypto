@@ -34,7 +34,7 @@ ALCP_Fuzz_Poly1305(const Uint8* buf, size_t len)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t             size_key   = stream.ConsumeIntegral<Uint16>();
+    size_t             size_key   = stream.ConsumeIntegral<Uint8>();
     std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
     size_t             size_input = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
@@ -56,12 +56,12 @@ ALCP_Fuzz_Poly1305(const Uint8* buf, size_t len)
         std::cout << "Error! alcp_mac_request" << std::endl;
         goto dealloc;
     }
-    err = alcp_mac_init(&handle, &fuzz_key[0], size_key, NULL);
+    err = alcp_mac_init(&handle, &fuzz_key[0], fuzz_key.size(), NULL);
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_init" << std::endl;
         goto dealloc;
     }
-    err = alcp_mac_update(&handle, &fuzz_input[0], size_input);
+    err = alcp_mac_update(&handle, &fuzz_input[0], fuzz_input.size());
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_update" << std::endl;
         goto dealloc;

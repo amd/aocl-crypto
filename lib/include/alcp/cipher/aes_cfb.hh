@@ -49,6 +49,8 @@ class ALCP_API_EXPORT Cfb : public Aes
         : Aes(ctx)
     {
         setMode(ALC_AES_MODE_CFB);
+        m_ivLen_max = 16;
+        m_ivLen_min = 16;
     };
     ~Cfb() {}
 };

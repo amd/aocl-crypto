@@ -54,6 +54,8 @@ class ALCP_API_EXPORT Cbc : public Aes
         : Aes(ctx)
     {
         setMode(ALC_AES_MODE_CBC);
+        m_ivLen_max = 16;
+        m_ivLen_min = 16;
     };
     ~Cbc() {}
 };

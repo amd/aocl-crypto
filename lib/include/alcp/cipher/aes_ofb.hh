@@ -42,8 +42,24 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
-CIPHER_CLASS_GEN(Ofb, Aes);
+class ALCP_API_EXPORT Ofb : public Aes
+{
+  public:
+    Ofb(alc_cipher_data_t* ctx)
+        : Aes(ctx)
+    {
+        setMode(ALC_AES_MODE_OFB);
+        m_ivLen_max = 16;
+        m_ivLen_min = 16;
+    };
+    ~Ofb() {}
+};
 
+namespace aesni {
+    CIPHER_CLASS_GEN(Ofb128, Ofb);
+    CIPHER_CLASS_GEN(Ofb192, Ofb);
+    CIPHER_CLASS_GEN(Ofb256, Ofb);
+} // namespace aesni
 } // namespace alcp::cipher
 
 #endif /* _CIPHER_AES_OFB_HH_ */

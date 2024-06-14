@@ -58,12 +58,17 @@ Poly1305<feature>::Poly1305()
 
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305(const Poly1305& src)
-{}
+{
+}
 
 template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
 {
+    if (keyLen != 32) {
+        std::cout << "ERROR KEYLEN:" << keyLen << std::endl;
+        return status::InitError("Wrong key size!");
+    }
     if constexpr ((utils::CpuArchFeature::eReference == feature)
                   || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->init(key, keyLen);

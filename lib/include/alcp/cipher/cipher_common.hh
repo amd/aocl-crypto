@@ -162,6 +162,10 @@ typedef struct _alc_gcm_local_data
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         m_isEnc_aes     = IS_ENC;                                              \
+        if (m_ivLen_aes != 16) {                                               \
+            err = ALC_ERROR_INVALID_SIZE;                                      \
+            return err;                                                        \
+        }                                                                      \
         err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
         return err;                                                            \
     }

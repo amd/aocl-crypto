@@ -62,6 +62,9 @@ Cmac::update(const Uint8* pMsgBuf, Uint64 size)
     if (m_finalized) {
         return UpdateAfterFinalzeError("");
     }
+    if (pMsgBuf == nullptr) {
+        return StatusOk();
+    }
     if (m_encrypt_keys == nullptr) {
         return EmptyKeyError("");
     }
@@ -209,8 +212,12 @@ Cmac::init(const Uint8* pKey, Uint64 keyLen)
     alc_error_t err       = ALC_ERROR_NONE;
     m_keyLen_in_bytes_aes = keyLen;
 
+    if ((keyLen != 32) && (keyLen != 24) && (keyLen != 16)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
     if (Aes::setKey(pKey, keyLen * 8) != ALC_ERROR_NONE) {
-        // s = status::EmptyKeyError("Invalid Key Size");
+        // FIXME: Need to create another error function
         return ALC_ERROR_INVALID_SIZE;
     }
 

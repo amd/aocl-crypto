@@ -55,7 +55,7 @@ Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
     m_ivLen_aes   = ivLen;
-    if ((ivLen == 0) && (ivLen > MAX_CIPHER_IV_SIZE)) {
+    if ((ivLen == 0) || (ivLen > m_ivLen_max) || (ivLen < m_ivLen_min)) {
         return ALC_ERROR_INVALID_SIZE;
     }
 

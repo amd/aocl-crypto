@@ -63,13 +63,13 @@ ALCP_Fuzz_Cmac(const Uint8* buf, size_t len)
     /* initialize */
     macinfo.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     macinfo.cmac.ci_mode = ALC_AES_MODE_NONE;
-    err = alcp_mac_init(&handle, &fuzz_key[0], size_key, &macinfo);
+    err = alcp_mac_init(&handle, &fuzz_key[0], fuzz_key.size(), &macinfo);
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_init" << std::endl;
         goto dealloc;
     }
     /* mac update */
-    err = alcp_mac_update(&handle, &fuzz_input[0], size_input);
+    err = alcp_mac_update(&handle, &fuzz_input[0], fuzz_input.size());
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_update" << std::endl;
         goto dealloc;

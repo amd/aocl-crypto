@@ -54,7 +54,7 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
 
     alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
                                 .ci_mode   = Mode,
-                                .ci_keyLen = keySize,
+                                .ci_keyLen = fuzz_key.size(),
                                 .ci_key    = key,
                                 .ci_iv     = iv };
 
@@ -78,13 +78,17 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
         std::cout << "alcp_cipher_request failed for encrypt" << std::endl;
         goto DEALLOC_ENC;
     }
-    err = alcp_cipher_init(
-        handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
+    err = alcp_cipher_init(handle_encrypt,
+                           cinfo.ci_key,
+                           cinfo.ci_keyLen,
+                           cinfo.ci_iv,
+                           fuzz_iv.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_init failed" << std::endl;
         goto DEALLOC_ENC;
     }
-    err = alcp_cipher_encrypt(handle_encrypt, plaintxt, &ciphertxt[0], pt_len);
+    err = alcp_cipher_encrypt(
+        handle_encrypt, plaintxt, &ciphertxt[0], fuzz_pt.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_encrypt failed" << std::endl;
         goto DEALLOC_ENC;
@@ -127,7 +131,7 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
 
     alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
                                 .ci_mode   = Mode,
-                                .ci_keyLen = keySize,
+                                .ci_keyLen = fuzz_key.size() * 8,
                                 .ci_key    = key,
                                 .ci_iv     = iv };
 
@@ -153,14 +157,17 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
         std::cout << "alcp_cipher_request failed for decrypt" << std::endl;
         goto DEALLOC_DEC;
     }
-    err = alcp_cipher_init(
-        handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
+    err = alcp_cipher_init(handle_decrypt,
+                           cinfo.ci_key,
+                           cinfo.ci_keyLen,
+                           cinfo.ci_iv,
+                           fuzz_iv.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_init failed for decrypt" << std::endl;
         goto DEALLOC_DEC;
     }
-    err =
-        alcp_cipher_decrypt(handle_decrypt, &fuzz_ct[0], &plaintxt[0], pt_len);
+    err = alcp_cipher_decrypt(
+        handle_decrypt, &fuzz_ct[0], &plaintxt[0], fuzz_ct.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_decrypt failed for decrypt" << std::endl;
         goto DEALLOC_DEC;
@@ -171,6 +178,7 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
 
 DEALLOC_DEC:
     if (handle_decrypt != nullptr) {
+        alcp_cipher_finish(handle_decrypt);
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
         }

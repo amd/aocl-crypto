@@ -197,7 +197,8 @@ CipherBuilder::Build(const alc_cipher_mode_t cipherMode,
             if ((cpu_feature == CpuCipherFeatures::eVaes512)
                 || (cpu_feature == CpuCipherFeatures::eVaes256)
                 || (cpu_feature == CpuCipherFeatures::eAesni)) {
-                err = __build_aes_cipher<Ofb, Ofb, Ofb>(keyLen, ctx);
+                using namespace aesni;
+                err = __build_aes_cipher<Ofb128, Ofb192, Ofb256>(keyLen, ctx);
             } else {
                 return ALC_ERROR_NOT_SUPPORTED;
             }
