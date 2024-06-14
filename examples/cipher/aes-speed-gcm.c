@@ -45,23 +45,6 @@ static alc_cipher_handle_t handle;
 
 // #define DEBUG 1
 
-static inline void
-printText(Uint8* I, Uint64 len, char* s, bool print)
-{
-    if (print) {
-        printf("\n %s ", s);
-        for (int x = 0; x < len; x++) {
-            if ((x % (16 * 4) == 0)) {
-                printf("\n");
-            }
-            if (x % 16 == 0) {
-                printf("   ");
-            }
-            printf(" %2x", *(I + x));
-        }
-    }
-}
-
 struct timeval begin, end;
 long           seconds;
 long           microseconds;
@@ -240,7 +223,6 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-    Uint8       tagDecrypt[16];
 
     // GCM init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
@@ -310,10 +292,8 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
                      alc_cipher_mode_t m,
                      int               i)
 {
-    bool         verboseprint = false;
     unsigned int keybits;
     Uint8        key[32];
-    int          ret = 0;
 
     memset(key, 0, 32);
 
@@ -342,7 +322,6 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     int u   = i;
     keybits = 128 + u * 64;
     printf(" keybits %d ", keybits);
-    int nr;
     memset(key, ((i * 10) + m), 32);
 
     memset(inputText, i, inputLen);

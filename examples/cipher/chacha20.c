@@ -55,7 +55,7 @@ create_demo_session(alc_cipher_handle_p handle,
                     Uint64              ivlength,
                     const alc_key_len_t cKeyLen)
 {
-    alc_error_t err;
+    alc_error_t err      = ALC_ERROR_NONE;
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
 

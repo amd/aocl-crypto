@@ -121,13 +121,9 @@ create_aes_session(Uint8*                  key,
                    const Uint32            key_len,
                    const alc_cipher_mode_t mode)
 {
-    alc_error_t err;
+    alc_error_t err      = ALC_ERROR_NONE;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-    Uint8       tweakKey[16] = {
-        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-        0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
-    };
 
     alc_cipher_info_t cinfo = { // request params
                                 .ci_type   = ALC_CIPHER_TYPE_AES,
@@ -234,7 +230,6 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     int          retval = 0;
     unsigned int keybits;
     Uint8        key[32];
-    int          ret = 0;
 
     memset(key, 0, 32);
 
@@ -246,8 +241,7 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     memset(iv, 10, 128 * 4);
 
     Uint8* ref;
-    ref          = malloc(inputLen);
-    Uint32 ivLen = 16;
+    ref = malloc(inputLen);
 
     {
         keybits = 128 + i * 64;

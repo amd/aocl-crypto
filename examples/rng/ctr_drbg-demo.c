@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -51,8 +51,8 @@ main(int argc, char const* argv[])
                       .max_entropy_len   = 16,
                       .max_nonce_len     = 16,
                       .di_algoinfo       = { .ctr_drbg = { .di_keysize = 128,
-                                                     .use_derivation_function =
-                                                         true } },
+                                                           .use_derivation_function =
+                                                               true } },
                       .di_rng_sourceinfo = {
                           .custom_rng    = false,
                           .di_sourceinfo = {
@@ -111,6 +111,4 @@ main(int argc, char const* argv[])
     }
 
     return 0;
-out:
-    return -1;
 }

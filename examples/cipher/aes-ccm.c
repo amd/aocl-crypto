@@ -35,24 +35,55 @@
 #include "alcp/alcp.h"
 
 #define MULTI_UPDATE_ENABLED 0
+#define BITS_PER_BYTE        8
+#define BITS_PER_BYTE        8
 
-static alc_cipher_handle_t handle;
+static alc_cipher_handle_t handle = { NULL };
 
-char*
-bytesToHexString(unsigned char* bytes, int length);
+// Session Helpers
+/**
+ * @brief Deallocate handle and set to nullpointer
+ */
+void
+deallocate_handle()
+{
+    if (handle.ch_context != NULL) {
+        free(handle.ch_context);
+        handle.ch_context = NULL;
+    }
+}
 
+/**
+ * @brief Finish and Deallocate the handle
+ */
+void
+close_demo_session()
+{
+    alcp_cipher_aead_finish(&handle);
+    deallocate_handle();
+}
+
+/**
+ * @brief In case of an error, return -1 after deallocating handle.
+ * @return -1
+ */
 int
-create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
+close_demo_session_exit()
+{
+    // Finish and deallocate the handle
+    close_demo_session();
+    return -1;
+}
+
+/**
+ * @brief Creates demosession given keylen
+ * @param key_len  Length of key in bytes
+ * @return 0 if success
+ */
+int
+create_demo_session(const alc_key_len_t keyLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
-    alc_cipher_aead_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
-                                     .ci_iv     = iv,
-                                     .ci_keyLen = key_len,
-                                     .ci_key    = key,
-                                     .ci_mode   = ALC_AES_MODE_CCM };
 
     /*
      * Application is expected to allocate for context
@@ -62,112 +93,66 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
         return -1;
 
     /* Request a context with cipher mode and keyLen */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(ALC_AES_MODE_CCM, keyLen, &handle);
     if (alcp_is_error(err)) {
-        free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
     }
-    printf("request succeeded\n");
+
+    printf("Request Succeeded\n");
     return 0;
 }
 
+// Print Helpers
+
 void
-close_demo_session()
-{
-    alcp_cipher_aead_finish(&handle);
-    free(handle.ch_context);
-}
+printHexString(const char* info, const unsigned char* bytes, int length);
 
 // Here its a 48 Byte plaintext message
-static Uint8* sample_plaintxt =
-    (Uint8*)"Happy and Fantastic Diwali from AOCL Crypto !!!!";
+static Uint8 sample_plaintxt[] =
+    "Happy and Fantastic Diwali from AOCL Crypto !!!!";
 
-static const Uint8 sample_key[] = {
+static Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
 };
 
-static const Uint8 sample_iv[] = { 0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9 };
+static Uint8 sample_iv[] = { 0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9 };
 
 static const Uint8* sample_ad = (Uint8*)"Hello World, this is a sample AAD, "
                                         "there can be a large value for AAD";
-
-static Uint8 sample_ciphertxt[512] = {
-    0,
-};
-
-#define BITS_PER_BYTE 8
-
-int
-alloc_and_test()
-{
-    void *    plaintxt, *ciphertxt, *output;
-    const int keylen = 256, keylen_bytes = keylen / 8,
-              keylen_words = keylen / sizeof(Uint32) * BITS_PER_BYTE;
-
-    Uint8  key[keylen_bytes];
-    Uint32 iv[] = {
-        0x1,
-        0x2,
-        0x3,
-        0x4,
-    };
-
-    assert(keylen_words == sizeof(iv));
-
-    /* TODO: get this through command line */
-    int buf_len = 1024 * 1024; /* Length of 1 buffer */
-    int num_buf = 1;           /* number of buffers of length 'buf_len' */
-
-    plaintxt = calloc(buf_len, num_buf);
-    if (!plaintxt)
-        goto out;
-
-    ciphertxt = calloc(buf_len, num_buf);
-    if (!ciphertxt)
-        goto free_plaintxt_out;
-
-    output = calloc(buf_len, num_buf);
-    if (!output)
-        goto free_ciphertxt_out;
-
-free_ciphertxt_out:
-    free(ciphertxt);
-
-free_plaintxt_out:
-    free(plaintxt);
-
-out:
-    return 0;
-}
-
 /* CCM: Authenticated Encryption demo */
 int
 aclp_aes_ccm_encrypt_demo(
     const Uint8* plaintxt,
-    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    Uint32       len, /* Describes both 'plaintxt' and 'ciphertxt' */
     Uint8*       ciphertxt,
     const Uint8* iv,
-    const Uint32 ivLen,
+    Uint32       ivLen,
     const Uint8* ad,
-    const Uint32 aadLen,
+    Uint32       aadLen,
     Uint8*       tag,
-    const Uint32 tagLen,
+    Uint32       tagLen,
     const Uint8* pKey,
-    const Uint32 keyLen)
+    Uint32       keyLen)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err      = ALC_ERROR_NONE;
+    int         retval   = 0;
+    const int   cErrSize = 256;
+    Uint8       err_buf[cErrSize];
+
+    // Create session for encryption
+    retval = create_demo_session(sizeof(sample_key) * 8);
+    if (retval != 0) {
+        return close_demo_session_exit();
+    }
 
     // set tag length
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 
 #if MULTI_UPDATE_ENABLED
@@ -175,7 +160,8 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable setting plaintext Length \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
+        return close_demo_session_exit();
     }
 #endif
 
@@ -183,16 +169,16 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm encrypt init \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 
     // Additional Data
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 #if MULTI_UPDATE_ENABLED
 
@@ -201,7 +187,8 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
+        return close_demo_session_exit();
     }
 
     err = alcp_cipher_aead_encrypt(
@@ -209,14 +196,15 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
+        return close_demo_session_exit();
     }
 #else
     err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 #endif
 
@@ -224,45 +212,58 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
+
+    printf("Encrypt succeeded\n");
+
+    // Close the encrypt session
+    close_demo_session();
     return 0;
 }
 
 /* CCM: Authenticated Decryption demo */
 int
 aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
-                          const Uint32 len,
+                          Uint32       len,
                           Uint8*       plaintxt,
                           const Uint8* iv,
-                          const Uint32 ivLen,
+                          Uint32       ivLen,
                           const Uint8* ad,
-                          const Uint32 aadLen,
+                          Uint32       aadLen,
                           Uint8*       tag,
-                          const Uint32 tagLen,
+                          Uint32       tagLen,
                           const Uint8* pKey,
-                          const Uint32 keyLen)
+                          Uint32       keyLen)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-    Uint8       tagDecrypt[16];
+    alc_error_t err      = ALC_ERROR_NONE;
+    int         retval   = 0;
+    const int   cErrSize = 256;
+    Uint8       err_buf[cErrSize];
+    Uint8       tag_decrypt[16];
 
-    // set tag length
+    // Create session for decrypt
+    retval = create_demo_session(sizeof(sample_key) * 8);
+    if (retval != 0) {
+        return close_demo_session_exit();
+    }
+
+    // Set Tag Length
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
+
 #if MULTI_UPDATE_ENABLED
     // set plaintext length only after key and iv has both set with init
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting Plaintext Length \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
     }
 #endif
 
@@ -270,25 +271,26 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm decrypt init \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 
     // Additional Data
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 
-#if MULTI_UPDATE_ENABLED
     // CCM decrypt
+#if MULTI_UPDATE_ENABLED
+    // Decrypt can be called multiple times in case of multi-update
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
     }
 
     err = alcp_cipher_aead_decrypt(
@@ -296,58 +298,67 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return close_demo_session_exit();
     }
 #else
+    // Decrypt can be called only single time in case of single-update
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 #endif
-    // get tag
-    err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
+
+    // Get Tag
+    err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
+        alcp_error_str(err, err_buf, cErrSize);
+        return close_demo_session_exit();
     }
 
-    char* hex_tagDecrypt = bytesToHexString(tagDecrypt, 14);
-    printf("TAG Decrypt:%s\n", hex_tagDecrypt);
-    free(hex_tagDecrypt);
+    printHexString("TAG Decrypt ", tag_decrypt, 14);
 
-    bool isTagMatched = true;
+    bool is_tag_matched = true;
 
+    // FIXME: Tag verification has to be done inside the library
     for (int i = 0; i < tagLen; i++) {
-        if (tagDecrypt[i] != tag[i]) {
-            isTagMatched = isTagMatched & false;
+        if (tag_decrypt[i] != tag[i]) {
+            is_tag_matched = is_tag_matched & false;
         }
     }
 
-    if (isTagMatched == false) {
+    if (is_tag_matched == false) {
         printf("\n tag mismatched, input encrypted data is not trusthworthy ");
         memset(plaintxt, 0, len);
-        return -1;
+        return close_demo_session_exit();
     }
+
+    printf("Decrypt Succeeded\n");
+
+    // Close the decrypt session
+    close_demo_session();
     return 0;
 }
 
 int
 main(void)
 {
-    int   retval                = 0;
-    Uint8 sample_output[512]    = { 0 };
-    Uint8 sample_tag_output[17] = { 0 };
+    int          retval                = 0;
+    int          pt_size               = 0;
+    Uint8        sample_output[512]    = { 0 };
+    Uint8        sample_tag_output[17] = { 0 };
+    static Uint8 sample_ciphertxt[512] = { 0 };
 
-    assert(sizeof(sample_plaintxt) < sizeof(sample_output));
+    assert(sizeof(sample_plaintxt) <= sizeof(sample_output));
 
-    retval = create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
-    if (retval != 0)
-        goto out;
+    // Size of the plaintext
+    pt_size = strlen((const char*)sample_plaintxt);
+
+    // Do the encryption without padding
     retval = aclp_aes_ccm_encrypt_demo(sample_plaintxt,
-                                       strlen((const char*)sample_plaintxt),
+                                       pt_size,
                                        sample_ciphertxt,
                                        sample_iv,
                                        sizeof(sample_iv),
@@ -357,30 +368,21 @@ main(void)
                                        14,
                                        sample_key,
                                        sizeof(sample_key) * 8);
-    if (retval != 0)
-        goto out;
 
-    int size = strlen((const char*)sample_plaintxt);
+    // In case of an error no point in continuing with decryption
+    if (retval != 0) {
+        return retval;
+    }
 
-    char* hex_sample_output = bytesToHexString(
-        sample_ciphertxt, strlen((const char*)sample_plaintxt));
-    char* hex_sample_input =
-        bytesToHexString(sample_plaintxt, strlen((const char*)sample_plaintxt));
-    char* hex_sample_tag_output = bytesToHexString(sample_tag_output, 14);
+    // Print plaintext, ciphertext and tag
+    printHexString("PlainTextOut ", sample_plaintxt, pt_size);
+    printHexString("CipherTextOut", sample_ciphertxt, pt_size);
+    printHexString("          TAG", sample_tag_output, 14);
 
-    printf("PlainTextOut :%s\n", hex_sample_input);
-    printf("CipherTextOut:%s\n", hex_sample_output);
-    printf("          TAG:%s\n", hex_sample_tag_output);
-
-    free(hex_sample_output);
-    free(hex_sample_input);
-    free(hex_sample_tag_output);
-    close_demo_session();
-    retval = create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
-    if (retval != 0)
-        goto out;
+    // Do the decryption
+    // Without padding PT Len is same as CT Len
     retval = aclp_aes_ccm_decrypt_demo(sample_ciphertxt,
-                                       size,
+                                       pt_size,
                                        sample_output,
                                        sample_iv,
                                        sizeof(sample_iv),
@@ -390,88 +392,34 @@ main(void)
                                        14,
                                        sample_key,
                                        sizeof(sample_key) * 8);
-    if (retval != 0)
-        goto out;
+
+    // In case of an error no point in printing decrypted message
+    if (retval != 0) {
+        return retval;
+    }
+
     printf("sample_output: %s\n", sample_output);
-
-    /*
-     * Complete the transaction
-     */
-    close_demo_session();
-
-    return 0;
-
-out:
-    return -1;
+    return retval;
 }
 
-/*  LocalWords:  decrypt Crypto AOCL
- */
-
-char*
-bytesToHexString(unsigned char* bytes, int length)
+void
+printHexString(const char* info, const unsigned char* bytes, int length)
 {
-    char* outputHexString = malloc(sizeof(char) * ((length * 2) + 1));
+    char* p_hex_string = malloc(sizeof(char) * ((length * 2) + 1));
     for (int i = 0; i < length; i++) {
         char chararray[2];
         chararray[0] = (bytes[i] & 0xf0) >> 4;
         chararray[1] = bytes[i] & 0x0f;
         for (int j = 0; j < 2; j++) {
-            switch (chararray[j]) {
-                case 0x0:
-                    chararray[j] = '0';
-                    break;
-                case 0x1:
-                    chararray[j] = '1';
-                    break;
-                case 0x2:
-                    chararray[j] = '2';
-                    break;
-                case 0x3:
-                    chararray[j] = '3';
-                    break;
-                case 0x4:
-                    chararray[j] = '4';
-                    break;
-                case 0x5:
-                    chararray[j] = '5';
-                    break;
-                case 0x6:
-                    chararray[j] = '6';
-                    break;
-                case 0x7:
-                    chararray[j] = '7';
-                    break;
-                case 0x8:
-                    chararray[j] = '8';
-                    break;
-                case 0x9:
-                    chararray[j] = '9';
-                    break;
-                case 0xa:
-                    chararray[j] = 'a';
-                    break;
-                case 0xb:
-                    chararray[j] = 'b';
-                    break;
-                case 0xc:
-                    chararray[j] = 'c';
-                    break;
-                case 0xd:
-                    chararray[j] = 'd';
-                    break;
-                case 0xe:
-                    chararray[j] = 'e';
-                    break;
-                case 0xf:
-                    chararray[j] = 'f';
-                    break;
-                default:
-                    printf("%x %d\n", chararray[j], j);
+            if (chararray[j] >= 0xa) {
+                chararray[j] = 'a' + chararray[j] - 0xa;
+            } else {
+                chararray[j] = '0' + chararray[j] - 0x0;
             }
-            outputHexString[i * 2 + j] = chararray[j];
+            p_hex_string[i * 2 + j] = chararray[j];
         }
     }
-    outputHexString[length * 2] = 0x0;
-    return outputHexString;
+    p_hex_string[length * 2] = 0x0;
+    printf("%s:%s\n", info, p_hex_string);
+    free(p_hex_string);
 }

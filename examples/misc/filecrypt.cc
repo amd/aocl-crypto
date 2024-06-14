@@ -76,7 +76,7 @@ namespace utilities {
             }
             out.push_back(0x0f); // Pushing Excape, mark padding
             rem--;
-            for (int i = 0; i < rem; i++) {
+            for (Uint64 i = 0; i < rem; i++) {
                 out.push_back(0x00);
             }
             return out;

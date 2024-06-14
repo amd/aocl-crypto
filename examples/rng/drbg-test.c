@@ -122,7 +122,6 @@ test_ctr_drbg()
     Uint8 customEntropy[] = { 0xca, 0xe4, 0x8d, 0xd8, 0x0d, 0x29, 0x81, 0x03,
                               0xef, 0x1e, 0xc0, 0xbf, 0x1b, 0xb9, 0x62, 0x70 };
 
-    bool  use_derivation_function = true;
     Uint8 nonce[] = { 0xd8, 0x27, 0xf9, 0x16, 0x13, 0xe0, 0xb4, 0x7f };
     Uint8 personalization_string[] = { 0xcc, 0x92, 0x8f, 0x3d, 0x2d, 0xf3,
                                        0x1a, 0x29, 0xf4, 0xe4, 0x44, 0xf3,
@@ -141,8 +140,8 @@ test_ctr_drbg()
                       .max_entropy_len   = sizeof(customEntropy),
                       .max_nonce_len     = sizeof(nonce),
                       .di_algoinfo       = { .ctr_drbg = { .di_keysize = 128,
-                                                     .use_derivation_function =
-                                                         true } },
+                                                           .use_derivation_function =
+                                                               true } },
                       .di_rng_sourceinfo = {
                           .custom_rng    = true,
                           .di_sourceinfo = {
@@ -174,15 +173,7 @@ test_hmac_drbg()
                               0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36 };
 
     Uint8 nonce[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
-    Uint8 personalization_string[] = {};
 
-    Uint8 AdditionalInput1[] = {
-
-    };
-
-    Uint8 AdditionalInput2[] = {
-
-    };
     alc_digest_info_t dinfo = {
         .dt_type = ALC_DIGEST_TYPE_SHA2,
         .dt_len  = ALC_DIGEST_LEN_256,
@@ -231,6 +222,4 @@ main(int argc, char const* argv[])
     printf("\n");
 
     return 0;
-out:
-    return -1;
 }

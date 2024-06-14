@@ -89,20 +89,6 @@ gettimeofday(struct timeval* tv, struct timeval* tv1)
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
-static inline void
-alcp_get_time(int x, char* y)
-{
-    gettimeofday(&end, 0);
-    seconds      = end.tv_sec - begin.tv_sec;
-    microseconds = end.tv_usec - begin.tv_usec;
-    elapsed      = seconds + microseconds * 1e-6;
-    totalTimeElapsed += elapsed;
-    if (x) {
-        printf("%s\t", y);
-        printf(" %2.2f ms ", elapsed * 1000);
-    }
-}
-
 void
 getinput(Uint8* output, int inputLen, int seed)
 {
@@ -331,10 +317,6 @@ create_aes_session(Uint8*                  key,
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-    Uint8       tweakKey[16] = {
-        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-        0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
-    };
 
     alc_cipher_aead_info_t cinfo = { // request params
                                      .ci_type   = ALC_CIPHER_TYPE_AES,
@@ -433,7 +415,6 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-    Uint8       tagDecrypt[16];
 
     // GCM init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
@@ -485,7 +466,6 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     int          retval = 0;
     unsigned int keybits;
     Uint8        key[32];
-    int          ret = 0;
 #if DEBUG_PRINT
     bool verboseprint = true;
 #else

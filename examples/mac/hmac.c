@@ -80,7 +80,7 @@ run_hmac(Uint8*            cipherText,
         goto out;
     }
 
-    alc_mac_info_t info = { mode };
+    alc_mac_info_t info = { { mode } };
     // info.hmac.digest_mode = mode;
     err = alcp_mac_init(&handle, key, size, &info);
     if (alcp_is_error(err)) {
@@ -628,7 +628,7 @@ demo_Hmac_Sha3_384_Reset()
         printf("Error Occurred on MAC Request");
         return -1;
     }
-    alc_mac_info_t hmac_info = { ALC_SHA3_384 };
+    alc_mac_info_t hmac_info = { { ALC_SHA3_384 } };
 
     err = alcp_mac_init(&handle, key, sizeof(key), &hmac_info);
     if (alcp_is_error(err)) {
@@ -686,7 +686,7 @@ demo_Hmac_Sha512_224()
 
     alc_error_t err;
     Uint8       key[] = { 0x8b, 0x1d, 0x42, 0xaa, 0xd7, 0x89, 0x0b, 0xd4,
-                    0x82, 0x40, 0x59, 0x2a, 0xd7, 0x88, 0x45, 0x17 };
+                          0x82, 0x40, 0x59, 0x2a, 0xd7, 0x88, 0x45, 0x17 };
 
     Uint8 cipherText[] = { 0x47, 0xb7, 0x76, 0xb5, 0x2c, 0x13, 0x9a, 0x65,
                            0xbf, 0x98, 0xac, 0x2e, 0xda, 0xcc, 0xfb, 0x26 };

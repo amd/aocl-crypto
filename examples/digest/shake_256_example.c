@@ -69,6 +69,8 @@ hash_demo(const Uint8* src,
     const Uint64 last_buf_size = src_size % num_chunks;
     const Uint8* p             = src;
 
+    Uint8* output_dup = NULL;
+
     while (num_chunks-- > 0) {
         err = alcp_digest_update(&s_dg_handle, p, buf_size);
         if (alcp_is_error(err)) {
@@ -105,7 +107,7 @@ hash_demo(const Uint8* src,
         goto out;
     }
 
-    Uint8* output_dup = malloc(out_size);
+    output_dup = malloc(out_size);
     for (Uint16 i = 0; i < out_size; i++) {
         err = alcp_digest_shake_squeeze(&s_dg_handle_dup, output_dup + i, 1);
         if (alcp_is_error(err)) {
