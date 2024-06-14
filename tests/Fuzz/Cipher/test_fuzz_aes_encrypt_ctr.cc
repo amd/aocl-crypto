@@ -26,42 +26,15 @@
  *
  */
 
-#pragma once
+#include "Fuzz/alcp_fuzz_test.hh"
 
-#include "alcp/alcp.h"
-#include "alcp/rsa.h"
-#include "config.h"
-#include <cstddef>
-#include <cstdint>
-#include <dlfcn.h>
-#include <fuzzer/FuzzedDataProvider.h>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#define ALCP_TEST_RSA_PADDING_PKCS 1
-#define ALCP_TEST_RSA_PADDING_PSS  2
-
-/* Fuzz functions */
-int
-ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
-                              const Uint8*      buf,
-                              size_t            len);
-int
-ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
-                              const Uint8*      buf,
-                              size_t            len);
-int
-ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len);
-int
-ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len);
-int
-ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len);
-int
-ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
-              alc_digest_mode_t mode,
-              const Uint8*      buf,
-              size_t            len);
+extern "C" int
+LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
+{
+    if (ALCP_Fuzz_Cipher_Encrypt(ALC_AES_MODE_CTR, Data, Size) != 0) {
+        std::cout << "ALCP_Fuzz_Cipher_Encrypt test failed for ALC_AES_MODE_CTR"
+                  << std::endl;
+        return -1;
+    }
+    return 0;
+}
