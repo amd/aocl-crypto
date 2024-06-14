@@ -47,7 +47,7 @@ else()
 
     # Function to create Symbolic Links for the dependent files
     FUNCTION(FILE_SYMLINK MYFILE OUTFILE)
-        FILE(CREATE_LINK ${MYFILE} ${SPHINX_BUILD_DIR}/${OUTFILE} SYMBOLIC)
+        LINK_IF_EXISTS(${MYFILE} ${SPHINX_BUILD_DIR}/${OUTFILE} SYMBOLIC)
     ENDFUNCTION(FILE_SYMLINK MYFILE OUTFILE)
 
     FILE_SYMLINK(${PROJECT_SOURCE_DIR}/docs/resources/Quick_Start.md Quick_Start.md)

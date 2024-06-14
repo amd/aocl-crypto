@@ -1,4 +1,4 @@
- # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -54,10 +54,10 @@ TARGET_LINK_LIBRARIES(test_poly1305_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK)
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.csv ${CMAKE_BINARY_DIR}/dataset_poly1305.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.csv ${CMAKE_BINARY_DIR}/dataset_poly1305.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_poly1305.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_poly1305.csv SYMBOLIC)
 
 ENDFUNCTION(TEST_DATA_LINK)
 

@@ -136,10 +136,10 @@ FUNCTION(AES_TEST TYPE MOD)
     # Below code must be enabled once we merge completely
     # Depending on the person, they are gonna run from root dir or binary directory
     # Link dataset to the root dir
-    # FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    # LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    # FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    # LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_experimental_${TYPE} PRIVATE
         ${ALCP_TEST_INCLUDES}
@@ -154,3 +154,16 @@ FUNCTION(AES_TEST TYPE MOD)
         TEST_SUFFIX .${MOD})
     gtest_discover_tests(aes_${MOD}_experimental_${TYPE})
 ENDFUNCTION()
+
+FUNCTION(LINK_IF_EXISTS SOURCE DESTINATION LINK_TYPE)
+    # Check if the source file exists
+    if(EXISTS ${SOURCE})
+        # Create a symbolic link if the source file exists
+        FILE(CREATE_LINK ${SOURCE} ${DESTINATION} ${LINK_TYPE})
+    else()
+        string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
+        if("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")
+            message(WARNING "Link Helper failed, no such file as ${SOURCE}")
+        endif("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")
+    endif()
+ENDFUNCTION(LINK_IF_EXISTS SOURCE DESTINATION)

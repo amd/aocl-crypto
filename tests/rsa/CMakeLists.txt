@@ -61,29 +61,29 @@ TARGET_LINK_LIBRARIES(test_rsa_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK RSA_ALG)
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
 
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
 
 
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
 
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
 ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 
 TEST_DATA_LINK(RSA_1024)

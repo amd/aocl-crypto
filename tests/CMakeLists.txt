@@ -62,7 +62,7 @@ ENDIF(ENABLE_TESTS_IPP_API)
 
 add_openssl()
 
- SET(ALCP_INCLUDES
+SET(ALCP_INCLUDES
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"

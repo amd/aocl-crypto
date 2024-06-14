@@ -80,10 +80,10 @@ TARGET_LINK_LIBRARIES(test_ecdh_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK ALG)
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${ALG}.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${ALG}.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${ALG}.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${ALG}.csv SYMBOLIC)
 ENDFUNCTION(TEST_DATA_LINK ALG)
 
 # TODO: Fix this name based on curve

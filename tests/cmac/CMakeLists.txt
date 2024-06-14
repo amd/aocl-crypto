@@ -60,10 +60,10 @@ TARGET_LINK_LIBRARIES(test_cmac_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK CMAC_ALG)
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${CMAC_ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${CMAC_ALG}.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${CMAC_ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${CMAC_ALG}.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${CMAC_ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${CMAC_ALG}.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${CMAC_ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${CMAC_ALG}.csv SYMBOLIC)
 
 ENDFUNCTION(TEST_DATA_LINK CMAC_ALG)
 
