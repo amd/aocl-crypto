@@ -35,9 +35,9 @@ ALCP_Fuzz_Cmac(const Uint8* buf, size_t len)
     FuzzedDataProvider stream(buf, len);
 
     size_t             size_input = stream.ConsumeIntegral<Uint16>();
+    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
     size_t             size_key   = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
-    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];

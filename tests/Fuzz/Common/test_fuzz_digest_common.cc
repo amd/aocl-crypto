@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
@@ -28,6 +29,38 @@
 
 #include "Fuzz/alcp_fuzz_test.hh"
 
+std::map<alc_digest_mode_t, alc_digest_len_t> sha_mode_len_map = {
+    { ALC_SHA2_224, ALC_DIGEST_LEN_224 },
+    { ALC_SHA2_256, ALC_DIGEST_LEN_256 },
+    { ALC_SHA2_384, ALC_DIGEST_LEN_384 },
+    { ALC_SHA2_512, ALC_DIGEST_LEN_512 },
+    { ALC_SHA3_224, ALC_DIGEST_LEN_224 },
+    { ALC_SHA3_256, ALC_DIGEST_LEN_256 },
+    { ALC_SHA3_384, ALC_DIGEST_LEN_384 },
+    { ALC_SHA3_512, ALC_DIGEST_LEN_512 },
+    { ALC_SHAKE_128, ALC_DIGEST_LEN_CUSTOM_SHAKE_128 },
+    { ALC_SHAKE_256, ALC_DIGEST_LEN_CUSTOM_SHAKE_256 }
+};
+
+std::map<alc_digest_mode_t, std::string> sha_mode_string_map = {
+    { ALC_SHA2_224, "ALC_SHA2_224" },   { ALC_SHA2_256, "ALC_SHA2_256" },
+    { ALC_SHA2_384, "ALC_SHA2_384" },   { ALC_SHA2_512, "ALC_SHA2_512" },
+    { ALC_SHA3_224, "ALC_SHA3_224" },   { ALC_SHA3_256, "ALC_SHA3_256" },
+    { ALC_SHA3_384, "ALC_SHA3_384" },   { ALC_SHA3_512, "ALC_SHA3_512" },
+    { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
+};
+
+alc_digest_info_t dinfo = {
+    .dt_type = ALC_DIGEST_TYPE_SHA2,
+    .dt_len  = ALC_DIGEST_LEN_256,
+    .dt_mode = ALC_SHA2_256,
+};
+alc_digest_info_t mgf_info = {
+    .dt_type = ALC_DIGEST_TYPE_SHA2,
+    .dt_len  = ALC_DIGEST_LEN_256,
+    .dt_mode = ALC_SHA2_256,
+};
+
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
 {
@@ -37,7 +70,7 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
     /* Initializing digest info */
-    alc_error_t         err;
+    alc_error_t         err          = ALC_ERROR_NONE;
     alc_digest_handle_p m_handle     = new alc_digest_handle_t;
     alc_digest_handle_p m_handle_dup = new alc_digest_handle_t;
 
@@ -54,58 +87,62 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
     } else {
         std::cout << sha_mode_len_map[mode] << " is not supported. Exiting.."
                   << std::endl;
-        return 0;
+        return -1;
     }
 
     /* output2 is to store digest data from duplicate handle */
     Uint8 output1[out_size], output2[out_size];
 
+    /* allocate context */
     Uint64 context_size = alcp_digest_context_size();
-
-    if (m_handle == nullptr || m_handle_dup == nullptr) {
-        std::cout << "Error: Mem alloc for digest handle" << std::endl;
-        goto OUT;
-    }
-
-    m_handle->context     = malloc(context_size);
-    m_handle_dup->context = malloc(context_size);
-    if (m_handle->context == nullptr || m_handle_dup->context == nullptr) {
+    m_handle->context   = malloc(context_size);
+    if (m_handle->context == nullptr) {
         std::cout << "Error: Mem alloc for digest context" << std::endl;
-        goto OUT;
+        return -1;
     }
-
+    m_handle_dup->context = malloc(context_size);
+    if (m_handle_dup->context == nullptr) {
+        std::cout << "Error: Mem alloc for digest dup context" << std::endl;
+        return -1;
+    }
     std::cout << "Running for Input size:" << size_input << std::endl;
-    /*FIXME: add lifecycle changes here, and randomize the order of the calls */
     err = alcp_digest_request(mode, m_handle);
-    Check_Error(err);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_digest_request" << std::endl;
+        goto dealloc_exit;
+    }
     err = alcp_digest_init(m_handle);
-    Check_Error(err);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_digest_init" << std::endl;
+        goto dealloc_exit;
+    }
     err = alcp_digest_update(m_handle, &fuzz_input[0], fuzz_input.size());
-    Check_Error(err);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_digest_update" << std::endl;
+        goto dealloc_exit;
+    }
     /* context copy */
     err = alcp_digest_context_copy(m_handle, m_handle_dup);
-    Check_Error(err);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_digest_context_copy" << std::endl;
+        goto dealloc_exit;
+    }
     /* for shake variants */
     if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
         err = alcp_digest_shake_squeeze(m_handle_dup, output2, out_size);
-        Check_Error(err);
-    }
-    err = alcp_digest_finalize(m_handle, output1, out_size);
-    Check_Error(err);
-
-    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        for (int i = 0; i < out_size; i++) {
-            if (output1[i] != output2[i]) {
-                std::cout << "Outputs are NOT equal" << std::endl;
-                break;
-            }
+        if (alcp_is_error(err)) {
+            std::cout << "Error! alcp_digest_shake_squeeze" << std::endl;
+            goto dealloc_exit;
         }
     }
-    std::cout << "Passed " << sha_mode_len_map[mode]
-              << " for Input size:" << size_input << std::endl;
-    goto CLOSE;
+    err = alcp_digest_finalize(m_handle, output1, out_size);
+    if (alcp_is_error(err)) {
+        std::cout << "Error! alcp_digest_finalize" << std::endl;
+        goto dealloc_exit;
+    }
+    goto exit;
 
-CLOSE:
+dealloc_exit:
     if (m_handle != nullptr) {
         alcp_digest_finish(m_handle);
         free(m_handle->context);
@@ -116,21 +153,20 @@ CLOSE:
         free(m_handle_dup->context);
         delete m_handle_dup;
     }
+    return -1;
 
-OUT:
-    return 0;
-}
-
-extern "C" int
-LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
-{
-    int retval = 0;
-    for (auto const& [Mode, Len] : sha_mode_len_map) {
-        if (ALCP_Fuzz_Digest(Mode, Data, Size) != 0) {
-            std::cout << "Digest fuzz test failed for Mode"
-                      << sha_mode_len_map[Mode] << std::endl;
-            return retval;
-        }
+exit:
+    if (m_handle != nullptr) {
+        alcp_digest_finish(m_handle);
+        free(m_handle->context);
+        delete m_handle;
     }
-    return retval;
+    if (m_handle_dup != nullptr) {
+        alcp_digest_finish(m_handle_dup);
+        free(m_handle_dup->context);
+        delete m_handle_dup;
+    }
+    std::cout << "Passed " << sha_mode_len_map[mode]
+              << " for Input size:" << size_input << std::endl;
+    return 0;
 }

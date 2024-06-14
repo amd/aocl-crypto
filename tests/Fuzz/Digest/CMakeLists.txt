@@ -25,4 +25,8 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_FUZZ_TARGET(test_fuzz_digest test_fuzz_digest.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha2_224 test_fuzz_digest_sha2_224.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha2_256 test_fuzz_digest_sha2_256.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha2_384 test_fuzz_digest_sha2_384.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha2_512 test_fuzz_digest_sha2_512.cc)
+
