@@ -50,17 +50,6 @@ std::map<alc_digest_mode_t, std::string> sha_mode_string_map = {
     { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
-alc_digest_info_t dinfo = {
-    .dt_type = ALC_DIGEST_TYPE_SHA2,
-    .dt_len  = ALC_DIGEST_LEN_256,
-    .dt_mode = ALC_SHA2_256,
-};
-alc_digest_info_t mgf_info = {
-    .dt_type = ALC_DIGEST_TYPE_SHA2,
-    .dt_len  = ALC_DIGEST_LEN_256,
-    .dt_mode = ALC_SHA2_256,
-};
-
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
 {

@@ -25,6 +25,15 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_FUZZ_TARGET(test_fuzz_hmac test_fuzz_hmac.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha2_224 test_fuzz_hmac_sha2_224.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha2_256 test_fuzz_hmac_sha2_256.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha2_384 test_fuzz_hmac_sha2_384.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha2_512 test_fuzz_hmac_sha2_512.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha3_224 test_fuzz_hmac_sha3_224.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha3_256 test_fuzz_hmac_sha3_256.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha3_384 test_fuzz_hmac_sha3_384.cc)
+ADD_FUZZ_TARGET(test_fuzz_hmac_sha3_512 test_fuzz_hmac_sha3_512.cc)
+
 ADD_FUZZ_TARGET(test_fuzz_poly1305 test_fuzz_poly1305.cc)
 ADD_FUZZ_TARGET(test_fuzz_cmac test_fuzz_cmac.cc)

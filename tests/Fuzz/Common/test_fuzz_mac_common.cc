@@ -28,25 +28,62 @@
 
 #include "Fuzz/alcp_fuzz_test.hh"
 
+std::map<alc_digest_mode_t, alc_digest_len_t> mac_sha_mode_len_map = {
+    { ALC_SHA2_224, ALC_DIGEST_LEN_224 },
+    { ALC_SHA2_256, ALC_DIGEST_LEN_256 },
+    { ALC_SHA2_384, ALC_DIGEST_LEN_384 },
+    { ALC_SHA2_512, ALC_DIGEST_LEN_512 },
+    { ALC_SHA3_224, ALC_DIGEST_LEN_224 },
+    { ALC_SHA3_256, ALC_DIGEST_LEN_256 },
+    { ALC_SHA3_384, ALC_DIGEST_LEN_384 },
+    { ALC_SHA3_512, ALC_DIGEST_LEN_512 },
+    { ALC_SHAKE_128, ALC_DIGEST_LEN_CUSTOM_SHAKE_128 },
+    { ALC_SHAKE_256, ALC_DIGEST_LEN_CUSTOM_SHAKE_256 }
+};
+
+std::map<alc_digest_mode_t, std::string> mac_sha_mode_string_map = {
+    { ALC_SHA2_224, "ALC_SHA2_224" },   { ALC_SHA2_256, "ALC_SHA2_256" },
+    { ALC_SHA2_384, "ALC_SHA2_384" },   { ALC_SHA2_512, "ALC_SHA2_512" },
+    { ALC_SHA3_224, "ALC_SHA3_224" },   { ALC_SHA3_256, "ALC_SHA3_256" },
+    { ALC_SHA3_384, "ALC_SHA3_384" },   { ALC_SHA3_512, "ALC_SHA3_512" },
+    { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
+};
+
+std::map<_alc_mac_type, std::string> mac_type_string_map = {
+    { ALC_MAC_HMAC, "HMAC" },
+    { ALC_MAC_CMAC, "CMAC" },
+    { ALC_MAC_POLY1305, "POLY1305" },
+};
+
+/* the second argument is relevant only for Hmac*/
 int
-ALCP_Fuzz_Hmac(alc_digest_mode_t mode, const Uint8* buf, size_t len)
+ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
+              alc_digest_mode_t mode,
+              const Uint8*      buf,
+              size_t            len)
 {
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t             size_input = stream.ConsumeIntegral<Uint16>();
     size_t             size_key   = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
+    size_t             size_input = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
-    Uint64 mac_size = sha_mode_len_map[mode] / 8;
-    Uint8  mac[mac_size];
+    /* for HMAC its sha size, for CMAC and Poly1305, its 16 */
+    Uint64 mac_size = 16;
+    if (mac_type == ALC_MAC_HMAC) {
+        mac_size = mac_sha_mode_len_map[mode] / 8;
+    }
+    Uint8 mac[mac_size];
 
-    std::cout << "Running for Input size: " << size_input
+    std::cout << mac_type_string_map[mac_type]
+              << " Running for Input size: " << size_input
               << " and Key size: " << size_key << " Mac size: " << mac_size
               << std::endl;
 
-    alc_mac_info_t   macinfo = { { mode } };
+    alc_mac_info_t macinfo = { { mode } };
+
     alc_mac_handle_t handle{};
 
     /* allocate context */
@@ -56,19 +93,30 @@ ALCP_Fuzz_Hmac(alc_digest_mode_t mode, const Uint8* buf, size_t len)
         return -1;
     }
     /* request */
-    err = alcp_mac_request(&handle, ALC_MAC_HMAC);
+    err = alcp_mac_request(&handle, mac_type);
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_request" << std::endl;
         goto dealloc;
     }
+
+    /* only for cmac */
+    if (mac_type == ALC_MAC_CMAC) {
+        macinfo.cmac.ci_type = ALC_CIPHER_TYPE_AES;
+        macinfo.cmac.ci_mode = ALC_AES_MODE_NONE;
+    }
+
     /* initialize */
-    err = alcp_mac_init(&handle, &fuzz_key[0], size_key, &macinfo);
+    if (mac_type == ALC_MAC_POLY1305) {
+        err = alcp_mac_init(&handle, &fuzz_key[0], fuzz_key.size(), NULL);
+    } else {
+        err = alcp_mac_init(&handle, &fuzz_key[0], fuzz_key.size(), &macinfo);
+    }
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_init" << std::endl;
         goto dealloc;
     }
     /* mac update */
-    err = alcp_mac_update(&handle, &fuzz_input[0], size_input);
+    err = alcp_mac_update(&handle, &fuzz_input[0], fuzz_input.size());
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_mac_update" << std::endl;
         goto dealloc;
@@ -89,22 +137,9 @@ dealloc:
 out:
     alcp_mac_finish(&handle);
     free(handle.ch_context);
-    std::cout << "Test Passed for Input size: " << size_input
+    std::cout << mac_type_string_map[mac_type]
+              << " Test Passed for Input size: " << size_input
               << " and Key size: " << size_key << " Mac size: " << mac_size
               << std::endl;
     return 0;
-}
-
-extern "C" int
-LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
-{
-    int retval = 0;
-    for (auto const& [Mode, Len] : sha_mode_len_map) {
-        if (ALCP_Fuzz_Hmac(Mode, Data, Size) != 0) {
-            std::cout << "ALCP_Fuzz_Hmac failed for Mode"
-                      << sha_mode_len_map[Mode] << std::endl;
-            return retval;
-        }
-    }
-    return retval;
 }

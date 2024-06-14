@@ -28,6 +28,17 @@
 
 #include "Fuzz/alcp_fuzz_test.hh"
 
+alc_digest_info_t dinfo = {
+    .dt_type = ALC_DIGEST_TYPE_SHA2,
+    .dt_len  = ALC_DIGEST_LEN_256,
+    .dt_mode = ALC_SHA2_256,
+};
+alc_digest_info_t mgf_info = {
+    .dt_type = ALC_DIGEST_TYPE_SHA2,
+    .dt_len  = ALC_DIGEST_LEN_256,
+    .dt_mode = ALC_SHA2_256,
+};
+
 int
 ALCP_Fuzz_Rsa_OAEP(const Uint8* buf, size_t len)
 {

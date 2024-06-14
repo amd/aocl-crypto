@@ -72,7 +72,7 @@ fuzz_dir = None
 for FuzzTarget in Fuzz_Targets:
     fuzz_dir = os.path.abspath(os.path.join(Fuzz_Build_Dir, FuzzTarget))
     for f in os.listdir(fuzz_dir):
-        if 'test_fuzz' in f:
+        if 'test_fuzz_' in f:
             Fuzz_Executables.append(os.path.join(fuzz_dir, f))
             
 # run exes
