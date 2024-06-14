@@ -30,3 +30,11 @@ ADD_FUZZ_TARGET(test_fuzz_digest_sha2_256 test_fuzz_digest_sha2_256.cc)
 ADD_FUZZ_TARGET(test_fuzz_digest_sha2_384 test_fuzz_digest_sha2_384.cc)
 ADD_FUZZ_TARGET(test_fuzz_digest_sha2_512 test_fuzz_digest_sha2_512.cc)
 
+ADD_FUZZ_TARGET(test_fuzz_digest_sha3_224 test_fuzz_digest_sha3_224.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha3_256 test_fuzz_digest_sha3_256.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha3_384 test_fuzz_digest_sha3_384.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_sha3_512 test_fuzz_digest_sha3_512.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_digest_shake_128 test_fuzz_digest_shake_128.cc)
+ADD_FUZZ_TARGET(test_fuzz_digest_shake_256 test_fuzz_digest_shake_256.cc)
+

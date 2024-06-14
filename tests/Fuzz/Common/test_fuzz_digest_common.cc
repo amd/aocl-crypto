@@ -90,6 +90,9 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode, const Uint8* buf, size_t len)
         return -1;
     }
 
+    std::cout << "Running Digest Fuzz test for SHA mode "
+              << sha_mode_string_map[mode] << std::endl;
+
     /* output2 is to store digest data from duplicate handle */
     Uint8 output1[out_size], output2[out_size];
 
