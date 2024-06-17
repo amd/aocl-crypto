@@ -147,31 +147,41 @@ Rsa_KAT(int                     padding_mode,
     }
 #endif
 
-    std::string TestDataFile   = "";
+    std::string TestDataFile = "";
+
+    /* default options */
     std::string PaddingModeStr = "";
-    rb->m_padding_mode         = padding_mode;
-    if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
+    std::string RsaAlgo        = "";
+
+    rb->m_padding_mode = padding_mode;
+
+    if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+        PaddingModeStr = "no_padding";
+        RsaAlgo        = "EncryptDecrypt";
+    } else if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         PaddingModeStr = "OAEP";
-        TestDataFile =
-            std::string("dataset_RSA_EncryptDecrypt_" + std::to_string(KeySize)
-                        + "_padding_" + PaddingModeStr + ".csv");
+        RsaAlgo        = "EncryptDecrypt";
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         PaddingModeStr = "PSS";
-        TestDataFile =
-            std::string("dataset_RSA_SignVerify_" + std::to_string(KeySize)
-                        + "_padding_" + PaddingModeStr + ".csv");
+        RsaAlgo        = "SignVerify";
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         PaddingModeStr = "PKCS";
-        TestDataFile =
-            std::string("dataset_RSA_SignVerify_" + std::to_string(KeySize)
-                        + "_padding_" + PaddingModeStr + ".csv");
+        RsaAlgo        = "SignVerify";
     } else {
-        TestDataFile =
-            std::string("dataset_RSA_EncryptDecrypt_" + std::to_string(KeySize)
-                        + "_no_padding" + ".csv");
+        std::cout << "Invalid / Unsupported Rsa Padding mode!" << std::endl;
+        FAIL();
     }
 
+    TestDataFile =
+        std::string("dataset_RSA_" + RsaAlgo + "_" + std::to_string(KeySize)
+                    + "_" + PaddingModeStr + ".csv");
+
     Csv csv = Csv(TestDataFile);
+
+    if (!csv.m_file_exists) {
+        std::cout << "File not found!" << TestDataFile << std::endl;
+        FAIL();
+    }
 
     /* Keysize is in bits (1024/2048) */
     KeySize = KeySize / 8;
