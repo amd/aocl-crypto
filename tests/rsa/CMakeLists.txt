@@ -59,36 +59,19 @@ TARGET_INCLUDE_DIRECTORIES(test_rsa_cross PRIVATE
 TARGET_COMPILE_OPTIONS(test_rsa_cross PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(test_rsa_cross ${LIBS})
 
-FUNCTION(TEST_DATA_LINK RSA_ALG)
+FUNCTION(TEST_DATA_LINK RSA_ALG KEY_SIZE PADDING_MODE)
     # Link dataset to the root dir
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
-
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv ${CMAKE_BINARY_DIR}/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv SYMBOLIC)
     # Link dataset to the actual place of test binary
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
-
-    # Link dataset to the root dir
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
-
-    # Link dataset to the actual place of test binary
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
-
-
-    # Link dataset to the root dir
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
-
-    # Link dataset to the actual place of test binary
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
-
-    # Link dataset to the root dir
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
-
-    # Link dataset to the actual place of test binary
-    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv SYMBOLIC)
 ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 
-TEST_DATA_LINK(RSA_1024)
-TEST_DATA_LINK(RSA_2048)
-TEST_DATA_LINK(RSA_SignVerify_2048)
+TEST_DATA_LINK(EncryptDecrypt 1024 no_padding)
+TEST_DATA_LINK(EncryptDecrypt 2048 no_padding)
+TEST_DATA_LINK(EncryptDecrypt 1024 padding_OAEP)
+TEST_DATA_LINK(EncryptDecrypt 2048 padding_OAEP)
+TEST_DATA_LINK(SignVerify 2048 padding_)
+TEST_DATA_LINK(SignVerify 2048 padding_)
 
 alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
 alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)

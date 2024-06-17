@@ -152,8 +152,9 @@ Rsa_KAT(int                     padding_mode,
     rb->m_padding_mode         = padding_mode;
     if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         PaddingModeStr = "OAEP";
-        TestDataFile   = std::string("dataset_RSA_" + std::to_string(KeySize)
-                                   + "_padding_" + PaddingModeStr + ".csv");
+        TestDataFile =
+            std::string("dataset_RSA_EncryptDecrypt_" + std::to_string(KeySize)
+                        + "_padding_" + PaddingModeStr + ".csv");
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         PaddingModeStr = "PSS";
         TestDataFile =
@@ -165,8 +166,9 @@ Rsa_KAT(int                     padding_mode,
             std::string("dataset_RSA_SignVerify_" + std::to_string(KeySize)
                         + "_padding_" + PaddingModeStr + ".csv");
     } else {
-        TestDataFile = std::string("dataset_RSA_" + std::to_string(KeySize)
-                                   + "_no_padding" + ".csv");
+        TestDataFile =
+            std::string("dataset_RSA_EncryptDecrypt_" + std::to_string(KeySize)
+                        + "_no_padding" + ".csv");
     }
 
     Csv csv = Csv(TestDataFile);
