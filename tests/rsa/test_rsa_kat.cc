@@ -48,9 +48,6 @@ TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256)
 }
 TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256)
 {
-    if (!useipp || !useossl)
-        GTEST_SKIP() << "Temporarily skipping this test for ALCP due to a "
-                        "known failure in PKCS Sign";
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;

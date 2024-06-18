@@ -103,8 +103,7 @@ template<alc_rsa_key_size T>
 Rsa<T>::Rsa()
     : m_key_size{ T / 8 }
     , m_digest_info_index{ SHA_UNKNOWN }
-{
-}
+{}
 
 template<alc_rsa_key_size T>
 void
@@ -655,7 +654,7 @@ Rsa<T>::signPrivatePkcsv15(bool         check,
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
     Uint64 pad_len = T / 8 - 3 - 19 - m_hash_len;
-    utils::PadBytes(message + 2, 0xf, pad_len);
+    utils::PadBytes(message + 2, 0xff, pad_len);
     utils::CopyBytes(
         message + 3 + pad_len, DigestInfo[m_digest_info_index], 19);
     utils::CopyBytes(message + 3 + pad_len + 19, hash, m_hash_len);
@@ -714,7 +713,7 @@ Rsa<T>::verifyPublicPkcsv15(const Uint8* pText,
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
     Uint64 pad_len = T / 8 - 3 - 19 - m_hash_len;
-    utils::PadBytes(message + 2, 0xf, pad_len);
+    utils::PadBytes(message + 2, 0xff, pad_len);
     utils::CopyBytes(
         message + 3 + pad_len, DigestInfo[m_digest_info_index], 19);
     utils::CopyBytes(message + 3 + pad_len + 19, hash, m_hash_len);
