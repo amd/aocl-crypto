@@ -114,28 +114,28 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
 
     /* now test lifecycle */
     if (TestLifeCycle) {
-        std::cout << "Init-->Update->Finalize" << std::endl;
         if (alcp_is_error(alcp_digest_init(m_handle))
             || (alcp_is_error(alcp_digest_update(
                 m_handle, &fuzz_input[0], fuzz_input.size())))
             || (alcp_is_error(
                 alcp_digest_finalize(m_handle, output1, out_size)))) {
+            std::cout << "FAIL! Init-->Update->Finalize" << std::endl;
             goto dealloc_exit;
         }
-        std::cout << "Init-->Update(s)->Finalize" << std::endl;
         if (alcp_is_error(alcp_digest_init(m_handle))
             || (alcp_is_error(alcp_digest_update(
                 m_handle, &fuzz_input[0], fuzz_input.size())))
             || (alcp_is_error(
                 alcp_digest_finalize(m_handle, output1, out_size)))) {
+            std::cout << "FAIL: Init-->Update(s)->Finalize" << std::endl;
             goto dealloc_exit;
         }
-        std::cout << "Init-->Finalize->Update" << std::endl;
         if (alcp_is_error(alcp_digest_init(m_handle))
             || (alcp_is_error(
                 alcp_digest_finalize(m_handle, output1, out_size)))
             || (alcp_is_error(alcp_digest_update(
                 m_handle, &fuzz_input[0], fuzz_input.size())))) {
+            std::cout << "FAIL: Init-->Finalize->Update" << std::endl;
             goto dealloc_exit;
         }
     } else {
