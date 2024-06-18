@@ -26,51 +26,15 @@
  *
  */
 
-#pragma once
+#include "Fuzz/alcp_fuzz_test.hh"
 
-#include "alcp/alcp.h"
-#include "alcp/rsa.h"
-#include "config.h"
-#include <cstddef>
-#include <cstdint>
-#include <dlfcn.h>
-#include <fuzzer/FuzzedDataProvider.h>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <random>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-
-static std::random_device rd;
-static std::mt19937       rng{ rd() };
-
-#define ALCP_TEST_RSA_PADDING_PKCS 1
-#define ALCP_TEST_RSA_PADDING_PSS  2
-
-/* Fuzz functions */
-int
-ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
-                              const Uint8*      buf,
-                              size_t            len);
-int
-ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
-                              const Uint8*      buf,
-                              size_t            len);
-int
-ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len);
-int
-ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len);
-int
-ALCP_Fuzz_Digest(alc_digest_mode_t mode,
-                 const Uint8*      buf,
-                 size_t            len,
-                 bool              TestLifeCycle);
-int
-ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
-              alc_digest_mode_t mode,
-              const Uint8*      buf,
-              size_t            len);
-int
-ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType, const Uint8* buf, size_t len);
+extern "C" int
+LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
+{
+    if (ALCP_Fuzz_Digest(ALC_SHA2_224, Data, Size, true) != 0) {
+        std::cout << "Digest fuzz lifecycle test failed for Mode ALC_SHA2_224"
+                  << std::endl;
+        return -1;
+    }
+    return 0;
+}

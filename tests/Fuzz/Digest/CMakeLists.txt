@@ -38,3 +38,4 @@ ADD_FUZZ_TARGET(test_fuzz_digest_sha3_512 test_fuzz_digest_sha3_512.cc)
 ADD_FUZZ_TARGET(test_fuzz_digest_shake_128 test_fuzz_digest_shake_128.cc)
 ADD_FUZZ_TARGET(test_fuzz_digest_shake_256 test_fuzz_digest_shake_256.cc)
 
+ADD_FUZZ_TARGET(test_fuzz_digest_sha2_224_lifecycle test_fuzz_digest_sha2_224_lifecycle.cc)

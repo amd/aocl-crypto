@@ -31,7 +31,7 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Digest(ALC_SHAKE_256, Data, Size) != 0) {
+    if (ALCP_Fuzz_Digest(ALC_SHAKE_256, Data, Size, false) != 0) {
         std::cout << "Digest fuzz test failed for Mode ALC_SHAKE_256"
                   << std::endl;
         return -1;
