@@ -97,6 +97,35 @@ TestDigestLifecycle_2(alc_digest_handle_p handle,
     return true;
 }
 
+bool
+TestDigestLifecycle_ctx_copy(alc_digest_handle_p handle,
+                             alc_digest_handle_p handle_dup,
+                             const Uint8*        fuzz_input,
+                             Uint64              InputSize,
+                             Uint8*              output1,
+                             Uint8*              output2,
+                             Uint64              out_size)
+{
+    /* invalid call, finalize on initialized dup handle, and trying to squeeze
+     * output , then try to call update from the dup handle */
+    if (alcp_is_error(
+            alcp_digest_init(handle)
+            || alcp_is_error(alcp_digest_finalize(handle, output1, out_size))
+            || (alcp_is_error(
+                alcp_digest_update(handle_dup, &fuzz_input[0], InputSize)))
+            || alcp_is_error(alcp_digest_context_copy(handle, handle_dup))
+            || alcp_is_error(
+                alcp_digest_shake_squeeze(handle_dup, output2, out_size)))
+        || alcp_is_error(
+            alcp_digest_update(handle_dup, &fuzz_input[0], InputSize))) {
+        std::cout << "Neg lifecycle Test FAIL! "
+                     "Init->Finalize->Update->CtxCopy->Squeeze->Update"
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                  const Uint8*      buf,
@@ -163,7 +192,6 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         goto dealloc_exit;
     }
 
-    /* now test lifecycle FIXME: add cases for SHAKE, context copy, etc */
     if (TestNegLifeCycle) {
         if (!TestDigestLifecycle_1(
                 handle, &fuzz_input[0], fuzz_input.size(), output1, out_size))
@@ -171,6 +199,17 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         if (!TestDigestLifecycle_2(
                 handle, &fuzz_input[0], fuzz_input.size(), output1, out_size))
             goto dealloc_exit;
+
+        /* for shake variants */
+        if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos)
+            if (!TestDigestLifecycle_ctx_copy(handle,
+                                              handle_dup,
+                                              &fuzz_input[0],
+                                              fuzz_input.size(),
+                                              output1,
+                                              output2,
+                                              out_size))
+                goto dealloc_exit;
     } else {
         err = alcp_digest_init(handle);
         if (alcp_is_error(err)) {
