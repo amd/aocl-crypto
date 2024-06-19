@@ -25,26 +25,26 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_cbc test_fuzz_aes_encrypt_cbc.cc)
-ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_cbc test_fuzz_aes_decrypt_cbc.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_cbc.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_cbc.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_cfb test_fuzz_aes_encrypt_cfb.cc)
-ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_cfb test_fuzz_aes_decrypt_cfb.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_cfb.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_cfb.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_ctr test_fuzz_aes_encrypt_ctr.cc)
-ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ctr test_fuzz_aes_decrypt_ctr.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_ctr.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ctr.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_ofb test_fuzz_aes_encrypt_ofb.cc)
-ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ofb test_fuzz_aes_decrypt_ofb.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_ofb.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ofb.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_gcm test_fuzz_aes_encrypt_gcm.cc)
-ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_gcm test_fuzz_aes_decrypt_gcm.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_gcm.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_gcm.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_ccm test_fuzz_aes_encrypt_ccm.cc)
-ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ccm test_fuzz_aes_decrypt_ccm.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_ccm.cc)
+ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ccm.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_chacha20 test_fuzz_chacha20.cc)
-ADD_FUZZ_TARGET(test_fuzz_chacha20-poly1305 test_fuzz_chacha20-poly1305.cc)
+ADD_FUZZ_TARGET(test_fuzz_chacha20.cc)
+ADD_FUZZ_TARGET(test_fuzz_chacha20-poly1305.cc)
 
 
 
