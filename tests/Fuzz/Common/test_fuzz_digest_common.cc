@@ -50,11 +50,58 @@ std::map<alc_digest_mode_t, std::string> sha_mode_string_map = {
     { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
+bool
+TestDigestLifecycle_1(alc_digest_handle_p handle,
+                      const Uint8*        fuzz_input,
+                      Uint64              InputSize,
+                      Uint8*              output1,
+                      Uint64              out_size)
+{
+    if (alcp_is_error(alcp_digest_init(handle))
+        || (alcp_is_error(alcp_digest_init(handle)))
+        || (alcp_is_error(
+            alcp_digest_update(handle, &fuzz_input[0], InputSize)))
+        || (alcp_is_error(alcp_digest_finalize(handle, output1, out_size)))
+        || (alcp_is_error(alcp_digest_update(handle, &fuzz_input[0], InputSize))
+            || alcp_is_error(alcp_digest_init(handle)))
+        || alcp_is_error(alcp_digest_update(handle, &fuzz_input[0], InputSize))
+        || alcp_is_error(alcp_digest_finalize(handle, output1, out_size))
+        || alcp_is_error(alcp_digest_init(handle))) {
+        std::cout << "Neg lifecycle Test FAIL! "
+                     "Init->Init->Update->Finalize->Update->Init->update->"
+                     "Finalize->Init"
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+TestDigestLifecycle_2(alc_digest_handle_p handle,
+                      const Uint8*        fuzz_input,
+                      Uint64              InputSize,
+                      Uint8*              output1,
+                      Uint64              out_size)
+{
+    if (alcp_is_error(alcp_digest_init(handle))
+        || (alcp_is_error(alcp_digest_init(handle)))
+        || (alcp_is_error(alcp_digest_finalize(handle, output1, out_size)))
+        || (alcp_is_error(
+            alcp_digest_update(handle, &fuzz_input[0], InputSize)))) {
+        std::cout << "Neg lifecycle Test FAIL! "
+                     "Init->Init->Update->Finalize->Update->Init->update->"
+                     "Finalize->Init"
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                  const Uint8*      buf,
                  size_t            len,
-                 bool              TestLifeCycle)
+                 bool              TestNegLifeCycle)
 {
     FuzzedDataProvider stream(buf, len);
 
@@ -63,8 +110,8 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
 
     /* Initializing digest info */
     alc_error_t         err = ALC_ERROR_NONE;
-    alc_digest_handle_p m_handle, m_handle_dup;
-    m_handle = new alc_digest_handle_t;
+    alc_digest_handle_p handle, handle_dup;
+    handle = new alc_digest_handle_t;
 
     Uint32 out_size = sha_mode_len_map[mode];
 
@@ -95,49 +142,37 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
 
     /* allocate context */
     Uint64 context_size = alcp_digest_context_size();
-    m_handle->context   = malloc(context_size);
-    if (m_handle->context == nullptr) {
+    handle->context     = malloc(context_size);
+    if (handle->context == nullptr) {
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         return -1;
     }
     if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        m_handle_dup          = new alc_digest_handle_t;
-        m_handle_dup->context = malloc(context_size);
-        if (m_handle_dup->context == nullptr) {
+        handle_dup          = new alc_digest_handle_t;
+        handle_dup->context = malloc(context_size);
+        if (handle_dup->context == nullptr) {
             std::cout << "Error: Mem alloc for digest dup context" << std::endl;
             return -1;
         }
     }
 
     std::cout << "Running for Input size:" << size_input << std::endl;
-    err = alcp_digest_request(mode, m_handle);
+    err = alcp_digest_request(mode, handle);
     if (alcp_is_error(err)) {
         std::cout << "Error! alcp_digest_request" << std::endl;
         goto dealloc_exit;
     }
 
     /* now test lifecycle FIXME: add cases for SHAKE, context copy, etc */
-    if (TestLifeCycle) {
-        std::cout << "Testing lifecycle" << std::endl;
-        if (alcp_is_error(alcp_digest_init(m_handle))
-            || (alcp_is_error(alcp_digest_update(
-                m_handle, &fuzz_input[0], fuzz_input.size())))
-            || (alcp_is_error(
-                alcp_digest_finalize(m_handle, output1, out_size)))
-            || (alcp_is_error(alcp_digest_update(
-                m_handle, &fuzz_input[0], fuzz_input.size())))) {
-            std::cout << "FAIL! Init-->Update->Finalize->Update" << std::endl;
+    if (TestNegLifeCycle) {
+        if (!TestDigestLifecycle_1(
+                handle, &fuzz_input[0], fuzz_input.size(), output1, out_size))
             goto dealloc_exit;
-        } else if (alcp_is_error(alcp_digest_init(m_handle))
-                   || (alcp_is_error(
-                       alcp_digest_finalize(m_handle, output1, out_size)))
-                   || (alcp_is_error(alcp_digest_update(
-                       m_handle, &fuzz_input[0], fuzz_input.size())))) {
-            std::cout << "Neg Test: FAIL: Init-->Finalize->Update" << std::endl;
+        if (!TestDigestLifecycle_2(
+                handle, &fuzz_input[0], fuzz_input.size(), output1, out_size))
             goto dealloc_exit;
-        }
     } else {
-        err = alcp_digest_init(m_handle);
+        err = alcp_digest_init(handle);
         if (alcp_is_error(err)) {
             std::cout << "Error! alcp_digest_init" << std::endl;
             goto dealloc_exit;
@@ -145,8 +180,7 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         /* call this multiple times in the positive lifecycle tests */
         for (int i = 0; i < digest_update_call_cout; i++) {
             std::cout << "Running digest update for loop:" << i << std::endl;
-            err =
-                alcp_digest_update(m_handle, &fuzz_input[0], fuzz_input.size());
+            err = alcp_digest_update(handle, &fuzz_input[0], fuzz_input.size());
             if (alcp_is_error(err)) {
                 std::cout << "Error! alcp_digest_update" << std::endl;
                 goto dealloc_exit;
@@ -156,18 +190,18 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         /* for shake variants */
         if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
             /* context copy */
-            err = alcp_digest_context_copy(m_handle, m_handle_dup);
+            err = alcp_digest_context_copy(handle, handle_dup);
             if (alcp_is_error(err)) {
                 std::cout << "Error! alcp_digest_context_copy" << std::endl;
                 goto dealloc_exit;
             }
-            err = alcp_digest_shake_squeeze(m_handle_dup, output2, out_size);
+            err = alcp_digest_shake_squeeze(handle_dup, output2, out_size);
             if (alcp_is_error(err)) {
                 std::cout << "Error! alcp_digest_shake_squeeze" << std::endl;
                 goto dealloc_exit;
             }
         }
-        err = alcp_digest_finalize(m_handle, output1, out_size);
+        err = alcp_digest_finalize(handle, output1, out_size);
         if (alcp_is_error(err)) {
             std::cout << "Error! alcp_digest_finalize" << std::endl;
             goto dealloc_exit;
@@ -176,33 +210,33 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
     goto exit;
 
 dealloc_exit:
-    if (m_handle != nullptr) {
-        alcp_digest_finish(m_handle);
-        free(m_handle->context);
-        delete m_handle;
+    if (handle != nullptr) {
+        alcp_digest_finish(handle);
+        free(handle->context);
+        delete handle;
     }
     /* FIXME, what if this was called on an uinitialized handle */
     if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        if (m_handle_dup != nullptr) {
-            alcp_digest_finish(m_handle_dup);
-            free(m_handle_dup->context);
-            delete m_handle_dup;
+        if (handle_dup != nullptr) {
+            alcp_digest_finish(handle_dup);
+            free(handle_dup->context);
+            delete handle_dup;
         }
     }
     return -1;
 
 exit:
-    if (m_handle != nullptr) {
-        alcp_digest_finish(m_handle);
-        free(m_handle->context);
-        delete m_handle;
+    if (handle != nullptr) {
+        alcp_digest_finish(handle);
+        free(handle->context);
+        delete handle;
     }
     /* FIXME, what if this was called on an uinitialized handle */
     if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        if (m_handle_dup != nullptr) {
-            alcp_digest_finish(m_handle_dup);
-            free(m_handle_dup->context);
-            delete m_handle_dup;
+        if (handle_dup != nullptr) {
+            alcp_digest_finish(handle_dup);
+            free(handle_dup->context);
+            delete handle_dup;
         }
     }
     std::cout << "Passed " << sha_mode_len_map[mode]

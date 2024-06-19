@@ -66,7 +66,7 @@ int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                  const Uint8*      buf,
                  size_t            len,
-                 bool              TestLifeCycle);
+                 bool              TestNegLifeCycle);
 int
 ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
               alc_digest_mode_t mode,
