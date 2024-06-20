@@ -28,7 +28,12 @@ include(CMakeParseArguments)
 include(GoogleTest)
 
 function(alcp_add_valgrind_check_test test_name test_binary)
+    message(STATUS "Generating tests to run using Valgrind Memchecks.. checking for valgrind installation")
     find_program(VALGRIND "valgrind")
+    # if no installation found
+    if (NOT VALGRIND)
+        message(FATAL_ERROR "Valgrind installation not found, tests will not work!")
+    endif()
     # add more valgrind options here
     set(VALGRIND_ARGS "--leak-check=full")
     add_test(${test_name}_valgrind ${VALGRIND} ${VALGRIND_ARGS} ${test_binary})
