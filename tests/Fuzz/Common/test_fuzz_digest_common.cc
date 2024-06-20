@@ -50,6 +50,11 @@ std::map<alc_digest_mode_t, std::string> sha_mode_string_map = {
     { ALC_SHAKE_128, "ALC_SHAKE_128" }, { ALC_SHAKE_256, "ALC_SHAKE_256" }
 };
 
+/**
+ * @brief Life cycle testing init -> update -> finalize -> update -> init ->
+ * update -> finalize -> init
+ *
+ */
 bool
 TestDigestLifecycle_1(alc_digest_handle_p handle,
                       const Uint8*        fuzz_input,
@@ -76,6 +81,9 @@ TestDigestLifecycle_1(alc_digest_handle_p handle,
     return true;
 }
 
+/**
+ * @brief Life cycle testing init -> init -> Finalize -> update
+ */
 bool
 TestDigestLifecycle_2(alc_digest_handle_p handle,
                       const Uint8*        fuzz_input,
@@ -97,6 +105,10 @@ TestDigestLifecycle_2(alc_digest_handle_p handle,
     return true;
 }
 
+/**
+ * @brief Life cycle testing init -> finalize -> update -> ctx copy -> squeeze
+ * -> update
+ */
 bool
 TestDigestLifecycle_ctx_copy(alc_digest_handle_p handle,
                              alc_digest_handle_p handle_dup,
@@ -126,6 +138,9 @@ TestDigestLifecycle_ctx_copy(alc_digest_handle_p handle,
     return true;
 }
 
+/**
+ * @brief Function to perform fuzz / lifecycle testing for specific digest mode
+ **/
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                  const Uint8*      buf,
