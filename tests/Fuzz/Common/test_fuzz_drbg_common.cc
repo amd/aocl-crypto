@@ -46,7 +46,7 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType, const Uint8* buf, size_t len)
     std::vector<Uint8> fuzz_custom_entropy =
         stream.ConsumeBytes<Uint8>(size_max_entropy_len);
     std::vector<Uint8> fuzz_custom_nonce =
-        stream.ConsumeBytes<Uint8>(size_max_entropy_len);
+        stream.ConsumeBytes<Uint8>(size_max_nonce_len);
 
     /* FIXME: add other digest modes */
     alc_drbg_handle_t handle;
@@ -67,12 +67,13 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType, const Uint8* buf, size_t len)
                                     .di_sourceinfo = {
                                         .custom_rng_info = {
                                             .entropy = &fuzz_custom_entropy[0],
-                                            .entropylen = size_max_entropy_len,
-                                            .nonce      = &fuzz_custom_nonce[0],
+                                            .entropylen =
+                                                fuzz_custom_entropy.size(),
+                                            .nonce = &fuzz_custom_nonce[0],
                                             .noncelen =
-                                                size_max_nonce_len } } };
-    drbg_info.max_entropy_len   = size_max_entropy_len;
-    drbg_info.max_nonce_len     = size_max_nonce_len;
+                                                fuzz_custom_nonce.size() } } };
+    drbg_info.max_entropy_len   = fuzz_custom_entropy.size();
+    drbg_info.max_nonce_len     = fuzz_custom_nonce.size();
 
     const int cSecurityStrength = 100;
 
@@ -115,14 +116,10 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType, const Uint8* buf, size_t len)
         goto dealloc_exit;
     }
 
+dealloc_exit:
     alcp_drbg_finish(&handle);
-    if (alcp_is_error(err)) {
-        std::cout << "Error alcp_drbg_finish" << std::endl;
-        return -1;
-    }
     goto exit;
 
-dealloc_exit:
     if (handle.ch_context) {
         free(handle.ch_context);
         handle.ch_context = nullptr;

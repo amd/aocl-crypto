@@ -137,25 +137,11 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
     using namespace status;
     Status status = StatusOk();
-    switch (drbgInfo.di_type) {
-        case ALC_DRBG_HMAC:
-            status = HmacDrbgBuilder::build(drbgInfo, ctx);
-            break;
-        case ALC_DRBG_CTR:
-            status = CtrDrbgBuilder::build(drbgInfo, ctx);
-            if (!status.ok()) {
-                return status;
-            }
-            break;
-        default:
-            status.update(InvalidArgument("Unknown MAC Type"));
-            break;
-    }
+
     const alc_rng_source_info_t* rng_source_info =
         &(drbgInfo.di_rng_sourceinfo);
-    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+    std::shared_ptr<IRng> irng;
     if (rng_source_info->custom_rng == false) {
-        std::shared_ptr<IRng> irng;
         switch (rng_source_info->di_sourceinfo.rng_info.ri_source) {
             case ALC_RNG_SOURCE_OS: {
                 irng = std::make_shared<alcp::rng::SystemRng>();
@@ -174,13 +160,16 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
                     "RNG type specified is unknown"));
                 break;
         }
-        status = p_drbg->setRng(irng);
-        if (!status.ok()) {
-            return status;
-        }
+        // status = p_drbg->setRng(irng);
+        // if (!status.ok()) {
+        //     return status;
+        // }
     } else {
         auto* entropy = rng_source_info->di_sourceinfo.custom_rng_info.entropy;
-        auto  entropylen =
+        if (entropy == nullptr) {
+            return status::InvalidArgument("Entropy cant be null\n");
+        }
+        auto entropylen =
             rng_source_info->di_sourceinfo.custom_rng_info.entropylen;
 
         auto nonce    = rng_source_info->di_sourceinfo.custom_rng_info.nonce;
@@ -196,14 +185,37 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
                 "given Entropy,Nonce Lengths");
         }
 
-        auto custom_rng = std::make_shared<alcp::drbg::CustomRng>();
-        custom_rng->setEntropy(entropy_vect);
-        custom_rng->setNonce(nonce_vect);
+        auto customRng = std::make_shared<alcp::drbg::CustomRng>();
+        customRng->setEntropy(entropy_vect);
+        customRng->setNonce(nonce_vect);
+        irng = customRng;
 
-        status = p_drbg->setRng(custom_rng);
-        if (!status.ok()) {
-            return status;
-        }
+        // status = p_drbg->setRng(custom_rng);
+        // if (!status.ok()) {
+        //     return status;
+        // }
+    }
+
+    switch (drbgInfo.di_type) {
+        case ALC_DRBG_HMAC:
+            status = HmacDrbgBuilder::build(drbgInfo, ctx);
+            break;
+        case ALC_DRBG_CTR:
+            status = CtrDrbgBuilder::build(drbgInfo, ctx);
+            if (!status.ok()) {
+                return status;
+            }
+            break;
+        default:
+            status.update(InvalidArgument("Unknown MAC Type"));
+            break;
+    }
+
+    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+
+    status = p_drbg->setRng(irng);
+    if (!status.ok()) {
+        return status;
     }
 
     p_drbg->setEntropyLen(drbgInfo.max_entropy_len);

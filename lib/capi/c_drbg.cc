@@ -97,6 +97,8 @@ alcp_drbg_initialize(alc_drbg_handle_p pDrbgHandle,
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
 
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+    ALCP_BAD_PTR_ERR_RET(p_ctx->m_drbg, err);
+    ALCP_BAD_PTR_ERR_RET(p_ctx->initialize, err);
 
     p_ctx->status = p_ctx->initialize(p_ctx->m_drbg,
                                       cSecurityStrength,
@@ -125,7 +127,8 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
     ALCP_BAD_PTR_ERR_RET(p_Output, err);
 
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
-
+    ALCP_BAD_PTR_ERR_RET(p_ctx->m_drbg, err);
+    ALCP_BAD_PTR_ERR_RET(p_ctx->randomize, err);
     p_ctx->status = p_ctx->randomize(p_ctx->m_drbg,
                                      p_Output,
                                      cOutputLength,
@@ -150,12 +153,18 @@ alcp_drbg_finish(alc_drbg_handle_p pDrbgHandle)
 
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
 
+    if(p_ctx->m_drbg && p_ctx->finish){
+
     p_ctx->status = p_ctx->finish(p_ctx->m_drbg);
+    
     // TODO: Convert status to proper alc_error_t code and return
     if (!p_ctx->status.ok()) {
         err = ALC_ERROR_EXISTS;
     } else {
         err = ALC_ERROR_NONE;
+    }
+    }else{
+        err = ALC_ERROR_EXISTS;
     }
     p_ctx->~Context();
     return err;
