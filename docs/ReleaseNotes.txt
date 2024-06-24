@@ -20,32 +20,57 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 4.2.1
 ---------------------------------------------------------------------------
-AOCL-May2024
+AOCL-June2024
 ---------------------------------------------------------------------------
   - OpenSSL Provider:
-    - Enabled support for Cipher and Digest Algorithms
+    - Enabled support for CMAC, Poly1305, Cipher and Digest Algorithms
     - Various Bug fixes in provider path.
+
   - Cipher:
     - Chacha20: Performance Improvements and bug fixes.
     - Chacha20-Poly1305 Cipher Algorithm.
-    - GCM: Bug fixes and performance improvements
+    - GCM: Bug fixes and performance improvements.
+    - Clean up:
+      - C APIS removed alcp_cipher_aead_encrypt alcp_cipher_aead_decrypt
+      - C APIs encryptUpdate/decryptUpdate modified to encrypt/decrypt
+    - Multi update: support option added for all non aead, gcm and ccm cipher algorithms
+    - Cipher API homogenization
+
   - RSA:
       - Bug fixes in Encrypt & Decrypt algorithms.
-      - Sign & Verify APIs for PSS and PKCS Padding schemes
+      - Sign & Verify APIs for PSS and PKCS Padding schemes.
+      - Bug fixes in reference algorithms on non avx2
+      - Bug fix in PKCS Sign API
+
   - MAC: Bug fixes and performance improvements in HMAC, CMAC and Poly1305
+
+  - Memory errors fixed in Rsa CMAC, GCM and DRBG
+
   - Digest:
       - SHA3 Shake Squeeze,Digest Context Copy support
       - Performance improvements in SHA2, SHA3 algorithms.
+      - Bug fixes in reference algorithm in Squeeze API
+      - Memory alignment fixes in SHA2
+      - Bug fixes in Unit tests
+
   - Tests and Benchmarks:
       - Misaligned pointer tests for all the modules
-      - Fuzz Testing: Initial level of fuzzing framework enabled for few Cipher and Digest modules.
+      - Fuzz Testing: Support for Cipher, Digest, MAC, EC, Rsa and Rng
+      - Lifecycle Tests: Support for Digest and MAC.
       - HMAC: Support for Digest Truncated variants and bug fixes
       - Digest: SHA3 Shake Squeeze and Context copy support in integration tests.
-      - RSA: Test and bench support for Signature generation and verification (PSS)
+      - RSA: Test and bench support for Signature generation and verification (PKCS, PSS Padding)
       - Cleanup and refactoring in all modules.
+      - Crash Fixes, clean up, and improvements in Tests and benchmarks
+  
   - Build system updates:
       - Make test covering all unit tests, all kat and cross tests for all libraries (ipp, openssl)
       - Make test supporting valgrind runs.
-  - Packaging:
+      - Cmake preset files added for configure and build.
+      - Coverage build support for AOCC/clang.
       - Packaging: Compilation issues fixed in all the example sources
+      - Coverity generated errors and warnings fixed all across the example sources.
+      - AOCC5.0, GCC14.1.0 compilation support.
+      - Ninja build support added.
+
   - Bug fixes in dynamic dispatcher.
