@@ -26,4 +26,6 @@
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
 ADD_FUZZ_TARGET(test_fuzz_ecdh_x25519.cc)
+ADD_FUZZ_TARGET(test_fuzz_ecdh_x25519_lifecycle.cc)
+
 

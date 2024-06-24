@@ -75,3 +75,18 @@ ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
               bool              TestNegLifeCycle);
 int
 ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType, const Uint8* buf, size_t len);
+
+int
+ALCP_Fuzz_Rsa_SignVerify(int PaddingMode, const Uint8* buf, size_t len);
+
+int
+ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len);
+
+int
+ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len);
+
+int
+ALCP_Fuzz_Rsa_OAEP(const Uint8* buf, size_t len);
+
+int
+ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifeCycle);

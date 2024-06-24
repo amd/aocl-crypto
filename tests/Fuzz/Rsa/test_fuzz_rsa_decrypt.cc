@@ -31,8 +31,8 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Ec_x25519(Data, Size, false) != 0) {
-        std::cout << "ALCP_Fuzz_Ec_x25519 fuzz test failed" << std::endl;
+    if (ALCP_Fuzz_Rsa_DecryptPvtKey(Data, Size) != 0) {
+        std::cout << "ALCP_Fuzz_Rsa_DecryptPvtKey test failed" << std::endl;
         return -1;
     }
     return 0;
