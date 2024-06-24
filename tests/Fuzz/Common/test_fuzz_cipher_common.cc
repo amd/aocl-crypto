@@ -95,7 +95,7 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_request failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto DEC_ERROR_EXIT;
     }
     err = alcp_cipher_init(handle_decrypt,
                            cinfo.ci_key,
@@ -104,19 +104,19 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
                            fuzz_iv.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_init failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto DEC_ERROR_EXIT;
     }
     err = alcp_cipher_decrypt(
         handle_decrypt, &fuzz_ct[0], &plaintxt[0], fuzz_ct.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_decrypt failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto DEC_ERROR_EXIT;
     }
     std::cout << "PASSED for decrypt for keylen " << cinfo.ci_keyLen
               << std::endl;
-    goto DEALLOC_DEC;
+    goto DEC_EXIT;
 
-DEALLOC_DEC:
+DEC_ERROR_EXIT:
     if (handle_decrypt != nullptr) {
         alcp_cipher_finish(handle_decrypt);
         if (handle_decrypt->ch_context != nullptr) {
@@ -124,7 +124,16 @@ DEALLOC_DEC:
         }
         delete handle_decrypt;
     }
+    return -1;
 
+DEC_EXIT:
+    if (handle_decrypt != nullptr) {
+        alcp_cipher_finish(handle_decrypt);
+        if (handle_decrypt->ch_context != nullptr) {
+            free(handle_decrypt->ch_context);
+        }
+        delete handle_decrypt;
+    }
     return 0;
 }
 
@@ -175,7 +184,7 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_encrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_request failed for encrypt" << std::endl;
-        goto DEALLOC_ENC;
+        goto ENC_ERROR_EXIT;
     }
     err = alcp_cipher_init(handle_encrypt,
                            cinfo.ci_key,
@@ -184,17 +193,17 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len)
                            fuzz_iv.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_init failed" << std::endl;
-        goto DEALLOC_ENC;
+        goto ENC_ERROR_EXIT;
     }
     err = alcp_cipher_encrypt(
         handle_encrypt, plaintxt, &ciphertxt[0], fuzz_pt.size());
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_encrypt failed" << std::endl;
-        goto DEALLOC_ENC;
+        goto ENC_ERROR_EXIT;
     }
-    goto DEALLOC_ENC;
+    goto ENC_EXIT;
 
-DEALLOC_ENC:
+ENC_ERROR_EXIT:
     if (handle_encrypt != nullptr) {
         alcp_cipher_finish(handle_encrypt);
         if (handle_encrypt->ch_context != nullptr) {
@@ -202,7 +211,16 @@ DEALLOC_ENC:
         }
         delete handle_encrypt;
     }
+    return -1;
 
+ENC_EXIT:
+    if (handle_encrypt != nullptr) {
+        alcp_cipher_finish(handle_encrypt);
+        if (handle_encrypt->ch_context != nullptr) {
+            free(handle_encrypt->ch_context);
+        }
+        delete handle_encrypt;
+    }
     return 0;
 }
 
@@ -269,34 +287,44 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_request failed for encrypt "
                   << std::endl;
-        goto DEALLOC_ENC;
+        goto AEAD_ENC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_init(
         handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_init failed" << std::endl;
-        goto DEALLOC_ENC;
+        goto AEAD_ENC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_set_aad(handle_encrypt, ad, adl);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_set_aad failed" << std::endl;
-        goto DEALLOC_ENC;
+        goto AEAD_ENC_ERROR_EXIT;
     }
     err =
         alcp_cipher_aead_encrypt(handle_encrypt, plaintxt, &ciphertxt[0], len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_encrypt failed" << std::endl;
-        goto DEALLOC_ENC;
+        goto AEAD_ENC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_get_tag(handle_encrypt, &tag[0], tagl);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_get_tag failed" << std::endl;
-        goto DEALLOC_ENC;
+        goto AEAD_ENC_ERROR_EXIT;
     }
-    goto DEALLOC_ENC;
+    goto AEAD_ENC_EXIT;
 
-DEALLOC_ENC:
+AEAD_ENC_ERROR_EXIT:
     if (handle_encrypt != nullptr) {
+        if (handle_encrypt->ch_context != nullptr) {
+            free(handle_encrypt->ch_context);
+        }
+        delete handle_encrypt;
+    }
+    return -1;
+
+AEAD_ENC_EXIT:
+    if (handle_encrypt != nullptr) {
+        alcp_cipher_finish(handle_encrypt);
         if (handle_encrypt->ch_context != nullptr) {
             free(handle_encrypt->ch_context);
         }
@@ -363,41 +391,50 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
         cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_request failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto AEAD_DEC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_init(
         handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_init failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto AEAD_DEC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_set_aad(handle_decrypt, &ad[0], adl);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_set_aad failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto AEAD_DEC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_decrypt(
         handle_decrypt, ciphertxt, &plaintxt[0], ct_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_decrypt failed" << std::endl;
-        goto DEALLOC_DEC;
+        goto AEAD_DEC_ERROR_EXIT;
     }
     err = alcp_cipher_aead_get_tag(handle_decrypt, &decrypted_tag[0], size_tag);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_get_tag failed for decrypt" << std::endl;
-        goto DEALLOC_DEC;
+        goto AEAD_DEC_ERROR_EXIT;
     }
     std::cout << "Operation passed for decrypt for keylen " << cinfo.ci_keyLen
               << std::endl;
-    goto DEALLOC_DEC;
+    goto AEAD_DEC_EXIT;
 
-DEALLOC_DEC:
+AEAD_DEC_ERROR_EXIT:
     if (handle_decrypt != nullptr) {
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
         }
         delete handle_decrypt;
     }
+    return -1;
 
+AEAD_DEC_EXIT:
+    if (handle_decrypt != nullptr) {
+        alcp_cipher_finish(handle_decrypt);
+        if (handle_decrypt->ch_context != nullptr) {
+            free(handle_decrypt->ch_context);
+        }
+        delete handle_decrypt;
+    }
     return 0;
 }
