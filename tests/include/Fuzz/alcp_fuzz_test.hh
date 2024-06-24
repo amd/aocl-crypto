@@ -71,6 +71,7 @@ int
 ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
               alc_digest_mode_t mode,
               const Uint8*      buf,
-              size_t            len);
+              size_t            len,
+              bool              TestNegLifeCycle);
 int
 ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType, const Uint8* buf, size_t len);

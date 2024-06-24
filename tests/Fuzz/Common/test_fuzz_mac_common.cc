@@ -55,12 +55,80 @@ std::map<_alc_mac_type, std::string> mac_type_string_map = {
     { ALC_MAC_POLY1305, "POLY1305" },
 };
 
+/**
+ * @brief Life cycle testing
+ Init->Init->Update->Init->Update->Finalize->Finalize->Init->Finalize
+ */
+bool
+TestMacLifecycle_1(alc_mac_handle_t handle,
+                   const Uint8*     fuzz_key,
+                   Uint64           KeySize,
+                   Uint8*           fuzz_input,
+                   Uint64           InputSize,
+                   Uint8*           mac,
+                   Uint64           MacSize,
+                   alc_mac_info_t   macinfo)
+{
+    if (alcp_is_error(alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(
+            alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))
+        || alcp_is_error(
+            alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))
+        || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
+        || alcp_is_error(
+            alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
+        || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
+        || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))) {
+        std::cout << "MAC Neg lifecycle Test! "
+                     "Init->Init->Update->Init->Update->Finalize->Finalize->"
+                     "Init->Finalize->update"
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @brief Life cycle testing
+  "Init->Update->Update->Finalize->Update->"
+ */
+bool
+TestMacLifecycle_2(alc_mac_handle_t handle,
+                   const Uint8*     fuzz_key,
+                   Uint64           KeySize,
+                   Uint8*           fuzz_input,
+                   Uint64           InputSize,
+                   Uint8*           mac,
+                   Uint64           MacSize,
+                   alc_mac_info_t   macinfo)
+{
+    if (alcp_is_error(alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(
+            alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))
+        || alcp_is_error(
+            alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
+        || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))
+        || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
+        || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))) {
+        std::cout << "MAC Neg lifecycle Test! "
+                     "Init->Update->Update->Finalize->Update->"
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
 /* the second argument is relevant only for Hmac*/
 int
 ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
               alc_digest_mode_t mode,
               const Uint8*      buf,
-              size_t            len)
+              size_t            len,
+              bool              TestNegLifeCycle)
 {
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
@@ -69,6 +137,9 @@ ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
     std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
     size_t             size_input = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
+
+    static std::uniform_int_distribution<int> id(1, 50);
+    int                                       mac_update_call_cout = id(rng);
 
     /* for HMAC its sha size, for CMAC and Poly1305, its 16 */
     Uint64 mac_size = 16;
@@ -105,27 +176,51 @@ ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
         macinfo.cmac.ci_mode = ALC_AES_MODE_NONE;
     }
 
-    /* initialize */
-    if (mac_type == ALC_MAC_POLY1305) {
-        err = alcp_mac_init(&handle, &fuzz_key[0], fuzz_key.size(), NULL);
+    /* lifecycle tests*/
+    if (TestNegLifeCycle) {
+        if (!TestMacLifecycle_1(handle,
+                                &fuzz_key[0],
+                                fuzz_key.size(),
+                                &fuzz_input[0],
+                                fuzz_input.size(),
+                                mac,
+                                mac_size,
+                                macinfo)) {
+            goto dealloc;
+        }
+        if (!TestMacLifecycle_2(handle,
+                                &fuzz_key[0],
+                                fuzz_key.size(),
+                                &fuzz_input[0],
+                                fuzz_input.size(),
+                                mac,
+                                mac_size,
+                                macinfo)) {
+            goto dealloc;
+        }
     } else {
+        /* Positive lifecycle fuzz tests */
+        /* Note: For POLY1305, the macinfo is ignored, it can be NULL */
         err = alcp_mac_init(&handle, &fuzz_key[0], fuzz_key.size(), &macinfo);
-    }
-    if (alcp_is_error(err)) {
-        std::cout << "Error! alcp_mac_init" << std::endl;
-        goto dealloc;
-    }
-    /* mac update */
-    err = alcp_mac_update(&handle, &fuzz_input[0], fuzz_input.size());
-    if (alcp_is_error(err)) {
-        std::cout << "Error! alcp_mac_update" << std::endl;
-        goto dealloc;
-    }
-    /* finalize */
-    err = alcp_mac_finalize(&handle, mac, mac_size);
-    if (alcp_is_error(err)) {
-        std::cout << "Error! alcp_mac_finalize" << std::endl;
-        goto dealloc;
+        if (alcp_is_error(err)) {
+            std::cout << "Error! alcp_mac_init" << std::endl;
+            goto dealloc;
+        }
+        /* mac update */
+        for (int i = 0; i < mac_update_call_cout; i++) {
+            err = alcp_mac_update(&handle, &fuzz_input[0], fuzz_input.size());
+            if (alcp_is_error(err)) {
+                std::cout << "Error! alcp_mac_update" << std::endl;
+                goto dealloc;
+            }
+            std::cout << "Called macupdate for iteration:" << i << std::endl;
+        }
+        /* finalize */
+        err = alcp_mac_finalize(&handle, mac, mac_size);
+        if (alcp_is_error(err)) {
+            std::cout << "Error! alcp_mac_finalize" << std::endl;
+            goto dealloc;
+        }
     }
     goto out;
 

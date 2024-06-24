@@ -31,8 +31,9 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Mac(ALC_MAC_CMAC, ALC_SHA2_224, Data, Size, false) != 0) {
-        std::cout << "CMAC fuzz test failed" << std::endl;
+    if (ALCP_Fuzz_Mac(ALC_MAC_POLY1305, ALC_SHA2_224, Data, Size, true) != 0) {
+        std::cout << "ALC_MAC_POLY1305 fuzz negative lifecycle test failed"
+                  << std::endl;
         return -1;
     }
     return 0;
