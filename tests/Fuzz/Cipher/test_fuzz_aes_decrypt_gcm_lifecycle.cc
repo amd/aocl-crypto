@@ -31,11 +31,11 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_AEAD_Cipher_Encrypt(ALC_AES_MODE_CCM, Data, Size, false)
+    if (ALCP_Fuzz_AEAD_Cipher_Decrypt(ALC_AES_MODE_GCM, Data, Size, true)
         != 0) {
-        std::cout
-            << "ALCP_Fuzz_AEAD_Cipher_Encrypt test failed for ALC_AES_MODE_CCM"
-            << std::endl;
+        std::cout << "ALCP_Fuzz_AEAD_Cipher_Decrypt lifecycle test failed for "
+                     "ALC_AES_MODE_GCM"
+                  << std::endl;
         return -1;
     }
     return 0;

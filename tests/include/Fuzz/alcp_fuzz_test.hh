@@ -53,15 +53,30 @@ static std::mt19937       rng{ rd() };
 int
 ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
                               const Uint8*      buf,
-                              size_t            len);
+                              size_t            len,
+                              bool              TestNeglifecycle);
 int
 ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
                               const Uint8*      buf,
-                              size_t            len);
+                              size_t            len,
+                              bool              TestNeglifecycle);
 int
-ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len);
+ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode,
+                         const Uint8*      buf,
+                         size_t            len,
+                         bool              TestNeglifecycle);
 int
-ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode, const Uint8* buf, size_t len);
+ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
+                         const Uint8*      buf,
+                         size_t            len,
+                         bool              TestNeglifecycle);
+
+int
+ALCP_Fuzz_Chacha20(const Uint8* buf, size_t len);
+
+int
+ALCP_Fuzz_Chacha20_Poly1305(const Uint8* buf, size_t len);
+
 int
 ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                  const Uint8*      buf,

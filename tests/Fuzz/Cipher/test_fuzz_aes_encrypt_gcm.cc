@@ -31,7 +31,8 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_AEAD_Cipher_Encrypt(ALC_AES_MODE_GCM, Data, Size) != 0) {
+    if (ALCP_Fuzz_AEAD_Cipher_Encrypt(ALC_AES_MODE_GCM, Data, Size, false)
+        != 0) {
         std::cout
             << "ALCP_Fuzz_AEAD_Cipher_Encrypt test failed for ALC_AES_MODE_GCM"
             << std::endl;
