@@ -57,11 +57,13 @@ EncryptXts(const Uint8* pSrc,
            Uint8*       pIv)
 {
 
-    auto p_key128   = reinterpret_cast<const __m128i*>(pKey);
-    auto p_src256   = reinterpret_cast<const __m256i*>(pSrc);
-    auto p_dest256  = reinterpret_cast<__m256i*>(pDest);
+    auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
+    auto p_src256  = reinterpret_cast<const __m256i*>(pSrc);
+    auto p_dest256 = reinterpret_cast<__m256i*>(pDest);
+#ifdef AES_MULTI_UPDATE
     auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
-    auto p_iv64     = reinterpret_cast<Uint64*>(pIv);
+#endif
+    auto p_iv64 = reinterpret_cast<Uint64*>(pIv);
 
     Uint64 blocks                       = len / Rijndael::cBlockSize;
     Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
@@ -75,7 +77,9 @@ EncryptXts(const Uint8* pSrc,
     // AesEnc_1x256(&extendedIV, p_tweak_key128, nRounds);
 
     __m256i tweakx8[8]; // 8*2 Tweak values stored inside this
+#ifdef AES_MULTI_UPDATE
     __m256i nextTweakBlock;
+#endif
 
     auto p_iv128    = reinterpret_cast<__m128i*>(&extendedIV);
     auto p_tweak128 = reinterpret_cast<__m128i*>(tweakx8);
@@ -206,8 +210,10 @@ EncryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 2 * 3;
+#endif
+    chunk = 2 * 3;
 
     // Encrypting 2*3 source text blocks at a time
     if (blocks >= chunk) {
@@ -246,8 +252,10 @@ EncryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 2 * 2;
+#endif
+    chunk = 2 * 2;
 
     // Encrypting 2*2 source text blocks at a time
     if (blocks >= chunk) {
@@ -279,8 +287,10 @@ EncryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 2;
+#endif
+    chunk = 2;
 
     // Encrypting 2*1 source text blocks at a time
     if (blocks >= chunk) {
@@ -306,7 +316,9 @@ EncryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    nextTweakBlock       = tweakx8[tweak_idx];
+#ifdef AES_MULTI_UPDATE
+    nextTweakBlock = tweakx8[tweak_idx];
+#endif
     __m256i lastTweak    = tweakx8[tweak_idx];
     auto    p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
     auto    p_dest8      = reinterpret_cast<Uint8*>(p_dest256);
@@ -325,9 +337,13 @@ EncryptXts(const Uint8* pSrc,
 
         utils::CopyBytes(p_dest8, p_src_text_1, (16));
 
-        // Swap low and high
+// Swap low and high
+#ifdef AES_MULTI_UPDATE
         nextTweakBlock = _mm256_permute2x128_si256(lastTweak, lastTweak, 0x01);
         lastTweak      = nextTweakBlock;
+#else
+        lastTweak = _mm256_permute2x128_si256(lastTweak, lastTweak, 0x01);
+#endif
     }
 
     if (extra_bytes_in_message_block) {
@@ -355,11 +371,16 @@ EncryptXts(const Uint8* pSrc,
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text8, 16);
 
-        // Swap low and high
+// Swap low and high
+#ifdef AES_MULTI_UPDATE
         nextTweakBlock = _mm256_permute2x128_si256(lastTweak, lastTweak, 0x01);
+#endif
     }
 
+#ifdef AES_MULTI_UPDATE
     _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
+#endif
+
     return ALC_ERROR_NONE;
 }
 
@@ -383,11 +404,13 @@ DecryptXts(const Uint8* pSrc,
            int          nRounds,
            Uint8*       pIv)
 {
-    auto p_key128   = reinterpret_cast<const __m128i*>(pKey);
-    auto p_src256   = reinterpret_cast<const __m256i*>(pSrc);
-    auto p_dest256  = reinterpret_cast<__m256i*>(pDest);
+    auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
+    auto p_src256  = reinterpret_cast<const __m256i*>(pSrc);
+    auto p_dest256 = reinterpret_cast<__m256i*>(pDest);
+#ifdef AES_MULTI_UPDATE
     auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
-    auto p_iv64     = reinterpret_cast<Uint64*>(pIv);
+#endif
+    auto p_iv64 = reinterpret_cast<Uint64*>(pIv);
 
     Uint64 blocks                       = len / Rijndael::cBlockSize;
     Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
@@ -399,7 +422,9 @@ DecryptXts(const Uint8* pSrc,
     // AesEnc_1x256(&extendedIV, p_tweak_key128, nRounds);
 
     __m256i tweakx8[8]; // 8*2 Tweak values stored inside this
+#ifdef AES_MULTI_UPDATE
     __m256i nextTweakBlock;
+#endif
 
     auto p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
     auto p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
@@ -543,8 +568,10 @@ DecryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 3 * 2;
+#endif
+    chunk = 3 * 2;
 
     // Encrypting 2*3 source text blocks at a time
     if (blocks >= chunk) {
@@ -589,8 +616,10 @@ DecryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 2 * 2;
+#endif
+    chunk = 2 * 2;
 
     // Encrypting 2*2 source text blocks at a time
     if (blocks >= chunk) {
@@ -628,8 +657,10 @@ DecryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 2;
+#endif
+    chunk = 2;
 
     // Encrypting 2*1 source text blocks at a time
     if (blocks >= chunk) {
@@ -661,7 +692,9 @@ DecryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    nextTweakBlock        = tweakx8[tweak_idx];
+#ifdef AES_MULTI_UPDATE
+    nextTweakBlock = tweakx8[tweak_idx];
+#endif
     __m256i  lastTweak    = tweakx8[tweak_idx];
     __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
     Uint8*   p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
@@ -687,8 +720,10 @@ DecryptXts(const Uint8* pSrc,
 
         utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
 
-        // Swap low and high
+// Swap low and high
+#ifdef AES_MULTI_UPDATE
         nextTweakBlock = _mm256_permute2x128_si256(lastTweak, lastTweak, 0x01);
+#endif
     }
 
     if (extra_bytes_in_message_block) {
@@ -718,7 +753,9 @@ DecryptXts(const Uint8* pSrc,
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
     }
 
+#ifdef AES_MULTI_UPDATE
     _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
+#endif
     return ALC_ERROR_NONE;
 }
 

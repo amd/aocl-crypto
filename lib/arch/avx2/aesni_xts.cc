@@ -202,7 +202,9 @@ namespace alcp::cipher { namespace aesni {
             utils::CopyBytes((p_dest8 - 16), p_last_messgae_block, 16);
         }
 
+#ifdef AES_MULTI_UPDATE
         _mm_store_si128(p_iv128, current_alpha);
+#endif
         return ALC_ERROR_NONE;
     }
 
@@ -389,7 +391,9 @@ namespace alcp::cipher { namespace aesni {
             utils::CopyBytes((p_dest8 - 16), p_last_src_text, 16);
         }
 
+#ifdef AES_MULTI_UPDATE
         _mm_store_si128(p_iv128, current_alpha);
+#endif
 
         return ALC_ERROR_NONE;
     }

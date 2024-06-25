@@ -161,9 +161,11 @@ XtsCross_KAT(xts_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
                       << std::endl;
         }
 #endif
-        ASSERT_EQ(output, datasetCipherText);
+        ASSERT_EQ(output, datasetCipherText)
+            << "XTS encryption validation failure!";
     } else { // Decrypt
-        // ASSERT_EQ(output, datasetPlainText);
+        ASSERT_EQ(output, datasetPlainText)
+            << "XTS decryption validation failure!";
     }
 }
 
