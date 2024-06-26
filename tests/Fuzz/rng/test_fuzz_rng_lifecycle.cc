@@ -31,8 +31,8 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Drbg(ALC_DRBG_HMAC, Data, Size, false) != 0) {
-        std::cout << "ALCP_Fuzz_Drbg ALC_DRBG_HMAC test failed" << std::endl;
+    if (ALCP_Fuzz_Rng(Data, Size, true) != 0) {
+        std::cout << "ALCP_Fuzz_Rng fuzz lifecycle test failed" << std::endl;
         return -1;
     }
     return 0;

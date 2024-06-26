@@ -31,7 +31,7 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Drbg(ALC_DRBG_CTR, Data, Size) != 0) {
+    if (ALCP_Fuzz_Drbg(ALC_DRBG_CTR, Data, Size, false) != 0) {
         std::cout << "ALCP_Fuzz_Drbg ALC_DRBG_CTR test failed" << std::endl;
         return -1;
     }

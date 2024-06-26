@@ -28,70 +28,12 @@
 
 #include "Fuzz/alcp_fuzz_test.hh"
 
-int
-ALCP_Fuzz_Rng(const Uint8* buf, size_t len)
-{
-    FuzzedDataProvider stream(buf, len);
-
-    size_t             size_output = stream.ConsumeIntegral<Uint16>();
-    std::vector<Uint8> output(size_output, 0);
-
-    std::cout << "Generating for output size: " << size_output << std::endl;
-
-    alc_rng_source_t source = ALC_RNG_SOURCE_OS;
-    alc_rng_handle_t handle;
-    alc_rng_info_t   rng_info;
-
-    rng_info.ri_distrib = ALC_RNG_DISTRIB_UNIFORM;
-    rng_info.ri_source  = source;
-    rng_info.ri_type    = ALC_RNG_TYPE_DISCRETE;
-
-    if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
-        std::cout << "Error: alcp_rng_supported" << std::endl;
-        return -1;
-    }
-    handle.rh_context = malloc(alcp_rng_context_size(&rng_info));
-    if (handle.rh_context == nullptr) {
-        std::cout << "Error: alcp_rng_context_size" << std::endl;
-        return -1;
-    }
-    if (alcp_rng_request(&rng_info, &handle) != ALC_ERROR_NONE) {
-        std::cout << "Error: alcp_rng_request" << std::endl;
-        return -1;
-    }
-    if (alcp_rng_gen_random(&handle, &output[0], size_output)
-        != ALC_ERROR_NONE) {
-        std::cout << "Error: alcp_rng_gen_random" << std::endl;
-        return -1;
-    }
-    if (alcp_rng_finish(&handle) != ALC_ERROR_NONE) {
-        std::cout << "Error: alcp_rng_finish" << std::endl;
-        return -1;
-    }
-    if (handle.rh_context) {
-        free(handle.rh_context);
-        handle.rh_context = nullptr;
-    }
-    /* Check if Output is not null/all zeros */
-    bool zeros =
-        std::all_of(output.begin(), output.end(), [](int i) { return i == 0; });
-    if (output.empty() || zeros) {
-        std::cout << "Error! Empty output generated for size: " << size_output
-                  << std::endl;
-        return -1;
-    }
-    std::cout << "Passed for output size: " << size_output << std::endl;
-
-    return 0;
-}
-
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    int retval = 0;
-    if (ALCP_Fuzz_Rng(Data, Size) != 0) {
+    if (ALCP_Fuzz_Rng(Data, Size, false) != 0) {
         std::cout << "ALCP_Fuzz_Rng fuzz test failed" << std::endl;
-        return retval;
+        return -1;
     }
-    return retval;
+    return 0;
 }
