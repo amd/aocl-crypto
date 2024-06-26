@@ -50,7 +50,8 @@ std::map<alc_cipher_mode_t, std::string> aes_aead_mode_string_map = {
 
 bool
 TestAEADCipherLifecycle_0(alc_cipher_handle_p handle,
-                          alc_cipher_info_t   cinfo,
+                          Uint8*              key,
+                          Uint64              keylen,
                           const Uint8*        plaintxt,
                           Uint8*              ciphertxt,
                           Uint64              pt_len,
@@ -61,8 +62,7 @@ TestAEADCipherLifecycle_0(alc_cipher_handle_p handle,
                           Uint8*              tag,
                           Uint64              tagl)
 {
-    if (alcp_is_error(alcp_cipher_aead_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16))
+    if (alcp_is_error(alcp_cipher_aead_init(handle, key, keylen, iv, ivl))
         || alcp_is_error(alcp_cipher_aead_set_aad(handle, ad, adl))
         || alcp_is_error(
             alcp_cipher_aead_encrypt(handle, plaintxt, &ciphertxt[0], pt_len))
@@ -75,7 +75,8 @@ TestAEADCipherLifecycle_0(alc_cipher_handle_p handle,
 }
 bool
 TestAEADCipherLifecycle_0_dec(alc_cipher_handle_p handle,
-                              alc_cipher_info_t   cinfo,
+                              Uint8*              key,
+                              Uint64              keylen,
                               const Uint8*        ciphertxt,
                               Uint8*              plaintxt,
                               Uint64              pt_len,
@@ -86,8 +87,7 @@ TestAEADCipherLifecycle_0_dec(alc_cipher_handle_p handle,
                               Uint8*              tag,
                               Uint64              tagl)
 {
-    if (alcp_is_error(alcp_cipher_aead_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16))
+    if (alcp_is_error(alcp_cipher_aead_init(handle, key, keylen, iv, ivl))
         || alcp_is_error(alcp_cipher_aead_set_aad(handle, ad, adl))
         || alcp_is_error(
             alcp_cipher_aead_decrypt(handle, ciphertxt, plaintxt, pt_len))
@@ -100,7 +100,8 @@ TestAEADCipherLifecycle_0_dec(alc_cipher_handle_p handle,
 }
 bool
 TestAEADCipherLifecycle_1(alc_cipher_handle_p handle,
-                          alc_cipher_info_t   cinfo,
+                          Uint8*              key,
+                          Uint64              keylen,
                           const Uint8*        plaintxt,
                           Uint8*              ciphertxt,
                           Uint64              pt_len,
@@ -124,7 +125,8 @@ TestAEADCipherLifecycle_1(alc_cipher_handle_p handle,
 }
 bool
 TestAEADCipherLifecycle_1_dec(alc_cipher_handle_p handle,
-                              alc_cipher_info_t   cinfo,
+                              Uint8*              key,
+                              Uint64              keylen,
                               const Uint8*        ciphertxt,
                               Uint8*              plaintxt,
                               Uint64              pt_len,
@@ -149,7 +151,8 @@ TestAEADCipherLifecycle_1_dec(alc_cipher_handle_p handle,
 
 bool
 TestAEADCipherLifecycle_2(alc_cipher_handle_p handle,
-                          alc_cipher_info_t   cinfo,
+                          Uint8*              key,
+                          Uint64              keylen,
                           const Uint8*        ciphertxt,
                           Uint8*              plaintxt,
                           Uint64              pt_len,
@@ -161,8 +164,7 @@ TestAEADCipherLifecycle_2(alc_cipher_handle_p handle,
                           Uint64              tagl)
 {
     /* try to call encrypt on a finished handle */
-    alcp_cipher_aead_init(
-        handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+    alcp_cipher_aead_init(handle, key, keylen, iv, ivl);
     alcp_cipher_aead_set_aad(handle, ad, adl);
     alcp_cipher_aead_encrypt(handle, ciphertxt, plaintxt, pt_len);
     alcp_cipher_finish(handle);
@@ -171,7 +173,8 @@ TestAEADCipherLifecycle_2(alc_cipher_handle_p handle,
 }
 bool
 TestAEADCipherLifecycle_2_dec(alc_cipher_handle_p handle,
-                              alc_cipher_info_t   cinfo,
+                              Uint8*              key,
+                              Uint64              keylen,
                               const Uint8*        ciphertxt,
                               Uint8*              plaintxt,
                               Uint64              pt_len,
@@ -183,8 +186,7 @@ TestAEADCipherLifecycle_2_dec(alc_cipher_handle_p handle,
                               Uint64              tagl)
 {
     /* try to call encrypt on a finished handle */
-    alcp_cipher_aead_init(
-        handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+    alcp_cipher_aead_init(handle, key, keylen, iv, ivl);
     alcp_cipher_aead_set_aad(handle, ad, adl);
     alcp_cipher_aead_encrypt(handle, ciphertxt, plaintxt, pt_len);
     alcp_cipher_finish(handle);
@@ -194,7 +196,8 @@ TestAEADCipherLifecycle_2_dec(alc_cipher_handle_p handle,
 
 bool
 TestCipherLifecycle_0(alc_cipher_handle_p handle,
-                      alc_cipher_info_t   cinfo,
+                      Uint8*              key,
+                      Uint64              keylen,
                       const Uint8*        plaintxt,
                       Uint8*              ciphertxt,
                       Uint64              pt_len,
@@ -202,8 +205,7 @@ TestCipherLifecycle_0(alc_cipher_handle_p handle,
                       Uint64              ivl)
 {
     if (alcp_is_error(alcp_cipher_encrypt(handle, plaintxt, ciphertxt, pt_len))
-        || alcp_is_error(alcp_cipher_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl))) {
+        || alcp_is_error(alcp_cipher_init(handle, key, keylen, iv, ivl))) {
         std::cout << "Neg lifecycle Test FAIL! Encrypt without init->Init"
                   << std::endl;
         return false;
@@ -212,7 +214,8 @@ TestCipherLifecycle_0(alc_cipher_handle_p handle,
 }
 bool
 TestCipherLifecycle_0_dec(alc_cipher_handle_p handle,
-                          alc_cipher_info_t   cinfo,
+                          Uint8*              key,
+                          Uint64              keylen,
                           Uint8*              plaintxt,
                           const Uint8*        ciphertxt,
                           Uint64              pt_len,
@@ -220,8 +223,7 @@ TestCipherLifecycle_0_dec(alc_cipher_handle_p handle,
                           Uint64              ivl)
 {
     if (alcp_is_error(alcp_cipher_decrypt(handle, ciphertxt, plaintxt, pt_len))
-        || alcp_is_error(alcp_cipher_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl))) {
+        || alcp_is_error(alcp_cipher_init(handle, key, keylen, iv, ivl))) {
         std::cout << "Neg lifecycle Test FAIL! Decrypt without init->Init"
                   << std::endl;
         return false;
@@ -231,19 +233,18 @@ TestCipherLifecycle_0_dec(alc_cipher_handle_p handle,
 
 bool
 TestCipherLifecycle_1(alc_cipher_handle_p handle,
-                      alc_cipher_info_t   cinfo,
+                      Uint8*              key,
+                      Uint64              keylen,
                       const Uint8*        plaintxt,
                       Uint8*              ciphertxt,
                       Uint64              pt_len,
                       const Uint8*        iv,
                       Uint64              ivl)
 {
-    if (alcp_is_error(alcp_cipher_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl))
+    if (alcp_is_error(alcp_cipher_init(handle, key, keylen, iv, ivl))
         || alcp_is_error(
             alcp_cipher_encrypt(handle, plaintxt, ciphertxt, pt_len))
-        || alcp_is_error(alcp_cipher_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl))) {
+        || alcp_is_error(alcp_cipher_init(handle, key, keylen, iv, ivl))) {
         std::cout << "Neg lifecycle Test FAIL! Init->Encrypt->Init"
                   << std::endl;
         return false;
@@ -252,19 +253,18 @@ TestCipherLifecycle_1(alc_cipher_handle_p handle,
 }
 bool
 TestCipherLifecycle_1_dec(alc_cipher_handle_p handle,
-                          alc_cipher_info_t   cinfo,
+                          Uint8*              key,
+                          Uint64              keylen,
                           Uint8*              plaintxt,
                           const Uint8*        ciphertxt,
                           Uint64              pt_len,
                           const Uint8*        iv,
                           Uint64              ivl)
 {
-    if (alcp_is_error(alcp_cipher_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl))
+    if (alcp_is_error(alcp_cipher_init(handle, key, keylen, iv, ivl))
         || alcp_is_error(
             alcp_cipher_decrypt(handle, ciphertxt, plaintxt, pt_len))
-        || alcp_is_error(alcp_cipher_init(
-            handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl))) {
+        || alcp_is_error(alcp_cipher_init(handle, key, keylen, iv, ivl))) {
         std::cout << "Neg lifecycle Test FAIL! Init->Decrypt->Init"
                   << std::endl;
         return false;
@@ -274,7 +274,8 @@ TestCipherLifecycle_1_dec(alc_cipher_handle_p handle,
 
 bool
 TestCipherLifecycle_2(alc_cipher_handle_p handle,
-                      alc_cipher_info_t   cinfo,
+                      Uint8*              key,
+                      Uint64              keylen,
                       const Uint8*        plaintxt,
                       Uint8*              ciphertxt,
                       Uint64              pt_len,
@@ -282,7 +283,7 @@ TestCipherLifecycle_2(alc_cipher_handle_p handle,
                       Uint64              ivl)
 {
     /* try to call encrypt on a finished handle */
-    alcp_cipher_init(handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
+    alcp_cipher_init(handle, key, keylen, iv, ivl);
     alcp_cipher_encrypt(handle, plaintxt, ciphertxt, pt_len);
     alcp_cipher_finish(handle);
     alcp_cipher_encrypt(handle, plaintxt, ciphertxt, pt_len);
@@ -290,7 +291,8 @@ TestCipherLifecycle_2(alc_cipher_handle_p handle,
 }
 bool
 TestCipherLifecycle_2_dec(alc_cipher_handle_p handle,
-                          alc_cipher_info_t   cinfo,
+                          Uint8*              key,
+                          Uint64              keylen,
                           Uint8*              plaintxt,
                           const Uint8*        ciphertxt,
                           Uint64              pt_len,
@@ -298,7 +300,7 @@ TestCipherLifecycle_2_dec(alc_cipher_handle_p handle,
                           Uint64              ivl)
 {
     /* try to call encrypt on a finished handle */
-    alcp_cipher_init(handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, ivl);
+    alcp_cipher_init(handle, key, keylen, iv, ivl);
     alcp_cipher_decrypt(handle, ciphertxt, plaintxt, pt_len);
     alcp_cipher_finish(handle);
     alcp_cipher_encrypt(handle, ciphertxt, plaintxt, pt_len);
@@ -324,18 +326,6 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
     std::vector<Uint8> plaintxt(size_ct, 0);
 
-    const Uint8* key     = fuzz_key.data();
-    const Uint32 keySize = fuzz_key.size();
-    const Uint32 pt_len  = fuzz_ct.size();
-    const Uint8* iv      = fuzz_iv.data();
-    const Uint32 ivl     = fuzz_iv.size();
-
-    alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
-                                .ci_mode   = Mode,
-                                .ci_keyLen = fuzz_key.size() * 8,
-                                .ci_key    = key,
-                                .ci_iv     = iv };
-
     alc_cipher_handle_p handle_decrypt = new alc_cipher_handle_t;
 
     /* for decrypt */
@@ -350,10 +340,11 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
         return -1;
     }
 
-    std::cout << "Running for InputSize:" << pt_len << ",KeySize:" << keySize
-              << ",IVLen:" << ivl << std::endl;
+    std::cout << "Running for InputSize:" << fuzz_ct.size()
+              << ",KeySize:" << fuzz_key.size() << ",IVLen:" << fuzz_iv.size()
+              << std::endl;
 
-    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
+    err = alcp_cipher_request(Mode, fuzz_key.size(), handle_decrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_request failed for decrypt" << std::endl;
         goto DEC_ERROR_EXIT;
@@ -361,34 +352,37 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
     if (TestNeglifecycle) {
         if (!TestCipherLifecycle_1_dec(handle_decrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        &plaintxt[0],
                                        &fuzz_ct[0],
                                        fuzz_ct.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size()))
             goto DEC_ERROR_EXIT;
         if (!TestCipherLifecycle_1_dec(handle_decrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        &plaintxt[0],
                                        &fuzz_ct[0],
                                        fuzz_ct.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size()))
             goto DEC_ERROR_EXIT;
         if (!TestCipherLifecycle_0_dec(handle_decrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        &plaintxt[0],
                                        &fuzz_ct[0],
                                        fuzz_ct.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size()))
             goto DEC_ERROR_EXIT;
     } else {
         err = alcp_cipher_init(handle_decrypt,
-                               cinfo.ci_key,
-                               cinfo.ci_keyLen,
-                               cinfo.ci_iv,
+                               &fuzz_key[0],
+                               fuzz_key.size(),
+                               &fuzz_iv[0],
                                fuzz_iv.size());
         if (alcp_is_error(err)) {
             std::cout << "alcp_cipher_init failed for decrypt" << std::endl;
@@ -421,7 +415,7 @@ DEC_EXIT:
         }
         delete handle_decrypt;
     }
-    std::cout << "PASSED for decrypt for keylen " << cinfo.ci_keyLen
+    std::cout << "PASSED for decrypt for keylen " << fuzz_key.size()
               << std::endl;
     return 0;
 }
@@ -445,18 +439,7 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode,
 
     std::vector<Uint8> ciphertxt(size_pt, 0);
 
-    const Uint8* key      = fuzz_key.data();
-    const Uint32 keySize  = fuzz_key.size();
     const Uint8* plaintxt = fuzz_pt.data();
-    const Uint32 pt_len   = fuzz_pt.size();
-    const Uint8* iv       = fuzz_iv.data();
-    const Uint32 ivl      = fuzz_iv.size();
-
-    alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
-                                .ci_mode   = Mode,
-                                .ci_keyLen = fuzz_key.size(),
-                                .ci_key    = key,
-                                .ci_iv     = iv };
 
     alc_cipher_handle_p handle_encrypt = new alc_cipher_handle_t;
 
@@ -470,10 +453,11 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode,
         return -1;
     }
 
-    std::cout << "Running for Inputsize:" << pt_len << ",Keysize:" << keySize
-              << ",IVLen:" << ivl << std::endl;
+    std::cout << "Running for Inputsize:" << fuzz_pt.size()
+              << ",Keysize:" << fuzz_key.size() << ",IVLen:" << fuzz_iv.size()
+              << std::endl;
 
-    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle_encrypt);
+    err = alcp_cipher_request(Mode, fuzz_key.size(), handle_encrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_request failed for encrypt" << std::endl;
         goto ENC_ERROR_EXIT;
@@ -481,34 +465,37 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode,
 
     if (TestNeglifecycle) {
         if (!TestCipherLifecycle_2(handle_encrypt,
-                                   cinfo,
+                                   &fuzz_key[0],
+                                   fuzz_key.size(),
                                    plaintxt,
                                    &ciphertxt[0],
                                    fuzz_pt.size(),
-                                   cinfo.ci_iv,
+                                   &fuzz_iv[0],
                                    fuzz_iv.size()))
             goto ENC_ERROR_EXIT;
         if (!TestCipherLifecycle_1(handle_encrypt,
-                                   cinfo,
+                                   &fuzz_key[0],
+                                   fuzz_key.size(),
                                    plaintxt,
                                    &ciphertxt[0],
                                    fuzz_pt.size(),
-                                   cinfo.ci_iv,
+                                   &fuzz_iv[0],
                                    fuzz_iv.size()))
             goto ENC_ERROR_EXIT;
         if (!TestCipherLifecycle_0(handle_encrypt,
-                                   cinfo,
+                                   &fuzz_key[0],
+                                   fuzz_key.size(),
                                    plaintxt,
                                    &ciphertxt[0],
                                    fuzz_pt.size(),
-                                   cinfo.ci_iv,
+                                   &fuzz_iv[0],
                                    fuzz_iv.size()))
             goto ENC_ERROR_EXIT;
     } else {
         err = alcp_cipher_init(handle_encrypt,
-                               cinfo.ci_key,
-                               cinfo.ci_keyLen,
-                               cinfo.ci_iv,
+                               &fuzz_key[0],
+                               fuzz_key.size(),
+                               &fuzz_iv[0],
                                fuzz_iv.size());
         if (alcp_is_error(err)) {
             std::cout << "alcp_cipher_init failed" << std::endl;
@@ -570,22 +557,14 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
     std::vector<Uint8> ciphertxt(size_pt, 0);
 
     /* Initializing the fuzz seeds  */
-    const Uint8* key      = fuzz_key.data();
     const Uint32 keySize  = fuzz_key.size();
     const Uint8* plaintxt = fuzz_pt.data();
     const Uint32 pt_len   = fuzz_pt.size();
 
-    const Uint8* iv   = fuzz_iv.data();
     Uint32       ivl  = fuzz_iv.size();
     const Uint8* ad   = fuzz_ad.data();
     Uint32       adl  = fuzz_ad.size();
     Uint32       tagl = tag.size();
-
-    alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
-                                .ci_mode   = Mode,
-                                .ci_keyLen = keySize,
-                                .ci_key    = key,
-                                .ci_iv     = iv };
 
     alc_cipher_handle_p handle_encrypt = new alc_cipher_handle_t;
 
@@ -603,8 +582,7 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
               << keySize << " and IV Len " << ivl << " And ADL: " << adl
               << std::endl;
 
-    err = alcp_cipher_aead_request(
-        cinfo.ci_mode, cinfo.ci_keyLen, handle_encrypt);
+    err = alcp_cipher_aead_request(Mode, fuzz_key.size(), handle_encrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_request failed for encrypt "
                   << std::endl;
@@ -613,11 +591,12 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
 
     if (TestNeglifecycle) {
         if (!TestAEADCipherLifecycle_2(handle_encrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        plaintxt,
                                        &ciphertxt[0],
                                        fuzz_pt.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size(),
                                        ad,
                                        adl,
@@ -625,11 +604,12 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
                                        tagl))
             goto AEAD_ENC_ERROR_EXIT;
         if (!TestAEADCipherLifecycle_1(handle_encrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        plaintxt,
                                        &ciphertxt[0],
                                        fuzz_pt.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size(),
                                        ad,
                                        adl,
@@ -637,11 +617,12 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
                                        tagl))
             goto AEAD_ENC_ERROR_EXIT;
         if (!TestAEADCipherLifecycle_0(handle_encrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        plaintxt,
                                        &ciphertxt[0],
                                        fuzz_pt.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size(),
                                        ad,
                                        adl,
@@ -649,8 +630,11 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
                                        tagl))
             goto AEAD_ENC_ERROR_EXIT;
     } else {
-        err = alcp_cipher_aead_init(
-            handle_encrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+        err = alcp_cipher_aead_init(handle_encrypt,
+                                    &fuzz_key[0],
+                                    fuzz_key.size(),
+                                    &fuzz_iv[0],
+                                    fuzz_iv.size());
         if (alcp_is_error(err)) {
             std::cout << "alcp_cipher_aead_init failed" << std::endl;
             goto AEAD_ENC_ERROR_EXIT;
@@ -720,19 +704,11 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
     std::vector<Uint8> plaintxt(size_ct, 0);
 
     /* Initializing the fuzz seeds  */
-    const Uint8* key       = fuzz_key.data();
     const Uint32 keySize   = fuzz_key.size();
     Uint8*       ciphertxt = fuzz_ct.data();
     const Uint32 ct_len    = fuzz_ct.size();
-    const Uint8* iv        = fuzz_iv.data();
     const Uint8* ad        = fuzz_ad.data();
     const Uint32 adl       = fuzz_ad.size();
-
-    alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
-                                .ci_mode   = Mode,
-                                .ci_keyLen = keySize,
-                                .ci_key    = key,
-                                .ci_iv     = iv };
 
     alc_cipher_handle_p handle_decrypt = new alc_cipher_handle_t;
 
@@ -751,8 +727,7 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
     std::cout << "Running for Input size:" << ct_len << ",Key size:" << keySize
               << ",IV Len:" << fuzz_iv.size() << ",ADL:" << adl << std::endl;
 
-    err = alcp_cipher_aead_request(
-        cinfo.ci_mode, cinfo.ci_keyLen, handle_decrypt);
+    err = alcp_cipher_aead_request(Mode, fuzz_key.size(), handle_decrypt);
     if (alcp_is_error(err)) {
         std::cout << "alcp_cipher_aead_request failed for decrypt" << std::endl;
         goto AEAD_DEC_ERROR_EXIT;
@@ -760,11 +735,12 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
     if (TestNeglifecycle) {
         if (!TestAEADCipherLifecycle_2(handle_decrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        &plaintxt[0],
                                        ciphertxt,
                                        fuzz_ct.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size(),
                                        ad,
                                        adl,
@@ -772,11 +748,12 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
                                        size_tag))
             goto AEAD_DEC_ERROR_EXIT;
         if (!TestAEADCipherLifecycle_1(handle_decrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        &plaintxt[0],
                                        ciphertxt,
                                        fuzz_ct.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size(),
                                        ad,
                                        adl,
@@ -784,11 +761,12 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
                                        size_tag))
             goto AEAD_DEC_ERROR_EXIT;
         if (!TestAEADCipherLifecycle_0(handle_decrypt,
-                                       cinfo,
+                                       &fuzz_key[0],
+                                       fuzz_key.size(),
                                        &plaintxt[0],
                                        ciphertxt,
                                        fuzz_ct.size(),
-                                       cinfo.ci_iv,
+                                       &fuzz_iv[0],
                                        fuzz_iv.size(),
                                        ad,
                                        adl,
@@ -796,8 +774,11 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
                                        size_tag))
             goto AEAD_DEC_ERROR_EXIT;
     } else {
-        err = alcp_cipher_aead_init(
-            handle_decrypt, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+        err = alcp_cipher_aead_init(handle_decrypt,
+                                    &fuzz_key[0],
+                                    fuzz_key.size(),
+                                    &fuzz_iv[0],
+                                    fuzz_iv.size());
         if (alcp_is_error(err)) {
             std::cout << "alcp_cipher_aead_init failed for decrypt"
                       << std::endl;
@@ -844,186 +825,6 @@ AEAD_DEC_EXIT:
         delete handle_decrypt;
     }
     std::cout << "Operation passed for AEAD decrypt for keylen "
-              << cinfo.ci_keyLen << std::endl;
-    return 0;
-}
-
-int
-ALCP_Fuzz_Chacha20(const Uint8* buf, size_t len)
-{
-    alc_error_t        err;
-    FuzzedDataProvider stream(buf, len);
-
-    size_t size_key   = stream.ConsumeIntegral<Uint16>(); // key
-    size_t size_input = stream.ConsumeIntegral<Uint16>(); // plaintext
-    size_t size_iv    = stream.ConsumeIntegral<Uint16>(); // IV
-
-    std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
-    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
-    std::vector<Uint8> fuzz_iv    = stream.ConsumeBytes<Uint8>(size_iv);
-
-    std::vector<Uint8> CipherText((Uint32)size_input, 0);
-
-    alc_cipher_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_CHACHA20,
-                                .ci_mode   = ALC_CHACHA20,
-                                .ci_keyLen = fuzz_key.size(),
-                                .ci_key    = &fuzz_key[0],
-                                .ci_iv     = &fuzz_iv[0],
-                                .ci_ivLen  = fuzz_iv.size() };
-
-    alc_cipher_handle_p handle = new alc_cipher_handle_t;
-    handle->ch_context         = malloc(alcp_cipher_context_size());
-
-    if (handle->ch_context == nullptr) {
-        std::cout << "Error: Memory Allocation Failed!" << std::endl;
-        return -1;
-    }
-
-    std::cout << "Running for Input size: " << size_input << " and Key size "
-              << size_key << std::endl;
-
-    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: Unable to Request" << std::endl;
-        goto CHACHA20_ERROR_EXIT;
-    }
-    err = alcp_cipher_init(
-        handle, &fuzz_key[0], fuzz_key.size(), &fuzz_iv[0], fuzz_iv.size());
-    if (alcp_is_error(err)) {
-        free(handle->ch_context);
-        std::cout << "Error: Unable to init" << std::endl;
-        goto CHACHA20_ERROR_EXIT;
-    }
-    err = alcp_cipher_encrypt(
-        handle, &fuzz_input[0], &CipherText[0], fuzz_input.size());
-    if (alcp_is_error(err)) {
-        std::cout << "Error: Unable to encrypt" << std::endl;
-        goto CHACHA20_ERROR_EXIT;
-    }
-    goto CHACHA20_EXIT;
-
-CHACHA20_ERROR_EXIT:
-    if (handle != nullptr) {
-        alcp_cipher_finish(handle);
-        if (handle->ch_context != nullptr) {
-            free(handle->ch_context);
-        }
-        delete handle;
-    }
-    return -1;
-
-CHACHA20_EXIT:
-    if (handle != nullptr) {
-        alcp_cipher_finish(handle);
-        if (handle->ch_context != nullptr) {
-            free(handle->ch_context);
-        }
-        delete handle;
-    }
-    return 0;
-}
-
-int
-ALCP_Fuzz_Chacha20_Poly1305(const Uint8* buf, size_t len)
-{
-    alc_error_t        err;
-    FuzzedDataProvider stream(buf, len);
-
-    size_t size_key   = stream.ConsumeIntegral<Uint16>();
-    size_t size_input = stream.ConsumeIntegral<Uint16>();
-    size_t size_ad    = stream.ConsumeIntegral<Uint16>();
-
-    /* keeping these sizes constant for now */
-    size_t size_iv  = 16;
-    size_t size_tag = 16;
-
-    std::vector<Uint8> fuzz_key   = stream.ConsumeBytes<Uint8>(size_key);
-    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
-    std::vector<Uint8> fuzz_iv    = stream.ConsumeBytes<Uint8>(size_iv);
-    std::vector<Uint8> fuzz_ad    = stream.ConsumeBytes<Uint8>(size_ad);
-
-    std::vector<Uint8> tag(size_tag, 0);
-
-    const Uint8* key        = fuzz_key.data();
-    Uint32       keySize    = fuzz_key.size();
-    const Uint8* input      = fuzz_input.data();
-    Uint32       input_size = fuzz_input.size();
-    const Uint8* iv         = fuzz_iv.data();
-    Uint32       ivl        = fuzz_iv.size();
-    Uint32       tagl       = tag.size();
-    Uint32       adl        = fuzz_ad.size();
-    const Uint8* ad         = fuzz_ad.data();
-
-    std::vector<Uint8> ciphertext(input_size, 0);
-
-    std::cout << "Running for Input size: " << input_size << " and Key size "
-              << keySize << " and IV Len " << ivl << std::endl;
-
-    alc_cipher_aead_info_t cinfo = { .ci_type =
-                                         ALC_CIPHER_TYPE_CHACHA20_POLY1305,
-                                     .ci_mode   = ALC_CHACHA20_POLY1305,
-                                     .ci_keyLen = keySize,
-                                     .ci_key    = key,
-                                     .ci_iv     = iv,
-                                     .ci_ivLen  = ivl };
-
-    alc_cipher_handle_p handle = new alc_cipher_handle_t;
-    handle->ch_context         = malloc(alcp_cipher_aead_context_size());
-    if (!handle->ch_context) {
-        std::cout << "Error in allocating context" << std::endl;
-        return -1;
-    }
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, handle);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_cipher_aead_request" << std::endl;
-        goto CHACHAPOLY_ERROR_EXIT;
-    }
-    err = alcp_cipher_aead_init(handle, key, keySize, iv, ivl);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_cipher_aead_init" << std::endl;
-        goto CHACHAPOLY_ERROR_EXIT;
-    }
-    err = alcp_cipher_aead_set_tag_length(handle, tagl);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_cipher_aead_set_tag_length" << std::endl;
-        goto CHACHAPOLY_ERROR_EXIT;
-    }
-
-    err = alcp_cipher_aead_set_aad(handle, ad, adl);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_cipher_aead_set_aad" << std::endl;
-        goto CHACHAPOLY_ERROR_EXIT;
-    }
-
-    err = alcp_cipher_aead_encrypt(handle, input, &ciphertext[0], input_size);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_cipher_aead_encrypt" << std::endl;
-        goto CHACHAPOLY_ERROR_EXIT;
-    }
-
-    err = alcp_cipher_aead_get_tag(handle, &tag[0], tagl);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_cipher_aead_get_tag" << std::endl;
-        goto CHACHAPOLY_ERROR_EXIT;
-    }
-    goto CHACHAPOLY_EXIT;
-
-CHACHAPOLY_ERROR_EXIT:
-    if (handle != nullptr) {
-        if (handle->ch_context != nullptr) {
-            free(handle->ch_context);
-        }
-        delete handle;
-    }
-    return -1;
-
-CHACHAPOLY_EXIT:
-    if (handle != nullptr) {
-        if (handle->ch_context != nullptr) {
-            free(handle->ch_context);
-        }
-        delete handle;
-    }
-
+              << fuzz_key.size() << std::endl;
     return 0;
 }

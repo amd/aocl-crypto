@@ -31,11 +31,11 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    int retval = 0;
-    if (ALCP_Fuzz_Chacha20_Poly1305(Data, Size) != 0) {
-        std::cout << "ALCP_Fuzz_Chacha20_Poly1305 fuzz test failed"
-                  << std::endl;
-        return retval;
+    if (ALCP_Fuzz_Cipher_Decrypt(ALC_CHACHA20, Data, Size, true) != 0) {
+        std::cout
+            << "ALCP_Fuzz_Chacha20 lifecycle test failed for mode ALC_CHACHA20"
+            << std::endl;
+        return -1;
     }
-    return retval;
+    return 0;
 }

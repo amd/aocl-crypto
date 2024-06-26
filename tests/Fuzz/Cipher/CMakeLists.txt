@@ -50,8 +50,11 @@ ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_siv.cc)
 ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_xts.cc)
 ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_xts.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_chacha20.cc)
-ADD_FUZZ_TARGET(test_fuzz_chacha20-poly1305.cc)
+ADD_FUZZ_TARGET(test_fuzz_encrypt_chacha20.cc)
+ADD_FUZZ_TARGET(test_fuzz_decrypt_chacha20.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_encrypt_chacha20-poly1305.cc)
+ADD_FUZZ_TARGET(test_fuzz_decrypt_chacha20-poly1305.cc)
 
 # Lifecycle test targets
 ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_cbc_lifecycle.cc)
@@ -74,5 +77,11 @@ ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_ccm_lifecycle.cc)
 
 ADD_FUZZ_TARGET(test_fuzz_aes_encrypt_siv_lifecycle.cc)
 ADD_FUZZ_TARGET(test_fuzz_aes_decrypt_siv_lifecycle.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_encrypt_chacha20_lifecycle.cc)
+ADD_FUZZ_TARGET(test_fuzz_decrypt_chacha20_lifecycle.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_encrypt_chacha20-poly1305_lifecycle.cc)
+ADD_FUZZ_TARGET(test_fuzz_decrypt_chacha20-poly1305_lifecycle.cc)
 
 

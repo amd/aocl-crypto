@@ -31,8 +31,10 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Chacha20(Data, Size) != 0) {
-        std::cout << "ALCP_Fuzz_Chacha20 test failed" << std::endl;
+    if (ALCP_Fuzz_Cipher_Decrypt(ALC_CHACHA20, Data, Size, true) != 0) {
+        std::cout
+            << "ALCP_Fuzz_Chacha20 lifecycle test failed for mode ALC_CHACHA20"
+            << std::endl;
         return -1;
     }
     return 0;
