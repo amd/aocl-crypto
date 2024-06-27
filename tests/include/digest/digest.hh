@@ -136,5 +136,4 @@ class DigestBase
     virtual void reset()                                         = 0;
     virtual void finish()                                        = 0;
 };
-};
- // namespace alcp::testing
+} // namespace alcp::testing
