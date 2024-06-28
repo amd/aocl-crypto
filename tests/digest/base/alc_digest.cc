@@ -62,6 +62,8 @@ AlcpDigestBase::init()
         m_handle->context = malloc(alcp_digest_context_size());
     } else if (m_handle->context == nullptr) {
         m_handle->context = malloc(alcp_digest_context_size());
+    } else {
+        alcp_digest_finish(m_handle);
         if (m_handle->context != nullptr) {
             free(m_handle->context);
             m_handle->context = nullptr;
@@ -91,6 +93,7 @@ AlcpDigestBase::init()
 AlcpDigestBase::~AlcpDigestBase()
 {
     if (m_handle != nullptr) {
+        alcp_digest_finish(m_handle);
         if (m_handle->context != nullptr) {
             free(m_handle->context);
             m_handle->context = nullptr;
@@ -196,8 +199,8 @@ AlcpDigestBase::finish()
 {
     alcp_digest_finish(m_handle);
     if (m_handle->context != nullptr) {
-            free(m_handle->context);
-            m_handle->context = nullptr;
-        }
+        free(m_handle->context);
+        m_handle->context = nullptr;
+    }
 }
 } // namespace alcp::testing
