@@ -31,9 +31,10 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Rsa_DecryptPvtKey(Data, Size) != 0) {
-        std::cout << "ALCP_Fuzz_Rsa_DecryptPvtKey test failed" << std::endl;
-        return -1;
+    if (ALCP_Fuzz_Rsa_OAEP(Data, Size, ALCP_TEST_FUZZ_RSA_ENCRYPT, true) != 0) {
+        std::cout << "ALCP_Fuzz_Rsa_OAEP encrypt lifecycle test failed"
+                  << std::endl;
+        return 0;
     }
-    return 0;
+    return -1;
 }

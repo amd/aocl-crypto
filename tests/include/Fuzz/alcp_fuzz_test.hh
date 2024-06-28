@@ -49,6 +49,11 @@ static std::mt19937       rng{ rd() };
 #define ALCP_TEST_RSA_PADDING_PKCS 1
 #define ALCP_TEST_RSA_PADDING_PSS  2
 
+#define ALCP_TEST_FUZZ_RSA_ENCRYPT 1
+#define ALCP_TEST_FUZZ_RSA_DECRYPT 2
+#define ALCP_TEST_FUZZ_RSA_SIGN    3
+#define ALCP_TEST_FUZZ_RSA_VERIFY  4
+
 /* Fuzz functions */
 int
 ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
@@ -89,12 +94,23 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType,
 int
 ALCP_Fuzz_Rng(const Uint8* buf, size_t len, bool TestNeglifecycle);
 int
-ALCP_Fuzz_Rsa_SignVerify(int PaddingMode, const Uint8* buf, size_t len);
+ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
+                         const Uint8* buf,
+                         size_t       len,
+                         int          SignVerify,
+                         bool         TestNegLifeCycle);
 int
-ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len);
+ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf,
+                            size_t       len,
+                            bool         TestNegLifeCycle);
 int
-ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len);
+ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf,
+                            size_t       len,
+                            bool         TestNegLifeCycle);
 int
-ALCP_Fuzz_Rsa_OAEP(const Uint8* buf, size_t len);
+ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
+                   size_t       len,
+                   int          EncDec,
+                   bool         TestNegLifeCycle);
 int
 ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifeCycle);

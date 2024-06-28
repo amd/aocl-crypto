@@ -31,8 +31,14 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
-    if (ALCP_Fuzz_Rsa_EncryptPubKey(Data, Size) != 0) {
-        std::cout << "ALCP_Fuzz_Rsa_EncryptPubKey test failed" << std::endl;
+    if (ALCP_Fuzz_Rsa_SignVerify(ALCP_TEST_RSA_PADDING_PKCS,
+                                 Data,
+                                 Size,
+                                 ALCP_TEST_FUZZ_RSA_VERIFY,
+                                 true)
+        != 0) {
+        std::cout << "ALCP_Fuzz_Rsa PKCS verify lifecycle test failed"
+                  << std::endl;
         return -1;
     }
     return 0;

@@ -25,8 +25,29 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt.cc)
-ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt.cc)
-ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_decrypt_oaep.cc)
-ADD_FUZZ_TARGET(test_fuzz_rsa_sign_verify_pkcs.cc)
-ADD_FUZZ_TARGET(test_fuzz_rsa_sign_verify_pss.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_nopadding.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt_nopadding.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_oaep.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt_oaep.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_sign_pkcs.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_sign_pss.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_verify_pkcs.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_verify_pss.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_nopadding_lifecycle.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt_nopadding_lifecycle.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_oaep_lifecycle.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt_oaep_lifecycle.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_sign_pkcs_lifecycle.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_sign_pss_lifecycle.cc)
+
+ADD_FUZZ_TARGET(test_fuzz_rsa_verify_pkcs_lifecycle.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_verify_pss_lifecycle.cc)
+
+
+
