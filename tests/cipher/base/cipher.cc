@@ -46,6 +46,62 @@ isNonAESCipherType(_alc_cipher_type cipher_type)
     return cipher_type != ALC_CIPHER_TYPE_AES;
 }
 
+/**
+ * returns respective string based on AES modes
+ */
+std::string
+GetModeSTR(alc_cipher_mode_t mode)
+{
+    switch (mode) {
+        case ALC_AES_MODE_ECB:
+            return "ECB";
+        case ALC_AES_MODE_CBC:
+            return "CBC";
+        case ALC_AES_MODE_OFB:
+            return "OFB";
+        case ALC_AES_MODE_CTR:
+            return "CTR";
+        case ALC_AES_MODE_CFB:
+            return "CFB";
+        case ALC_AES_MODE_XTS:
+            return "XTS";
+        case ALC_AES_MODE_GCM:
+            return "GCM";
+        case ALC_AES_MODE_CCM:
+            return "CCM";
+        case ALC_AES_MODE_SIV:
+            return "SIV";
+        case ALC_CHACHA20:
+            return "Chacha20";
+        default:
+            return "";
+    }
+}
+
+/** check if cipher mode is AEAD **/
+bool
+CheckCipherIsAEAD(alc_cipher_mode_t mode)
+{
+    switch (mode) {
+        case ALC_AES_MODE_ECB:
+        case ALC_AES_MODE_CBC:
+        case ALC_AES_MODE_OFB:
+        case ALC_AES_MODE_CTR:
+        case ALC_AES_MODE_CFB:
+        case ALC_AES_MODE_XTS:
+        case ALC_CHACHA20:
+            return false;
+        case ALC_AES_MODE_GCM:
+        case ALC_AES_MODE_CCM:
+        case ALC_AES_MODE_SIV:
+        case ALC_CHACHA20_POLY1305:
+            return true;
+        default:
+            return false;
+    }
+    return false;
+}
+
 // Class ExecRecPlay - FlightRecorder/FlightReplay
 ExecRecPlay::ExecRecPlay()
 {

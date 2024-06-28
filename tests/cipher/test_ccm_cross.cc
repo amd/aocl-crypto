@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,37 +48,37 @@ ExecRecPlay* fr = nullptr;
 /* encrypt tests */
 TEST(AES_ENC_128, CROSS_SMALL_128)
 {
-    AesAeadCrosstest(128, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(128, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
 }
 TEST(AES_ENC_128, CROSS_BIG_128)
 {
-    AesAeadCrosstest(128, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(128, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
 }
 TEST(AES_ENC_256, CROSS_BIG_256)
 {
-    AesAeadCrosstest(256, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
 }
 TEST(AES_ENC_256, CROSS_SMALL_256)
 {
-    AesAeadCrosstest(256, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
 }
 
 /* decrypt tests */
 TEST(AES_DEC_128, CROSS_SMALL_128)
 {
-    AesAeadCrosstest(128, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(128, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
 }
 TEST(AES_DEC_128, CROSS_BIG_128)
 {
-    AesAeadCrosstest(128, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(128, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
 }
 TEST(AES_DEC_256, CROSS_BIG_256)
 {
-    AesAeadCrosstest(256, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(256, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
 }
 TEST(AES_DEC_256, CROSS_SMALL_256)
 {
-    AesAeadCrosstest(256, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(256, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
 }
 
 int

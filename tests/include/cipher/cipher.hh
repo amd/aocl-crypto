@@ -41,6 +41,14 @@ using alcp::testing::utils::parseHexStrToBin;
 bool
 isNonAESCipherType(_alc_cipher_type cipher_type);
 
+/* to check if cipher mode is AEAD */
+bool
+CheckCipherIsAEAD(alc_cipher_mode_t mode);
+
+/* to get cipher mode as a string */
+std::string
+GetModeSTR(alc_cipher_mode_t mode);
+
 // alcp_data_cipher_ex_t
 struct alcp_dc_ex_t
 {
