@@ -23,8 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
+
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)

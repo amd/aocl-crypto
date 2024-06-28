@@ -31,8 +31,13 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 find_package(Threads)
 
+message(STATUS "checking for git-lfs installation")
+    find_program(GITLFS "git-lfs")
+    if (NOT GITLFS)
+        message(FATAL_ERROR "git-lfs installation not found, KAT tests will not run!")
+    endif()
+
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-# SET(COMMON_SRCS ${COMMON_SRCS} PARENT_SCOPE)
 
 SET(LIBS ${LIBS} gtest alcp)
 

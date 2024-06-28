@@ -25,6 +25,7 @@
 
 
 include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
 
 SET(LIBS ${LIBS} gtest alcp)
 
