@@ -39,6 +39,7 @@ typedef struct Context
     void* m_cipher = nullptr;
 
     alc_cipher_data_t m_alcp_cipher_data;
+    Uint8             destructed;
 
     // sw methods
     alc_error_t (*decrypt)(void*        ctx,
@@ -82,7 +83,8 @@ typedef struct Context
     Status status{ StatusOk() };
 
     Context()
-        : decrypt{ nullptr }
+        : destructed{ 0 }
+        , decrypt{ nullptr }
         , encrypt{ nullptr }
         , encryptBlocksXts{ nullptr }
         , decryptBlocksXts{ nullptr }
@@ -91,6 +93,8 @@ typedef struct Context
         , getTag{ nullptr }
         , setTagLength{ nullptr }
         , finish{ nullptr } {};
+
+    ~Context() { destructed = 1; }
 } alcp_cipher_ctx_t;
 
 } // namespace alcp::cipher

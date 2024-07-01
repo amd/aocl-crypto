@@ -808,7 +808,7 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
 AEAD_DEC_ERROR_EXIT:
     if (handle_decrypt != nullptr) {
-        // alcp_cipher_finish(handle_decrypt);
+        alcp_cipher_aead_finish(handle_decrypt);
         if (handle_decrypt->ch_context != nullptr) {
             free(handle_decrypt->ch_context);
         }
