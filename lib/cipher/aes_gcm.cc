@@ -30,6 +30,7 @@
 
 #include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "alcp/utils/compare.hh"
 #include "alcp/utils/cpuid.hh"
 
 #include <immintrin.h>
@@ -150,7 +151,7 @@ GcmGhash::getTag(alc_cipher_data_t* ctx, Uint8* ptag, Uint64 tagLen)
 #if PROVIDER_CHANGES // During decrypt, tag generated should be compared with
                      // input Tag.
     if (!m_isEnc_aes) {
-        if (memcmp(ptag, tagInput, tagLen)) {
+        if (utils::CompareConstTime(ptag, tagInput, tagLen) == 0) {
             // printf("\n Error: Tag mismatch");
             // clear data
             memset(ptag, 0, tagLen);

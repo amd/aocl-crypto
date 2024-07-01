@@ -30,6 +30,15 @@
 #include "alcp/base.hh"
 
 namespace alcp::utils {
+/**
+ * @brief Returns 1 in case of match, else 0
+ *
+ * @tparam comparetype
+ * @param pA  First Buffer
+ * @param pB  Second Buffer
+ * @param len Length of both buffers in bytes
+ * @return Uint8
+ */
 template<typename comparetype = Uint8>
 Uint8
 CompareConstTime(const void* pA, const void* pB, Uint64 len)
