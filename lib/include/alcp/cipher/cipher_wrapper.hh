@@ -222,7 +222,6 @@ namespace aesni {
                          const Uint8*          pKey, // ptr to Key
                          int                   nRounds, // No. of rounds
                          alc_gcm_local_data_t* gcmLocalData,
-                         alc_cipher_data_t*    cipherData,
                          bool                  isEncrypt,
                          Uint64*               pGcmCtxHashSubkeyTable);
 
@@ -363,7 +362,6 @@ namespace vaes512 {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t encryptGcm192(const Uint8*          pPlainText,
@@ -373,7 +371,6 @@ namespace vaes512 {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t encryptGcm256(const Uint8*          pPlainText,
@@ -383,7 +380,6 @@ namespace vaes512 {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm128(const Uint8*          pPlainText,
@@ -393,7 +389,6 @@ namespace vaes512 {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm192(const Uint8*          pPlainText,
@@ -403,7 +398,6 @@ namespace vaes512 {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm256(const Uint8*          pPlainText,
@@ -413,7 +407,6 @@ namespace vaes512 {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
 } // namespace vaes512
@@ -502,7 +495,6 @@ namespace vaes {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t encryptGcm192(const Uint8*          pPlainText,
@@ -512,7 +504,6 @@ namespace vaes {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t encryptGcm256(const Uint8*          pPlainText,
@@ -522,8 +513,8 @@ namespace vaes {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm128(const Uint8*          pPlainText,
                               Uint8*                pCipherText,
@@ -532,7 +523,6 @@ namespace vaes {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm192(const Uint8*          pPlainText,
@@ -542,7 +532,6 @@ namespace vaes {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm256(const Uint8*          pPlainText,
@@ -552,7 +541,6 @@ namespace vaes {
                               const Uint8*          pKey,
                               int                   nRounds,
                               alc_gcm_local_data_t* gcmLocalData,
-                              alc_cipher_data_t*    cipherData,
                               Uint64*               pGcmCtxHashSubkeyTable);
 
     // ctr APIs for vaes

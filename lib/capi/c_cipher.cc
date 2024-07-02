@@ -121,7 +121,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    err = i->encrypt(NULL, pPlainText, pCipherText, len);
+    err = i->encrypt(pPlainText, pCipherText, len);
 
     return err;
 }
@@ -145,7 +145,7 @@ alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
 
     err = ctx->encryptBlocksXts(
-        ctx, pPlainText, pCipherText, currPlainTextLen, startBlockNum);
+        pPlainText, pCipherText, currPlainTextLen, startBlockNum);
 
     return err;
 }
@@ -168,7 +168,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    err = i->decrypt(NULL, pCipherText, pPlainText, len);
+    err = i->decrypt(pCipherText, pPlainText, len);
 
     return err;
 }
@@ -194,7 +194,7 @@ alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     ALCP_BAD_PTR_ERR_RET(ctx->decryptBlocksXts, err);
     err = ctx->decryptBlocksXts(
-        ctx, pCipherText, pPlainText, currCipherTextLen, startBlockNum);
+        pCipherText, pPlainText, currCipherTextLen, startBlockNum);
 
     return err;
 }

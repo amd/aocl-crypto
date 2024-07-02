@@ -45,14 +45,12 @@ namespace alcp { namespace cipher {
     {
       public:
         virtual ~Crypter()                      = default;
-        virtual alc_error_t decrypt(alc_cipher_data_t* ctx,
-                                    const Uint8*       pSrc,
-                                    Uint8*             pDst,
-                                    Uint64             len) = 0;
-        virtual alc_error_t encrypt(alc_cipher_data_t* ctx,
-                                    const Uint8*       pSrt,
-                                    Uint8*             pDrc,
-                                    Uint64             len) = 0;
+        virtual alc_error_t decrypt(const Uint8* pSrc,
+                                    Uint8*       pDst,
+                                    Uint64       len) = 0;
+        virtual alc_error_t encrypt(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       len) = 0;
         virtual alc_error_t finish(const void*) = 0;
     };
 
@@ -73,18 +71,13 @@ namespace alcp { namespace cipher {
     class CipherAuth
     {
       public:
-        virtual ~CipherAuth()                     = default;
-        virtual alc_error_t setAad(alc_cipher_data_t* ctx,
-                                   const Uint8*       pAad,
-                                   Uint64             aadLen) = 0;
-        virtual alc_error_t getTag(alc_cipher_data_t* ctx,
-                                   Uint8*             pTag,
-                                   Uint64             tagLen) = 0;
+        virtual ~CipherAuth()                                        = default;
+        virtual alc_error_t setAad(const Uint8* pAad, Uint64 aadLen) = 0;
+        virtual alc_error_t getTag(Uint8* pTag, Uint64 tagLen)       = 0;
 
         /* setPlaintextLength and setTageLength to be one single api */
         /* setLength(void*ctx, typeofLen, Uint64 len) */
-        virtual alc_error_t setTagLength(alc_cipher_data_t* ctx,
-                                         Uint64             tagLen) = 0;
+        virtual alc_error_t setTagLength(Uint64 tagLen) = 0;
     };
 
     class CipherAEADInterface

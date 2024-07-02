@@ -42,41 +42,32 @@ typedef struct Context
     Uint8             destructed;
 
     // sw methods
-    alc_error_t (*decrypt)(void*        ctx,
-                           const Uint8* pSrc,
-                           Uint8*       pDst,
-                           Uint64       len);
+    alc_error_t (*decrypt)(const Uint8* pSrc, Uint8* pDst, Uint64 len);
 
-    alc_error_t (*encrypt)(void*        ctx,
-                           const Uint8* pSrt,
-                           Uint8*       pDrc,
-                           Uint64       len);
+    alc_error_t (*encrypt)(const Uint8* pSrt, Uint8* pDrc, Uint64 len);
 
-    alc_error_t (*encryptBlocksXts)(void*        ctx,
-                                    const Uint8* pSrt,
+    alc_error_t (*encryptBlocksXts)(const Uint8* pSrt,
                                     Uint8*       pDrc,
                                     Uint64       currPlainTextLen,
                                     Uint64       startBlockNum);
 
-    alc_error_t (*decryptBlocksXts)(void*        ctx,
-                                    const Uint8* pSrt,
+    alc_error_t (*decryptBlocksXts)(const Uint8* pSrt,
                                     Uint8*       pDrc,
                                     Uint64       currCipherTextLen,
                                     Uint64       startBlockNum);
 
-    alc_error_t (*init)(void*        ctx,
-                        const Uint8* pKey,
+    alc_error_t (*init)(const Uint8* pKey,
                         Uint64       keyLen,
                         const Uint8* pIv,
                         Uint64       ivLen);
 
-    alc_error_t (*setAad)(void* ctx, const Uint8* pAad, Uint64 aadLen);
+    alc_error_t (*setAad)(const Uint8* pAad, Uint64 aadLen);
 
-    alc_error_t (*getTag)(void* ctx, Uint8* pTag, Uint64 tagLen);
+    alc_error_t (*getTag)(Uint8* pTag, Uint64 tagLen);
 
-    alc_error_t (*setTagLength)(void* ctx, Uint64 tagLen);
+    alc_error_t (*setTagLength)(Uint64 tagLen);
 
-    alc_error_t (*setPlainTextLength)(void* ctx, Uint64 plainTextLength);
+    alc_error_t (*setPlainTextLength)(Uint64 plainTextLength);
 
     alc_error_t (*finish)(const void*);
 

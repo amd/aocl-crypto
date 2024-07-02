@@ -123,13 +123,9 @@ class GcmAuth
     {}
     ~GcmAuth() {}
 
-    alc_error_t setAad(alc_cipher_data_t* ctx,
-                       const Uint8*       pInput,
-                       Uint64             aadLen) override;
-    alc_error_t getTag(alc_cipher_data_t* ctx,
-                       Uint8*             pTag,
-                       Uint64             tagLen) override;
-    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen) override;
+    alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
+    alc_error_t getTag(Uint8* pTag, Uint64 tagLen) override;
+    alc_error_t setTagLength(Uint64 tagLen) override;
 };
 
 // vaes512 classes

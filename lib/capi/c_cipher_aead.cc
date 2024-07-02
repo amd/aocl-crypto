@@ -111,7 +111,7 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
     auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
 
     // ALCP_BAD_PTR_ERR_RET(i->encrypt, err);
-    err = i->encrypt(NULL, pInput, pOutput, len);
+    err = i->encrypt(pInput, pOutput, len);
 
     return err;
 }
@@ -139,7 +139,7 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
     // status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     // ALCP_BAD_PTR_ERR_RET(i->decrypt, err);
-    err = i->decrypt(NULL, pInput, pOutput, len);
+    err = i->decrypt(pInput, pOutput, len);
 
     return err;
 }
@@ -198,7 +198,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
     // FIXME: Modify setAad to return Status and assign to context status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     // ALCP_BAD_PTR_ERR_RET(i->setAad, err);
-    err = i->setAad(NULL, pInput, aadLen);
+    err = i->setAad(pInput, aadLen);
 
     return err;
 }
@@ -227,7 +227,7 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
     // FIXME: Modify getTag to return Status and assign to context status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     // ALCP_BAD_PTR_ERR_RET(i->getTag, err);
-    err = i->getTag(NULL, pOutput, tagLen);
+    err = i->getTag(pOutput, tagLen);
 
     return err;
 }
@@ -254,7 +254,7 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
     // status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     // ALCP_BAD_PTR_ERR_RET(i->setTagLength, err);
-    err = i->setTagLength(NULL, tagLen);
+    err = i->setTagLength(tagLen);
 
     return err;
 }

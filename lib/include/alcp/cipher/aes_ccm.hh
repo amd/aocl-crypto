@@ -130,16 +130,11 @@ class CcmHash
     {}
     ~CcmHash() {}
 
-    alc_error_t setAad(alc_cipher_data_t* ctx,
-                       const Uint8*       pInput,
-                       Uint64             aadLen) override;
-    alc_error_t getTag(alc_cipher_data_t* ctx,
-                       Uint8*             pOutput,
-                       Uint64             tagLen) override;
-    alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength) override;
+    alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
+    alc_error_t getTag(Uint8* pOutput, Uint64 tagLen) override;
+    alc_error_t setTagLength(Uint64 tagLength) override;
 
-    alc_error_t setPlainTextLength(alc_cipher_data_t* ctx,
-                                   Uint64 len); // used in multiupdate case only
+    alc_error_t setPlainTextLength(Uint64 len); // used in multiupdate case only
 };
 
 // vaes512 classes

@@ -86,7 +86,7 @@ class ALCP_API_EXPORT Xts
                      const Uint8* pIv,
                      Uint64       ivLen) override;
 
-    void tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId);
+    void tweakBlockSet(Uint64 aesBlockId);
 
   private:
     // functions unique to Xts class
@@ -109,27 +109,23 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pPlainText,                     \
-                            Uint8*             pCipherText,                    \
-                            Uint64             len);                                       \
+        alc_error_t encrypt(const Uint8* pPlainText,                           \
+                            Uint8*       pCipherText,                          \
+                            Uint64       len);                                       \
                                                                                \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len);                                       \
+        alc_error_t decrypt(const Uint8* pCipherText,                          \
+                            Uint8*       pPlainText,                           \
+                            Uint64       len);                                       \
                                                                                \
-        Status encryptBlocksXts(alc_cipher_data_t* ctx,                        \
-                                const Uint8*       pSrc,                       \
-                                Uint8*             pDest,                      \
-                                Uint64             currSrcLen,                 \
-                                Uint64             startBlockNum);                         \
+        Status encryptBlocksXts(const Uint8* pSrc,                             \
+                                Uint8*       pDest,                            \
+                                Uint64       currSrcLen,                       \
+                                Uint64       startBlockNum);                         \
                                                                                \
-        Status decryptBlocksXts(alc_cipher_data_t* ctx,                        \
-                                const Uint8*       pSrc,                       \
-                                Uint8*             pDest,                      \
-                                Uint64             currSrcLen,                 \
-                                Uint64             startBlockNum);                         \
+        Status decryptBlocksXts(const Uint8* pSrc,                             \
+                                Uint8*       pDest,                            \
+                                Uint64       currSrcLen,                       \
+                                Uint64       startBlockNum);                         \
     };
 
 // vaes512 classes

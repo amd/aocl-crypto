@@ -86,7 +86,7 @@ Xts::init(const Uint8* pKey,
 }
 
 void
-Xts::tweakBlockSet(alc_cipher_data_t* ctx, Uint64 aesBlockId)
+Xts::tweakBlockSet(Uint64 aesBlockId)
 {
     // FIXME: In future we need to dispatch it correctly
     // m_cipher_key_data.m_xts.m_aes_block_id is the previous block id and
@@ -154,11 +154,8 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
 #if 0
 
 #define CRYPT_BLOCKS_XTS_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)     \
-    Status CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,                    \
-                                    const Uint8*       pinput,                 \
-                                    Uint8*             pOutput,                \
-                                    Uint64             len,                    \
-                                    Uint64             startBlockNum)          \
+    Status CLASS_NAME::WRAPPER_FUNC(                                           \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len, Uint64 startBlockNum) \
                                                                                \
     {                                                                          \
         Status s = StatusOk();                                                 \
@@ -202,10 +199,8 @@ namespace aesni {
 // length check to be converted to generic function for all cipher modes
 #define CRYPT_XTS_WRAPPER_FUNC(                                                        \
     NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                  \
-    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(alc_cipher_data_t* ctx,         \
-                                                       const Uint8* pinput,            \
-                                                       Uint8*       pOutput,           \
-                                                       Uint64       len)               \
+    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                                \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len)                               \
     {                                                                                  \
         alc_error_t err = ALC_ERROR_NONE;                                              \
                                                                                        \

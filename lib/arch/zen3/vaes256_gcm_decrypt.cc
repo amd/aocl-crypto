@@ -75,7 +75,6 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
                              int            nRounds,
                              // gcm specific params
                              alc_gcm_local_data_t* gcmLocalData,
-                             alc_cipher_data_t*    cipherData,
                              int                   remBytes,
                              Uint64*               pGcmCtxHashSubkeyTable)
 {
@@ -392,7 +391,6 @@ decryptGcm128(const Uint8*          pInputText,  // ptr to inputText
               const Uint8*          pKey,    // ptr to Key
               const int             nRounds, // No. of rounds
               alc_gcm_local_data_t* gcmLocalData,
-              alc_cipher_data_t*    cipherData,
               Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -416,7 +414,6 @@ decryptGcm128(const Uint8*          pInputText,  // ptr to inputText
                                                  nRounds,
                                                  // gcm specific params
                                                  gcmLocalData,
-                                                 cipherData,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
 
@@ -431,7 +428,6 @@ decryptGcm192(const Uint8*          pInputText,  // ptr to inputText
               const Uint8*          pKey,    // ptr to Key
               const int             nRounds, // No. of rounds
               alc_gcm_local_data_t* gcmLocalData,
-              alc_cipher_data_t*    cipherData,
               Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -455,7 +451,6 @@ decryptGcm192(const Uint8*          pInputText,  // ptr to inputText
                                                  nRounds,
                                                  // gcm specific params
                                                  gcmLocalData,
-                                                 cipherData,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
 
@@ -470,7 +465,6 @@ decryptGcm256(const Uint8*          pInputText,  // ptr to inputText
               const Uint8*          pKey,    // ptr to Key
               const int             nRounds, // No. of rounds
               alc_gcm_local_data_t* gcmLocalData,
-              alc_cipher_data_t*    cipherData,
               Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -494,7 +488,6 @@ decryptGcm256(const Uint8*          pInputText,  // ptr to inputText
                                                  nRounds,
                                                  // gcm specific params
                                                  gcmLocalData,
-                                                 cipherData,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
 

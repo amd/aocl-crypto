@@ -33,10 +33,8 @@
 namespace alcp::cipher {
 
 #define CHACHA_CRYPT_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)         \
-    alc_error_t CLASS_NAME::WRAPPER_FUNC(alc_cipher_data_t* ctx,               \
-                                         const Uint8*       pInput,            \
-                                         Uint8*             pOutput,           \
-                                         Uint64             len)               \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(                                      \
+        const Uint8* pInput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
         alc_error_t err      = ALC_ERROR_NONE;                                 \
         Uint64      blocks   = len / cMBlockSize;                              \

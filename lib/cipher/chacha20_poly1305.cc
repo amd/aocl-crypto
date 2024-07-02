@@ -56,7 +56,7 @@ namespace vaes512 {
             return err;
         }
         std::fill(m_poly1305_key, m_poly1305_key + 32, 0);
-        err = ChaCha256::encrypt(nullptr, m_poly1305_key, m_poly1305_key, 32);
+        err = ChaCha256::encrypt(m_poly1305_key, m_poly1305_key, 32);
 
         alcp::base::Status s      = Poly1305::init(m_poly1305_key, 32);
         m_len_input_processed.u64 = 0;
@@ -71,11 +71,10 @@ namespace vaes512 {
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t ChaChaPoly::init(alc_cipher_data_t* cipher_data,
-                                 const Uint8*       pKey,
-                                 Uint64             keyLen,
-                                 const Uint8*       pIv,
-                                 Uint64             ivLen)
+    alc_error_t ChaChaPoly::init(const Uint8* pKey,
+                                 Uint64       keyLen,
+                                 const Uint8* pIv,
+                                 Uint64       ivLen)
     {
         alc_error_t err = ALC_ERROR_NONE;
         // FIXME: add ptr check and len checks
@@ -88,17 +87,16 @@ namespace vaes512 {
     }
 
     /* chacha256::encrypt and poly::update to be fused */
-    alc_error_t ChaChaPoly256::encrypt(alc_cipher_data_t* cipher_data,
-                                       const Uint8*       inputBuffer,
-                                       Uint8*             outputBuffer,
-                                       Uint64             bufferLength)
+    alc_error_t ChaChaPoly256::encrypt(const Uint8* inputBuffer,
+                                       Uint8*       outputBuffer,
+                                       Uint64       bufferLength)
     {
 
         alcp::base::Status s{ alcp::base::StatusOk() };
         // set  Counter to 1
         (*(reinterpret_cast<Uint32*>(ChaCha256::m_iv))) += 1;
-        alc_error_t err = ChaCha256::encrypt(
-            nullptr, inputBuffer, outputBuffer, bufferLength);
+        alc_error_t err =
+            ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -142,17 +140,16 @@ namespace vaes512 {
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t ChaChaPoly256::decrypt(alc_cipher_data_t* cipher_data,
-                                       const Uint8*       inputBuffer,
-                                       Uint8*             outputBuffer,
-                                       Uint64             bufferLength)
+    alc_error_t ChaChaPoly256::decrypt(const Uint8* inputBuffer,
+                                       Uint8*       outputBuffer,
+                                       Uint64       bufferLength)
     {
 
         alcp::base::Status s{ alcp::base::StatusOk() };
         // set  Counter to 1
         (*(reinterpret_cast<Uint32*>(ChaCha256::m_iv))) += 1;
-        alc_error_t err = ChaCha256::encrypt(
-            nullptr, inputBuffer, outputBuffer, bufferLength);
+        alc_error_t err =
+            ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -199,9 +196,7 @@ namespace vaes512 {
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t ChaChaPolyAuth::setAad(alc_cipher_data_t* cipher_data,
-                                       const Uint8*       pInput,
-                                       Uint64             len)
+    alc_error_t ChaChaPolyAuth::setAad(const Uint8* pInput, Uint64 len)
     {
         alcp::base::Status s = Poly1305::update(pInput, len);
         if (!s.ok()) {
@@ -211,9 +206,7 @@ namespace vaes512 {
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t ChaChaPolyAuth::getTag(alc_cipher_data_t* cipher_data,
-                                       Uint8*             pOutput,
-                                       Uint64             len)
+    alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
         alcp::base::Status s = Poly1305::finalize(pOutput, len);
         if (!s.ok()) {
@@ -222,8 +215,7 @@ namespace vaes512 {
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t ChaChaPolyAuth::setTagLength(alc_cipher_data_t* cipher_data,
-                                             Uint64             tagLength)
+    alc_error_t ChaChaPolyAuth::setTagLength(Uint64 tagLength)
     {
         if (tagLength != 16) {
             return ALC_ERROR_INVALID_SIZE;

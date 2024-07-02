@@ -69,7 +69,7 @@ main()
     }
 
     // core encrypt
-    err = aesmode->encrypt(NULL, inputText, cipherText, dataLen);
+    err = aesmode->encrypt(inputText, cipherText, dataLen);
     if (err != ALC_ERROR_NONE) {
         printf("\n cipher encrypt failed");
         goto dealloc;
@@ -82,7 +82,7 @@ main()
         goto dealloc;
     }
 
-    err = aesmode->decrypt(NULL, cipherText, outputText, dataLen);
+    err = aesmode->decrypt(cipherText, outputText, dataLen);
     if (err != ALC_ERROR_NONE) {
         printf("\n cipher encrypt failed");
         goto dealloc;

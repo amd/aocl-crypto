@@ -86,13 +86,10 @@ CtrDrbgUpdate(const Uint8  pProvidedData[],
         384; // For key size 256 (Block Size + KeySize = 256+128=384)
 
     // temp = Null.
-    Uint8             temp[cMaxSeedLength];
-    Uint64            temp_size = 0;
-    alc_cipher_data_t cipher_data;
-    cipher_data.alcp_keyLen_in_bytes = cKeyLen;
+    Uint8  temp[cMaxSeedLength];
+    Uint64 temp_size = 0;
 
-    std::unique_ptr<EncryptAes> aes =
-        std::make_unique<EncryptAes>(&cipher_data);
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLen);
 
     aes->setKey(&pKey[0], cKeyLen * 8);
     const Uint32   cAesRounds = aes->getRounds();
@@ -186,11 +183,8 @@ DrbgCtrGenerate(const Uint8  pcAdditionalInput[],
         _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     const __m128i cOneReg128 =
         _mm_setr_epi8(0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    alc_cipher_data_t cipher_data;
-    cipher_data.alcp_keyLen_in_bytes = cKeyLen;
 
-    std::unique_ptr<EncryptAes> aes =
-        std::make_unique<EncryptAes>(&cipher_data);
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLen);
     aes->setKey(&pKey[0], cKeyLen * 8);
     const Uint32 cAesRounds = aes->getRounds();
     auto p_key = reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
@@ -238,12 +232,9 @@ BCC(const Uint8* pcKey,
     // Starting with the leftmost bits of data, split data into n blocks
     // ofencrypt_block outlen bits each, forming block1 to blockn. For i = 1 to
     // n do
-    __m128i           data_reg;
-    alc_cipher_data_t cipher_data;
-    cipher_data.alcp_keyLen_in_bytes = cKeyLength;
+    __m128i data_reg;
 
-    std::unique_ptr<EncryptAes> aes =
-        std::make_unique<EncryptAes>(&cipher_data);
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLength);
     aes->setKey(&pcKey[0], cKeyLength * 8);
     const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =
@@ -338,11 +329,7 @@ BlockCipherDf(const Uint8* pcInputString,
         i++;
     }
 
-    alc_cipher_data_t cipher_data;
-    cipher_data.alcp_keyLen_in_bytes = cKeyLen;
-
-    std::unique_ptr<EncryptAes> aes =
-        std::make_unique<EncryptAes>(&cipher_data);
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLen);
     aes->setKey(&temp[0], cKeyLen * 8);
     // K = leftmost (temp, keylen).
     const Uint32   cAesRounds = aes->getRounds();

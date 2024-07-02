@@ -254,7 +254,7 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
 // class SivHash functions
 
 alc_error_t
-SivHash::getTag(alc_cipher_data_t* ctx, Uint8 out[], Uint64 len)
+SivHash::getTag(Uint8 out[], Uint64 len)
 {
     if (out == nullptr) {
         return ALC_ERROR_INVALID_ARG;
@@ -269,7 +269,7 @@ SivHash::getTag(alc_cipher_data_t* ctx, Uint8 out[], Uint64 len)
 }
 
 alc_error_t
-SivHash::setAad(alc_cipher_data_t* ctx, const Uint8* pAad, Uint64 aadLen)
+SivHash::setAad(const Uint8* pAad, Uint64 aadLen)
 {
     if (pAad == nullptr) {
         printf("\n nullptr ");
@@ -280,7 +280,7 @@ SivHash::setAad(alc_cipher_data_t* ctx, const Uint8* pAad, Uint64 aadLen)
 }
 
 alc_error_t
-SivHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength)
+SivHash::setTagLength(Uint64 tagLength)
 {
     return ALC_ERROR_NONE;
 }
@@ -289,10 +289,7 @@ SivHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength)
 
 // aesni functions
 alc_error_t
-Siv128_aesni::encrypt(alc_cipher_data_t* ctx,
-                      const Uint8*       pPlainText,
-                      Uint8*             pCipherText,
-                      Uint64             len)
+Siv128_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -313,8 +310,7 @@ Siv128_aesni::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 128, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -325,10 +321,7 @@ Siv128_aesni::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv128_aesni::decrypt(alc_cipher_data_t* ctx,
-                      const Uint8*       pCipherText,
-                      Uint8*             pPlainText,
-                      Uint64             len)
+Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -343,11 +336,8 @@ Siv128_aesni::decrypt(alc_cipher_data_t* ctx,
         q[i] = m_iv_aes[i] & q[i];
     }
 
-    // Do the CTR
-    // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
-    // false);
     ctrobj->init(m_key2, 128, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -380,10 +370,7 @@ Siv128_aesni::decrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv192_aesni::encrypt(alc_cipher_data_t* ctx,
-                      const Uint8*       pPlainText,
-                      Uint8*             pCipherText,
-                      Uint64             len)
+Siv192_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -404,8 +391,7 @@ Siv192_aesni::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 192, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -416,10 +402,7 @@ Siv192_aesni::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv192_aesni::decrypt(alc_cipher_data_t* ctx,
-                      const Uint8*       pCipherText,
-                      Uint8*             pPlainText,
-                      Uint64             len)
+Siv192_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -435,7 +418,7 @@ Siv192_aesni::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 192, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -468,10 +451,7 @@ Siv192_aesni::decrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv256_aesni::encrypt(alc_cipher_data_t* ctx,
-                      const Uint8*       pPlainText,
-                      Uint8*             pCipherText,
-                      Uint64             len)
+Siv256_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -492,8 +472,7 @@ Siv256_aesni::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 256, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -504,10 +483,7 @@ Siv256_aesni::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv256_aesni::decrypt(alc_cipher_data_t* ctx,
-                      const Uint8*       pCipherText,
-                      Uint8*             pPlainText,
-                      Uint64             len)
+Siv256_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -523,7 +499,7 @@ Siv256_aesni::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 256, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -557,10 +533,7 @@ Siv256_aesni::decrypt(alc_cipher_data_t* ctx,
 
 // vaes functions
 alc_error_t
-Siv128_vaes::encrypt(alc_cipher_data_t* ctx,
-                     const Uint8*       pPlainText,
-                     Uint8*             pCipherText,
-                     Uint64             len)
+Siv128_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -581,8 +554,7 @@ Siv128_vaes::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 128, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -593,10 +565,7 @@ Siv128_vaes::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv128_vaes::decrypt(alc_cipher_data_t* ctx,
-                     const Uint8*       pCipherText,
-                     Uint8*             pPlainText,
-                     Uint64             len)
+Siv128_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -612,7 +581,7 @@ Siv128_vaes::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 128, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -645,10 +614,7 @@ Siv128_vaes::decrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv192_vaes::encrypt(alc_cipher_data_t* ctx,
-                     const Uint8*       pPlainText,
-                     Uint8*             pCipherText,
-                     Uint64             len)
+Siv192_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -669,8 +635,7 @@ Siv192_vaes::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 192, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -681,10 +646,7 @@ Siv192_vaes::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv192_vaes::decrypt(alc_cipher_data_t* ctx,
-                     const Uint8*       pCipherText,
-                     Uint8*             pPlainText,
-                     Uint64             len)
+Siv192_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -700,7 +662,7 @@ Siv192_vaes::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 192, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -733,10 +695,7 @@ Siv192_vaes::decrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv256_vaes::encrypt(alc_cipher_data_t* ctx,
-                     const Uint8*       pPlainText,
-                     Uint8*             pCipherText,
-                     Uint64             len)
+Siv256_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -757,8 +716,7 @@ Siv256_vaes::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 256, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -769,10 +727,7 @@ Siv256_vaes::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv256_vaes::decrypt(alc_cipher_data_t* ctx,
-                     const Uint8*       pCipherText,
-                     Uint8*             pPlainText,
-                     Uint64             len)
+Siv256_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -788,7 +743,7 @@ Siv256_vaes::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 256, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -822,10 +777,7 @@ Siv256_vaes::decrypt(alc_cipher_data_t* ctx,
 
 // vaes512 functions
 alc_error_t
-Siv128_vaes512::encrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pPlainText,
-                        Uint8*             pCipherText,
-                        Uint64             len)
+Siv128_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -846,8 +798,7 @@ Siv128_vaes512::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 128, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -858,10 +809,7 @@ Siv128_vaes512::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv128_vaes512::decrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pCipherText,
-                        Uint8*             pPlainText,
-                        Uint64             len)
+Siv128_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -877,7 +825,7 @@ Siv128_vaes512::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 128, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -910,10 +858,7 @@ Siv128_vaes512::decrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv192_vaes512::encrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pPlainText,
-                        Uint8*             pCipherText,
-                        Uint64             len)
+Siv192_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -934,8 +879,7 @@ Siv192_vaes512::encrypt(alc_cipher_data_t* ctx,
 
     ctrobj->init(m_key2, 192, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -946,10 +890,7 @@ Siv192_vaes512::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv192_vaes512::decrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pCipherText,
-                        Uint8*             pPlainText,
-                        Uint64             len)
+Siv192_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -965,7 +906,7 @@ Siv192_vaes512::decrypt(alc_cipher_data_t* ctx,
     }
 
     ctrobj->init(m_key2, 192, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -998,10 +939,7 @@ Siv192_vaes512::decrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv256_vaes512::encrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pPlainText,
-                        Uint8*             pCipherText,
-                        Uint64             len)
+Siv256_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
     Status s = StatusOk();
 
@@ -1021,13 +959,12 @@ Siv256_vaes512::encrypt(alc_cipher_data_t* ctx,
     }
 
     // Do the CTR
-    // s = ctrWrapper(ctx, pPlainText, pCipherText, len + m_padLen, q,
+    // s = ctrWrapper( pPlainText, pCipherText, len + m_padLen, q,
     // true);
 
     ctrobj->init(m_key2, 256, q, 16);
 
-    alc_error_t err =
-        ctrobj->encrypt(ctx, pPlainText, pCipherText, len + m_padLen);
+    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);
@@ -1038,10 +975,7 @@ Siv256_vaes512::encrypt(alc_cipher_data_t* ctx,
 }
 
 alc_error_t
-Siv256_vaes512::decrypt(alc_cipher_data_t* ctx,
-                        const Uint8*       pCipherText,
-                        Uint8*             pPlainText,
-                        Uint64             len)
+Siv256_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
     Status      s   = StatusOk();
@@ -1057,10 +991,10 @@ Siv256_vaes512::decrypt(alc_cipher_data_t* ctx,
     }
 
     // Do the CTR
-    // s = ctrWrapper(ctx, pCipherText, pPlainText, len + m_padLen, q,
+    // s = ctrWrapper( pCipherText, pPlainText, len + m_padLen, q,
     // false);
     ctrobj->init(m_key2, 256, q, 16);
-    err = ctrobj->decrypt(ctx, pCipherText, pPlainText, len); //, mac);
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         auto cer = status::EncryptFailed("Encryption Kernel Failed!");
         s.update(cer);

@@ -81,12 +81,6 @@ class Aes : public Rijndael
     Uint32 m_ivLen_max = MAX_CIPHER_IV_SIZE;
     Uint32 m_ivLen_min = 1;
 
-    Aes(alc_cipher_data_t* ctx)
-        : Rijndael()
-    {
-        m_keyLen_in_bytes_aes = ctx->alcp_keyLen_in_bytes;
-    }
-
     Aes(Uint32 keyLen_in_bytes)
         : Rijndael()
     {

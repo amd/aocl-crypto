@@ -54,14 +54,12 @@ static constexpr Uint32 Chacha20Constants[4] = {
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pInput,                         \
-                            Uint8*             pOutput,                        \
-                            Uint64             pInputLen);                                 \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pInput,                         \
-                            Uint8*             pOutput,                        \
-                            Uint64             pInputLen);                                 \
+        alc_error_t encrypt(const Uint8* pInput,                               \
+                            Uint8*       pOutput,                              \
+                            Uint64       pInputLen);                                 \
+        alc_error_t decrypt(const Uint8* pInput,                               \
+                            Uint8*       pOutput,                              \
+                            Uint64       pInputLen);                                 \
     };
 
 class ALCP_API_EXPORT ChaCha20 : public virtual CipherInterface

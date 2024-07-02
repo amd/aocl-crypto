@@ -531,10 +531,7 @@ Rijndael::AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
  *  end
  */
 alc_error_t
-Rijndael::decrypt(alc_cipher_data_t* ctx,
-                  const Uint8*       pSrc,
-                  Uint8*             pDst,
-                  Uint64             len) const
+Rijndael::decrypt(const Uint8* pSrc, Uint8* pDst, Uint64 len) const
 {
 #if 0
     Uint32 nb = cBlockSizeWord;
@@ -679,10 +676,7 @@ Rijndael::getNk() const
 }
 
 alc_error_t
-Rijndael::encrypt(alc_cipher_data_t* ctx,
-                  const Uint8*       pPlaintxt,
-                  Uint8*             pCiphertxt,
-                  Uint64             len) const
+Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
 {
     auto n_words = len / Rijndael::cBlockSizeWord;
 

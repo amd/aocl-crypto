@@ -55,15 +55,13 @@ namespace alcp::cipher {
         ~CHILD_NEW##_##NAMESPACE() = default;                                  \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pPlainText,                     \
-                            Uint8*             pCipherText,                    \
-                            Uint64             len) override;                              \
+        alc_error_t encrypt(const Uint8* pPlainText,                           \
+                            Uint8*       pCipherText,                          \
+                            Uint64       len) override;                              \
                                                                                \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len) override;                              \
+        alc_error_t decrypt(const Uint8* pCipherText,                          \
+                            Uint8*       pPlainText,                           \
+                            Uint64       len) override;                              \
         alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
     };
 
@@ -81,15 +79,13 @@ namespace alcp::cipher {
         ~CHILD_NEW() = default;                                                \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pPlainText,                     \
-                            Uint8*             pCipherText,                    \
-                            Uint64             len) override;                              \
+        alc_error_t encrypt(const Uint8* pPlainText,                           \
+                            Uint8*       pCipherText,                          \
+                            Uint64       len) override;                              \
                                                                                \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len) override;                              \
+        alc_error_t decrypt(const Uint8* pCipherText,                          \
+                            Uint8*       pPlainText,                           \
+                            Uint64       len) override;                              \
         alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
     };
 
@@ -111,14 +107,12 @@ namespace alcp::cipher {
         ~CHILD_NEW##_##NAMESPACE() { delete ctrobj; }                          \
                                                                                \
       public:                                                                  \
-        alc_error_t encrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pInput,                         \
-                            Uint8*             pOutput,                        \
-                            Uint64             len) override;                              \
-        alc_error_t decrypt(alc_cipher_data_t* ctx,                            \
-                            const Uint8*       pCipherText,                    \
-                            Uint8*             pPlainText,                     \
-                            Uint64             len) override;                              \
+        alc_error_t encrypt(const Uint8* pInput,                               \
+                            Uint8*       pOutput,                              \
+                            Uint64       len) override;                              \
+        alc_error_t decrypt(const Uint8* pCipherText,                          \
+                            Uint8*       pPlainText,                           \
+                            Uint64       len) override;                              \
         alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
     };
 
@@ -134,21 +128,15 @@ namespace alcp::cipher {
         {}                                                                     \
         virtual ~CHILD_NEW() = default;                                        \
                                                                                \
-        alc_error_t setAad(alc_cipher_data_t* ctx,                             \
-                           const Uint8*       pInput,                          \
-                           Uint64             aadLen);                                     \
-        alc_error_t setTagLength(alc_cipher_data_t* ctx, Uint64 tagLength);    \
-        alc_error_t getTag(alc_cipher_data_t* ctx,                             \
-                           Uint8*             pOutput,                         \
-                           Uint64             tagLen);                                     \
+        alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);                \
+        alc_error_t setTagLength(Uint64 tagLength);                            \
+        alc_error_t getTag(Uint8* pOutput, Uint64 tagLen);                     \
     };
 
 #define CRYPT_WRAPPER_FUNC(                                                    \
     NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)  \
-    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(alc_cipher_data_t* ctx, \
-                                                       const Uint8* pinput,    \
-                                                       Uint8*       pOutput,   \
-                                                       Uint64       len)       \
+    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         m_isEnc_aes     = IS_ENC;                                              \

@@ -32,9 +32,9 @@ namespace alcp::mac {
 
 struct Context
 {
-    void*             m_mac    = nullptr;
-    void*             m_digest = nullptr;
-    alc_cipher_data_t data     = {};
+    void* m_mac    = nullptr;
+    void* m_digest = nullptr;
+    //    alc_cipher_data_t data     = {};
     Status (*init)(Context*        ctx,
                    const Uint8*    key,
                    Uint64          size,

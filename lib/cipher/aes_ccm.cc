@@ -39,10 +39,8 @@ namespace alcp::cipher {
 
 #define CRYPT_AEAD_WRAPPER_FUNC_N(                                             \
     NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, IS_ENC)                    \
-    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(alc_cipher_data_t* ctx, \
-                                                       const Uint8* pInput,    \
-                                                       Uint8*       pOutput,   \
-                                                       Uint64       len)       \
+    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
+        const Uint8* pInput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
         Status s    = StatusOk();                                              \
         m_isEnc_aes = IS_ENC;                                                  \
@@ -269,7 +267,7 @@ Ccm::setIv(ccm_data_t* ccm_data,
 
 // Auth class definitions
 alc_error_t
-CcmHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
+CcmHash::setTagLength(Uint64 tagLen)
 {
     Status s = StatusOk();
     if (tagLen < 4 || tagLen > 16) {
@@ -282,7 +280,7 @@ CcmHash::setTagLength(alc_cipher_data_t* ctx, Uint64 tagLen)
 }
 
 alc_error_t
-CcmHash::setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len)
+CcmHash::setPlainTextLength(Uint64 len)
 {
     m_plainTextLength      = len;
     m_updatedLength        = 0;
@@ -291,7 +289,7 @@ CcmHash::setPlainTextLength(alc_cipher_data_t* ctx, Uint64 len)
 }
 
 alc_error_t
-CcmHash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
+CcmHash::setAad(const Uint8* pInput, Uint64 aadLen)
 {
 
     m_additionalData    = pInput;
@@ -301,7 +299,7 @@ CcmHash::setAad(alc_cipher_data_t* ctx, const Uint8* pInput, Uint64 aadLen)
 }
 
 alc_error_t
-CcmHash::getTag(alc_cipher_data_t* ctx, Uint8* pOutput, Uint64 tagLen)
+CcmHash::getTag(Uint8* pOutput, Uint64 tagLen)
 {
 #ifdef CCM_MULTI_UPDATE
     Status s = StatusOk();

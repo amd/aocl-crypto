@@ -69,17 +69,17 @@ main()
     }
 
     // core encrypt + auth
-    err = aead->setAad(NULL, aad, 16);
+    err = aead->setAad(aad, 16);
     if (err != ALC_ERROR_NONE) {
         printf("\n cipher setAad failed");
         goto dealloc;
     }
-    err = aead->encrypt(NULL, inputText, cipherText, dataLen);
+    err = aead->encrypt(inputText, cipherText, dataLen);
     if (err != ALC_ERROR_NONE) {
         printf("\n cipher encrypt failed");
         goto dealloc;
     }
-    err = aead->getTag(NULL, tag, 16);
+    err = aead->getTag(tag, 16);
     if (err != ALC_ERROR_NONE) {
         printf("\n cipher tag failed");
         goto dealloc;

@@ -128,7 +128,7 @@ TEST(OFB, BasicEncryption)
 
     ofb->init(&key[0], 128, &iv[0], iv.size());
 
-    ofb->encrypt(NULL, &plainText[0], &output[0], plainText.size());
+    ofb->encrypt(&plainText[0], &output[0], plainText.size());
 
     EXPECT_EQ(cipherText, output);
 }
@@ -143,7 +143,7 @@ TEST(OFB, BasicDecryption)
 
     ofb->init(&key[0], 128, &iv[0], iv.size());
 
-    ofb->decrypt(NULL, &cipherText[0], &output[0], cipherText.size());
+    ofb->decrypt(&cipherText[0], &output[0], cipherText.size());
 
     EXPECT_EQ(plainText, output);
 }
@@ -170,8 +170,7 @@ TEST(OFB, MultiUpdateEncryption)
     }
 
     for (Uint64 i = 0; i < plainText.size() / 16; i++) {
-        err = ofb->encrypt(NULL,
-                           &plainText[0] + i * 16,
+        err = ofb->encrypt(&plainText[0] + i * 16,
                            &output[0] + i * 16,
                            16); // 16 byte chunks
         if (alcp_is_error(err)) {
@@ -201,8 +200,7 @@ TEST(OFB, MultiUpdateDecryption)
     }
 
     for (Uint64 i = 0; i < plainText.size() / 16; i++) {
-        err = ofb->decrypt(
-            NULL, &cipherText[0] + i * 16, &output[0] + i * 16, 16);
+        err = ofb->decrypt(&cipherText[0] + i * 16, &output[0] + i * 16, 16);
         if (alcp_is_error(err)) {
             std::cout << "Decrypt failed!" << std::endl;
         }
@@ -244,7 +242,7 @@ TEST(OFB, RandomEncryptDecryptTest)
         }
 
         s = ofb->encrypt(
-            NULL, &plainTextVect[0], &cipherText_vect[0], plainTextVect.size());
+            &plainTextVect[0], &cipherText_vect[0], plainTextVect.size());
         if (s != ALC_ERROR_NONE) {
             std::cout << "RANDOM_TEST: Encrypt Failure!" << std::endl;
         }
@@ -255,7 +253,7 @@ TEST(OFB, RandomEncryptDecryptTest)
         }
 
         s = ofb->decrypt(
-            NULL, &cipherText_vect[0], &plainTextOut[0], plainTextVect.size());
+            &cipherText_vect[0], &plainTextOut[0], plainTextVect.size());
         if (s != ALC_ERROR_NONE) {
             std::cout << "RANDOM_TEST: Decrypt Failure!" << std::endl;
         }

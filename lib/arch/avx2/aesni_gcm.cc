@@ -139,7 +139,6 @@ gcmBlk(const __m128i*        p_in_x,
        const __m128i*        pkey128,
        int                   nRounds,
        alc_gcm_local_data_t* gcmLocalData,
-       alc_cipher_data_t*    cipherData,
        bool                  isEncrypt,
        int                   remBytes)
 {
@@ -421,7 +420,6 @@ CryptGcm(const Uint8*          pInputText,  // ptr to inputText
          const Uint8*          pKey,        // ptr to Key
          int                   nRounds,     // No. of rounds
          alc_gcm_local_data_t* gcmLocalData,
-         alc_cipher_data_t*    cipherData,
          bool                  isEncrypt,
          Uint64*               pGcmCtxHashSubkeyTable)
 {
@@ -440,7 +438,6 @@ CryptGcm(const Uint8*          pInputText,  // ptr to inputText
            nRounds,
            // gcm specific params
            gcmLocalData,
-           cipherData,
            isEncrypt,
            remBytes);
 

@@ -76,11 +76,10 @@ namespace vaes512 {
         ChaChaPoly(Uint32 keyLen_in_bytes)
             : ChaChaPlusPoly(keyLen_in_bytes){}; /* fixed keyLen*/
         virtual ~ChaChaPoly() = default;
-        alc_error_t init(alc_cipher_data_t* cipher_data,
-                         const Uint8*       pKey,
-                         Uint64             keyLen,
-                         const Uint8*       pIv,
-                         Uint64             ivLen);
+        alc_error_t init(const Uint8* pKey,
+                         Uint64       keyLen,
+                         const Uint8* pIv,
+                         Uint64       ivLen);
     };
 
     AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual CipherAuth);

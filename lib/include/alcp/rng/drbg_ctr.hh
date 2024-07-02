@@ -61,8 +61,8 @@ namespace avx2 {
 class EncryptAes : public cipher::Aes
 {
   public:
-    EncryptAes(alc_cipher_data_t* ctx)
-        : Aes(ctx)
+    EncryptAes(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {}
 
     // FIXME: remove below constructor

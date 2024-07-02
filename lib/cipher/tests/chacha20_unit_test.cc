@@ -90,8 +90,7 @@ TEST(Chacha20, KeyStream)
     ref::ChaCha256 chacha20_obj;
     chacha20_obj.setKey(key, sizeof(key));
     chacha20_obj.setIv(iv, sizeof(iv));
-    chacha20_obj.encrypt(
-        nullptr, &key_stream[0], &key_stream[0], key_stream.size());
+    chacha20_obj.encrypt(&key_stream[0], &key_stream[0], key_stream.size());
 
     EXPECT_EQ(key_stream, expected_key_stream);
 }
@@ -134,13 +133,12 @@ TEST(Chacha20, Encrypt)
 
     chacha20_obj_enc.setKey(key, sizeof(key));
     chacha20_obj_enc.setIv(iv, sizeof(iv));
-    chacha20_obj_enc.encrypt(
-        nullptr, &plaintext[0], &output[0], plaintext.size());
+    chacha20_obj_enc.encrypt(&plaintext[0], &output[0], plaintext.size());
     ASSERT_EQ(output, expected_output);
     chacha20_obj_dec.setKey(key, sizeof(key));
     chacha20_obj_dec.setIv(iv, sizeof(iv));
     chacha20_obj_dec.decrypt(
-        nullptr, &output[0], &decrypted_plaintext[0], plaintext.size());
+        &output[0], &decrypted_plaintext[0], plaintext.size());
     EXPECT_EQ(decrypted_plaintext, plaintext);
 }
 
@@ -241,13 +239,12 @@ TEST(Chacha20, Encrypt_MultipleBytes)
     chacha20_obj_dec.setKey(key, sizeof(key));
     chacha20_obj_dec.setIv(iv, sizeof(iv));
     for (Uint64 i = 0; i < plaintext.size(); i++) {
-        chacha20_obj_enc.encrypt(nullptr, &plaintext[0], &output[0], i);
+        chacha20_obj_enc.encrypt(&plaintext[0], &output[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
             << "Failed to Encrypt block size " << i;
-        chacha20_obj_dec.decrypt(
-            nullptr, &output[0], &decrypted_plaintext[0], i);
+        chacha20_obj_dec.decrypt(&output[0], &decrypted_plaintext[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
@@ -274,8 +271,7 @@ TEST(Chacha20, PerformanceTest)
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha20_obj.encrypt(
-            nullptr, &plaintext[0], &ciphertext[0], plaintext.size());
+        chacha20_obj.encrypt(&plaintext[0], &ciphertext[0], plaintext.size());
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"
