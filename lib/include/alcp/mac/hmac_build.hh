@@ -144,6 +144,9 @@ static Status
 __build_with_copy_hmac(Context* srcCtx, Context* destCtx)
 {
     using namespace digest;
+    if (!srcCtx->m_digest) {
+        return status::InternalError("Digest cannot be nullptr");
+    }
     auto hmac_algo = new Hmac(*reinterpret_cast<Hmac*>(srcCtx->m_mac));
 
     IDigest* src_digest  = static_cast<digest::IDigest*>(srcCtx->m_digest);

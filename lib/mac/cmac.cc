@@ -42,7 +42,17 @@ Cmac::Cmac()
     setMode(ALC_AES_MODE_NONE);
 }
 
-Cmac::Cmac(const Cmac& cmac) {}
+Cmac::Cmac(const Cmac& cmac)
+{
+    utils::CopyBytes(m_k1, cmac.m_k1, cAESBlockSize);
+    utils::CopyBytes(m_k2, cmac.m_k2, cAESBlockSize);
+    m_encrypt_keys = cmac.m_cipher_key_data.m_enc_key;
+    utils::CopyBytes(m_buff, cmac.m_buff, cAESBlockSize);
+    m_buff_offset = cmac.m_buff_offset;
+    utils::CopyBytes(m_buffEnc, cmac.m_buffEnc, cAESBlockSize);
+    m_pBuffEnc  = reinterpret_cast<Uint8*>(m_buffEnc);
+    m_finalized = cmac.m_finalized;
+}
 
 Cmac::~Cmac()
 {

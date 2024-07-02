@@ -82,6 +82,22 @@ __cmac_wrapperReset(void* cmac)
     return p_cmac->reset();
 }
 
+static Status
+__cmac_build_with_copy(Context* srcCtx, Context* destCtx)
+{
+    auto cmac = new Cmac(*reinterpret_cast<Cmac*>(srcCtx->m_mac));
+
+    destCtx->m_mac = static_cast<void*>(cmac);
+
+    destCtx->init      = srcCtx->init;
+    destCtx->update    = srcCtx->update;
+    destCtx->finalize  = srcCtx->finalize;
+    destCtx->finish    = srcCtx->finish;
+    destCtx->reset     = srcCtx->reset;
+    destCtx->duplicate = srcCtx->duplicate;
+    return StatusOk();
+}
+
 Status
 CmacBuilder::build(Context* ctx)
 {
@@ -97,7 +113,7 @@ CmacBuilder::build(Context* ctx)
     ctx->finalize  = __cmac_wrapperFinalize;
     ctx->finish    = __cmac_wrapperFinish;
     ctx->reset     = __cmac_wrapperReset;
-    ctx->duplicate = nullptr;
+    ctx->duplicate = __cmac_build_with_copy;
     return status;
 }
 
