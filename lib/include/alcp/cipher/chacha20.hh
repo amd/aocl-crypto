@@ -62,7 +62,7 @@ static constexpr Uint32 Chacha20Constants[4] = {
                             Uint64       pInputLen);                                 \
     };
 
-class ALCP_API_EXPORT ChaCha20 : public virtual CipherInterface
+class ALCP_API_EXPORT ChaCha20 : public virtual iCipher
 {
     // ChaCha256 should be able to access this
   protected:
@@ -93,12 +93,12 @@ class ALCP_API_EXPORT ChaCha20 : public virtual CipherInterface
 };
 
 namespace vaes512 {
-    CIPHER_CLASS_GEN_(ChaCha256, ChaCha20, virtual CipherInterface, 256 / 8)
+    CIPHER_CLASS_GEN_(ChaCha256, ChaCha20, virtual iCipher, 256 / 8)
 
 } // namespace vaes512
 
 namespace ref {
-    CIPHER_CLASS_GEN_(ChaCha256, ChaCha20, virtual CipherInterface, 256 / 8)
+    CIPHER_CLASS_GEN_(ChaCha256, ChaCha20, virtual iCipher, 256 / 8)
 } // namespace ref
 
 } // namespace alcp::cipher

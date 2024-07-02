@@ -52,7 +52,7 @@ main()
     Uint8* aad        = new Uint8[16];
     Uint8* tag        = new Uint8[16];
 
-    auto alcpCipher = new CipherFactory<CipherAEADInterface>;
+    auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead = alcpCipher->create("aes-gcm-192", CpuCipherFeatures::eVaes512);
 
     if (aead == nullptr) {

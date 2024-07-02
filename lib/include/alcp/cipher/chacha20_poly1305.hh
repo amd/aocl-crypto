@@ -86,7 +86,7 @@ namespace vaes512 {
 
     CIPHER_CLASS_GEN_(ChaChaPoly256,
                       ChaChaPolyAuth,
-                      virtual CipherAEADInterface,
+                      virtual iCipherAead,
                       256 / 8);
 
 } // namespace vaes512

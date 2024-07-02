@@ -48,7 +48,7 @@ namespace alcp::cipher {
  */
 class ALCP_API_EXPORT Xts
     : public Aes
-    , public virtual CipherInterface
+    , public virtual iCipher
 {
   public:
     Uint8* m_pIv_xts;
@@ -129,15 +129,15 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
     };
 
 // vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Xts128, Xts, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Xts256, Xts, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Xts128, Xts, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Xts256, Xts, virtual iCipher, 256 / 8)
 
 // vaes classes
-CIPHER_CLASS_GEN_N(vaes, Xts128, Xts, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Xts256, Xts, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(vaes, Xts128, Xts, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Xts256, Xts, virtual iCipher, 256 / 8)
 
 // aesni classes
-CIPHER_CLASS_GEN_N(aesni, Xts128, Xts, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Xts256, Xts, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(aesni, Xts128, Xts, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Xts256, Xts, virtual iCipher, 256 / 8)
 
 } // namespace alcp::cipher

@@ -31,7 +31,8 @@
 #include "config.h"
 
 #include "alcp/base.hh"
-#include "alcp/cipher_aead.h"
+#include "alcp/cipher.h"
+#include "alcp/error.h"
 
 #include <array>
 #include <cstdint>
@@ -54,11 +55,11 @@ namespace alcp { namespace cipher {
         virtual alc_error_t finish(const void*) = 0;
     };
 
-    class CipherInterface : public Crypter
+    class iCipher : public Crypter
     {
 
       public:
-        virtual ~CipherInterface() = default;
+        virtual ~iCipher() = default;
 
         // Set key & iv
         virtual alc_error_t init(const Uint8* pKey,
@@ -80,13 +81,13 @@ namespace alcp { namespace cipher {
         virtual alc_error_t setTagLength(Uint64 tagLen) = 0;
     };
 
-    class CipherAEADInterface
-        : public virtual CipherInterface // cipherInterface class
+    class iCipherAead
+        : public virtual iCipher    // cipherInterface class
         , public virtual CipherAuth // authenication class - optional based on
                                     // cipher mode
     {
       public:
-        virtual ~CipherAEADInterface() = default;
+        virtual ~iCipherAead() = default;
     };
 
 }} // namespace alcp::cipher

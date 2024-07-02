@@ -54,7 +54,7 @@ using utils::CpuId;
 
 class ALCP_API_EXPORT Siv
     : public Aes
-    , public virtual CipherInterface
+    , public virtual iCipher
 {
   public:
     alc_error_t init(const Uint8* pKey,
@@ -115,26 +115,26 @@ class SivHash
 // Declare AEAD Classes
 // vaes512 classes
 CIPHER_CLASS_GEN_DOUBLE(
-    vaes512, Siv128, Ctr128, SivHash, virtual CipherAEADInterface, 128 / 8);
+    vaes512, Siv128, Ctr128, SivHash, virtual iCipherAead, 128 / 8);
 CIPHER_CLASS_GEN_DOUBLE(
-    vaes512, Siv192, Ctr192, SivHash, virtual CipherAEADInterface, 192 / 8);
+    vaes512, Siv192, Ctr192, SivHash, virtual iCipherAead, 192 / 8);
 CIPHER_CLASS_GEN_DOUBLE(
-    vaes512, Siv256, Ctr256, SivHash, virtual CipherAEADInterface, 256 / 8);
+    vaes512, Siv256, Ctr256, SivHash, virtual iCipherAead, 256 / 8);
 
 // vaes classes
 CIPHER_CLASS_GEN_DOUBLE(
-    vaes, Siv128, Ctr128, SivHash, virtual CipherAEADInterface, 128 / 8);
+    vaes, Siv128, Ctr128, SivHash, virtual iCipherAead, 128 / 8);
 CIPHER_CLASS_GEN_DOUBLE(
-    vaes, Siv192, Ctr192, SivHash, virtual CipherAEADInterface, 192 / 8);
+    vaes, Siv192, Ctr192, SivHash, virtual iCipherAead, 192 / 8);
 CIPHER_CLASS_GEN_DOUBLE(
-    vaes, Siv256, Ctr256, SivHash, virtual CipherAEADInterface, 256 / 8);
+    vaes, Siv256, Ctr256, SivHash, virtual iCipherAead, 256 / 8);
 
 // aesni classes
 CIPHER_CLASS_GEN_DOUBLE(
-    aesni, Siv128, Ctr128, SivHash, virtual CipherAEADInterface, 128 / 8);
+    aesni, Siv128, Ctr128, SivHash, virtual iCipherAead, 128 / 8);
 CIPHER_CLASS_GEN_DOUBLE(
-    aesni, Siv192, Ctr192, SivHash, virtual CipherAEADInterface, 192 / 8);
+    aesni, Siv192, Ctr192, SivHash, virtual iCipherAead, 192 / 8);
 CIPHER_CLASS_GEN_DOUBLE(
-    aesni, Siv256, Ctr256, SivHash, virtual CipherAEADInterface, 256 / 8);
+    aesni, Siv256, Ctr256, SivHash, virtual iCipherAead, 256 / 8);
 
 } // namespace alcp::cipher

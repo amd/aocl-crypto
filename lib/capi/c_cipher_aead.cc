@@ -73,7 +73,9 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
 
     ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
-    auto alcpCipher       = new CipherFactory<CipherAEADInterface>;
+    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
+
+    auto alcpCipher       = new CipherFactory<iCipherAead>;
     ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
 
     auto aead = alcpCipher->create(
@@ -101,14 +103,13 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    auto i   = static_cast<iCipherAead*>(ctx->m_cipher);
 
     if (ctx->destructed == 1) {
         return ALC_ERROR_BAD_STATE;
     }
     // status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-
-    auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
 
     // ALCP_BAD_PTR_ERR_RET(i->encrypt, err);
     err = i->encrypt(pInput, pOutput, len);
@@ -134,7 +135,7 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
     if (ctx->destructed == 1) {
         return ALC_ERROR_BAD_STATE;
     }
-    auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
+    auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
     // status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
@@ -162,7 +163,7 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
     if (ctx->destructed == 1) {
         return ALC_ERROR_BAD_STATE;
     }
-    auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
+    auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
     // FIXME: Modify setIv to return Status and assign to context status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
@@ -193,7 +194,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
     if (ctx->destructed == 1) {
         return ALC_ERROR_BAD_STATE;
     }
-    auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
+    auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
     // FIXME: Modify setAad to return Status and assign to context status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
@@ -222,7 +223,7 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
     if (ctx->destructed == 1) {
         return ALC_ERROR_BAD_STATE;
     }
-    auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
+    auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
     // FIXME: Modify getTag to return Status and assign to context status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
@@ -248,7 +249,7 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
     if (ctx->destructed == 1) {
         return ALC_ERROR_BAD_STATE;
     }
-    auto i = static_cast<CipherAEADInterface*>(ctx->m_cipher);
+    auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
     // FIXME: Modify setTagLength to return Status and assign to context
     // status
@@ -292,7 +293,7 @@ alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
     auto alcpCipher =
-        static_cast<CipherFactory<CipherAEADInterface>*>(ctx->m_cipher_factory);
+        static_cast<CipherFactory<iCipherAead>*>(ctx->m_cipher_factory);
 
     if (alcpCipher != nullptr) {
         delete alcpCipher;

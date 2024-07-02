@@ -30,10 +30,7 @@
 #include <map>
 #include <tuple>
 
-#include "alcp/cipher.h"
 #include "alcp/cipher.hh"
-#include "alcp/error.h"
-
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuCipherFeatures;
@@ -56,65 +53,16 @@ template<class INTERFACE>
 class CipherFactory
 {
   private:
-    // user arch request
-    CpuCipherFeatures m_arch = CpuCipherFeatures::eVaes512; // default zen arch
-    CipherKeyLen      m_keyLen = KEY_128_BIT;               // default keyLen
-    alc_cipher_mode_t m_mode   = ALC_AES_MODE_CTR;          // default mode
-    // current arch detected by CPUID
-    CpuCipherFeatures m_currentArch = getCpuCipher();
-
-    INTERFACE* m_iCipher = nullptr;
-
-    cipherAlgoMap m_cipherAeadMap = {
-        { "aes-gcm-128", { ALC_AES_MODE_GCM, KEY_128_BIT } },
-        { "aes-gcm-192", { ALC_AES_MODE_GCM, KEY_192_BIT } },
-        { "aes-gcm-256", { ALC_AES_MODE_GCM, KEY_256_BIT } },
-
-        { "aes-ccm-128", { ALC_AES_MODE_CCM, KEY_128_BIT } },
-        { "aes-ccm-192", { ALC_AES_MODE_CCM, KEY_192_BIT } },
-        { "aes-ccm-256", { ALC_AES_MODE_CCM, KEY_256_BIT } },
-
-        { "aes-siv-128", { ALC_AES_MODE_SIV, KEY_128_BIT } },
-        { "aes-siv-192", { ALC_AES_MODE_SIV, KEY_192_BIT } },
-        { "aes-siv-256", { ALC_AES_MODE_SIV, KEY_256_BIT } },
-
-        { "aes-polychacha", { ALC_AES_MODE_SIV, KEY_256_BIT } },
-    };
-
-    cipherAlgoMap m_cipherMap = {
-        { "aes-cbc-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
-        { "aes-cbc-192", { ALC_AES_MODE_CBC, KEY_192_BIT } },
-        { "aes-cbc-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
-
-        { "aes-ofb-128", { ALC_AES_MODE_OFB, KEY_128_BIT } },
-        { "aes-ofb-192", { ALC_AES_MODE_OFB, KEY_192_BIT } },
-        { "aes-ofb-256", { ALC_AES_MODE_OFB, KEY_256_BIT } },
-
-        { "aes-ctr-128", { ALC_AES_MODE_CTR, KEY_128_BIT } },
-        { "aes-ctr-192", { ALC_AES_MODE_CTR, KEY_192_BIT } },
-        { "aes-ctr-256", { ALC_AES_MODE_CTR, KEY_256_BIT } },
-
-        { "aes-cfb-128", { ALC_AES_MODE_CFB, KEY_128_BIT } },
-        { "aes-cfb-192", { ALC_AES_MODE_CFB, KEY_192_BIT } },
-        { "aes-cfb-256", { ALC_AES_MODE_CFB, KEY_256_BIT } },
-
-        { "aes-xts-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
-        { "aes-xts-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
-
-        { "aes-chacha20", { ALC_CHACHA20, KEY_256_BIT } },
-
-    };
+    CpuCipherFeatures m_arch = CpuCipherFeatures::eVaes512; // default zen4 arch
+    CpuCipherFeatures m_currentArch = getCpuCipherFeature();
+    CipherKeyLen      m_keyLen      = KEY_128_BIT;
+    alc_cipher_mode_t m_mode        = ALC_AES_MODE_NONE;
+    INTERFACE*        m_iCipher     = nullptr;
+    cipherAlgoMap     m_cipherMap   = {};
 
   public:
-    CipherFactory() = default;
-    ~CipherFactory()
-    {
-        m_cipherMap.clear();
-
-        if (m_iCipher != nullptr) {
-            delete m_iCipher;
-        }
-    };
+    CipherFactory();
+    ~CipherFactory();
 
     // cipher creators
     INTERFACE* create(const string& name);
@@ -125,8 +73,10 @@ class CipherFactory
                       CpuCipherFeatures arch);
 
   private:
+    void              initCipherMap();
+    void              clearCipherMap();
     void              getCipher();
-    CpuCipherFeatures getCpuCipher();
+    CpuCipherFeatures getCpuCipherFeature();
 };
 
 } // namespace alcp::cipher

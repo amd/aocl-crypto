@@ -44,7 +44,7 @@ namespace alcp::cipher {
  */
 class ALCP_API_EXPORT Cbc
     : public Aes
-    , public virtual CipherInterface
+    , public virtual iCipher
 {
   public:
     Cbc(Uint32 keyLen_in_bytes)
@@ -65,17 +65,17 @@ class ALCP_API_EXPORT Cbc
 };
 
 // vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Cbc128, Cbc, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cbc192, Cbc, virtual CipherInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cbc256, Cbc, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc128, Cbc, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc192, Cbc, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc256, Cbc, virtual iCipher, 256 / 8)
 
 // vaes classes
-CIPHER_CLASS_GEN_N(vaes, Cbc128, Cbc, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cbc192, Cbc, virtual CipherInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cbc256, Cbc, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc128, Cbc, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc192, Cbc, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc256, Cbc, virtual iCipher, 256 / 8)
 
 // aesni classes
-CIPHER_CLASS_GEN_N(aesni, Cbc128, Cbc, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cbc192, Cbc, virtual CipherInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cbc256, Cbc, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc128, Cbc, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc192, Cbc, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc256, Cbc, virtual iCipher, 256 / 8)
 } // namespace alcp::cipher

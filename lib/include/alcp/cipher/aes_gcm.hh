@@ -67,7 +67,7 @@ typedef struct _alc_gcm_local_data
 } alc_gcm_local_data_t;
 class ALCP_API_EXPORT Gcm
     : public Aes
-    , public virtual CipherInterface
+    , public virtual iCipher
 {
   protected:
     alc_gcm_local_data_t m_gcm_local_data;
@@ -129,21 +129,18 @@ class GcmAuth
 };
 
 // vaes512 classes
-CIPHER_CLASS_GEN_N(
-    vaes512, Gcm128, GcmAuth, virtual CipherAEADInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(
-    vaes512, Gcm192, GcmAuth, virtual CipherAEADInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(
-    vaes512, Gcm256, GcmAuth, virtual CipherAEADInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
 
 // vaes classes
-CIPHER_CLASS_GEN_N(vaes, Gcm128, GcmAuth, virtual CipherAEADInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Gcm192, GcmAuth, virtual CipherAEADInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Gcm256, GcmAuth, virtual CipherAEADInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
 
 // aesni classes
-CIPHER_CLASS_GEN_N(aesni, Gcm128, GcmAuth, virtual CipherAEADInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Gcm192, GcmAuth, virtual CipherAEADInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Gcm256, GcmAuth, virtual CipherAEADInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
 
 } // namespace alcp::cipher

@@ -82,7 +82,7 @@ namespace aesni::ccm {
 
 class ALCP_API_EXPORT Ccm
     : public Aes
-    , public virtual CipherInterface
+    , public virtual iCipher
 {
     // Needs to be protected as class CcmHash should use it
   protected:
@@ -138,24 +138,18 @@ class CcmHash
 };
 
 // vaes512 classes
-CIPHER_CLASS_GEN_N(
-    vaes512, Ccm128, CcmHash, virtual CipherAEADInterface, 128 / 8);
-CIPHER_CLASS_GEN_N(
-    vaes512, Ccm192, CcmHash, virtual CipherAEADInterface, 192 / 8);
-CIPHER_CLASS_GEN_N(
-    vaes512, Ccm256, CcmHash, virtual CipherAEADInterface, 256 / 8);
+CIPHER_CLASS_GEN_N(vaes512, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
+CIPHER_CLASS_GEN_N(vaes512, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
+CIPHER_CLASS_GEN_N(vaes512, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
 
 // vaes classes
-CIPHER_CLASS_GEN_N(vaes, Ccm128, CcmHash, virtual CipherAEADInterface, 128 / 8);
-CIPHER_CLASS_GEN_N(vaes, Ccm192, CcmHash, virtual CipherAEADInterface, 192 / 8);
-CIPHER_CLASS_GEN_N(vaes, Ccm256, CcmHash, virtual CipherAEADInterface, 256 / 8);
+CIPHER_CLASS_GEN_N(vaes, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
+CIPHER_CLASS_GEN_N(vaes, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
+CIPHER_CLASS_GEN_N(vaes, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
 
 // aesni classes
-CIPHER_CLASS_GEN_N(
-    aesni, Ccm128, CcmHash, virtual CipherAEADInterface, 128 / 8);
-CIPHER_CLASS_GEN_N(
-    aesni, Ccm192, CcmHash, virtual CipherAEADInterface, 192 / 8);
-CIPHER_CLASS_GEN_N(
-    aesni, Ccm256, CcmHash, virtual CipherAEADInterface, 256 / 8);
+CIPHER_CLASS_GEN_N(aesni, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
+CIPHER_CLASS_GEN_N(aesni, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
+CIPHER_CLASS_GEN_N(aesni, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
 
 } // namespace alcp::cipher

@@ -53,7 +53,7 @@ main()
 
     memset(inputText, 10, dataLen);
 
-    auto alcpCipher = new CipherFactory<CipherInterface>;
+    auto alcpCipher = new CipherFactory<iCipher>;
     auto aesmode    = alcpCipher->create("aes-cbc-192");
     if (aesmode == nullptr) {
         printf("\n cipher create failed");

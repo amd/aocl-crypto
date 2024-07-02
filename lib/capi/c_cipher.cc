@@ -87,7 +87,7 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
 
     ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
-    auto alcpCipher       = new CipherFactory<CipherInterface>;
+    auto alcpCipher       = new CipherFactory<iCipher>;
     ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
 
     auto aead = alcpCipher->create(
@@ -118,7 +118,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
-    auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
+    auto i   = static_cast<iCipher*>(ctx->m_cipher);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     err = i->encrypt(pPlainText, pCipherText, len);
@@ -165,7 +165,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
-    auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
+    auto i   = static_cast<iCipher*>(ctx->m_cipher);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     err = i->decrypt(pCipherText, pPlainText, len);
@@ -212,7 +212,7 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
-    auto i   = static_cast<CipherInterface*>(ctx->m_cipher);
+    auto i   = static_cast<iCipher*>(ctx->m_cipher);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
 
@@ -233,7 +233,7 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
     auto alcpCipher =
-        static_cast<CipherFactory<CipherInterface>*>(ctx->m_cipher_factory);
+        static_cast<CipherFactory<iCipher>*>(ctx->m_cipher_factory);
 
     if (alcpCipher != nullptr) {
         delete alcpCipher;

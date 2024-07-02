@@ -144,12 +144,12 @@ getMode(CipherKeyLen keyLen, CpuCipherFeatures arch)
 
 template<>
 void
-CipherFactory<CipherInterface>::getCipher()
+CipherFactory<iCipher>::getCipher()
 {
     // Non-AEAD ciphers
     switch (m_mode) {
         case ALC_AES_MODE_CBC:
-            m_iCipher = getMode<CipherInterface,
+            m_iCipher = getMode<iCipher,
                                 Cbc128_vaes512,
                                 Cbc192_vaes512,
                                 Cbc256_vaes512,
@@ -161,7 +161,7 @@ CipherFactory<CipherInterface>::getCipher()
                                 Cbc256_aesni>(m_keyLen, m_arch);
             break;
         case ALC_AES_MODE_OFB:
-            m_iCipher = getMode<CipherInterface,
+            m_iCipher = getMode<iCipher,
                                 Ofb128_aesni,
                                 Ofb192_aesni,
                                 Ofb256_aesni,
@@ -173,7 +173,7 @@ CipherFactory<CipherInterface>::getCipher()
                                 Ofb256_aesni>(m_keyLen, m_arch);
             break;
         case ALC_AES_MODE_CTR:
-            m_iCipher = getMode<CipherInterface,
+            m_iCipher = getMode<iCipher,
                                 Ctr128_vaes512,
                                 Ctr192_vaes512,
                                 Ctr256_vaes512,
@@ -185,7 +185,7 @@ CipherFactory<CipherInterface>::getCipher()
                                 Ctr256_aesni>(m_keyLen, m_arch);
             break;
         case ALC_AES_MODE_CFB:
-            m_iCipher = getMode<CipherInterface,
+            m_iCipher = getMode<iCipher,
                                 Cfb128_vaes512,
                                 Cfb192_vaes512,
                                 Cfb256_vaes512,
@@ -197,7 +197,7 @@ CipherFactory<CipherInterface>::getCipher()
                                 Cfb256_aesni>(m_keyLen, m_arch);
             break;
         case ALC_AES_MODE_XTS:
-            m_iCipher = getMode<CipherInterface,
+            m_iCipher = getMode<iCipher,
                                 Xts128_vaes512,
                                 Xts256_vaes512,
                                 Xts128_vaes,
@@ -222,12 +222,12 @@ CipherFactory<CipherInterface>::getCipher()
 
 template<>
 void
-CipherFactory<CipherAEADInterface>::getCipher()
+CipherFactory<iCipherAead>::getCipher()
 {
     // AEAD ciphers
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
-            m_iCipher = getMode<CipherAEADInterface,
+            m_iCipher = getMode<iCipherAead,
                                 Gcm128_vaes512,
                                 Gcm192_vaes512,
                                 Gcm256_vaes512,
@@ -239,7 +239,7 @@ CipherFactory<CipherAEADInterface>::getCipher()
                                 Gcm256_aesni>(m_keyLen, m_arch);
             break;
         case ALC_AES_MODE_CCM:
-            m_iCipher = getMode<CipherAEADInterface,
+            m_iCipher = getMode<iCipherAead,
                                 Ccm128_aesni,
                                 Ccm192_aesni,
                                 Ccm256_aesni,
@@ -251,7 +251,7 @@ CipherFactory<CipherAEADInterface>::getCipher()
                                 Ccm256_aesni>(m_keyLen, m_arch);
             break;
         case ALC_AES_MODE_SIV:
-            m_iCipher = getMode<CipherAEADInterface,
+            m_iCipher = getMode<iCipherAead,
                                 Siv128_vaes512,
                                 Siv192_vaes512,
                                 Siv256_vaes512,
@@ -277,23 +277,9 @@ CipherFactory<CipherAEADInterface>::getCipher()
     }
 }
 
-template<>
-CipherAEADInterface*
-CipherFactory<CipherAEADInterface>::create(const string& name)
-{
-    cipherAlgoMap::iterator it = m_cipherAeadMap.find(name);
-    if (it == m_cipherAeadMap.end()) {
-        std::cout << "\n error " << name << " cipher AEAD mode not supported "
-                  << std::endl;
-        return nullptr;
-    }
-    cipherKeyLenTuple t = it->second;
-    return create(std::get<0>(t), std::get<1>(t));
-}
-
-template<>
-CipherInterface*
-CipherFactory<CipherInterface>::create(const string& name)
+template<class INTERFACE>
+INTERFACE*
+CipherFactory<INTERFACE>::create(const string& name)
 {
     cipherAlgoMap::iterator it = m_cipherMap.find(name);
     if (it == m_cipherMap.end()) {
@@ -305,25 +291,9 @@ CipherFactory<CipherInterface>::create(const string& name)
     return create(std::get<0>(t), std::get<1>(t));
 }
 
-template<>
-CipherAEADInterface*
-CipherFactory<CipherAEADInterface>::create(const string&     name,
-                                           CpuCipherFeatures arch)
-{
-    cipherAlgoMap::iterator it = m_cipherAeadMap.find(name);
-    cipherKeyLenTuple       t  = it->second;
-    if (it == m_cipherAeadMap.end()) {
-        std::cout << "\n error " << name << " cipher AEAD mode not supported "
-                  << std::endl;
-        return nullptr;
-    }
-    return create(std::get<0>(t), std::get<1>(t), arch);
-}
-
-template<>
-CipherInterface*
-CipherFactory<CipherInterface>::create(const string&     name,
-                                       CpuCipherFeatures arch)
+template<class INTERFACE>
+INTERFACE*
+CipherFactory<INTERFACE>::create(const string& name, CpuCipherFeatures arch)
 {
     cipherAlgoMap::iterator it = m_cipherMap.find(name);
     cipherKeyLenTuple       t  = it->second;
@@ -368,7 +338,7 @@ CipherFactory<INTERFACE>::create(alc_cipher_mode_t mode,
 
 template<class INTERFACE>
 CpuCipherFeatures
-CipherFactory<INTERFACE>::getCpuCipher()
+CipherFactory<INTERFACE>::getCpuCipherFeature()
 {
     CpuCipherFeatures cpu_feature =
         CpuCipherFeatures::eReference; // If no arch features present,means
@@ -391,7 +361,78 @@ CipherFactory<INTERFACE>::getCpuCipher()
     return cpu_feature;
 }
 
-template class CipherFactory<CipherAEADInterface>;
-template class CipherFactory<CipherInterface>;
+template<>
+void
+CipherFactory<iCipher>::initCipherMap()
+{
+    m_cipherMap = {
+        { "aes-cbc-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
+        { "aes-cbc-192", { ALC_AES_MODE_CBC, KEY_192_BIT } },
+        { "aes-cbc-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
+
+        { "aes-ofb-128", { ALC_AES_MODE_OFB, KEY_128_BIT } },
+        { "aes-ofb-192", { ALC_AES_MODE_OFB, KEY_192_BIT } },
+        { "aes-ofb-256", { ALC_AES_MODE_OFB, KEY_256_BIT } },
+
+        { "aes-ctr-128", { ALC_AES_MODE_CTR, KEY_128_BIT } },
+        { "aes-ctr-192", { ALC_AES_MODE_CTR, KEY_192_BIT } },
+        { "aes-ctr-256", { ALC_AES_MODE_CTR, KEY_256_BIT } },
+
+        { "aes-cfb-128", { ALC_AES_MODE_CFB, KEY_128_BIT } },
+        { "aes-cfb-192", { ALC_AES_MODE_CFB, KEY_192_BIT } },
+        { "aes-cfb-256", { ALC_AES_MODE_CFB, KEY_256_BIT } },
+
+        { "aes-xts-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
+        { "aes-xts-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
+
+        { "aes-chacha20", { ALC_CHACHA20, KEY_256_BIT } },
+    };
+}
+
+template<>
+void
+CipherFactory<iCipherAead>::initCipherMap()
+{
+    m_cipherMap = {
+        { "aes-gcm-128", { ALC_AES_MODE_GCM, KEY_128_BIT } },
+        { "aes-gcm-192", { ALC_AES_MODE_GCM, KEY_192_BIT } },
+        { "aes-gcm-256", { ALC_AES_MODE_GCM, KEY_256_BIT } },
+
+        { "aes-ccm-128", { ALC_AES_MODE_CCM, KEY_128_BIT } },
+        { "aes-ccm-192", { ALC_AES_MODE_CCM, KEY_192_BIT } },
+        { "aes-ccm-256", { ALC_AES_MODE_CCM, KEY_256_BIT } },
+
+        { "aes-siv-128", { ALC_AES_MODE_SIV, KEY_128_BIT } },
+        { "aes-siv-192", { ALC_AES_MODE_SIV, KEY_192_BIT } },
+        { "aes-siv-256", { ALC_AES_MODE_SIV, KEY_256_BIT } },
+
+        { "aes-polychacha", { ALC_AES_MODE_SIV, KEY_256_BIT } },
+    };
+}
+
+template<class INTERFACE>
+void
+CipherFactory<INTERFACE>::clearCipherMap()
+{
+    m_cipherMap.clear();
+}
+
+template<class INTERFACE>
+CipherFactory<INTERFACE>::CipherFactory()
+{
+    initCipherMap();
+};
+
+template<class INTERFACE>
+CipherFactory<INTERFACE>::~CipherFactory()
+{
+    clearCipherMap();
+    if (m_iCipher != nullptr) {
+        delete m_iCipher;
+    }
+};
+
+template class CipherFactory<iCipherAead>;
+template class CipherFactory<iCipher>;
 
 } // namespace alcp::cipher

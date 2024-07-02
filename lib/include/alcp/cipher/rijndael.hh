@@ -36,7 +36,7 @@
 #include <memory>
 
 namespace alcp::cipher {
-using Status = alcp::base::Status;
+// using Status = alcp::base::Status;
 
 // aes and Rijndael can be unified?
 

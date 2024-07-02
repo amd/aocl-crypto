@@ -43,7 +43,7 @@ namespace alcp::cipher {
 
 class ALCP_API_EXPORT Ofb
     : public Aes
-    , public virtual CipherInterface
+    , public virtual iCipher
 {
   public:
     Ofb(Uint32 keyLen_in_bytes)
@@ -64,9 +64,9 @@ class ALCP_API_EXPORT Ofb
 };
 
 // aesni classes
-CIPHER_CLASS_GEN_N(aesni, Ofb128, Ofb, virtual CipherInterface, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Ofb192, Ofb, virtual CipherInterface, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Ofb256, Ofb, virtual CipherInterface, 256 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ofb128, Ofb, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ofb192, Ofb, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ofb256, Ofb, virtual iCipher, 256 / 8)
 
 } // namespace alcp::cipher
 
