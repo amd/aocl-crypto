@@ -83,6 +83,16 @@ TEST(HMAC_SHA3, CROSS_512)
     Hmac_Cross(ALC_SHA3_512);
 }
 
+TEST(HMAC_SHA1, CROSS_160)
+{
+    Hmac_Cross(ALC_SHA1);
+}
+
+TEST(HMAC_MD5, CROSS_128)
+{
+    Hmac_Cross(ALC_MD5);
+}
+
 int
 main(int argc, char** argv)
 {
@@ -90,11 +100,11 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        printErrors("IPP is not avaiable");
+        printErrors("IPP is not available");
 #endif
 #ifndef USE_OSSL
     if (useossl)
-        printErrors("OpenSSL is not avaiable");
+        printErrors("OpenSSL is not available");
 #endif
 
     return RUN_ALL_TESTS();

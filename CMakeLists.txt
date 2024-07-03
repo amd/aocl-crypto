@@ -101,7 +101,7 @@ ENDIF()
 MARK_AS_ADVANCED(CMAKE_INSTALL_LIBDIR)
 
 
-# All the options which are avaiable with ALCP
+# All the options which are available with ALCP
 # These options can be listed with cmake -LH
 OPTION(ALCP_ENABLE_DOCS "ENABLE DOCUMENTATION" OFF)
 OPTION(ALCP_ENABLE_HTML "ENABLE HTML DOCUMENT GENERATION" OFF)

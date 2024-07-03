@@ -36,7 +36,9 @@ alcp_prov_digest_freectx(void* vctx)
     ENTER();
     alcp_digest_finish(&pdctx->handle);
     OPENSSL_clear_free(pdctx->handle.context, alcp_digest_context_size());
+    pdctx->handle.context = NULL;
     OPENSSL_clear_free(vctx, sizeof(*pdctx));
+    EXIT();
 }
 
 void*
@@ -58,6 +60,7 @@ alcp_prov_digest_newctx(void* vprovctx, alc_digest_mode_t mode)
             return 0;
         }
     }
+    EXIT();
 
     return dig_ctx;
 }
@@ -137,7 +140,7 @@ alcp_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
     ENTER();
     alc_error_t           err;
     alc_prov_digest_ctx_p cctx = vctx;
-    ENTER();
+
     err = alcp_digest_update(&(cctx->handle), in, inl);
     if (err != ALC_ERROR_NONE) {
         printf("Provider: Unable to Update Digest\n");

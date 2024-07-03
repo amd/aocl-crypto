@@ -30,6 +30,8 @@
 
 /* get digest from SHA type*/
 std::map<alc_digest_mode_t, const IppsHashMethod*> IPPDigestMap = {
+    { ALC_MD5, ippsHashMethod_MD5() },
+    { ALC_SHA1, ippsHashMethod_SHA1_TT() },
     { ALC_SHA2_224, ippsHashMethod_SHA224_TT() },
     { ALC_SHA2_256, ippsHashMethod_SHA256_TT() },
     { ALC_SHA2_384, ippsHashMethod_SHA384() },

@@ -81,6 +81,8 @@ typedef enum _alc_digest_len
  */
 typedef enum alc_digest_block_size
 {
+    ALC_DIGEST_BLOCK_SIZE_MD5       = 512,
+    ALC_DIGEST_BLOCK_SIZE_SHA1      = 512,
     ALC_DIGEST_BLOCK_SIZE_SHA2_256  = 512,
     ALC_DIGEST_BLOCK_SIZE_SHA2_512  = 1024,
     ALC_DIGEST_BLOCK_SIZE_SHA3_224  = 1152,
@@ -98,6 +100,8 @@ typedef enum alc_digest_block_size
  */
 typedef enum _alc_digest_mode
 {
+    ALC_MD5,
+    ALC_SHA1,
     ALC_SHA2_224,
     ALC_SHA2_256,
     ALC_SHA2_384,

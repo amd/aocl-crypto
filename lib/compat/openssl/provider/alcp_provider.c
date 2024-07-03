@@ -71,9 +71,11 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
          * internally tries to use CBC from alcp and multi update is not
          * supported in ALCP as of now.  */
         case OSSL_OP_CIPHER:
+            EXIT();
             return ALC_prov_ciphers;
             break;
         case OSSL_OP_DIGEST:
+            EXIT();
             return ALC_prov_digests;
             break;
         case OSSL_OP_MAC:
@@ -97,6 +99,7 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
     return OSSL_PROVIDER_query_operation(
         prov_openssl_default, operation_id, no_cache);
 #else
+    EXIT();
     return NULL;
 #endif
 }

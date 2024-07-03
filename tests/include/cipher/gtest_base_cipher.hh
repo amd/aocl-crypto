@@ -94,7 +94,7 @@ class CipherTestingCore
             case LIB_TYPE::OPENSSL:
 #ifndef USE_OSSL
                 delete m_cipherHandler;
-                throw "OpenSSL not avaiable!";
+                throw "OpenSSL not available!";
 #else
                 ocb = new OpenSSLCipherBase(cipher_type, alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
@@ -103,7 +103,7 @@ class CipherTestingCore
             case LIB_TYPE::IPP:
 #ifndef USE_IPP
                 delete m_cipherHandler;
-                throw "IPP not avaiable!";
+                throw "IPP not available!";
 #else
                 if (!useipp) {
                     delete m_cipherHandler;
@@ -205,7 +205,7 @@ class CipherAeadTestingCore
             case LIB_TYPE::OPENSSL:
 #ifndef USE_OSSL
                 delete m_cipherHandler;
-                throw "OpenSSL not avaiable!";
+                throw "OpenSSL not available!";
 #else
                 ocb = new OpenSSLCipherAeadBase(cipher_type, alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
@@ -214,7 +214,7 @@ class CipherAeadTestingCore
             case LIB_TYPE::IPP:
 #ifndef USE_IPP
                 delete m_cipherHandler;
-                throw "IPP not avaiable!";
+                throw "IPP not available!";
 #else
                 if (!useipp) {
                     delete m_cipherHandler;

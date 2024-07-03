@@ -148,12 +148,12 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        std::cout << RED << "IPP is not avaiable, defaulting to ALCP" << RESET
+        std::cout << RED << "IPP is not available, defaulting to ALCP" << RESET
                   << std::endl;
 #endif
 #ifndef USE_OSSL
     if (useossl) {
-        std::cout << RED << "OpenSSL is not avaiable, defaulting to ALCP"
+        std::cout << RED << "OpenSSL is not available, defaulting to ALCP"
                   << RESET << std::endl;
     }
 #endif

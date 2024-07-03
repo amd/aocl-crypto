@@ -30,6 +30,8 @@
 #include "alcp/capi/digest/ctx.hh"
 
 #include "alcp/digest.hh"
+#include "alcp/digest/md5.hh"
+#include "alcp/digest/sha1.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
@@ -171,6 +173,12 @@ class Sha2Builder
         alc_error_t err = ALC_ERROR_NONE;
 
         switch (mode) {
+            case ALC_MD5:
+                __build_sha<MD5>(rCtx);
+                break;
+            case ALC_SHA1:
+                __build_sha<Sha1>(rCtx);
+                break;
             case ALC_SHA2_224:
                 __build_sha<Sha224>(rCtx);
                 break;
@@ -238,6 +246,8 @@ DigestBuilder::Build(alc_digest_mode_t mode, Context& rCtx)
     alc_error_t err = ALC_ERROR_NONE;
 
     switch (mode) {
+        case ALC_MD5:
+        case ALC_SHA1:
         case ALC_SHA2_224:
         case ALC_SHA2_256:
         case ALC_SHA2_384:

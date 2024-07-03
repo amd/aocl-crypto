@@ -57,6 +57,9 @@ OpenSSLDigestBase::init()
     m_handle = EVP_MD_CTX_new();
 
     switch (m_mode) {
+        case ALC_SHA1:
+            m_md_type = EVP_sha1();
+            break;
         case ALC_SHA2_224:
             m_md_type = EVP_sha224();
             break;

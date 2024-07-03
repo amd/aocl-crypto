@@ -130,6 +130,13 @@ TEST(DIGEST_SHA3, CROSS_512)
     Digest_Cross(512, ALC_SHA3_512, false);
 }
 
+TEST(DIGEST_SHA1, CROSS_160)
+{
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have SHA1 implemented yet";
+    Digest_Cross(160, ALC_SHA1, false);
+}
+
 int
 main(int argc, char** argv)
 {
@@ -137,11 +144,11 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        printErrors("IPP is not avaiable");
+        printErrors("IPP is not available");
 #endif
 #ifndef USE_OSSL
     if (useossl)
-        printErrors("OpenSSL is not avaiable");
+        printErrors("OpenSSL is not available");
 #endif
     return RUN_ALL_TESTS();
 }

@@ -26,7 +26,7 @@
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
 set(TEST_FILES 
-  sha256_unit_test.cc    sha3_256_unit_test.cc  sha3_512_unit_test.cc  sha3_shake_unit_test.cc
+  sha1_unit_test.cc sha256_unit_test.cc    sha3_256_unit_test.cc  sha3_512_unit_test.cc  sha3_shake_unit_test.cc
   sha224_unit_test.cc  sha3_224_unit_test.cc  sha3_384_unit_test.cc  sha384_unit_test.cc    sha512_unit_test.cc
   )
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,75 +26,53 @@
  *
  */
 
-/* C/C++ Headers */
-#include <iostream>
-#include <string.h>
+#include "alcp/digest.hh"
+#include <openssl/evp.h>
+namespace alcp::digest {
+class ALCP_API_EXPORT MD5 final : public IDigest
+{
 
-/* ALCP Headers */
-#include "alcp/alcp.h"
-#include "hmac/alc_hmac.hh"
-#include "hmac/gtest_base_hmac.hh"
-#include "hmac/hmac.hh"
+  private:
+    EVP_MD_CTX* m_ctx = nullptr;
+    EVP_MD*     m_md  = nullptr;
 
-/* All tests to be added here */
-TEST(HMAC_SHA3, KAT_224)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_224);
-}
-TEST(HMAC_SHA3, KAT_256)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_256);
-}
-TEST(HMAC_SHA3, KAT_384)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_384);
-}
-TEST(HMAC_SHA3, KAT_512)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_512);
-}
-/* HMAC SHA2 tests */
-TEST(HMAC_SHA2, KAT_224)
-{
-    Hmac_KAT(ALC_SHA2_224);
-}
-TEST(HMAC_SHA2, KAT_256)
-{
-    Hmac_KAT(ALC_SHA2_256);
-}
-TEST(HMAC_SHA2, KAT_384)
-{
-    Hmac_KAT(ALC_SHA2_384);
-}
-TEST(HMAC_SHA2, KAT_512)
-{
-    Hmac_KAT(ALC_SHA2_512);
-}
+  public:
+    MD5();
+    ~MD5();
+    MD5(const MD5& src);
+    /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    void init(void) override;
 
-int
-main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    parseArgs(argc, argv);
-#ifndef USE_IPP
-    if (useipp)
-        std::cout << RED << "IPP is not available, defaulting to ALCP" << RESET
-                  << std::endl;
-#endif
+    /**
+     * @brief   Updates hash for given buffer
+     *
+     * @note    Can be called repeatedly, if the hashsize is smaller
+     *           it will be cached for future use. and hash is only updated
+     *           after finalize() is called.
+     *
+     * @param    pBuf    Pointer to message buffer
+     *
+     * @param    size    should be valid size > 0
+     */
+    alc_error_t update(const Uint8* pBuf, Uint64 size) override;
 
-#ifndef USE_OSSL
-    if (useossl) {
-        std::cout << RED << "OpenSSL is not available, defaulting to ALCP"
-                  << RESET << std::endl;
-    }
-#endif
-    return RUN_ALL_TESTS();
-}
+    /**
+     * \brief    Call for fetching final digest
+     *
+     *
+     * \param    pBuf    Destination buffer to which digest will be copied
+     *
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
+     */
+    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+};
+
+} // namespace alcp::digest

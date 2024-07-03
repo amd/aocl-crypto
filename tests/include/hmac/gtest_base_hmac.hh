@@ -71,10 +71,10 @@ PrintHmacTestData(std::vector<Uint8> key, alcp_hmac_data_t data)
 
 /* get Mac digest len from SHA type*/
 std::map<alc_digest_mode_t, int> DigestTypeToLenMap = {
-    { ALC_SHA2_224, 224 },    { ALC_SHA2_256, 256 }, { ALC_SHA2_384, 384 },
-    { ALC_SHA2_512, 512 },    { ALC_SHA3_224, 224 }, { ALC_SHA3_256, 256 },
-    { ALC_SHA3_384, 384 },    { ALC_SHA3_512, 512 }, { ALC_SHA2_512_224, 224 },
-    { ALC_SHA2_512_256, 256 }
+    { ALC_MD5, 128 },      { ALC_SHA1, 160 },         { ALC_SHA2_224, 224 },
+    { ALC_SHA2_256, 256 }, { ALC_SHA2_384, 384 },     { ALC_SHA2_512, 512 },
+    { ALC_SHA3_224, 224 }, { ALC_SHA3_256, 256 },     { ALC_SHA3_384, 384 },
+    { ALC_SHA3_512, 512 }, { ALC_SHA2_512_224, 224 }, { ALC_SHA2_512_256, 256 }
 };
 /* get SHA2 type string to pass into the KAT test function */
 std::string

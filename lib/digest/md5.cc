@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,75 +26,78 @@
  *
  */
 
-/* C/C++ Headers */
-#include <iostream>
-#include <string.h>
+#include "alcp/digest/md5.hh"
+#include <openssl/err.h>
 
-/* ALCP Headers */
-#include "alcp/alcp.h"
-#include "hmac/alc_hmac.hh"
-#include "hmac/gtest_base_hmac.hh"
-#include "hmac/hmac.hh"
+namespace alcp::digest {
 
-/* All tests to be added here */
-TEST(HMAC_SHA3, KAT_224)
+MD5::MD5()
 {
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_224);
-}
-TEST(HMAC_SHA3, KAT_256)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_256);
-}
-TEST(HMAC_SHA3, KAT_384)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_384);
-}
-TEST(HMAC_SHA3, KAT_512)
-{
-    if (useipp)
-        GTEST_SKIP();
-    Hmac_KAT(ALC_SHA3_512);
-}
-/* HMAC SHA2 tests */
-TEST(HMAC_SHA2, KAT_224)
-{
-    Hmac_KAT(ALC_SHA2_224);
-}
-TEST(HMAC_SHA2, KAT_256)
-{
-    Hmac_KAT(ALC_SHA2_256);
-}
-TEST(HMAC_SHA2, KAT_384)
-{
-    Hmac_KAT(ALC_SHA2_384);
-}
-TEST(HMAC_SHA2, KAT_512)
-{
-    Hmac_KAT(ALC_SHA2_512);
+    m_block_len  = ALC_DIGEST_BLOCK_SIZE_MD5 / 8;
+    m_digest_len = ALC_DIGEST_LEN_128 / 8;
+    m_ctx        = EVP_MD_CTX_new();
+    m_md         = EVP_MD_fetch(NULL, "MD5", "provider=default");
 }
 
-int
-main(int argc, char** argv)
+void
+MD5::init()
 {
-    ::testing::InitGoogleTest(&argc, argv);
-    parseArgs(argc, argv);
-#ifndef USE_IPP
-    if (useipp)
-        std::cout << RED << "IPP is not available, defaulting to ALCP" << RESET
-                  << std::endl;
-#endif
-
-#ifndef USE_OSSL
-    if (useossl) {
-        std::cout << RED << "OpenSSL is not available, defaulting to ALCP"
-                  << RESET << std::endl;
+    if (EVP_DigestInit(m_ctx, m_md) != 1) {
+        return;
     }
-#endif
-    return RUN_ALL_TESTS();
 }
+
+alc_error_t
+MD5::update(const Uint8* pBuf, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (EVP_DigestUpdate(m_ctx, pBuf, size) != 1) {
+        err = ALC_ERROR_EXISTS;
+    }
+
+    return err;
+}
+
+alc_error_t
+MD5::finalize(Uint8* pBuf, Uint64 size)
+{
+    if (size != (ALC_DIGEST_LEN_128 / 8)) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    alc_error_t  err         = ALC_ERROR_NONE;
+    unsigned int output_size = 0;
+    if (EVP_DigestFinal_ex(m_ctx, pBuf, &output_size) != 1) {
+        err = ALC_ERROR_EXISTS;
+    }
+    assert(size == output_size);
+
+    return err;
+}
+
+MD5::~MD5()
+{
+    if (m_ctx != nullptr) {
+        EVP_MD_CTX_free(m_ctx);
+    }
+    if (m_md != nullptr) {
+        EVP_MD_free(m_md);
+    }
+}
+
+MD5::MD5(const MD5& src)
+{
+    m_digest_len = src.m_digest_len;
+    m_block_len  = src.m_block_len;
+    if (m_md) {
+        EVP_MD_free(m_md);
+    }
+    m_md = EVP_MD_fetch(NULL, "MD5", "provider=default");
+    if (m_ctx) {
+        EVP_MD_CTX_free(m_ctx);
+    }
+    m_ctx = EVP_MD_CTX_new();
+
+    EVP_MD_CTX_copy(m_ctx, src.m_ctx);
+}
+
+} // namespace alcp::digest

@@ -30,11 +30,18 @@
 
 /* get Mac digest len from SHA type*/
 std::map<alc_digest_mode_t, const char*> OpenSSLDigestStringMap = {
-    { ALC_SHA2_224, "sha224" },         { ALC_SHA2_256, "sha256" },
-    { ALC_SHA2_384, "sha384" },         { ALC_SHA2_512, "sha512" },
-    { ALC_SHA3_224, "sha3-224" },       { ALC_SHA3_256, "sha3-256" },
-    { ALC_SHA3_384, "sha3-384" },       { ALC_SHA3_512, "sha3-512" },
-    { ALC_SHA2_512_224, "sha512-224" }, { ALC_SHA2_512_256, "sha512-256" }
+    { ALC_MD5, "md5" },
+    { ALC_SHA1, "sha1" },
+    { ALC_SHA2_224, "sha224" },
+    { ALC_SHA2_256, "sha256" },
+    { ALC_SHA2_384, "sha384" },
+    { ALC_SHA2_512, "sha512" },
+    { ALC_SHA3_224, "sha3-224" },
+    { ALC_SHA3_256, "sha3-256" },
+    { ALC_SHA3_384, "sha3-384" },
+    { ALC_SHA3_512, "sha3-512" },
+    { ALC_SHA2_512_224, "sha512-224" },
+    { ALC_SHA2_512_256, "sha512-256" }
 };
 
 namespace alcp::testing {

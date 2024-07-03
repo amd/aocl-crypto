@@ -58,6 +58,10 @@ IPPDigestBase::init()
     ippsHashGetSize_rmf(&ctx_size);
     m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
     switch (m_mode) {
+        case ALC_SHA1:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA1_TT());
+        case ALC_MD5:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_MD5());
         case ALC_SHA2_224:
             status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
             break;

@@ -56,6 +56,7 @@ typedef struct alcp_hmac_data_st alcp_hmac_data_st_t;
 static void*
 alcp_prov_hmac_new(void* provctx)
 {
+    ENTER();
     alcp_hmac_data_st_t* macctx;
 
     if ((macctx = OPENSSL_zalloc(sizeof(*macctx))) == NULL
@@ -64,6 +65,7 @@ alcp_prov_hmac_new(void* provctx)
         return NULL;
     }
     macctx->provctx = provctx;
+    EXIT();
     return macctx;
 }
 
@@ -81,6 +83,7 @@ alcp_prov_hmac_free(void* ctx)
 static void*
 alcp_prov_hmac_dup(void* vsrc)
 {
+    ENTER();
     alcp_hmac_data_st_t* src = vsrc;
     alcp_hmac_data_st_t* dst = OPENSSL_memdup(src, sizeof(*src));
 
@@ -101,6 +104,7 @@ alcp_prov_hmac_dup(void* vsrc)
         OPENSSL_clear_free(dst->ctx, sizeof(*(dst->ctx)));
         return NULL;
     }
+    EXIT();
 
     return dst;
 }
@@ -131,6 +135,12 @@ alcp_hmac_size(alcp_hmac_data_st_t* macctx)
         case ALC_SHA2_512:
         case ALC_SHA3_512:
             len = ALC_DIGEST_LEN_512;
+            break;
+        case ALC_SHA1:
+            len = ALC_DIGEST_LEN_160;
+            break;
+        case ALC_MD5:
+            len = ALC_DIGEST_LEN_128;
             break;
         default:
             printf("Error: Unsupported mode\n");
@@ -170,6 +180,12 @@ alcp_hmac_block_size(alcp_hmac_data_st_t* macctx)
             break;
         case ALC_SHAKE_256:
             len = ALC_DIGEST_BLOCK_SIZE_SHAKE_256;
+            break;
+        case ALC_SHA1:
+            len = ALC_DIGEST_BLOCK_SIZE_SHA1;
+            break;
+        case ALC_MD5:
+            len = ALC_DIGEST_BLOCK_SIZE_MD5;
             break;
         default:
             printf("Error: Unsupported mode\n");
@@ -211,6 +227,10 @@ alcp_hmac_get_digest_mode(char* str)
         digest_mode = ALC_SHA3_384;
     } else if (!strcasecmp(str, "sha3-512")) {
         digest_mode = ALC_SHA3_512;
+    } else if (!strcasecmp(str, "sha1")) {
+        digest_mode = ALC_SHA1;
+    } else if (!strcasecmp(str, "md5")) {
+        digest_mode = ALC_MD5;
     } else {
         digest_mode = -1;
         printf("HMAC Provider: Digest '%s' not Supported\n", str);

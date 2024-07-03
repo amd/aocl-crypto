@@ -31,6 +31,7 @@
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
 {
+
     if (ALCP_Fuzz_Digest(ALC_SHA2_224, Data, Size, true) != 0) {
         std::cout << "Digest fuzz lifecycle test failed for Mode ALC_SHA2_224"
                   << std::endl;

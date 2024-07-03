@@ -28,6 +28,7 @@
 
 #include "alcp/alcp.h"
 #include "alcp/base.hh"
+#include "alcp/digest/sha1.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
@@ -310,6 +311,29 @@ known_answer_map_t KAT_ShaDataset {
             "53616d706c65206d65737361676520666f72206b65796c656e3e626c6f636b6c656e",
             "5f464f5e5b7848e3885e49b2c385f0694985d0e38966242dc4a5fe3fea4b37d46b65ceced5dcf59438dd840bab22269f0ba7febdb9fcf74602a35666b2a32915"
         }
+    },{
+        "SHA1_KEYLEN_EQ_B",
+        {
+            "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+            "53616d706c65206d65737361676520666f72206b65796c656e3d626c6f636b6c656e",
+            "5fd596ee78d5553c8ff4e72d266dfd192366da29"
+        }
+    },
+    {
+        "SHA1_KEYLEN_LT_B",
+        {
+            "000102030405060708090a0b0c0d0e0f10111213",
+            "53616d706c65206d65737361676520666f72206b65796c656e3c626c6f636b6c656e",
+            "4c99ff0cb1b31bd33f8431dbaf4d17fcd356a807"
+        }
+    },
+    {
+        "SHA1_KEYLEN_GT_B",
+        {"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F30"
+            "3132333435363738393A3B3C3D3E3F404142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F60616263",
+            "53616d706c65206d65737361676520666f72206b65796c656e3d626c6f636b6c656e",
+            "2d51b2f7750e410584662e38f133435f4c4fd42a"
+        }
     }
     
 };
@@ -325,8 +349,7 @@ class HmacTestFixture
     std::vector<Uint8>    m_key;
     std::unique_ptr<Hmac> m_p_hmac = std::make_unique<Hmac>();
 
-    std::unique_ptr<IDigest> m_p_sha2;
-    std::unique_ptr<IDigest> m_p_sha3;
+    std::unique_ptr<IDigest> m_p_sha;
 
   public:
     void setUp(const ParamType& params)
@@ -350,27 +373,28 @@ class HmacTestFixture
 
         if (sha_type == "SHA2") {
             if (hash_name == "256") {
-                m_p_sha2 = std::make_unique<Sha256>();
+                m_p_sha = std::make_unique<Sha256>();
             } else if (hash_name == "224") {
-                m_p_sha2 = std::make_unique<Sha224>();
+                m_p_sha = std::make_unique<Sha224>();
             } else if (hash_name == "384") {
-                m_p_sha2 = std::make_unique<Sha384>();
+                m_p_sha = std::make_unique<Sha384>();
             } else if (hash_name == "512") {
-                m_p_sha2 = std::make_unique<Sha512>();
+                m_p_sha = std::make_unique<Sha512>();
             }
-            m_p_hmac->init(&m_key[0], m_key.size(), m_p_sha2.get());
         } else if (sha_type == "SHA3") {
             if (hash_name == "224") {
-                m_p_sha3 = std::make_unique<Sha3_224>();
+                m_p_sha = std::make_unique<Sha3_224>();
             } else if (hash_name == "256") {
-                m_p_sha3 = std::make_unique<Sha3_256>();
+                m_p_sha = std::make_unique<Sha3_256>();
             } else if (hash_name == "384") {
-                m_p_sha3 = std::make_unique<Sha3_384>();
+                m_p_sha = std::make_unique<Sha3_384>();
             } else if (hash_name == "512") {
-                m_p_sha3 = std::make_unique<Sha3_512>();
+                m_p_sha = std::make_unique<Sha3_512>();
             }
-            m_p_hmac->init(&m_key[0], m_key.size(), m_p_sha3.get());
+        } else if (sha_type == "SHA1") {
+            m_p_sha = std::make_unique<Sha1>();
         }
+        m_p_hmac->init(&m_key[0], m_key.size(), m_p_sha.get());
     }
 };
 
