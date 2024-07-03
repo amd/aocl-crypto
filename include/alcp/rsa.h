@@ -458,23 +458,6 @@ alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
 ALCP_API_EXPORT void
 alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle);
 
-/**
- * @brief              Get the error string for errors occurring in RSA
- *                     operations
- * @parblock <br> &nbsp;
- * <b> This API is called to get the error string. It should be called after
- * @ref alcp_rsa_request and before @ref alcp_rsa_finish </b>
- * @endparblock
- * @param [in] pRsaHandle Session handle for rsa operation
- * @param [out] pBuff  Destination Buffer to which Error String will be copied
- * @param [in] size    Length of the Buffer.
- *
- * @return alc_error_t Error code to validate the Handle
- */
-
-alc_error_t
-alcp_rsa_error(const alc_rsa_handle_p pRsaHandle, Uint8* pBuff, Uint64 size);
-
 EXTERN_C_END
 #endif /* _ALCP_RSA_H_ */
 

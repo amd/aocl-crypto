@@ -257,6 +257,7 @@ class ALCP_API_EXPORT Rsa
     Uint64                 m_hash_len;
     Uint64                 m_mgf_hash_len;
     DigestIndex            m_digest_info_index;
+    Uint64                 m_digest_info_size;
     digest::IDigest*       m_digest = nullptr;
     digest::IDigest*       m_mgf    = nullptr;
 };

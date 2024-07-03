@@ -34,6 +34,8 @@
 namespace alcp::rsa {
 enum DigestIndex
 {
+    MD5,
+    SHA1,
     SHA_224,
     SHA_256,
     SHA_384,

@@ -31,6 +31,8 @@
 #include "alcp/capi/rsa/builder.hh"
 #include "alcp/capi/rsa/ctx.hh"
 
+#include "alcp/digest/md5.hh"
+#include "alcp/digest/sha1.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
@@ -133,6 +135,14 @@ fetch_digest(alc_digest_mode_t mode)
     using namespace digest;
     void* digest = nullptr;
     switch (mode) {
+        case ALC_MD5: {
+            digest = new MD5;
+            break;
+        }
+        case ALC_SHA1: {
+            digest = new Sha1;
+            break;
+        }
         case ALC_SHA2_256: {
             digest = new Sha256;
             break;
@@ -510,23 +520,6 @@ alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle)
     delete static_cast<const alcp::digest::IDigest*>(ctx->m_mgf);
     ctx->m_mgf = nullptr;
     ctx->~Context();
-}
-
-alc_error_t
-alcp_rsa_error(const alc_rsa_handle_p pRsaHandle, Uint8* buf, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-
-    auto p_ctx = static_cast<rsa::Context*>(pRsaHandle->context);
-
-    String message = String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)buf, size_to_copy, "%s", message.c_str());
-
-    return err;
 }
 
 EXTERN_C_END

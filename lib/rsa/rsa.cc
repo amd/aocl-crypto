@@ -47,7 +47,11 @@ namespace alcp::rsa {
 // clang-format off
 // As per rfc8017 appendix-A.2.4
 static const Uint8 DigestInfo[SHA_UNKNOWN][19] = 
-                    {{0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04,
+                    {
+                     {0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05,
+                      0x00, 0x04, 0x10},
+                     {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14},
+                     {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04,
                       0x05, 0x00, 0x04, 0x1c},
                      {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
                       0x05, 0x00, 0x04, 0x20},
@@ -113,23 +117,35 @@ Rsa<T>::setDigest(digest::IDigest* digest)
         m_digest   = digest;
         m_hash_len = digest->getHashSize();
         switch (m_hash_len * 8) {
+            case ALC_DIGEST_LEN_128:
+                m_digest_info_index = MD5;
+                m_digest_info_size  = 18;
+                break;
+            case ALC_DIGEST_LEN_160:
+                m_digest_info_index = SHA1;
+                m_digest_info_size  = 15;
+                break;
             case ALC_DIGEST_LEN_224:
                 m_digest_info_index =
                     digest->getInputBlockSize() == 64
                         ? SHA_224
                         : SHA_512_224; // SHA_512_224 chunk size is 128 bytes
+                m_digest_info_size = 19;
                 break;
             case ALC_DIGEST_LEN_256:
                 m_digest_info_index =
                     digest->getInputBlockSize() == 64
                         ? SHA_256
                         : SHA_512_256; // SHA_512_256 chunk size is 128 bytes
+                m_digest_info_size = 19;
                 break;
             case ALC_DIGEST_LEN_384:
                 m_digest_info_index = SHA_384;
+                m_digest_info_size  = 19;
                 break;
             case ALC_DIGEST_LEN_512:
                 m_digest_info_index = SHA_512;
+                m_digest_info_size  = 19;
                 break;
         }
     }
@@ -653,11 +669,13 @@ Rsa<T>::signPrivatePkcsv15(bool         check,
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
-    Uint64 pad_len = T / 8 - 3 - 19 - m_hash_len;
+    Uint64 pad_len = T / 8 - 3 - m_digest_info_size - m_hash_len;
     utils::PadBytes(message + 2, 0xff, pad_len);
+    utils::CopyBytes(message + 3 + pad_len,
+                     DigestInfo[m_digest_info_index],
+                     m_digest_info_size);
     utils::CopyBytes(
-        message + 3 + pad_len, DigestInfo[m_digest_info_index], 19);
-    utils::CopyBytes(message + 3 + pad_len + 19, hash, m_hash_len);
+        message + 3 + pad_len + m_digest_info_size, hash, m_hash_len);
 
     Status status = decryptPrivate(message, T / 8, pSignedBuff);
 
@@ -712,11 +730,14 @@ Rsa<T>::verifyPublicPkcsv15(const Uint8* pText,
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
-    Uint64 pad_len = T / 8 - 3 - 19 - m_hash_len;
+    Uint64 pad_len = T / 8 - 3 - m_digest_info_size - m_hash_len;
     utils::PadBytes(message + 2, 0xff, pad_len);
+    utils::CopyBytes(message + 3 + pad_len,
+                     DigestInfo[m_digest_info_index],
+                     m_digest_info_size);
+
     utils::CopyBytes(
-        message + 3 + pad_len, DigestInfo[m_digest_info_index], 19);
-    utils::CopyBytes(message + 3 + pad_len + 19, hash, m_hash_len);
+        message + 3 + pad_len + m_digest_info_size, hash, m_hash_len);
 
     Uint64* num1 = reinterpret_cast<Uint64*>(message);
     Uint64* num2 = reinterpret_cast<Uint64*>(mod_text);
