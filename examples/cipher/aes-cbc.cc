@@ -32,7 +32,7 @@
 #include <memory>
 #include <vector>
 
-#include "alcp/capi/cipher/builder.hh"
+#include "alcp/cipher.hh"
 
 #include <alcp/alcp.h>
 

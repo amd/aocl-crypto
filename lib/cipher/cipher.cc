@@ -26,11 +26,10 @@
  *
  */
 
-#include "alcp/capi/cipher/builder.hh"
-
 #include "alcp/cipher/aes.hh"
 
 #include "alcp/cipher/aes_cbc.hh"
+#include "alcp/cipher/aes_ccm.hh"
 #include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/cipher/aes_ctr.hh"

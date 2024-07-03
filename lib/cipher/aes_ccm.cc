@@ -37,7 +37,7 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
-#define CRYPT_AEAD_WRAPPER_FUNC_N(                                             \
+#define CRYPT_CCM_WRAPPER_FUNC(                                                \
     NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, IS_ENC)                    \
     alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
         const Uint8* pInput, Uint8* pOutput, Uint64 len)                       \
@@ -344,13 +344,13 @@ CcmHash::getTag(Uint8* pOutput, Uint64 tagLen)
 // Aead class definitions
 
 // aesni member functions
-CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm128, encrypt, cryptUpdate, ALCP_ENC)
-CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm128, decrypt, cryptUpdate, ALCP_DEC)
+CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm128, encrypt, cryptUpdate, ALCP_ENC)
+CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm128, decrypt, cryptUpdate, ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm192, encrypt, cryptUpdate, ALCP_ENC)
-CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm192, decrypt, cryptUpdate, ALCP_DEC)
+CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm192, encrypt, cryptUpdate, ALCP_ENC)
+CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm192, decrypt, cryptUpdate, ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm256, encrypt, cryptUpdate, ALCP_ENC)
-CRYPT_AEAD_WRAPPER_FUNC_N(aesni, Ccm256, decrypt, cryptUpdate, ALCP_DEC)
+CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm256, encrypt, cryptUpdate, ALCP_ENC)
+CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm256, decrypt, cryptUpdate, ALCP_DEC)
 
 } // namespace alcp::cipher

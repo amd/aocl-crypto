@@ -160,7 +160,7 @@ GcmAuth::setTagLength(Uint64 tagLength)
     return ALC_ERROR_NONE;
 }
 
-#define CRYPT_AEAD_WRAPPER_FUNC_N(                                             \
+#define CRYPT_GCM_WRAPPER_FUNC(                                                \
     NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)  \
     alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
         const Uint8* pinput, Uint8* pOutput, Uint64 len)                       \
@@ -186,106 +186,106 @@ GcmAuth::setTagLength(Uint64 tagLength)
         return err;                                                            \
     }
 // vaes512 member functions
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes512,
-                          Gcm128,
-                          decrypt,
-                          decryptGcm128,
-                          m_cipher_key_data.m_enc_key,
-                          10,
-                          ALCP_DEC)
+CRYPT_GCM_WRAPPER_FUNC(vaes512,
+                       Gcm128,
+                       decrypt,
+                       decryptGcm128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes512,
-                          Gcm192,
-                          decrypt,
-                          decryptGcm192,
-                          m_cipher_key_data.m_enc_key,
-                          12,
-                          ALCP_DEC)
+CRYPT_GCM_WRAPPER_FUNC(vaes512,
+                       Gcm192,
+                       decrypt,
+                       decryptGcm192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes512,
-                          Gcm256,
-                          decrypt,
-                          decryptGcm256,
-                          m_cipher_key_data.m_enc_key,
-                          14,
-                          ALCP_DEC)
+CRYPT_GCM_WRAPPER_FUNC(vaes512,
+                       Gcm256,
+                       decrypt,
+                       decryptGcm256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes512,
-                          Gcm128,
-                          encrypt,
-                          encryptGcm128,
-                          m_cipher_key_data.m_enc_key,
-                          10,
-                          ALCP_ENC)
+CRYPT_GCM_WRAPPER_FUNC(vaes512,
+                       Gcm128,
+                       encrypt,
+                       encryptGcm128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_ENC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes512,
-                          Gcm192,
-                          encrypt,
-                          encryptGcm192,
-                          m_cipher_key_data.m_enc_key,
-                          12,
-                          ALCP_ENC)
+CRYPT_GCM_WRAPPER_FUNC(vaes512,
+                       Gcm192,
+                       encrypt,
+                       encryptGcm192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_ENC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes512,
-                          Gcm256,
-                          encrypt,
-                          encryptGcm256,
-                          m_cipher_key_data.m_enc_key,
-                          14,
-                          ALCP_ENC)
+CRYPT_GCM_WRAPPER_FUNC(vaes512,
+                       Gcm256,
+                       encrypt,
+                       encryptGcm256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_ENC)
 
 // vaes member functions
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes,
-                          Gcm128,
-                          decrypt,
-                          decryptGcm128,
-                          m_cipher_key_data.m_enc_key,
-                          10,
-                          ALCP_DEC)
+CRYPT_GCM_WRAPPER_FUNC(vaes,
+                       Gcm128,
+                       decrypt,
+                       decryptGcm128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes,
-                          Gcm192,
-                          decrypt,
-                          decryptGcm192,
-                          m_cipher_key_data.m_enc_key,
-                          12,
-                          ALCP_DEC)
+CRYPT_GCM_WRAPPER_FUNC(vaes,
+                       Gcm192,
+                       decrypt,
+                       decryptGcm192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes,
-                          Gcm256,
-                          decrypt,
-                          decryptGcm256,
-                          m_cipher_key_data.m_enc_key,
-                          14,
-                          ALCP_DEC)
+CRYPT_GCM_WRAPPER_FUNC(vaes,
+                       Gcm256,
+                       decrypt,
+                       decryptGcm256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_DEC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes,
-                          Gcm128,
-                          encrypt,
-                          encryptGcm128,
-                          m_cipher_key_data.m_enc_key,
-                          10,
-                          ALCP_ENC)
+CRYPT_GCM_WRAPPER_FUNC(vaes,
+                       Gcm128,
+                       encrypt,
+                       encryptGcm128,
+                       m_cipher_key_data.m_enc_key,
+                       10,
+                       ALCP_ENC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes,
-                          Gcm192,
-                          encrypt,
-                          encryptGcm192,
-                          m_cipher_key_data.m_enc_key,
-                          12,
-                          ALCP_ENC)
+CRYPT_GCM_WRAPPER_FUNC(vaes,
+                       Gcm192,
+                       encrypt,
+                       encryptGcm192,
+                       m_cipher_key_data.m_enc_key,
+                       12,
+                       ALCP_ENC)
 
-CRYPT_AEAD_WRAPPER_FUNC_N(vaes,
-                          Gcm256,
-                          encrypt,
-                          encryptGcm256,
-                          m_cipher_key_data.m_enc_key,
-                          14,
-                          ALCP_ENC)
+CRYPT_GCM_WRAPPER_FUNC(vaes,
+                       Gcm256,
+                       encrypt,
+                       encryptGcm256,
+                       m_cipher_key_data.m_enc_key,
+                       14,
+                       ALCP_ENC)
 
 // aesni member functions
 
-// below code to be re-written to use CRYPT_AEAD_WRAPPER_FUNC wrapper
+// below code to be re-written to use CRYPT_GCM_WRAPPER_FUNC wrapper
 // itself.
 
 alc_error_t

@@ -30,11 +30,10 @@
 
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
+#include "alcp/cipher.hh"
 
 #include "alcp/capi/cipher/ctx.hh"
 #include "alcp/capi/defs.hh"
-
-#include "alcp/capi/cipher/builder.hh"
 
 using namespace alcp::cipher;
 
@@ -118,10 +117,9 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
-    auto i   = static_cast<iCipher*>(ctx->m_cipher);
-
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    err = i->encrypt(pPlainText, pCipherText, len);
+    auto i = static_cast<iCipher*>(ctx->m_cipher);
+    err    = i->encrypt(pPlainText, pCipherText, len);
 
     return err;
 }
@@ -165,10 +163,10 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
-    auto i   = static_cast<iCipher*>(ctx->m_cipher);
-
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    err = i->decrypt(pCipherText, pPlainText, len);
+
+    auto i = static_cast<iCipher*>(ctx->m_cipher);
+    err    = i->decrypt(pCipherText, pPlainText, len);
 
     return err;
 }
@@ -212,9 +210,9 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
-    auto i   = static_cast<iCipher*>(ctx->m_cipher);
-
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
+
+    auto i = static_cast<iCipher*>(ctx->m_cipher);
 
     // init can be called to setKey or setIv or both
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {

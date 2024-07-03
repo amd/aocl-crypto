@@ -30,6 +30,7 @@
 #define _CIPHER_AES_HH_ 2
 
 #include "alcp/cipher.h"
+#include "alcp/cipher.hh"
 
 #include "alcp/base.hh"
 #include "alcp/cipher/rijndael.hh"

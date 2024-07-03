@@ -38,24 +38,28 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <map>
+#include <tuple>
+
+#include "alcp/utils/cpuid.hh"
+
+using alcp::utils::CpuCipherFeatures;
+using alcp::utils::CpuId;
 
 namespace alcp { namespace cipher {
-    // Different implementation of crypt class required based on ISA support in
-    // hardware
-    class Crypter
+
+    enum CipherKeyLen
     {
-      public:
-        virtual ~Crypter()                      = default;
-        virtual alc_error_t decrypt(const Uint8* pSrc,
-                                    Uint8*       pDst,
-                                    Uint64       len) = 0;
-        virtual alc_error_t encrypt(const Uint8* pSrt,
-                                    Uint8*       pDrc,
-                                    Uint64       len) = 0;
-        virtual alc_error_t finish(const void*) = 0;
+        KEY_128_BIT,
+        KEY_192_BIT,
+        KEY_256_BIT
     };
 
-    class iCipher : public Crypter
+    typedef std::tuple<const alc_cipher_mode_t, const CipherKeyLen>
+                                                            cipherKeyLenTuple;
+    typedef std::map<const string, const cipherKeyLenTuple> cipherAlgoMap;
+
+    class iCipher
     {
 
       public:
@@ -66,6 +70,14 @@ namespace alcp { namespace cipher {
                                  Uint64       keyLen,
                                  const Uint8* pIv,
                                  Uint64       ivLen) = 0;
+
+        virtual alc_error_t decrypt(const Uint8* pSrc,
+                                    Uint8*       pDst,
+                                    Uint64       len) = 0;
+        virtual alc_error_t encrypt(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       len) = 0;
+        virtual alc_error_t finish(const void*) = 0;
     };
 
     // Additional Authentication functionality used for AEAD schemes
@@ -82,12 +94,43 @@ namespace alcp { namespace cipher {
     };
 
     class iCipherAead
-        : public virtual iCipher    // cipherInterface class
-        , public virtual CipherAuth // authenication class - optional based on
-                                    // cipher mode
+        : public virtual iCipher
+        , public virtual CipherAuth // authenication class - used for Aead modes
     {
       public:
         virtual ~iCipherAead() = default;
+    };
+
+    /* Cipher Factory for different Aead and non-Aead modes */
+    template<class INTERFACE>
+    class CipherFactory
+    {
+      private:
+        CpuCipherFeatures m_arch =
+            CpuCipherFeatures::eVaes512; // default zen4 arch
+        CpuCipherFeatures m_currentArch = getCpuCipherFeature();
+        CipherKeyLen      m_keyLen      = KEY_128_BIT;
+        alc_cipher_mode_t m_mode        = ALC_AES_MODE_NONE;
+        INTERFACE*        m_iCipher     = nullptr;
+        cipherAlgoMap     m_cipherMap   = {};
+
+      public:
+        CipherFactory();
+        ~CipherFactory();
+
+        // cipher creators
+        INTERFACE* create(const string& name);
+        INTERFACE* create(const string& name, CpuCipherFeatures arch);
+        INTERFACE* create(alc_cipher_mode_t mode, CipherKeyLen keyLen);
+        INTERFACE* create(alc_cipher_mode_t mode,
+                          CipherKeyLen      keyLen,
+                          CpuCipherFeatures arch);
+
+      private:
+        void              initCipherMap();
+        void              clearCipherMap();
+        void              getCipher();
+        CpuCipherFeatures getCpuCipherFeature();
     };
 
 }} // namespace alcp::cipher
