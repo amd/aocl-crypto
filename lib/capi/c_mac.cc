@@ -194,7 +194,7 @@ alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
 
     ALCP_BAD_PTR_ERR_RET(src_ctx, err);
     ALCP_BAD_PTR_ERR_RET(dest_ctx, err);
-    ALCP_BAD_PTR_ERR_RET(src_ctx->m_digest, err);
+
     new (dest_ctx) mac::Context;
 
     Status status = mac::MacBuilder::BuildWithCopy(src_ctx, dest_ctx);
