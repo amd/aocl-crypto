@@ -213,6 +213,9 @@ CrossTestXTS(std::shared_ptr<RngBase> rng,
              LibrarySelect            select1,
              LibrarySelect            select2)
 {
+#ifndef CIPHER_MULTI_UPDATE
+    GTEST_SKIP() << "MultiUpdate not available at compile time!";
+#endif
     const std::vector<Uint64> cKeySizes   = { 128, 256 }; // bits // bits
     const std::vector<Uint64> cChunkSizes = { 32, 64 };   // bits
     const std::vector<Uint64> cPtSizes    = { 16, 1000, 8192, 65536 }; // bytes
