@@ -66,6 +66,7 @@ typedef enum _alc_digest_len
     ALC_DIGEST_LEN_128              = 128, /* for MD2,MD4,MD5 */
     ALC_DIGEST_LEN_192              = 192,
     ALC_DIGEST_LEN_160              = 160, /* for SHA1 */
+    ALC_DIGEST_LEN_288              = 288, /* for MD5_SHA1 */
     ALC_DIGEST_LEN_224              = 224, /* SHA224, SHA512/224 */
     ALC_DIGEST_LEN_256              = 256, /* MD6, SHA256, SHA512/256 */
     ALC_DIGEST_LEN_384              = 384, /* SHA348 */
@@ -83,6 +84,7 @@ typedef enum alc_digest_block_size
 {
     ALC_DIGEST_BLOCK_SIZE_MD5       = 512,
     ALC_DIGEST_BLOCK_SIZE_SHA1      = 512,
+    ALC_DIGEST_BLOCK_SIZE_MD5_SHA1  = ALC_DIGEST_BLOCK_SIZE_SHA1,
     ALC_DIGEST_BLOCK_SIZE_SHA2_256  = 512,
     ALC_DIGEST_BLOCK_SIZE_SHA2_512  = 1024,
     ALC_DIGEST_BLOCK_SIZE_SHA3_224  = 1152,
