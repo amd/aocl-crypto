@@ -146,15 +146,6 @@ IPPDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 
 void
 IPPDigestBase::reset()
-{
-}
+{}
 
-void
-IPPDigestBase::finish()
-{
-    if (m_handle != nullptr) {
-        delete[] reinterpret_cast<Uint8*>(m_handle);
-        m_handle = nullptr;
-    }
-}
 } // namespace alcp::testing

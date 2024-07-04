@@ -245,7 +245,6 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
-            db->finish();
             /*conv m_digest into a vector */
             std::vector<Uint8> digest_vector(std::begin(digest),
                                              std::end(digest));

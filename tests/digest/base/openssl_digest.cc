@@ -194,13 +194,4 @@ OpenSSLDigestBase::reset()
     }
 }
 
-void
-OpenSSLDigestBase::finish()
-{
-    if (m_handle != nullptr) {
-        EVP_MD_CTX_free(m_handle);
-        m_handle = nullptr;
-    }
-}
-
 } // namespace alcp::testing

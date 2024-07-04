@@ -55,7 +55,6 @@ class IPPDigestBase : public DigestBase
     bool digest_finalize(const alcp_digest_data_t& data);
     bool digest_squeeze(const alcp_digest_data_t& data);
     void reset();
-    void finish();
 };
 
 } // namespace alcp::testing

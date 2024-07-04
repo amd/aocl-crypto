@@ -194,13 +194,4 @@ AlcpDigestBase::reset()
     alcp_digest_init(m_handle);
 }
 
-void
-AlcpDigestBase::finish()
-{
-    alcp_digest_finish(m_handle);
-    if (m_handle->context != nullptr) {
-        free(m_handle->context);
-        m_handle->context = nullptr;
-    }
-}
 } // namespace alcp::testing
