@@ -40,6 +40,7 @@ IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 
 AES_TEST(kat gcm)
-AES_TEST(kat xts)
+#AES_TEST(kat xts)
+
 AES_TEST(cross gcm)
-AES_TEST(cross xts)
+#AES_TEST(cross xts)

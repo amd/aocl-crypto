@@ -89,8 +89,7 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
     auto alcpCipher       = new CipherFactory<iCipher>;
     ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
 
-    auto aead = alcpCipher->create(
-        cipherMode, getKeyLen(keyLen), CpuCipherFeatures::eVaes512);
+    auto aead = alcpCipher->create(cipherMode, getKeyLen(keyLen));
 
     if (aead == nullptr) {
         printf("\n cipher algo create failed");

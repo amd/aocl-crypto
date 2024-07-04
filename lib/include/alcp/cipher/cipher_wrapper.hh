@@ -34,7 +34,6 @@
 #include "alcp/error.h"
 
 #include "aes.hh"
-#include "aes_ccm.hh"
 #include "aes_gcm.hh"
 
 #include "alcp/utils/copy.hh"

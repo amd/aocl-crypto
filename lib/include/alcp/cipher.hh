@@ -30,8 +30,11 @@
 
 #include "config.h"
 
+#include "alcp/alcp.hh"
+
 #include "alcp/base.hh"
 #include "alcp/cipher.h"
+#include "alcp/cipher_aead.h" //dependency to be removed
 #include "alcp/error.h"
 
 #include <array>
@@ -59,7 +62,7 @@ namespace alcp { namespace cipher {
                                                             cipherKeyLenTuple;
     typedef std::map<const string, const cipherKeyLenTuple> cipherAlgoMap;
 
-    class iCipher
+    class ALCP_API_EXPORT iCipher
     {
 
       public:
@@ -81,10 +84,10 @@ namespace alcp { namespace cipher {
     };
 
     // Additional Authentication functionality used for AEAD schemes
-    class CipherAuth
+    class iCipherAuth
     {
       public:
-        virtual ~CipherAuth()                                        = default;
+        virtual ~iCipherAuth()                                       = default;
         virtual alc_error_t setAad(const Uint8* pAad, Uint64 aadLen) = 0;
         virtual alc_error_t getTag(Uint8* pTag, Uint64 tagLen)       = 0;
 
@@ -93,9 +96,10 @@ namespace alcp { namespace cipher {
         virtual alc_error_t setTagLength(Uint64 tagLen) = 0;
     };
 
-    class iCipherAead
+    class ALCP_API_EXPORT iCipherAead
         : public virtual iCipher
-        , public virtual CipherAuth // authenication class - used for Aead modes
+        , public virtual iCipherAuth // authenication class - used for Aead
+                                     // modes
     {
       public:
         virtual ~iCipherAead() = default;
@@ -103,7 +107,7 @@ namespace alcp { namespace cipher {
 
     /* Cipher Factory for different Aead and non-Aead modes */
     template<class INTERFACE>
-    class CipherFactory
+    class ALCP_API_EXPORT CipherFactory
     {
       private:
         CpuCipherFeatures m_arch =

@@ -37,10 +37,12 @@ ADD_EXAMPLE(aes-ccm aes-ccm.c)
 
 ADD_EXAMPLE(aes-siv aes-siv.c)
 
-ADD_EXAMPLE(chacha20 chacha20.c)
+#temporarily disabled reference kernel support to be added in next PR
+#ADD_EXAMPLE(chacha20 chacha20.c)
 
 ADD_EXAMPLE(aes-speed-cipher aes-speed-cipher.c)
 
 ADD_EXAMPLE(aes-speed-gcm aes-speed-gcm.c)
 
-ADD_EXAMPLE(chacha20-poly1305 chacha20-poly1305.c)
+#temporarily disabled reference kernel support to be added in next PR
+#ADD_EXAMPLE(chacha20-poly1305 chacha20-poly1305.c)

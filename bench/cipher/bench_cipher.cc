@@ -796,11 +796,13 @@ BENCH_CHACHA20_DECRYPT_256(benchmark::State& state)
 int
 AddBenchmarks()
 {
+#if 0 // to be enabled after adding ref kernel support
     /* IPPCP doesnt have Chacha20 stream cipher variant yet */
     if (!useipp) {
         BENCHMARK(BENCH_CHACHA20_ENCRYPT_256)->ArgsProduct({ blocksizes });
         BENCHMARK(BENCH_CHACHA20_DECRYPT_256)->ArgsProduct({ blocksizes });
     }
+#endif
     BENCHMARK(BENCH_AES_ENCRYPT_CBC_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CTR_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_OFB_128)->ArgsProduct({ blocksizes });

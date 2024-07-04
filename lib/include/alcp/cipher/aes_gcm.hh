@@ -113,9 +113,9 @@ class ALCP_API_EXPORT Gcm
 };
 
 // GCM authentication class
-class GcmAuth
+class ALCP_API_EXPORT GcmAuth
     : public Gcm
-    , public virtual CipherAuth
+    , public virtual iCipherAuth
 {
   public:
     GcmAuth(Uint32 keyLen_in_bytes)

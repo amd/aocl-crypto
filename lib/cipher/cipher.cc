@@ -325,9 +325,11 @@ CipherFactory<INTERFACE>::create(alc_cipher_mode_t mode,
     m_keyLen = keyLen;
     // limit based on arch available in the cpu.
     if (arch > m_currentArch) {
+#if 0 /* when default feature set to highest level, avoid multiple warnings */
         std::cout << "\n warning! requested ISA is not supported by platform, "
                      "lowering to ISA supported "
                   << std::endl;
+#endif
         arch = m_currentArch;
     }
     m_arch = arch;

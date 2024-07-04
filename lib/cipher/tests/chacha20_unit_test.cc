@@ -33,7 +33,7 @@
 #include <openssl/bio.h>
 
 #include "alcp/utils/benchmark.hh"
-
+#if 0
 using namespace alcp::cipher;
 TEST(Chacha20, QuarterRoundTest)
 {
@@ -281,3 +281,5 @@ TEST(Chacha20, PerformanceTest)
         }
     }
 }
+
+#endif

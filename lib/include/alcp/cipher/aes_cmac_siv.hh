@@ -94,12 +94,12 @@ class ALCP_API_EXPORT Siv
     Siv(Uint32 keyLen_in_bytes) {}
 };
 
-// AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual CipherAuth);
+// AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual iCipherAuth);
 
 // GCM authentication class
-class SivHash
+class ALCP_API_EXPORT SivHash
     : public Siv
-    , public virtual CipherAuth
+    , public virtual iCipherAuth
 {
   public:
     SivHash(Uint32 keyLen_in_bytes)

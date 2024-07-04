@@ -34,7 +34,10 @@
 #include <memory>
 #include <vector>
 
+#include "alcp/cipher.hh"
 #include <alcp/alcp.h>
+
+#if 0
 namespace filecrypt {
 namespace utilities {
     /* Utilities */
@@ -525,3 +528,5 @@ main(int argc, char const* argv[])
 
     return 0;
 }
+
+#endif

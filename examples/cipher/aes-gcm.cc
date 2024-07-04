@@ -53,7 +53,7 @@ main()
     Uint8* tag        = new Uint8[16];
 
     auto alcpCipher = new CipherFactory<iCipherAead>;
-    auto aead = alcpCipher->create("aes-gcm-192", CpuCipherFeatures::eVaes512);
+    auto aead       = alcpCipher->create("aes-gcm-192");
 
     if (aead == nullptr) {
         printf("\n cipher create failed");

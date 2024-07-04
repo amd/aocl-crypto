@@ -99,7 +99,7 @@ AddState(Uint32 state1[16], Uint32 state2[16])
 inline alc_error_t
 ValidateKey(const Uint8* key, Uint64 keylen)
 {
-    if (key == NULL || (keylen != (256 / 8))) {
+    if (key == NULL || (keylen != 256)) {
         return ALC_ERROR_INVALID_ARG;
     }
     return ALC_ERROR_NONE;
@@ -111,7 +111,7 @@ SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(state + 4, key, keylen);
+    memcpy(state + 4, key, keylen / 8);
     return ALC_ERROR_NONE;
 }
 inline alc_error_t

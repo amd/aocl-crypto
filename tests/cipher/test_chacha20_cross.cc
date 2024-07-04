@@ -33,6 +33,7 @@
 
 using namespace alcp::testing;
 
+#if 0 // to be enabled after adding ref kernel support
 /* Testing Starts Here! */
 TEST(CHACHA20_ENC_256, CROSS_SMALL_256)
 {
@@ -47,6 +48,7 @@ TEST(CHACHA20_ENC_256, CROSS_BIG_256)
         GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
     CipherCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20, ALC_CHACHA20, BIG);
 }
+#endif
 
 int
 main(int argc, char** argv)

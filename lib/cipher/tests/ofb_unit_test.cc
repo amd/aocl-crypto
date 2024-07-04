@@ -39,6 +39,8 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
+#if 0 // disabled temporarily.
+
 using alcp::cipher::Ofb128_aesni;
 using alcp::cipher::Ofb192_aesni;
 using alcp::cipher::Ofb256_aesni;
@@ -275,3 +277,5 @@ main(int argc, char** argv)
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+#endif

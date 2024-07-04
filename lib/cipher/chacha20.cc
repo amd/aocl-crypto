@@ -60,7 +60,7 @@ ChaCha20::init(const Uint8* pKey,
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(pKey, keyLen / 8);
+        err = setKey(pKey, keyLen);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
@@ -92,7 +92,7 @@ ChaCha20::setKey(const Uint8 key[], Uint64 keylen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_key, key, keylen);
+    memcpy(m_key, key, keylen / 8);
     return ALC_ERROR_NONE;
 }
 

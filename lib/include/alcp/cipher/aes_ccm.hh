@@ -119,10 +119,10 @@ class ALCP_API_EXPORT Ccm
                        bool        isEncrypt);
 };
 
-// AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual CipherAuth);
+// AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual iCipherAuth);
 class CcmHash
     : public Ccm
-    , public virtual CipherAuth
+    , public virtual iCipherAuth
 {
   public:
     CcmHash(Uint32 keyLen_in_bytes)
@@ -136,16 +136,6 @@ class CcmHash
 
     alc_error_t setPlainTextLength(Uint64 len); // used in multiupdate case only
 };
-
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
-CIPHER_CLASS_GEN_N(vaes512, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
-CIPHER_CLASS_GEN_N(vaes512, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
-
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
-CIPHER_CLASS_GEN_N(vaes, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
-CIPHER_CLASS_GEN_N(vaes, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
 
 // aesni classes
 CIPHER_CLASS_GEN_N(aesni, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);

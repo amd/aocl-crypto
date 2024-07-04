@@ -82,7 +82,7 @@ namespace vaes512 {
                          Uint64       ivLen);
     };
 
-    AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual CipherAuth);
+    AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual iCipherAuth);
 
     CIPHER_CLASS_GEN_(ChaChaPoly256,
                       ChaChaPolyAuth,
