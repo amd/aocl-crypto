@@ -30,4 +30,4 @@
 
 ADD_EXAMPLE(hmac hmac.c)
 ADD_EXAMPLE(cmac cmac.c)
-#ADD_EXAMPLE(poly1305 poly1305.c)
+ADD_EXAMPLE(poly1305 poly1305.c)

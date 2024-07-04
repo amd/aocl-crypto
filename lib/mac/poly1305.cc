@@ -58,7 +58,8 @@ Poly1305<feature>::Poly1305()
 
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305(const Poly1305& src)
-{}
+{
+}
 
 template<utils::CpuArchFeature feature>
 Status
@@ -71,7 +72,11 @@ Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
 
     // default utils::CpuArchFeature::eAvx512 is only supported.
     // ref support temporarily removed poly1305_impl->init(key, keyLen);
-    zen4::poly1305_init_radix44(state, key);
+    if constexpr (feature == utils::CpuArchFeature::eAvx512) {
+        zen4::poly1305_init_radix44(state, key);
+    } else {
+        return poly1305_impl->init(key, keyLen);
+    }
     return StatusOk();
 
     return base::status::InternalError("Dispatch Failure");

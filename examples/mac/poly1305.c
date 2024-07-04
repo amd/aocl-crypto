@@ -89,7 +89,7 @@ poly1305_demo(Uint8*       data,
 int
 main(int argc, char const* argv[])
 {
-#if 0 // temporarily disabled reference kernel support to be added in next PR
+#if 1 // temporarily disabled reference kernel support to be added in next PR
     alc_error_t err;
 
     Uint8 key[32] = { 0x85, 0xd6, 0xbe, 0x78, 0x57, 0x55, 0x6d, 0x33,
