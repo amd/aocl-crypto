@@ -242,7 +242,8 @@ static const Uint8 cSampleAd[] = "Hello World, this is a sample AAD, "
 int
 main(int argc, char const* argv[])
 {
-    int   retval                = 0;
+    int retval = 0;
+#if 0 // temporarily disabled reference kernel support to be added in next PR
     Uint8 sample_tag_output[16] = {};
     Uint8 decrypted_plaintext[sizeof(sample_plaintxt)];
     retval = CreateDemoSession(
@@ -313,6 +314,9 @@ main(int argc, char const* argv[])
 
 out:
     return -1;
+#else
+    return retval;
+#endif
 }
 
 char*
