@@ -145,7 +145,7 @@ CreateInitialState(Uint32      state[16],
     state[2] = 0x79622d32;
     state[3] = 0x6b206574;
     //  state = constants | key | counter | nonce
-    alc_error_t err = SetKey(state, key, keylen);
+    alc_error_t err = SetKey(state, key, keylen * 8);
     if (alcp_is_error(err)) {
         return err;
     };
