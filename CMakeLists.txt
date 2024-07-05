@@ -242,8 +242,8 @@ ENDIF(UNIX AND ALCP_INSTALL_COMBINED_STATIC)
 
 IF (ALCP_ENABLE_EXAMPLES)
 	# examples which should be part of release package
-	#FILE(GLOB EXAMPLES_FILES_CIPHER
-	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.c)
+	FILE(GLOB EXAMPLES_FILES_CIPHER
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.c)
 
     #FIXME: temporarily disabling this for coverage build, due to a known runtime issue in these examples
     IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
@@ -268,8 +268,8 @@ IF (ALCP_ENABLE_EXAMPLES)
 			${CMAKE_CURRENT_SOURCE_DIR}/examples/BUILD_Examples.md)
 
 	# install
-	#INSTALL(FILES ${EXAMPLES_FILES_CIPHER}
-	#		DESTINATION examples/cipher)
+	INSTALL(FILES ${EXAMPLES_FILES_CIPHER}
+			DESTINATION examples/cipher)
 	INSTALL(FILES ${EXAMPLES_FILES_DIGEST}
 			DESTINATION examples/digest)
 	INSTALL(FILES ${EXAMPLES_FILES_MAC}
@@ -283,8 +283,8 @@ IF (ALCP_ENABLE_EXAMPLES)
 	INSTALL(FILES ${EXAMPLES_FILES_RSA}
 			DESTINATION examples/rsa)
 	#TODO: do we need to cover this under install?
-	# INSTALL(FILES ${EXAMPLES_FILES_MISC}
-	# 		DESTINATION examples/misc)
+	INSTALL(FILES ${EXAMPLES_FILES_MISC}
+	 		DESTINATION examples/misc)
 	INSTALL(FILES examples/Makefile
 			DESTINATION .)
 	INSTALL(FILES ${EXAMPLES_README}

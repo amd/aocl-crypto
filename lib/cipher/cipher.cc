@@ -209,8 +209,8 @@ CipherFactory<iCipher>::getCipher()
                 using namespace vaes512;
                 m_iCipher = new ChaCha256();
             } else {
-                m_iCipher = nullptr;
-                printf("\n Error: only avx512 kernels are supported ");
+                using namespace ref;
+                m_iCipher = new ChaCha256();
             }
             break;
         default:
@@ -266,8 +266,8 @@ CipherFactory<iCipherAead>::getCipher()
                 using namespace vaes512;
                 m_iCipher = new ChaChaPoly256();
             } else {
-                m_iCipher = nullptr;
-                printf("\n Error: only avx512 kernels are supported ");
+                using namespace ref;
+                m_iCipher = new ChaChaPoly256();
             }
             break;
         default:
@@ -386,7 +386,7 @@ CipherFactory<iCipher>::initCipherMap()
         { "aes-xts-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
         { "aes-xts-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
 
-        { "aes-chacha20", { ALC_CHACHA20, KEY_256_BIT } },
+        { "chacha20", { ALC_CHACHA20, KEY_256_BIT } },
     };
 }
 
@@ -407,7 +407,7 @@ CipherFactory<iCipherAead>::initCipherMap()
         { "aes-siv-192", { ALC_AES_MODE_SIV, KEY_192_BIT } },
         { "aes-siv-256", { ALC_AES_MODE_SIV, KEY_256_BIT } },
 
-        { "aes-polychacha", { ALC_AES_MODE_SIV, KEY_256_BIT } },
+        { "chachapoly", { ALC_CHACHA20_POLY1305, KEY_256_BIT } },
     };
 }
 

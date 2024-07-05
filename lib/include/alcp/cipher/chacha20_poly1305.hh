@@ -50,7 +50,6 @@ union len_aad_processed
 using utils::CpuArchFeature;
 
 namespace vaes512 {
-
     class ALCP_API_EXPORT ChaChaPlusPoly
         : public ChaCha256
         , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
@@ -91,13 +90,45 @@ namespace vaes512 {
 
 } // namespace vaes512
 
-#if 0
-
 namespace ref {
 
+    class ALCP_API_EXPORT ChaChaPlusPoly
+        : public ChaCha256
+        , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
+    {
+      protected:
+        Uint8               m_poly1305_key[32]{};
+        const Uint8         m_zero_padding[16]{};
+        len_input_processed m_len_input_processed{};
+        len_aad_processed   m_len_aad_processed{};
 
+      public:
+        ChaChaPlusPoly(Uint32 keyLen_in_bytes){};
+        virtual ~ChaChaPlusPoly() = default;
+
+        alc_error_t setIv(const Uint8* iv, Uint64 ivLen);
+        alc_error_t setKey(const Uint8* key, Uint64 keylen);
+    };
+
+    class ALCP_API_EXPORT ChaChaPoly : public ChaChaPlusPoly
+    {
+
+      public:
+        ChaChaPoly(Uint32 keyLen_in_bytes)
+            : ChaChaPlusPoly(keyLen_in_bytes){}; /* fixed keyLen*/
+        virtual ~ChaChaPoly() = default;
+        alc_error_t init(const Uint8* pKey,
+                         Uint64       keyLen,
+                         const Uint8* pIv,
+                         Uint64       ivLen);
+    };
+
+    AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual iCipherAuth);
+
+    CIPHER_CLASS_GEN_(ChaChaPoly256,
+                      ChaChaPolyAuth,
+                      virtual iCipherAead,
+                      256 / 8);
 } // namespace ref
-
-#endif
 
 } // namespace alcp::cipher

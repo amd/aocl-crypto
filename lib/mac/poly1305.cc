@@ -26,20 +26,17 @@
  *
  */
 
+#include "alcp/mac/poly1305.hh"
+#include "alcp/base.hh"
+#include "alcp/mac/macerror.hh"
+#include "alcp/mac/poly1305_zen4.hh"
+#include "alcp/utils/cpuid.hh"
 #include <algorithm>
 #include <array>
 #include <iostream>
 #include <tuple>
-
-#include "alcp/base.hh"
-#include "alcp/mac/macerror.hh"
-#include "alcp/mac/poly1305.hh"
-#include "alcp/mac/poly1305_zen4.hh"
-#include "alcp/utils/cpuid.hh"
-
 namespace alcp::mac::poly1305 {
 using utils::CpuId;
-
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305()
 {
@@ -55,12 +52,9 @@ Poly1305<feature>::Poly1305()
         }
     }
 }
-
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305(const Poly1305& src)
-{
-}
-
+{}
 template<utils::CpuArchFeature feature>
 Status
 Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
@@ -69,16 +63,23 @@ Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
         std::cout << "ERROR KEYLEN:" << keyLen << std::endl;
         return status::InitError("Wrong key size!");
     }
-
-    // default utils::CpuArchFeature::eAvx512 is only supported.
-    // ref support temporarily removed poly1305_impl->init(key, keyLen);
-    if constexpr (feature == utils::CpuArchFeature::eAvx512) {
-        zen4::poly1305_init_radix44(state, key);
-    } else {
+    if constexpr ((utils::CpuArchFeature::eReference == feature)
+                  || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->init(key, keyLen);
+    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
+        zen4::poly1305_init_radix44(state, key);
+        return StatusOk();
+    } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
+        // Manual dispatch in case we don't know where to dispatch to.
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            zen4::poly1305_init_radix44(state, key);
+            return StatusOk();
+        } else {
+            return poly1305_impl->init(key, keyLen);
+        }
     }
-    return StatusOk();
-
     return base::status::InternalError("Dispatch Failure");
 }
 
@@ -144,12 +145,10 @@ Poly1305<feature>::finalize(Uint8 digest[], Uint64 digestLen)
                   || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->finish(digest, digestLen);
     } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
-        // return poly1305_impl->finish(pMsg, msgLen);
         if (zen4::poly1305_finalize_radix44(state, digest, digestLen) == true)
             return StatusOk();
         else
             return status::AlreadyFinalizedError("");
-
     } else if constexpr (utils::CpuArchFeature::eDynamic == feature) {
         // Manual dispatch in case we don't know where to dispatch to.
         if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
@@ -166,7 +165,6 @@ Poly1305<feature>::finalize(Uint8 digest[], Uint64 digestLen)
     }
     return base::status::InternalError("Dispatch Failure");
 }
-
 template class Poly1305<utils::CpuArchFeature::eAvx512>;
 template class Poly1305<utils::CpuArchFeature::eAvx2>;
 template class Poly1305<utils::CpuArchFeature::eReference>;

@@ -176,7 +176,6 @@ int
 main(void)
 {
     int retval = 0;
-#if 0 // temporarily disabled reference kernel support to be added in next PR
     // Buffer to write plain text into.
     // It should have size greater than or equal to the plaintext.
     Uint8        sample_output[512] = { 0 };
@@ -223,9 +222,6 @@ main(void)
     return 0;
 out:
     return -1;
-#else
-    return retval;
-#endif
 }
 
 /*  LocalWords:  decrypt Crypto AOCL
