@@ -128,7 +128,11 @@ OpenSSLCmacBase::MacFinalize(const alcp_cmac_data_t& data)
 bool
 OpenSSLCmacBase::MacReset()
 {
-    /* there is no reset calls for evp mac */
+    if (EVP_MAC_init(m_handle, m_key, m_key_len, nullptr) != 1) {
+        std::cout << "EVP_MAC_init failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
     return true;
 }
 
