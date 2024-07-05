@@ -368,7 +368,7 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     /*
      * Complete the transaction
      */
-    alcp_cipher_finish(&handle);
+    alcp_cipher_aead_finish(&handle);
     free(handle.ch_context);
 
     if (outputText) {

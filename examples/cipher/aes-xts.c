@@ -70,7 +70,7 @@ deallocate_handle()
 void
 close_demo_session()
 {
-    alcp_cipher_aead_finish(&handle);
+    alcp_cipher_finish(&handle);
     deallocate_handle();
 }
 

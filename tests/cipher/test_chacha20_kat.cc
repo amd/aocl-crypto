@@ -32,7 +32,6 @@
 
 using namespace alcp::testing;
 
-#if 0 // to be enabled after adding ref kernel support
 /* Testing Starts Here! */
 TEST(CHACHA20_ENC_256, KAT_256)
 {
@@ -46,7 +45,6 @@ TEST(CHACHA20_DEC_256, KAT_256)
         GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
     CipherKatTest(256, DECRYPT, ALC_CIPHER_TYPE_CHACHA20, ALC_CHACHA20);
 }
-#endif
 
 int
 main(int argc, char** argv)
