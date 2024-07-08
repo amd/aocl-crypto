@@ -838,6 +838,7 @@ AddBenchmarks()
 
     /* Benchmark of AEAD Ciphers */
     // GCM Benchmarks
+#if 0
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)
         ->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)
@@ -850,6 +851,8 @@ AddBenchmarks()
         ->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)
         ->ArgsProduct({ blocksizes });
+#endif
+
     // SIV Benchmarks
     BENCHMARK(BENCH_AES_ENCRYPT_SIV_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_SIV_128)->ArgsProduct({ blocksizes });
