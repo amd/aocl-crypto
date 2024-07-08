@@ -59,6 +59,7 @@ ENDIF (POLICY CMP0079)
 IF(WIN32)
 target_link_libraries(gmock PUBLIC gtest)
 target_link_libraries(gmock_main PUBLIC gtest_main)
+set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 ENDIF()
 
 function(add_openssl)
