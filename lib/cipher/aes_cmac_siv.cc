@@ -77,37 +77,37 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
         m_key2 = pKey + keyLength / 8;
         err    = setKeys(m_key1, keyLength);
         if (err != ALC_ERROR_NONE) {
-            return ALC_ERROR_INVALID_ARG;
+            return err;
         }
     }
 
     return ALC_ERROR_NONE;
 }
 
-Status
+alc_error_t
 Siv::cmacWrapper(const Uint8 data[], Uint64 size, Uint8 mac[], Uint64 macSize)
 {
-    Status s{ StatusOk() };
+    alc_error_t err = ALC_ERROR_NONE;
     if (data == nullptr || mac == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
-    s = m_cmac.update(data, size);
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.update(data, size);
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    s = m_cmac.finalize(mac, macSize);
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.finalize(mac, macSize);
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    s = m_cmac.reset();
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.reset();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    return s;
+    return err;
 }
 
-Status
+alc_error_t
 Siv::cmacWrapperMultiData(const Uint8 data1[],
                           Uint64      size1,
                           const Uint8 data2[],
@@ -115,38 +115,38 @@ Siv::cmacWrapperMultiData(const Uint8 data1[],
                           Uint8       mac[],
                           Uint64      macSize)
 {
-    Status s{ StatusOk() };
+    alc_error_t err = ALC_ERROR_NONE;
     if (data1 == nullptr || data2 == nullptr || mac == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
-    s = m_cmac.update(data1, size1);
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.update(data1, size1);
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    s = m_cmac.update(data2, size2);
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.update(data2, size2);
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    s = m_cmac.finalize(mac, macSize);
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.finalize(mac, macSize);
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    s = m_cmac.reset();
-    if (!s.ok()) {
-        return s;
+    err = m_cmac.reset();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
-    return s;
+    return err;
 }
 
-Status
+alc_error_t
 Siv::addAdditionalInput(const Uint8* pAad, Uint64 aadLen)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     if (pAad == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
 
     // FIXME: Allocate SIZE_CMAC for 10 vectors on intialization to be more
@@ -160,9 +160,8 @@ Siv::addAdditionalInput(const Uint8* pAad, Uint64 aadLen)
 
     // Block Null Keys or non set Keys.
     if (m_key1 == nullptr || m_key2 == nullptr) {
-        auto cer = cipher::CipherError(cipher::ErrorCode::eInvaidValue);
-        s.update(cer, cer.message());
-        return s;
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
     // Allocate memory for additonal data processed vector
@@ -170,37 +169,38 @@ Siv::addAdditionalInput(const Uint8* pAad, Uint64 aadLen)
         std::vector<Uint8>(SIZE_CMAC);
 
     // Do cmac for additional data and set it to the proceed data.
-    s = cmacWrapper(
+    err = cmacWrapper(
         pAad,
         aadLen,
         &((m_additionalDataProcessed.at(m_additionalDataProcessedSize)).at(0)),
         SIZE_CMAC);
 
-    if (!s.ok()) {
-        return s;
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Increment the size of Data Processed if no errors
     m_additionalDataProcessedSize += 1;
-    return s;
+    return err;
 }
 
-Status
+alc_error_t
 Siv::s2v(const Uint8 plainText[], Uint64 size)
 {
     // Assume plaintest to be 128 bit multiples.
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
+
     if (plainText == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
     std::vector<Uint8> zero = std::vector<Uint8>(SIZE_CMAC, 0);
 
     // Do a cmac of Zero Vector, first additonal data.
-    s = cmacWrapper(&(zero.at(0)), zero.size(), m_cmacTemp, SIZE_CMAC);
+    err = cmacWrapper(&(zero.at(0)), zero.size(), m_cmacTemp, SIZE_CMAC);
 
-    if (!s.ok()) {
-        return s;
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     avx2::processAad(
@@ -222,12 +222,12 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
                     SIZE_CMAC);
         }
 
-        s = cmacWrapperMultiData(plainText,
-                                 (size - SIZE_CMAC),
-                                 m_cmacTemp,
-                                 SIZE_CMAC,
-                                 m_cmacTemp,
-                                 SIZE_CMAC);
+        err = cmacWrapperMultiData(plainText,
+                                   (size - SIZE_CMAC),
+                                   m_cmacTemp,
+                                   SIZE_CMAC,
+                                   m_cmacTemp,
+                                   SIZE_CMAC);
     } else {
         Uint8 temp_bytes[16] = {};
         // Padding Hack
@@ -242,13 +242,10 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
 
         // std::cout << "xor:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-        s = cmacWrapper(m_cmacTemp, SIZE_CMAC, m_cmacTemp, SIZE_CMAC);
-    }
-    if (!s.ok()) {
-        return s;
+        err = cmacWrapper(m_cmacTemp, SIZE_CMAC, m_cmacTemp, SIZE_CMAC);
     }
 
-    return s;
+    return err;
 }
 
 // class SivHash functions
@@ -275,8 +272,8 @@ SivHash::setAad(const Uint8* pAad, Uint64 aadLen)
         printf("\n nullptr ");
         return ALC_ERROR_INVALID_ARG;
     }
-    Status s = addAdditionalInput(pAad, aadLen);
-    return s.code();
+    alc_error_t err = addAdditionalInput(pAad, aadLen);
+    return err;
 }
 
 alc_error_t
@@ -291,16 +288,16 @@ SivHash::setTagLength(Uint64 tagLength)
 alc_error_t
 Siv128_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len); // Nullptr check inside this function
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -310,21 +307,19 @@ Siv128_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 128, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -339,17 +334,20 @@ Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 128, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -362,26 +360,26 @@ Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv192_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -391,21 +389,19 @@ Siv192_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 192, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv192_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -420,17 +416,20 @@ Siv192_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 192, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -443,26 +442,26 @@ Siv192_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv256_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -472,21 +471,19 @@ Siv256_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 256, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv256_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -501,17 +498,20 @@ Siv256_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 256, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -524,27 +524,27 @@ Siv256_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 // vaes functions
 alc_error_t
 Siv128_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -554,21 +554,19 @@ Siv128_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 128, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv128_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -583,17 +581,20 @@ Siv128_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 128, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -606,26 +607,26 @@ Siv128_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv192_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -635,21 +636,19 @@ Siv192_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 192, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv192_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -664,17 +663,20 @@ Siv192_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 192, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -687,26 +689,26 @@ Siv192_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv256_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -716,21 +718,19 @@ Siv256_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 256, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv256_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -745,17 +745,20 @@ Siv256_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 256, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -768,27 +771,27 @@ Siv256_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 // vaes512 functions
 alc_error_t
 Siv128_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -798,21 +801,19 @@ Siv128_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 128, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv128_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -827,17 +828,20 @@ Siv128_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 128, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -850,26 +854,26 @@ Siv128_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv192_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -879,21 +883,19 @@ Siv192_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 
     ctrobj->init(m_key2, 192, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv192_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -908,17 +910,20 @@ Siv192_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
     ctrobj->init(m_key2, 192, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -931,26 +936,26 @@ Siv192_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv256_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len); // Nullptr check inside this function
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Apply the mask and make q the IV
@@ -958,27 +963,21 @@ Siv256_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
         q[i] = m_cmacTemp[i] & q[i];
     }
 
-    // Do the CTR
-    // s = ctrWrapper( pPlainText, pCipherText, len + m_padLen, q,
-    // true);
-
     ctrobj->init(m_key2, 256, q, 16);
 
-    alc_error_t err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
+    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    return s.code();
+    return err;
 }
 
 alc_error_t
 Siv256_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
 
 {
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
 
     // Mask Vector for disabling 2 bits in the counter
@@ -990,23 +989,23 @@ Siv256_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         q[i] = m_iv_aes[i] & q[i];
     }
 
-    // Do the CTR
-    // s = ctrWrapper( pCipherText, pPlainText, len + m_padLen, q,
-    // false);
     ctrobj->init(m_key2, 256, q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
-        auto cer = status::EncryptFailed("Encryption Kernel Failed!");
-        s.update(cer);
-        return s.code();
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    if (!s.ok()) {
-        return s.code();
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
 
     // Create the tag from generated plain text
-    s = s2v(pPlainText, len);
+    err = s2v(pPlainText, len);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // Verify tag, which just got generated
     if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
@@ -1019,11 +1018,11 @@ Siv256_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         err = ALC_ERROR_TAG_MISMATCH;
         return err;
 #endif
-        if (!s.ok()) {
-            return s.code();
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
     }
-    return s.code();
+    return err;
 }
 
 } // namespace alcp::cipher

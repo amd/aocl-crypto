@@ -56,28 +56,28 @@ class Poly1305Ref
      * @brief Sets the Key and Initializes the state of Poly1305
      * @param key - Key to use for Poly1305
      * @param len - Key Length 32 Byte, anything else wont work
-     * @return Status/Result of the operation
+     * @return alc_error_t/Result of the operation
      */
-    Status init(const Uint8 key[], Uint64 keyLen);
+    alc_error_t init(const Uint8 key[], Uint64 keyLen);
     /**
      * @brief Given message, updates internal state processing the message
      * @param pMsg  Byte addressible message
      * @param msgLen  Length of message in bytes
-     * @return Status/Result of the operation
+     * @return alc_error_t/Result of the operation
      */
-    Status update(const Uint8 pMsg[], Uint64 msgLen);
+    alc_error_t update(const Uint8 pMsg[], Uint64 msgLen);
     /**
      * @brief finishes internal state processing
      * @param digest Copy the digest/mac to given buffer
      * @param length Length of the buffer to copy into
-     * @return Status/Result of the operation
+     * @return alc_error_t/Result of the operation
      */
-    Status finish(Uint8 digest[], Uint64 length);
+    alc_error_t finish(Uint8 digest[], Uint64 length);
     /**
      * @brief Resets the temporary buffers without clearing key
-     * @return Status/Result of the operation
+     * @return alc_error_t/Result of the operation
      */
-    Status reset();
+    alc_error_t reset();
 };
 
 } // namespace alcp::mac::poly1305::reference

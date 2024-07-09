@@ -36,7 +36,6 @@
 // class design
 namespace alcp::mac {
 using utils::CpuId;
-using namespace status;
 Cmac::Cmac()
 {
     setMode(ALC_AES_MODE_NONE);
@@ -66,26 +65,29 @@ Cmac::getSubkeys()
     return;
 }
 
-Status
+alc_error_t
 Cmac::update(const Uint8* pMsgBuf, Uint64 size)
 {
+    alc_error_t err = ALC_ERROR_NONE;
     if (m_finalized) {
-        return UpdateAfterFinalzeError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
     if (pMsgBuf == nullptr) {
-        return StatusOk();
+        err = ALC_ERROR_NONE;
+        return err;
     }
     if (m_encrypt_keys == nullptr) {
-        return EmptyKeyError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
-
-    Status status{ StatusOk() };
 
     static bool has_avx2_aesni = CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
 
     // No need to Process anything for empty block
     if (size == 0) {
-        return status;
+        err = ALC_ERROR_NONE;
+        return err;
     }
 
     /* Internal Storage buffer and Plaintext combined should be greater than
@@ -94,7 +96,8 @@ Cmac::update(const Uint8* pMsgBuf, Uint64 size)
     if ((m_buff_offset + size) <= cAESBlockSize) {
         utils::CopyBlock<Uint64>(m_buff + m_buff_offset, pMsgBuf, size);
         m_buff_offset += size;
-        return status;
+        err = ALC_ERROR_NONE;
+        return err;
     }
 
     int n_blocks = 0;
@@ -148,32 +151,33 @@ Cmac::update(const Uint8* pMsgBuf, Uint64 size)
     utils::CopyBytes(m_buff, pMsgBuf + cAESBlockSize * n_blocks, bytes_to_copy);
     m_buff_offset = bytes_to_copy;
 
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 Cmac::reset()
 {
     memset(m_pBuffEnc, 0, cAESBlockSize);
     memset(m_buff, 0, cAESBlockSize);
     m_buff_offset = 0;
     m_finalized   = false;
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
-Status
+alc_error_t
 Cmac::finalize(Uint8* pMsgBuf, Uint64 size)
 {
+    alc_error_t err = ALC_ERROR_NONE;
     if (m_finalized) {
-        return AlreadyFinalizedError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
     if (m_encrypt_keys == nullptr) {
-        return EmptyKeyError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
     static bool has_avx2_aesni = CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
-
-    Status s{ StatusOk() };
 
     if (has_avx2_aesni) {
         avx2::finalize(m_buff,
@@ -186,7 +190,7 @@ Cmac::finalize(Uint8* pMsgBuf, Uint64 size)
                        m_encrypt_keys);
         utils::CopyBytes(pMsgBuf, m_pBuffEnc, size);
         m_finalized = true;
-        return s;
+        return err;
     }
     // Check if storage_buffer is complete ie, Cipher Block Size bits
     if (m_buff_offset == cAESBlockSize) {
@@ -213,7 +217,7 @@ Cmac::finalize(Uint8* pMsgBuf, Uint64 size)
     utils::CopyBytes(pMsgBuf, m_pBuffEnc, size);
 
     m_finalized = true;
-    return s;
+    return err;
 }
 
 alc_error_t

@@ -209,23 +209,23 @@ class CMACFuncionalityTest
 TEST_P(CMACFuncionalityTest, CMAC_SINGLE_UPDATE)
 {
 
-    Status s{ StatusOk() };
-    s = m_cmac->update(&m_plain_text[0], m_plain_text.size());
-    ASSERT_TRUE(s.ok());
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = m_cmac->update(&m_plain_text[0], m_plain_text.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    s = m_cmac->finalize(&m_mac[0], m_mac.size());
-    ASSERT_TRUE(s.ok());
+    err = m_cmac->finalize(&m_mac[0], m_mac.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(m_mac, m_expected_mac);
 }
 
 TEST_P(CMACFuncionalityTest, CMAC_UPDATE_FINALIZE)
 {
 
-    Status s{ StatusOk() };
-    s = m_cmac->update(&m_plain_text[0], m_plain_text.size());
-    ASSERT_TRUE(s.ok());
-    s = m_cmac->finalize(&m_mac[0], m_mac.size());
-    ASSERT_TRUE(s.ok());
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = m_cmac->update(&m_plain_text[0], m_plain_text.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = m_cmac->finalize(&m_mac[0], m_mac.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(m_mac, m_expected_mac);
 }
 
@@ -240,13 +240,13 @@ TEST_P(CMACFuncionalityTest, CMAC_MULTIPLE_UPDATE)
 
     SetReserve(block1);
     SetReserve(block2);
-    Status s{ StatusOk() };
-    s = m_cmac->update(&block1[0], block1.size());
-    ASSERT_TRUE(s.ok());
-    s = m_cmac->update(&block2[0], block2.size());
-    ASSERT_TRUE(s.ok());
-    s = m_cmac->finalize(&m_mac[0], m_mac.size());
-    ASSERT_TRUE(s.ok());
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = m_cmac->update(&block1[0], block1.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = m_cmac->update(&block2[0], block2.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = m_cmac->finalize(&m_mac[0], m_mac.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(m_mac, m_expected_mac);
 }
 
@@ -270,8 +270,8 @@ TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
     Cmac  cmac2;
     Uint8 data[20];
 
-    Status s = cmac2.update(data, sizeof(data));
-    ASSERT_EQ(s, EmptyKeyError(""));
+    alc_error_t err = cmac2.update(data, sizeof(data));
+    ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
@@ -279,8 +279,8 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
     Cmac  cmac2;
     Uint8 data[20];
 
-    Status s = cmac2.finalize(data, sizeof(data));
-    ASSERT_EQ(s, EmptyKeyError(""));
+    alc_error_t err = cmac2.finalize(data, sizeof(data));
+    ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
@@ -288,14 +288,14 @@ TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
     Uint8 key[16]{};
     Cmac  cmac2;
 
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
     cmac2.init(key, sizeof(key));
-    ASSERT_TRUE(s.ok());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    s = cmac2.finalize(nullptr, 0);
-    ASSERT_TRUE(s.ok());
-    s = cmac2.update(nullptr, 0);
-    ASSERT_EQ(s, UpdateAfterFinalzeError(""));
+    err = cmac2.finalize(nullptr, 0);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = cmac2.update(nullptr, 0);
+    ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
@@ -307,17 +307,15 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
      alc_error_t usage is mixed. */
     // step 1: remove Status usage fully.
     // step 2: Add Status for all api-s one shot.
-
-    Status      s   = StatusOk();
     alc_error_t err = ALC_ERROR_NONE;
     err             = cmac2.init(key, sizeof(key));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    s = cmac2.finalize(nullptr, 0);
-    ASSERT_TRUE(s.ok());
+    err = cmac2.finalize(nullptr, 0);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    s = cmac2.finalize(nullptr, 0);
-    ASSERT_EQ(s, AlreadyFinalizedError(""));
+    err = cmac2.finalize(nullptr, 0);
+    ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)

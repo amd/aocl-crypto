@@ -407,18 +407,17 @@ TEST(HmacReliabilityTest, NullUpdate)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    Sha256 sha256;
-    Hmac   hmac;
-    Status status = StatusOk();
-    status        = hmac.init(&key[0], key.size(), &sha256);
-    ASSERT_EQ(status, StatusOk());
-    ASSERT_EQ(status, StatusOk());
+    Sha256      sha256;
+    Hmac        hmac;
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = hmac.init(&key[0], key.size(), &sha256);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    status = hmac.update(nullptr, 0);
-    ASSERT_EQ(status, StatusOk());
+    err = hmac.update(nullptr, 0);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    status = hmac.update(&cipher_text[0], cipher_text.size());
-    ASSERT_EQ(status, StatusOk());
+    err = hmac.update(&cipher_text[0], cipher_text.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
     hmac.finalize(&mac.at(0), mac.size());
@@ -596,9 +595,9 @@ TEST(HmacTest, setKeyAfterFinalize)
 TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
 {
 
-    Hmac   hmac;
-    Status s = hmac.update(nullptr, 0);
-    EXPECT_EQ(s, InitError(""));
+    Hmac        hmac;
+    alc_error_t err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callUpdateWithNullKey)
@@ -608,24 +607,24 @@ TEST(HmacRobustnessTest, callUpdateWithNullKey)
     Sha256 sha256;
 
     hmac.init(nullptr, 0, &sha256);
-    Status s = hmac.update(nullptr, 0);
-    EXPECT_EQ(s, InitError(""));
+    alc_error_t err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callUpdateWithoutInit)
 {
 
-    Hmac   hmac;
-    Status s = hmac.update(nullptr, 0);
-    EXPECT_EQ(s, InitError(""));
+    Hmac        hmac;
+    alc_error_t err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callFinalizeWithoutInit)
 {
 
-    Hmac   hmac;
-    Status s = hmac.finalize(nullptr, 0);
-    EXPECT_EQ(s, InitError(""));
+    Hmac        hmac;
+    alc_error_t err = hmac.finalize(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callFinalizeWithNullKey)
@@ -635,41 +634,41 @@ TEST(HmacRobustnessTest, callFinalizeWithNullKey)
     Sha256 sha256;
 
     hmac.init(nullptr, 0, &sha256);
-    Status s = hmac.finalize(nullptr, 0);
-    EXPECT_EQ(s, InitError(""));
+    alc_error_t err = hmac.finalize(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callUpdateAfterFinalize)
 {
 
-    Hmac   hmac;
-    Uint8  key[16]{};
-    Uint8  data[32]{};
-    Sha256 sha256;
-    Status s{ StatusOk() };
-    s = hmac.init(key, sizeof(key), &sha256);
-    ASSERT_TRUE(s.ok());
-    s = hmac.finalize(data, sizeof(data));
-    ASSERT_TRUE(s.ok());
-    s = hmac.update(data, sizeof(data));
-    EXPECT_EQ(s, UpdateAfterFinalzeError(""));
+    Hmac        hmac;
+    Uint8       key[16]{};
+    Uint8       data[32]{};
+    Sha256      sha256;
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = hmac.init(key, sizeof(key), &sha256);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = hmac.finalize(data, sizeof(data));
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = hmac.update(data, sizeof(data));
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callFinalizeTwice)
 {
 
-    Hmac   hmac;
-    Uint8  key[16]{};
-    Uint8  data[32]{};
-    Sha256 sha256;
-    Status s{ StatusOk() };
-    s = hmac.init(key, sizeof(key), &sha256);
-    ASSERT_TRUE(s.ok());
+    Hmac        hmac;
+    Uint8       key[16]{};
+    Uint8       data[32]{};
+    Sha256      sha256;
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = hmac.init(key, sizeof(key), &sha256);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    s = hmac.finalize(data, sizeof(data));
-    ASSERT_TRUE(s.ok());
-    s = hmac.finalize(data, sizeof(data));
-    ASSERT_EQ(s, AlreadyFinalizedError(""));
+    err = hmac.finalize(data, sizeof(data));
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = hmac.finalize(data, sizeof(data));
+    ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 INSTANTIATE_TEST_SUITE_P(

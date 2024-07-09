@@ -45,7 +45,7 @@ class Poly1305Builder
 };
 
 template<CpuArchFeature feature>
-static Status
+static alc_error_t
 __poly1305_wrapperInit(Context*        ctx,
                        const Uint8*    key,
                        Uint64          size,
@@ -56,7 +56,7 @@ __poly1305_wrapperInit(Context*        ctx,
 }
 
 template<CpuArchFeature feature>
-static Status
+static alc_error_t
 __poly1305_wrapperUpdate(void* poly1305, const Uint8* buff, Uint64 size)
 {
 
@@ -65,7 +65,7 @@ __poly1305_wrapperUpdate(void* poly1305, const Uint8* buff, Uint64 size)
 }
 
 template<CpuArchFeature feature>
-static Status
+static alc_error_t
 __poly1305_wrapperFinalize(void* poly1305, Uint8* buff, Uint64 size)
 {
     auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
@@ -87,7 +87,7 @@ __poly1305_wrapperFinish(void* poly1305, void* digest)
 }
 
 template<CpuArchFeature feature>
-static Status
+static alc_error_t
 __poly1305_wrapperReset(void* poly1305)
 {
     auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
@@ -95,7 +95,7 @@ __poly1305_wrapperReset(void* poly1305)
 }
 
 template<CpuArchFeature feature>
-static Status
+static alc_error_t
 __poly1305_build_with_copy(Context* srcCtx, Context* destCtx)
 {
     auto poly1305_algo = new Poly1305<feature>(
@@ -110,7 +110,7 @@ __poly1305_build_with_copy(Context* srcCtx, Context* destCtx)
     destCtx->reset     = srcCtx->reset;
     destCtx->duplicate = srcCtx->duplicate;
 
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
 template<CpuArchFeature feature>

@@ -57,17 +57,17 @@ namespace vaes512 {
         }
         std::fill(m_poly1305_key, m_poly1305_key + 32, 0);
         err = ChaCha256::encrypt(m_poly1305_key, m_poly1305_key, 32);
-
-        alcp::base::Status s      = Poly1305::init(m_poly1305_key, 32);
-        m_len_input_processed.u64 = 0;
-        m_len_aad_processed.u64   = 0;
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
-        }
-
         if (err != ALC_ERROR_NONE) {
             return err;
         }
+
+        m_len_input_processed.u64 = 0;
+        m_len_aad_processed.u64   = 0;
+        err                       = Poly1305::init(m_poly1305_key, 32);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+
         return ALC_ERROR_NONE;
     }
 
@@ -92,11 +92,10 @@ namespace vaes512 {
                                        Uint64       bufferLength)
     {
 
-        alcp::base::Status s{ alcp::base::StatusOk() };
+        alc_error_t err = ALC_ERROR_NONE;
         // set  Counter to 1
         (*(reinterpret_cast<Uint32*>(ChaCha256::m_iv))) += 1;
-        alc_error_t err =
-            ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
+        err = ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -108,34 +107,34 @@ namespace vaes512 {
                                     ? 0
                                     : (16 - (m_len_aad_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
-        s = Poly1305::update(outputBuffer, bufferLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(outputBuffer, bufferLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         padding_length = ((m_len_input_processed.u64 % 16) == 0)
                              ? 0
                              : (16 - (m_len_input_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
         constexpr Uint64 cSizeLength = sizeof(Uint64);
-        s = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-        s = Poly1305::update(m_len_input_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_input_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         return ALC_ERROR_NONE;
     }
@@ -145,12 +144,10 @@ namespace vaes512 {
                                        Uint64       bufferLength)
     {
 
-        alcp::base::Status s{ alcp::base::StatusOk() };
+        alc_error_t err = ALC_ERROR_NONE;
         // set  Counter to 1
         (*(reinterpret_cast<Uint32*>(ChaCha256::m_iv))) += 1;
-        alc_error_t err =
-            ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
-
+        err = ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
@@ -161,58 +158,58 @@ namespace vaes512 {
                                     ? 0
                                     : (16 - (m_len_aad_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
         //  In case of decryption one should change the order of updation i.e
         //  input (which is the ciphertext) should be updated
-        s = Poly1305::update(inputBuffer, bufferLength);
+        err = Poly1305::update(inputBuffer, bufferLength);
 
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         padding_length = ((m_len_input_processed.u64 % 16) == 0)
                              ? 0
                              : (16 - (m_len_input_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
         constexpr Uint64 cSizeLength = sizeof(Uint64);
-        s = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-        s = Poly1305::update(m_len_input_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_input_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         return ALC_ERROR_NONE;
     }
 
     alc_error_t ChaChaPolyAuth::setAad(const Uint8* pInput, Uint64 len)
     {
-        alcp::base::Status s = Poly1305::update(pInput, len);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        alc_error_t err = Poly1305::update(pInput, len);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         m_len_aad_processed.u64 += len;
-        return ALC_ERROR_NONE;
+        return err;
     }
 
     alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
-        alcp::base::Status s = Poly1305::finalize(pOutput, len);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        alc_error_t err = Poly1305::finalize(pOutput, len);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-        return ALC_ERROR_NONE;
+        return err;
     }
 
     alc_error_t ChaChaPolyAuth::setTagLength(Uint64 tagLength)
@@ -246,13 +243,17 @@ namespace ref {
         }
         std::fill(m_poly1305_key, m_poly1305_key + 32, 0);
         err = ChaCha256::encrypt(m_poly1305_key, m_poly1305_key, 32);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
 
-        alcp::base::Status s      = Poly1305::init(m_poly1305_key, 32);
+        err = Poly1305::init(m_poly1305_key, 32);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+
         m_len_input_processed.u64 = 0;
         m_len_aad_processed.u64   = 0;
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
-        }
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -280,12 +281,10 @@ namespace ref {
                                        Uint8*       outputBuffer,
                                        Uint64       bufferLength)
     {
-
-        alcp::base::Status s{ alcp::base::StatusOk() };
+        alc_error_t err = ALC_ERROR_NONE;
         // set  Counter to 1
         (*(reinterpret_cast<Uint32*>(ChaCha256::m_iv))) += 1;
-        alc_error_t err =
-            ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
+        err = ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -297,34 +296,34 @@ namespace ref {
                                     ? 0
                                     : (16 - (m_len_aad_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
-        s = Poly1305::update(outputBuffer, bufferLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(outputBuffer, bufferLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         padding_length = ((m_len_input_processed.u64 % 16) == 0)
                              ? 0
                              : (16 - (m_len_input_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
         constexpr Uint64 cSizeLength = sizeof(Uint64);
-        s = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-        s = Poly1305::update(m_len_input_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_input_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         return ALC_ERROR_NONE;
     }
@@ -334,11 +333,10 @@ namespace ref {
                                        Uint64       bufferLength)
     {
 
-        alcp::base::Status s{ alcp::base::StatusOk() };
+        alc_error_t err = ALC_ERROR_NONE;
         // set  Counter to 1
         (*(reinterpret_cast<Uint32*>(ChaCha256::m_iv))) += 1;
-        alc_error_t err =
-            ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
+        err = ChaCha256::encrypt(inputBuffer, outputBuffer, bufferLength);
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -350,58 +348,58 @@ namespace ref {
                                     ? 0
                                     : (16 - (m_len_aad_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
         //  In case of decryption one should change the order of updation i.e
         //  input (which is the ciphertext) should be updated
-        s = Poly1305::update(inputBuffer, bufferLength);
+        err = Poly1305::update(inputBuffer, bufferLength);
 
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         padding_length = ((m_len_input_processed.u64 % 16) == 0)
                              ? 0
                              : (16 - (m_len_input_processed.u64 % 16));
         if (padding_length != 0) {
-            s = Poly1305::update(m_zero_padding, padding_length);
-            if (!s.ok()) {
-                return ALC_ERROR_EXISTS;
+            err = Poly1305::update(m_zero_padding, padding_length);
+            if (err != ALC_ERROR_NONE) {
+                return err;
             }
         }
 
         constexpr Uint64 cSizeLength = sizeof(Uint64);
-        s = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_aad_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-        s = Poly1305::update(m_len_input_processed.u8, cSizeLength);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        err = Poly1305::update(m_len_input_processed.u8, cSizeLength);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         return ALC_ERROR_NONE;
     }
 
     alc_error_t ChaChaPolyAuth::setAad(const Uint8* pInput, Uint64 len)
     {
-        alcp::base::Status s = Poly1305::update(pInput, len);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        alc_error_t err = Poly1305::update(pInput, len);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
         m_len_aad_processed.u64 += len;
-        return ALC_ERROR_NONE;
+        return err;
     }
 
     alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
-        alcp::base::Status s = Poly1305::finalize(pOutput, len);
-        if (!s.ok()) {
-            return ALC_ERROR_EXISTS;
+        alc_error_t err = Poly1305::finalize(pOutput, len);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-        return ALC_ERROR_NONE;
+        return err;
     }
 
     alc_error_t ChaChaPolyAuth::setTagLength(Uint64 tagLength)

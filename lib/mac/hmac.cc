@@ -35,10 +35,9 @@
 #include <immintrin.h>
 
 namespace alcp::mac {
-using namespace alcp::mac::status;
 using utils::CpuId;
 
-static inline Status
+static inline alc_error_t
 getK0(const Uint8*     pKey,
       Uint32           keylen,
       Uint8*           pK0,
@@ -46,26 +45,25 @@ getK0(const Uint8*     pKey,
       Uint32           input_block_length,
       Uint32           output_hash_size)
 {
-    Status status = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
     if (keylen <= input_block_length) {
         utils::CopyBlock<Uint64>(pK0, pKey, keylen);
     } else {
         // Optimization: Reusing pDigest for calculating
         /*TODO: For all the following digest calls check and update proper
         error status */
-        alc_error_t err = ALC_ERROR_NONE;
         pDigest->init();
         err = pDigest->update(pKey, keylen);
         if (alcp_is_error(err)) {
-            return HMACDigestOperationError("");
+            return err;
         }
         pDigest->finalize(pK0, output_hash_size);
         if (alcp_is_error(err)) {
-            return HMACDigestOperationError("");
+            return err;
         }
         pDigest->init();
     }
-    return status;
+    return err;
 }
 
 static inline void
@@ -124,39 +122,42 @@ Hmac::getHashSize()
     return m_output_hash_size;
 }
 
-Status
+alc_error_t
 Hmac::update(const Uint8* buff, Uint64 size)
 {
+    alc_error_t err = ALC_ERROR_NONE;
     if (m_finalized) {
-        return UpdateAfterFinalzeError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
     if (!m_isInit) {
-        return InitError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    Status status = StatusOk();
     if (buff != nullptr && size != 0) {
-        alc_error_t err = m_pDigest->update(buff, size);
+        err = m_pDigest->update(buff, size);
         if (alcp_is_error(err)) {
-            return HMACDigestOperationError("");
+            return err;
         }
     }
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 Hmac::finalize(Uint8* buff, Uint64 size)
 {
+    alc_error_t err = ALC_ERROR_NONE;
+
     if (m_finalized) {
-        return AlreadyFinalizedError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
-    Status      status = StatusOk();
-    alc_error_t err    = ALC_ERROR_NONE;
-
     if (!m_isInit) {
-        return InitError("");
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     }
 
     /* TODO: For all the following calls to digest return the proper error
@@ -168,49 +169,50 @@ Hmac::finalize(Uint8* buff, Uint64 size)
 
     err = m_pDigest->finalize(pTempHash, m_output_hash_size);
     if (alcp_is_error(err)) {
-        return HMACDigestOperationError("");
+        return err;
     }
     m_pDigest->init();
 
     err = m_pDigest->update(m_pK0_xor_opad, m_input_block_length);
     if (alcp_is_error(err)) {
-        return HMACDigestOperationError("");
+        return err;
     }
     err = m_pDigest->update(pTempHash, m_output_hash_size);
     if (alcp_is_error(err)) {
-        return HMACDigestOperationError("");
+        return err;
     }
 
     auto size_to_copy = size <= m_output_hash_size ? size : m_output_hash_size;
 
     err = m_pDigest->finalize(buff, size_to_copy);
     if (alcp_is_error(err)) {
-        return HMACDigestOperationError("");
+        return err;
     }
     m_finalized = true;
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 Hmac::reset()
 {
-    Status status = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
     m_pDigest->init();
-    alc_error_t err = m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
+    err = m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
     if (alcp_is_error(err)) {
-        return HMACDigestOperationError("");
+        return err;
     }
     m_finalized = false;
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest)
 {
-    Status status = StatusOk();
+    alc_error_t err;
 
     if (key == nullptr || digest == nullptr) {
-        return InitError("");
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
 
     m_pDigest = digest;
@@ -229,20 +231,21 @@ Hmac::init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest)
      * */
     alignas(16) Uint8 pK0[cMaxInternalBlockLength]{};
 
-    status = getK0(
+    err = getK0(
         key, keylen, pK0, m_pDigest, m_input_block_length, m_output_hash_size);
 
-    if (!status.ok()) {
-        return status;
+    if (err != ALC_ERROR_NONE) {
+        return err;
     }
     getK0XorPad(m_input_block_length, pK0, m_pK0_xor_ipad, m_pK0_xor_opad);
 
-    alc_error_t err = m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
+    err = m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
     if (alcp_is_error(err)) {
-        return HMACDigestOperationError("");
+        return err;
     }
+
     m_isInit = true;
-    return status;
+    return err;
 }
 
 void

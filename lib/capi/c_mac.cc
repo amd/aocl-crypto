@@ -55,10 +55,10 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
 
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
     new (p_ctx) mac::Context;
-    p_ctx->status = mac::MacBuilder::build(mi_type, p_ctx);
+    Status s = mac::MacBuilder::build(mi_type, p_ctx);
 
     // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
+    if (!s.ok()) {
         err = ALC_ERROR_EXISTS;
     } else {
         err = ALC_ERROR_NONE;
@@ -75,13 +75,7 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
 
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
 
-    p_ctx->status = p_ctx->update(p_ctx->m_mac, buff, size);
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    err = p_ctx->update(p_ctx->m_mac, buff, size);
     return err;
 }
 
@@ -93,15 +87,8 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
-    auto p_ctx    = static_cast<mac::Context*>(pMacHandle->ch_context);
-    p_ctx->status = p_ctx->finalize(p_ctx->m_mac, buff, size);
-
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
+    err        = p_ctx->finalize(p_ctx->m_mac, buff, size);
     return err;
 }
 
@@ -128,14 +115,8 @@ alcp_mac_reset(alc_mac_handle_p pMacHandle)
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
-    auto   p_ctx  = static_cast<mac::Context*>(pMacHandle->ch_context);
-    Status status = p_ctx->reset(p_ctx->m_mac);
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
+    err        = p_ctx->reset(p_ctx->m_mac);
     // FIXME: This function is always returning no errors
     return err;
 }
@@ -147,12 +128,13 @@ alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* pBuff, Uint64 size)
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
+#if 0 // There is no message to copy post status removal
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
-
     String message = String(p_ctx->status.message());
 
     int size_to_copy = size > message.size() ? message.size() : size;
     snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
+#endif
 
     return err;
 }
@@ -169,14 +151,9 @@ alcp_mac_init(alc_mac_handle_p pMacHandle,
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(key, err);
 
-    auto   p_ctx  = static_cast<mac::Context*>(pMacHandle->ch_context);
-    Status status = p_ctx->init(p_ctx, key, size, info);
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
+    err        = p_ctx->init(p_ctx, key, size, info);
+
     // FIXME: This function is always returning no errors
     return err;
 }

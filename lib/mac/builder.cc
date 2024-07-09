@@ -83,13 +83,17 @@ MacBuilder::build(alc_mac_type_t mi_type, Context* ctx)
 Status
 MacBuilder::BuildWithCopy(mac::Context* srcCtx, mac::Context* destCtx)
 {
-    Status status = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
+    Status      s   = StatusOk();
     if (srcCtx->duplicate) {
-        status = srcCtx->duplicate(srcCtx, destCtx);
+        err = srcCtx->duplicate(srcCtx, destCtx);
+        if (err != ALC_ERROR_NONE) {
+            s.update(InternalError("Copy Failed!"));
+        }
     } else {
-        status.update(NotImplemented("Unknown MAC Type"));
+        s.update(NotImplemented("Unknown MAC Type"));
     }
-    return status;
+    return s;
 }
 
 } // namespace alcp::mac

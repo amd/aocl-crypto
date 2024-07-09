@@ -36,9 +36,9 @@ namespace alcp::mac {
 class IMac
 {
   public:
-    virtual alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size) = 0;
-    virtual alcp::base::Status reset()                                   = 0;
-    virtual alcp::base::Status finalize(Uint8* pMsgBuf, Uint64 size)     = 0;
+    virtual alc_error_t update(const Uint8* pMsgBuf, Uint64 size) = 0;
+    virtual alc_error_t reset()                                   = 0;
+    virtual alc_error_t finalize(Uint8* pMsgBuf, Uint64 size)     = 0;
 };
 
 } // namespace alcp::mac

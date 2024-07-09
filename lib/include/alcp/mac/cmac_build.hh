@@ -40,27 +40,26 @@ class CmacBuilder
     static Status build(Context* ctx);
 };
 
-static Status
+static alc_error_t
 __cmac_wrapperInit(Context*        ctx,
                    const Uint8*    key,
                    Uint64          size,
                    alc_mac_info_t* info)
 {
-    Status s      = StatusOk();
-    auto   p_cmac = static_cast<Cmac*>(ctx->m_mac);
+    alc_error_t err    = ALC_ERROR_NONE;
+    auto        p_cmac = static_cast<Cmac*>(ctx->m_mac);
     p_cmac->init(key, size); // p_cmac->init(key, size, NULL, 0);
-    return s;
+    return err;
 }
 
-static Status
+static alc_error_t
 __cmac_wrapperUpdate(void* cmac, const Uint8* buff, Uint64 size)
 {
-
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->update(buff, size);
 }
 
-static Status
+static alc_error_t
 __cmac_wrapperFinalize(void* cmac, Uint8* buff, Uint64 size)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
@@ -75,14 +74,14 @@ __cmac_wrapperFinish(void* cmac, void* digest)
     // Not deleting the memory because it is allocated by application
 }
 
-static Status
+static alc_error_t
 __cmac_wrapperReset(void* cmac)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->reset();
 }
 
-static Status
+static alc_error_t
 __cmac_build_with_copy(Context* srcCtx, Context* destCtx)
 {
     auto cmac = new Cmac(*reinterpret_cast<Cmac*>(srcCtx->m_mac));
@@ -95,7 +94,7 @@ __cmac_build_with_copy(Context* srcCtx, Context* destCtx)
     destCtx->finish    = srcCtx->finish;
     destCtx->reset     = srcCtx->reset;
     destCtx->duplicate = srcCtx->duplicate;
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
 Status

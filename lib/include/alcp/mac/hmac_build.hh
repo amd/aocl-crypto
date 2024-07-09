@@ -46,14 +46,14 @@ class HmacBuilder
     static Status build(Context* ctx);
 };
 
-static Status
+static alc_error_t
 __hmac_wrapperUpdate(void* hmac, const Uint8* buff, Uint64 size)
 {
     auto ap = static_cast<Hmac*>(hmac);
     return ap->update(buff, size);
 }
 
-static Status
+static alc_error_t
 __hmac_wrapperFinalize(void* hmac, Uint8* buff, Uint64 size)
 {
     auto ap = static_cast<Hmac*>(hmac);
@@ -69,7 +69,7 @@ __hmac_wrapperFinish(void* hmac, void* digest)
     delete ap;
 }
 
-static Status
+static alc_error_t
 __hmac_wrapperReset(void* hmac)
 {
     auto ap = static_cast<Hmac*>(hmac);
@@ -77,7 +77,7 @@ __hmac_wrapperReset(void* hmac)
     return ap->reset();
 }
 
-static Status
+static alc_error_t
 __hmac_wrapperInit(Context*        ctx,
                    const Uint8*    key,
                    Uint64          size,
@@ -139,10 +139,10 @@ __hmac_wrapperInit(Context*        ctx,
         }
         case ALC_SHAKE_128:
         case ALC_SHAKE_256: {
-            digest        = nullptr;
-            Status status = StatusOk();
-            status.update(InternalError("Not Supported"));
-            return status;
+            alc_error_t err = ALC_ERROR_NONE;
+            digest          = nullptr;
+            err             = ALC_ERROR_NOT_SUPPORTED;
+            return err;
         }
     }
 
@@ -150,12 +150,14 @@ __hmac_wrapperInit(Context*        ctx,
     return hmac_algo->init(key, size, static_cast<digest::IDigest*>(digest));
 }
 
-static Status
+static alc_error_t
 __build_with_copy_hmac(Context* srcCtx, Context* destCtx)
 {
+    alc_error_t err = ALC_ERROR_NONE;
     using namespace digest;
     if (!srcCtx->m_digest) {
-        return status::InternalError("Digest cannot be nullptr");
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
     auto hmac_algo = new Hmac(*reinterpret_cast<Hmac*>(srcCtx->m_mac));
 
@@ -210,7 +212,7 @@ __build_with_copy_hmac(Context* srcCtx, Context* destCtx)
     destCtx->duplicate = srcCtx->duplicate;
     destCtx->reset     = srcCtx->reset;
 
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
 Status

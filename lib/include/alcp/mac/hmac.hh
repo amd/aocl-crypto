@@ -75,15 +75,15 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @brief Can be called continously to update message on small chunks
      * @param buff: message array block to update HMAC
      * @param size: Size of the message array
-     * @returns Status
+     * @returns alc_error_t
      */
-    Status update(const Uint8* buff, Uint64 size) override;
+    alc_error_t update(const Uint8* buff, Uint64 size) override;
     /**
      * @brief Can be called only once to get the final mac
      * @param size: Size of the final mac
-     * @returns Status
+     * @returns alc_error_t
      */
-    Status finalize(Uint8* buff, Uint64 size) override;
+    alc_error_t finalize(Uint8* buff, Uint64 size) override;
     /**
      * @brief get the output hash size to allocate the output array on
      * @returns the output hash size of HMAC
@@ -95,16 +95,16 @@ class ALCP_API_EXPORT Hmac final : public IMac
      * @param key: Pointer to the key to be used by HMAC
      * @param keylen: Length of the key to be used by HMAC
      * @param digest: Digest class to be used by HMAC.
-     * @returns Status
+     * @returns alc_error_t
      */
-    Status init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest);
+    alc_error_t init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest);
 
     /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with
      * the same digest and same key.
-     * @returns Status
+     * @returns alc_error_t
      */
-    Status reset() override;
+    alc_error_t reset() override;
 
     void setDigest(digest::IDigest* digest);
 };

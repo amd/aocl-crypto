@@ -50,7 +50,7 @@ using utils::CpuId;
 
 // RFC5297
 
-//#define MAX_ADD_SIZE_SIV (126 * 16) // 126*16
+// #define MAX_ADD_SIZE_SIV (126 * 16) // 126*16
 
 class ALCP_API_EXPORT Siv
     : public Aes
@@ -76,19 +76,19 @@ class ALCP_API_EXPORT Siv
     Uint64       m_padLen                      = {};
     Cmac         m_cmac;
 
-    Status      cmacWrapper(const Uint8 data[],
+    alc_error_t cmacWrapper(const Uint8 data[],
                             Uint64      size,
                             Uint8       mac[],
                             Uint64      macSize);
-    Status      cmacWrapperMultiData(const Uint8 data1[],
+    alc_error_t cmacWrapperMultiData(const Uint8 data1[],
                                      Uint64      size1,
                                      const Uint8 data2[],
                                      Uint64      size2,
                                      Uint8       mac[],
                                      Uint64      macSize);
-    Status      addAdditionalInput(const Uint8* pAad, Uint64 aadLen);
+    alc_error_t addAdditionalInput(const Uint8* pAad, Uint64 aadLen);
     alc_error_t setKeys(const Uint8 key1[], Uint64 length);
-    Status      s2v(const Uint8 plainText[], Uint64 size);
+    alc_error_t s2v(const Uint8 plainText[], Uint64 size);
 
     Siv() = default;
     Siv(Uint32 keyLen_in_bytes) {}

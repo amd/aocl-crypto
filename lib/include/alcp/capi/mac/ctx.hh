@@ -35,17 +35,15 @@ struct Context
     void* m_mac    = nullptr;
     void* m_digest = nullptr;
     //    alc_cipher_data_t data     = {};
-    Status (*init)(Context*        ctx,
-                   const Uint8*    key,
-                   Uint64          size,
-                   alc_mac_info_t* info);
-    Status (*update)(void* mac, const Uint8* buff, Uint64 size);
-    Status (*finalize)(void* mac, Uint8* buff, Uint64 size);
-    Status (*duplicate)(Context* srcCtx, Context* destCtx);
+    alc_error_t (*init)(Context*        ctx,
+                        const Uint8*    key,
+                        Uint64          size,
+                        alc_mac_info_t* info);
+    alc_error_t (*update)(void* mac, const Uint8* buff, Uint64 size);
+    alc_error_t (*finalize)(void* mac, Uint8* buff, Uint64 size);
+    alc_error_t (*duplicate)(Context* srcCtx, Context* destCtx);
     void (*finish)(void* mac, void* digest);
-    Status (*reset)(void* mac);
-
-    alcp::base::Status status{ StatusOk() };
+    alc_error_t (*reset)(void* mac);
 };
 
 } // namespace alcp::mac

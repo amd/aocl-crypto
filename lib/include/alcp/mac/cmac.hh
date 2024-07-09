@@ -46,7 +46,7 @@ class Cmac final
     /**
      * @brief Reset CMAC. After resetting update can be called by the same key
      */
-    ALCP_API_EXPORT Status reset() override;
+    ALCP_API_EXPORT alc_error_t reset() override;
 
     /**
      * @brief Update CMAC with plaintext Message
@@ -54,7 +54,8 @@ class Cmac final
      * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    ALCP_API_EXPORT Status update(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alc_error_t update(const Uint8* pMsgBuf,
+                                       Uint64       size) override;
 
     ALCP_API_EXPORT alc_error_t init(const Uint8* pKey, Uint64 keyLen);
     /**
@@ -63,7 +64,7 @@ class Cmac final
      * @param pMsgBuf   cmac buffer
      * @param size      Size of the cmac in bytes
      */
-    ALCP_API_EXPORT Status finalize(Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alc_error_t finalize(Uint8* pMsgBuf, Uint64 size) override;
 
   private:
     void                 getSubkeys();

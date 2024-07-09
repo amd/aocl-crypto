@@ -30,6 +30,7 @@
 #include <array>
 #include <tuple>
 
+#include "alcp/error.h"
 #include "alcp/mac/poly1305-ref.hh"
 
 namespace alcp::mac::poly1305::reference {
@@ -65,16 +66,16 @@ clamp(Uint8 in[16])
     Key, Message, Accumulator are all processed in Radix(Base) 26 format
 */
 
-Status
+alc_error_t
 Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
 {
-    Uint8* p_m_key_8 = reinterpret_cast<Uint8*>(m_key);
+    alc_error_t err       = ALC_ERROR_NONE;
+    Uint8*      p_m_key_8 = reinterpret_cast<Uint8*>(m_key);
     // Uint8* m_acc_8 = reinterpret_cast<Uint8*>(m_accumulator);
-    Status s = StatusOk();
 
     if (keyLen != 32) {
-        s.update(status::InvalidArgument("Length does not match"));
-        return s;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
 
     // r = k[0..16]
@@ -109,7 +110,7 @@ Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
         m_s[i] = m_r[i + 1] * 5;
     }
 
-    return s;
+    return err;
 }
 
 inline Uint64
@@ -186,14 +187,14 @@ poly1305_block(const Uint8 pMsg[],
     return msgLen;
 }
 
-Status
+alc_error_t
 Poly1305Ref::update(const Uint8 pMsg[], Uint64 msgLen)
 {
-    Status status = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finalized) {
-        status.update(status::InternalError("Cannot update after finalized!"));
-        return status;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
 
     if (m_msg_buffer_len != 0) {
@@ -203,7 +204,7 @@ Poly1305Ref::update(const Uint8 pMsg[], Uint64 msgLen)
             std::copy(pMsg, pMsg + msgLen, m_msg_buffer + m_msg_buffer_len);
             m_msg_buffer_len += msgLen;
             // We ran out of the buffer to read
-            return status;
+            return err;
         }
         std::copy(
             pMsg, pMsg + msg_buffer_left, m_msg_buffer + m_msg_buffer_len);
@@ -223,21 +224,21 @@ Poly1305Ref::update(const Uint8 pMsg[], Uint64 msgLen)
         m_msg_buffer_len = overflow;
     }
 
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 Poly1305Ref::finish(Uint8 digest[], Uint64 len)
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
     if (m_finalized) {
-        s.update(status::InternalError("Cannot update after finalized!"));
-        return s;
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
 
     if (len != 16) {
-        s.update(status::InvalidArgument("Invalid Size for Poly1305"));
-        return s;
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
     }
 
     if (m_msg_buffer_len) {
@@ -325,13 +326,13 @@ Poly1305Ref::finish(Uint8 digest[], Uint64 len)
 
     m_finalized = true;
 
-    return s;
+    return err;
 }
 
-Status
+alc_error_t
 Poly1305Ref::reset()
 {
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Erase all the internal update buffers
     std::fill(m_msg_buffer, m_msg_buffer + m_cMsgSize_bytes, 0);
@@ -340,7 +341,7 @@ Poly1305Ref::reset()
     m_msg_buffer_len = 0;
     m_finalized      = false;
 
-    return s;
+    return err;
 }
 
 } // namespace alcp::mac::poly1305::reference
