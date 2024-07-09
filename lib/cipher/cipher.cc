@@ -49,11 +49,11 @@ INTERFACE*
 pickKeyLen(CipherKeyLen keyLen)
 {
     switch (keyLen) {
-        case KEY_128_BIT:
+        case CipherKeyLen::eKey128Bit:
             return new CLASS_128();
-        case KEY_192_BIT:
+        case CipherKeyLen::eKey192Bit:
             return new CLASS_192();
-        case KEY_256_BIT:
+        case CipherKeyLen::eKey256Bit:
             return new CLASS_256();
         default:
             printf("\n Error: key length not supported ");
@@ -66,9 +66,9 @@ INTERFACE*
 pickKeyLen(CipherKeyLen keyLen)
 {
     switch (keyLen) {
-        case KEY_128_BIT:
+        case CipherKeyLen::eKey128Bit:
             return new CLASS_128();
-        case KEY_256_BIT:
+        case CipherKeyLen::eKey256Bit:
             return new CLASS_256();
         default:
             printf("\n Error: key length not supported ");
@@ -146,8 +146,8 @@ void
 CipherFactory<iCipher>::getCipher()
 {
     // Non-AEAD ciphers
-    switch (m_mode) {
-        case ALC_AES_MODE_CBC:
+    switch (m_cipher_mode) {
+        case CipherMode::eAesCBC:
             m_iCipher = getMode<iCipher,
                                 Cbc128_vaes512,
                                 Cbc192_vaes512,
@@ -159,7 +159,7 @@ CipherFactory<iCipher>::getCipher()
                                 Cbc192_aesni,
                                 Cbc256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_AES_MODE_OFB:
+        case CipherMode::eAesOFB:
             m_iCipher = getMode<iCipher,
                                 Ofb128_aesni,
                                 Ofb192_aesni,
@@ -171,7 +171,7 @@ CipherFactory<iCipher>::getCipher()
                                 Ofb192_aesni,
                                 Ofb256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_AES_MODE_CTR:
+        case CipherMode::eAesCTR:
             m_iCipher = getMode<iCipher,
                                 Ctr128_vaes512,
                                 Ctr192_vaes512,
@@ -183,7 +183,7 @@ CipherFactory<iCipher>::getCipher()
                                 Ctr192_aesni,
                                 Ctr256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_AES_MODE_CFB:
+        case CipherMode::eAesCFB:
             m_iCipher = getMode<iCipher,
                                 Cfb128_vaes512,
                                 Cfb192_vaes512,
@@ -195,7 +195,7 @@ CipherFactory<iCipher>::getCipher()
                                 Cfb192_aesni,
                                 Cfb256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_AES_MODE_XTS:
+        case CipherMode::eAesXTS:
             m_iCipher = getMode<iCipher,
                                 Xts128_vaes512,
                                 Xts256_vaes512,
@@ -204,7 +204,7 @@ CipherFactory<iCipher>::getCipher()
                                 Xts128_aesni,
                                 Xts256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_CHACHA20:
+        case CipherMode::eCHACHA20:
             if (m_arch == CpuCipherFeatures::eVaes512) {
                 using namespace vaes512;
                 m_iCipher = new ChaCha256();
@@ -224,8 +224,8 @@ void
 CipherFactory<iCipherAead>::getCipher()
 {
     // AEAD ciphers
-    switch (m_mode) {
-        case ALC_AES_MODE_GCM:
+    switch (m_cipher_mode) {
+        case CipherMode::eAesGCM:
             m_iCipher = getMode<iCipherAead,
                                 Gcm128_vaes512,
                                 Gcm192_vaes512,
@@ -237,7 +237,7 @@ CipherFactory<iCipherAead>::getCipher()
                                 Gcm192_aesni,
                                 Gcm256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_AES_MODE_CCM:
+        case CipherMode::eAesCCM:
             m_iCipher = getMode<iCipherAead,
                                 Ccm128_aesni,
                                 Ccm192_aesni,
@@ -249,7 +249,7 @@ CipherFactory<iCipherAead>::getCipher()
                                 Ccm192_aesni,
                                 Ccm256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_AES_MODE_SIV:
+        case CipherMode::eAesSIV:
             m_iCipher = getMode<iCipherAead,
                                 Siv128_vaes512,
                                 Siv192_vaes512,
@@ -261,7 +261,7 @@ CipherFactory<iCipherAead>::getCipher()
                                 Siv192_aesni,
                                 Siv256_aesni>(m_keyLen, m_arch);
             break;
-        case ALC_CHACHA20_POLY1305:
+        case CipherMode::eCHACHA20_POLY1305:
             if (m_arch == CpuCipherFeatures::eVaes512) {
                 using namespace vaes512;
                 m_iCipher = new ChaChaPoly256();
@@ -276,17 +276,28 @@ CipherFactory<iCipherAead>::getCipher()
     }
 }
 
+static void
+listModes(cipherAlgoMapT map)
+{
+    std::cout << "List of supported cipher modes in the selected CipherFactory "
+              << std::endl;
+    for (auto it1 = map.begin(); it1 != map.end(); ++it1) {
+        std::cout << it1->first.c_str() << std::endl;
+    }
+}
+
 template<class INTERFACE>
 INTERFACE*
 CipherFactory<INTERFACE>::create(const string& name)
 {
-    cipherAlgoMap::iterator it = m_cipherMap.find(name);
+    auto               it = m_cipherMap.find(name);
+    cipherKeyLenTupleT t  = it->second;
     if (it == m_cipherMap.end()) {
         std::cout << "\n error " << name << " cipher mode not supported "
                   << std::endl;
+        listModes(m_cipherMap);
         return nullptr;
     }
-    cipherKeyLenTuple t = it->second;
     return create(std::get<0>(t), std::get<1>(t));
 }
 
@@ -294,11 +305,12 @@ template<class INTERFACE>
 INTERFACE*
 CipherFactory<INTERFACE>::create(const string& name, CpuCipherFeatures arch)
 {
-    cipherAlgoMap::iterator it = m_cipherMap.find(name);
-    cipherKeyLenTuple       t  = it->second;
+    auto               it = m_cipherMap.find(name);
+    cipherKeyLenTupleT t  = it->second;
     if (it == m_cipherMap.end()) {
-        std::cout << "\n error " << name << " cipher AEAD mode not supported "
+        std::cout << "\n error " << name << " cipher mode not supported "
                   << std::endl;
+        listModes(m_cipherMap);
         return nullptr;
     }
     return create(std::get<0>(t), std::get<1>(t), arch);
@@ -306,23 +318,23 @@ CipherFactory<INTERFACE>::create(const string& name, CpuCipherFeatures arch)
 
 template<class INTERFACE>
 INTERFACE*
-CipherFactory<INTERFACE>::create(alc_cipher_mode_t mode, CipherKeyLen keyLen)
+CipherFactory<INTERFACE>::create(CipherMode mode, CipherKeyLen keyLen)
 {
-    m_mode   = mode;
-    m_keyLen = keyLen;
-    m_arch   = m_currentArch;
+    m_cipher_mode = mode;
+    m_keyLen      = keyLen;
+    m_arch        = m_currentArch;
     getCipher();
     return m_iCipher;
 };
 
 template<class INTERFACE>
 INTERFACE*
-CipherFactory<INTERFACE>::create(alc_cipher_mode_t mode,
+CipherFactory<INTERFACE>::create(CipherMode        mode,
                                  CipherKeyLen      keyLen,
                                  CpuCipherFeatures arch)
 {
-    m_mode   = mode;
-    m_keyLen = keyLen;
+    m_cipher_mode = mode;
+    m_keyLen      = keyLen;
     // limit based on arch available in the cpu.
     if (arch > m_currentArch) {
 #if 0 /* when default feature set to highest level, avoid multiple warnings */
@@ -367,26 +379,26 @@ void
 CipherFactory<iCipher>::initCipherMap()
 {
     m_cipherMap = {
-        { "aes-cbc-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
-        { "aes-cbc-192", { ALC_AES_MODE_CBC, KEY_192_BIT } },
-        { "aes-cbc-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
+        { "aes-cbc-128", { CipherMode::eAesCBC, CipherKeyLen::eKey128Bit } },
+        { "aes-cbc-192", { CipherMode::eAesCBC, CipherKeyLen::eKey192Bit } },
+        { "aes-cbc-256", { CipherMode::eAesCBC, CipherKeyLen::eKey256Bit } },
 
-        { "aes-ofb-128", { ALC_AES_MODE_OFB, KEY_128_BIT } },
-        { "aes-ofb-192", { ALC_AES_MODE_OFB, KEY_192_BIT } },
-        { "aes-ofb-256", { ALC_AES_MODE_OFB, KEY_256_BIT } },
+        { "aes-ofb-128", { CipherMode::eAesOFB, CipherKeyLen::eKey128Bit } },
+        { "aes-ofb-192", { CipherMode::eAesOFB, CipherKeyLen::eKey192Bit } },
+        { "aes-ofb-256", { CipherMode::eAesOFB, CipherKeyLen::eKey256Bit } },
 
-        { "aes-ctr-128", { ALC_AES_MODE_CTR, KEY_128_BIT } },
-        { "aes-ctr-192", { ALC_AES_MODE_CTR, KEY_192_BIT } },
-        { "aes-ctr-256", { ALC_AES_MODE_CTR, KEY_256_BIT } },
+        { "aes-ctr-128", { CipherMode::eAesCTR, CipherKeyLen::eKey128Bit } },
+        { "aes-ctr-192", { CipherMode::eAesCTR, CipherKeyLen::eKey192Bit } },
+        { "aes-ctr-256", { CipherMode::eAesCTR, CipherKeyLen::eKey256Bit } },
 
-        { "aes-cfb-128", { ALC_AES_MODE_CFB, KEY_128_BIT } },
-        { "aes-cfb-192", { ALC_AES_MODE_CFB, KEY_192_BIT } },
-        { "aes-cfb-256", { ALC_AES_MODE_CFB, KEY_256_BIT } },
+        { "aes-cfb-128", { CipherMode::eAesCFB, CipherKeyLen::eKey128Bit } },
+        { "aes-cfb-192", { CipherMode::eAesCFB, CipherKeyLen::eKey192Bit } },
+        { "aes-cfb-256", { CipherMode::eAesCFB, CipherKeyLen::eKey256Bit } },
 
-        { "aes-xts-128", { ALC_AES_MODE_CBC, KEY_128_BIT } },
-        { "aes-xts-256", { ALC_AES_MODE_CBC, KEY_256_BIT } },
+        { "aes-xts-128", { CipherMode::eAesCBC, CipherKeyLen::eKey128Bit } },
+        { "aes-xts-256", { CipherMode::eAesCBC, CipherKeyLen::eKey256Bit } },
 
-        { "chacha20", { ALC_CHACHA20, KEY_256_BIT } },
+        { "chacha20", { CipherMode::eCHACHA20, CipherKeyLen::eKey256Bit } },
     };
 }
 
@@ -395,19 +407,20 @@ void
 CipherFactory<iCipherAead>::initCipherMap()
 {
     m_cipherMap = {
-        { "aes-gcm-128", { ALC_AES_MODE_GCM, KEY_128_BIT } },
-        { "aes-gcm-192", { ALC_AES_MODE_GCM, KEY_192_BIT } },
-        { "aes-gcm-256", { ALC_AES_MODE_GCM, KEY_256_BIT } },
+        { "aes-gcm-128", { CipherMode::eAesGCM, CipherKeyLen::eKey128Bit } },
+        { "aes-gcm-192", { CipherMode::eAesGCM, CipherKeyLen::eKey192Bit } },
+        { "aes-gcm-256", { CipherMode::eAesGCM, CipherKeyLen::eKey256Bit } },
 
-        { "aes-ccm-128", { ALC_AES_MODE_CCM, KEY_128_BIT } },
-        { "aes-ccm-192", { ALC_AES_MODE_CCM, KEY_192_BIT } },
-        { "aes-ccm-256", { ALC_AES_MODE_CCM, KEY_256_BIT } },
+        { "aes-ccm-128", { CipherMode::eAesCCM, CipherKeyLen::eKey128Bit } },
+        { "aes-ccm-192", { CipherMode::eAesCCM, CipherKeyLen::eKey192Bit } },
+        { "aes-ccm-256", { CipherMode::eAesCCM, CipherKeyLen::eKey256Bit } },
 
-        { "aes-siv-128", { ALC_AES_MODE_SIV, KEY_128_BIT } },
-        { "aes-siv-192", { ALC_AES_MODE_SIV, KEY_192_BIT } },
-        { "aes-siv-256", { ALC_AES_MODE_SIV, KEY_256_BIT } },
+        { "aes-siv-128", { CipherMode::eAesSIV, CipherKeyLen::eKey128Bit } },
+        { "aes-siv-192", { CipherMode::eAesSIV, CipherKeyLen::eKey192Bit } },
+        { "aes-siv-256", { CipherMode::eAesSIV, CipherKeyLen::eKey256Bit } },
 
-        { "chachapoly", { ALC_CHACHA20_POLY1305, KEY_256_BIT } },
+        { "chachapoly",
+          { CipherMode::eCHACHA20_POLY1305, CipherKeyLen::eKey256Bit } },
     };
 }
 

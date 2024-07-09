@@ -29,7 +29,7 @@ ADD_EXAMPLE(aes-gcm aes-gcm.c)
 
 ADD_EXAMPLE(aes-gcmcpp aes-gcm.cc)
 
-ADD_EXAMPLE(aes-cbccpp aes-cbc.cc)
+ADD_EXAMPLE(aes-cfbcpp aes-cfb.cc)
 
 ADD_EXAMPLE(aes-xts aes-xts.c)
 

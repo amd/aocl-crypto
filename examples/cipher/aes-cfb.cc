@@ -34,8 +34,6 @@
 
 #include "alcp/cipher.hh"
 
-#include <alcp/alcp.h>
-
 using namespace alcp::cipher;
 
 int
@@ -54,7 +52,7 @@ main()
     memset(inputText, 10, dataLen);
 
     auto alcpCipher = new CipherFactory<iCipher>;
-    auto aesmode    = alcpCipher->create("aes-cbc-192");
+    auto aesmode    = alcpCipher->create("aes-cfb-192");
     if (aesmode == nullptr) {
         printf("\n cipher create failed");
         err = ALC_ERROR_GENERIC;

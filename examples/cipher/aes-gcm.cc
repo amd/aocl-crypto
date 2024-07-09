@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "alcp/cipher.hh"
-#include <alcp/alcp.h>
 
 using namespace alcp::cipher;
 

@@ -49,17 +49,34 @@ alcp_cipher_aead_context_size()
 static CipherKeyLen
 getKeyLen(const Uint64 keyLen)
 {
-    enum CipherKeyLen key_size = KEY_128_BIT;
+    CipherKeyLen key_size = CipherKeyLen::eKey128Bit;
     if (keyLen == 192) {
-        key_size = KEY_192_BIT;
+        key_size = CipherKeyLen::eKey192Bit;
     } else if (keyLen == 256) {
-        key_size = KEY_256_BIT;
+        key_size = CipherKeyLen::eKey256Bit;
     }
     return key_size;
 }
 
+static CipherMode
+getCipherAeadMode(const alc_cipher_mode_t mode)
+{
+    switch (mode) {
+        case ALC_AES_MODE_GCM:
+            return CipherMode::eAesGCM;
+        case ALC_AES_MODE_CCM:
+            return CipherMode::eAesCCM;
+        case ALC_AES_MODE_SIV:
+            return CipherMode::eAesSIV;
+        case ALC_CHACHA20_POLY1305:
+            return CipherMode::eCHACHA20_POLY1305;
+        default:
+            return CipherMode::eCipherModeNone;
+    }
+}
+
 alc_error_t
-alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
+alcp_cipher_aead_request(const alc_cipher_mode_t mode,
                          const Uint64            keyLen,
                          alc_cipher_handle_p     pCipherHandle)
 {
@@ -76,7 +93,7 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
     auto alcpCipher       = new CipherFactory<iCipherAead>;
     ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
 
-    auto aead = alcpCipher->create(cipherMode, getKeyLen(keyLen));
+    auto aead = alcpCipher->create(getCipherAeadMode(mode), getKeyLen(keyLen));
     if (aead == nullptr) {
         printf("\n cipher algo create failed");
         return ALC_ERROR_GENERIC;

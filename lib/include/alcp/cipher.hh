@@ -33,8 +33,6 @@
 #include "alcp/alcp.hh"
 
 #include "alcp/base.hh"
-#include "alcp/cipher.h"
-#include "alcp/cipher_aead.h" //dependency to be removed
 #include "alcp/error.h"
 
 #include <array>
@@ -51,17 +49,35 @@ using alcp::utils::CpuId;
 
 namespace alcp { namespace cipher {
 
-    enum CipherKeyLen
+    enum class CipherKeyLen
     {
-        KEY_128_BIT,
-        KEY_192_BIT,
-        KEY_256_BIT
+        eKey128Bit,
+        eKey192Bit,
+        eKey256Bit
     };
 
-    typedef std::tuple<const alc_cipher_mode_t, const CipherKeyLen>
-                                                            cipherKeyLenTuple;
-    typedef std::map<const string, const cipherKeyLenTuple> cipherAlgoMap;
+    enum class CipherMode
+    {
+        eCipherModeNone = 0,
+        /* aes ciphers */
+        eAesCBC,
+        eAesOFB,
+        eAesCTR,
+        eAesCFB,
+        eAesXTS,
+        eCHACHA20, // non-aes
+        /* aes aead ciphers */
+        eAesGCM,
+        eAesCCM,
+        eAesSIV,
+        eCHACHA20_POLY1305, // non-aes
+        eCipherModeMax,
+    };
 
+    using cipherKeyLenTupleT = std::tuple<const CipherMode, const CipherKeyLen>;
+    using cipherAlgoMapT     = std::map<const string, const cipherKeyLenTupleT>;
+
+    // non-aead cipher interface
     class ALCP_API_EXPORT iCipher
     {
 
@@ -96,6 +112,7 @@ namespace alcp { namespace cipher {
         virtual alc_error_t setTagLength(Uint64 tagLen) = 0;
     };
 
+    // aead cipher interface
     class ALCP_API_EXPORT iCipherAead
         : public virtual iCipher
         , public virtual iCipherAuth // authenication class - used for Aead
@@ -113,10 +130,10 @@ namespace alcp { namespace cipher {
         CpuCipherFeatures m_arch =
             CpuCipherFeatures::eVaes512; // default zen4 arch
         CpuCipherFeatures m_currentArch = getCpuCipherFeature();
-        CipherKeyLen      m_keyLen      = KEY_128_BIT;
-        alc_cipher_mode_t m_mode        = ALC_AES_MODE_NONE;
+        CipherKeyLen      m_keyLen      = CipherKeyLen::eKey128Bit;
+        CipherMode        m_cipher_mode = CipherMode::eCipherModeNone;
         INTERFACE*        m_iCipher     = nullptr;
-        cipherAlgoMap     m_cipherMap   = {};
+        cipherAlgoMapT    m_cipherMap   = {};
 
       public:
         CipherFactory();
@@ -125,8 +142,8 @@ namespace alcp { namespace cipher {
         // cipher creators
         INTERFACE* create(const string& name);
         INTERFACE* create(const string& name, CpuCipherFeatures arch);
-        INTERFACE* create(alc_cipher_mode_t mode, CipherKeyLen keyLen);
-        INTERFACE* create(alc_cipher_mode_t mode,
+        INTERFACE* create(CipherMode mode, CipherKeyLen keyLen);
+        INTERFACE* create(CipherMode        mode,
                           CipherKeyLen      keyLen,
                           CpuCipherFeatures arch);
 
