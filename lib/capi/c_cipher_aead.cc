@@ -31,6 +31,7 @@
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
 #include "alcp/cipher.hh"
+#include "alcp/cipher_aead.h"
 
 #include "alcp/capi/cipher/ctx.hh"
 #include "alcp/capi/defs.hh"
