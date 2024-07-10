@@ -36,8 +36,7 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{
-}
+{}
 
 /* xts */
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,

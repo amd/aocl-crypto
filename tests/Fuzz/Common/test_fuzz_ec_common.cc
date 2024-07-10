@@ -103,16 +103,19 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
         .ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED,
     };
 
-    size                  = alcp_ec_context_size(&ecinfo);
+    size = alcp_ec_context_size(&ecinfo);
+
     handle_peer1->context = malloc(size);
-    if (handle_peer1->context == nullptr) {
-        std::cout << "Handle1 allocation failed" << std::endl;
+    err                   = alcp_ec_request(&ecinfo, handle_peer1);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_ec_request for peer1" << std::endl;
         goto dealloc_exit;
     }
 
     handle_peer2->context = malloc(size);
-    if (handle_peer2->context == nullptr) {
-        std::cout << "Handle2 allocation failed" << std::endl;
+    err                   = alcp_ec_request(&ecinfo, handle_peer2);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_ec_request for peer2" << std::endl;
         goto dealloc_exit;
     }
 
@@ -181,26 +184,36 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
     goto out;
 
 dealloc_exit:
+    alcp_ec_finish(handle_peer1);
     if (handle_peer1->context != nullptr) {
-        alcp_ec_finish(handle_peer1);
         free(handle_peer1->context);
     }
+    delete (handle_peer1);
+    handle_peer1 = nullptr;
+
+    alcp_ec_finish(handle_peer2);
     if (handle_peer2->context != nullptr) {
-        alcp_ec_finish(handle_peer2);
         free(handle_peer2->context);
     }
+    delete (handle_peer2);
+    handle_peer2 = nullptr;
     std::cout << "Failed fuzz test for Key size: " << key_size << std::endl;
     return -1;
 
 out:
+    alcp_ec_finish(handle_peer1);
     if (handle_peer1->context != nullptr) {
-        alcp_ec_finish(handle_peer1);
         free(handle_peer1->context);
     }
+    delete (handle_peer1);
+    handle_peer1 = nullptr;
+
+    alcp_ec_finish(handle_peer2);
     if (handle_peer2->context != nullptr) {
-        alcp_ec_finish(handle_peer2);
         free(handle_peer2->context);
     }
+    delete (handle_peer2);
+    handle_peer2 = nullptr;
     std::cout << "Passed case for Key size: " << key_size << std::endl;
     return 0;
 }
