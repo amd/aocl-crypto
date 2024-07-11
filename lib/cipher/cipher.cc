@@ -290,14 +290,14 @@ template<class INTERFACE>
 INTERFACE*
 CipherFactory<INTERFACE>::create(const string& name)
 {
-    auto               it = m_cipherMap.find(name);
-    cipherKeyLenTupleT t  = it->second;
+    auto it = m_cipherMap.find(name);
     if (it == m_cipherMap.end()) {
         std::cout << "\n error " << name << " cipher mode not supported "
                   << std::endl;
         listModes(m_cipherMap);
         return nullptr;
     }
+    cipherKeyLenTupleT t = it->second;
     return create(std::get<0>(t), std::get<1>(t));
 }
 
@@ -305,14 +305,14 @@ template<class INTERFACE>
 INTERFACE*
 CipherFactory<INTERFACE>::create(const string& name, CpuCipherFeatures arch)
 {
-    auto               it = m_cipherMap.find(name);
-    cipherKeyLenTupleT t  = it->second;
+    auto it = m_cipherMap.find(name);
     if (it == m_cipherMap.end()) {
         std::cout << "\n error " << name << " cipher mode not supported "
                   << std::endl;
         listModes(m_cipherMap);
         return nullptr;
     }
+    cipherKeyLenTupleT t = it->second;
     return create(std::get<0>(t), std::get<1>(t), arch);
 }
 
