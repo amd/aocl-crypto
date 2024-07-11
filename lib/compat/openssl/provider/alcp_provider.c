@@ -70,7 +70,7 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
  * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
  * internally tries to use CBC from alcp and multi update is not
  * supported in ALCP as of now.  */
-#if OPENSSL_API_LEVEL < 30300
+#if OPENSSL_API_LEVEL < 30200
         case OSSL_OP_CIPHER:
             EXIT();
             return ALC_prov_ciphers;

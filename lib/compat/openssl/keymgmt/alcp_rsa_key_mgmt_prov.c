@@ -54,7 +54,7 @@ typedef struct
     const char*    description;
     OSSL_PROVIDER* prov;
     int            refcnt;
-#if OPENSSL_API_LEVEL < 30300
+#if OPENSSL_API_LEVEL < 30200
     void* lock;
 #endif
 
@@ -85,12 +85,12 @@ typedef struct
     /* Import and export routines */
     OSSL_FUNC_keymgmt_import_fn*       import;
     OSSL_FUNC_keymgmt_import_types_fn* import_types;
-#if OPENSSL_API_LEVEL >= 30300
+#if OPENSSL_API_LEVEL >= 30200
     OSSL_FUNC_keymgmt_import_types_ex_fn* import_types_ex;
 #endif
     OSSL_FUNC_keymgmt_export_fn* export;
     OSSL_FUNC_keymgmt_export_types_fn* export_types;
-#if OPENSSL_API_LEVEL >= 30300
+#if OPENSSL_API_LEVEL >= 30200
     OSSL_FUNC_keymgmt_export_types_ex_fn* export_types_ex;
 #endif
     OSSL_FUNC_keymgmt_dup_fn* dup;

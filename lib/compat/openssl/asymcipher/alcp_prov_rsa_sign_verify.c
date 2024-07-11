@@ -45,7 +45,7 @@ struct evp_signature_st
     const char*    description;
     OSSL_PROVIDER* prov;
     int            refcnt;
-#if OPENSSL_API_LEVEL < 30300
+#if OPENSSL_API_LEVEL < 30200
     void* lock;
 #endif
 

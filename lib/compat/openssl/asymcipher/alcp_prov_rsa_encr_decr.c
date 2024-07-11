@@ -53,7 +53,7 @@ struct evp_asym_cipher_st
     const char*    description;
     OSSL_PROVIDER* prov;
     int            refcnt;
-#if OPENSSL_API_LEVEL < 30300
+#if OPENSSL_API_LEVEL < 30200
     void* lock;
 #endif
 
@@ -86,7 +86,7 @@ typedef struct
     /* TLS padding */
     unsigned int client_version;
     unsigned int alt_version;
-#if OPENSSL_API_LEVEL >= 30300
+#if OPENSSL_API_LEVEL >= 30200
     /* PKCS#1 v1.5 decryption mode */
     unsigned int implicit_rejection;
 #endif
@@ -562,7 +562,7 @@ static const OSSL_PARAM alcp_known_gettable_ctx_params[] = {
         OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL, OSSL_PARAM_OCTET_PTR, NULL, 0),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_CLIENT_VERSION, NULL),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_NEGOTIATED_VERSION, NULL),
-#if OPENSSL_API_LEVEL >= 30300
+#if OPENSSL_API_LEVEL >= 30200
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_IMPLICIT_REJECTION, NULL),
 #endif
     OSSL_PARAM_END
@@ -582,7 +582,7 @@ static const OSSL_PARAM alcp_known_settable_ctx_params[] = {
     OSSL_PARAM_octet_string(OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL, NULL, 0),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_CLIENT_VERSION, NULL),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_NEGOTIATED_VERSION, NULL),
-#if OPENSSL_API_LEVEL >= 30300
+#if OPENSSL_API_LEVEL >= 30200
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_IMPLICIT_REJECTION, NULL),
 #endif
     OSSL_PARAM_END
