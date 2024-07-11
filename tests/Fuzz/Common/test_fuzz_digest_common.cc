@@ -152,9 +152,11 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
     size_t             size_input = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
 
+    size_t size_output_shake = stream.ConsumeIntegral<Uint16>();
+
     /* Initializing digest info */
     alc_error_t         err = ALC_ERROR_NONE;
-    alc_digest_handle_p handle, handle_dup;
+    alc_digest_handle_p handle{}, handle_dup{};
     handle = new alc_digest_handle_t;
 
     Uint32 out_size = sha_mode_len_map[mode];
@@ -171,7 +173,8 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
     /* for shake variants */
     else if (out_size == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
              || out_size == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
-        out_size = stream.ConsumeIntegral<Uint32>();
+        out_size = size_output_shake;
+        std::cout << "Requesting for Digest of size " << out_size << std::endl;
     } else {
         std::cout << sha_mode_len_map[mode] << " is not supported. Exiting.."
                   << std::endl;
@@ -203,7 +206,7 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
     std::cout << "Running for Input size:" << size_input << std::endl;
     err = alcp_digest_request(mode, handle);
     if (alcp_is_error(err)) {
-        std::cout << "Error! alcp_digest_request" << std::endl;
+        std::cout << "Error! alcp_digest_request for main handle" << std::endl;
         goto dealloc_exit;
     }
 
@@ -229,6 +232,12 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         err = alcp_digest_init(handle);
         if (alcp_is_error(err)) {
             std::cout << "Error! alcp_digest_init" << std::endl;
+            goto dealloc_exit;
+        }
+        /* context copy */
+        err = alcp_digest_context_copy(handle, handle_dup);
+        if (alcp_is_error(err)) {
+            std::cout << "Error! alcp_digest_context_copy" << std::endl;
             goto dealloc_exit;
         }
         /* call this multiple times in the positive lifecycle tests */
@@ -264,34 +273,34 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
     goto exit;
 
 dealloc_exit:
-    if (handle != nullptr) {
-        alcp_digest_finish(handle);
+    alcp_digest_finish(handle);
+    if (handle->context != nullptr) {
         free(handle->context);
-        delete handle;
     }
+    delete handle;
     /* FIXME, what if this was called on an uinitialized handle */
     if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        if (handle_dup != nullptr) {
-            alcp_digest_finish(handle_dup);
+        alcp_digest_finish(handle_dup);
+        if (handle_dup->context != nullptr) {
             free(handle_dup->context);
-            delete handle_dup;
         }
+        delete handle_dup;
     }
     return -1;
 
 exit:
-    if (handle != nullptr) {
-        alcp_digest_finish(handle);
+    alcp_digest_finish(handle);
+    if (handle->context != nullptr) {
         free(handle->context);
-        delete handle;
     }
+    delete handle;
     /* FIXME, what if this was called on an uinitialized handle */
     if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        if (handle_dup != nullptr) {
-            alcp_digest_finish(handle_dup);
+        alcp_digest_finish(handle_dup);
+        if (handle_dup->context != nullptr) {
             free(handle_dup->context);
-            delete handle_dup;
         }
+        delete handle_dup;
     }
     std::cout << "Passed " << sha_mode_len_map[mode]
               << " for Input size:" << size_input << std::endl;
