@@ -1073,14 +1073,76 @@ Rsa::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
                 m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
         }
     } else if (zen_available || zen_available_flags) {
-        zen::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        if (m_key_size == 2048 / 8) {
+            zen::archCreateContext<KEY_SIZE_2048>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        } else {
+            zen::archCreateContext<KEY_SIZE_1024>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        }
     } else {
         return ALC_ERROR_NOT_PERMITTED;
     }
     return ALC_ERROR_NONE;
 }
 
+alc_error_t
+Rsa::setPublicKeyAsBigNum(const BigNum* exponent, const BigNum* pModulus)
+{
+    if (!pModulus || !exponent || !exponent->num || !pModulus->num) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+
+    if (!(pModulus->size == 128 / 8 || pModulus->size == 256 / 8)) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+    // ToDo: check if the key can be stored as shared pointer
+    // m_pub_key.m_public_exponent = exponent->num;
+    utils::CopyQWord(
+        m_pub_key.m_public_exponent, exponent->num, exponent->size * 8);
+
+    // m_pub_key.m_mod             = pModulus->num;
+    utils::CopyQWord(m_pub_key.m_mod, pModulus->num, pModulus->size * 8);
+
+    m_pub_key.m_size           = pModulus->size;
+    m_key_size                 = pModulus->size * 8;
+    static bool zen4_available = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+
+    if (zen4_available) {
+        if (m_key_size == 2048 / 8) {
+            zen4::archCreateContext<KEY_SIZE_2048>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        } else {
+            zen4::archCreateContext<KEY_SIZE_1024>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        }
+
+    } else if (zen3_available) {
+        if (m_key_size == 2048 / 8) {
+            zen3::archCreateContext<KEY_SIZE_2048>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        } else {
+            zen3::archCreateContext<KEY_SIZE_1024>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        }
+
+    } else if (zen_available || zen_available_flags) {
+        if (m_key_size == 2048 / 8) {
+            zen::archCreateContext<KEY_SIZE_2048>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        } else {
+            zen::archCreateContext<KEY_SIZE_1024>(
+                m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        }
+    } else {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+    return ALC_ERROR_NONE;
+}
 alc_error_t
 Rsa::setPrivateKey(const Uint8* dp,
                    const Uint8* dq,
@@ -1151,7 +1213,7 @@ Rsa::setPrivateKey(const Uint8* dp,
                 m_context_q, m_priv_key.m_q, m_priv_key.m_size);
         }
     } else {
-        return ALC_ERROR_NOT_PERMITTED
+        return ALC_ERROR_NOT_PERMITTED;
     }
     return ALC_ERROR_NONE;
 }
