@@ -272,17 +272,6 @@ BENCH_AES_ENCRYPT_CFB_128(benchmark::State& state)
 }
 
 static void
-BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(CipherAeadBench(state,
-                                             state.range(0),
-                                             ENCRYPT,
-                                             ALC_CIPHER_TYPE_AES,
-                                             ALC_AES_MODE_GCM,
-                                             128));
-}
-
-static void
 BENCH_AES_ENCRYPT_CCM_128(benchmark::State& state)
 {
     benchmark::DoNotOptimize(CipherAeadBench(state,
