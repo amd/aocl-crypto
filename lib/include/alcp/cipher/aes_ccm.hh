@@ -105,7 +105,6 @@ class ALCP_API_EXPORT Ccm
         : Aes(keyLen_in_bytes)
     {}
 
-    Ccm()  = default;
     ~Ccm() = default;
 
     alc_error_t init(const Uint8* pKey,

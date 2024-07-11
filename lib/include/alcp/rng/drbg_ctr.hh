@@ -65,9 +65,6 @@ class EncryptAes : public cipher::Aes
         : Aes(keyLen_in_bytes)
     {}
 
-    // FIXME: remove below constructor
-    EncryptAes() {}
-
   public:
     bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 };

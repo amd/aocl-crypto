@@ -90,8 +90,9 @@ class ALCP_API_EXPORT Siv
     alc_error_t setKeys(const Uint8 key1[], Uint64 length);
     alc_error_t s2v(const Uint8 plainText[], Uint64 size);
 
-    Siv() = default;
-    Siv(Uint32 keyLen_in_bytes) {}
+    Siv(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
+    {}
 };
 
 // AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual iCipherAuth);
