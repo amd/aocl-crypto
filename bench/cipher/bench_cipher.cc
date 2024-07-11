@@ -366,17 +366,6 @@ BENCH_AES_DECRYPT_CFB_128(benchmark::State& state)
 }
 
 static void
-BENCH_AES_DECRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(CipherAeadBench(state,
-                                             state.range(0),
-                                             DECRYPT,
-                                             ALC_CIPHER_TYPE_AES,
-                                             ALC_AES_MODE_GCM,
-                                             128));
-}
-
-static void
 BENCH_AES_DECRYPT_XTS_128(benchmark::State& state)
 {
     benchmark::DoNotOptimize(CipherBench(state,
@@ -463,17 +452,6 @@ BENCH_AES_ENCRYPT_CFB_192(benchmark::State& state)
 }
 
 static void
-BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(CipherAeadBench(state,
-                                             state.range(0),
-                                             ENCRYPT,
-                                             ALC_CIPHER_TYPE_AES,
-                                             ALC_AES_MODE_GCM,
-                                             192));
-}
-
-static void
 BENCH_AES_ENCRYPT_CCM_192(benchmark::State& state)
 {
     benchmark::DoNotOptimize(CipherAeadBench(state,
@@ -543,17 +521,6 @@ BENCH_AES_DECRYPT_CFB_192(benchmark::State& state)
                                          ALC_CIPHER_TYPE_AES,
                                          ALC_AES_MODE_CFB,
                                          192));
-}
-
-static void
-BENCH_AES_DECRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(CipherAeadBench(state,
-                                             state.range(0),
-                                             DECRYPT,
-                                             ALC_CIPHER_TYPE_AES,
-                                             ALC_AES_MODE_GCM,
-                                             192));
 }
 
 static void
@@ -630,17 +597,6 @@ BENCH_AES_ENCRYPT_CFB_256(benchmark::State& state)
                                          ALC_CIPHER_TYPE_AES,
                                          ALC_AES_MODE_CFB,
                                          256));
-}
-
-static void
-BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(CipherAeadBench(state,
-                                             state.range(0),
-                                             ENCRYPT,
-                                             ALC_CIPHER_TYPE_AES,
-                                             ALC_AES_MODE_GCM,
-                                             256));
 }
 
 static void
@@ -724,17 +680,6 @@ BENCH_AES_DECRYPT_CFB_256(benchmark::State& state)
                                          ALC_CIPHER_TYPE_AES,
                                          ALC_AES_MODE_CFB,
                                          256));
-}
-
-static void
-BENCH_AES_DECRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(CipherAeadBench(state,
-                                             state.range(0),
-                                             DECRYPT,
-                                             ALC_CIPHER_TYPE_AES,
-                                             ALC_AES_MODE_GCM,
-                                             256));
 }
 
 static void
@@ -837,22 +782,6 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({ blocksizes });
 
     /* Benchmark of AEAD Ciphers */
-    // GCM Benchmarks
-#if 0
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)
-        ->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)
-        ->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192)
-        ->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_192)
-        ->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256)
-        ->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)
-        ->ArgsProduct({ blocksizes });
-#endif
-
     // SIV Benchmarks
     BENCHMARK(BENCH_AES_ENCRYPT_SIV_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_SIV_128)->ArgsProduct({ blocksizes });
