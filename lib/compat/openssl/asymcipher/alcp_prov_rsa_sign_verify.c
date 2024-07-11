@@ -177,6 +177,7 @@ alcp_prov_rsa_new(void* provctx, const char* propq)
 {
     alc_prov_rsa_ctx* prsactx = NULL;
 
+    ENTER();
     if ((prsactx = OPENSSL_zalloc(sizeof(alc_prov_rsa_ctx))) == NULL) {
         return NULL;
     }
@@ -201,6 +202,7 @@ alcp_prov_rsa_new(void* provctx, const char* propq)
         OPENSSL_clear_free(prsactx, sizeof(*prsactx));
         return 0;
     }
+    EXIT();
     return prsactx;
 }
 
@@ -208,6 +210,7 @@ static int
 alcp_prov_rsa_set_ctx_params(void* vprsactx, const OSSL_PARAM params[])
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+    ENTER();
 
     typedef int (*fun_ptr)(void* provctx, const OSSL_PARAM params[]);
     fun_ptr fun;
@@ -241,7 +244,7 @@ alcp_prov_rsa_set_ctx_params(void* vprsactx, const OSSL_PARAM params[])
             return 0;
         }
     }
-
+    EXIT();
     return 1;
 }
 
@@ -253,6 +256,7 @@ alcp_rsa_signverify_init(void*            vprsactx,
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
 
+    ENTER();
     if (prsactx == NULL)
         return 0;
 
@@ -322,7 +326,7 @@ alcp_rsa_signverify_init(void*            vprsactx,
         prsactx->digest_info_size =
             alcp_rsa_get_digest_info_size(prsactx->mode);
     }
-
+    EXIT();
     return 1;
 }
 
@@ -343,6 +347,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
     size_t            rsasize = prsactx->rsa_size;
 
+    ENTER();
     if (rsasize != 256 || prsactx->crt_disabled
         || prsactx->ossl_rsa_ctx->pad_mode == RSA_X931_PADDING) {
         typedef int (*fun_ptr)(void*                vprsactx,
@@ -363,6 +368,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
 
     if (sig == NULL) {
         *siglen = rsasize;
+        EXIT();
         return 1;
     }
 
@@ -494,6 +500,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
         }
     }
     *siglen = rsasize;
+    EXIT();
     return 1;
 }
 
@@ -516,9 +523,11 @@ alcp_prov_rsa_verify_recover(void*                vprsactx,
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
     int               ret;
+    ENTER();
 
     if (rout == NULL) {
         *routlen = prsactx->rsa_size;
+        EXIT();
         return 1;
     }
 
@@ -548,6 +557,7 @@ alcp_prov_rsa_verify_recover(void*                vprsactx,
         }
     }
     *routlen = siglen;
+    EXIT();
     return 1;
 }
 
@@ -569,7 +579,7 @@ alcp_prov_rsa_verify(void*                vprsactx,
     alc_error_t err = ALC_ERROR_NONE;
 
     size_t rsasize = prsactx->rsa_size;
-
+    ENTER();
     if (rsasize != 256 || prsactx->crt_disabled
         || prsactx->ossl_rsa_ctx->pad_mode == RSA_X931_PADDING) {
         typedef int (*fun_ptr)(void*                vprsactx,
@@ -583,7 +593,7 @@ alcp_prov_rsa_verify(void*                vprsactx,
 
         if (!fun)
             return 0;
-
+        EXIT();
         return fun(prsactx->ossl_rsa_ctx, sig, siglen, tbs, tbslen);
     }
 
@@ -645,59 +655,9 @@ alcp_prov_rsa_verify(void*                vprsactx,
                            "Non padding or PKCS#1 v1.5 or PSS padding allowed");
             return 0;
     }
-
+    EXIT();
     return 1;
 }
-
-// static int
-// alcp_rsa_digest_signverify_init(void*            vprsactx,
-//                                 const char*      mdname,
-//                                 void*            vrsa,
-//                                 const OSSL_PARAM params[],
-//                                 int              operation)
-// {
-//     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
-
-//     if (!alcp_rsa_signverify_init(vprsactx, vrsa, params, operation))
-//         return 0;
-
-//     // ToDO : check if this can be further cleaned up
-//     if (mdname != NULL
-//         && (mdname[0] == '\0'
-//             || OPENSSL_strcasecmp(prsactx->ossl_rsa_ctx->mdname, mdname)
-//                    != 0)) {
-//         int mode_digest = alcp_rsa_get_digest_mode(mdname);
-//         prsactx->mode   = mode_digest;
-//         prsactx->mdsize = alcp_rsa_get_digest_size(mode_digest);
-//         // Add mdnid
-//         prsactx->ossl_rsa_ctx->mdnid = alcp_rsa_get_nid(mode_digest);
-
-//         alc_error_t err = alcp_rsa_add_digest(&prsactx->handle, mode_digest);
-//         if (err != ALC_ERROR_NONE) {
-//             return 0;
-//         }
-//     }
-
-//     prsactx->ossl_rsa_ctx->flag_allow_md = 0;
-
-//     if (prsactx->ossl_rsa_ctx->mdctx == NULL) {
-//         prsactx->ossl_rsa_ctx->mdctx = EVP_MD_CTX_new();
-//         if (prsactx->ossl_rsa_ctx->mdctx == NULL)
-//             goto error;
-//     }
-
-//     if (!EVP_DigestInit_ex2(
-//             prsactx->ossl_rsa_ctx->mdctx, EVP_get_digestbyname(mdname),
-//             params))
-//         goto error;
-
-//     return 1;
-
-// error:
-//     EVP_MD_CTX_free(prsactx->ossl_rsa_ctx->mdctx);
-//     prsactx->ossl_rsa_ctx->mdctx = NULL;
-//     return 0;
-// }
 
 static int
 alcp_prov_rsa_digest_sign_update(void*                vprsactx,
@@ -708,11 +668,13 @@ alcp_prov_rsa_digest_sign_update(void*                vprsactx,
     typedef int (*fun_ptr)(
         void* vprsactx, const unsigned char* data, size_t datalen);
     fun_ptr fun;
+    ENTER();
 
     fun = get_default_rsa_signature().digest_sign_update;
 
     if (!fun)
         return 0;
+    EXIT();
     return fun(prsactx->ossl_rsa_ctx, data, datalen);
 }
 
@@ -726,11 +688,12 @@ alcp_prov_rsa_digest_verify_update(void*                vprsactx,
     typedef int (*fun_ptr)(
         void* vprsactx, const unsigned char* data, size_t datalen);
     fun_ptr fun;
-
+    ENTER();
     fun = get_default_rsa_signature().digest_verify_update;
 
     if (!fun)
         return 0;
+    EXIT();
     return fun(prsactx->ossl_rsa_ctx, data, datalen);
 }
 
@@ -747,7 +710,7 @@ alcp_prov_rsa_digest_sign_init(void*            vprsactx,
                            void*            vrsa,
                            const OSSL_PARAM params[]);
     fun_ptr fun;
-
+    ENTER();
     fun = get_default_rsa_signature().digest_sign_init;
 
     if (!fun)
@@ -765,6 +728,7 @@ alcp_prov_rsa_digest_sign_init(void*            vprsactx,
     }
 
     if (prsactx->rsa_size != 256 || prsactx->crt_disabled) {
+        EXIT();
         return ret;
     }
 
@@ -791,7 +755,7 @@ alcp_prov_rsa_digest_sign_init(void*            vprsactx,
     if (err != ALC_ERROR_NONE) {
         return 0;
     }
-
+    EXIT();
     return ret;
 }
 
@@ -805,6 +769,7 @@ alcp_prov_rsa_digest_sign_final(void*          vprsactx,
     unsigned char     digest[EVP_MAX_MD_SIZE];
     unsigned int      dlen = 0;
 
+    ENTER();
     if (prsactx == NULL)
         return 0;
     int rsasize = prsactx->rsa_size;
@@ -820,6 +785,7 @@ alcp_prov_rsa_digest_sign_final(void*          vprsactx,
 
         int ret = fun(prsactx->ossl_rsa_ctx, sig, siglen, sigsize);
 
+        EXIT();
         return ret;
     }
 
@@ -840,6 +806,7 @@ alcp_prov_rsa_digest_sign_final(void*          vprsactx,
     int ret = alcp_prov_rsa_sign(
         vprsactx, sig, siglen, sigsize, digest, (size_t)dlen);
 
+    EXIT();
     return ret;
 }
 
@@ -856,7 +823,7 @@ alcp_prov_rsa_digest_verify_init(void*            vprsactx,
                            void*            vrsa,
                            const OSSL_PARAM params[]);
     fun_ptr fun;
-
+    ENTER();
     fun = get_default_rsa_signature().digest_verify_init;
 
     if (!fun)
@@ -867,6 +834,7 @@ alcp_prov_rsa_digest_verify_init(void*            vprsactx,
     prsactx->rsa_size = alcp_rsa_size(prsactx->ossl_rsa_ctx->rsa);
 
     if (prsactx->rsa_size != 256) {
+        EXIT();
         return ret;
     }
 
@@ -890,9 +858,8 @@ alcp_prov_rsa_digest_verify_init(void*            vprsactx,
     if (err != ALC_ERROR_NONE) {
         return 0;
     }
+    EXIT();
     return ret;
-    // return alcp_rsa_digest_signverify_init(
-    //     vprsactx, mdname, vrsa, params, EVP_PKEY_OP_VERIFY);
 }
 
 int
@@ -904,6 +871,7 @@ alcp_prov_rsa_digest_verify_final(void*                vprsactx,
     unsigned char     digest[EVP_MAX_MD_SIZE];
     unsigned int      dlen = 0;
 
+    ENTER();
     if (prsactx == NULL)
         return 0;
 
@@ -918,6 +886,7 @@ alcp_prov_rsa_digest_verify_final(void*                vprsactx,
         if (!fun)
             return 0;
 
+        EXIT();
         return fun(prsactx->ossl_rsa_ctx, sig, siglen);
     }
 
@@ -929,6 +898,7 @@ alcp_prov_rsa_digest_verify_final(void*                vprsactx,
         return 0;
 
     int ret = alcp_prov_rsa_verify(vprsactx, sig, siglen, digest, (size_t)dlen);
+    EXIT();
     return ret;
 }
 
@@ -937,6 +907,7 @@ alcp_prov_rsa_freectx(void* vprsactx)
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
 
+    ENTER();
     if (prsactx == NULL)
         return;
 
@@ -951,6 +922,7 @@ alcp_prov_rsa_freectx(void* vprsactx)
     alcp_rsa_finish(&prsactx->handle);
     OPENSSL_free(prsactx->handle.context);
     OPENSSL_clear_free(prsactx, sizeof(alc_prov_rsa_ctx));
+    EXIT();
 }
 
 static void*
@@ -958,6 +930,7 @@ alcp_prov_rsa_dupctx(void* vprsactx)
 {
     alc_prov_rsa_ctx* prsactx  = (alc_prov_rsa_ctx*)vprsactx;
     alc_prov_rsa_ctx* dest_ctx = OPENSSL_memdup(prsactx, sizeof(*prsactx));
+    ENTER();
     if (dest_ctx == NULL) {
         return NULL;
     }
@@ -982,7 +955,7 @@ alcp_prov_rsa_dupctx(void* vprsactx)
     if (err != ALC_ERROR_NONE) {
         goto err_label;
     }
-
+    EXIT();
     return dest_ctx;
 
 err_label:
@@ -997,10 +970,12 @@ alcp_prov_rsa_get_ctx_params(void* vprsactx, OSSL_PARAM* params)
 {
     typedef int (*fun_ptr)(void* vprsactx, OSSL_PARAM* params);
     fun_ptr fun = get_default_rsa_signature().get_ctx_params;
+    ENTER();
     if (!fun)
         return 0;
 
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+    EXIT();
     return fun(prsactx->ossl_rsa_ctx, params);
 }
 
@@ -1017,6 +992,8 @@ static const OSSL_PARAM*
 alcp_prov_rsa_gettable_ctx_params(ossl_unused void* vprsactx,
                                   ossl_unused void* provctx)
 {
+    ENTER();
+    EXIT();
     return alcp_known_gettable_ctx_params;
 }
 
@@ -1043,8 +1020,10 @@ alcp_prov_rsa_settable_ctx_params(void* vprsactx, ossl_unused void* provctx)
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
 
+    ENTER();
     if (prsactx != NULL && !prsactx->ossl_rsa_ctx->flag_allow_md)
         return alcp_settable_ctx_params_no_digest;
+    EXIT();
     return alcp_settable_ctx_params;
 }
 
@@ -1053,8 +1032,10 @@ alcp_prov_rsa_get_ctx_md_params(void* vprsactx, OSSL_PARAM* params)
 {
     typedef int (*fun_ptr)(void* vprsactx, OSSL_PARAM* params);
     fun_ptr fun = get_default_rsa_signature().get_ctx_md_params;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
     return fun(prsactx->ossl_rsa_ctx, params);
 }
@@ -1064,8 +1045,10 @@ alcp_prov_rsa_gettable_ctx_md_params(void* vprsactx)
 {
     typedef const OSSL_PARAM* (*fun_ptr)(void* vprsactx);
     fun_ptr fun = get_default_rsa_signature().gettable_ctx_md_params;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
     return fun(prsactx->ossl_rsa_ctx);
 }
@@ -1075,9 +1058,11 @@ alcp_prov_rsa_set_ctx_md_params(void* vprsactx, const OSSL_PARAM params[])
 {
     typedef int (*fun_ptr)(void* vprsactx, const OSSL_PARAM params[]);
     fun_ptr fun = get_default_rsa_signature().set_ctx_md_params;
+    ENTER();
     if (!fun)
         return 0;
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+    EXIT();
     return fun(prsactx->ossl_rsa_ctx, params);
 }
 
@@ -1086,9 +1071,11 @@ alcp_prov_rsa_settable_ctx_md_params(void* vprsactx)
 {
     typedef const OSSL_PARAM* (*fun_ptr)(void* vprsactx);
     fun_ptr fun = get_default_rsa_signature().settable_ctx_md_params;
+    ENTER();
     if (!fun)
         return NULL;
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+    EXIT();
     return fun(prsactx->ossl_rsa_ctx);
 }
 

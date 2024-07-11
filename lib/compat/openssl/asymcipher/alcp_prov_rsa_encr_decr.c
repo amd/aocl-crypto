@@ -140,6 +140,7 @@ alcp_prov_rsa_new(void* provctx)
 {
     alc_prov_rsa_ctx* prsactx;
     prsactx = OPENSSL_zalloc(sizeof(alc_prov_rsa_ctx));
+    ENTER();
     if (prsactx == NULL)
         return NULL;
 
@@ -163,7 +164,7 @@ alcp_prov_rsa_new(void* provctx)
         OPENSSL_clear_free(prsactx, sizeof(*prsactx));
         return 0;
     }
-
+    EXIT();
     return prsactx;
 }
 static int
@@ -171,6 +172,7 @@ alcp_rsa_set_ctx_params(void* vprsactx, const OSSL_PARAM params[])
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
 
+    ENTER();
     if (prsactx == NULL)
         return 0;
     if (params == NULL)
@@ -193,7 +195,8 @@ alcp_rsa_set_ctx_params(void* vprsactx, const OSSL_PARAM params[])
         prsactx->seed_size = alcp_rsa_get_digest_size(mode);
         alc_error_t err    = alcp_rsa_add_digest(&prsactx->handle, mode);
         if (err != ALC_ERROR_NONE) {
-            printf("Rsa Provider: digest addition failed = %ld\n", err);
+            printf("Rsa Provider: digest addition failed = %llu\n",
+                   (unsigned long long)err);
             return 0;
         }
 
@@ -202,11 +205,12 @@ alcp_rsa_set_ctx_params(void* vprsactx, const OSSL_PARAM params[])
             EVP_MD_get0_name(prsactx->ossl_rsa_ctx->oaep_md));
         err = alcp_rsa_add_mgf(&prsactx->handle, mode);
         if (err != ALC_ERROR_NONE) {
-            printf("Rsa Provider: mgf addition failed = %ld\n", err);
+            printf("Rsa Provider: mgf addition failed = %llu\n",
+                   (unsigned long long)err);
             return 0;
         }
     }
-
+    EXIT();
     return ret;
 }
 
@@ -216,6 +220,8 @@ alcp_prov_rsa_encrypt_init(void*            vprsactx,
                            const OSSL_PARAM params[])
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+
+    ENTER();
     if (prsactx == NULL || vrsa == NULL)
         return 0;
     prsactx->version  = ((Rsa*)vrsa)->version;
@@ -242,7 +248,8 @@ alcp_prov_rsa_encrypt_init(void*            vprsactx,
         prsactx->seed_size = alcp_rsa_get_digest_size(mode);
         alc_error_t err    = alcp_rsa_add_digest(&prsactx->handle, mode);
         if (err != ALC_ERROR_NONE) {
-            printf("Rsa Provider: digest addition failed = %ld\n", err);
+            printf("Rsa Provider: digest addition failed = %llu\n",
+                   (unsigned long long)err);
             return 0;
         }
 
@@ -251,7 +258,8 @@ alcp_prov_rsa_encrypt_init(void*            vprsactx,
             EVP_MD_get0_name(prsactx->ossl_rsa_ctx->oaep_md));
         err = alcp_rsa_add_mgf(&prsactx->handle, mode);
         if (err != ALC_ERROR_NONE) {
-            printf("Rsa Provider: mgf addition failed = %ld\n", err);
+            printf("Rsa Provider: mgf addition failed = %llu\n",
+                   (unsigned long long)err);
             return 0;
         }
     }
@@ -264,6 +272,7 @@ alcp_prov_rsa_encrypt_init(void*            vprsactx,
         printf("Rsa Provider: rsa init failed %llu\n", (unsigned long long)err);
         return 0;
     }
+    EXIT();
     return ret;
 }
 static int
@@ -272,6 +281,7 @@ alcp_prov_rsa_decrypt_init(void*            vprsactx,
                            const OSSL_PARAM params[])
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+    ENTER();
     if (prsactx == NULL || vrsa == NULL)
         return 0;
     prsactx->version  = ((Rsa*)vrsa)->version;
@@ -289,6 +299,7 @@ alcp_prov_rsa_decrypt_init(void*            vprsactx,
     if (prsactx->version == RSA_ASN1_VERSION_MULTI
         || prsactx->ossl_rsa_ctx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING
         || prsactx->rsa_size != 256) {
+        EXIT();
         return ret;
     }
 
@@ -299,7 +310,8 @@ alcp_prov_rsa_decrypt_init(void*            vprsactx,
         prsactx->seed_size = alcp_rsa_get_digest_size(mode);
         alc_error_t err    = alcp_rsa_add_digest(&prsactx->handle, mode);
         if (err != ALC_ERROR_NONE) {
-            printf("Rsa Provider: digest addition failed = %ld\n", err);
+            printf("Rsa Provider: digest addition failed = %llu\n",
+                   (unsigned long long)err);
             return 0;
         }
 
@@ -308,7 +320,8 @@ alcp_prov_rsa_decrypt_init(void*            vprsactx,
             EVP_MD_get0_name(prsactx->ossl_rsa_ctx->oaep_md));
         err = alcp_rsa_add_mgf(&prsactx->handle, mode);
         if (err != ALC_ERROR_NONE) {
-            printf("Rsa Provider: mgf addition failed = %ld\n", err);
+            printf("Rsa Provider: mgf addition failed = %llu\n",
+                   (unsigned long long)err);
             return 0;
         }
     }
@@ -326,6 +339,7 @@ alcp_prov_rsa_decrypt_init(void*            vprsactx,
                (unsigned long long)err);
         return 0;
     }
+    EXIT();
     return ret;
 }
 
@@ -339,7 +353,8 @@ alcp_prov_rsa_encrypt(void*                vprsactx,
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
     size_t            len     = prsactx->rsa_size;
-    // int           ret     = 0;
+
+    ENTER();
     if (prsactx == NULL)
         return 0;
     if (out == NULL) {
@@ -347,6 +362,7 @@ alcp_prov_rsa_encrypt(void*                vprsactx,
             printf("Rsa Provider: Invalid key size");
             return 0;
         }
+        EXIT();
         *outlen = len;
         return 1;
     }
@@ -365,7 +381,7 @@ alcp_prov_rsa_encrypt(void*                vprsactx,
 
         if (!fun)
             return 0;
-
+        EXIT();
         return fun(prsactx->ossl_rsa_ctx, out, outlen, outsize, in, inlen);
     }
 
@@ -411,6 +427,7 @@ alcp_prov_rsa_encrypt(void*                vprsactx,
         return 0;
     }
     *outlen = inlen;
+    EXIT();
     return 1;
 }
 static int
@@ -424,10 +441,7 @@ alcp_prov_rsa_decrypt(void*                vprsactx,
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
     size_t            len     = prsactx->rsa_size;
 
-    // printf("Rsa Provider: key size = %d\n", len);
-    // printf("Rsa Provider: outsize = %d\n", outsize);
-    // printf("Rsa Provider: prsactx->ossl_rsa_ctx->pad_mode = %d\n",
-    //        prsactx->ossl_rsa_ctx->pad_mode);
+    ENTER();
     if (prsactx->version == RSA_ASN1_VERSION_MULTI
         || prsactx->ossl_rsa_ctx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING
         || prsactx->rsa_size != 256) {
@@ -443,6 +457,7 @@ alcp_prov_rsa_decrypt(void*                vprsactx,
         if (!fun)
             return 0;
 
+        EXIT();
         return fun(prsactx->ossl_rsa_ctx, out, outlen, outsize, in, inlen);
     }
 
@@ -452,6 +467,7 @@ alcp_prov_rsa_decrypt(void*                vprsactx,
             return 0;
         }
         *outlen = len;
+        EXIT();
         return 1;
     }
 
@@ -479,7 +495,7 @@ alcp_prov_rsa_decrypt(void*                vprsactx,
             &prsactx->handle, ALCP_RSA_PADDING_NONE, in, inlen, out);
         *outlen = len;
     }
-
+    EXIT();
     return Select(IsZero(err), 1, 0);
 }
 static void
@@ -491,12 +507,14 @@ alcp_prov_rsa_freectx(void* vprsactx)
     fun_ptr fun;
     fun = get_default_rsa_cipher().freectx;
 
+    ENTER();
     if (fun)
         fun(prsactx->ossl_rsa_ctx);
 
     alcp_rsa_finish(&prsactx->handle);
     OPENSSL_free(prsactx->handle.context);
     OPENSSL_free(prsactx);
+    EXIT();
 }
 
 static void*
@@ -504,6 +522,7 @@ alcp_prov_rsa_dupctx(void* vprsactx)
 {
     alc_prov_rsa_ctx* prsactx  = (alc_prov_rsa_ctx*)vprsactx;
     alc_prov_rsa_ctx* dest_ctx = OPENSSL_memdup(prsactx, sizeof(*prsactx));
+    ENTER();
     if (dest_ctx == NULL) {
         return NULL;
     }
@@ -522,6 +541,7 @@ alcp_prov_rsa_dupctx(void* vprsactx)
     if (prsactx->version == RSA_ASN1_VERSION_MULTI
         || prsactx->ossl_rsa_ctx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING
         || prsactx->rsa_size != 256) {
+        EXIT();
         return dest_ctx;
     }
 
@@ -530,7 +550,7 @@ alcp_prov_rsa_dupctx(void* vprsactx)
     if (err != ALC_ERROR_NONE) {
         goto err_label;
     }
-
+    EXIT();
     return dest_ctx;
 
 err_label:
@@ -543,6 +563,7 @@ static int
 alcp_prov_rsa_get_ctx_params(void* vprsactx, OSSL_PARAM* params)
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
+    ENTER();
     if (prsactx == NULL)
         return 0;
 
@@ -551,6 +572,7 @@ alcp_prov_rsa_get_ctx_params(void* vprsactx, OSSL_PARAM* params)
     fun = get_default_rsa_cipher().get_ctx_params;
     if (!fun)
         return 0;
+    EXIT();
     return fun(prsactx->ossl_rsa_ctx, params);
 }
 
@@ -571,6 +593,8 @@ static const OSSL_PARAM*
 alcp_prov_rsa_gettable_ctx_params(ossl_unused void* vprsactx,
                                   ossl_unused void* provctx)
 {
+    ENTER();
+    EXIT();
     return alcp_known_gettable_ctx_params;
 }
 static const OSSL_PARAM alcp_known_settable_ctx_params[] = {
@@ -591,6 +615,8 @@ static const OSSL_PARAM*
 alcp_rsa_settable_ctx_params(ossl_unused void* vprsactx,
                              ossl_unused void* provctx)
 {
+    ENTER();
+    EXIT();
     return alcp_known_settable_ctx_params;
 }
 const OSSL_DISPATCH alcp_rsa_asym_cipher_functions[] = {
