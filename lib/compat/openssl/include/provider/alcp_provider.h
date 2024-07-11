@@ -29,18 +29,22 @@
 #ifndef _OPENSSL_ALCP_PROVIDER_H
 #define _OPENSSL_ALCP_PROVIDER_H 2
 
-#include <openssl/core.h>
-#include <openssl/evp.h>
-
 #include <alcp/alcp.h>
 #include <alcp/cipher.h>
 #include <alcp/digest.h>
+#include <openssl/core.h>
+#include <openssl/evp.h>
+#include <string.h>
 
 #include "debug.h"
 
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
 #include "provider/alcp_provider_cipherdata.h"
+
+#if defined(WIN32) || defined(WIN64)
+#define strcasecmp _stricmp
+#endif
 
 #define GCM_IV_DEFAULT_SIZE 12
 #define GCM_IV_MAX_SIZE     (1024 / 8)

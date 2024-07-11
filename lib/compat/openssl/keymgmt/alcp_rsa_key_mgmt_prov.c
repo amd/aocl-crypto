@@ -119,9 +119,11 @@ static void*
 alcp_prov_keymgmt_rsa_newdata(void* provctx)
 {
     typedef void* (*fun_ptr)(void*);
+    ENTER();
     fun_ptr fun = get_keymgmt()->new;
     if (!fun)
         return NULL;
+    EXIT();
     return fun(provctx);
 }
 
@@ -129,9 +131,11 @@ static void
 alcp_prov_keymgmt_rsa_freedata(void* keydata)
 {
     typedef void (*fun_ptr)(void*);
+    ENTER();
     fun_ptr fun = get_keymgmt()->free;
     if (!fun)
         return;
+    EXIT();
     fun(keydata);
 }
 
@@ -139,10 +143,11 @@ static int
 alcp_prov_keymgmt_rsa_has(const void* keydata, int selection)
 {
     typedef int (*fun_ptr)(const void*, int);
+    ENTER();
     fun_ptr fun = get_keymgmt()->has;
     if (!fun)
         return 0;
-
+    EXIT();
     return fun(keydata, selection);
 }
 
@@ -153,8 +158,10 @@ alcp_prov_keymgmt_rsa_import(void*            keydata,
 {
     typedef int (*fun_ptr)(void*, int, const OSSL_PARAM*);
     fun_ptr fun = get_keymgmt()->import;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     return fun(keydata, selection, params);
 }
 
@@ -163,8 +170,10 @@ alcp_prov_keymgmt_rsa_import_types(int selection)
 {
     typedef const OSSL_PARAM* (*fun_ptr)(int);
     fun_ptr fun = get_keymgmt()->import_types;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(selection);
 }
 
@@ -175,8 +184,10 @@ alcp_prov_keymgmt_rsa_gen_init(void*            provctx,
 {
     typedef void* (*fun_ptr)(void*, int, const OSSL_PARAM*);
     fun_ptr fun = get_keymgmt()->gen_init;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(provctx, selection, params);
 }
 
@@ -185,8 +196,10 @@ alcp_prov_keymgmt_rsa_gen_set_params(void* genctx, const OSSL_PARAM params[])
 {
     typedef int (*fun_ptr)(void*, const OSSL_PARAM*);
     fun_ptr fun = get_keymgmt()->gen_set_params;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     return fun(genctx, params);
 }
 
@@ -196,8 +209,10 @@ alcp_prov_keymgmt_rsa_gen_settable_params(ossl_unused void* genctx,
 {
     typedef const OSSL_PARAM* (*fun_ptr)(void*, void*);
     fun_ptr fun = get_keymgmt()->gen_settable_params;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(genctx, provctx);
 }
 
@@ -207,9 +222,10 @@ alcp_prov_keymgmt_rsa_gen(void* genctx, OSSL_CALLBACK* osslcb, void* cbarg)
     typedef void* (*fun_ptr)(void*, OSSL_CALLBACK*, void*);
     RSA*    rsa = NULL;
     fun_ptr fun = get_keymgmt()->gen;
+    ENTER();
     if (!fun)
         goto end;
-
+    EXIT();
     rsa = fun(genctx, osslcb, cbarg);
 end:
     return rsa;
@@ -220,8 +236,10 @@ alcp_prov_keymgmt_rsa_gen_cleanup(void* genctx)
 {
     typedef void (*fun_ptr)(void*);
     fun_ptr fun = get_keymgmt()->gen_cleanup;
+    ENTER();
     if (!fun)
         return;
+    EXIT();
     fun(genctx);
 }
 
@@ -230,8 +248,10 @@ alcp_prov_keymgmt_rsa_load(const void* reference, size_t reference_sz)
 {
     typedef void* (*fun_ptr)(const void*, size_t);
     fun_ptr fun = get_keymgmt()->load;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(reference, reference_sz);
 }
 
@@ -240,8 +260,10 @@ alcp_prov_keymgmt_rsa_get_params(void* key, OSSL_PARAM params[])
 {
     typedef int (*fun_ptr)(void*, OSSL_PARAM*);
     fun_ptr fun = get_keymgmt()->get_params;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     return fun(key, params);
 }
 
@@ -250,8 +272,10 @@ alcp_prov_keymgmt_rsa_gettable_params(void* provctx)
 {
     typedef const OSSL_PARAM* (*fun_ptr)(void*);
     fun_ptr fun = get_keymgmt()->gettable_params;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(provctx);
 }
 
@@ -262,8 +286,10 @@ alcp_prov_keymgmt_rsa_match(const void* keydata1,
 {
     typedef int (*fun_ptr)(const void*, const void*, int);
     fun_ptr fun = get_keymgmt()->match;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     return fun(keydata1, keydata2, selection);
 }
 
@@ -274,8 +300,10 @@ alcp_prov_keymgmt_rsa_validate(const void* keydata,
 {
     typedef int (*fun_ptr)(const void*, int, int);
     fun_ptr fun = get_keymgmt()->validate;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     return fun(keydata, selection, checktype);
 }
 
@@ -287,8 +315,10 @@ alcp_prov_keymgmt_rsa_export(void*          keydata,
 {
     typedef int (*fun_ptr)(void*, int, OSSL_CALLBACK*, void*);
     fun_ptr fun = get_keymgmt()->export;
+    ENTER();
     if (!fun)
         return 0;
+    EXIT();
     return fun(keydata, selection, param_callback, cbarg);
 }
 
@@ -297,8 +327,10 @@ alcp_prov_keymgmt_rsa_export_types(int selection)
 {
     typedef const OSSL_PARAM* (*fun_ptr)(int);
     fun_ptr fun = get_keymgmt()->export_types;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(selection);
 }
 
@@ -307,8 +339,10 @@ alcp_prov_keymgmt_rsa_dup(const void* keydata_from, int selection)
 {
     typedef void* (*fun_ptr)(const void*, int);
     fun_ptr fun = get_keymgmt()->dup;
+    ENTER();
     if (!fun)
         return NULL;
+    EXIT();
     return fun(keydata_from, selection);
 }
 

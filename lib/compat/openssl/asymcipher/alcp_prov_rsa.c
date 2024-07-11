@@ -28,8 +28,8 @@
 
 #include "alcp_prov_rsa.h"
 #include "debug.h"
+#include "provider/alcp_provider.h"
 #include <openssl/obj_mac.h>
-#include <strings.h>
 
 int
 alcp_rsa_size(const Rsa* r)
