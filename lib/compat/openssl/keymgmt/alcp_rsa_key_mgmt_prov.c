@@ -97,7 +97,7 @@ typedef struct
 } alcp_rsa_keymgmt;
 
 static inline alcp_rsa_keymgmt*
-get_keymgmt()
+get_keymgmt(void)
 {
     static alcp_rsa_keymgmt s_keymgmt;
     static int              initialized = 0;

@@ -154,7 +154,7 @@ typedef struct
     (prsactx->ossl_rsa_ctx->min_saltlen != -1)
 
 static inline EVP_SIGNATURE
-get_default_rsa_signature()
+get_default_rsa_signature(void)
 {
     static EVP_SIGNATURE signature_static;
     static int           initilazed = 0;

@@ -46,7 +46,7 @@ using namespace alcp;
 EXTERN_C_BEGIN
 
 Uint64
-alcp_rsa_context_size()
+alcp_rsa_context_size(void)
 {
     Uint64 size = sizeof(rsa::Context) + rsa::RsaBuilder::getSize();
     return size;

@@ -117,7 +117,7 @@ typedef struct
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
-alcp_rsa_context_size();
+alcp_rsa_context_size(void);
 
 /**
  * @brief       Request a handle for rsa for a configuration

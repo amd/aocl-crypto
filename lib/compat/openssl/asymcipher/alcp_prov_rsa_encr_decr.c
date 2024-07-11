@@ -105,7 +105,7 @@ typedef struct
 } alc_prov_rsa_ctx;
 
 static inline EVP_ASYM_CIPHER
-get_default_rsa_cipher()
+get_default_rsa_cipher(void)
 {
     static EVP_ASYM_CIPHER enc_static;
     static int             initilazed = 0;
