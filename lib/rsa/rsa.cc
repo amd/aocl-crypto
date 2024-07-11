@@ -251,9 +251,7 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
         return StatusOk();
     }
 
-    archEncryptPublic<T>(pEncText, bignum_text, m_pub_key, m_context_pub);
-
-    return StatusOk();
+    return status::NotPermitted("Not supported");
 }
 
 template<alc_rsa_key_size T>
@@ -301,11 +299,7 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
             pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     }
-
-    archDecryptPrivate<T>(
-        pText, bignum_text, m_priv_key, m_context_p, m_context_q);
-
-    return StatusOk();
+    return status::NotPermitted("Not supported");
 }
 
 template<alc_rsa_key_size T>
@@ -804,10 +798,8 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
-
     } else {
-
-        archCreateContext<T>(m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
+        return status::NotPermitted("Not supported");
     }
     return StatusOk();
 }
@@ -862,10 +854,9 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
         zen::archCreateContext<T>(
             m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else {
-
-        archCreateContext<T>(m_context_p, m_priv_key.m_p, m_priv_key.m_size);
-        archCreateContext<T>(m_context_q, m_priv_key.m_q, m_priv_key.m_size);
+        return status::NotPermitted("Not supported");
     }
+
     return StatusOk();
 }
 

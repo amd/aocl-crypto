@@ -28,9 +28,10 @@
 #include "alcp/types.hh"
 
 #pragma once
-
+// ToDO : Enable without regressing on RSA OAEP
+// encryption
 #ifdef COMPILER_IS_GCC
-#define NO_OPTIMIZE _Pragma("GCC optimize \"O0\"")
+#define NO_OPTIMIZE //_Pragma("GCC optimize \"O0\"")
 #else
 #define NO_OPTIMIZE __attribute__((optnone))
 #endif
