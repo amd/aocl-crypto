@@ -463,7 +463,7 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
                         const Uint8*           mod,
                         Uint64                 size);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_private_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
                                    const BigNum*          dp,
                                    const BigNum*          dq,

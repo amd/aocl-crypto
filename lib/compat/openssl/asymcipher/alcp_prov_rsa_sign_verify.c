@@ -383,7 +383,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
     alc_error_t err    = ALC_ERROR_NONE;
     int         mdsize = prsactx->mdsize;
     if (mdsize != 0) {
-        if (tbslen != mdsize) {
+        if (tbslen != (size_t)mdsize) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_DIGEST_LENGTH);
             return 0;
         }

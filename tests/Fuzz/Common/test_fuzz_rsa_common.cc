@@ -50,12 +50,9 @@ TestRsaEncryptLifecycle_0(alc_rsa_handle_p handle,
     /* try to call encrypt on a finished handle */
     alcp_rsa_set_publickey(handle, PublicKeyExponent, &Modulus[0], ModulusSize);
     Uint64 KeySize = alcp_rsa_get_key_size(handle);
-    alcp_rsa_get_publickey(handle, &PublicKeyExponent, &Modulus[0], KeySize);
-    alcp_rsa_publickey_encrypt(
-        handle, ALCP_RSA_PADDING_NONE, &Input[0], KeySize, &EncryptedOutput[0]);
+    alcp_rsa_publickey_encrypt(handle, &Input[0], KeySize, &EncryptedOutput[0]);
     alcp_rsa_finish(handle);
-    alcp_rsa_publickey_encrypt(
-        handle, ALCP_RSA_PADDING_NONE, &Input[0], KeySize, &EncryptedOutput[0]);
+    alcp_rsa_publickey_encrypt(handle, &Input[0], KeySize, &EncryptedOutput[0]);
     return;
 }
 
@@ -259,9 +256,9 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
 
     alc_rsa_handle_p handle = new alc_rsa_handle_t;
 
-    Uint64 size     = alcp_rsa_context_size(KEY_SIZE_2048);
+    Uint64 size     = alcp_rsa_context_size();
     handle->context = malloc(size);
-    err             = alcp_rsa_request(KEY_SIZE_2048, handle);
+    err             = alcp_rsa_request(handle);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_rsa_request" << std::endl;
         goto dealloc;
@@ -434,10 +431,10 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
 
     alc_rsa_handle_p handle = new alc_rsa_handle_t;
 
-    Uint64 size     = alcp_rsa_context_size(KEY_SIZE_2048);
+    Uint64 size     = alcp_rsa_context_size();
     handle->context = malloc(size);
 
-    err = alcp_rsa_request(KEY_SIZE_2048, handle);
+    err = alcp_rsa_request(handle);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_rsa_request" << std::endl;
         goto dealloc;
@@ -571,9 +568,9 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
 
     alc_rsa_handle_p handle_encrypt = new alc_rsa_handle_t;
 
-    Uint64 size             = alcp_rsa_context_size(KEY_SIZE_2048);
+    Uint64 size             = alcp_rsa_context_size();
     handle_encrypt->context = malloc(size);
-    err                     = alcp_rsa_request(KEY_SIZE_2048, handle_encrypt);
+    err                     = alcp_rsa_request(handle_encrypt);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_rsa_request" << std::endl;
         goto out_enc;
@@ -600,19 +597,11 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
         }
         /* input buffer */
         input.resize(size_key);
-        err = alcp_rsa_get_publickey(
-            handle_encrypt, &PublicKeyExponent, &fuzz_modulus[0], size_key);
-        if (alcp_is_error(err)) {
-            std::cout << "Error: alcp_rsa_get_publickey" << std::endl;
-            goto free_enc;
-        }
+
         /* encrypted output */
         encrypted_text.resize(size_key);
-        err = alcp_rsa_publickey_encrypt(handle_encrypt,
-                                         ALCP_RSA_PADDING_NONE,
-                                         &input[0],
-                                         size_key,
-                                         &encrypted_text[0]);
+        err = alcp_rsa_publickey_encrypt(
+            handle_encrypt, &input[0], size_key, &encrypted_text[0]);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_publickey_encrypt" << std::endl;
             goto free_enc;
@@ -674,9 +663,9 @@ ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
 
     alc_rsa_handle_p handle_decrypt = new alc_rsa_handle_t;
 
-    Uint64 size             = alcp_rsa_context_size(KEY_SIZE_2048);
+    Uint64 size             = alcp_rsa_context_size();
     handle_decrypt->context = malloc(size);
-    err                     = alcp_rsa_request(KEY_SIZE_2048, handle_decrypt);
+    err                     = alcp_rsa_request(handle_decrypt);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_rsa_request" << std::endl;
         goto free_decrypt;

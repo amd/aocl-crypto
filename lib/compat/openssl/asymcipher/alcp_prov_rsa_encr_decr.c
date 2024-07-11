@@ -400,7 +400,7 @@ alcp_prov_rsa_encrypt(void*                vprsactx,
             out);
 
     } else if (RSA_PKCS1_PADDING == prsactx->ossl_rsa_ctx->pad_mode) {
-        Uint64 random_pad_len = len - 3 - inlen;
+        int    random_pad_len = len - 3 - inlen;
         Uint8* random_pad     = malloc(random_pad_len);
         if (RAND_bytes_ex(NULL, random_pad, random_pad_len, 0) <= 0)
             return 0;
