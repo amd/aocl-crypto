@@ -451,8 +451,19 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 }
 
 /* sign verify */
-int
+bool
 IPPRsaBase::Sign(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+bool
+IPPRsaBase::Verify(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+
+bool
+IPPRsaBase::DigestSign(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
@@ -475,16 +486,16 @@ IPPRsaBase::Sign(const alcp_rsa_data_t& data)
                                           m_scratchBuffer_Pvt);
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;
-        return 1;
+        return false;
     }
     if (status != ippStsNoErr) {
         std::cout << "IPP RSA Sign failed with err code" << status << std::endl;
-        return status;
+        return false;
     }
-    return 0;
+    return true;
 }
-int
-IPPRsaBase::Verify(const alcp_rsa_data_t& data)
+bool
+IPPRsaBase::DigestVerify(const alcp_rsa_data_t& data)
 {
     IppStatus status  = ippStsNoErr;
     int       isValid = 0;
@@ -507,14 +518,14 @@ IPPRsaBase::Verify(const alcp_rsa_data_t& data)
                                             m_scratchBuffer_Pub);
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;
-        return 1;
+        return false;
     }
     if (status != ippStsNoErr) {
         std::cout << "IPP RSA Verify failed with err code" << status
                   << std::endl;
-        return status;
+        return false;
     }
-    return 0;
+    return true;
 }
 
 bool

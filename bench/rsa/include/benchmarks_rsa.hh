@@ -138,6 +138,12 @@ Rsa_Bench(benchmark::State&       state,
     rb->m_mgf_info    = mgfinfo;
     rb->m_hash_len    = dinfo.dt_len / 8;
 
+    Uint8 digest[rb->m_hash_len];
+    memset(digest, 0, rb->m_hash_len * sizeof(Uint8));
+
+    data.m_digest     = digest;
+    data.m_digest_len = rb->m_hash_len;
+
     /* seed and label for padding mode */
     std::vector<Uint8> seed(rb->m_hash_len);
     data.m_pseed = &(seed[0]);
@@ -157,18 +163,18 @@ Rsa_Bench(benchmark::State&       state,
 
     if (opt == RSA_BENCH_ENC_PUB_KEY) {
         for (auto _ : state) {
-            if (0 != rb->EncryptPubKey(data)) {
+            if (rb->EncryptPubKey(data) != 0) {
                 state.SkipWithError("Error in RSA EncryptPubKey");
             }
         }
     } else if (opt == RSA_BENCH_DEC_PVT_KEY) {
         /* encrypt, then benchmark only dec pvt key */
-        if (0 != rb->EncryptPubKey(data)) {
+        if (rb->EncryptPubKey(data) != 0) {
             state.SkipWithError("Error in RSA EncryptPubKey");
         }
         /* benchmark only this */
         for (auto _ : state) {
-            if (0 != rb->DecryptPvtKey(data)) {
+            if (rb->DecryptPvtKey(data) != 0) {
                 state.SkipWithError("Error in RSA DecryptPvtKey");
             }
         }
@@ -177,17 +183,35 @@ Rsa_Bench(benchmark::State&       state,
     /* benchmark sign verify */
     else if (opt == RSA_BENCH_SIGN) {
         for (auto _ : state) {
-            if (rb->Sign(data) != 0) {
-                state.SkipWithError("Error in RSA Sign");
+            if (useossl == true) {
+                if (!rb->Sign(data)) {
+                    state.SkipWithError("Error in RSA Sign");
+                }
+            } else {
+                if (!rb->DigestSign(data)) {
+                    state.SkipWithError("Error in RSA Digest Sign");
+                }
             }
         }
     } else if (opt == RSA_BENCH_VERIFY) {
-        if (rb->Sign(data) != 0) {
-            state.SkipWithError("Error in RSA Sign");
+        if (useossl == true) {
+            if (!rb->Sign(data)) {
+                state.SkipWithError("Error in RSA Sign");
+            }
+        } else {
+            if (!rb->DigestSign(data)) {
+                state.SkipWithError("Error in RSA Digest Sign");
+            }
         }
         for (auto _ : state) {
-            if (rb->Verify(data) != 0) {
-                state.SkipWithError("Error in RSA verify");
+            if (useossl == true) {
+                if (!rb->Verify(data)) {
+                    state.SkipWithError("Error in RSA verify");
+                }
+            } else {
+                if (!rb->DigestVerify(data)) {
+                    state.SkipWithError("Error in RSA verify");
+                }
             }
         }
     } else {

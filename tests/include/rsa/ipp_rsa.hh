@@ -65,8 +65,11 @@ class IPPRsaBase : public RsaBase
     int EncryptPubKey(const alcp_rsa_data_t& data);
     int DecryptPvtKey(const alcp_rsa_data_t& data);
 
-    int Sign(const alcp_rsa_data_t& data);
-    int Verify(const alcp_rsa_data_t& data);
+    bool DigestSign(const alcp_rsa_data_t& data);
+    bool DigestVerify(const alcp_rsa_data_t& data);
+
+    bool Sign(const alcp_rsa_data_t& data);
+    bool Verify(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing

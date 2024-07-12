@@ -232,8 +232,18 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 }
 
 /* sign verify */
-int
+bool
 AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+bool
+AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+bool
+AlcpRsaBase::DigestSign(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
 
@@ -252,21 +262,21 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_privatekey_sign_pkcs1v15 " << err
                       << std::endl;
-            return err;
+            return false;
         }
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;
-        return 1;
+        return false;
     }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa sign function" << err << std::endl;
-        return err;
+        return false;
     }
-    return 0;
+    return true;
 }
 
-int
-AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
+bool
+AlcpRsaBase::DigestVerify(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
@@ -277,13 +287,13 @@ AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
             m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;
-        return 1;
+        return false;
     }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_publickey_verify" << err << std::endl;
-        return err;
+        return false;
     }
-    return 0;
+    return true;
 }
 
 bool

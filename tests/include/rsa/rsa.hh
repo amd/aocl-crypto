@@ -30,6 +30,7 @@
 #include "file.hh"
 #include "utils.hh"
 #include <alcp/rsa.h>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <stdio.h>
@@ -59,10 +60,13 @@ typedef struct _alcp_rsa_data
     Uint64 m_label_size = 0;
 
     /* for signing and verification*/
-    Uint8* m_signature = nullptr;
-    Uint8* m_salt      = nullptr;
-    Uint64 m_salt_len  = 0;
-    bool   m_check     = false;
+    Uint8* m_digest        = nullptr;
+    Uint64 m_digest_len    = 0;
+    Uint8* m_signature     = nullptr;
+    Uint64 m_signature_len = 0;
+    Uint8* m_salt          = nullptr;
+    Uint64 m_salt_len      = 0;
+    bool   m_check         = false;
 } alcp_rsa_data_t;
 
 class RsaBase
@@ -80,7 +84,9 @@ class RsaBase
     virtual int       EncryptPubKey(const alcp_rsa_data_t& data) = 0;
     virtual int       DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
     virtual bool      ValidateKeys()                             = 0;
-    virtual int       Sign(const alcp_rsa_data_t& data)          = 0;
-    virtual int       Verify(const alcp_rsa_data_t& data)        = 0;
+    virtual bool      DigestSign(const alcp_rsa_data_t& data)    = 0;
+    virtual bool      DigestVerify(const alcp_rsa_data_t& data)  = 0;
+    virtual bool      Sign(const alcp_rsa_data_t& data)          = 0;
+    virtual bool      Verify(const alcp_rsa_data_t& data)        = 0;
 };
 } // namespace alcp::testing

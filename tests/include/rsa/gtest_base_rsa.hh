@@ -251,11 +251,11 @@ Rsa_KAT(int                     padding_mode,
         /* for signature and verification */
         if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
             || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-            if (rb->Sign(data) != 0) {
+            if (!rb->DigestSign(data)) {
                 std::cout << "Error in RSA sign" << std::endl;
                 FAIL();
             }
-            if (rb->Verify(data) != 0) {
+            if (!rb->DigestVerify(data)) {
                 std::cout << "Error in RSA verify" << std::endl;
                 FAIL();
             }
@@ -574,21 +574,21 @@ Rsa_Cross(int                     padding_mode,
         if (padding_mode == ALCP_TEST_RSA_PADDING_PKCS
             || padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
             /* sign and verify */
-            if (rb_main->Sign(data_main) != 0) {
+            if (!rb_main->DigestSign(data_main)) {
                 std::cout << "Error in RSA sign for " << LibStrMain
                           << std::endl;
                 FAIL();
             }
-            if (rb_ext->Sign(data_ext) != 0) {
+            if (!rb_ext->DigestSign(data_ext)) {
                 std::cout << "Error in RSA sign for " << LibStrExt << std::endl;
                 FAIL();
             }
-            if (rb_main->Verify(data_main) != 0) {
+            if (!rb_main->DigestVerify(data_main)) {
                 std::cout << "Error in RSA verify for " << LibStrMain
                           << std::endl;
                 FAIL();
             }
-            if (rb_ext->Verify(data_ext) != 0) {
+            if (!rb_ext->DigestVerify(data_ext)) {
                 std::cout << "Error in RSA verify for " << LibStrExt
                           << std::endl;
                 FAIL();
