@@ -316,7 +316,7 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_key = stream.ConsumeIntegral<Uint16>();
     size_t size_ct  = stream.ConsumeIntegral<Uint16>();
     size_t size_iv  = stream.ConsumeIntegral<Uint16>();
 
@@ -429,7 +429,7 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_key = stream.ConsumeIntegral<Uint16>();
     size_t size_pt  = stream.ConsumeIntegral<Uint16>();
     size_t size_iv  = stream.ConsumeIntegral<Uint16>();
 
@@ -541,9 +541,9 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
-    size_t size_pt  = stream.ConsumeIntegralInRange<Uint16>(1, 1024);
-    size_t size_ad  = stream.ConsumeIntegralInRange<Uint16>(128, 256);
+    size_t size_key = stream.ConsumeIntegral<Uint16>();
+    size_t size_pt  = stream.ConsumeIntegral<Uint16>();
+    size_t size_ad  = stream.ConsumeIntegral<Uint16>();
 
     size_t size_iv  = stream.ConsumeIntegral<Uint16>();
     size_t size_tag = 16;
@@ -689,8 +689,8 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_key = stream.ConsumeIntegralInRange<Uint16>(128, 256);
-    size_t size_ct  = stream.ConsumeIntegralInRange<Uint16>(1, 1024);
+    size_t size_key = stream.ConsumeIntegral<Uint16>();
+    size_t size_ct  = stream.ConsumeIntegral<Uint16>();
     size_t size_iv  = stream.ConsumeIntegral<Uint16>();
     size_t size_ad  = stream.ConsumeIntegral<Uint16>();
     size_t size_tag = 16;
