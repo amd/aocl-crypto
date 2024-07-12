@@ -643,7 +643,7 @@ Rsa::verifyPublicPss(const Uint8* pText,
         m_mgf_hash_len = m_hash_len;
     }
 
-    alignas(64) Uint8 mod_text[2048 / 8];
+    alignas(64) Uint8 mod_text[2048 / 8 + 6];
 
     alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
     if (err != ALC_ERROR_NONE) {
@@ -674,7 +674,7 @@ Rsa::verifyPublicPss(const Uint8* pText,
 
     for (Uint16 i = 0; i < db_len; i++) {
         p_masked_db[i] ^= p_db_mask[i];
-        p_db_mask[i] = 0;
+        // p_db_mask[i] = 0;
     }
     // Set the leftmost 8emLen - emBits bits of the leftmost octet
     // in DB to zero as per rfc8017
@@ -689,11 +689,12 @@ Rsa::verifyPublicPss(const Uint8* pText,
     Uint16 saltLen = success ? db_len - i : 0;
 
     // M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt
-    utils::CopyBytes(p_db_mask + 8, hash, m_hash_len);
-    utils::CopyBlock(p_db_mask + 8 + m_hash_len, p_masked_db + i, saltLen);
+    *(reinterpret_cast<Uint64*>(mod_text)) = 0;
+    utils::CopyBytes(mod_text + 8, hash, m_hash_len);
+    utils::CopyBlock(mod_text + 8 + m_hash_len, p_masked_db + i, saltLen);
 
     m_digest->init();
-    m_digest->update(p_db_mask, 8 + m_hash_len + saltLen);
+    m_digest->update(mod_text, 8 + m_hash_len + saltLen);
     m_digest->finalize(hash, m_hash_len);
 
     success &= IsEqual(h, hash, m_hash_len);
@@ -719,7 +720,7 @@ Rsa::verifyPublicPssWithoutHash(const Uint8* pHash,
         m_mgf_hash_len = m_hash_len;
     }
 
-    alignas(64) Uint8 mod_text[2048 / 8];
+    alignas(64) Uint8 mod_text[2048 / 8 + 6];
 
     alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
     if (err != ALC_ERROR_NONE) {
@@ -746,7 +747,7 @@ Rsa::verifyPublicPssWithoutHash(const Uint8* pHash,
 
     for (Uint16 i = 0; i < db_len; i++) {
         p_masked_db[i] ^= p_db_mask[i];
-        p_db_mask[i] = 0;
+        // p_db_mask[i] = 0;
     }
     // Set the leftmost 8emLen - emBits bits of the leftmost octet
     // in DB to zero as per rfc8017
@@ -761,11 +762,12 @@ Rsa::verifyPublicPssWithoutHash(const Uint8* pHash,
     Uint16 saltLen = success ? db_len - i : 0;
 
     // M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt
-    utils::CopyBytes(p_db_mask + 8, pHash, m_hash_len);
-    utils::CopyBlock(p_db_mask + 8 + m_hash_len, p_masked_db + i, saltLen);
+    *(reinterpret_cast<Uint64*>(mod_text)) = 0;
+    utils::CopyBytes(mod_text + 8, pHash, m_hash_len);
+    utils::CopyBlock(mod_text + 8 + m_hash_len, p_masked_db + i, saltLen);
 
     m_digest->init();
-    m_digest->update(p_db_mask, 8 + m_hash_len + saltLen);
+    m_digest->update(mod_text, 8 + m_hash_len + saltLen);
     m_digest->finalize(hash, m_hash_len);
 
     success &= IsEqual(h, hash, m_hash_len);
