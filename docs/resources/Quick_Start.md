@@ -376,7 +376,7 @@ EOF
 As you have already run the `Exporting Environment Variables` code snippet, building becomes very simple.
 
 ```bash
-gcc version.c -o version -lalcp -laoclutils
+gcc version.c -o version -lalcp -lau_cpuid
 ```
 
 #### Execute the application
@@ -417,7 +417,7 @@ main()
 EOF
 
 # Compile the application
-gcc version.c -o version -lalcp -laoclutils
+gcc version.c -o version -lalcp -lau_cpuid
 
 # Execute the application
 ./version
