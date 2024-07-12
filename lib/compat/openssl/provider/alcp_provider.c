@@ -80,12 +80,15 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             EXIT();
             return ALC_prov_digests;
             break;
+// ToDO : Will be enabled after openssl version check
+#if 0
         case OSSL_OP_ASYM_CIPHER:
             return alc_prov_asym_ciphers;
         case OSSL_OP_SIGNATURE:
             return alc_prov_signature;
         case OSSL_OP_KEYMGMT:
             return alc_prov_keymgmt;
+#endif
         case OSSL_OP_MAC:
             EXIT();
             return ALC_prov_macs;
