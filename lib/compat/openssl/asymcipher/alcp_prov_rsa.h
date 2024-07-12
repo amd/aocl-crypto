@@ -134,12 +134,3 @@ int
 alcp_rsa_get_digest_size(alc_digest_mode_t mode);
 void
 alcp_rsa_free(Rsa* r);
-
-int
-alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
-
-int
-alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
-
-// int
-// alcp_rsa_get_nid(alc_digest_mode_t mode);

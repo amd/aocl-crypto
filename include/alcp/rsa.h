@@ -80,6 +80,35 @@ enum DigestIndex
     SHA_UNKNOWN
 };
 
+// clang-format off
+//ToDo : Add DigestInfo for sha3
+static const Uint8 DigestInfo[SHA_UNKNOWN][19] = 
+                    {
+                     {0x00},   
+                     {0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05,
+                      0x00, 0x04, 0x10},
+                     {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14},
+                     {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04,
+                      0x05, 0x00, 0x04, 0x1c},
+                     {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                      0x05, 0x00, 0x04, 0x20},
+                     {0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02,
+                      0x05, 0x00, 0x04, 0x30},
+                     {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03,
+                      0x05, 0x00, 0x04, 0x40},
+                     {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x05,
+                      0x05, 0x00, 0x04, 0x1c},
+                     {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x06,
+                      0x05, 0x00, 0x04, 0x20}
+                    };
+// clang-format on
+
+int
+alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
+
+int
+alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
+
 /**
  * @brief Store Context for the future operation of RSA
  *
@@ -371,18 +400,16 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pSignedBuff);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_privatekey_sign_pkcs1v15_without_hash(
-    const alc_rsa_handle_p pRsaHandle,
-    const Uint8*           pText,
-    Uint64                 textSize,
-    Uint8*                 pSignedText);
+alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                       const Uint8*           pText,
+                                       Uint64                 textSize,
+                                       Uint8*                 pSignedText);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_publickey_verify_pkcs1v15_without_hash(
-    const alc_rsa_handle_p pRsaHandle,
-    const Uint8*           pText,
-    Uint64                 textSize,
-    const Uint8*           pEncryptText);
+alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                        const Uint8*           pText,
+                                        Uint64                 textSize,
+                                        const Uint8*           pEncryptText);
 
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -398,18 +425,18 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                      Uint64*                textSize);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_privatekey_sign_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
-                                          const Uint8*           pHash,
-                                          Uint64                 hashSize,
-                                          const Uint8*           salt,
-                                          Uint64                 saltSize,
-                                          Uint8*                 pSignedBuff);
+alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
+                                  const Uint8*           pHash,
+                                  Uint64                 hashSize,
+                                  const Uint8*           salt,
+                                  Uint64                 saltSize,
+                                  Uint8*                 pSignedBuff);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_publickey_verify_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
-                                           const Uint8*           pHash,
-                                           Uint64                 hashSize,
-                                           const Uint8*           pSignedBuff);
+alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
+                                   const Uint8*           pHash,
+                                   Uint64                 hashSize,
+                                   const Uint8*           pSignedBuff);
 
 /**
  * @brief Function sets the public key inside the handle
@@ -432,9 +459,9 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
                        Uint64                 size);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_set_public_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
-                                  const BigNum*          exponent,
-                                  const BigNum*          pModulus);
+alcp_rsa_set_bignum_public_key(const alc_rsa_handle_p pRsaHandle,
+                               const BigNum*          exponent,
+                               const BigNum*          pModulus);
 
 /**
  * @brief Function sets the private key inside the handle
@@ -464,13 +491,13 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
                         Uint64                 size);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_set_private_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
-                                   const BigNum*          dp,
-                                   const BigNum*          dq,
-                                   const BigNum*          p,
-                                   const BigNum*          q,
-                                   const BigNum*          qinv,
-                                   const BigNum*          mod);
+alcp_rsa_set_bignum_private_key(const alc_rsa_handle_p pRsaHandle,
+                                const BigNum*          dp,
+                                const BigNum*          dq,
+                                const BigNum*          p,
+                                const BigNum*          q,
+                                const BigNum*          qinv,
+                                const BigNum*          mod);
 
 /**
  * @brief       Fetches key size

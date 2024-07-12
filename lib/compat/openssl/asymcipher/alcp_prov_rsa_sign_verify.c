@@ -76,29 +76,6 @@ struct evp_signature_st
     OSSL_FUNC_signature_settable_ctx_md_params_fn* settable_ctx_md_params;
 } /* EVP_SIGNATURE */;
 
-// clang-format off
-//ToDo : Add DigestInfo for sha3
-static const Uint8 DigestInfo[SHA_UNKNOWN][19] = 
-                    {
-                     {0x00},   
-                     {0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05,
-                      0x00, 0x04, 0x10},
-                     {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14},
-                     {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04,
-                      0x05, 0x00, 0x04, 0x1c},
-                     {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
-                      0x05, 0x00, 0x04, 0x20},
-                     {0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02,
-                      0x05, 0x00, 0x04, 0x30},
-                     {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03,
-                      0x05, 0x00, 0x04, 0x40},
-                     {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x05,
-                      0x05, 0x00, 0x04, 0x1c},
-                     {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x06,
-                      0x05, 0x00, 0x04, 0x20}
-                    };
-// clang-format on
-
 // Structure taken from OpenSSL to support unimplemented functions
 typedef struct
 {
@@ -301,7 +278,7 @@ alcp_rsa_signverify_init(void*            vprsactx,
         BigNum      q    = { rsa->q->d, rsa->q->top };
         BigNum      qinv = { rsa->iqmp->d, rsa->iqmp->top };
         BigNum      mod  = { rsa->n->d, rsa->n->top };
-        alc_error_t err  = alcp_rsa_set_private_key_as_bignum(
+        alc_error_t err  = alcp_rsa_set_bignum_private_key(
             &prsactx->handle, &dp, &dq, &p, &q, &qinv, &mod);
         if (err != ALC_ERROR_NONE) {
             printf("Rsa Provider: rsa decrypt init failed %llu\n",
@@ -311,7 +288,7 @@ alcp_rsa_signverify_init(void*            vprsactx,
     } else {
         BigNum      exponent = { rsa->e->d, rsa->e->top };
         BigNum      modulus  = { rsa->n->d, rsa->n->top };
-        alc_error_t err      = alcp_rsa_set_public_key_as_bignum(
+        alc_error_t err      = alcp_rsa_set_bignum_public_key(
             &prsactx->handle, &exponent, &modulus);
         if (err != ALC_ERROR_NONE) {
             printf("Rsa Provider: rsa init failed %llu\n",
@@ -397,7 +374,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
                 Uint8* hash_with_info = malloc(size + tbslen);
                 memcpy(hash_with_info, DigestInfo[index], size);
                 memcpy(hash_with_info + size, tbs, tbslen);
-                err = alcp_rsa_privatekey_sign_pkcs1v15_without_hash(
+                err = alcp_rsa_privatekey_sign_hash_pkcs1v15(
                     &prsactx->handle, hash_with_info, tbslen + size, sig);
                 free(hash_with_info);
                 if (err != ALC_ERROR_NONE) {
@@ -465,7 +442,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
                     if (RAND_bytes_ex(NULL, salt, sLen, 0) <= 0)
                         return 0;
                 }
-                err = alcp_rsa_privatekey_sign_pss_without_hash(
+                err = alcp_rsa_privatekey_sign_hash_pss(
                     &prsactx->handle, tbs, tbslen, salt, sLen, sig);
                 if (err != ALC_ERROR_NONE) {
                     ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
@@ -482,7 +459,7 @@ alcp_prov_rsa_sign(void*                vprsactx,
     } else {
         switch (prsactx->ossl_rsa_ctx->pad_mode) {
             case RSA_PKCS1_PADDING: {
-                err = alcp_rsa_privatekey_sign_pkcs1v15_without_hash(
+                err = alcp_rsa_privatekey_sign_hash_pkcs1v15(
                     &prsactx->handle, tbs, tbslen, sig);
                 break;
             }
@@ -608,11 +585,11 @@ alcp_prov_rsa_verify(void*                vprsactx,
                 Uint8* hash_with_info = malloc(size + tbslen);
                 memcpy(hash_with_info, DigestInfo[index], size);
                 memcpy(hash_with_info + size, tbs, tbslen);
-                err = alcp_rsa_publickey_verify_pkcs1v15_without_hash(
+                err = alcp_rsa_publickey_verify_hash_pkcs1v15(
                     &prsactx->handle, hash_with_info, tbslen + size, sig);
                 free(hash_with_info);
             } else {
-                err = alcp_rsa_publickey_verify_pkcs1v15_without_hash(
+                err = alcp_rsa_publickey_verify_hash_pkcs1v15(
                     &prsactx->handle, tbs, tbslen, sig);
             }
             if (err != ALC_ERROR_NONE) {
@@ -630,7 +607,7 @@ alcp_prov_rsa_verify(void*                vprsactx,
                                tbslen);
                 return 0;
             }
-            err = alcp_rsa_publickey_verify_pss_without_hash(
+            err = alcp_rsa_publickey_verify_hash_pss(
                 &prsactx->handle, tbs, tbslen, sig);
 
             if (err != ALC_ERROR_NONE) {
@@ -740,7 +717,7 @@ alcp_prov_rsa_digest_sign_init(void*            vprsactx,
     BigNum      q    = { rsa->q->d, rsa->q->top };
     BigNum      qinv = { rsa->iqmp->d, rsa->iqmp->top };
     BigNum      mod  = { rsa->n->d, rsa->n->top };
-    alc_error_t err  = alcp_rsa_set_private_key_as_bignum(
+    alc_error_t err  = alcp_rsa_set_bignum_private_key(
         &prsactx->handle, &dp, &dq, &p, &q, &qinv, &mod);
     if (err != ALC_ERROR_NONE) {
         printf("Rsa Provider: rsa decrypt init failed %llu\n",
@@ -843,8 +820,8 @@ alcp_prov_rsa_digest_verify_init(void*            vprsactx,
     Rsa*        rsa      = prsactx->ossl_rsa_ctx->rsa;
     BigNum      exponent = { rsa->e->d, rsa->e->top };
     BigNum      modulus  = { rsa->n->d, rsa->n->top };
-    alc_error_t err      = alcp_rsa_set_public_key_as_bignum(
-        &prsactx->handle, &exponent, &modulus);
+    alc_error_t err =
+        alcp_rsa_set_bignum_public_key(&prsactx->handle, &exponent, &modulus);
     if (err != ALC_ERROR_NONE) {
         printf("Rsa Provider: rsa init failed %llu\n", (unsigned long long)err);
         return 0;

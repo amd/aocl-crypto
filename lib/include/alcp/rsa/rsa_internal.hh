@@ -32,33 +32,36 @@
 #include <memory>
 
 namespace alcp::rsa {
+constexpr Uint32 KEY_SIZE_LONG_INT    = 2048 / 64;
+constexpr Uint32 KEY_SIZE_IN_RADIX_52 = 2048 / 52 + 1;
+
 struct RsaPublicKeyBignum
 {
-    Uint64 m_mod[2048 / 64]{};
-    Uint64 m_public_exponent[2048 / 64]{};
+    Uint64 m_mod[KEY_SIZE_LONG_INT]{};
+    Uint64 m_public_exponent[KEY_SIZE_LONG_INT]{};
     Uint64 m_size = 0;
 };
 
 struct RsaPrivateKeyBignum
 {
-    Uint64 m_dp[2048 / (2 * 64)]{};
-    Uint64 m_dq[2048 / (2 * 64)]{};
-    Uint64 m_p[2048 / (2 * 64)]{};
-    Uint64 m_q[2048 / (2 * 64)]{};
-    Uint64 m_qinv[2048 / (2 * 64)]{};
-    Uint64 m_mod[2048 / 64]{};
+    Uint64 m_dp[KEY_SIZE_LONG_INT / 2]{};
+    Uint64 m_dq[KEY_SIZE_LONG_INT / 2]{};
+    Uint64 m_p[KEY_SIZE_LONG_INT / 2]{};
+    Uint64 m_q[KEY_SIZE_LONG_INT / 2]{};
+    Uint64 m_qinv[KEY_SIZE_LONG_INT / 2]{};
+    Uint64 m_mod[KEY_SIZE_LONG_INT]{};
     Uint64 m_size = 0;
 };
 
 struct MontContextBignum
 {
-    Uint64 m_r1[2048 / 64]{}; // Montgomery identity
-    Uint64 m_r2[2048 / 64]{}; // Montgomery converter
-    Uint64 m_r3[2048 / 64]{}; // Montgomery optimizer
-    Uint64 m_r2_radix_52_bit[2048 / 52
-                             + 1]{}; // Montgomery converter in radix 52 bit.
-    Uint64 m_mod_radix_52_bit[2048 / 52 + 1]{}; // Modulus in radix 52.
-    Uint64 m_k0;                                // Montgomery parameter
+    Uint64 m_r1[KEY_SIZE_LONG_INT]{};                 // Montgomery identity
+    Uint64 m_r2[KEY_SIZE_LONG_INT]{};                 // Montgomery converter
+    Uint64 m_r3[KEY_SIZE_LONG_INT]{};                 // Montgomery optimizer
+    Uint64 m_r2_radix_52_bit[KEY_SIZE_IN_RADIX_52]{}; // Montgomery converter in
+                                                      // radix 52 bit.
+    Uint64 m_mod_radix_52_bit[KEY_SIZE_IN_RADIX_52]{}; // Modulus in radix 52.
+    Uint64 m_k0;                                       // Montgomery parameter
     Uint64 m_size = 0;
 };
 

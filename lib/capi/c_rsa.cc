@@ -45,6 +45,74 @@ using namespace alcp;
 
 EXTERN_C_BEGIN
 
+int
+alcp_rsa_get_digest_info_index(alc_digest_mode_t mode)
+{
+    int index = 0;
+    switch (mode) {
+        case ALC_MD5:
+            index = MD_5;
+            break;
+        case ALC_SHA1:
+            index = SHA_1;
+            break;
+        case ALC_MD5_SHA1:
+            index = MD_5_SHA_1;
+            break;
+        case ALC_SHA2_224:
+            index = SHA_224;
+            break;
+        case ALC_SHA2_256:
+            index = SHA_256;
+            break;
+        case ALC_SHA2_384:
+            index = SHA_384;
+            break;
+        case ALC_SHA2_512:
+            index = SHA_512;
+            break;
+        case ALC_SHA2_512_224:
+            index = SHA_512_224;
+            break;
+        case ALC_SHA2_512_256:
+            index = SHA_512_256;
+            break;
+        default:
+            printf("Error: Unsupported mode %d\n", mode);
+            index = -1;
+    }
+    return index;
+}
+
+int
+alcp_rsa_get_digest_info_size(alc_digest_mode_t mode)
+{
+    int size = 0;
+    switch (mode) {
+        case ALC_MD5:
+            size = 18;
+            break;
+        case ALC_SHA1:
+            size = 15;
+            break;
+        case ALC_MD5_SHA1:
+            size = 0;
+            break;
+        case ALC_SHA2_224:
+        case ALC_SHA2_256:
+        case ALC_SHA2_384:
+        case ALC_SHA2_512:
+        case ALC_SHA2_512_224:
+        case ALC_SHA2_512_256:
+            size = 19;
+            break;
+        default:
+            printf("Error: Unsupported mode\n");
+            size = 0;
+    }
+    return size;
+}
+
 Uint64
 alcp_rsa_context_size(void)
 {
@@ -308,12 +376,12 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
 }
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_privatekey_sign_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
-                                          const Uint8*           pHash,
-                                          Uint64                 hashSize,
-                                          const Uint8*           salt,
-                                          Uint64                 saltSize,
-                                          Uint8*                 pSignedBuff)
+alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
+                                  const Uint8*           pHash,
+                                  Uint64                 hashSize,
+                                  const Uint8*           salt,
+                                  Uint64                 saltSize,
+                                  Uint8*                 pSignedBuff)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -333,10 +401,10 @@ alcp_rsa_privatekey_sign_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
 }
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_publickey_verify_pss_without_hash(const alc_rsa_handle_p pRsaHandle,
-                                           const Uint8*           pHash,
-                                           Uint64                 hashSize,
-                                           const Uint8*           pSignedBuff)
+alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
+                                   const Uint8*           pHash,
+                                   Uint64                 hashSize,
+                                   const Uint8*           pSignedBuff)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -390,11 +458,10 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 }
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_privatekey_sign_pkcs1v15_without_hash(
-    const alc_rsa_handle_p pRsaHandle,
-    const Uint8*           pText,
-    Uint64                 textSize,
-    Uint8*                 pSignedText)
+alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                       const Uint8*           pText,
+                                       Uint64                 textSize,
+                                       Uint8*                 pSignedText)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -428,11 +495,10 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 }
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_publickey_verify_pkcs1v15_without_hash(
-    const alc_rsa_handle_p pRsaHandle,
-    const Uint8*           pText,
-    Uint64                 textSize,
-    const Uint8*           pEncryptText)
+alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                        const Uint8*           pText,
+                                        Uint64                 textSize,
+                                        const Uint8*           pEncryptText)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -497,9 +563,9 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
 }
 
 alc_error_t
-alcp_rsa_set_public_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
-                                  const BigNum*          exponent,
-                                  const BigNum*          pModulus)
+alcp_rsa_set_bignum_public_key(const alc_rsa_handle_p pRsaHandle,
+                               const BigNum*          exponent,
+                               const BigNum*          pModulus)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -542,13 +608,13 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
 }
 
 alc_error_t
-alcp_rsa_set_private_key_as_bignum(const alc_rsa_handle_p pRsaHandle,
-                                   const BigNum*          dp,
-                                   const BigNum*          dq,
-                                   const BigNum*          p,
-                                   const BigNum*          q,
-                                   const BigNum*          qinv,
-                                   const BigNum*          mod)
+alcp_rsa_set_bignum_private_key(const alc_rsa_handle_p pRsaHandle,
+                                const BigNum*          dp,
+                                const BigNum*          dq,
+                                const BigNum*          p,
+                                const BigNum*          q,
+                                const BigNum*          qinv,
+                                const BigNum*          mod)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);

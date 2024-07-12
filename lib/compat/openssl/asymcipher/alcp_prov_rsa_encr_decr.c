@@ -266,8 +266,8 @@ alcp_prov_rsa_encrypt_init(void*            vprsactx,
     Rsa*        rsa      = vrsa;
     BigNum      exponent = { rsa->e->d, rsa->e->top };
     BigNum      modulus  = { rsa->n->d, rsa->n->top };
-    alc_error_t err      = alcp_rsa_set_public_key_as_bignum(
-        &prsactx->handle, &exponent, &modulus);
+    alc_error_t err =
+        alcp_rsa_set_bignum_public_key(&prsactx->handle, &exponent, &modulus);
     if (err != ALC_ERROR_NONE) {
         printf("Rsa Provider: rsa init failed %llu\n", (unsigned long long)err);
         return 0;
@@ -332,7 +332,7 @@ alcp_prov_rsa_decrypt_init(void*            vprsactx,
     BigNum      q    = { rsa->q->d, rsa->q->top };
     BigNum      qinv = { rsa->iqmp->d, rsa->iqmp->top };
     BigNum      mod  = { rsa->n->d, rsa->n->top };
-    alc_error_t err  = alcp_rsa_set_private_key_as_bignum(
+    alc_error_t err  = alcp_rsa_set_bignum_private_key(
         &prsactx->handle, &dp, &dq, &p, &q, &qinv, &mod);
     if (err != ALC_ERROR_NONE) {
         printf("Rsa Provider: rsa decrypt init failed %llu\n",
