@@ -239,6 +239,7 @@ alcp_prov_rsa_set_ctx_params(void* vprsactx, const OSSL_PARAM params[])
             alcp_rsa_get_digest_info_index(prsactx->mode);
         prsactx->digest_info_size =
             alcp_rsa_get_digest_info_size(prsactx->mode);
+        prsactx->mdsize = alcp_rsa_get_digest_size(prsactx->mode);
         alc_error_t err = alcp_rsa_add_digest(&prsactx->handle, prsactx->mode);
         if (err != ALC_ERROR_NONE) {
             return 0;
@@ -264,8 +265,7 @@ alcp_rsa_signverify_init(void*            vprsactx,
         ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
         return 0;
     }
-    prsactx->mode     = -1;
-    prsactx->rsa_size = alcp_rsa_size(vrsa ? vrsa : prsactx->ossl_rsa_ctx->rsa);
+    prsactx->mode = -1;
 
     int ret = 0;
     typedef int (*fun_ptr)(
@@ -281,8 +281,10 @@ alcp_rsa_signverify_init(void*            vprsactx,
 
     ret = fun(prsactx->ossl_rsa_ctx, vrsa, params);
 
-    Rsa* rsa = prsactx->ossl_rsa_ctx->rsa;
-    if (rsa->dmp1 == NULL || rsa->dmq1 == NULL || rsa->iqmp == NULL) {
+    Rsa* rsa          = prsactx->ossl_rsa_ctx->rsa;
+    prsactx->rsa_size = alcp_rsa_size(rsa);
+    if ((EVP_PKEY_OP_SIGN == operation)
+        && (rsa->dmp1 == NULL || rsa->dmq1 == NULL || rsa->iqmp == NULL)) {
         prsactx->crt_disabled = 1;
     } else {
         prsactx->crt_disabled = 0;
