@@ -372,8 +372,8 @@ __build_with_copy_rsa(Context* srcCtx, Context* destCtx)
 {
     using namespace digest;
     memcpy(destCtx, srcCtx, sizeof(Context));
-    auto addr      = reinterpret_cast<Uint8*>(destCtx) + sizeof(Context);
-    auto rsa_algo  = new (addr) Rsa(*reinterpret_cast<Rsa*>(srcCtx->m_rsa));
+
+    auto rsa_algo  = new Rsa(*reinterpret_cast<Rsa*>(srcCtx->m_rsa));
     destCtx->m_rsa = static_cast<void*>(rsa_algo);
 
     IDigest* src_digest  = static_cast<digest::IDigest*>(srcCtx->m_digest);
