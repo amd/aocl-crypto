@@ -48,7 +48,7 @@ EXTERN_C_BEGIN
 Uint64
 alcp_rsa_context_size(void)
 {
-    Uint64 size = sizeof(rsa::Context) + rsa::RsaBuilder::getSize();
+    Uint64 size = sizeof(rsa::Context);
     return size;
 }
 

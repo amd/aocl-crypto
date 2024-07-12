@@ -303,8 +303,7 @@ alc_error_t
 __rsa_dtor(void* pRsaHandle)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    // FIXME: Not a good idea!
-    ap->~Rsa();
+    delete ap;
     return ALC_ERROR_NONE;
 }
 
@@ -393,8 +392,7 @@ __build_with_copy_rsa(Context* srcCtx, Context* destCtx)
 alc_error_t
 __build_rsa(Context& ctx)
 {
-    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-    auto algo = new (addr) Rsa;
+    auto algo = new Rsa;
 
     ctx.m_rsa                = static_cast<void*>(algo);
     ctx.encryptPublicFn      = __rsa_encrBufWithPub_wrapper;
