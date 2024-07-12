@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
 #include "alcp/digest.hh"
 #include <openssl/evp.h>

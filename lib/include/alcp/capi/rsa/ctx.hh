@@ -39,82 +39,126 @@ class Context
     void* m_rsa    = nullptr;
     void* m_digest = nullptr;
     void* m_mgf    = nullptr;
-    Status (*encryptPublicFn)(void*        pRsaHandle,
-                              const Uint8* pText,
-                              Uint64       textSize,
-                              Uint8*       pEncText);
-
-    Status (*decryptPrivateFn)(void*        pRsaHandle,
-                               const Uint8* pEncText,
-                               Uint64       encSize,
-                               Uint8*       pText);
-
-    Status (*encryptPublicOaepFn)(void*        pRsaHandle,
-                                  const Uint8* pText,
-                                  Uint64       textSize,
-                                  const Uint8* label,
-                                  Uint64       labelSize,
-                                  const Uint8* pSeed,
-                                  Uint8*       pEncText);
-
-    Status (*decryptPrivateOaepFn)(void*        pRsaHandle,
-                                   const Uint8* pEncText,
-                                   Uint64       encSize,
-                                   const Uint8* label,
-                                   Uint64       labelSize,
-                                   Uint8*       pText,
-                                   Uint64&      textSize);
-
-    Status (*signPrivatePssFn)(void*        pRsaHandle,
-                               bool         check,
-                               const Uint8* pText,
-                               Uint64       textSize,
-                               const Uint8* salt,
-                               Uint64       saltSize,
-                               Uint8*       pSignedBuff);
-
-    Status (*verifyPublicPssFn)(void*        pRsaHandle,
-                                const Uint8* pText,
-                                Uint64       textSize,
-                                const Uint8* pSignedBuff);
-
-    Status (*signPrivatePkcsv15Fn)(void*        pRsaHandle,
-                                   bool         check,
+    alc_error_t (*encryptPublicFn)(void*        pRsaHandle,
                                    const Uint8* pText,
                                    Uint64       textSize,
-                                   Uint8*       pSignedBuff);
+                                   Uint8*       pEncText);
 
-    Status (*verifyPublicPkcsv15Fn)(void*        pRsaHandle,
+    alc_error_t (*decryptPrivateFn)(void*        pRsaHandle,
+                                    const Uint8* pEncText,
+                                    Uint64       encSize,
+                                    Uint8*       pText);
+
+    alc_error_t (*encryptPublicOaepFn)(void*        pRsaHandle,
+                                       const Uint8* pText,
+                                       Uint64       textSize,
+                                       const Uint8* label,
+                                       Uint64       labelSize,
+                                       const Uint8* pSeed,
+                                       Uint8*       pEncText);
+
+    alc_error_t (*decryptPrivateOaepFn)(void*        pRsaHandle,
+                                        const Uint8* pEncText,
+                                        Uint64       encSize,
+                                        const Uint8* label,
+                                        Uint64       labelSize,
+                                        Uint8*       pText,
+                                        Uint64&      textSize);
+
+    alc_error_t (*signPrivatePssFn)(void*        pRsaHandle,
+                                    bool         check,
                                     const Uint8* pText,
                                     Uint64       textSize,
-                                    const Uint8* pSignedBuff);
+                                    const Uint8* salt,
+                                    Uint64       saltSize,
+                                    Uint8*       pSignedBuff);
+
+    alc_error_t (*verifyPublicPssFn)(void*        pRsaHandle,
+                                     const Uint8* pText,
+                                     Uint64       textSize,
+                                     const Uint8* pSignedBuff);
+
+    alc_error_t (*signPrivatePkcsv15Fn)(void*        pRsaHandle,
+                                        bool         check,
+                                        const Uint8* pText,
+                                        Uint64       textSize,
+                                        Uint8*       pSignedBuff);
+
+    alc_error_t (*verifyPublicPkcsv15Fn)(void*        pRsaHandle,
+                                         const Uint8* pText,
+                                         Uint64       textSize,
+                                         const Uint8* pSignedBuff);
+
+    alc_error_t (*signPrivatePkcsv15WithoutHashFn)(void*        pRsaHandle,
+                                                   const Uint8* pText,
+                                                   Uint64       textSize,
+                                                   Uint8*       decrypText);
+
+    alc_error_t (*verifyPublicPkcsv15WithoutHashFn)(void*        pRsaHandle,
+                                                    const Uint8* pText,
+                                                    Uint64       textSize,
+                                                    const Uint8* psignedText);
+
+    alc_error_t (*signPrivatePssWithoutHashFn)(void*        pRsaHandle,
+                                               const Uint8* pHash,
+                                               Uint64       hashSize,
+                                               const Uint8* salt,
+                                               Uint64       saltSize,
+                                               Uint8*       pSignedBuff);
+
+    alc_error_t (*verifyPublicPssWithoutHashFn)(void*        pRsaHandle,
+                                                const Uint8* pHash,
+                                                Uint64       hashSize,
+                                                const Uint8* pSignedBuff);
+
+    alc_error_t (*encryptPublicPkcsv15Fn)(void*        pRsaHandle,
+                                          const Uint8* pText,
+                                          Uint64       textSize,
+                                          Uint8*       pEncryptText,
+                                          const Uint8* randomPad);
+
+    alc_error_t (*decryptPrivatePkcsv15Fn)(void*        pRsaHandle,
+                                           const Uint8* encryptedText,
+                                           Uint8*       decrypText,
+                                           Uint64*      textSize);
 
     Uint64 (*getKeySize)(void* pRsaHandle);
 
-    Status (*getPublickey)(void* pRsaHandle, RsaPublicKey& publicKey);
+    alc_error_t (*getPublickey)(void* pRsaHandle, RsaPublicKey& publicKey);
 
-    Status (*setPublicKey)(void*        pRsaHandle,
-                           const Uint64 exponent,
-                           const Uint8* mod,
-                           const Uint64 size);
+    alc_error_t (*setPublicKey)(void*        pRsaHandle,
+                                const Uint64 exponent,
+                                const Uint8* mod,
+                                const Uint64 size);
+    alc_error_t (*setPublicKeyAsBignum)(void*         pRsaHandle,
+                                        const BigNum* exponent,
+                                        const BigNum* pModulus);
 
-    Status (*setPrivateKey)(void*        pRsaHandle,
-                            const Uint8* dp,
-                            const Uint8* dq,
-                            const Uint8* p,
-                            const Uint8* q,
-                            const Uint8* qinv,
-                            const Uint8* mod,
-                            const Uint64 size);
+    alc_error_t (*setPrivateKey)(void*        pRsaHandle,
+                                 const Uint8* dp,
+                                 const Uint8* dq,
+                                 const Uint8* p,
+                                 const Uint8* q,
+                                 const Uint8* qinv,
+                                 const Uint8* mod,
+                                 const Uint64 size);
+
+    alc_error_t (*setPrivateKeyAsBignum)(void*         pRsaHandle,
+                                         const BigNum* dp,
+                                         const BigNum* dq,
+                                         const BigNum* p,
+                                         const BigNum* q,
+                                         const BigNum* qinv,
+                                         const BigNum* mod);
 
     void (*setDigest)(void* pRsaHandle, digest::IDigest* digest);
     void (*setMgf)(void* pRsaHandle, digest::IDigest* digest);
 
-    Status (*finish)(void*);
+    alc_error_t (*finish)(void*);
 
-    Status (*reset)(void*);
+    alc_error_t (*reset)(void*);
 
-    Status status{ StatusOk() };
+    alc_error_t (*duplicate)(Context* srcCtx, Context* destCtx);
 };
 
 } // namespace alcp::rsa

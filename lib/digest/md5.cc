@@ -31,16 +31,16 @@
 
 namespace alcp::digest {
 
-MD5::MD5()
+Md5::Md5()
 {
     m_block_len  = ALC_DIGEST_BLOCK_SIZE_MD5 / 8;
     m_digest_len = ALC_DIGEST_LEN_128 / 8;
     m_ctx        = EVP_MD_CTX_new();
-    m_md         = EVP_MD_fetch(NULL, "MD5", "provider=default");
+    m_md         = EVP_MD_fetch(NULL, "Md5", "provider=default");
 }
 
 void
-MD5::init()
+Md5::init()
 {
     if (EVP_DigestInit(m_ctx, m_md) != 1) {
         return;
@@ -48,7 +48,7 @@ MD5::init()
 }
 
 alc_error_t
-MD5::update(const Uint8* pBuf, Uint64 size)
+Md5::update(const Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (EVP_DigestUpdate(m_ctx, pBuf, size) != 1) {
@@ -59,7 +59,7 @@ MD5::update(const Uint8* pBuf, Uint64 size)
 }
 
 alc_error_t
-MD5::finalize(Uint8* pBuf, Uint64 size)
+Md5::finalize(Uint8* pBuf, Uint64 size)
 {
     if (size != (ALC_DIGEST_LEN_128 / 8)) {
         return ALC_ERROR_INVALID_ARG;
@@ -74,7 +74,7 @@ MD5::finalize(Uint8* pBuf, Uint64 size)
     return err;
 }
 
-MD5::~MD5()
+Md5::~Md5()
 {
     if (m_ctx != nullptr) {
         EVP_MD_CTX_free(m_ctx);
@@ -84,14 +84,14 @@ MD5::~MD5()
     }
 }
 
-MD5::MD5(const MD5& src)
+Md5::Md5(const Md5& src)
 {
     m_digest_len = src.m_digest_len;
     m_block_len  = src.m_block_len;
     if (m_md) {
         EVP_MD_free(m_md);
     }
-    m_md = EVP_MD_fetch(NULL, "MD5", "provider=default");
+    m_md = EVP_MD_fetch(NULL, "Md5", "provider=default");
     if (m_ctx) {
         EVP_MD_CTX_free(m_ctx);
     }

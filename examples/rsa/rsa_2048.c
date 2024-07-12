@@ -145,10 +145,10 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 {
     alc_error_t err;
 
-    Uint64 size           = alcp_rsa_context_size(KEY_SIZE_2048);
+    Uint64 size           = alcp_rsa_context_size();
     s_rsa_handle->context = malloc(size);
 
-    err = alcp_rsa_request(KEY_SIZE_2048, s_rsa_handle);
+    err = alcp_rsa_request(s_rsa_handle);
 
     return err;
 }
@@ -184,8 +184,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     // Encrypt text
 
-    err = alcp_rsa_publickey_encrypt(
-        ps_rsa_handle, ALCP_RSA_PADDING_NONE, text, size, enc_text);
+    err = alcp_rsa_publickey_encrypt(ps_rsa_handle, text, size, enc_text);
 
     if (alcp_is_error(err)) {
         printf("\n publc key encrypt failed");

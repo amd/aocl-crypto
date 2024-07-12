@@ -29,18 +29,22 @@
 #ifndef _OPENSSL_ALCP_PROVIDER_H
 #define _OPENSSL_ALCP_PROVIDER_H 2
 
-#include <openssl/core.h>
-#include <openssl/evp.h>
-
 #include <alcp/alcp.h>
 #include <alcp/cipher.h>
 #include <alcp/digest.h>
+#include <openssl/core.h>
+#include <openssl/evp.h>
+#include <string.h>
 
 #include "debug.h"
 
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
 #include "provider/alcp_provider_cipherdata.h"
+
+#if defined(WIN32) || defined(WIN64)
+#define strcasecmp _stricmp
+#endif
 
 #define GCM_IV_DEFAULT_SIZE 12
 #define GCM_IV_MAX_SIZE     (1024 / 8)
@@ -72,11 +76,14 @@ extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];
 extern const OSSL_ALGORITHM ALC_prov_macs[];
 extern const OSSL_ALGORITHM ALC_prov_rng[];
+extern const OSSL_ALGORITHM alc_prov_asym_ciphers[];
+extern const OSSL_ALGORITHM alc_prov_signature[];
+extern const OSSL_ALGORITHM alc_prov_keymgmt[];
 
 struct _alc_prov_ctx
 {
-    OSSL_LIB_CTX*           ap_libctx;
     const OSSL_CORE_HANDLE* ap_core_handle;
+    OSSL_LIB_CTX*           libctx;
 };
 typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
 typedef void (*fptr_t)(void);

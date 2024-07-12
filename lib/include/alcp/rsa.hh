@@ -43,13 +43,12 @@ struct RsaPublicKey
     Uint64 size            = 0;
 };
 
-template<alc_rsa_key_size T>
 class ALCP_API_EXPORT Rsa
 {
   public:
-    static_assert(T == KEY_SIZE_1024 || T == KEY_SIZE_2048);
     Rsa();
     ~Rsa();
+    Rsa(const Rsa& rsa);
     /**
      * @brief Function encrypt the buffer
      *
@@ -57,9 +56,11 @@ class ALCP_API_EXPORT Rsa
      * @param [in]  textSize       Input text size
      * @param [out] pEncText       pointer to encrypted text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText);
+    alc_error_t encryptPublic(const Uint8* pText,
+                              Uint64       textSize,
+                              Uint8*       pEncText);
 
     /**
      * @brief set the Digest to be used by OAEP / PSS / PKCSV15 padding
@@ -86,14 +87,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in]  pSeed          pointer to seed with hashlen
      * @param [out] pEncText       pointer to encrypted text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status encryptPublicOaep(const Uint8* pText,
-                             Uint64       textSize,
-                             const Uint8* plabel,
-                             Uint64       labelSize,
-                             const Uint8* pSeed,
-                             Uint8*       pEncText);
+    alc_error_t encryptPublicOaep(const Uint8* pText,
+                                  Uint64       textSize,
+                                  const Uint8* plabel,
+                                  Uint64       labelSize,
+                                  const Uint8* pSeed,
+                                  Uint8*       pEncText);
 
     /**
      * @brief Function decrypt the buffer
@@ -102,9 +103,11 @@ class ALCP_API_EXPORT Rsa
      * @param [in]  encSize     encrypted data size
      * @param [out] pText       pointer to decrypted text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText);
+    alc_error_t decryptPrivate(const Uint8* pEncText,
+                               Uint64       encSize,
+                               Uint8*       pText);
 
     /**
      * @brief Function decrypt the buffer with oaep padding
@@ -116,15 +119,15 @@ class ALCP_API_EXPORT Rsa
      * @param [out] pText       pointer to decrypted text
      * @param [out] textSize    size of decrypted text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
 
-    Status decryptPrivateOaep(const Uint8* pEncText,
-                              Uint64       encSize,
-                              const Uint8* label,
-                              Uint64       labelSize,
-                              Uint8*       pText,
-                              Uint64&      textSize);
+    alc_error_t decryptPrivateOaep(const Uint8* pEncText,
+                                   Uint64       encSize,
+                                   const Uint8* label,
+                                   Uint64       labelSize,
+                                   Uint8*       pText,
+                                   Uint64&      textSize);
 
     /**
      * @brief Function signs the buffer with pss padding
@@ -136,14 +139,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in]  saltSize    - size of salt
      * @param [out] pSignedBuff - pointer to signed text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status signPrivatePss(bool         check,
-                          const Uint8* pText,
-                          Uint64       textSize,
-                          const Uint8* salt,
-                          Uint64       saltSize,
-                          Uint8*       pSignedBuff);
+    alc_error_t signPrivatePss(bool         check,
+                               const Uint8* pText,
+                               Uint64       textSize,
+                               const Uint8* salt,
+                               Uint64       saltSize,
+                               Uint8*       pSignedBuff);
 
     /**
      * @brief Function verifies the buffer with pss padding
@@ -152,26 +155,37 @@ class ALCP_API_EXPORT Rsa
      * @param [in] textSize    - size of input text
      * @param [in] pSignedBuff - pointer to signed text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status verifyPublicPss(const Uint8* pText,
-                           Uint64       textSize,
-                           const Uint8* pSignedBuff);
+    alc_error_t verifyPublicPss(const Uint8* pText,
+                                Uint64       textSize,
+                                const Uint8* pSignedBuff);
+
+    alc_error_t signPrivatePssWithoutHash(const Uint8* pHash,
+                                          Uint64       hashSize,
+                                          const Uint8* salt,
+                                          Uint64       saltSize,
+                                          Uint8*       pSignedBuff);
+
+    alc_error_t verifyPublicPssWithoutHash(const Uint8* pHash,
+                                           Uint64       hashSize,
+                                           const Uint8* pSignedBuff);
 
     /**
      * @brief Function signs the buffer with pkcsv15 padding
      *
-     * @param [in]  check       - signed message verification for fault attack
+     * @param [in]  check       - signed message verification for fault
+     * attack
      * @param [in]  pText       - pointer to input text
      * @param [in]  textSize    - size of input text
      * @param [out] pSignedBuff - pointer to signed text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status signPrivatePkcsv15(bool         check,
-                              const Uint8* pText,
-                              Uint64       textSize,
-                              Uint8*       pSignedBuff);
+    alc_error_t signPrivatePkcsv15(bool         check,
+                                   const Uint8* pText,
+                                   Uint64       textSize,
+                                   Uint8*       pSignedBuff);
 
     /**
      * @brief Function verifies the buffer with pkcsv15 padding
@@ -180,21 +194,37 @@ class ALCP_API_EXPORT Rsa
      * @param [in] textSize    - size of input text
      * @param [in] pSignedBuff - pointer to signed text
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status verifyPublicPkcsv15(const Uint8* pText,
-                               Uint64       textSize,
-                               const Uint8* pSignedBuff);
+    alc_error_t verifyPublicPkcsv15(const Uint8* pText,
+                                    Uint64       textSize,
+                                    const Uint8* pSignedBuff);
 
+    alc_error_t signPrivatePkcsv15WithoutHash(const Uint8* pText,
+                                              Uint64       textSize,
+                                              Uint8*       decrypText);
+
+    alc_error_t verifyPublicPkcsv15WithoutHash(const Uint8* pText,
+                                               Uint64       textSize,
+                                               const Uint8* pEncryptText);
+
+    alc_error_t encryptPublicPkcsv15(const Uint8* pText,
+                                     Uint64       textSize,
+                                     Uint8*       pEncryptText,
+                                     const Uint8* randomPad);
+
+    alc_error_t decryptPrivatePkcsv15(const Uint8* pEncryptedText,
+                                      Uint8*       pText,
+                                      Uint64*      textSize);
     /**
      * @brief Function fetches the public key
      *
      * @param [out] pPublicKey      Refrence to public key structure
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
 
-    Status getPublickey(RsaPublicKey& pPublicKey);
+    alc_error_t getPublickey(RsaPublicKey& pPublicKey);
 
     /**
      * @brief Function sets the public key
@@ -203,11 +233,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in]  mod         pointer to the modulus
      * @param [in]  size        size of modulus
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status setPublicKey(const Uint64 exponent,
-                        const Uint8* mod,
-                        const Uint64 size);
+    alc_error_t setPublicKey(const Uint64 exponent,
+                             const Uint8* mod,
+                             const Uint64 size);
+
+    alc_error_t setPublicKeyAsBigNum(const BigNum* exponent,
+                                     const BigNum* pModulus);
 
     /**
      * @brief Function sets the public key
@@ -220,15 +253,22 @@ class ALCP_API_EXPORT Rsa
      * @param [in]   mod        - pointer to mult of first and second modulus
      * @param [in]   size       - size of modulus
      *
-     * @return Status Error code
+     * @return alc_error_t Error code
      */
-    Status setPrivateKey(const Uint8* dp,
-                         const Uint8* dq,
-                         const Uint8* p,
-                         const Uint8* q,
-                         const Uint8* qinv,
-                         const Uint8* mod,
-                         const Uint64 size);
+    alc_error_t setPrivateKey(const Uint8* dp,
+                              const Uint8* dq,
+                              const Uint8* p,
+                              const Uint8* q,
+                              const Uint8* qinv,
+                              const Uint8* mod,
+                              const Uint64 size);
+
+    alc_error_t setPrivateKeyAsBigNum(const BigNum* dp,
+                                      const BigNum* dq,
+                                      const BigNum* p,
+                                      const BigNum* q,
+                                      const BigNum* qinv,
+                                      const BigNum* mod);
 
     /**
      * @brief Function returns the private key size
@@ -248,18 +288,18 @@ class ALCP_API_EXPORT Rsa
                       const Uint8* input,
                       Uint64       inputLen);
 
-    RsaPrivateKeyBignum<T> m_priv_key;
-    RsaPublicKeyBignum<T>  m_pub_key;
-    MontContextBignum<T>   m_context_pub;
-    MontContextBignum<T>   m_context_p;
-    MontContextBignum<T>   m_context_q;
-    Uint64                 m_key_size;
-    Uint64                 m_hash_len;
-    Uint64                 m_mgf_hash_len;
-    DigestIndex            m_digest_info_index;
-    Uint64                 m_digest_info_size;
-    digest::IDigest*       m_digest = nullptr;
-    digest::IDigest*       m_mgf    = nullptr;
+    RsaPrivateKeyBignum m_priv_key;
+    RsaPublicKeyBignum  m_pub_key;
+    MontContextBignum   m_context_pub;
+    MontContextBignum   m_context_p;
+    MontContextBignum   m_context_q;
+    Uint64              m_key_size;
+    Uint64              m_hash_len;
+    Uint64              m_mgf_hash_len;
+    DigestIndex         m_digest_info_index;
+    Uint64              m_digest_info_size;
+    digest::IDigest*    m_digest = nullptr;
+    digest::IDigest*    m_mgf    = nullptr;
 };
 
 } // namespace alcp::rsa

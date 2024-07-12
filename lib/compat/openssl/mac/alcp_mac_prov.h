@@ -34,15 +34,10 @@
 #ifndef _OPENSSL_ALCP_MAC_PROV_H
 #define _OPENSSL_ALCP_MAC_PROV_H 2
 
-#if defined(WIN32) || defined(WIN64)
-#define strcasecmp _stricmp
-#endif
-
 #include "debug.h"
 #include "provider/alcp_provider.h"
 #include <alcp/mac.h>
 #include <openssl/core_names.h>
-#include <string.h>
 
 struct _alc_prov_mac_ctx
 {

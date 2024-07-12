@@ -37,8 +37,8 @@ static void
 ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 {
     if (alcpctx != NULL) {
-        if (alcpctx->ap_libctx != NULL) {
-            OSSL_LIB_CTX_free(alcpctx->ap_libctx);
+        if (alcpctx->libctx != NULL) {
+            OSSL_LIB_CTX_free(alcpctx->libctx);
         }
         OPENSSL_free(alcpctx);
     }
@@ -66,18 +66,29 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
     }
 #endif
     switch (operation_id) {
-        /*FIXME: When Cipher Provider is enabled and MAC provider is
-         * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
-         * internally tries to use CBC from alcp and multi update is not
-         * supported in ALCP as of now.  */
+/*FIXME: When Cipher Provider is enabled and MAC provider is
+ * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
+ * internally tries to use CBC from alcp and multi update is not
+ * supported in ALCP as of now.  */
+#if OPENSSL_API_LEVEL < 30200
         case OSSL_OP_CIPHER:
             EXIT();
             return ALC_prov_ciphers;
             break;
+#endif
         case OSSL_OP_DIGEST:
             EXIT();
             return ALC_prov_digests;
             break;
+// ToDO : Will be enabled after openssl version check
+#if 0
+        case OSSL_OP_ASYM_CIPHER:
+            return alc_prov_asym_ciphers;
+        case OSSL_OP_SIGNATURE:
+            return alc_prov_signature;
+        case OSSL_OP_KEYMGMT:
+            return alc_prov_keymgmt;
+#endif
         case OSSL_OP_MAC:
             EXIT();
             return ALC_prov_macs;
@@ -186,12 +197,12 @@ OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
         printf("\n alcp provider init failed");
         return 0;
     } else {
-#if LOAD_DEFAULT_PROV
-        alcpctx->ap_libctx = OSSL_LIB_CTX_new_from_dispatch(handle, in);
+#if 1
+        alcpctx->libctx = OSSL_LIB_CTX_new_from_dispatch(handle, in);
 #else
-        alcpctx->ap_libctx = OSSL_LIB_CTX_new();
+        alcpctx->libctx = OSSL_LIB_CTX_new();
 #endif
-        if (alcpctx->ap_libctx == NULL) {
+        if (alcpctx->libctx == NULL) {
             ALCP_teardown((void*)alcpctx);
             return 0;
         }

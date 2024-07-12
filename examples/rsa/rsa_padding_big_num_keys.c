@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,6 @@
 #include "alcp/rng.h"
 #include "alcp/rsa.h"
 
-// Modulus in Private key
 static const Uint8 Modulus[] = {
     0xae, 0xdd, 0x0e, 0x10, 0xa5, 0xcc, 0xc0, 0x86, 0xfd, 0xdb, 0xef, 0x26,
     0xaa, 0x5b, 0x60, 0xa2, 0x67, 0xc7, 0x0e, 0x50, 0x5c, 0x91, 0x32, 0xc1,
@@ -62,8 +61,7 @@ static const Uint8 Modulus[] = {
     0x2e, 0x0a, 0xef, 0x67
 };
 
-// private key in CRT(Chinese remainder form)
-static const Uint8 P_Modulus[] = {
+static const Uint8 P[] = {
     0xb8, 0xc7, 0x80, 0xd1, 0xa9, 0xf2, 0x33, 0x7a, 0x1e, 0xbb, 0x57, 0xcc,
     0x0e, 0x4e, 0x97, 0xfb, 0x92, 0xde, 0xa1, 0x7c, 0xee, 0xf5, 0xaa, 0x63,
     0xd0, 0xa8, 0x24, 0xa6, 0x99, 0x89, 0xb5, 0x7d, 0xf0, 0x82, 0x1c, 0x7e,
@@ -77,7 +75,7 @@ static const Uint8 P_Modulus[] = {
     0x83, 0x3c, 0xd4, 0xfc, 0xbc, 0xfb, 0xed, 0x59
 };
 
-static const Uint8 Q_Modulus[] = {
+static const Uint8 Q[] = {
     0xf2, 0x43, 0x24, 0x20, 0xce, 0xbc, 0xb0, 0x3a, 0x9a, 0xf4, 0x08, 0xad,
     0xb2, 0xd2, 0x34, 0x63, 0x37, 0x8a, 0xcb, 0xb9, 0xee, 0xa3, 0x7a, 0x30,
     0x19, 0x88, 0xf3, 0xe1, 0x6b, 0xd1, 0x81, 0xbf, 0xb6, 0xb9, 0x90, 0x88,
@@ -91,7 +89,7 @@ static const Uint8 Q_Modulus[] = {
     0x14, 0xeb, 0x5b, 0xfc, 0xec, 0x7e, 0x6a, 0xbf
 };
 
-static const Uint8 DP_EXP[] = {
+static const Uint8 DP[] = {
     0x54, 0x29, 0xf3, 0x00, 0x0c, 0xf3, 0x98, 0x04, 0xe8, 0xd8, 0x96, 0x5e,
     0x08, 0xaa, 0x3d, 0xc9, 0xc6, 0x15, 0x07, 0xe3, 0x5b, 0x08, 0xa4, 0xea,
     0xc0, 0x10, 0xc6, 0x58, 0xe8, 0x18, 0x74, 0x85, 0x7f, 0xb6, 0x13, 0xfa,
@@ -105,7 +103,7 @@ static const Uint8 DP_EXP[] = {
     0x8b, 0x7a, 0x7a, 0xdc, 0xff, 0xcb, 0x94, 0x49
 };
 
-static const Uint8 DQ_EXP[] = {
+static const Uint8 DQ[] = {
     0x56, 0xce, 0x7e, 0x14, 0x8f, 0x5f, 0x87, 0x1a, 0x08, 0xc9, 0xe6, 0x8e,
     0x2e, 0xe4, 0x29, 0x47, 0x5f, 0xf0, 0x88, 0xdd, 0x5f, 0xc8, 0x0e, 0x11,
     0x4c, 0x25, 0x09, 0x96, 0x3d, 0x66, 0xfd, 0xc1, 0xef, 0x3c, 0x80, 0xb0,
@@ -119,7 +117,7 @@ static const Uint8 DQ_EXP[] = {
     0x05, 0x4b, 0xec, 0x53, 0x2d, 0x7e, 0x82, 0xcb
 };
 
-static const Uint8 Q_ModulusINV[] = {
+static const Uint8 QINV[] = {
     0x29, 0x46, 0xdd, 0xbd, 0x16, 0x47, 0x73, 0xb8, 0x80, 0x88, 0x05, 0xe1,
     0x2b, 0x30, 0xb1, 0x58, 0x25, 0x59, 0xe6, 0x18, 0x54, 0xd6, 0x9e, 0xb8,
     0xc5, 0xb6, 0xe4, 0x07, 0xa1, 0xdd, 0x34, 0x82, 0x61, 0x46, 0xb0, 0x8b,
@@ -133,18 +131,23 @@ static const Uint8 Q_ModulusINV[] = {
     0x49, 0x41, 0x2e, 0xd9, 0xc0, 0xe6, 0xd2, 0xc8
 };
 
-// Initial random salt
-static const Uint8 Salt[] = { 'h', 'e', 'l', 'l', 'o' };
-
-// Exponent in public key
-static const Uint64 PublicKeyExponent = 0x10001;
+static Uint64 PublicKeyExponent = 0x10001;
 
 #define ALCP_PRINT_TEXT(I, L, S)                                               \
     printf("%s\n", S);                                                         \
     for (int x = 0; x < L; x++) {                                              \
         printf(" %02x", *(I + x));                                             \
     }                                                                          \
-    printf("\n\n");
+    printf("\n");
+
+static inline void
+convert_to_bignum(const Uint8* bytes, Uint64* bigNum, Uint64 size)
+{
+    Uint8* p_res = (Uint8*)(bigNum);
+    for (Int64 i = size - 1, j = 0; i >= 0; --i, ++j) {
+        p_res[j] = bytes[i];
+    }
+}
 
 static alc_error_t
 create_demo_session(alc_rsa_handle_t* s_rsa_handle)
@@ -160,80 +163,184 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 }
 
 static alc_error_t
-Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
+Rsa_Pkcs_Encrypt_Decrypt(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
 {
     alc_error_t err;
-    Uint8*      text        = NULL;
-    Uint8*      pSignedBuff = NULL;
+    Uint8*      text     = NULL;
+    Uint8*      enc_text = NULL;
+    Uint8*      dec_text = NULL;
 
-    Uint64 size = sizeof(Modulus);
+    printf("\n\n***Demonstrating pkcs encrypt / decrypt*** \n\n");
 
-    // Adding the public key for applying encryption
-    err =
-        alcp_rsa_set_publickey(ps_rsa_handle, PublicKeyExponent, Modulus, size);
-    if (alcp_is_error(err)) {
-        printf("\n setting of publc key failed");
-        return err;
-    }
+    enc_text = malloc(key_size);
+    dec_text = malloc(key_size);
 
-    // setting the private key for decryption
-    err = alcp_rsa_set_privatekey(ps_rsa_handle,
-                                  DP_EXP,
-                                  DQ_EXP,
-                                  P_Modulus,
-                                  Q_Modulus,
-                                  Q_ModulusINV,
-                                  Modulus,
-                                  sizeof(P_Modulus));
-    if (alcp_is_error(err)) {
-        printf("\n setting of private key failed");
-        goto free_buff;
-    }
+    Uint64 text_size = 47;
+    text             = malloc(text_size);
 
-    // Adding the digest function for generating the hash in oaep padding
-    err = alcp_rsa_add_digest(ps_rsa_handle, ALC_SHA2_256);
-    if (alcp_is_error(err)) {
-        printf("\n setting of digest for oaep failed");
-        return err;
-    }
-
-    Uint64 text_size = 48; // the maximum size is (2^64-1)/8 bytes
-
-    pSignedBuff = malloc(size);
-    text        = malloc(text_size);
-
-    memset(pSignedBuff, 0, size);
     memset(text, 0x31, text_size);
 
     ALCP_PRINT_TEXT(text, text_size, "text")
 
-    bool check = true;
+    printf("\n");
 
-    err = alcp_rsa_privatekey_sign_pss(
-        ps_rsa_handle, check, text, text_size, Salt, sizeof(Salt), pSignedBuff);
+    int random_pad_len = key_size - 3 - text_size;
+
+    Uint8* random_pad = malloc(random_pad_len);
+    memset(random_pad, 0x31, random_pad_len);
+
+    err = alcp_rsa_publickey_encrypt_pkcs1v15(
+        ps_rsa_handle, text, text_size, enc_text, random_pad);
+
+    free(random_pad);
 
     if (alcp_is_error(err)) {
-        printf("\nSignature process failed");
+        printf("\n pkcs publc key encrypt failed");
         goto free_buff;
     }
 
-    ALCP_PRINT_TEXT(pSignedBuff, size, "signed_text")
+    ALCP_PRINT_TEXT(enc_text, key_size, "enc_text")
+    printf("\n");
 
-    // verify signature
-    err = alcp_rsa_publickey_verify_pss(
-        ps_rsa_handle, text, text_size, pSignedBuff);
+    Uint64 dec_text_size = 0;
+    err                  = alcp_rsa_privatekey_decrypt_pkcs1v15(
+        ps_rsa_handle, enc_text, dec_text, &dec_text_size);
 
     if (alcp_is_error(err)) {
-        printf("\n Verification process failed");
+        printf("\n private key pkcs decryption failed");
         goto free_buff;
+    }
+
+    if (memcmp(dec_text, text, dec_text_size) == 0) {
+        err = ALC_ERROR_NONE;
+        ALCP_PRINT_TEXT(dec_text, dec_text_size, "dec_text")
     } else {
-        printf("\n Signature / Verification successful\n");
+        printf("\n decrypted text not matching the original text");
+        err = ALC_ERROR_GENERIC;
     }
+    printf("\n******************************************************"
+           "*********** \n\n");
+free_buff:
+    free(dec_text);
+    free(enc_text);
+    free(text);
+    return err;
+}
+
+static alc_error_t
+Rsa_Pkcs_Hash_Sign_Verify(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
+{
+    alc_error_t err;
+    Uint8*      hash      = NULL;
+    Uint8*      sign_text = NULL;
+
+    printf("***Demonstrating pkcs sign / verify on hash*** \n\n");
+
+    sign_text = malloc(key_size);
+
+    Uint64 hash_size = 32; // sha256 hash size
+    hash             = malloc(hash_size);
+
+    memset(hash, 0x31, hash_size);
+
+    ALCP_PRINT_TEXT(hash, hash_size, "hash")
+
+    printf("\n");
+
+    int index            = alcp_rsa_get_digest_info_index(ALC_SHA2_256);
+    int digest_info_size = alcp_rsa_get_digest_info_size(ALC_SHA2_256);
+
+    Uint8* hash_with_info = malloc(digest_info_size + hash_size);
+    memcpy(hash_with_info, DigestInfo[index], digest_info_size);
+    memcpy(hash_with_info + digest_info_size, hash, hash_size);
+    err = alcp_rsa_privatekey_sign_hash_pkcs1v15(
+        ps_rsa_handle, hash_with_info, digest_info_size + hash_size, sign_text);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n pkcs sign error on hash \n");
+        goto free_buff;
+    }
+
+    ALCP_PRINT_TEXT(sign_text, key_size, "sign_text")
+    printf("\n");
+
+    err = alcp_rsa_publickey_verify_hash_pkcs1v15(
+        ps_rsa_handle, hash_with_info, digest_info_size + hash_size, sign_text);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n pkcs verify error on hash \n");
+        return 0;
+    }
+
+    printf("\n******************************************************"
+           "*********** \n\n");
 
 free_buff:
-    free(pSignedBuff);
-    free(text);
+    free(hash);
+    free(sign_text);
+    free(hash_with_info);
+    return err;
+}
 
+static alc_error_t
+Rsa_Pss_Hash_Sign_Verify(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
+{
+    alc_error_t err;
+    Uint8*      hash      = NULL;
+    Uint8*      sign_text = NULL;
+
+    printf("***Demonstrating pss sign / verify on hash***\n\n");
+
+    sign_text = malloc(key_size);
+
+    Uint64 hash_size = 32; // sha256 hash size
+    hash             = malloc(hash_size);
+
+    memset(hash, 0x31, hash_size);
+
+    ALCP_PRINT_TEXT(hash, hash_size, "hash")
+
+    printf("\n");
+
+    Uint64 salt_size = key_size - hash_size - 2;
+    Uint8* salt      = malloc(salt_size);
+
+    err = alcp_rsa_add_digest(ps_rsa_handle, ALC_SHA2_256);
+
+    if (err != ALC_ERROR_NONE) {
+        printf("\n pss error setting digest\n");
+        goto free_buff;
+    }
+
+    err = alcp_rsa_add_mgf(ps_rsa_handle, ALC_SHA2_256);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n pss error setting mgf\n");
+        goto free_buff;
+    }
+
+    err = alcp_rsa_privatekey_sign_hash_pss(
+        ps_rsa_handle, hash, hash_size, salt, salt_size, sign_text);
+
+    if (err != ALC_ERROR_NONE) {
+        printf("\n pss sign error on hash \n");
+        goto free_buff;
+    }
+
+    ALCP_PRINT_TEXT(sign_text, key_size, "sign_text")
+    printf("\n");
+
+    err = alcp_rsa_publickey_verify_hash_pss(
+        ps_rsa_handle, hash, hash_size, sign_text);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n psss verify error on hash \n");
+        return 0;
+    }
+
+    printf("\n******************************************************"
+           "*********** \n\n");
+
+free_buff:
+    free(hash);
+    free(sign_text);
+    free(salt);
     return err;
 }
 
@@ -246,7 +353,60 @@ main(void)
         return -1;
     }
 
-    err = Rsa_demo(&s_rsa_handle);
+    Uint64 Modulus_BigNum[sizeof(Modulus) / 8];
+
+    Uint64 size = sizeof(Modulus);
+
+    convert_to_bignum(Modulus, Modulus_BigNum, size);
+
+    BigNum modulus = { Modulus_BigNum, size / 8 };
+
+    BigNum public_key = { &PublicKeyExponent, 1 };
+
+    err = alcp_rsa_set_bignum_public_key(&s_rsa_handle, &public_key, &modulus);
+    if (alcp_is_error(err)) {
+        printf("\n setting of publc key failed");
+        return err;
+    }
+
+    Uint64 DP_BigNum[sizeof(DP) / 8];
+    Uint64 DQ_BigNum[sizeof(DP) / 8];
+    Uint64 P_BigNum[sizeof(DP) / 8];
+    Uint64 Q_BigNum[sizeof(DP) / 8];
+    Uint64 QINV_BigNum[sizeof(DP) / 8];
+
+    size = sizeof(DP);
+
+    convert_to_bignum(DP, DP_BigNum, size);
+    convert_to_bignum(DQ, DQ_BigNum, size);
+    convert_to_bignum(P, P_BigNum, size);
+    convert_to_bignum(Q, Q_BigNum, size);
+    convert_to_bignum(QINV, QINV_BigNum, size);
+
+    BigNum dp   = { DP_BigNum, size / 8 };
+    BigNum dq   = { DQ_BigNum, size / 8 };
+    BigNum p    = { P_BigNum, size / 8 };
+    BigNum q    = { Q_BigNum, size / 8 };
+    BigNum qinv = { QINV_BigNum, size / 8 };
+
+    err = alcp_rsa_set_bignum_private_key(
+        &s_rsa_handle, &dp, &dq, &p, &q, &qinv, &modulus);
+    if (alcp_is_error(err)) {
+        printf("\n setting of publc key failed");
+        return -1;
+    }
+
+    err = Rsa_Pkcs_Encrypt_Decrypt(&s_rsa_handle, sizeof(Modulus));
+    if (alcp_is_error(err)) {
+        return -1;
+    }
+
+    err = Rsa_Pkcs_Hash_Sign_Verify(&s_rsa_handle, sizeof(Modulus));
+    if (alcp_is_error(err)) {
+        return -1;
+    }
+
+    err = Rsa_Pss_Hash_Sign_Verify(&s_rsa_handle, sizeof(Modulus));
     if (alcp_is_error(err)) {
         return -1;
     }

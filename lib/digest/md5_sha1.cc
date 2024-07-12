@@ -32,21 +32,21 @@
 
 namespace alcp::digest {
 
-MD5_SHA1::MD5_SHA1()
+Md5_Sha1::Md5_Sha1()
 {
     m_block_len  = ALC_DIGEST_BLOCK_SIZE_MD5_SHA1 / 8;
     m_digest_len = ALC_DIGEST_LEN_288 / 8;
 }
 
 void
-MD5_SHA1::init()
+Md5_Sha1::init()
 {
     m_md5.init();
     m_sha1.init();
 }
 
 alc_error_t
-MD5_SHA1::update(const Uint8* pBuf, Uint64 size)
+Md5_Sha1::update(const Uint8* pBuf, Uint64 size)
 {
     if (m_md5.update(pBuf, size)) {
         return ALC_ERROR_EXISTS;
@@ -55,7 +55,7 @@ MD5_SHA1::update(const Uint8* pBuf, Uint64 size)
 }
 
 alc_error_t
-MD5_SHA1::finalize(Uint8* pBuf, Uint64 size)
+Md5_Sha1::finalize(Uint8* pBuf, Uint64 size)
 {
     if (size != (ALC_DIGEST_LEN_288 / 8)) {
         return ALC_ERROR_INVALID_ARG;
@@ -67,9 +67,9 @@ MD5_SHA1::finalize(Uint8* pBuf, Uint64 size)
                            (ALC_DIGEST_LEN_160 / 8));
 }
 
-MD5_SHA1::~MD5_SHA1() {}
+Md5_Sha1::~Md5_Sha1() {}
 
-MD5_SHA1::MD5_SHA1(const MD5_SHA1& src)
+Md5_Sha1::Md5_Sha1(const Md5_Sha1& src)
     : m_sha1{ src.m_sha1 }
     , m_md5{ src.m_md5 }
 {

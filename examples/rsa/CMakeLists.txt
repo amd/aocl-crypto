@@ -31,3 +31,4 @@
  ADD_EXAMPLE(rsa_oaep_2048 rsa_oaep_2048.c)
  ADD_EXAMPLE(rsa_pss_sign_verify rsa_pss_sign_verify.c)
  ADD_EXAMPLE(rsa_pkcs1-v1_5_sign_verify rsa_pkcs1-v1_5_sign_verify.c)
+ ADD_EXAMPLE(rsa_padding_big_num_keys rsa_padding_big_num_keys.c)

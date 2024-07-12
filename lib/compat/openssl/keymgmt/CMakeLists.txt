@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,33 +23,6 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-# Added aocl-compat as a seperate library
-ADD_SUBDIRECTORY(cipher)
-ADD_SUBDIRECTORY(asymcipher)
-ADD_SUBDIRECTORY(digest)
-ADD_SUBDIRECTORY(rng)
-ADD_SUBDIRECTORY(mac)
-ADD_SUBDIRECTORY(keymgmt)
-ADD_SUBDIRECTORY(provider)
+FILE(GLOB KEY_MGMT_SRCS "*.c")
 
-# MESSAGE(STATUS "PROVIDER_SOURCES:${PROVIDER_SRC}")
-
-ADD_LIBRARY(openssl-compat 
-	${PROVIDER_SRC}
-	)
-
-# Include ALCP header files
-TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
-TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE include)
-
-# Link to ALCP shared object file
-TARGET_LINK_LIBRARIES(openssl-compat PUBLIC alcp)
-
-# OPENSSL files
-IF(WIN32)
-	IF(OPENSSL_INSTALL_DIR)
-		TARGET_COMPILE_OPTIONS(openssl-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
-	ENDIF()
-ENDIF(WIN32)
-
-
+SET(PROVIDER_SRC ${PROVIDER_SRC} ${KEY_MGMT_SRCS} PARENT_SCOPE)

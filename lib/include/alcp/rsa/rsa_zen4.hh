@@ -31,21 +31,21 @@
 namespace alcp::rsa { namespace zen4 {
 
     template<alc_rsa_key_size T>
-    void archEncryptPublic(Uint8*                 pEncText,
-                           const Uint64*          pTextBigNum,
-                           RsaPublicKeyBignum<T>& pubKey,
-                           MontContextBignum<T>&  context);
+    void archEncryptPublic(Uint8*              pEncText,
+                           const Uint64*       pTextBigNum,
+                           RsaPublicKeyBignum& pubKey,
+                           MontContextBignum&  context);
 
     template<alc_rsa_key_size T>
-    void archDecryptPrivate(Uint8*                  pText,
-                            const Uint64*           pEncTextBigNum,
-                            RsaPrivateKeyBignum<T>& privKey,
-                            MontContextBignum<T>&   contextP,
-                            MontContextBignum<T>&   contextQ);
+    void archDecryptPrivate(Uint8*               pText,
+                            const Uint64*        pEncTextBigNum,
+                            RsaPrivateKeyBignum& privKey,
+                            MontContextBignum&   contextP,
+                            MontContextBignum&   contextQ);
 
     // todo remove the size param.
     template<alc_rsa_key_size T>
-    void archCreateContext(MontContextBignum<T>& context,
-                           Uint64*               mod,
-                           Uint64                size);
+    void archCreateContext(MontContextBignum& context,
+                           Uint64*            mod,
+                           Uint64             size);
 }} // namespace alcp::rsa::zen4

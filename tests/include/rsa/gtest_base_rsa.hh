@@ -85,7 +85,7 @@ SkipTest(int ret_val, std::string LibStr)
     /* for invalid
       inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS,
       alcp returns ALC_ERROR_NOT_PERMITTED, IPP returns -11 */
-    if ((LibStr.compare("ALCP") == 0) && ret_val == ALC_ERROR_NOT_PERMITTED) {
+    if ((LibStr.compare("ALCP") == 0) && ret_val == ALC_ERROR_INVALID_DATA) {
         if (verbose > 1)
             std::cout << LibStr << ": Invalid case: ret code: " << ret_val
                       << ".. Skipping this test" << std::endl;

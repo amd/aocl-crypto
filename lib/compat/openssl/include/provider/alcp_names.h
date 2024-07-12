@@ -120,6 +120,11 @@
 #define ALCP_PROV_NAMES_HMAC     "HMAC"
 #define ALCP_PROV_NAMES_CMAC     "CMAC"
 #define ALCP_PROV_NAMES_POLY1305 "POLY1305"
+
+// RSA
+#define ALCP_PROV_NAMES_RSA "RSA:rsaEncryption:1.2.840.113549.1.1.1"
+
+#define ALCP_PROV_RSA_DESC "ALCP RSA implementation"
 // FIXME: Add provider for below
 // #define ALCP_PROV_DESCS_HMAC_SIGN "OpenSSL HMAC via EVP_PKEY implementation"
 // #define ALCP_PROV_DESCS_CMAC_SIGN "OpenSSL CMAC via EVP_PKEY implementation"

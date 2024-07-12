@@ -57,7 +57,7 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 			mac/hmac mac/cmac mac/poly1305 \
 			ecdh/x25519_example ecdh/p256_example \
 			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt rsa/rsa_2048 rsa/rsa_oaep_2048 rsa/rsa_oaep \
-			rsa/rsa_pkcs1-v1_5_sign_verify rsa/rsa_pss_sign_verify \
+			rsa/rsa_pkcs1-v1_5_sign_verify rsa/rsa_pss_sign_verify rsa/rsa_padding_big_num_keys \
 			version/version-demo
 
 .PHONY: all
