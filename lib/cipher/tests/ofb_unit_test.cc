@@ -39,16 +39,16 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
-#if 0 // disabled temporarily.
+#undef DEBUG
 
-using alcp::cipher::Ofb128_aesni;
-using alcp::cipher::Ofb192_aesni;
-using alcp::cipher::Ofb256_aesni;
+using alcp::cipher::CipherFactory;
+using alcp::cipher::iCipher;
 namespace alcp::cipher::unittest::ofb {
-std::vector<Uint8> key       = { 0x0d, 0x3c, 0x13, 0x53, 0xea, 0x0f, 0x01, 0x06,
+std::vector<Uint8> key = { 0x0d, 0x3c, 0x13, 0x53, 0xea, 0x0f, 0x01, 0x06,
                            0x83, 0x47, 0x98, 0xc8, 0x6d, 0x3d, 0xc7, 0x4e };
-std::vector<Uint8> iv        = { 0xf6, 0xe5, 0x25, 0x16, 0x7d, 0xca, 0x50, 0xbf,
-                          0x1b, 0x9f, 0xb8, 0x13, 0xd2, 0xec, 0xab, 0x5e };
+const string cCipher   = "aes-ofb-128"; // Needs to be modified base on the key
+std::vector<Uint8> iv  = { 0xf6, 0xe5, 0x25, 0x16, 0x7d, 0xca, 0x50, 0xbf,
+                           0x1b, 0x9f, 0xb8, 0x13, 0xd2, 0xec, 0xab, 0x5e };
 std::vector<Uint8> plainText = {
     0x12, 0xb0, 0xe9, 0x9b, 0x7f, 0xf8, 0xc4, 0x6a, 0xb0, 0xae, 0x00, 0xf7,
     0xfb, 0x7a, 0xa7, 0x19, 0x3d, 0x0c, 0x87, 0xe9, 0x14, 0x01, 0x02, 0x62,
@@ -115,16 +115,19 @@ using namespace alcp::cipher::unittest::ofb;
 
 TEST(OFB, creation)
 {
-    std::unique_ptr<Ofb128_aesni> ofb = std::make_unique<Ofb128_aesni>();
-    EXPECT_TRUE(ofb->isSupported(key.size() * 8));
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto ofb        = alcpCipher->create("aes-ofb-128");
+    EXPECT_TRUE(ofb != nullptr);
+    delete alcpCipher;
 }
 
 TEST(OFB, BasicEncryption)
 {
 
-    std::unique_ptr<Ofb128_aesni> ofb = std::make_unique<Ofb128_aesni>();
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb->isSupported(key.size() * 8));
+    EXPECT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -132,14 +135,16 @@ TEST(OFB, BasicEncryption)
 
     ofb->encrypt(&plainText[0], &output[0], plainText.size());
 
+    delete alcpCipher;
     EXPECT_EQ(cipherText, output);
 }
 
 TEST(OFB, BasicDecryption)
 {
-    std::unique_ptr<Ofb128_aesni> ofb = std::make_unique<Ofb128_aesni>();
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb->isSupported(key.size() * 8));
+    EXPECT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(plainText.size());
 
@@ -147,6 +152,7 @@ TEST(OFB, BasicDecryption)
 
     ofb->decrypt(&cipherText[0], &output[0], cipherText.size());
 
+    delete alcpCipher;
     EXPECT_EQ(plainText, output);
 }
 
@@ -155,15 +161,12 @@ TEST(OFB, MultiUpdateEncryption)
 #ifndef OFB_MULTI_UPDATE
     GTEST_SKIP() << "Multi Update functionality unavailable!";
 #endif
-    std::unique_ptr<Ofb128_aesni> ofb = std::make_unique<Ofb128_aesni>();
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb->isSupported(128));
+    EXPECT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
-
-    // api to be added to icipher
-    // ctr->setKey(128, &key[0]);  or
-    // ctr->setKey(128, &key[0]);
 
     alc_error_t err = ofb->init(&key[0], 128, &iv[0], iv.size());
 
@@ -181,6 +184,7 @@ TEST(OFB, MultiUpdateEncryption)
         EXPECT_FALSE(alcp_is_error(err));
     }
 
+    delete alcpCipher;
     EXPECT_EQ(cipherText, output);
 }
 
@@ -189,9 +193,10 @@ TEST(OFB, MultiUpdateDecryption)
 #ifndef OFB_MULTI_UPDATE
     GTEST_SKIP() << "Multi Update functionality unavailable!";
 #endif
-    std::unique_ptr<Ofb128_aesni> ofb = std::make_unique<Ofb128_aesni>();
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb->isSupported(key.size() * 8));
+    EXPECT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -209,6 +214,7 @@ TEST(OFB, MultiUpdateDecryption)
         EXPECT_FALSE(alcp_is_error(err));
     }
 
+    delete alcpCipher;
     EXPECT_EQ(plainText, output);
 }
 
@@ -234,11 +240,12 @@ TEST(OFB, RandomEncryptDecryptTest)
                                                plainText_vect.end());
         std::vector<Uint8>       plainTextOut(plainTextVect.size());
 
-        std::unique_ptr<Ofb256_aesni> ofb = std::make_unique<Ofb256_aesni>();
+        auto alcpCipher = new CipherFactory<iCipher>;
+        auto ofb        = alcpCipher->create("aes-ofb-256");
 
-        EXPECT_TRUE(ofb->isSupported(key.size() * 8));
+        EXPECT_TRUE(ofb != nullptr);
 
-        alc_error_t s = ofb->init(&key[0], 256, &iv[0], sizeof(iv));
+        alc_error_t s = ofb->init(key_256, 256, &iv[0], sizeof(iv));
         if (s != ALC_ERROR_NONE) {
             std::cout << "RANDOM_TEST: Init Failure!" << std::endl;
         }
@@ -249,7 +256,7 @@ TEST(OFB, RandomEncryptDecryptTest)
             std::cout << "RANDOM_TEST: Encrypt Failure!" << std::endl;
         }
 
-        s = ofb->init(&key[0], 256, &iv[0], sizeof(iv));
+        s = ofb->init(key_256, 256, &iv[0], sizeof(iv));
         if (s != ALC_ERROR_NONE) {
             std::cout << "RANDOM_TEST: Init Failure!" << std::endl;
         }
@@ -260,6 +267,7 @@ TEST(OFB, RandomEncryptDecryptTest)
             std::cout << "RANDOM_TEST: Decrypt Failure!" << std::endl;
         }
 
+        delete alcpCipher;
         EXPECT_EQ(plainTextVect, plainTextOut);
 #ifdef DEBUG
         auto ret = std::mismatch(
@@ -277,5 +285,3 @@ main(int argc, char** argv)
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-#endif
