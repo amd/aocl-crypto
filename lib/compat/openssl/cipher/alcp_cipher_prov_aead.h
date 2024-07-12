@@ -28,6 +28,11 @@
 
 #include "alcp_cipher_prov_common.h"
 
+#define IV_STATE_UNINITIALISED 0 /* initial state is not initialized */
+#define IV_STATE_BUFFERED      1 /* iv has been copied to the iv buffer */
+#define IV_STATE_COPIED        2 /* iv has been copied from the iv buffer */
+#define IV_STATE_FINISHED      3 /* the iv has been used - so don't reuse it */
+
 #define UNINITIALISED_SIZET ((size_t)-1)
 
 #define AEAD_FLAGS (PROV_CIPHER_FLAG_AEAD | PROV_CIPHER_FLAG_CUSTOM_IV)

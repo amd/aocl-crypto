@@ -36,7 +36,8 @@
 #include <memory>
 
 namespace alcp::cipher {
-// using Status = alcp::base::Status;
+
+#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 
 // aes and Rijndael can be unified?
 

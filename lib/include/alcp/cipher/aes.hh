@@ -41,8 +41,9 @@
 
 namespace alcp::cipher {
 
-#define ALCP_ENC 1
-#define ALCP_DEC 0
+#define ALCP_ENC           1
+#define ALCP_DEC           0
+#define MAX_CIPHER_IV_SIZE (1024 / 8)
 
 typedef struct alc_cipher_key_data
 {

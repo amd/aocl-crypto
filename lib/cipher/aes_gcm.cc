@@ -166,8 +166,12 @@ GcmAuth::setTagLength(Uint64 tagLength)
         const Uint8* pinput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
+        m_isEnc_aes     = IS_ENC;                                              \
+        if (!(m_ivState_aes && m_isKeySet_aes)) {                              \
+            printf("\nError: Key or Iv not set \n");                           \
+            return ALC_ERROR_BAD_STATE;                                        \
+        }                                                                      \
         m_dataLen += len;                                                      \
-        m_isEnc_aes = IS_ENC;                                                  \
         /*printf(" datalen %ld ", len);*/                                      \
         bool isFirstUpdate = false;                                            \
         if (len == m_dataLen) {                                                \

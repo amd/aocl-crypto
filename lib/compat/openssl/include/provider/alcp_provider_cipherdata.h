@@ -35,6 +35,9 @@
 #include <alcp/alcp.h>
 #include <alcp/cipher.h>
 
+#define MAX_CIPHER_IV_SIZE_PROV (1024 / 8)
+#define AES_BLOCK_SIZE          16
+
 typedef struct _alc_cipher_ccm_data
 {
     Uint32 isLenSet : 1;
@@ -73,7 +76,7 @@ typedef struct _alc_prov_cipher_data
 
     // iv info
     const Uint8* pIv;
-    Uint8        iv_buff[MAX_CIPHER_IV_SIZE];
+    Uint8        iv_buff[MAX_CIPHER_IV_SIZE_PROV];
     Uint64       ivLen;
 
     // key info

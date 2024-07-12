@@ -44,6 +44,13 @@ namespace alcp::cipher {
  */
 
 #define ALCP_GCM_TAG_MAX_SIZE 16
+#define MAX_NUM_512_BLKS      8
+
+typedef struct _alc_cipher_gcm_data
+{
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+
+} _alc_cipher_gcm_data_t;
 
 typedef struct _alc_gcm_local_data
 {

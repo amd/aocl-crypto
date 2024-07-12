@@ -68,7 +68,7 @@ Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
     m_pIv_aes = m_iv_aes;
 
     m_ivLen_aes   = ivLen;
-    m_ivState_aes = IV_STATE_COPIED;
+    m_ivState_aes = 1;
 
     return e;
 }

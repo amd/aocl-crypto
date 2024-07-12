@@ -42,6 +42,17 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
+// FIXME: _alc_cipher_xts_data structure needs further refinement.
+typedef struct _alc_cipher_xts_data
+{
+    __attribute__((aligned(64))) Uint8 m_iv_xts[16];
+    __attribute__((aligned(64))) Uint8 m_tweak_block[16];
+    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
+    Uint8* m_pTweak_key; // this pointer can be removed.
+    Int64  m_aes_block_id;
+
+} _alc_cipher_xts_data_t;
+
 /*
  * @brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
  * Stealing Mode)

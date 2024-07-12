@@ -44,7 +44,11 @@ namespace alcp::cipher {
     {                                                                          \
         Status s    = StatusOk();                                              \
         m_isEnc_aes = IS_ENC;                                                  \
-        s           = Ccm::FUNC_NAME(pInput, pOutput, len, IS_ENC);            \
+        if (!(m_ivState_aes && m_isKeySet_aes)) {                              \
+            printf("\nError: Key or Iv not set \n");                           \
+            return ALC_ERROR_BAD_STATE;                                        \
+        }                                                                      \
+        s = Ccm::FUNC_NAME(pInput, pOutput, len, IS_ENC);                      \
         return s.code();                                                       \
     } // namespace alcp::cipher
 
@@ -261,6 +265,8 @@ Ccm::setIv(ccm_data_t* ccm_data,
 
     ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
     utils::CopyBytes(&ccm_data->nonce[1], pIv, 14 - q);
+
+    m_ivState_aes = 1;
     // EXITG();
     return s;
 }

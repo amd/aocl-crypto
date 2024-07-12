@@ -78,10 +78,6 @@ Xts::init(const Uint8* pKey,
         m_ivState_aes = 1;
     }
 
-    if (!(m_ivState_aes && m_isKeySet_aes)) {
-        return ALC_ERROR_BAD_STATE; // FIXME: better error code?
-    }
-
     return err;
 }
 
@@ -204,6 +200,10 @@ namespace aesni {
     {                                                                                  \
         alc_error_t err = ALC_ERROR_NONE;                                              \
                                                                                        \
+        if (!(m_ivState_aes && m_isKeySet_aes)) {                                      \
+            printf("\nError: Key or Iv not set \n");                                   \
+            return ALC_ERROR_BAD_STATE;                                                \
+        }                                                                              \
         if (len < 16 || len > (1 << 21)) {                                             \
             err = ALC_ERROR_INVALID_DATA;                                              \
             return err;                                                                \
