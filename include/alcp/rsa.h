@@ -103,12 +103,6 @@ static const Uint8 DigestInfo[SHA_UNKNOWN][19] =
                     };
 // clang-format on
 
-int
-alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
-
-int
-alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
-
 /**
  * @brief Store Context for the future operation of RSA
  *
@@ -133,6 +127,12 @@ typedef struct
     Uint64* num;
     Uint64  size;
 } BigNum;
+
+ALCP_API_EXPORT int
+alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
+
+ALCP_API_EXPORT int
+alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
 
 /**
  * @brief       Returns the context size of the interaction
