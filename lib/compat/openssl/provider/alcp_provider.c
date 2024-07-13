@@ -50,6 +50,8 @@ ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 OSSL_PROVIDER* prov_openssl_default;
 #endif
 
+#define ALCP_OPENSSL_VERSION OPENSSL_VERSION_STR
+
 static const OSSL_ALGORITHM*
 ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 {
@@ -65,6 +67,7 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
         is_alcp_prov_init_done = true;
     }
 #endif
+    const char* openssl_version = OpenSSL_version(OPENSSL_VERSION_STRING);
     switch (operation_id) {
 /*FIXME: When Cipher Provider is enabled and MAC provider is
  * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
@@ -80,14 +83,22 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             EXIT();
             return ALC_prov_digests;
             break;
-// ToDO : Will be enabled after openssl version check
-#if 0
+#if OPENSSL_API_LEVEL >= 30100
         case OSSL_OP_ASYM_CIPHER:
-            return alc_prov_asym_ciphers;
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                return alc_prov_asym_ciphers;
+            }
+            break;
         case OSSL_OP_SIGNATURE:
-            return alc_prov_signature;
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                return alc_prov_signature;
+            }
+            break;
         case OSSL_OP_KEYMGMT:
-            return alc_prov_keymgmt;
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                return alc_prov_keymgmt;
+            }
+            break;
 #endif
         case OSSL_OP_MAC:
             EXIT();
