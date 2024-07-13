@@ -441,11 +441,14 @@ alcp_prov_rsa_sign(void*                vprsactx,
                     salt = OPENSSL_malloc(sLen);
                     if (salt == NULL)
                         return 0;
-                    if (RAND_bytes_ex(NULL, salt, sLen, 0) <= 0)
+                    if (RAND_bytes_ex(NULL, salt, sLen, 0) <= 0) {
+                        free(salt);
                         return 0;
+                    }
                 }
                 err = alcp_rsa_privatekey_sign_hash_pss(
                     &prsactx->handle, tbs, tbslen, salt, sLen, sig);
+                free(salt);
                 if (err != ALC_ERROR_NONE) {
                     ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
                     return 0;
