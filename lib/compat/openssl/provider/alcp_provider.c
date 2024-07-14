@@ -26,11 +26,13 @@
  *
  */
 
+#include <openssl/bio.h>
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
 #include <openssl/params.h>
 #include <openssl/provider.h>
 
+#include "provider/alcp_prov_bio.h"
 #include "provider/alcp_provider.h"
 
 static void
@@ -46,9 +48,7 @@ ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 
 #define LOAD_DEFAULT_PROV 0 // to be explored.
 
-#if LOAD_DEFAULT_PROV
 OSSL_PROVIDER* prov_openssl_default;
-#endif
 
 #define ALCP_OPENSSL_VERSION OPENSSL_VERSION_STR
 
@@ -56,11 +56,10 @@ static const OSSL_ALGORITHM*
 ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 {
     ENTER();
-    *no_cache = 0;
-
+    *no_cache            = 0;
+    prov_openssl_default = OSSL_PROVIDER_load(NULL, "default");
 #if LOAD_DEFAULT_PROV
     static bool is_alcp_prov_init_done = false;
-    prov_openssl_default               = OSSL_PROVIDER_load(NULL, "default");
 
     if (is_alcp_prov_init_done == false) {
         EVP_set_default_properties(NULL, "provider=alcp,fips=no");
@@ -99,6 +98,13 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
                 return alc_prov_keymgmt;
             }
             break;
+        case OSSL_OP_ENCODER:
+        case OSSL_OP_DECODER:
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                return OSSL_PROVIDER_query_operation(
+                    prov_openssl_default, operation_id, no_cache);
+            }
+            break;
 #endif
         case OSSL_OP_MAC:
             EXIT();
@@ -127,22 +133,22 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 }
 
 /* The error reasons used here */
-#define ALCP_ERROR_NO_KEYLEN_SET     1
-#define ALCP_ERROR_ONGOING_OPERATION 2
-#define ALCP_ERROR_INCORRECT_KEYLEN  3
-static const OSSL_ITEM reason_strings[] = {
-    { ALCP_ERROR_NO_KEYLEN_SET, "no key length has been set" },
-    { ALCP_ERROR_ONGOING_OPERATION, "an operation is underway" },
-    { ALCP_ERROR_INCORRECT_KEYLEN, "incorrect key length" },
-    { 0, NULL }
-};
+// #define ALCP_ERROR_NO_KEYLEN_SET     1
+// #define ALCP_ERROR_ONGOING_OPERATION 2
+// #define ALCP_ERROR_INCORRECT_KEYLEN  3
+// static const OSSL_ITEM reason_strings[] = {
+//     { ALCP_ERROR_NO_KEYLEN_SET, "no key length has been set" },
+//     { ALCP_ERROR_ONGOING_OPERATION, "an operation is underway" },
+//     { ALCP_ERROR_INCORRECT_KEYLEN, "incorrect key length" },
+//     { 0, NULL }
+// };
 
-static const OSSL_ITEM*
-ALCP_get_reason_strings(void* vctx)
-{
-    ENTER();
-    return reason_strings;
-}
+// static const OSSL_ITEM*
+// ALCP_get_reason_strings(void* vctx)
+// {
+//     ENTER();
+//     return reason_strings;
+// }
 
 static int
 ALCP_get_params(void* provctx, OSSL_PARAM* params)
@@ -173,7 +179,9 @@ ALCP_teardown(void* vctx)
 
 static const OSSL_DISPATCH ALC_dispatch_table[] = {
     { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (fptr_t)ALCP_query_operation },
-    { OSSL_FUNC_PROVIDER_GET_REASON_STRINGS, (fptr_t)ALCP_get_reason_strings },
+    // This is causing crash in provider test on 3.3.0
+    //{ OSSL_FUNC_PROVIDER_GET_REASON_STRINGS, (fptr_t)ALCP_get_reason_strings
+    //},
     { OSSL_FUNC_PROVIDER_GET_PARAMS, (fptr_t)ALCP_get_params },
     { OSSL_FUNC_PROVIDER_TEARDOWN, (fptr_t)ALCP_teardown },
     { 0, NULL }
@@ -201,6 +209,8 @@ OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
     *vprovctx               = NULL;
 
     ENTER();
+    if (!alcp_prov_bio_from_dispatch(in))
+        return 0;
 
     alcpctx = OPENSSL_zalloc(sizeof(alc_prov_ctx_t));
 
@@ -218,6 +228,11 @@ OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
             return 0;
         }
         alcpctx->ap_core_handle = handle;
+    }
+    alcpctx->corebiometh = alcp_bio_prov_init_bio_method();
+    if (alcpctx->corebiometh == NULL) {
+        ALCP_teardown((void*)alcpctx);
+        return 0;
     }
 
     *out      = ALC_dispatch_table;

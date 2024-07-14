@@ -84,6 +84,7 @@ struct _alc_prov_ctx
 {
     const OSSL_CORE_HANDLE* ap_core_handle;
     OSSL_LIB_CTX*           libctx;
+    BIO_METHOD*             corebiometh;
 };
 typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
 typedef void (*fptr_t)(void);

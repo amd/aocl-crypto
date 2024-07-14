@@ -132,5 +132,3 @@ int
 alcp_rsa_get_digest_mode(const char* str);
 int
 alcp_rsa_get_digest_size(alc_digest_mode_t mode);
-void
-alcp_rsa_free(Rsa* r);
