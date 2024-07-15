@@ -36,6 +36,8 @@
 #include <openssl/rsa.h>
 #include <openssl/types.h>
 
+#if OPENSSL_API_LEVEL >= 30100
+
 #define RSA_DEFAULT_DIGEST_NAME OSSL_DIGEST_NAME_SHA1
 // Structure taken from OpenSSL to support unimplemented functions
 struct evp_signature_st
@@ -1104,6 +1106,8 @@ const OSSL_DISPATCH alcp_rsa_signature_functions[] = {
 
 static const char    ASYM_CIPHERS_DEF_PROP[] = "provider=alcp,fips=no";
 const OSSL_ALGORITHM alc_prov_signature[]    = { { ALCP_PROV_NAMES_RSA,
-                                                ASYM_CIPHERS_DEF_PROP,
-                                                alcp_rsa_signature_functions },
-                                              { NULL, NULL, NULL } };
+                                                   ASYM_CIPHERS_DEF_PROP,
+                                                   alcp_rsa_signature_functions },
+                                                 { NULL, NULL, NULL } };
+
+#endif
