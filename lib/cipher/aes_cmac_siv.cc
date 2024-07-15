@@ -67,9 +67,14 @@ alc_error_t
 Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 {
     alc_error_t err       = ALC_ERROR_NONE;
-    Uint64      keyLength = keyLen; // 128/8 = 16
+    Uint64      keyLength = keyLen;
+
     if (pIv != nullptr) {
-        memcpy(m_iv_aes, pIv, ivLen);
+        if (ivLen == 16) {
+            memcpy(m_iv_aes, pIv, ivLen);
+        } else {
+            return ALC_ERROR_INVALID_SIZE;
+        }
     }
 
     if (pKey != nullptr) {

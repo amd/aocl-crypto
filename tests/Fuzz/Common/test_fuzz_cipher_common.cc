@@ -645,7 +645,7 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
             goto AEAD_ENC_ERROR_EXIT;
         }
         err = alcp_cipher_aead_encrypt(
-            handle_encrypt, plaintxt, &ciphertxt[0], len);
+            handle_encrypt, plaintxt, &ciphertxt[0], pt_len);
         if (alcp_is_error(err)) {
             std::cout << "alcp_cipher_aead_encrypt failed" << std::endl;
             goto AEAD_ENC_ERROR_EXIT;

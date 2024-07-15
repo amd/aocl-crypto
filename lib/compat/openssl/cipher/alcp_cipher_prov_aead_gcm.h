@@ -38,7 +38,6 @@
 #include <alcp/cipher.h>
 
 #define GCM_IV_DEFAULT_SIZE 12
-#define GCM_IV_MAX_SIZE     (1024 / 8)
 #define GCM_TAG_MAX_SIZE    16
 
 OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_gcm_einit;

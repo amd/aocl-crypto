@@ -46,10 +46,6 @@
 #define strcasecmp _stricmp
 #endif
 
-#define GCM_IV_DEFAULT_SIZE 12
-#define GCM_IV_MAX_SIZE     (1024 / 8)
-#define GCM_TAG_MAX_SIZE    16
-
 #define AES_MAXNR 14
 
 typedef struct alcp_aes_key_st
