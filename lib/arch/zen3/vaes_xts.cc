@@ -727,7 +727,8 @@ DecryptXts(const Uint8* pSrc,
     }
 
     if (extra_bytes_in_message_block) {
-
+        /* FIXME: there is an array out-of-bounds reported by gcc14.1 in this
+         * memcpy operation. Fix TBD */
         utils::CopyBytes(p_dest8 + (16 * blocks),
                          p_dest8 + (16 * (blocks - 1)),
                          extra_bytes_in_message_block);

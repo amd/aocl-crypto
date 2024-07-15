@@ -46,6 +46,12 @@ ADD_LIBRARY(arch_zen3
 	OBJECT
 	${ZEN3_SRCS})
 
+# FIXME: temporarily suppressing this. Known issue with gcc14
+if(CMAKE_COMPILER_IS_GCC AND CMAKE_COMPILER_GCC_VERSION MATCHES "14")
+	MESSAGE(WARNING "GCC14: Disabling array out of bounds checks (-Wno-array-bounds) for zen3 sources")
+	TARGET_COMPILE_OPTIONS(arch_zen3 PRIVATE "-Wno-array-bounds")
+endif()
+
 IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 	TARGET_COMPILE_DEFINITIONS(arch_zen3 PRIVATE "AES_MULTI_UPDATE")	
 ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
