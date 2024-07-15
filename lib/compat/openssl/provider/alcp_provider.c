@@ -48,7 +48,9 @@ ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 
 #define LOAD_DEFAULT_PROV 0 // to be explored.
 
+#if LOAD_DEFAULT_PROV
 OSSL_PROVIDER* prov_openssl_default;
+#endif
 
 #define ALCP_OPENSSL_VERSION OPENSSL_VERSION_STR
 
@@ -56,10 +58,10 @@ static const OSSL_ALGORITHM*
 ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 {
     ENTER();
-    *no_cache            = 0;
-    prov_openssl_default = OSSL_PROVIDER_load(NULL, "default");
+    *no_cache = 0;
 #if LOAD_DEFAULT_PROV
     static bool is_alcp_prov_init_done = false;
+    prov_openssl_default               = OSSL_PROVIDER_load(NULL, "default");
 
     if (is_alcp_prov_init_done == false) {
         EVP_set_default_properties(NULL, "provider=alcp,fips=no");
@@ -98,13 +100,14 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
                 return alc_prov_keymgmt;
             }
             break;
-        case OSSL_OP_ENCODER:
-        case OSSL_OP_DECODER:
-            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
-                return OSSL_PROVIDER_query_operation(
-                    prov_openssl_default, operation_id, no_cache);
-            }
-            break;
+            // Todo : Enabling this causes memory leaks in asan
+            // case OSSL_OP_ENCODER:
+            // case OSSL_OP_DECODER:
+            //     if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+            //         return OSSL_PROVIDER_query_operation(
+            //             prov_openssl_default, operation_id, no_cache);
+            //     }
+            //     break;
 #endif
         case OSSL_OP_MAC:
             EXIT();
@@ -174,7 +177,9 @@ static void
 ALCP_teardown(void* vctx)
 {
     ENTER();
+    BIO_meth_free(alcp_prov_ctx_get0_core_bio_method(vctx));
     ALCP_prov_freectx(vctx);
+    EXIT();
 }
 
 static const OSSL_DISPATCH ALC_dispatch_table[] = {
