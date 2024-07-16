@@ -20,8 +20,8 @@ Functions
 .. doxygenfunction:: alcp_cipher_request
 .. doxygenfunction:: alcp_cipher_encrypt
 .. doxygenfunction:: alcp_cipher_decrypt
-.. doxygenfunction:: alcp_cipher_blocks_encrypt_xts
-.. doxygenfunction:: alcp_cipher_blocks_decrypt_xts
+.. doxygenfunction:: alcp_cipher_segment_encrypt_xts
+.. doxygenfunction:: alcp_cipher_segment_decrypt_xts
 .. doxygenfunction:: alcp_cipher_init
 .. doxygenfunction:: alcp_cipher_finish
 .. doxygenfunction:: alcp_cipher_aead_context_size

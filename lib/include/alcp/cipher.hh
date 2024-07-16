@@ -88,8 +88,7 @@ namespace alcp { namespace cipher {
         virtual alc_error_t init(const Uint8* pKey,
                                  Uint64       keyLen,
                                  const Uint8* pIv,
-                                 Uint64       ivLen) = 0;
-
+                                 Uint64       ivLen)  = 0;
         virtual alc_error_t decrypt(const Uint8* pSrc,
                                     Uint8*       pDst,
                                     Uint64       len) = 0;
@@ -97,6 +96,35 @@ namespace alcp { namespace cipher {
                                     Uint8*       pDrc,
                                     Uint64       len) = 0;
         virtual alc_error_t finish(const void*) = 0;
+    };
+
+    // iCipher segments
+    class ALCP_API_EXPORT iCipherSeg
+    {
+
+      public:
+        virtual ~iCipherSeg() = default;
+
+        // Set key & iv
+        virtual alc_error_t init(const Uint8* pKey,
+                                 Uint64       keyLen,
+                                 const Uint8* pIv,
+                                 Uint64       ivLen)                   = 0;
+        virtual alc_error_t decrypt(const Uint8* pSrc,
+                                    Uint8*       pDst,
+                                    Uint64       len)                  = 0;
+        virtual alc_error_t encrypt(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       len)                  = 0;
+        virtual alc_error_t decryptSegment(const Uint8* pSrc,
+                                           Uint8*       pDst,
+                                           Uint64       len,
+                                           Uint64       startBlockNum) = 0;
+        virtual alc_error_t encryptSegment(const Uint8* pSrt,
+                                           Uint8*       pDrc,
+                                           Uint64       len,
+                                           Uint64       startBlockNum) = 0;
+        virtual alc_error_t finish(const void*)                  = 0;
     };
 
     // Additional Authentication functionality used for AEAD schemes

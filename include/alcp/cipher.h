@@ -34,8 +34,6 @@
 #include "alcp/key.h"
 #include "alcp/macros.h"
 
-// #define DEBUG_PROV_GCM_INIT 0
-
 EXTERN_C_BEGIN
 
 /**
@@ -254,64 +252,6 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pCipherText,
                     Uint8*                    pPlainText,
                     Uint64                    datalen);
-
-/**
- * @brief    Encrypt plain text and write it to cipher text with provided
- * handle.
- * @parblock <br> &nbsp;
- * <b>This XTS specific API should be called only after @ref
- * alcp_cipher_request and alcp_cipher_init . API is meant to be used with XTS
- * mode.</b>
- * @endparblock
- * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, ctx to be
- * considered valid.
- * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
- * it's the last call. Also last call if there is a paritial block, both partial
- * and a complete block has to be included in the last call to this function.
- * @param [in]   pCipherHandle Session handle for future encrypt decrypt
- *                         operation
- * @param[in]    pPlainText    Pointer to Plain Text
- * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    currPlainTextLen Length of the given plaintext
- * @param[in]    startBlockNum Start block number of given plaintext
- * @return   &nbsp; Error Code for the API called.
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
-                               const Uint8*              pPlainText,
-                               Uint8*                    pCipherText,
-                               Uint64                    currPlainTextLen,
-                               Uint64                    startBlockNum);
-
-/**
- * @brief    Decryption of cipher text and write it to plain text with
- * provided handle.
- * @parblock <br> &nbsp;
- * <b>This XTS specific API should be called only after @ref
- * alcp_cipher_request and alcp_cipher_init. API is meant to be used with XTS
- * mode.</b>
- * @endparblock
- * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
- *           is valid.
- * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
- * it's the last call. Also last call if there is a partial block, both partial
- * and a complete block has to be included in the last call to this function.
- * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
- * operation
- * @param[out]    pPlainText    Pointer to Plain Text
- * @param[in]    pCipherText   Pointer to Cipher Text
- * @param[in]    startBlockNum    Start block number of given plaintext
- * @param[in]    currCipherTextLen    Length of the given Cipher Text
- * @return   &nbsp; Error Code for the API called.
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
-                               const Uint8*              pCipherText,
-                               Uint8*                    pPlainText,
-                               Uint64                    currCipherTextLen,
-                               Uint64                    startBlockNum);
 
 /**
  * FIXME: Need to fix return type of API

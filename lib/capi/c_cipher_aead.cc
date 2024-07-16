@@ -26,8 +26,6 @@
  *
  */
 
-#include <iostream> /* TODO: remove after debug messages */
-
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
 #include "alcp/cipher.hh"

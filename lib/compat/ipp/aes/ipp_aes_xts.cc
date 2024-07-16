@@ -98,7 +98,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     if (!handle.ch_context)
         return ippStsErr;
 
-    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_segment_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -107,7 +107,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     }
 
     // xts init
-    err = alcp_cipher_init(
+    err = alcp_cipher_segment_init(
         &handle, cinfo.ci_key, cinfo.ci_keyLen, pTweakPT, iv_len);
     if (alcp_is_error(err)) {
         printf("Error: unable to init\n");
@@ -121,7 +121,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
 inline void
 alcp_finalizeXTSDirect(alc_cipher_handle_t& handle)
 {
-    alcp_cipher_finish(&handle);
+    alcp_cipher_segment_finish(&handle);
     free(handle.ch_context);
     handle.ch_context = nullptr;
 }
@@ -146,7 +146,7 @@ ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
     if (status != 0) {
         return status;
     }
-    err = alcp_cipher_blocks_encrypt_xts(
+    err = alcp_cipher_segment_encrypt_xts(
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
@@ -178,7 +178,7 @@ ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
     if (status != 0) {
         return status;
     }
-    err = alcp_cipher_blocks_decrypt_xts(
+    err = alcp_cipher_segment_decrypt_xts(
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");

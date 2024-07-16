@@ -111,34 +111,7 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
     return utils::GetSbox(offset, use_invsbox);
 }
 
-#define AES_XTS_CLASS_GEN(CHILD_NEW, PARENT)                                   \
-    class ALCP_API_EXPORT CHILD_NEW : public PARENT                            \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(alc_cipher_data_t* ctx)                                      \
-            : PARENT(ctx){};                                                   \
-        ~CHILD_NEW(){};                                                        \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(const Uint8* pPlainText,                           \
-                            Uint8*       pCipherText,                          \
-                            Uint64       len);                                       \
-                                                                               \
-        alc_error_t decrypt(const Uint8* pCipherText,                          \
-                            Uint8*       pPlainText,                           \
-                            Uint64       len);                                       \
-                                                                               \
-        Status encryptBlocksXts(const Uint8* pSrc,                             \
-                                Uint8*       pDest,                            \
-                                Uint64       currSrcLen,                       \
-                                Uint64       startBlockNum);                         \
-                                                                               \
-        Status decryptBlocksXts(const Uint8* pSrc,                             \
-                                Uint8*       pDest,                            \
-                                Uint64       currSrcLen,                       \
-                                Uint64       startBlockNum);                         \
-    };
-
+/* iCipher classes */
 // vaes512 classes
 CIPHER_CLASS_GEN_N(vaes512, Xts128, Xts, virtual iCipher, 128 / 8)
 CIPHER_CLASS_GEN_N(vaes512, Xts256, Xts, virtual iCipher, 256 / 8)
@@ -150,5 +123,18 @@ CIPHER_CLASS_GEN_N(vaes, Xts256, Xts, virtual iCipher, 256 / 8)
 // aesni classes
 CIPHER_CLASS_GEN_N(aesni, Xts128, Xts, virtual iCipher, 128 / 8)
 CIPHER_CLASS_GEN_N(aesni, Xts256, Xts, virtual iCipher, 256 / 8)
+
+/* iCipherSeg classes */
+// vaes512 classes
+CIPHERBLOCKS_CLASS_GEN_N(vaes512, XtsBlock128, Xts, virtual iCipherSeg, 128 / 8)
+CIPHERBLOCKS_CLASS_GEN_N(vaes512, XtsBlock256, Xts, virtual iCipherSeg, 256 / 8)
+
+// vaes classes
+CIPHERBLOCKS_CLASS_GEN_N(vaes, XtsBlock128, Xts, virtual iCipherSeg, 128 / 8)
+CIPHERBLOCKS_CLASS_GEN_N(vaes, XtsBlock256, Xts, virtual iCipherSeg, 256 / 8)
+
+// aesni classes
+CIPHERBLOCKS_CLASS_GEN_N(aesni, XtsBlock128, Xts, virtual iCipherSeg, 128 / 8)
+CIPHERBLOCKS_CLASS_GEN_N(aesni, XtsBlock256, Xts, virtual iCipherSeg, 256 / 8)
 
 } // namespace alcp::cipher

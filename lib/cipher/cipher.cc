@@ -221,6 +221,27 @@ CipherFactory<iCipher>::getCipher()
 
 template<>
 void
+CipherFactory<iCipherSeg>::getCipher()
+{
+    // Non-AEAD ciphers
+    switch (m_cipher_mode) {
+        case CipherMode::eAesXTS:
+            m_iCipher = getMode<iCipherSeg,
+                                XtsBlock128_vaes512,
+                                XtsBlock256_vaes512,
+                                XtsBlock128_vaes,
+                                XtsBlock256_vaes,
+                                XtsBlock128_aesni,
+                                XtsBlock256_aesni>(m_keyLen, m_arch);
+            break;
+        default:
+            m_iCipher = nullptr;
+            break;
+    }
+}
+
+template<>
+void
 CipherFactory<iCipherAead>::getCipher()
 {
     // AEAD ciphers
@@ -404,6 +425,16 @@ CipherFactory<iCipher>::initCipherMap()
 
 template<>
 void
+CipherFactory<iCipherSeg>::initCipherMap()
+{
+    m_cipherMap = {
+        { "aes-xts-128", { CipherMode::eAesCBC, CipherKeyLen::eKey128Bit } },
+        { "aes-xts-256", { CipherMode::eAesCBC, CipherKeyLen::eKey256Bit } },
+    };
+}
+
+template<>
+void
 CipherFactory<iCipherAead>::initCipherMap()
 {
     m_cipherMap = {
@@ -448,5 +479,6 @@ CipherFactory<INTERFACE>::~CipherFactory()
 
 template class CipherFactory<iCipherAead>;
 template class CipherFactory<iCipher>;
+template class CipherFactory<iCipherSeg>;
 
 } // namespace alcp::cipher

@@ -303,7 +303,6 @@ BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
         256));
 }
 
-#if 0
 using alcp::benchmarking::cipher::BenchXtsCipherExperimental;
 using alcp::testing::cipher::xts::XtsCipherFactory;
 
@@ -346,7 +345,6 @@ BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
         XtsCipherFactory<false>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
-#endif
 
 using alcp::testing::cipher::CipherFactory;
 using alcp::testing::cipher::LibrarySelect;
@@ -424,7 +422,6 @@ main(int argc, char** argv)
     BENCHMARK(BENCH_AES_DECRYPT_GCM_256)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
-#if 0
     // XTS
     BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
@@ -437,7 +434,7 @@ main(int argc, char** argv)
 
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
-#endif
+
     // if (::benchmark::ReportUnrecognizedArguments(argc, argv))
     //     return 1;
     ::benchmark::RunSpecifiedBenchmarks();
