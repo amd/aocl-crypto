@@ -63,40 +63,6 @@ CipherAeadBench(benchmark::State& state,
     alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8]      = {};
     alcp::testing::CipherAeadBase* p_cb                        = nullptr;
 
-    alcp::testing::AlcpCipherAeadBase acb = alcp::testing::AlcpCipherAeadBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, cBlockSize);
-
-    p_cb = &acb;
-#ifdef USE_IPP
-    std::unique_ptr<alcp::testing::IPPCipherAeadBase> icb;
-    if (useipp) {
-        icb = std::make_unique<alcp::testing::IPPCipherAeadBase>(
-            cipher_type,
-            alcpMode,
-            iv,
-            12,
-            reinterpret_cast<Uint8*>(key),
-            keylen,
-            reinterpret_cast<Uint8*>(tkey),
-            cBlockSize);
-        p_cb = icb.get();
-    }
-#endif
-#ifdef USE_OSSL
-    std::unique_ptr<alcp::testing::OpenSSLCipherAeadBase> ocb;
-    if (useossl) {
-        ocb = std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(
-            cipher_type,
-            alcpMode,
-            iv,
-            12,
-            reinterpret_cast<Uint8*>(key),
-            keylen,
-            reinterpret_cast<Uint8*>(tkey),
-            cBlockSize);
-        p_cb = ocb.get();
-    }
-#endif
     alcp::testing::alcp_dca_ex_t data;
     data.m_in      = vec_in_arr;
     data.m_inl     = cBlockSize;
@@ -112,6 +78,51 @@ CipherAeadBench(benchmark::State& state,
     data.m_tkey    = tkey;
     data.m_tkeyl   = 16;
 
+    if (alcpMode == ALC_AES_MODE_SIV) {
+        data.m_ivl = 16;
+    }
+
+    alcp::testing::AlcpCipherAeadBase acb =
+        alcp::testing::AlcpCipherAeadBase(cipher_type,
+                                          alcpMode,
+                                          data.m_iv,
+                                          data.m_ivl,
+                                          key,
+                                          keylen,
+                                          data.m_tkey,
+                                          data.m_outl);
+
+    p_cb = &acb;
+#ifdef USE_IPP
+    std::unique_ptr<alcp::testing::IPPCipherAeadBase> icb;
+    if (useipp) {
+        icb  = std::make_unique<alcp::testing::IPPCipherAeadBase>(cipher_type,
+                                                                 alcpMode,
+                                                                 data.m_iv,
+                                                                 data.m_ivl,
+                                                                 key,
+                                                                 keylen,
+                                                                 data.m_tkey,
+                                                                 data.m_outl);
+        p_cb = icb.get();
+    }
+#endif
+#ifdef USE_OSSL
+    std::unique_ptr<alcp::testing::OpenSSLCipherAeadBase> ocb;
+    if (useossl) {
+        ocb =
+            std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(cipher_type,
+                                                                   alcpMode,
+                                                                   data.m_iv,
+                                                                   data.m_ivl,
+                                                                   key,
+                                                                   keylen,
+                                                                   data.m_tkey,
+                                                                   data.m_outl);
+        p_cb = ocb.get();
+    }
+#endif
+
     if (!enc
         && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM
             || alcpMode == ALC_AES_MODE_SIV)) {
@@ -126,7 +137,6 @@ CipherAeadBench(benchmark::State& state,
             memcpy(iv, data.m_tag, 16);
             // Since the tag of 16 bytes is copied to iv, iv length has to be
             // reset to 16 bytes
-            data.m_ivl = 16;
         }
     }
 
