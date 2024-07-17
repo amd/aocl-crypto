@@ -28,6 +28,7 @@
 
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
+#include "alcp/cipher_segment.h"
 #include "alcp/cipher.hh"
 
 #include "alcp/capi/cipher/ctx.hh"
