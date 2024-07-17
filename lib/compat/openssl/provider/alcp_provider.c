@@ -123,9 +123,6 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             break;
 #endif
         default:
-            /* printing this to avoid unused variable error for openssl version
-             * check case above */
-            printf("Using openssl version: %s\n", openssl_version);
             break;
     }
 
