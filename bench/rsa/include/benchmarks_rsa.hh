@@ -61,6 +61,7 @@ std::vector<Int64> rsa_key_sizes_sign = { 2048 };
 /* bench function */
 inline int
 Rsa_Bench(benchmark::State&       state,
+          std::string             RsaAlgo,
           rsa_bench_opt           opt,
           int                     padding_mode,
           int                     KeySize,
@@ -96,20 +97,18 @@ Rsa_Bench(benchmark::State&       state,
 #endif
 
     rb->m_padding_mode = padding_mode;
+    rb->m_rsa_algo     = RsaAlgo;
 
     /* for encrypt/ decrypt */
-    if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
+    if (padding_mode != ALCP_TEST_RSA_NO_PADDING) {
         /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
         if (KeySize == 128) {
             InputSize = 62;
         } else
             InputSize = 47;
-    } else if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+    } else {
+        /* for no padding, input size = key size */
         InputSize = KeySize;
-    }
-    /* this is for sign / verify :which uses either PSS or PKCS */
-    else {
-        InputSize = 48;
     }
     /*FIXME: keeping input const for now, a valid data for now */
     std::vector<Uint8> input_data(InputSize, 30);
@@ -239,6 +238,7 @@ BENCH_RSA_DecryptPvtKey_OAEP_Padding(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "EncryptDecrypt",
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_PADDING_OAEP,
                                        state.range(0),
@@ -255,6 +255,7 @@ BENCH_RSA_DecryptPvtKey_NoPadding(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "EncryptDecrypt",
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        state.range(0),
@@ -271,6 +272,7 @@ BENCH_RSA_EncryptPubKey_OAEP_Padding(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "EncryptDecrypt",
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_PADDING_OAEP,
                                        state.range(0),
@@ -287,6 +289,7 @@ BENCH_RSA_EncryptPubKey_NoPadding(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "EncryptDecrypt",
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        state.range(0),
@@ -303,6 +306,7 @@ BENCH_RSA_Sign_PSS(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "SignVerify",
                                        RSA_BENCH_SIGN,
                                        ALCP_TEST_RSA_PADDING_PSS,
                                        state.range(0),
@@ -318,6 +322,7 @@ BENCH_RSA_Sign_PKCS(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "SignVerify",
                                        RSA_BENCH_SIGN,
                                        ALCP_TEST_RSA_PADDING_PKCS,
                                        state.range(0),
@@ -333,6 +338,7 @@ BENCH_RSA_Verify_PSS(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "SignVerify",
                                        RSA_BENCH_VERIFY,
                                        ALCP_TEST_RSA_PADDING_PSS,
                                        state.range(0),
@@ -348,6 +354,7 @@ BENCH_RSA_Verify_PKCS(benchmark::State& state)
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo       = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       "SignVerify",
                                        RSA_BENCH_VERIFY,
                                        ALCP_TEST_RSA_PADDING_PKCS,
                                        state.range(0),
