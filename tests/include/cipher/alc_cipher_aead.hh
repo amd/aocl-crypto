@@ -39,6 +39,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
   private:
     alc_cipher_handle_p m_handle = nullptr;
     alc_cipher_mode_t   m_mode;
+    alc_cipher_type_t   m_cipher_type;
     Uint64              m_keyLen;
 
     const Uint8* m_key;
@@ -128,6 +129,9 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return true -  if no failure
      * @return false - if there is some failure
      */
+
+    template<bool enc>
+    inline bool alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data);
     ~AlcpCipherAeadBase();
 
     bool init(const Uint8* iv,

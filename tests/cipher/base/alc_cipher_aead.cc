@@ -35,9 +35,9 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const alc_cipher_mode_t cMode,
                                        const Uint8*            iv)
     : m_mode{ cMode }
+    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{
-}
+{}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const alc_cipher_mode_t cMode,
@@ -60,6 +60,7 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const Uint8*            tkey,
                                        const Uint64            cBlockSize)
     : m_mode{ cMode }
+    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
 {
     init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
@@ -140,7 +141,7 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     }
 
     // request params
-    m_cinfo.ci_type = ALC_CIPHER_TYPE_AES;
+    m_cinfo.ci_type = m_cipher_type;
     m_cinfo.ci_mode = m_mode;
 
     // init params
@@ -196,6 +197,8 @@ AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
             return alcpCCMModeToFuncCall<cEnc>(aead_data);
         case ALC_AES_MODE_SIV:
             return alcpSIVModeToFuncCall<cEnc>(aead_data);
+        case ALC_CHACHA20_POLY1305:
+            return alcpChachaPolyModeToFuncCall<cEnc>(aead_data);
         default:
             return false; // Should not come here
     }
@@ -213,9 +216,83 @@ AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
             return alcpCCMModeToFuncCall<cEnc>(aead_data);
         case ALC_AES_MODE_SIV:
             return alcpSIVModeToFuncCall<cEnc>(aead_data);
+        case ALC_CHACHA20_POLY1305:
+            return alcpChachaPolyModeToFuncCall<cEnc>(aead_data);
         default:
             return false; // Should not come here
     }
+}
+
+template<bool enc>
+bool
+AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
+{
+    alc_error_t err;
+    const int   cErrSize = 256;
+    Uint8       err_buff[cErrSize];
+
+    err =
+        alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
+    if (alcp_is_error(err)) {
+        std::cout << __func__ << ":Err:alcp_cipher_aead_init" << std::endl;
+        alcp_error_str(err, err_buff, cErrSize);
+        std::cout << "Error:" << err_buff << std::endl;
+        return false;
+    }
+
+    if (aead_data.m_adl > 0) {
+        err =
+            alcp_cipher_aead_set_aad(m_handle, aead_data.m_ad, aead_data.m_adl);
+        if (alcp_is_error(err)) {
+            std::cout << __func__ << ":Err:alcp_cipher_aead_set_aad"
+                      << std::endl;
+            alcp_error_str(err, err_buff, cErrSize);
+            std::cout << "Error:" << err_buff << std::endl;
+            return false;
+        }
+    }
+
+    if constexpr (enc) {
+        err = alcp_cipher_aead_encrypt(
+            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
+        if (alcp_is_error(err)) {
+            std::cout << __func__ << ":Err:alcp_cipher_aead_encrypt"
+                      << std::endl;
+            alcp_error_str(err, err_buff, cErrSize);
+            std::cout << "Error:" << err_buff << std::endl;
+            return false;
+        }
+        err = alcp_cipher_aead_get_tag(
+            m_handle, aead_data.m_tag, aead_data.m_tagl);
+        if (alcp_is_error(err)) {
+            std::cout << __func__ << ":Err:alcp_cipher_aead_get_tag"
+                      << std::endl;
+            alcp_error_str(err, err_buff, cErrSize);
+            std::cout << "Error:" << err_buff << std::endl;
+            return false;
+        }
+    } else {
+        err = alcp_cipher_aead_decrypt(
+            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
+        if (alcp_is_error(err)) {
+            std::cout << __func__ << ":Err:alcp_cipher_aead_decrypt"
+                      << std::endl;
+            alcp_error_str(err, err_buff, cErrSize);
+            std::cout << "Error:" << err_buff << std::endl;
+            return false;
+        }
+
+        err = alcp_cipher_aead_get_tag(
+            m_handle, aead_data.m_tag, aead_data.m_tagl);
+        if (alcp_is_error(err)) {
+            std::cout << __func__ << ":Err:alcp_cipher_aead_get_tag"
+                      << std::endl;
+            alcp_error_str(err, err_buff, cErrSize);
+            std::cout << "Error:" << err_buff << std::endl;
+            return false;
+        }
+    }
+    return true;
 }
 
 template<bool enc>

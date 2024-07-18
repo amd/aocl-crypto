@@ -329,7 +329,7 @@ EncDecType(encDec_t e_d, big_small_t b_s)
 // Non AEAD Version
 /* print params verbosely */
 inline void
-PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
+PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, alc_cipher_mode_t mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " Len: " << key.size() << std::endl;
@@ -339,7 +339,7 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
               << " Len: " << data.m_ivl << std::endl;
     std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
               << " Len: " << data.m_outl << std::endl;
-    if (mode.compare("XTS") == 0) {
+    if (GetModeSTR(mode).compare("XTS") == 0) {
         std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
                   << " Len: " << data.m_tkeyl << std::endl;
     }
@@ -349,7 +349,9 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
 // FIXME: Reduce the dupication
 // AEAD Version
 inline void
-PrintTestData(std::vector<Uint8> key, alcp_dca_ex_t data, std::string mode)
+PrintTestDataAead(std::vector<Uint8> key,
+                  alcp_dca_ex_t      data,
+                  alc_cipher_mode_t  mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " Len: " << key.size() << std::endl;
@@ -360,13 +362,13 @@ PrintTestData(std::vector<Uint8> key, alcp_dca_ex_t data, std::string mode)
     std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
               << " Len: " << data.m_outl << std::endl;
     /* gcm / ccm / xts specific */
-    if (mode.compare("GCM") == 0 || mode.compare("CCM") == 0) {
+    if (CheckCipherIsAEAD(mode)) {
         std::cout << "ADL: " << parseBytesToHexStr(data.m_ad, data.m_adl)
                   << " Len: " << data.m_adl << std::endl;
         std::cout << "TAG: " << parseBytesToHexStr(data.m_tag, data.m_tagl)
                   << " Len: " << data.m_tagl << std::endl;
     }
-    if (mode.compare("XTS") == 0) {
+    if (GetModeSTR(mode).compare("XTS") == 0) {
         std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
                   << " Len: " << data.m_tkeyl << std::endl;
     }
@@ -545,8 +547,8 @@ CipherCrossTest(int               keySize,
                 }
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestData(key, data_alc, mode);
+                    PrintTestData(key, data_ext, mode);
                 }
             } else {
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
@@ -564,8 +566,8 @@ CipherCrossTest(int               keySize,
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
 
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestData(key, data_alc, mode);
+                    PrintTestData(key, data_ext, mode);
                 }
             }
         }
@@ -594,19 +596,27 @@ CipherAeadCrossTest(int               keySize,
     int         key_size = keySize;
     int         LOOP_START, MAX_LOOP, INC_LOOP;
     size_t      size = 1;
-    std::string encDecStr, big_small_str;
-    std::string modeStr = GetModeSTR(mode);
-    Int32       ivl, adl, tkeyl = 16;
+    std::string encDecStr, big_small_str, modeStr = "";
+    Int32       ivl, adl, tkeyl                   = 16;
     bool        ret       = false;
     Int32       IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
-    bool isxts = (modeStr.compare("XTS") == 0);
-    bool isgcm = (modeStr.compare("GCM") == 0);
-    bool isccm = (modeStr.compare("CCM") == 0);
-    bool issiv = (modeStr.compare("SIV") == 0);
+    modeStr = GetModeSTR(mode);
 
+    bool isxts        = (modeStr.compare("XTS") == 0);
+    bool isgcm        = (modeStr.compare("GCM") == 0);
+    bool isccm        = (modeStr.compare("CCM") == 0);
+    bool issiv        = (modeStr.compare("SIV") == 0);
+    bool ischachapoly = (modeStr.compare("chacha20-poly1305") == 0);
+
+    /*ensure that non-aead modes are not passed into this function*/
+    if (!CheckCipherIsAEAD(mode)) {
+        std::cout << "Error! Mode " << modeStr
+                  << " is not an AEAD Cipher! exiting this test!";
+        GTEST_FAIL();
+    }
     /* IV, AD Length limits for different cases */
     if (isccm) {
         IVL_START = 7;
@@ -617,6 +627,11 @@ CipherAeadCrossTest(int               keySize,
         IVL_START = 16;
         IVL_MAX   = 16;
         ADL_START = 16;
+        ADL_MAX   = 16;
+    } else if (ischachapoly) {
+        IVL_START = 12;
+        IVL_MAX   = 12;
+        ADL_START = 12;
         ADL_MAX   = 16;
     } else if (isgcm) {
         IVL_START = 12;
@@ -752,7 +767,7 @@ CipherAeadCrossTest(int               keySize,
             data_alc.m_ivl  = iv.size();
             data_alc.m_out  = &(out_ct_alc[0]);
             data_alc.m_outl = data_alc.m_inl;
-            if (isgcm || isccm || issiv) {
+            if (isgcm || isccm || issiv || ischachapoly) {
                 data_alc.m_ad      = &(add[0]);
                 data_alc.m_adl     = add.size();
                 data_alc.m_tag     = &(tag_alc[0]);
@@ -769,7 +784,7 @@ CipherAeadCrossTest(int               keySize,
             data_ext.m_ivl  = iv.size();
             data_ext.m_out  = &(out_ct_ext[0]);
             data_ext.m_outl = data_alc.m_inl;
-            if (isgcm || isccm || issiv) {
+            if (isgcm || isccm || issiv || ischachapoly) {
                 data_ext.m_ad      = &(add[0]);
                 data_ext.m_adl     = add.size();
                 data_ext.m_tag     = &(tag_ext[0]);
@@ -795,15 +810,15 @@ CipherAeadCrossTest(int               keySize,
                 }
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 /* for gcm*/
-                if (isgcm || isccm) {
+                if (isgcm || isccm || ischachapoly) {
                     EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestDataAead(key, data_alc, mode);
+                    PrintTestDataAead(key, data_ext, mode);
                 }
             } else {
-                if (isgcm || isccm || issiv) {
+                if (isgcm || isccm || issiv || ischachapoly) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc,
                                                                      key);
                     // TAG is IV for decrypt in SIV mode.
@@ -825,7 +840,7 @@ CipherAeadCrossTest(int               keySize,
                 }
 
                 /*ext lib decrypt */
-                if (isgcm || isccm || issiv) {
+                if (isgcm || isccm || issiv || ischachapoly) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_ext,
                                                                      key);
                     // TAG is IV for decrypt in SIV mode.
@@ -862,12 +877,12 @@ CipherAeadCrossTest(int               keySize,
                             EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                         }
                     }
-                } else if (!(isgcm || isccm)) {
+                } else if (!(isgcm || isccm || ischachapoly)) {
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestDataAead(key, data_alc, mode);
+                    PrintTestDataAead(key, data_ext, mode);
                 }
             }
         }
@@ -892,7 +907,7 @@ bool
 RunCipherKatTest(CipherTestingCore& testingCore,
                  encDec_t           encDec,
                  std::string        encDecStr,
-                 std::string        modeStr,
+                 alc_cipher_mode_t  mode,
                  int                keySize)
 {
     // FIXME: isxts and isgcm unused
@@ -905,6 +920,8 @@ RunCipherKatTest(CipherTestingCore& testingCore,
     std::vector<Uint8>   tkey            = csv->getVect("TWEAK_KEY");
     std::vector<Uint8>   actual_output   = {};
     std::vector<Uint8>   expected_output = {};
+
+    std::string modeStr = GetModeSTR(mode);
 
     /* check if unsupported (NULL) test vectors */
     if (pt.empty() || ct.empty()) {
@@ -941,6 +958,8 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             std::cout << "ERROR: Enc" << std::endl;
             EXPECT_TRUE(ret);
         }
+        if (verbose > 1)
+            PrintTestData(csv->getVect("KEY"), data, mode);
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
@@ -969,6 +988,8 @@ RunCipherKatTest(CipherTestingCore& testingCore,
                     *(testingCore.getCsv()),
                     std::string("AES_" + modeStr + "_" + std::to_string(keySize)
                                 + encDecStr)));
+    if (verbose > 1)
+        PrintTestData(csv->getVect("KEY"), data, mode);
 
     return ret;
 }
@@ -977,9 +998,9 @@ bool
 RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
                      encDec_t               encDec,
                      std::string            encDecStr,
-                     std::string            modeStr,
+                     alc_cipher_mode_t      mode,
                      int                    keySize,
-                     bool                   isCcm,
+                     bool                   isSiv,
                      bool                   isGcm)
 {
     bool                 ret = false;
@@ -996,6 +1017,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
     std::vector<Uint8>   ctrkey  = csv->getVect("CTR_KEY");
 
+    std::string modeStr = GetModeSTR(mode);
     /* check if unsupported (NULL) test vectors for gcm */
     if (modeStr.compare("GCM") == 0 && (pt.empty() || ct.empty())) {
         std::cout << "UnSupported test vector! Null PT/CT" << std::endl;
@@ -1020,7 +1042,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_adl = ad.size();
         }
     }
-    if (isCcm && isGcm) {
+    if (isSiv && isGcm) {
         iv = csv->getVect("TAG"); // Let tag be IV (which is techically true
                                   // but not good idea)
     }
@@ -1034,10 +1056,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         if (outct.size())
             data.m_out = &(outct[0]);
         data.m_outl = data.m_inl;
-        if (isCcm && isGcm) {
+        if (isSiv && isGcm) {
             data.m_tkey  = &(ctrkey[0]);
             data.m_tkeyl = tkey.size();
-        } else if (isCcm) {
+        } else if (isSiv) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = pt.size();
@@ -1055,7 +1077,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
                         std::string("AES_" + modeStr + "_"
                                     + std::to_string(keySize) + encDecStr)));
 
-        if (isGcm || (isGcm && isCcm)) {
+        if (isGcm || (isGcm && isSiv)) {
             EXPECT_TRUE(ArraysMatch(outtag,
                                     csv->getVect("TAG"),
                                     *(csv.get()),
@@ -1065,6 +1087,8 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         }
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
+        if (verbose > 1)
+            PrintTestDataAead(csv->getVect("KEY"), data, mode);
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
@@ -1076,10 +1100,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_out = &(outpt[0]);
         data.m_outl = data.m_inl;
         // FIXME: Ugly solution, this is SIV
-        if (isCcm && isGcm) {
+        if (isSiv && isGcm) {
             data.m_tkey  = &(ctrkey[0]);
             data.m_tkeyl = tkey.size();
-        } else if (isCcm) {
+        } else if (isSiv) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = ct.size();
@@ -1101,6 +1125,8 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
                                     + std::to_string(keySize) + encDecStr)));
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
+        if (verbose > 1)
+            PrintTestDataAead(csv->getVect("KEY"), data, mode);
     }
     return ret;
 }
@@ -1142,19 +1168,20 @@ CipherKatTest(int               keySize,
             continue;
         }
 
-        retval = RunCipherKatTest(
-            testing_core, encDec, encDecStr, cModeStr, keySize);
+        retval =
+            RunCipherKatTest(testing_core, encDec, encDecStr, mode, keySize);
 
         EXPECT_TRUE(retval);
     }
 }
 
 /**
- * @brief Function to run KAT for AES Schemes CTR,CFB,OFB,CBC,XTS
+ * @brief Function to run KAT for AES (GCM,CCM,SIV), and non AES
+ * (Chacha20-Poly1305) AEAD schemes
  *
  * @param keySize keysize in bits(128,192,256)
  * @param encDec enum for encryption or decryption
- * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
+ * @param mode Aode of encryption/Decryption (GCM,CCM,SIV,Chacha20-Poly1305)
  */
 void
 CipherAeadKatTest(int               keySize,
@@ -1165,10 +1192,10 @@ CipherAeadKatTest(int               keySize,
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
     std::string       encDecStr;
-    bool              isxts = (cModeStr.compare("XTS") == 0);
     bool              isgcm = (cModeStr.compare("GCM") == 0);
     bool              isccm = (cModeStr.compare("CCM") == 0);
     bool              issiv = (cModeStr.compare("SIV") == 0);
+    bool ischachapoly       = (cModeStr.compare("chacha20-poly1305") == 0);
 
     /*ensure that non-aead modes are not passed into this function*/
     if (!CheckCipherIsAEAD(mode)) {
@@ -1199,10 +1226,10 @@ CipherAeadKatTest(int               keySize,
         retval = RunCipherAeadKATTest(testing_core,
                                       encDec,
                                       encDecStr,
-                                      cModeStr,
+                                      mode,
                                       keySize,
-                                      isxts || issiv, // FIXME: Not good design
-                                      isgcm || isccm || issiv);
+                                      issiv, // FIXME: Not good design
+                                      isgcm || isccm || issiv || ischachapoly);
         EXPECT_TRUE(retval);
     }
 }

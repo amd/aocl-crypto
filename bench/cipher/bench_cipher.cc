@@ -123,11 +123,9 @@ CipherAeadBench(benchmark::State& state,
     }
 #endif
 
-    if (!enc
-        && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM
-            || alcpMode == ALC_AES_MODE_SIV)) {
+    if (!enc && alcp::testing::CheckCipherIsAEAD(alcpMode)) {
         if (!p_cb->encrypt(data)) {
-            state.SkipWithError("GCM / CCM : BENCH_ENC_FAILURE");
+            state.SkipWithError("AEAD : BENCH_ENC_FAILURE");
         }
         data.m_in  = vec_out_arr;
         data.m_out = vec_in_arr;
@@ -135,8 +133,8 @@ CipherAeadBench(benchmark::State& state,
         // cb->init(key, keylen);
         if (alcpMode == ALC_AES_MODE_SIV) {
             memcpy(iv, data.m_tag, 16);
-            // Since the tag of 16 bytes is copied to iv, iv length has to be
-            // reset to 16 bytes
+            // Since the tag of 16 bytes is copied to iv, iv length has to
+            // be reset to 16 bytes
         }
     }
 
@@ -737,6 +735,27 @@ BENCH_CHACHA20_DECRYPT_256(benchmark::State& state)
                                          256));
 }
 
+static void
+BENCH_CHACHA20_POLY1305_ENCRYPT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(CipherAeadBench(state,
+                                             state.range(0),
+                                             ENCRYPT,
+                                             ALC_CIPHER_TYPE_CHACHA20_POLY1305,
+                                             ALC_CHACHA20_POLY1305,
+                                             256));
+}
+static void
+BENCH_CHACHA20_POLY1305_DECRYPT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(CipherAeadBench(state,
+                                             state.range(0),
+                                             DECRYPT,
+                                             ALC_CIPHER_TYPE_CHACHA20_POLY1305,
+                                             ALC_CHACHA20_POLY1305,
+                                             256));
+}
+
 int
 AddBenchmarks()
 {
@@ -744,6 +763,10 @@ AddBenchmarks()
     if (!useipp) {
         BENCHMARK(BENCH_CHACHA20_ENCRYPT_256)->ArgsProduct({ blocksizes });
         BENCHMARK(BENCH_CHACHA20_DECRYPT_256)->ArgsProduct({ blocksizes });
+        BENCHMARK(BENCH_CHACHA20_POLY1305_ENCRYPT_256)
+            ->ArgsProduct({ blocksizes });
+        BENCHMARK(BENCH_CHACHA20_POLY1305_DECRYPT_256)
+            ->ArgsProduct({ blocksizes });
     }
     BENCHMARK(BENCH_AES_ENCRYPT_CBC_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CTR_128)->ArgsProduct({ blocksizes });

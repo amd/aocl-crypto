@@ -73,6 +73,8 @@ OpenSSLCipherAeadBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
                 case 256:
                     return EVP_CIPHER_fetch(NULL, "AES-256-SIV", NULL);
             }
+        case ALC_CHACHA20_POLY1305:
+            return EVP_chacha20_poly1305();
         default:
             return nullptr;
     }
@@ -82,8 +84,7 @@ OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
                                              const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
                                              const alc_cipher_mode_t cMode,
                                              const Uint8*            iv,
@@ -264,6 +265,28 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
                 return false;
             }
             break;
+        case ALC_CHACHA20_POLY1305:
+            if (1
+                != EVP_EncryptInit_ex(
+                    m_ctx_enc,
+                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
+                    NULL,
+                    NULL,
+                    NULL)) {
+                handleErrors();
+                return false;
+            }
+            if (1
+                != EVP_CIPHER_CTX_ctrl(
+                    m_ctx_enc, EVP_CTRL_GCM_SET_IVLEN, m_iv_len, NULL)) {
+                handleErrors();
+                return false;
+            }
+            if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv)) {
+                handleErrors();
+                return false;
+            }
+            break;
         default: // Should not come here
             return false;
     }
@@ -304,7 +327,6 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             }
             break;
         case ALC_AES_MODE_CCM:
-
             if (1
                 != EVP_DecryptInit_ex(
                     m_ctx_dec,
@@ -324,7 +346,6 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             }
             break;
         case ALC_AES_MODE_SIV:
-
             // For SIV (Synthetic Initialization Vector), there is no IV
             // passed from Application side.
             EVP_CIPHER_free((EVP_CIPHER*)m_cipher_siv);
@@ -333,6 +354,30 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             if (1
                 != EVP_DecryptInit_ex(
                     m_ctx_dec, m_cipher_siv, NULL, m_key, NULL)) {
+                handleErrors();
+                return false;
+            }
+            break;
+        case ALC_CHACHA20_POLY1305:
+            if (1
+                != EVP_DecryptInit_ex(
+                    m_ctx_dec,
+                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
+                    NULL,
+                    NULL,
+                    NULL)) {
+                handleErrors();
+                return false;
+            }
+            /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
+            if (1
+                != EVP_CIPHER_CTX_ctrl(
+                    m_ctx_dec, EVP_CTRL_GCM_SET_IVLEN, m_iv_len, NULL)) {
+                handleErrors();
+                return false;
+            }
+            /* Initialise key and IV */
+            if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv)) {
                 handleErrors();
                 return false;
             }
@@ -388,8 +433,43 @@ OpenSSLCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
         /* Get the tag */
         if (data.m_tagl != 0)
             if (1
-                != EVP_CIPHER_CTX_ctrl(
-                    m_ctx_enc, EVP_CTRL_GCM_GET_TAG, data.m_tagl, data.m_tag)) {
+                != EVP_CIPHER_CTX_ctrl(m_ctx_enc,
+                                       EVP_CTRL_AEAD_GET_TAG,
+                                       data.m_tagl,
+                                       data.m_tag)) {
+                std::cout << "Error: Tag Creation Failed" << std::endl;
+                std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
+                handleErrors();
+                return false;
+            }
+    } else if (m_mode == ALC_CHACHA20_POLY1305) {
+        if (data.m_adl > 0)
+            if (1
+                != EVP_EncryptUpdate(
+                    m_ctx_enc, NULL, &len_ct, data.m_ad, data.m_adl)) {
+                std::cout << "Error: Additional Data" << std::endl;
+                handleErrors();
+                return false;
+            }
+        if (1
+            != EVP_EncryptUpdate(
+                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
+            std::cout << "Error: Encrypt Data" << std::endl;
+            handleErrors();
+            return false;
+        }
+        if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.m_out + len_ct, &len_ct)) {
+            std::cout << "Error: Finalize" << std::endl;
+            handleErrors();
+            return false;
+        }
+        /* Get the tag */
+        if (data.m_tagl != 0)
+            if (1
+                != EVP_CIPHER_CTX_ctrl(m_ctx_enc,
+                                       EVP_CTRL_AEAD_GET_TAG,
+                                       data.m_tagl,
+                                       data.m_tag)) {
                 std::cout << "Error: Tag Creation Failed" << std::endl;
                 std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
                 handleErrors();
@@ -521,7 +601,6 @@ OpenSSLCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
     alcp_dca_ex_t data = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
 #if 1
     if (m_mode == ALC_AES_MODE_GCM) {
-
         if (data.m_adl > 0)
             if (1
                 != EVP_DecryptUpdate(
@@ -530,7 +609,6 @@ OpenSSLCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
                 handleErrors();
                 return false;
             }
-
         if (1
             != EVP_DecryptUpdate(
                 m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
@@ -538,25 +616,55 @@ OpenSSLCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
             handleErrors();
             return false;
         }
-
         if (data.m_tagl > 0)
             if (1
-                != EVP_CIPHER_CTX_ctrl(
-                    m_ctx_dec, EVP_CTRL_GCM_SET_TAG, data.m_tagl, data.m_tag)) {
+                != EVP_CIPHER_CTX_ctrl(m_ctx_dec,
+                                       EVP_CTRL_AEAD_SET_TAG,
+                                       data.m_tagl,
+                                       data.m_tag)) {
                 std::cout << "Error: Tag Setting Failed" << std::endl;
                 handleErrors();
                 return false;
             }
-
         if (1 != EVP_DecryptFinal_ex(m_ctx_dec, data.m_out + len_pt, &len_pt)) {
             std::cout << "Error: EVP_DecryptFinal_ex Failed" << std::endl;
             handleErrors();
             return false;
         }
         return true;
-    }
-
-    else if (m_mode == ALC_AES_MODE_SIV) {
+    } else if (m_mode == ALC_CHACHA20_POLY1305) {
+        if (data.m_adl > 0)
+            if (1
+                != EVP_DecryptUpdate(
+                    m_ctx_dec, NULL, &len_pt, data.m_ad, data.m_adl)) {
+                std::cout << "Error: EVP_DecryptUpdate update" << std::endl;
+                handleErrors();
+                return false;
+            }
+        if (1
+            != EVP_DecryptUpdate(
+                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
+            std::cout << "Error: EVP_DecryptUpdate" << std::endl;
+            handleErrors();
+            return false;
+        }
+        if (data.m_tagl > 0)
+            if (1
+                != EVP_CIPHER_CTX_ctrl(m_ctx_dec,
+                                       EVP_CTRL_AEAD_SET_TAG,
+                                       data.m_tagl,
+                                       data.m_tag)) {
+                std::cout << "Error: Tag Setting Failed" << std::endl;
+                handleErrors();
+                return false;
+            }
+        if (1 != EVP_DecryptFinal_ex(m_ctx_dec, data.m_out + len_pt, &len_pt)) {
+            std::cout << "Error: EVP_DecryptFinal_ex Failed" << std::endl;
+            handleErrors();
+            return false;
+        }
+        return true;
+    } else if (m_mode == ALC_AES_MODE_SIV) {
         int len_ct;
         // For processing Additional data, with EVP_DecryptUpdate, keep
         // out=null
@@ -610,8 +718,10 @@ OpenSSLCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
         /* set the tagl */
         if (data.m_tagl != 0) {
             if (1
-                != EVP_CIPHER_CTX_ctrl(
-                    m_ctx_dec, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
+                != EVP_CIPHER_CTX_ctrl(m_ctx_dec,
+                                       EVP_CTRL_AEAD_SET_TAG,
+                                       data.m_tagl,
+                                       data.m_tag)) {
                 std::cout << "Error: Tag Creation Failed" << std::endl;
                 std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
                 handleErrors();

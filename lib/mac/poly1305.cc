@@ -56,6 +56,7 @@ template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305(const Poly1305& src)
 {
 }
+
 template<utils::CpuArchFeature feature>
 alc_error_t
 Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
@@ -66,6 +67,7 @@ Poly1305<feature>::init(const Uint8 key[], Uint64 keyLen)
         err = ALC_ERROR_NOT_SUPPORTED;
         return err;
     }
+    state.finalized = false;
     if constexpr ((utils::CpuArchFeature::eReference == feature)
                   || (utils::CpuArchFeature::eAvx2 == feature)) {
         return poly1305_impl->init(key, keyLen);

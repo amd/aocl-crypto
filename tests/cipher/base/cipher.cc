@@ -73,6 +73,8 @@ GetModeSTR(alc_cipher_mode_t mode)
             return "SIV";
         case ALC_CHACHA20:
             return "Chacha20";
+        case ALC_CHACHA20_POLY1305:
+            return "chacha20-poly1305";
         default:
             return "";
     }
@@ -418,6 +420,7 @@ CipherAeadBase::isAead(const alc_cipher_mode_t& mode)
         case ALC_AES_MODE_GCM:
         case ALC_AES_MODE_SIV:
         case ALC_AES_MODE_CCM:
+        case ALC_CHACHA20_POLY1305:
             return true;
         default:
             return false;
