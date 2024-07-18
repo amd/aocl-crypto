@@ -32,6 +32,7 @@
 #include <immintrin.h>
 
 #include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aesni.hh"
 #include "avx512.hh"
 
 #include "vaes_avx512.hh"
@@ -56,130 +57,141 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     Uint64      blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
 
-    auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);
-    auto p_out_128 = reinterpret_cast<__m128i*>(pPlainText);
-    auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
-
-    __m512i input_128_a1;
+    auto pkey128  = reinterpret_cast<const __m128i*>(pKey);
+    auto pa_128   = reinterpret_cast<const __m128i*>(pCipherText);
+    auto pb_128   = pa_128;
+    auto pOut_512 = reinterpret_cast<__m512i*>(pPlainText);
 
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
 
-    sKeys keys = {};
-
+    sKeys keys;
     alcp_load_key_zmm(pkey128, keys);
 
-    // Load IV into b1 to process 1st block.
-    b1 = alcp_loadu_128((const __m512i*)pIv);
+    Int32 isIvUsed = 0;
 
-    // First block is an exception, it needs to be xord with IV
-    if (blocks >= 1) {
-        a1 = input_128_a1 = alcp_loadu_128((const __m512i*)p_in_128);
+    if (blocks >= 4) {
+        // Load IV into b1 to process 1st block.
+        b1          = alcp_loadu_128((const __m512i*)pIv);
+        b2          = _mm512_loadu_si512(pb_128);
+        __m512i idx = _mm512_set_epi64(5, 4, 3, 2, 1, 0, 0, 0);
+        b2          = _mm512_permutexvar_epi64(idx, b2);
+        b1          = _mm512_mask_blend_epi64(252, b1, b2); // pack iv and b2
 
-        AesEncNoLoad_1x512(a1, keys);
+        for (; blocks >= 16; blocks -= 16) {
+            if (isIvUsed) {
+                b1 = _mm512_loadu_si512(pb_128);
+                pb_128 += 4;
+            } else {
+                pb_128 += 3;
+            }
+            isIvUsed = 1;
 
-        a1 = alcp_xor(a1, b1);
+            a1 = _mm512_loadu_si512(pa_128);
+            a2 = _mm512_loadu_si512(pa_128 + 4);
+            a3 = _mm512_loadu_si512(pa_128 + 8);
+            a4 = _mm512_loadu_si512(pa_128 + 12);
 
-        alcp_storeu_128((__m512i*)p_out_128, a1);
-        b1 = input_128_a1;
-        p_in_128++;
-        p_out_128++;
-        blocks--;
-    }
-    // Process 16 (1x128x16) blocks at a time
-    for (; blocks >= 16; blocks -= 16) {
-        // Note below uses up 1 Kilobit of data, 128 bytes
-        // Load in the format b1 = c0,c1. Counting on cache to have data
-        b1 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 0);
-        b2 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 1);
-        b3 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 2);
-        b4 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 3);
-        // Load in the format a1 = c1,c2.
-        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
-        a2 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
-        a3 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 2);
-        a4 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 3);
+            b2 = _mm512_loadu_si512(pb_128);
+            b3 = _mm512_loadu_si512(pb_128 + 4);
+            b4 = _mm512_loadu_si512(pb_128 + 8);
+            pb_128 += 12;
 
-        AesEncNoLoad_4x512(a1, a2, a3, a4, keys);
+            AesEncNoLoad_4x512(a1, a2, a3, a4, keys);
+            a1 = alcp_xor(a1, b1);
+            a2 = alcp_xor(a2, b2);
+            a3 = alcp_xor(a3, b3);
+            a4 = alcp_xor(a4, b4);
 
-        // Do xor with previous cipher text to complete decryption.
-        a1 = alcp_xor(a1, b1);
-        a2 = alcp_xor(a2, b2);
-        a3 = alcp_xor(a3, b3);
-        a4 = alcp_xor(a4, b4);
+            // Store decrypted blocks.
+            alcp_storeu(pOut_512, a1);
+            alcp_storeu(pOut_512 + 1, a2);
+            alcp_storeu(pOut_512 + 2, a3);
+            alcp_storeu(pOut_512 + 3, a4);
 
-        // Store decrypted blocks.
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128) + 0, a1);
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128) + 1, a2);
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128) + 2, a3);
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128) + 3, a4);
+            pa_128 += 16;
+            pOut_512 += 4;
+        }
 
-        p_in_128 += 16;
-        p_out_128 += 16;
-    }
+        if (blocks) {
 
-    // Process 8 (1x128x8) blocks at a time
-    for (; blocks >= 8; blocks -= 8) {
-        // Note below uses up 1 Kilobit of data, 128 bytes
-        // Load in the format b1 = c0,c1. Counting on cache to have data
-        b1 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 0);
-        b2 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 1);
-        // Load in the format a1 = c1,c2.
-        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
-        a2 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
+            if (blocks >= 8) {
+                if (isIvUsed) {
+                    b1 = _mm512_loadu_si512(pb_128);
+                    pb_128 += 4;
+                } else {
+                    pb_128 += 3;
+                }
+                isIvUsed = 1;
 
-        AesEncNoLoad_2x512(a1, a2, keys);
+                a1 = _mm512_loadu_si512(pa_128);
+                a2 = _mm512_loadu_si512(pa_128 + 4);
+                b2 = _mm512_loadu_si512(pb_128);
+                pb_128 += 4;
+                AesEncNoLoad_2x512(a1, a2, keys);
+                a1 = alcp_xor(a1, b1);
+                a2 = alcp_xor(a2, b2);
+                alcp_storeu(pOut_512, a1);
+                alcp_storeu(pOut_512 + 1, a2);
 
-        // Do xor with previous cipher text to complete decryption.
-        a1 = alcp_xor(a1, b1);
-        a2 = alcp_xor(a2, b2);
+                pa_128 += 8;
+                pOut_512 += 2;
+                blocks -= 8;
+            }
 
-        // Store decrypted blocks.
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128) + 0, a1);
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128) + 1, a2);
+            if (blocks >= 4) {
+                if (isIvUsed) {
+                    b1 = _mm512_loadu_si512(pb_128);
+                    pb_128 += 4;
+                } else {
+                    pb_128 += 3;
+                }
+                isIvUsed = 1;
+                a1       = _mm512_loadu_si512(pa_128);
+                AesEncNoLoad_1x512(a1, keys);
+                a1 = alcp_xor(a1, b1);
+                alcp_storeu(pOut_512, a1);
 
-        p_in_128 += 8;
-        p_out_128 += 8;
-    }
+                pa_128 += 4;
+                pOut_512 += 1;
+                blocks -= 4;
+            }
 
-    // Process 4 (1x128x4) blocks at a time
-    for (; blocks >= 4; blocks -= 4) {
-        // Note below uses up 1 Kilobit of data, 128 bytes
-        // Load in the format b1 = c0,c1. Counting on cache to have data
-        b1 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 0);
-        // Load in the format a1 = c1,c2.
-        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
+            auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
+            for (; blocks != 0; blocks--) {
+                a1 = alcp_loadu_128((const __m512i*)pa_128);
+                if (isIvUsed) {
+                    b1 = alcp_loadu_128((__m512i*)(pb_128));
+                }
+                pb_128 += 1;
+                isIvUsed = 1;
 
-        AesEncNoLoad_2x512(a1, a2, keys);
+                AesEncNoLoad_1x512(a1, keys);
 
-        // Do xor with previous cipher text to complete decryption.
-        a1 = alcp_xor(a1, b1);
+                a1 = alcp_xor(a1, b1);
+                alcp_storeu_128((__m512i*)p_out_128, a1);
 
-        // Store decrypted blocks.
-        alcp_storeu(reinterpret_cast<__m512i*>(p_out_128), a1);
+                pa_128++;
+                p_out_128++;
+            }
+        }
+    } else {
+        b1             = alcp_loadu_128((const __m512i*)pIv);
+        auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
+        for (; blocks != 0; blocks--) {
+            if (isIvUsed) {
+                b1 = alcp_loadu_128((__m512i*)pb_128);
+                pb_128++;
+            }
+            isIvUsed = 1;
 
-        p_in_128 += 4;
-        p_out_128 += 4;
-    }
-
-    // If more blocks are left, prepare b1 with cN-1 cuz need for xor
-    if (blocks >= 1)
-        b1 = alcp_loadu_128((const __m512i*)(p_in_128 - 1));
-
-    for (; blocks >= 1; blocks -= 1) {
-        // Load the Nth block
-        a1 = input_128_a1 = alcp_loadu_128((const __m512i*)p_in_128);
-
-        AesEncNoLoad_1x512(a1, keys);
-        // Do xor with previous cipher text to complete decryption.
-        a1 = alcp_xor(a1, b1);
-
-        // Store decrypted block.
-        alcp_storeu_128((__m512i*)p_out_128, a1);
-
-        b1 = input_128_a1;
-        p_in_128++;
-        p_out_128++;
+            a1 = alcp_loadu_128((const __m512i*)pa_128);
+            AesEncNoLoad_1x512(a1, keys);
+            a1 = alcp_xor(a1, b1);
+            alcp_storeu_128((__m512i*)p_out_128, a1);
+            pa_128++;
+            p_out_128++;
+        }
     }
 
 #ifdef AES_MULTI_UPDATE

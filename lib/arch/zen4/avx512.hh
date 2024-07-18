@@ -35,10 +35,6 @@
 namespace alcp::cipher { namespace vaes512 {
 
     // load functions
-    static inline __m512i alcp_loadu(__m512i* ad)
-    {
-        return _mm512_loadu_si512(ad);
-    }
     static inline __m512i alcp_loadu(const __m512i* ad)
     {
         return _mm512_loadu_si512(ad);
@@ -66,13 +62,15 @@ namespace alcp::cipher { namespace vaes512 {
         a3 = _mm512_loadu_si512(ad + 2);
         a4 = _mm512_loadu_si512(ad + 3);
     }
-    static inline __m512i alcp_loadu_128(__m512i* ad)
-    {
-        return _mm512_maskz_loadu_epi64(0x03, ad);
-    }
+
     static inline __m512i alcp_loadu_128(const __m512i* ad)
     {
         return _mm512_maskz_loadu_epi64(0x03, ad);
+    }
+
+    static inline __m512i alcp_loadu_256(const __m512i* ad)
+    {
+        return _mm512_maskz_loadu_epi64(0xF, ad);
     }
 
     // xor functions.
@@ -211,6 +209,11 @@ namespace alcp::cipher { namespace vaes512 {
     static inline void alcp_storeu_128(__m512i* ad, __m512i x)
     {
         _mm512_mask_storeu_epi64(ad, 0x03, x);
+    }
+
+    static inline void alcp_storeu_256(__m512i* ad, __m512i x)
+    {
+        _mm512_mask_storeu_epi64(ad, 0xF, x);
     }
 
 }} // namespace alcp::cipher::vaes512
