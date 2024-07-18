@@ -54,25 +54,32 @@ using namespace alcp::testing;
 
 /* print params verbosely */
 inline void
-PrintRsaTestData(alcp_rsa_data_t data)
+PrintRsaTestData(alcp_rsa_data_t data, std::string RsaAlgo)
 {
     if (data.m_msg)
         std::cout << "InputData: "
                   << parseBytesToHexStr(data.m_msg, data.m_msg_len)
                   << " Len : " << data.m_msg_len << std::endl;
-    if (data.m_encrypted_data)
-        std::cout << "EncryptedData: "
-                  << parseBytesToHexStr(data.m_encrypted_data, data.m_msg_len)
-                  << " Len : " << data.m_msg_len << std::endl;
-    if (data.m_decrypted_data)
-        std::cout << "DecryptedData: "
-                  << parseBytesToHexStr(data.m_decrypted_data, data.m_msg_len)
-                  << " Len : " << data.m_msg_len << std::endl;
+    if (RsaAlgo.compare("EncryptDecrypt") == 0) {
+        if (data.m_encrypted_data)
+            std::cout << "EncryptedData: "
+                      << parseBytesToHexStr(data.m_encrypted_data,
+                                            data.m_msg_len)
+                      << " Len : " << data.m_msg_len << std::endl;
+        if (data.m_decrypted_data)
+            std::cout << "DecryptedData: "
+                      << parseBytesToHexStr(data.m_decrypted_data,
+                                            data.m_msg_len)
+                      << " Len : " << data.m_msg_len << std::endl;
+    }
     /* for sign verify tests */
     /* FIXME: signature len for now is 256, parameterize this !*/
-    if (data.m_signature)
-        std::cout << "Signature: " << parseBytesToHexStr(data.m_signature, 256)
-                  << " Len : " << 256 << std::endl;
+    if (RsaAlgo.compare("SignVerify") == 0) {
+        if (data.m_signature)
+            std::cout << "Signature: "
+                      << parseBytesToHexStr(data.m_signature, 256)
+                      << " Len : " << 256 << std::endl;
+    }
     return;
 }
 
@@ -117,7 +124,8 @@ SkipTest(int ret_val, std::string LibStr)
 /* encrypt decrypt tests */
 /* FIXME, change this name to Enc/Dec*/
 void
-Rsa_KAT(int                     padding_mode,
+Rsa_KAT(std::string             RsaAlgo,
+        int                     padding_mode,
         int                     KeySize,
         const alc_digest_info_t dinfo,
         const alc_digest_info_t mgfinfo)
@@ -151,22 +159,18 @@ Rsa_KAT(int                     padding_mode,
 
     /* default options */
     std::string PaddingModeStr = "";
-    std::string RsaAlgo        = "";
 
     rb->m_padding_mode = padding_mode;
+    rb->m_rsa_algo     = RsaAlgo;
 
     if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         PaddingModeStr = "no_padding";
-        RsaAlgo        = "EncryptDecrypt";
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         PaddingModeStr = "OAEP";
-        RsaAlgo        = "EncryptDecrypt";
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         PaddingModeStr = "PSS";
-        RsaAlgo        = "SignVerify";
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         PaddingModeStr = "PKCS";
-        RsaAlgo        = "SignVerify";
     } else {
         std::cout << "Invalid / Unsupported Rsa Padding mode!" << std::endl;
         FAIL();
@@ -193,18 +197,27 @@ Rsa_KAT(int                     padding_mode,
          * non-padded modes */
         std::vector<Uint8> encrypted_data_expected =
             csv.getVect("ENCRYPTEDDATA");
-        std::vector<Uint8> encrypted_data(KeySize);
+        std::vector<Uint8> encrypted_data(KeySize, 0);
         std::vector<Uint8> decrypted_data(KeySize); /* keysize for padded */
         std::vector<Uint8> PubKeyKeyMod(KeySize);
         std::vector<Uint8> signature(KeySize);
         std::vector<Uint8> expected_signature(KeySize);
 
+        /* set randomlen padding for pkcs encrypt/decrypt */
+        int                random_pad_len = 0;
+        std::vector<Uint8> random_len_padding(KeySize, 0x01);
+        if (RsaAlgo.compare("EncryptDecrypt") == 0
+            && padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+            random_pad_len = KeySize - 3 - input_data.size();
+            random_len_padding.resize(random_pad_len);
+            data.m_random_pad = &(random_len_padding[0]);
+        }
+
         /* FIXME, randomize this or come from CSV */
         // Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
 
         /* for signature generation and verification*/
-        if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
-            || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        if (RsaAlgo.compare("SignVerify") == 0) {
             expected_signature = csv.getVect("SIGNATURE");
             data.m_signature   = getPtr(signature);
             // data.m_salt      = getAddress(salt);
@@ -249,8 +262,7 @@ Rsa_KAT(int                     padding_mode,
         }
 
         /* for signature and verification */
-        if (padding_mode == ALCP_TEST_RSA_PADDING_PSS
-            || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        if (RsaAlgo.compare("SignVerify") == 0) {
             if (!rb->DigestSign(data)) {
                 std::cout << "Error in RSA sign" << std::endl;
                 FAIL();
@@ -262,7 +274,7 @@ Rsa_KAT(int                     padding_mode,
             EXPECT_TRUE(ArraysMatch(expected_signature, signature, KeySize));
         }
 
-        /* for encrypt / decrypt cases for NoPadding/OAEP*/
+        /* for encrypt / decrypt cases */
         else {
             ret_val = rb->EncryptPubKey(data);
             if (ret_val != 0) {
@@ -277,7 +289,8 @@ Rsa_KAT(int                     padding_mode,
             }
 
             /* check if dec val is same as input */
-            if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
+            if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP
+                || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
                 input_data.resize(KeySize);
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data, input_data, input_data.size()));
@@ -295,7 +308,7 @@ Rsa_KAT(int                     padding_mode,
             }
         }
         if (verbose > 1) {
-            PrintRsaTestData(data);
+            PrintRsaTestData(data, RsaAlgo);
         }
     }
     return;
@@ -303,7 +316,8 @@ Rsa_KAT(int                     padding_mode,
 
 /* RSA Cross tests */
 void
-Rsa_Cross(int                     padding_mode,
+Rsa_Cross(std::string             RsaAlgo,
+          int                     padding_mode,
           int                     KeySize,
           const alc_digest_info_t dinfo,
           const alc_digest_info_t mgfinfo)
@@ -363,8 +377,9 @@ Rsa_Cross(int                     padding_mode,
     rb_main->m_mgf_info = rb_ext->m_mgf_info = mgfinfo;
     rb_main->m_hash_len = rb_ext->m_hash_len = dinfo.dt_len / 8;
 
+    rb_main->m_rsa_algo = rb_ext->m_rsa_algo = RsaAlgo;
     rb_main->m_padding_mode = rb_ext->m_padding_mode = padding_mode;
-    if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
+    if (padding_mode != ALCP_TEST_RSA_NO_PADDING) {
         /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
         if (KeySize == 128) {
             InputSize_Max = 62;
@@ -436,14 +451,11 @@ Rsa_Cross(int                     padding_mode,
     for (int i = loop_start; i < InputSize_Max; i++) {
         /* For non-padded mode, input len will always be KeySize */
         /* over-allocating this to test the misaligned pointers */
-        if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP)
-            InputSize = i + 1;
-        else if (padding_mode == ALCP_TEST_RSA_NO_PADDING)
+        if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
             InputSize = InputSize_Max + 1;
-        /* for sign/verify*/
-        else
+        } else {
             InputSize = i + 1;
-
+        }
         std::vector<Uint8> input_data(InputSize);
 
         /* shuffle input vector after each iterations */
@@ -469,6 +481,17 @@ Rsa_Cross(int                     padding_mode,
 
         std::vector<Uint8> signature_data_main(KeySize);
         std::vector<Uint8> signature_data_ext(KeySize);
+
+        /* set randomlen padding for pkcs encrypt/decrypt */
+        int                random_pad_len = 0;
+        std::vector<Uint8> random_len_padding(KeySize, 0x01);
+        if (RsaAlgo.compare("EncryptDecrypt") == 0
+            && padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+            random_pad_len = KeySize - 3 - input_data.size();
+            random_len_padding.resize(random_pad_len);
+            data_main.m_random_pad = data_ext.m_random_pad =
+                &(random_len_padding[0]);
+        }
 
         /* misalign if buffers are aligned */
         bool force_misaligned = false;
@@ -508,18 +531,12 @@ Rsa_Cross(int                     padding_mode,
         std::vector<Uint8> seed(rb_main->m_hash_len);
         if (padding_mode == 1) {
             /* shuffle seed data after each iterations */
-            if (padding_mode == 1) {
-                err = alcp_drbg_randomize(&handle,
-                                          &(seed[0]),
-                                          seed.size(),
-                                          cSecurityStrength,
-                                          NULL,
-                                          0);
-                if (alcp_is_error(err)) {
-                    std::cout << "Error: alcp_drbg_randomize seed data: " << err
-                              << std::endl;
-                    FAIL();
-                }
+            err = alcp_drbg_randomize(
+                &handle, &(seed[0]), seed.size(), cSecurityStrength, NULL, 0);
+            if (alcp_is_error(err)) {
+                std::cout << "Error: alcp_drbg_randomize seed data: " << err
+                          << std::endl;
+                FAIL();
             }
         }
 
@@ -527,14 +544,12 @@ Rsa_Cross(int                     padding_mode,
 
         /* label length should vary */
         std::vector<Uint8> label(i * KeySize);
-        if (padding_mode == 1) {
-            err = alcp_drbg_randomize(
-                &handle, &(label[0]), label.size(), cSecurityStrength, NULL, 0);
-            if (alcp_is_error(err)) {
-                std::cout << "Error: alcp_drbg_randomize label data: " << err
-                          << std::endl;
-                FAIL();
-            }
+        err = alcp_drbg_randomize(
+            &handle, &(label[0]), label.size(), cSecurityStrength, NULL, 0);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_drbg_randomize label data: " << err
+                      << std::endl;
+            FAIL();
         }
         data_main.m_label = data_ext.m_label = &(label[0]);
         data_main.m_label_size = data_ext.m_label_size = label.size();
@@ -548,7 +563,6 @@ Rsa_Cross(int                     padding_mode,
             std::cout << "Error in RSA init for " << LibStrExt << std::endl;
             FAIL();
         }
-
         /* set public, private keys for both libs */
         if (!rb_main->SetPublicKey(data_main)) {
             std::cout << "Error in RSA set pubkey for " << LibStrMain
@@ -571,8 +585,7 @@ Rsa_Cross(int                     padding_mode,
             FAIL();
         }
 
-        if (padding_mode == ALCP_TEST_RSA_PADDING_PKCS
-            || padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        if (RsaAlgo.compare("SignVerify") == 0) {
             /* sign and verify */
             if (!rb_main->DigestSign(data_main)) {
                 std::cout << "Error in RSA sign for " << LibStrMain
@@ -596,7 +609,7 @@ Rsa_Cross(int                     padding_mode,
             /* check if signature generated by both libraries are same */
             EXPECT_TRUE(
                 ArraysMatch(signature_data_main, signature_data_ext, KeySize));
-        } else {
+        } else if (RsaAlgo.compare("EncryptDecrypt") == 0) {
             /* Call encrypt for both libs */
             ret_val_main = rb_main->EncryptPubKey(data_main);
             ret_val_ext  = rb_ext->EncryptPubKey(data_ext);
@@ -636,16 +649,15 @@ Rsa_Cross(int                     padding_mode,
                                                 input_data.end());
             }
             /* Now check outputs from both libs */
-            if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
+            if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP
+                || padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
                 input_data.resize(KeySize);
                 /* compare decrypted output for ext lib vs original input */
                 EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
                 EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
-                /* now revert input data to original length after
-                 * verification
-                 */
+                /* now revert input data to original len after verification*/
                 input_data.resize(i);
             } else {
                 /* For non-padded mode, input len will always be KeySize */
@@ -659,8 +671,8 @@ Rsa_Cross(int                     padding_mode,
         }
 
         if (verbose > 1) {
-            PrintRsaTestData(data_main);
-            PrintRsaTestData(data_ext);
+            PrintRsaTestData(data_main, RsaAlgo);
+            PrintRsaTestData(data_ext, RsaAlgo);
         }
     }
 

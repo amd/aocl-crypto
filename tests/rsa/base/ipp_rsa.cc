@@ -309,7 +309,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 
-    if (m_padding_mode == 1) {
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         /* Encrypt message */
         status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
                                          data.m_msg_len,
@@ -326,7 +326,19 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                       << status << std::endl;
             return status;
         }
-    } else {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        status = ippsRSAEncrypt_PKCSv15(data.m_msg,
+                                        data.m_msg_len,
+                                        NULL,
+                                        data.m_encrypted_data,
+                                        m_pPub,
+                                        m_scratchBuffer_Pub);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSAEncrypt_PKCSv15 failed with err code" << status
+                      << std::endl;
+            return status;
+        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         /* for non padded mode */
         IppsBigNumState* m_pBN_kat_PT =
             createSetBigNUM((Uint8*)data.m_msg, data.m_msg_len);
@@ -336,8 +348,6 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         status = ippsRSA_Encrypt(
             m_pBN_kat_PT, m_pBN_kat_CT, m_pPub, m_scratchBuffer_Pub);
         if (status != ippStsNoErr) {
-            // std::cout << "ippsRSA_Encrypt failed with err code" << status
-            //           << std::endl;
             if (m_pBN_kat_PT) {
                 delete[] (Ipp8u*)m_pBN_kat_PT;
             }
@@ -366,6 +376,9 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         if (m_pBN_kat_CT) {
             delete[] (Ipp8u*)m_pBN_kat_CT;
         }
+    } else {
+        std::cout << __func__ << ":Error Invalid padding mode!" << std::endl;
+        return -1;
     }
     return 0;
 }
@@ -374,10 +387,12 @@ int
 IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
+    int       plainTextLen;
+    Ipp8u*    pPlainText = nullptr;
 
-    if (m_padding_mode == 1) {
-        int    plainTextLen = data.m_msg_len;
-        Ipp8u* pPlainText   = new Ipp8u[data.m_key_len]();
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
+        plainTextLen = data.m_msg_len;
+        pPlainText   = new Ipp8u[data.m_key_len]();
         /* Decrypt message */
         status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
                                          0,
@@ -387,7 +402,6 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                          m_pPrv,
                                          m_md_type,
                                          m_scratchBuffer_Pvt);
-
         if (status != ippStsNoErr) {
             std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
                       << status << std::endl;
@@ -396,13 +410,31 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             }
             return status;
         }
-
         std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
-
         if (pPlainText) {
             delete[] (Ipp8u*)pPlainText;
         }
-    } else {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        plainTextLen = data.m_msg_len;
+        pPlainText   = new Ipp8u[data.m_key_len]();
+        status       = ippsRSADecrypt_PKCSv15(data.m_encrypted_data,
+                                        pPlainText,
+                                        &plainTextLen,
+                                        m_pPrv,
+                                        m_scratchBuffer_Pvt);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSAEncrypt_PKCSv15 failed with err code" << status
+                      << std::endl;
+            if (pPlainText) {
+                delete[] (Ipp8u*)pPlainText;
+            }
+            return status;
+        }
+        std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
+        if (pPlainText) {
+            delete[] (Ipp8u*)pPlainText;
+        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         /* for non padded mode */
         IppsBigNumState* m_pBN_kat_CT =
             createSetBigNUM((Uint8*)data.m_encrypted_data, data.m_msg_len);
@@ -446,6 +478,9 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (m_pBN_kat_CT) {
             delete[] (Ipp8u*)m_pBN_kat_CT;
         }
+    } else {
+        std::cout << __func__ << ":Error Invalid padding mode!" << std::endl;
+        return -1;
     }
     return 0;
 }

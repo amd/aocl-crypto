@@ -44,6 +44,9 @@ namespace alcp::testing {
 #define ALCP_TEST_RSA_PADDING_PSS  3
 #define ALCP_TEST_RSA_NO_PADDING   0
 
+#define ALCP_TEST_RSA_ALGO_SIGN_VERIFY 4
+#define ALCP_TEST_RSA_ALGO_ENC_DEC     5
+
 typedef struct _alcp_rsa_data
 {
     const Uint8* m_msg     = nullptr;
@@ -67,6 +70,10 @@ typedef struct _alcp_rsa_data
     Uint8* m_salt          = nullptr;
     Uint64 m_salt_len      = 0;
     bool   m_check         = false;
+
+    /* for pkcs encrypt decrypt */
+    Uint8* m_random_pad     = nullptr;
+    Uint64 m_random_pad_len = 0;
 } alcp_rsa_data_t;
 
 class RsaBase
@@ -75,6 +82,7 @@ class RsaBase
     alc_digest_info_t m_digest_info{};
     alc_digest_info_t m_mgf_info{};
     int               m_padding_mode                             = 0;
+    std::string       m_rsa_algo                                 = "";
     Uint64            m_key_len                                  = 0;
     Uint64            m_hash_len                                 = 0;
     virtual bool      init()                                     = 0;

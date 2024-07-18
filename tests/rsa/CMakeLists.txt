@@ -70,6 +70,9 @@ TEST_DATA_LINK(EncryptDecrypt 1024 no_padding)
 TEST_DATA_LINK(EncryptDecrypt 2048 no_padding)
 TEST_DATA_LINK(EncryptDecrypt 1024 OAEP)
 TEST_DATA_LINK(EncryptDecrypt 2048 OAEP)
+
+TEST_DATA_LINK(EncryptDecrypt 2048 PKCS)
+
 TEST_DATA_LINK(SignVerify 2048 PSS)
 TEST_DATA_LINK(SignVerify 2048 PKCS)
 

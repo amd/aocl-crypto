@@ -174,11 +174,13 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_publickey_encrypt(
             m_rsa_handle, data.m_msg, data.m_key_len, data.m_encrypted_data);
-        if (alcp_is_error(err)) {
-            return err;
-        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        err = alcp_rsa_publickey_encrypt_pkcs1v15(m_rsa_handle,
+                                                  data.m_msg,
+                                                  data.m_msg_len,
+                                                  data.m_encrypted_data,
+                                                  data.m_random_pad);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
-        // Encrypt text
         err = alcp_rsa_publickey_encrypt_oaep(m_rsa_handle,
                                               data.m_msg,
                                               data.m_msg_len,
@@ -186,12 +188,12 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                               data.m_label_size,
                                               data.m_pseed,
                                               data.m_encrypted_data);
-        if (alcp_is_error(err)) {
-            return err;
-        }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
         return 1;
+    }
+    if (alcp_is_error(err)) {
+        return err;
     }
     return 0;
 }
@@ -208,6 +210,11 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                           data.m_encrypted_data,
                                           data.m_key_len,
                                           data.m_decrypted_data);
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        err = alcp_rsa_privatekey_decrypt_pkcs1v15(m_rsa_handle,
+                                                   data.m_encrypted_data,
+                                                   data.m_decrypted_data,
+                                                   &text_size);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         err = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
                                                data.m_encrypted_data,
