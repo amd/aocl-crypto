@@ -153,7 +153,7 @@ IF(UNIX AND ENABLE_AOCL_UTILS)
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			COMMAND /bin/bash 
 			${CMAKE_SOURCE_DIR}/scripts/create_static.sh 
-			${AOCL_UTILS_INSTALL_DIR}/lib/libau_cpuid.a
+			${AOCL_UTILS_STATIC_LIB}
 			"DEBUG"
 		)
  	ELSE()
@@ -161,7 +161,7 @@ IF(UNIX AND ENABLE_AOCL_UTILS)
 			TARGET alcp_static POST_BUILD
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/scripts/create_static.sh 
-			${AOCL_UTILS_INSTALL_DIR}/lib/libau_cpuid.a
+			${AOCL_UTILS_STATIC_LIB}
 			""
 		)
 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "debug")

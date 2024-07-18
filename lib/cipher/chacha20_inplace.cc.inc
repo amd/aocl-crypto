@@ -29,6 +29,7 @@
 #include "alcp/base.hh"
 #include "alcp/error.h"
 #include "alcp/utils/bits.hh"
+#include "alcp/utils/copy.hh"
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -111,8 +112,9 @@ SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(state + 4, key, keylen / 8);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(
+        state + 4, (16 - 4) * sizeof(Uint64), key, keylen / 8);
+    return err;
 }
 inline alc_error_t
 ValidateIv(const Uint8 iv[], Uint64 iVlen)
@@ -129,8 +131,9 @@ SetIv(Uint32 state[16], const Uint8 iv[], Uint64 ivlen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(state + 12, iv, ivlen);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(
+        state + 12, sizeof(Uint32) * (16 - 12), iv, ivlen);
+    return err;
 }
 inline alc_error_t
 CreateInitialState(Uint32      state[16],
@@ -174,6 +177,7 @@ ProcessInput(const Uint8 key[],
         CreateInitialState(
             state, key, keylen, iv, ivlen, cInitialCounter + blocks / 64);
         Uint32 working_state[16];
+        // FIXME: Check if we need SecureCopy here
         memcpy(working_state, state, sizeof(working_state));
         for (int i = 0; i < 10; i++) {
             InnerBlock(working_state);

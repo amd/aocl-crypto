@@ -24,6 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 include(ExternalProject)
+include(FetchContent)
 
 
 # Enable UTILS if enabled and available
@@ -31,23 +32,22 @@ IF(ENABLE_AOCL_UTILS)
 	MESSAGE(STATUS "Enabling AOCL UTILS Support")
 	IF(AOCL_UTILS_INSTALL_DIR)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR set, overriding fetch path")
+		set(AOCL_UTILS_STATIC_LIB ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a PARENT_SCOPE)
 	ELSE(AOCL_UTILS_INSTALL_DIR)
 		# FIXME: Move this to lib parent scope in future
-		set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
-		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION} PARENT_SCOPE)
+		set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR})
+		set(AOCL_UTILS_STATIC_LIB ${EXTERNAL_INSTALL_LOCATION}/libau_cpuid.a PARENT_SCOPE)
 		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION})
-		# Add project repo dir
-		ExternalProject_Add(aoclutils
+		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
+		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
+		FetchContent_Declare(aoclutils
 			GIT_REPOSITORY git@github.amd.com:AOCL/aocl-utils.git
 			GIT_TAG amd-main
 			SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
-			CMAKE_ARGS  -DAU_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
- 			BYPRODUCTS ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.so ${CMAKE_BINARY_DIR}/external/lib/libau_cpuid.a
+			BINARY_DIR "${CMAKE_BINARY_DIR}/external/aoclutils"
 		)
-		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
-		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
-		add_dependencies(alcp aoclutils)
-		add_dependencies(alcp_static aoclutils)
+		FetchContent_MakeAvailable(aoclutils)
+		set(AOCL_UTILS_FETCHED ON)
 	ENDIF(AOCL_UTILS_INSTALL_DIR)
 	IF(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
 		TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/include)
@@ -59,20 +59,13 @@ IF(ENABLE_AOCL_UTILS)
 
 			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/au_cpuid.lib)
 		ELSE()
-			# Define imported target for the shared library
-			add_library(au_cpuid SHARED IMPORTED)
-			set_target_properties(au_cpuid PROPERTIES
-				IMPORTED_LOCATION ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.so
-			)
-
-			# Define imported target for the static library
-			add_library(au_cpuid_static STATIC IMPORTED)
-			set_target_properties(au_cpuid_static PROPERTIES
-				IMPORTED_LOCATION ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a
-			)
-
-			TARGET_LINK_LIBRARIES(alcp PRIVATE au_cpuid)
-			TARGET_LINK_LIBRARIES(alcp_static PRIVATE au_cpuid_static)
+ 			IF(AOCL_UTILS_FETCHED)
+				TARGET_LINK_LIBRARIES(alcp PRIVATE aoclutils)
+				TARGET_LINK_LIBRARIES(alcp_static PRIVATE aoclutils)
+			ELSE(AOCL_UTILS_FETCHED)
+				TARGET_LINK_LIBRARIES(alcp PRIVATE ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.so)
+				TARGET_LINK_LIBRARIES(alcp_static PRIVATE ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a)
+			ENDIF()
 		ENDIF()
 	ELSE(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
 		MESSAGE(FATAL_ERROR "AOCL UTILS fallback error, external directory not found!")
@@ -85,6 +78,7 @@ SET(UTILS_SRCS
   #mempool.cc
   console_logger.cc
   cpuid.cc
+  memory.cc
   )
 
 IF (ALCP_ENABLE_TESTS)

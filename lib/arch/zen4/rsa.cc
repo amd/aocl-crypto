@@ -68,6 +68,7 @@ namespace alcp::rsa { namespace zen4 {
                | static_cast<Uint64>(val[1]) << 8 | val[0];
 #else
         Uint64 val64 = 0;
+        // FIXME: Check if utils::SecureCopy is needed here
         memcpy(&val64, val, 8);
         return val64;
 #endif
@@ -1908,14 +1909,14 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
                                          r1_radix_52_bit_contig + 20 };
         Uint64* input_radix_52[2]    = { input_radix_52_contig,
-                                      input_radix_52_contig + 20 };
+                                         input_radix_52_contig + 20 };
         Uint64* res_radix_52[2]      = { res_radix_52_contig,
-                                    res_radix_52_contig + 20 };
+                                         res_radix_52_contig + 20 };
 
         Uint64* mult_radix_52[2] = { mult_radix_52_contig,
                                      mult_radix_52_contig + 20 };
         Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
-                                   sq_radix_52_contig + 20 };
+                                     sq_radix_52_contig + 20 };
 
         __m256i mod_reg[10];
         LoadReg256(mod_reg, modRadix52Bit[0]);

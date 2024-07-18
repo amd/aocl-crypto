@@ -34,7 +34,6 @@
 #include "alcp/utils/bits.hh"
 
 #include <memory>
-
 namespace alcp::cipher {
 
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
@@ -74,10 +73,10 @@ class ALCP_API_EXPORT Rijndael
     static Uint32 constexpr cMaxRounds = 14;
 
   private:
-    __attribute__((aligned(64)))
-    Uint8 m_round_key_enc[cMaxKeySize * (cMaxRounds + 2)] = {};
-    __attribute__((aligned(64)))
-    Uint8 m_round_key_dec[cMaxKeySize * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(
+        64))) Uint8 m_round_key_enc[cMaxKeySize * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(
+        64))) Uint8 m_round_key_dec[cMaxKeySize * (cMaxRounds + 2)] = {};
 
     Uint8* m_enc_key = NULL;
     Uint8* m_dec_key = NULL;
@@ -92,7 +91,7 @@ class ALCP_API_EXPORT Rijndael
     Uint32       m_keyLen_rij = 0;    /* key len*/
 
   public:
-    Rijndael() {}
+    Rijndael();
     ~Rijndael();
 
     /**

@@ -92,8 +92,8 @@ ChaCha20::setKey(const Uint8 key[], Uint64 keylen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_key, key, keylen / 8);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(m_key, cMKeylen, key, keylen / 8);
+    return err;
 }
 
 alc_error_t
@@ -103,8 +103,8 @@ ChaCha20::setIv(const Uint8 iv[], Uint64 ivlen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_iv, iv, ivlen);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(m_iv, cMIvlen, iv, ivlen);
+    return err;
 }
 
 namespace vaes512 {

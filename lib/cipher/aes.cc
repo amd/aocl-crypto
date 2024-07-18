@@ -64,7 +64,11 @@ Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
     }
 
     // copy IV and set IvLen
-    memcpy(m_iv_aes, pIv, ivLen); // copy iv to aes
+    e = utils::SecureCopy<Uint8>(
+        m_iv_aes, MAX_CIPHER_IV_SIZE, pIv, ivLen); // copy iv to aes
+    if (e != ALC_ERROR_NONE) {
+        return e;
+    }
     m_pIv_aes = m_iv_aes;
 
     m_ivLen_aes   = ivLen;

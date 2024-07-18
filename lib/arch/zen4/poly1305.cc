@@ -33,6 +33,7 @@
 #include <tuple>
 
 #include "alcp/mac/poly1305_zen4.hh"
+#include "alcp/utils/copy.hh"
 
 #define DEBUG_PRINT
 
@@ -49,7 +50,8 @@ debug_print(std::string in)
 #else
 void
 debug_print(std::string in)
-{}
+{
+}
 #endif
 
 namespace alcp::mac::poly1305::zen4 {
@@ -593,8 +595,8 @@ poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32])
     Uint8 r[16];
     Uint8 s[16];
 
-    std::memcpy(r, key, 16);
-    std::memcpy(s, key + 16, 16);
+    utils::SecureCopy<Uint8>(r, 16, key, 16);
+    utils::SecureCopy<Uint8>(s, 16, key + 16, 16);
 
     clamp(r);
 

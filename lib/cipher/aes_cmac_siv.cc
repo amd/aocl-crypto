@@ -71,7 +71,8 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 
     if (pIv != nullptr) {
         if (ivLen == 16) {
-            memcpy(m_iv_aes, pIv, ivLen);
+            err = utils::SecureCopy<Uint8>(
+                m_iv_aes, MAX_CIPHER_IV_SIZE, pIv, ivLen);
         } else {
             return ALC_ERROR_INVALID_SIZE;
         }

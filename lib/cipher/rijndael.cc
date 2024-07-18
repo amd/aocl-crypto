@@ -646,7 +646,21 @@ Rijndael::initRijndael(const Uint8* pKey, const Uint64 keyLen)
     setUp();
 }
 
-Rijndael::~Rijndael() {}
+Rijndael::Rijndael()
+{
+    utils::memlock(m_round_key_enc, cMaxKeySize * (cMaxRounds + 2));
+    utils::memlock(m_round_key_dec, cMaxKeySize * (cMaxRounds + 2));
+}
+
+Rijndael::~Rijndael()
+{
+    std::fill(
+        m_round_key_enc, m_round_key_enc + cMaxKeySize * (cMaxRounds + 2), 0);
+    std::fill(
+        m_round_key_dec, m_round_key_enc + cMaxKeySize * (cMaxRounds + 2), 0);
+    utils::memunlock(m_round_key_enc, cMaxKeySize * (cMaxRounds + 2));
+    utils::memunlock(m_round_key_dec, cMaxKeySize * (cMaxRounds + 2));
+}
 
 #define BYTE0O_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
@@ -698,7 +712,8 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
     return ALC_ERROR_NONE;
 }
 
-void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void
+Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     encryptBlockKernel(blk0, blk0, pkey, nr);
 }

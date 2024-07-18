@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 #include <cassert>
 #include <functional>
 
+#include "alcp/error.h"
 #include "alcp/types.hh"
 #include <cstring>
 
@@ -211,6 +212,34 @@ static inline Uint8 constexpr GetByte(Uint32 u, int byte)
 {
     assert(byte < 4);
     return (Uint8)((u >> (byte * 8)) & 0xFF);
+}
+
+/**
+ * @brief
+ *
+ * @tparam T
+ * @param pDest
+ * @param destSize
+ * @param pSrc
+ * @param srcSize
+ * @return alc_error_t
+ */
+template<typename T>
+static inline alc_error_t
+SecureCopy(void* pDest, Uint64 destSize, const void* pSrc, Uint64 srcSize)
+{
+#ifdef __STDC_LIB_EXT1__
+    memcpy_s(pDest, destSize, pSrc, srcSize);
+#else
+    if (pDest == nullptr || pSrc == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    if (destSize < srcSize) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+    CopyBlock<T>(pDest, pSrc, srcSize);
+    return ALC_ERROR_NONE;
+#endif
 }
 
 } // namespace alcp::utils

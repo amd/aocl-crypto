@@ -33,6 +33,7 @@
 #include "alcp/cipher/aesni.hh"
 #include "alcp/rng/drbg_ctr.hh"
 #include "alcp/utils/copy.hh"
+#include <cassert>
 #include <immintrin.h>
 
 namespace alcp::rng::drbg::avx2 {
@@ -287,7 +288,8 @@ BlockCipherDf(const Uint8* pcInputString,
         p_s_8[sizeof(Int32) - i - 1] = t;
     }
     Uint8* p_s_input_str = (&S[0]) + sizeof(cL) + sizeof(cN);
-    memcpy(p_s_input_str, pcInputString, cL);
+    utils::SecureCopy<Uint8>(
+        p_s_input_str, s_size - (sizeof(cL) + sizeof(cN)), pcInputString, cL);
     memset(p_s_input_str + cL, 0x80, 1);
 
     // temp = the Null string.
@@ -317,8 +319,11 @@ BlockCipherDf(const Uint8* pcInputString,
 
         // temp = temp || BCC (K, (IV || S)).
         std::vector<Uint8> iv_concat_s(IV.size() + S.size());
-        memcpy(&iv_concat_s[0], &IV[0], IV.size());
-        memcpy(&iv_concat_s[0] + IV.size(), &S[0], S.size());
+        utils::SecureCopy<Uint8>(
+            &iv_concat_s[0], IV.size() + S.size(), &IV[0], IV.size());
+
+        utils::SecureCopy<Uint8>(
+            &iv_concat_s[0] + IV.size(), S.size(), &S[0], S.size());
 
         BCC(big_key,
             cKeyLen,

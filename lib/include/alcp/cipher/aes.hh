@@ -35,6 +35,7 @@
 #include "alcp/base.hh"
 #include "alcp/cipher/rijndael.hh"
 #include "alcp/utils/bits.hh"
+#include "alcp/utils/memory.hh"
 
 #include <immintrin.h>
 #include <wmmintrin.h>
@@ -87,15 +88,22 @@ class Aes : public Rijndael
         : Rijndael()
     {
         m_keyLen_in_bytes_aes = keyLen_in_bytes;
+        utils::memlock(m_iv_aes, MAX_CIPHER_IV_SIZE);
     }
 
     // this constructor to be removed.
     Aes()
         : Rijndael()
-    {}
+    {
+        utils::memlock(m_iv_aes, MAX_CIPHER_IV_SIZE);
+    }
 
   protected:
-    virtual ~Aes() {}
+    virtual ~Aes()
+    {
+        utils::memunlock(m_iv_aes, MAX_CIPHER_IV_SIZE);
+        std::fill(m_iv_aes, m_iv_aes + MAX_CIPHER_IV_SIZE, 0);
+    }
 
     // FIXME:
     // Without CMAC-SIV extending AES, we cannot access it with protected,
