@@ -546,7 +546,7 @@ Sha3Finalize(Uint8*  state,
     }
 }
 
-alc_error_t
+__attribute__((aligned(64))) alc_error_t
 Sha3Update(Uint64* state, Uint64* pSrc, Uint64 msg_size, Uint64 chunk_size)
 {
 
