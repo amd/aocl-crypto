@@ -187,9 +187,11 @@ endfunction(alcp_get_arch_cflags_zen4_clang)
 # sanitizer options
 function(alcp_add_sanitize_flags)
     # memory sanitizer supported only by clang
+    # FIXME: since memsan is not supported by all the dependency libraries,
+    # compilation is disabled with memsan.
     set (ALCP_SANITIZE_OPTIONS_CLANG
-            -fsanitize=memory
-            -fsanitize-memory-track-origins
+            #-fsanitize=memory
+            #-fsanitize-memory-track-origins
             -fPIC
             -fno-omit-frame-pointer
             CACHE INTERNAL ""
