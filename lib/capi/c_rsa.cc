@@ -498,18 +498,18 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                         const Uint8*           pText,
                                         Uint64                 textSize,
-                                        const Uint8*           pEncryptText)
+                                        const Uint8*           pSignedBuff)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
-    ALCP_BAD_PTR_ERR_RET(pEncryptText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
     err = ctx->verifyPublicPkcsv15WithoutHashFn(
-        ctx->m_rsa, pText, textSize, pEncryptText);
+        ctx->m_rsa, pText, textSize, pSignedBuff);
     return err;
 }
 
