@@ -48,17 +48,17 @@ ExecRecPlay* fr = nullptr;
 
 TEST(ChachaPoly_ENC_256, CROSS_SMALL_256)
 {
-    // if (useipp || oa_override)
-    GTEST_SKIP() << "IPP doesnt have Chacha20-poly1305 cipher implemented yet";
-    /* FIXME temporarily disabling chacha-poly tests due to known failures */
+    if (useipp || oa_override)
+        GTEST_SKIP()
+            << "IPP doesnt have Chacha20-poly1305 cipher implemented yet";
 
     CipherAeadCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
 }
 TEST(ChachaPoly_DEC_256, CROSS_SMALL_256)
 {
-    // if (useipp || oa_override)
-    GTEST_SKIP() << "IPP doesnt have Chacha20-poly1305 cipher implemented yet";
-    /* FIXME temporarily disabling chacha-poly tests due to known failures */
+    if (useipp || oa_override)
+        GTEST_SKIP()
+            << "IPP doesnt have Chacha20-poly1305 cipher implemented yet";
 
     CipherAeadCrossTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
 }

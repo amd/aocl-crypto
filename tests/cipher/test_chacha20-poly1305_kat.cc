@@ -37,16 +37,16 @@ using namespace alcp::testing;
 
 TEST(ChachaPoly_ENC_256, KAT_256)
 {
-    // if (useipp || oa_override)
-    /* FIXME temporarily disabling chacha-poly tests due to known failures */
-    GTEST_SKIP() << "IPP doesnt have Chacha20-Poly1305 cipher implemented yet";
+    if (useipp || oa_override)
+        GTEST_SKIP()
+            << "IPP doesnt have Chacha20-Poly1305 cipher implemented yet";
     CipherAeadKatTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 TEST(ChachaPoly_DEC_256, KAT_256)
 {
-    // if (useipp || oa_override)
-    /* FIXME temporarily disabling chacha-poly tests due to known failures */
-    GTEST_SKIP() << "IPP doesnt have Chacha20-Poly1305 cipher implemented yet";
+    if (useipp || oa_override)
+        GTEST_SKIP()
+            << "IPP doesnt have Chacha20-Poly1305 cipher implemented yet";
     CipherAeadKatTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 

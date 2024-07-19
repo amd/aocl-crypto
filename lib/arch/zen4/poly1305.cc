@@ -799,6 +799,7 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
             pMsg, pMsg + copy_len, state.msg_buffer + state.msg_buffer_len);
         len -= copy_len;
         state.msg_buffer_len += copy_len;
+        pMsg += copy_len;
 
         const Uint8* p_temp_ptr = state.msg_buffer;
         Uint64       temp_len   = 16;
