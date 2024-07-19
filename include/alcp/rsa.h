@@ -128,9 +128,23 @@ typedef struct
     Uint64  size;
 } BigNum;
 
+/**
+ * @brief       Returns the digest info index
+ *
+ * @param [in]  mode      - digest mode
+ *
+ * @return      index in DigestInfo array
+ */
 ALCP_API_EXPORT int
 alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
 
+/**
+ * @brief       Returns the digest info size
+ *
+ * @param [in]  mode      - digest mode
+ *
+ * @return      size of entry in DigestInfo array
+ */
 ALCP_API_EXPORT int
 alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
 
