@@ -135,7 +135,7 @@ typedef struct
  *
  * @return      index in DigestInfo array
  */
-ALCP_API_EXPORT int
+ALCP_API_EXPORT Int32
 alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
 
 /**
@@ -145,7 +145,7 @@ alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
  *
  * @return      size of entry in DigestInfo array
  */
-ALCP_API_EXPORT int
+ALCP_API_EXPORT Int32
 alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
 
 /**
@@ -328,7 +328,7 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  check       - Verify the signed message to prevent fault attack
  * @param [in]  pText       - pointer to input text
  * @param [in]  textSize    - size of input text
- * @param [in]  salt        - pointer to salt
+ * @param [in]  pSalt       - pointer to salt
  * @param [in]  saltSize    - size of salt
  * @param [out] pSignedBuff - pointer to signed text
  *
@@ -340,7 +340,7 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
                              bool                   check,
                              const Uint8*           pText,
                              Uint64                 textSize,
-                             const Uint8*           salt,
+                             const Uint8*           pSalt,
                              Uint64                 saltSize,
                              Uint8*                 pSignedBuff);
 
@@ -510,7 +510,7 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pRsaHandle  - Handler of the Context for the session
  * @param [in]  pHash       - pointer to input hash
  * @param [in]  hashSize    - size of hash
- * @param [in]  salt        - pointer to salt
+ * @param [in]  pSalt       - pointer to salt
  * @param [in]  saltSize    - size of salt
  * @param [out] pSignedBuff - pointer to signed text
  *
@@ -521,7 +521,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                   const Uint8*           pHash,
                                   Uint64                 hashSize,
-                                  const Uint8*           salt,
+                                  const Uint8*           pSalt,
                                   Uint64                 saltSize,
                                   Uint8*                 pSignedBuff);
 
