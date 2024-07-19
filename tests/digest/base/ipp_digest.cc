@@ -26,6 +26,9 @@
  *
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "digest/ipp_digest.hh"
 
 namespace alcp::testing {
@@ -146,6 +149,9 @@ IPPDigestBase::digest_squeeze(const alcp_digest_data_t& data)
 
 void
 IPPDigestBase::reset()
-{}
+{
+}
 
 } // namespace alcp::testing
+
+#pragma GCC diagnostic pop

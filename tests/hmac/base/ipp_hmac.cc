@@ -26,6 +26,9 @@
  *
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "hmac/ipp_hmac.hh"
 
 /* get digest from SHA type*/
@@ -147,3 +150,5 @@ IPPHmacBase::MacReset()
 }
 
 } // namespace alcp::testing
+
+#pragma GCC diagnostic pop

@@ -26,6 +26,9 @@
  *
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "rsa/ipp_rsa.hh"
 #include <algorithm>
 #include <cstddef>
@@ -570,3 +573,5 @@ IPPRsaBase::reset()
 }
 
 } // namespace alcp::testing
+
+#pragma GCC diagnostic pop
