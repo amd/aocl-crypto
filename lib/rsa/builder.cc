@@ -132,8 +132,7 @@ __rsa_pssSignBufWithPriv_wrapper_without_hash(void*        pRsaHandle,
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->signPrivatePssWithoutHash(
-        pHash, hashSize, salt, saltSize, pSignedBuff);
+    return ap->signPrivateHashPss(pHash, hashSize, salt, saltSize, pSignedBuff);
 }
 
 alc_error_t
@@ -145,7 +144,7 @@ __rsa_pssVerifyBufWithPub_wrapper_without_hash(void*        pRsaHandle,
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicPssWithoutHash(pHash, hashSize, pSignedBuff);
+    return ap->verifyPublicHashPss(pHash, hashSize, pSignedBuff);
 }
 
 alc_error_t
@@ -204,7 +203,7 @@ __rsa_pkcsv15SignBufWithPrivWithoutHash_wrapper(void*        pRsaHandle,
 
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->signPrivatePkcsv15WithoutHash(pText, textSize, signedText);
+    return ap->signPrivateHashPkcsv15(pText, textSize, signedText);
 }
 
 alc_error_t
@@ -214,7 +213,7 @@ __rsa_pkcsv15VerifyBufWithPubWithoutHash_wrapper(void*        pRsaHandle,
                                                  const Uint8* signedText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicPkcsv15WithoutHash(pText, textSize, signedText);
+    return ap->verifyPublicHashPkcsv15(pText, textSize, signedText);
 }
 
 static Uint64

@@ -45,7 +45,7 @@ using namespace alcp;
 
 EXTERN_C_BEGIN
 
-int
+Int32
 alcp_rsa_get_digest_info_index(alc_digest_mode_t mode)
 {
     int index = 0;
@@ -84,7 +84,7 @@ alcp_rsa_get_digest_info_index(alc_digest_mode_t mode)
     return index;
 }
 
-int
+Int32
 alcp_rsa_get_digest_info_size(alc_digest_mode_t mode)
 {
     int size = 0;
@@ -336,7 +336,7 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
                              bool                   check,
                              const Uint8*           pText,
                              Uint64                 textSize,
-                             const Uint8*           salt,
+                             const Uint8*           pSalt,
                              Uint64                 saltSize,
                              Uint8*                 pSignedBuff)
 {
@@ -346,14 +346,14 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(pText, err);
     ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
 
-    if (salt == nullptr && saltSize > 0) {
+    if (pSalt == nullptr && saltSize > 0) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
     err = ctx->signPrivatePssFn(
-        ctx->m_rsa, check, pText, textSize, salt, saltSize, pSignedBuff);
+        ctx->m_rsa, check, pText, textSize, pSalt, saltSize, pSignedBuff);
     return err;
 }
 
@@ -379,7 +379,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                   const Uint8*           pHash,
                                   Uint64                 hashSize,
-                                  const Uint8*           salt,
+                                  const Uint8*           pSalt,
                                   Uint64                 saltSize,
                                   Uint8*                 pSignedBuff)
 {
@@ -389,14 +389,14 @@ alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(pHash, err);
     ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
 
-    if (salt == nullptr && saltSize > 0) {
+    if (pSalt == nullptr && saltSize > 0) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
     err = ctx->signPrivatePssWithoutHashFn(
-        ctx->m_rsa, pHash, hashSize, salt, saltSize, pSignedBuff);
+        ctx->m_rsa, pHash, hashSize, pSalt, saltSize, pSignedBuff);
     return err;
 }
 
@@ -498,18 +498,18 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                         const Uint8*           pText,
                                         Uint64                 textSize,
-                                        const Uint8*           pEncryptText)
+                                        const Uint8*           pSignedBuff)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
-    ALCP_BAD_PTR_ERR_RET(pEncryptText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
     err = ctx->verifyPublicPkcsv15WithoutHashFn(
-        ctx->m_rsa, pText, textSize, pEncryptText);
+        ctx->m_rsa, pText, textSize, pSignedBuff);
     return err;
 }
 

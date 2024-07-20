@@ -561,11 +561,11 @@ Rsa::signPrivatePss(bool         check,
 }
 
 alc_error_t
-Rsa::signPrivatePssWithoutHash(const Uint8* pHash,
-                               Uint64       hashSize,
-                               const Uint8* salt,
-                               Uint64       saltSize,
-                               Uint8*       pSignedBuff)
+Rsa::signPrivateHashPss(const Uint8* pHash,
+                        Uint64       hashSize,
+                        const Uint8* salt,
+                        Uint64       saltSize,
+                        Uint8*       pSignedBuff)
 {
     // Add Pss encoding
     if (!pHash || (saltSize > 0 && !salt) || !pSignedBuff
@@ -703,9 +703,9 @@ Rsa::verifyPublicPss(const Uint8* pText,
 }
 
 alc_error_t
-Rsa::verifyPublicPssWithoutHash(const Uint8* pHash,
-                                Uint64       hashSize,
-                                const Uint8* pSignedBuff)
+Rsa::verifyPublicHashPss(const Uint8* pHash,
+                         Uint64       hashSize,
+                         const Uint8* pSignedBuff)
 {
     if (!pHash || !pSignedBuff) {
         return ALC_ERROR_NOT_PERMITTED;
@@ -832,14 +832,14 @@ Rsa::signPrivatePkcsv15(bool         check,
 }
 
 alc_error_t
-Rsa::signPrivatePkcsv15WithoutHash(const Uint8* pText,
-                                   Uint64       textSize,
-                                   Uint8*       decrypText)
+Rsa::signPrivateHashPkcsv15(const Uint8* pHash,
+                            Uint64       hashSize,
+                            Uint8*       pSignedBuff)
 {
-    // textSize will already include hash size + DigestInfo size
+    // hashSize will already include hash size + DigestInfo size
     // pText will have the hash + DigestInfo
 
-    if (!pText || !decrypText || textSize > m_key_size - 11) {
+    if (!pHash || !pSignedBuff || hashSize > m_key_size - 11) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
@@ -847,11 +847,11 @@ Rsa::signPrivatePkcsv15WithoutHash(const Uint8* pText,
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
-    Uint64 pad_len = m_key_size - 3 - textSize;
+    Uint64 pad_len = m_key_size - 3 - hashSize;
     utils::PadBytes(message + 2, 0xff, pad_len);
-    utils::CopyBytes(message + 3 + pad_len, pText, textSize);
+    utils::CopyBytes(message + 3 + pad_len, pHash, hashSize);
 
-    alc_error_t err = decryptPrivate(message, m_key_size, decrypText);
+    alc_error_t err = decryptPrivate(message, m_key_size, pSignedBuff);
 
     return err;
 }
@@ -939,26 +939,26 @@ Rsa::verifyPublicPkcsv15(const Uint8* pText,
 }
 
 alc_error_t
-Rsa::verifyPublicPkcsv15WithoutHash(const Uint8* pText,
-                                    Uint64       textSize,
-                                    const Uint8* pEncryptText)
+Rsa::verifyPublicHashPkcsv15(const Uint8* pHash,
+                             Uint64       hashSize,
+                             const Uint8* pSignedBuff)
 {
     alignas(64) Uint8 mod_text[2048 / 8], message[2048 / 8]{};
 
-    if (!pText || !pEncryptText || textSize > m_key_size - 11) {
+    if (!pHash || !pSignedBuff || hashSize > m_key_size - 11) {
         return ALC_ERROR_GENERIC;
     }
 
-    alc_error_t err = encryptPublic(pEncryptText, m_key_size, mod_text);
+    alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
     if (err != ALC_ERROR_NONE) {
         return err;
     }
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]    = 0x01;
-    Int64 pad_len = m_key_size - 3 - textSize;
+    Int64 pad_len = m_key_size - 3 - hashSize;
     utils::PadBytes(message + 2, 0xff, pad_len);
-    utils::CopyBytes(message + 3 + pad_len, pText, textSize);
+    utils::CopyBytes(message + 3 + pad_len, pHash, hashSize);
 
     Uint64* num1 = reinterpret_cast<Uint64*>(message);
     Uint64* num2 = reinterpret_cast<Uint64*>(mod_text);

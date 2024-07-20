@@ -128,10 +128,24 @@ typedef struct
     Uint64  size;
 } BigNum;
 
-ALCP_API_EXPORT int
+/**
+ * @brief       Returns the digest info index
+ *
+ * @param [in]  mode      - digest mode
+ *
+ * @return      index in DigestInfo array
+ */
+ALCP_API_EXPORT Int32
 alcp_rsa_get_digest_info_index(alc_digest_mode_t mode);
 
-ALCP_API_EXPORT int
+/**
+ * @brief       Returns the digest info size
+ *
+ * @param [in]  mode      - digest mode
+ *
+ * @return      size of entry in DigestInfo array
+ */
+ALCP_API_EXPORT Int32
 alcp_rsa_get_digest_info_size(alc_digest_mode_t mode);
 
 /**
@@ -150,7 +164,6 @@ alcp_rsa_context_size(void);
 
 /**
  * @brief       Request a handle for rsa for a configuration
- *              as pointed by p_ec_info_p
  *
  * @note        Only 1024 and 2048 key size supported
  *
@@ -315,7 +328,7 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  check       - Verify the signed message to prevent fault attack
  * @param [in]  pText       - pointer to input text
  * @param [in]  textSize    - size of input text
- * @param [in]  salt        - pointer to salt
+ * @param [in]  pSalt       - pointer to salt
  * @param [in]  saltSize    - size of salt
  * @param [out] pSignedBuff - pointer to signed text
  *
@@ -327,7 +340,7 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
                              bool                   check,
                              const Uint8*           pText,
                              Uint64                 textSize,
-                             const Uint8*           salt,
+                             const Uint8*           pSalt,
                              Uint64                 saltSize,
                              Uint8*                 pSignedBuff);
 
@@ -399,18 +412,65 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                    Uint64                 textSize,
                                    const Uint8*           pSignedBuff);
 
+/**
+ * @brief Function signs hash using private key and PKCS1-v1_5 padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle  - Handler of the Context for the session
+ * @param [in]  pText       - pointer to input hash
+ * @param [in]  textSize    - size of input hash
+ * @param [out] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                        const Uint8*           pText,
                                        Uint64                 textSize,
                                        Uint8*                 pSignedText);
 
+/**
+ * @brief Function verifies hash using public key and PKCS1-v1_5 padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in] pRsaHandle  - Handler of the Context for the session
+ * @param [in] pText       - pointer to input hash
+ * @param [in] textSize    - size of input hash
+ * @param [in] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                         const Uint8*           pText,
                                         Uint64                 textSize,
-                                        const Uint8*           pEncryptText);
+                                        const Uint8*           pSignedBuff);
 
+/**
+ * @brief Function encrypts text using using public key and pkcs padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request</b>
+ * @endparblock
+ *
+ * @param [in]  pRsaHandle         - Handler of the Context for the session
+ * @param [in]  pText              - pointer to raw bytes
+ * @param [in]  textSize           - size of raw bytes
+ * @param [out] pEncryptText       - pointer to encrypted bytes
+ * @param [in]  randomPad          - random pad
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                     const Uint8*           pText,
@@ -418,20 +478,69 @@ alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                     Uint8*                 pEncryptText,
                                     const Uint8*           randomPad);
 
+/**
+ * @brief Function decrypts encrypted text using private key and pkcs padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle - Handler of the Context for the session
+ * @param [in]  pText   - pointer to encrypted bytes
+ * @param [out] pDecryptText      - pointer to decrypted text
+ * @param [out] textSize   - pointer to size of decrypted text
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                      const Uint8*           pText,
                                      Uint8*                 pDecryptText,
                                      Uint64*                textSize);
 
+/**
+ * @brief Function signs hash using private key and PSS padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle  - Handler of the Context for the session
+ * @param [in]  pHash       - pointer to input hash
+ * @param [in]  hashSize    - size of hash
+ * @param [in]  pSalt       - pointer to salt
+ * @param [in]  saltSize    - size of salt
+ * @param [out] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                   const Uint8*           pHash,
                                   Uint64                 hashSize,
-                                  const Uint8*           salt,
+                                  const Uint8*           pSalt,
                                   Uint64                 saltSize,
                                   Uint8*                 pSignedBuff);
 
+/**
+ * @brief Function verifies hash using public key and PSS padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in] pRsaHandle  - Handler of the Context for the session
+ * @param [in] pHash       - pointer to input hash
+ * @param [in] hashSize    - size of input hash
+ * @param [in] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pHash,
@@ -458,6 +567,18 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
                        const Uint8*           pModulus,
                        Uint64                 size);
 
+/**
+ * @brief Function sets the public key in big num format inside the handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request</b>
+ * @endparblock
+ * @param [in]   pRsaHandle - Handler of the Context for the session
+ * @param [in]   exponent   - BigNum pointer to public key exponent
+ * @param [in]   pModulus   - BigNum pointer to modulus
+
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_bignum_public_key(const alc_rsa_handle_p pRsaHandle,
                                const BigNum*          exponent,
@@ -490,6 +611,22 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
                         const Uint8*           mod,
                         Uint64                 size);
 
+/**
+ * @brief Function sets the private key inside the handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request</b>
+ * @endparblock
+ * @param [in]   pRsaHandle - handler of the Context for the session
+ * @param [in]   dp         - pointer to BigNum first exponent
+ * @param [in]   dq         - pointer to BigNum second exponent
+ * @param [in]   p          - pointer to BigNum first modulus
+ * @param [in]   q          - pointer to BigNum second modulus
+ * @param [in]   qinv       - pointer to BigNum inverse of second modulus
+ * @param [in]   mod        - pointer to BigNum mult of first and second modulus
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_bignum_private_key(const alc_rsa_handle_p pRsaHandle,
                                 const BigNum*          dp,
@@ -533,6 +670,18 @@ alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
 ALCP_API_EXPORT void
 alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle);
 
+/**
+ * @brief       copies a handle for rsa from pSrcHandle to pDestHandle
+ *
+ * @note        Only 1024 and 2048 key size supported
+ *
+ * @param [in]  pSrcHandle       - Input source handle.
+ * @param [out] pDestHandle      - Output source handle.
+ *
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_context_copy(const alc_rsa_handle_p pSrcHandle,
                       const alc_rsa_handle_p pDestHandle);
