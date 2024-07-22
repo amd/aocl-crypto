@@ -1000,6 +1000,7 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_GCM,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256gcm_functions },
+    // SIV
     { ALCP_PROV_NAMES_AES_128_SIV,
       CIPHER_DEF_PROP,
       ALCP_prov_aes128siv_functions },

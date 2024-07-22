@@ -85,10 +85,15 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             return ALC_prov_ciphers;
             break;
 #endif
+
+// Digest providers are disabled as of now due to provider overhead
+#ifdef DIGEST_PROVIDER_ENABLED
         case OSSL_OP_DIGEST:
             EXIT();
             return ALC_prov_digests;
             break;
+#endif
+
 #if OPENSSL_API_LEVEL >= 30100
             openssl_version = OpenSSL_version(OPENSSL_VERSION_STRING);
         case OSSL_OP_ASYM_CIPHER:
