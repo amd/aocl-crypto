@@ -197,7 +197,7 @@ static const Uint8 Q_ModulusINV_2048[] = {
     0x49, 0x41, 0x2e, 0xd9, 0xc0, 0xe6, 0xd2, 0xc8
 };
 
-static const Uint64 PublicKeyExponent = 0x10001;
+static Uint64 PublicKeyExponent = 0x10001;
 
 static inline digest::IDigest*
 fetch_digest(alc_digest_mode_t mode)
@@ -243,6 +243,15 @@ fetch_digest(alc_digest_mode_t mode)
         }
     }
     return digest;
+}
+
+static inline void
+convert_to_bignum(const Uint8* bytes, Uint64* bigNum, Uint64 size)
+{
+    Uint8* p_res = (Uint8*)(bigNum);
+    for (Int64 i = size - 1, j = 0; i >= 0; --i, ++j) {
+        p_res[j] = bytes[i];
+    }
 }
 
 TEST(RsaTest, PublicEncryptPrivateDecryptTest)
@@ -959,6 +968,256 @@ TEST(RsaTest, Pkcsv15SignatureVerification)
 
     err = rsa_obj_2048.verifyPublicPkcsv15(
         text_2048, text_size_2048, signed_text_2048);
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, BigNumApiNegativeTest)
+{
+    Rsa         rsa_obj_2048;
+    alc_error_t err = rsa_obj_2048.setPrivateKeyAsBigNum(
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+    ASSERT_NE(err, ALC_ERROR_NONE);
+    BigNum dp, dq, p, q, qinv, mod, exp;
+    dp = dq = p = q = qinv = mod = exp = { nullptr, 0 };
+
+    err = rsa_obj_2048.setPrivateKeyAsBigNum(&dp, &dq, &p, &q, &qinv, &mod);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+
+    err = rsa_obj_2048.setPublicKeyAsBigNum(nullptr, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+
+    err = rsa_obj_2048.setPublicKeyAsBigNum(&exp, &mod);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, Pkcsv15NegativeTest)
+{
+    Rsa         rsa_obj_2048;
+    alc_error_t err =
+        rsa_obj_2048.encryptPublicPkcsv15(nullptr, 0, nullptr, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+    err = rsa_obj_2048.decryptPrivatePkcsv15(nullptr, nullptr, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+
+    err = rsa_obj_2048.signPrivateHashPkcsv15(nullptr, 0, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+    err = rsa_obj_2048.verifyPublicHashPkcsv15(nullptr, 0, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, PssHashNegativeTest)
+{
+    Rsa         rsa_obj_2048;
+    alc_error_t err =
+        rsa_obj_2048.signPrivateHashPss(nullptr, 0, nullptr, 0, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+
+    err = rsa_obj_2048.verifyPublicHashPss(nullptr, 0, nullptr);
+    ASSERT_NE(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, Pkcsv15EncryptDecrypt)
+{
+    Rsa rsa_obj_2048;
+
+    Uint64 Modulus_BigNum[sizeof(Modulus_2048) / 8];
+
+    Uint64 size     = sizeof(Modulus_2048);
+    Uint64 key_size = 256;
+
+    convert_to_bignum(Modulus_2048, Modulus_BigNum, size);
+
+    BigNum modulus = { Modulus_BigNum, size / 8 };
+
+    BigNum public_key = { &PublicKeyExponent, 1 };
+
+    alc_error_t err = rsa_obj_2048.setPublicKeyAsBigNum(&public_key, &modulus);
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint64 DP_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 DQ_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 P_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 Q_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 QINV_BigNum[sizeof(DP_EXP_2048) / 8];
+
+    size = sizeof(DP_EXP_2048);
+
+    convert_to_bignum(DP_EXP_2048, DP_BigNum, size);
+    convert_to_bignum(DQ_EXP_2048, DQ_BigNum, size);
+    convert_to_bignum(P_Modulus_2048, P_BigNum, size);
+    convert_to_bignum(Q_Modulus_2048, Q_BigNum, size);
+    convert_to_bignum(Q_ModulusINV_2048, QINV_BigNum, size);
+
+    BigNum dp   = { DP_BigNum, size / 8 };
+    BigNum dq   = { DQ_BigNum, size / 8 };
+    BigNum p    = { P_BigNum, size / 8 };
+    BigNum q    = { Q_BigNum, size / 8 };
+    BigNum qinv = { QINV_BigNum, size / 8 };
+
+    err = rsa_obj_2048.setPrivateKeyAsBigNum(&dp, &dq, &p, &q, &qinv, &modulus);
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint64                   text_size = 47;
+    std::unique_ptr<Uint8[]> text      = std::make_unique<Uint8[]>(text_size);
+    std::unique_ptr<Uint8[]> enc_text  = std::make_unique<Uint8[]>(key_size);
+    std::unique_ptr<Uint8[]> dec_text  = std::make_unique<Uint8[]>(key_size);
+
+    int random_pad_len = key_size - 3 - text_size;
+
+    std::unique_ptr<Uint8[]> random_pad =
+        std::make_unique<Uint8[]>(random_pad_len);
+
+    memset((void*)random_pad.get(), 0x31, random_pad_len);
+
+    err = rsa_obj_2048.encryptPublicPkcsv15(
+        text.get(), text_size, enc_text.get(), random_pad.get());
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint64 dec_text_size = 0;
+
+    err = rsa_obj_2048.decryptPrivatePkcsv15(
+        enc_text.get(), dec_text.get(), &dec_text_size);
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+    ASSERT_EQ(memcmp(dec_text.get(), text.get(), dec_text_size), 0);
+}
+
+TEST(RsaTest, Pkcsv15HashSignVerify)
+{
+    Rsa rsa_obj_2048;
+
+    Uint64 Modulus_BigNum[sizeof(Modulus_2048) / 8];
+
+    Uint64 size = sizeof(Modulus_2048);
+
+    convert_to_bignum(Modulus_2048, Modulus_BigNum, size);
+
+    BigNum modulus = { Modulus_BigNum, size / 8 };
+
+    BigNum public_key = { &PublicKeyExponent, 1 };
+
+    alc_error_t err = rsa_obj_2048.setPublicKeyAsBigNum(&public_key, &modulus);
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint64 DP_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 DQ_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 P_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 Q_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 QINV_BigNum[sizeof(DP_EXP_2048) / 8];
+
+    size = sizeof(DP_EXP_2048);
+
+    convert_to_bignum(DP_EXP_2048, DP_BigNum, size);
+    convert_to_bignum(DQ_EXP_2048, DQ_BigNum, size);
+    convert_to_bignum(P_Modulus_2048, P_BigNum, size);
+    convert_to_bignum(Q_Modulus_2048, Q_BigNum, size);
+    convert_to_bignum(Q_ModulusINV_2048, QINV_BigNum, size);
+
+    BigNum dp   = { DP_BigNum, size / 8 };
+    BigNum dq   = { DQ_BigNum, size / 8 };
+    BigNum p    = { P_BigNum, size / 8 };
+    BigNum q    = { Q_BigNum, size / 8 };
+    BigNum qinv = { QINV_BigNum, size / 8 };
+
+    err = rsa_obj_2048.setPrivateKeyAsBigNum(&dp, &dq, &p, &q, &qinv, &modulus);
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint32 key_size  = 256;
+    Uint32 hash_size = 32;
+
+    std::unique_ptr<Uint8[]> hash      = std::make_unique<Uint8[]>(hash_size);
+    std::unique_ptr<Uint8[]> sign_text = std::make_unique<Uint8[]>(key_size);
+
+    Int32 index            = alcp_rsa_get_digest_info_index(ALC_SHA2_256);
+    Int32 digest_info_size = alcp_rsa_get_digest_info_size(ALC_SHA2_256);
+
+    std::unique_ptr<Uint8[]> hash_with_info =
+        std::make_unique<Uint8[]>(digest_info_size + hash_size);
+
+    Uint8* hash_with_info_ptr = hash_with_info.get();
+
+    memcpy(hash_with_info_ptr, DigestInfo[index], digest_info_size);
+    memcpy(hash_with_info_ptr + digest_info_size, hash.get(), hash_size);
+    err = rsa_obj_2048.signPrivateHashPkcsv15(
+        hash_with_info_ptr, digest_info_size + hash_size, sign_text.get());
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    err = rsa_obj_2048.verifyPublicHashPkcsv15(
+        hash_with_info_ptr, digest_info_size + hash_size, sign_text.get());
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, PssHashSignVerify)
+{
+    Rsa rsa_obj_2048;
+
+    Uint64 Modulus_BigNum[sizeof(Modulus_2048) / 8];
+
+    Uint64 size = sizeof(Modulus_2048);
+
+    convert_to_bignum(Modulus_2048, Modulus_BigNum, size);
+
+    BigNum modulus = { Modulus_BigNum, size / 8 };
+
+    BigNum public_key = { &PublicKeyExponent, 1 };
+
+    alc_error_t err = rsa_obj_2048.setPublicKeyAsBigNum(&public_key, &modulus);
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint64 DP_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 DQ_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 P_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 Q_BigNum[sizeof(DP_EXP_2048) / 8];
+    Uint64 QINV_BigNum[sizeof(DP_EXP_2048) / 8];
+
+    size = sizeof(DP_EXP_2048);
+
+    convert_to_bignum(DP_EXP_2048, DP_BigNum, size);
+    convert_to_bignum(DQ_EXP_2048, DQ_BigNum, size);
+    convert_to_bignum(P_Modulus_2048, P_BigNum, size);
+    convert_to_bignum(Q_Modulus_2048, Q_BigNum, size);
+    convert_to_bignum(Q_ModulusINV_2048, QINV_BigNum, size);
+
+    BigNum dp   = { DP_BigNum, size / 8 };
+    BigNum dq   = { DQ_BigNum, size / 8 };
+    BigNum p    = { P_BigNum, size / 8 };
+    BigNum q    = { Q_BigNum, size / 8 };
+    BigNum qinv = { QINV_BigNum, size / 8 };
+
+    err = rsa_obj_2048.setPrivateKeyAsBigNum(&dp, &dq, &p, &q, &qinv, &modulus);
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    Uint32 key_size  = 256;
+    Uint64 hash_size = 32;
+
+    std::unique_ptr<Uint8[]> hash      = std::make_unique<Uint8[]>(hash_size);
+    std::unique_ptr<Uint8[]> sign_text = std::make_unique<Uint8[]>(key_size);
+
+    Uint64                   salt_size = key_size - hash_size - 2;
+    std::unique_ptr<Uint8[]> salt      = std::make_unique<Uint8[]>(salt_size);
+
+    digest::IDigest*                 digest = fetch_digest(ALC_SHA2_256);
+    std::unique_ptr<digest::IDigest> digest_ptr;
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    rsa_obj_2048.setDigest(digest);
+    rsa_obj_2048.setMgf(digest);
+
+    err = rsa_obj_2048.signPrivateHashPss(
+        hash.get(), hash_size, salt.get(), salt_size, sign_text.get());
+
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    err = rsa_obj_2048.verifyPublicHashPss(
+        hash.get(), hash_size, sign_text.get());
+
     ASSERT_EQ(err, ALC_ERROR_NONE);
 }
 
