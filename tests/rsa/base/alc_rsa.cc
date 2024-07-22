@@ -82,6 +82,11 @@ AlcpRsaBase::init()
             std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
             return err;
         }
+        /* FIXME:check if these return values are valid*/
+        m_digest_info_index =
+            alcp_rsa_get_digest_info_index(m_digest_info.dt_mode);
+        m_digest_info_size =
+            alcp_rsa_get_digest_info_size(m_digest_info.dt_mode);
     }
     return true;
 }
@@ -96,6 +101,7 @@ AlcpRsaBase::~AlcpRsaBase()
         }
         delete m_rsa_handle;
     }
+    free(m_hash_with_info);
 }
 
 bool
@@ -235,17 +241,88 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     return 0;
 }
 
-/* sign verify */
+/* sign verify on a calculated digest */
 bool
 AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
 {
+    /* first sign then digest */
+    alc_error_t err;
+
+    m_rsa_digest_handle          = new alc_digest_handle_t;
+    m_rsa_digest_handle->context = malloc(alcp_digest_context_size());
+
+    err = alcp_digest_request(m_digest_info.dt_mode, m_rsa_digest_handle);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_digest_request:" << err << std::endl;
+        return false;
+    }
+    err = alcp_digest_init(m_rsa_digest_handle);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_digest_init:" << err << std::endl;
+        return false;
+    }
+    if (data.m_msg != nullptr && data.m_msg_len > 0) {
+        err =
+            alcp_digest_update(m_rsa_digest_handle, data.m_msg, data.m_msg_len);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_digest_update:" << err
+                      << std::endl;
+            return false;
+        }
+    }
+    err = alcp_digest_finalize(m_rsa_digest_handle, data.m_digest, m_hash_len);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
+        return false;
+    }
+
+    if (m_rsa_digest_handle != nullptr) {
+        alcp_digest_finish(m_rsa_digest_handle);
+        if (m_rsa_digest_handle->context != nullptr) {
+            free(m_rsa_digest_handle->context);
+            m_rsa_digest_handle->context = nullptr;
+        }
+        delete m_rsa_digest_handle;
+        m_rsa_digest_handle = nullptr;
+    }
+
+    /* now calculate signature on data.m_digest */
+    /* FIXME: deallocate this in the class destructor */
+    if (m_hash_with_info != nullptr)
+        free(m_hash_with_info);
+    m_hash_with_info = (Uint8*)malloc(m_digest_info_size + m_hash_len);
+    memcpy(
+        m_hash_with_info, DigestInfo[m_digest_info_index], m_digest_info_size);
+    memcpy(m_hash_with_info + m_digest_info_size, data.m_digest, m_hash_len);
+    err =
+        alcp_rsa_privatekey_sign_hash_pkcs1v15(m_rsa_handle,
+                                               m_hash_with_info,
+                                               m_digest_info_size + m_hash_len,
+                                               data.m_signature);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
+        return false;
+    }
     return true;
 }
 bool
 AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
 {
+    alc_error_t err;
+    err =
+        alcp_rsa_publickey_verify_hash_pkcs1v15(m_rsa_handle,
+                                                m_hash_with_info,
+                                                m_digest_info_size + m_hash_len,
+                                                data.m_signature);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_rsa_publickey_verify_hash_pkcs1v15:"
+                  << err << std::endl;
+        return false;
+    }
     return true;
 }
+
+/* Perform sign on an arbitrary len message. First calculate digest,and sign*/
 bool
 AlcpRsaBase::DigestSign(const alcp_rsa_data_t& data)
 {

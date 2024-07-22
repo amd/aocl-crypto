@@ -75,6 +75,8 @@ TEST_DATA_LINK(EncryptDecrypt 2048 PKCS)
 
 TEST_DATA_LINK(SignVerify 2048 PSS)
 TEST_DATA_LINK(SignVerify 2048 PKCS)
+TEST_DATA_LINK(DigestSignVerify 2048 PKCS)
+
 
 alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
 alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)

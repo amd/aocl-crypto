@@ -437,7 +437,8 @@ OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     }
 
     /* this need not be called for padding mode */
-    if (m_rsa_algo.compare("SignVerify") == 0) {
+    if (m_rsa_algo.compare("SignVerify") == 0
+        || m_rsa_algo.compare("DigestSignVerify") == 0) {
         if (EVP_PKEY_CTX_set_signature_md(m_SigningKeyCtxDirect, m_md_type)
             != 1) {
             std::cout << __func__ << ":"

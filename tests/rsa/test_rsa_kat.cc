@@ -57,6 +57,22 @@ TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256)
         "SignVerify", ALCP_TEST_RSA_PADDING_PKCS, 2048, dinfo_256, mgfinfo_256);
 }
 
+/* test for digest sign */
+TEST(RSA_DigestSignVerify_PKCS_2048, KAT_SHA2_256)
+{
+    if (useipp)
+        GTEST_SKIP();
+    dinfo_256.dt_mode = ALC_SHA2_256;
+    dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256       = dinfo_256;
+    Rsa_KAT("DigestSignVerify",
+            ALCP_TEST_RSA_PADDING_PKCS,
+            2048,
+            dinfo_256,
+            mgfinfo_256);
+}
+
 /* All tests to be added here */
 /* non padded mode */
 TEST(RSA_EncryptDecrypt_No_Padding_1024, KAT)

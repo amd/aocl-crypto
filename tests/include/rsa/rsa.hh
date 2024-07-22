@@ -74,6 +74,9 @@ typedef struct _alcp_rsa_data
     /* for pkcs encrypt decrypt */
     Uint8* m_random_pad     = nullptr;
     Uint64 m_random_pad_len = 0;
+
+    /* for pkcs hash sign */
+    // Uint8* m_hash_with_info = nullptr;
 } alcp_rsa_data_t;
 
 class RsaBase
@@ -81,20 +84,23 @@ class RsaBase
   public:
     alc_digest_info_t m_digest_info{};
     alc_digest_info_t m_mgf_info{};
-    int               m_padding_mode                             = 0;
-    std::string       m_rsa_algo                                 = "";
-    Uint64            m_key_len                                  = 0;
-    Uint64            m_hash_len                                 = 0;
-    virtual bool      init()                                     = 0;
-    virtual bool      reset()                                    = 0;
-    virtual bool      SetPublicKey(const alcp_rsa_data_t& data)  = 0;
-    virtual bool      SetPrivateKey(const alcp_rsa_data_t& data) = 0;
-    virtual int       EncryptPubKey(const alcp_rsa_data_t& data) = 0;
-    virtual int       DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
-    virtual bool      ValidateKeys()                             = 0;
-    virtual bool      DigestSign(const alcp_rsa_data_t& data)    = 0;
-    virtual bool      DigestVerify(const alcp_rsa_data_t& data)  = 0;
-    virtual bool      Sign(const alcp_rsa_data_t& data)          = 0;
-    virtual bool      Verify(const alcp_rsa_data_t& data)        = 0;
+    int               m_padding_mode      = 0;
+    std::string       m_rsa_algo          = "";
+    Uint64            m_key_len           = 0;
+    Uint64            m_hash_len          = 0;
+    int               m_digest_info_index = 0;
+    int               m_digest_info_size  = 0;
+
+    virtual bool init()                                     = 0;
+    virtual bool reset()                                    = 0;
+    virtual bool SetPublicKey(const alcp_rsa_data_t& data)  = 0;
+    virtual bool SetPrivateKey(const alcp_rsa_data_t& data) = 0;
+    virtual int  EncryptPubKey(const alcp_rsa_data_t& data) = 0;
+    virtual int  DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+    virtual bool ValidateKeys()                             = 0;
+    virtual bool DigestSign(const alcp_rsa_data_t& data)    = 0;
+    virtual bool DigestVerify(const alcp_rsa_data_t& data)  = 0;
+    virtual bool Sign(const alcp_rsa_data_t& data)          = 0;
+    virtual bool Verify(const alcp_rsa_data_t& data)        = 0;
 };
 } // namespace alcp::testing
