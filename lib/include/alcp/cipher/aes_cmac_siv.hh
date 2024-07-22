@@ -69,12 +69,12 @@ class ALCP_API_EXPORT Siv
         std::vector<std::vector<Uint8>>(10);
     // alignas(16) Uint8 m_additionalDataProcessed[MAX_ADD_SIZE] = {};
 
-    alignas(16) Uint8 m_cmacTemp[SIZE_CMAC]    = {};
-    Uint64       m_additionalDataProcessedSize = {};
-    const Uint8* m_key1                        = {};
-    const Uint8* m_key2                        = {};
-    Uint64       m_padLen                      = {};
-    Cmac         m_cmac;
+    alignas(16) Uint8 m_cmacTemp[SIZE_CMAC] = {};
+    Uint64 m_additionalDataProcessedSize    = {};
+    Uint8  m_key1[32];
+    Uint8  m_key2[32];
+    Uint64 m_padLen = 0;
+    Cmac   m_cmac;
 
     alc_error_t cmacWrapper(const Uint8 data[],
                             Uint64      size,
@@ -93,6 +93,7 @@ class ALCP_API_EXPORT Siv
     Siv(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {}
+    ~Siv();
 };
 
 // AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual iCipherAuth);

@@ -51,8 +51,6 @@ Siv::setKeys(const Uint8 key1[], Uint64 length)
             return ALC_ERROR_INVALID_SIZE;
     }
 
-    m_key1 = key1;
-
     alc_error_t err = m_cmac.init(
         m_key1, length / 8); // m_cmac.init(m_key1, length, NULL, 0);
 
@@ -79,9 +77,17 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
     }
 
     if (pKey != nullptr) {
-        m_key1 = pKey;
-        m_key2 = pKey + keyLength / 8;
-        err    = setKeys(m_key1, keyLength);
+
+        if (utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8)) {
+            return ALC_ERROR_INVALID_SIZE;
+        }
+
+        if (utils::SecureCopy<Uint8>(
+                m_key2, 32, pKey + (keyLength / 8), keyLength / 8)) {
+            return ALC_ERROR_INVALID_SIZE;
+        }
+
+        err = setKeys(m_key1, keyLength);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
@@ -162,12 +168,6 @@ Siv::addAdditionalInput(const Uint8* pAad, Uint64 aadLen)
     if ((m_additionalDataProcessedSize + 1)
         == m_additionalDataProcessed.size()) {
         m_additionalDataProcessed.resize(m_additionalDataProcessed.size() + 10);
-    }
-
-    // Block Null Keys or non set Keys.
-    if (m_key1 == nullptr || m_key2 == nullptr) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
     }
 
     // Allocate memory for additonal data processed vector
@@ -253,7 +253,11 @@ Siv::s2v(const Uint8 plainText[], Uint64 size)
 
     return err;
 }
-
+Siv::~Siv()
+{
+    memset(m_key1, 0, 32);
+    memset(m_key2, 0, 32);
+}
 // class SivHash functions
 
 alc_error_t
