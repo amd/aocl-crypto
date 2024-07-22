@@ -1204,7 +1204,12 @@ Rsa::setPrivateKeyAsBigNum(const BigNum* dp,
                            const BigNum* qinv,
                            const BigNum* mod)
 {
-    if (!dp || !dq || !p || !q || !mod) {
+    if (!dp || !dq || !p || !q || !mod || !dp->num || !dq->num || !p->num
+        || !q->num || !mod->num) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+
+    if (!(dp->size == 128 / 16 || dp->size == 256 / 16)) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
