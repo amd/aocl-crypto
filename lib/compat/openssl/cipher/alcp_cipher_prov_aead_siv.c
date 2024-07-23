@@ -69,6 +69,7 @@ ALCP_prov_aes_siv_newctx(void*        provctx,
 
         if (ctx->base.handle.ch_context == NULL) {
             printf("\n context allocation failed ");
+            OPENSSL_clear_free(ctx, sizeof(*ctx));
             return NULL;
         }
 
@@ -80,12 +81,11 @@ ALCP_prov_aes_siv_newctx(void*        provctx,
             printf("Failure in SIV AEAD Request\n");
         }
 
-        ctx->base.prov_cipher_data = ctx->base.prov_cipher_data;
-
         if (err == ALC_ERROR_NONE) {
             ALCP_prov_siv_initctx(provctx, ctx, keybits, mode);
         } else {
             OPENSSL_clear_free(ctx, sizeof(*ctx));
+            return NULL;
         }
     }
     EXIT();

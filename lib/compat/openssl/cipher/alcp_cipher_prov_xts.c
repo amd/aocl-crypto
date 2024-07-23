@@ -74,7 +74,6 @@ alcp_prov_aes_xts_newctx(void*        provctx,
         }
         alc_error_t err =
             alcp_cipher_request(ALC_AES_MODE_XTS, kbits / 2, &(ctx->handle));
-        ctx->prov_cipher_data = ctx->prov_cipher_data;
 
         if (err == ALC_ERROR_NONE) {
             if (ctx != ((void*)0)) {

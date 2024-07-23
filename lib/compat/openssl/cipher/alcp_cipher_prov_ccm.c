@@ -57,6 +57,7 @@ ALCP_prov_alg_ccm_newctx(void* provctx, size_t keybits)
 
         if (ctx->handle.ch_context == NULL) {
             printf("\n context allocation failed ");
+            OPENSSL_clear_free(ctx, sizeof(*ctx));
             return NULL;
         }
 
@@ -64,12 +65,11 @@ ALCP_prov_alg_ccm_newctx(void* provctx, size_t keybits)
         alc_error_t err =
             alcp_cipher_aead_request(ALC_AES_MODE_CCM, keybits, &(ctx->handle));
 
-        ctx->prov_cipher_data = ctx->prov_cipher_data;
-
         if (err == ALC_ERROR_NONE) {
             ALCP_prov_ccm_initctx(ctx, keybits);
         } else {
             OPENSSL_clear_free(ctx, sizeof(*ctx));
+            return NULL;
         }
     }
     return ctx;

@@ -29,24 +29,6 @@
 #include "cipher/alcp_cipher_aes.h"
 #include "alcp_cipher_prov_common.h"
 
-// CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
-// CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
-// CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
-// CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
-// CIPHER_CONTEXT(xts, ALC_AES_MODE_XTS);
-// CIPHER_AEAD_CONTEXT(gcm, ALC_AES_MODE_GCM);
-// CIPHER_AEAD_CONTEXT(ccm, ALC_AES_MODE_CCM);
-// CIPHER_AEAD_CONTEXT(siv, ALC_AES_MODE_SIV);
-
-#if 0
-CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 128, true);
-CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 192, true);
-CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 256, true);
-CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 128, true);
-CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 192, true);
-CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 256, true);
-#endif
-
 static OSSL_FUNC_cipher_freectx_fn aes_freectx;
 static OSSL_FUNC_cipher_dupctx_fn  aes_dupctx;
 

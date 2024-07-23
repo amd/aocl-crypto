@@ -55,6 +55,7 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
 
         if (ctx->base.handle.ch_context == NULL) {
             printf("\n context allocation failed ");
+            OPENSSL_clear_free(ctx, sizeof(*ctx));
             return NULL;
         }
 
@@ -66,6 +67,7 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
             ALCP_prov_gcm_initctx(provctx, &(ctx->base), keybits);
         } else {
             OPENSSL_clear_free(ctx, sizeof(*ctx));
+            return NULL;
         }
     }
     return ctx;

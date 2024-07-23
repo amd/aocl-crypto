@@ -224,6 +224,7 @@ ALCP_prov_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
                 OPENSSL_malloc(alcp_cipher_aead_context_size());               \
             if (ctx->handle.ch_context == NULL) {                              \
                 printf("\n context allocation failed ");                       \
+                OPENSSL_clear_free(ctx, sizeof(*ctx));                         \
                 return NULL;                                                   \
             }                                                                  \
             alc_error_t err = alcp_cipher_request(                             \

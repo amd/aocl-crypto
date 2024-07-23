@@ -517,7 +517,10 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     printText(iv, ivLen, "iv       ", verboseprint);
     printText(ad, aadLen, "ad       ", verboseprint);
 
-    create_aes_session(key, iv, keybits, m);
+    retval = create_aes_session(key, iv, keybits, m);
+    if (retval != 0) {
+        return retval;
+    }
 
     // Encrypt
     retval = alcp_aes_gcm_encrypt_demo(inputText,
@@ -572,6 +575,7 @@ gcm_selftest(Uint8*            inputText,  // plaintext
         printf("\t test PASSED ");
     }
 
+out:
     /*
      * Complete the transaction
      */
@@ -590,10 +594,7 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     if (ad) {
         free(ad);
     }
-    return 0;
-
-out:
-    return -1;
+    return retval;
 }
 
 // Demo of GCM with std testor vectors
@@ -638,10 +639,7 @@ runGCMAutoTest()
                          ALC_AES_MODE_GCM,
                          keySizeItr,
                          testNumber);
-        if (retval != 0)
-            return retval;
 
-        // its time to free!
         if (inputText) {
             free(inputText);
         }
@@ -649,7 +647,7 @@ runGCMAutoTest()
             free(cipherText);
         }
     }
-    return 0;
+    return retval;
 }
 
 int
