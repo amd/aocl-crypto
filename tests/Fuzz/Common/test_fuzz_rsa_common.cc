@@ -39,6 +39,13 @@ alc_digest_info_t mgf_info = {
     .dt_mode = ALC_SHA2_256,
 };
 
+static inline void
+convert_to_bignum(const Uint8* bytes, Uint64* bigNum, Uint64 size)
+{
+    Uint8* p_res = (Uint8*)(bigNum);
+    std::reverse_copy(bytes, bytes + size, p_res);
+}
+
 void
 TestRsaEncryptLifecycle_0(alc_rsa_handle_p handle,
                           Uint64           PublicKeyExponent,
@@ -728,5 +735,124 @@ out_dec:
     delete handle_decrypt;
     std::cout << "Completed decrypt for Input size: " << size_encrypted_data
               << " and Modulus size " << size_modulus << std::endl;
+    return 0;
+}
+
+/* RSA PKCS and PSS Encrypt/Decrypt */
+int
+ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec)
+{
+    alc_error_t        err;
+    FuzzedDataProvider stream(buf, len);
+    Uint64             size                = 0;
+    size_t             random_pad_len      = stream.ConsumeIntegral<Uint16>();
+    size_t             size_encrypted_data = stream.ConsumeIntegral<Uint16>();
+    Uint64             dec_text_size       = 0;
+    Uint8*             dec_text            = nullptr;
+    Uint64             size_modulus        = 256;
+    Uint64             PublicKeyExponent   = 0x10001;
+    std::vector<Uint8> fuzz_input =
+        stream.ConsumeBytes<Uint8>(size_encrypted_data);
+    std::vector<Uint8> fuzz_random_pad =
+        stream.ConsumeBytes<Uint8>(random_pad_len);
+    /* key parameters */
+    std::vector<Uint8> Modulus(size_modulus);
+    std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
+    std::vector<Uint8> decrypted_text(size_encrypted_data, 0);
+
+    Uint64 Modulus_BigNum[sizeof(Modulus) / 8];
+    BigNum modulus{};
+    BigNum public_key{};
+
+    /* Pvt key params */
+    Uint64 size_dp = 128, size_dq = 128, size_p_mod = 128, size_q_mod = 128,
+           size_qinv = 128;
+    std::vector<Uint8> dp(size_dp);
+    std::vector<Uint8> dq(size_dq);
+    std::vector<Uint8> p_mod(size_p_mod);
+    std::vector<Uint8> q_mod(size_q_mod);
+    std::vector<Uint8> qinv(size_qinv);
+
+    Uint64 DP_BigNum[size_dp / 8];
+    Uint64 DQ_BigNum[size_dp / 8];
+    Uint64 P_BigNum[size_dp / 8];
+    Uint64 Q_BigNum[size_dp / 8];
+    Uint64 QINV_BigNum[size_dp / 8];
+
+    convert_to_bignum(&dp[0], DP_BigNum, size);
+    convert_to_bignum(&dq[0], DQ_BigNum, size);
+    convert_to_bignum(&p_mod[0], P_BigNum, size);
+    convert_to_bignum(&q_mod[0], Q_BigNum, size);
+    convert_to_bignum(&qinv[0], QINV_BigNum, size);
+
+    BigNum dp_bn   = { DP_BigNum, size / 8 };
+    BigNum dq_bn   = { DQ_BigNum, size / 8 };
+    BigNum p_bn    = { P_BigNum, size / 8 };
+    BigNum q_bn    = { Q_BigNum, size / 8 };
+    BigNum qinv_bn = { QINV_BigNum, size / 8 };
+
+    size                            = alcp_rsa_context_size();
+    alc_rsa_handle_p handle_encrypt = new alc_rsa_handle_t;
+    handle_encrypt->context         = malloc(size);
+    err                             = alcp_rsa_request(handle_encrypt);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_rsa_privatekey_decrypt" << std::endl;
+        goto dealloc_exit;
+    }
+    size = sizeof(size_modulus);
+    /* FIXME: if we dont provide a proper sizes Modulus, this function will
+     * fail, so for now not fuzzing the modulus length*/
+    convert_to_bignum(&Modulus[0], Modulus_BigNum, size);
+    modulus    = { Modulus_BigNum, size / 8 };
+    public_key = { &PublicKeyExponent, 1 };
+
+    if (EncDec == ALCP_TEST_FUZZ_RSA_ENCRYPT) {
+        err = alcp_rsa_set_bignum_public_key(
+            handle_encrypt, &public_key, &modulus);
+        if (alcp_is_error(err)) {
+            std::cout << "alcp_rsa_set_bignum_public_key failed" << std::endl;
+            goto dealloc_exit;
+        }
+        err = alcp_rsa_publickey_encrypt_pkcs1v15(handle_encrypt,
+                                                  &fuzz_input[0],
+                                                  size_encrypted_data,
+                                                  &encrypted_text[0],
+                                                  &fuzz_random_pad[0]);
+        if (alcp_is_error(err)) {
+            std::cout << "alcp_rsa_publickey_encrypt_pkcs1v15 failed"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+    } else if (EncDec == ALCP_TEST_FUZZ_RSA_DECRYPT) {
+        err = alcp_rsa_set_bignum_private_key(
+            handle_encrypt, &dp_bn, &dq_bn, &p_bn, &q_bn, &qinv_bn, &modulus);
+        if (alcp_is_error(err)) {
+            std::cout << "alcp_rsa_set_bignum_private_key failed" << std::endl;
+            goto dealloc_exit;
+        }
+        err = alcp_rsa_privatekey_decrypt_pkcs1v15(
+            handle_encrypt, &encrypted_text[0], dec_text, &dec_text_size);
+        if (alcp_is_error(err)) {
+            std::cout << "alcp_rsa_privatekey_decrypt_pkcs1v15 failed"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+    }
+    goto exit;
+
+dealloc_exit:
+    alcp_rsa_finish(handle_encrypt);
+    free(handle_encrypt->context);
+    delete handle_encrypt;
+    std::cout << "Failed decrypt for Input size: " << size_encrypted_data
+              << std::endl;
+    return -1;
+
+exit:
+    alcp_rsa_finish(handle_encrypt);
+    free(handle_encrypt->context);
+    delete handle_encrypt;
+    std::cout << "Completed decrypt for Input size: " << size_encrypted_data
+              << std::endl;
     return 0;
 }

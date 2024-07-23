@@ -112,5 +112,9 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
                    size_t       len,
                    int          EncDec,
                    bool         TestNegLifeCycle);
+
+int
+ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec);
+
 int
 ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifeCycle);

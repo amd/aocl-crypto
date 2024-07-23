@@ -49,5 +49,10 @@ ADD_FUZZ_TARGET(test_fuzz_rsa_sign_pss_lifecycle.cc)
 ADD_FUZZ_TARGET(test_fuzz_rsa_verify_pkcs_lifecycle.cc)
 ADD_FUZZ_TARGET(test_fuzz_rsa_verify_pss_lifecycle.cc)
 
+ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_pkcs.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt_pkcs.cc)
+
+
+
 
 
