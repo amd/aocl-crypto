@@ -40,8 +40,8 @@ class AlcpRsaBase : public RsaBase
     alc_rsa_handle_t* m_rsa_handle{};
     Uint64            m_pub_key_exp = {};
 
-    alc_digest_handle_t* m_rsa_digest_handle = {};
-    Uint8*               m_hash_with_info    = nullptr;
+    alc_digest_handle_t* m_rsa_digest_handle   = {};
+    Uint8*               m_pkcs_hash_with_info = nullptr;
 
   public:
     AlcpRsaBase();

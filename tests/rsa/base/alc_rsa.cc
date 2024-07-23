@@ -83,6 +83,7 @@ AlcpRsaBase::init()
             return err;
         }
         /* FIXME:check if these return values are valid*/
+        /* FIXME: call this only for PKCS Sign verify*/
         m_digest_info_index =
             alcp_rsa_get_digest_info_index(m_digest_info.dt_mode);
         m_digest_info_size =
@@ -101,7 +102,10 @@ AlcpRsaBase::~AlcpRsaBase()
         }
         delete m_rsa_handle;
     }
-    free(m_hash_with_info);
+    /* free this only for PKCS */
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        free(m_pkcs_hash_with_info);
+    }
 }
 
 bool
@@ -287,20 +291,53 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
     }
 
     /* now calculate signature on data.m_digest */
-    /* FIXME: deallocate this in the class destructor */
-    if (m_hash_with_info != nullptr)
-        free(m_hash_with_info);
-    m_hash_with_info = (Uint8*)malloc(m_digest_info_size + m_hash_len);
-    memcpy(
-        m_hash_with_info, DigestInfo[m_digest_info_index], m_digest_info_size);
-    memcpy(m_hash_with_info + m_digest_info_size, data.m_digest, m_hash_len);
-    err =
-        alcp_rsa_privatekey_sign_hash_pkcs1v15(m_rsa_handle,
-                                               m_hash_with_info,
-                                               m_digest_info_size + m_hash_len,
-                                               data.m_signature);
-    if (alcp_is_error(err)) {
-        std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        err = alcp_rsa_add_digest(m_rsa_handle, m_digest_info.dt_mode);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_rsa_add_digest:" << err
+                      << std::endl;
+            return false;
+        }
+        err = alcp_rsa_add_mgf(m_rsa_handle, m_digest_info.dt_mode);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_rsa_add_mgf:" << err << std::endl;
+            return false;
+        }
+        err = alcp_rsa_privatekey_sign_hash_pss(m_rsa_handle,
+                                                data.m_digest,
+                                                m_hash_len,
+                                                data.m_salt,
+                                                data.m_salt_len,
+                                                data.m_signature);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_rsa_privatekey_sign_hash_pss:"
+                      << err << std::endl;
+            return false;
+        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        if (m_pkcs_hash_with_info != nullptr) {
+            free(m_pkcs_hash_with_info);
+        }
+        m_pkcs_hash_with_info = (Uint8*)malloc(m_digest_info_size + m_hash_len);
+        memcpy(m_pkcs_hash_with_info,
+               DigestInfo[m_digest_info_index],
+               m_digest_info_size);
+        memcpy(m_pkcs_hash_with_info + m_digest_info_size,
+               data.m_digest,
+               m_hash_len);
+        err = alcp_rsa_privatekey_sign_hash_pkcs1v15(m_rsa_handle,
+                                                     m_pkcs_hash_with_info,
+                                                     m_digest_info_size
+                                                         + m_hash_len,
+                                                     data.m_signature);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_digest_finalize:" << err
+                      << std::endl;
+            return false;
+        }
+    } else {
+        std::cout << "Invalid/Unsupported padding mode for ALCP RSA Digest Sign"
+                  << std::endl;
         return false;
     }
     return true;
@@ -309,16 +346,33 @@ bool
 AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
-    err =
-        alcp_rsa_publickey_verify_hash_pkcs1v15(m_rsa_handle,
-                                                m_hash_with_info,
-                                                m_digest_info_size + m_hash_len,
-                                                data.m_signature);
-    if (alcp_is_error(err)) {
-        std::cout << "Error code in alcp_rsa_publickey_verify_hash_pkcs1v15:"
-                  << err << std::endl;
+
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        err = alcp_rsa_publickey_verify_hash_pkcs1v15(m_rsa_handle,
+                                                      m_pkcs_hash_with_info,
+                                                      m_digest_info_size
+                                                          + m_hash_len,
+                                                      data.m_signature);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_rsa_publickey_verify_hash_pkcs1v15"
+                      << err << std::endl;
+            return false;
+        }
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        err = alcp_rsa_publickey_verify_hash_pss(
+            m_rsa_handle, data.m_digest, m_hash_len, data.m_signature);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_rsa_publickey_verify_hash_pss"
+                      << err << std::endl;
+            return false;
+        }
+    } else {
+        std::cout
+            << "Invalid/Unsupported padding mode for ALCP RSA Digest Verify"
+            << std::endl;
         return false;
     }
+
     return true;
 }
 
