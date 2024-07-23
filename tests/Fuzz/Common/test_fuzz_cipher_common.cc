@@ -538,6 +538,7 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
                               size_t            len,
                               bool              TestNeglifecycle)
 {
+    int                ret = 0;
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
@@ -656,18 +657,10 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
             goto AEAD_ENC_ERROR_EXIT;
         }
     }
-    goto AEAD_ENC_EXIT;
 
+    goto AEAD_ENC_EXIT;
 AEAD_ENC_ERROR_EXIT:
-    if (handle_encrypt != nullptr) {
-        // alcp_cipher_finish(handle_encrypt); --> FIXME: this should be a neg
-        // lifecycle test
-        if (handle_encrypt->ch_context != nullptr) {
-            free(handle_encrypt->ch_context);
-        }
-        delete handle_encrypt;
-    }
-    return -1;
+    ret = -1;
 
 AEAD_ENC_EXIT:
     if (handle_encrypt != nullptr) {
@@ -677,7 +670,7 @@ AEAD_ENC_EXIT:
         }
         delete handle_encrypt;
     }
-    return 0;
+    return ret;
 }
 
 int
@@ -686,6 +679,7 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
                               size_t            len,
                               bool              TestNeglifecycle)
 {
+    int                ret = 0;
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
@@ -807,14 +801,7 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
     goto AEAD_DEC_EXIT;
 
 AEAD_DEC_ERROR_EXIT:
-    if (handle_decrypt != nullptr) {
-        alcp_cipher_aead_finish(handle_decrypt);
-        if (handle_decrypt->ch_context != nullptr) {
-            free(handle_decrypt->ch_context);
-        }
-        delete handle_decrypt;
-    }
-    return -1;
+    ret = -1;
 
 AEAD_DEC_EXIT:
     if (handle_decrypt != nullptr) {
@@ -826,5 +813,5 @@ AEAD_DEC_EXIT:
     }
     std::cout << "Operation passed for AEAD decrypt for keylen "
               << fuzz_key.size() << std::endl;
-    return 0;
+    return ret;
 }

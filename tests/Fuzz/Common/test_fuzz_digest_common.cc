@@ -134,6 +134,8 @@ TestDigestLifecycle_ctx_copy(alc_digest_handle_p handle,
                      "Init->Finalize->Update->CtxCopy->Squeeze->Update"
                   << std::endl;
         return false;
+    } else {
+        alcp_digest_finish(handle_dup);
     }
     return true;
 }
@@ -147,6 +149,7 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                  size_t            len,
                  bool              TestNegLifeCycle)
 {
+    int                ret = 0;
     FuzzedDataProvider stream(buf, len);
 
     size_t             size_input = stream.ConsumeIntegral<Uint16>();
@@ -194,13 +197,12 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         std::cout << "Error: Mem alloc for digest context" << std::endl;
         return -1;
     }
-    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        handle_dup          = new alc_digest_handle_t;
-        handle_dup->context = malloc(context_size);
-        if (handle_dup->context == nullptr) {
-            std::cout << "Error: Mem alloc for digest dup context" << std::endl;
-            return -1;
-        }
+
+    handle_dup          = new alc_digest_handle_t;
+    handle_dup->context = malloc(context_size);
+    if (handle_dup->context == nullptr) {
+        std::cout << "Error: Mem alloc for digest dup context" << std::endl;
+        return -1;
     }
 
     std::cout << "Running for Input size:" << size_input << std::endl;
@@ -252,6 +254,9 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
 
         /* for shake variants */
         if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+            // Finish handle_dup to deallocate any objects before calling
+            // context_copy again
+            alcp_digest_finish(handle_dup);
             /* context copy */
             err = alcp_digest_context_copy(handle, handle_dup);
             if (alcp_is_error(err)) {
@@ -273,21 +278,7 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
     goto exit;
 
 dealloc_exit:
-    alcp_digest_finish(handle);
-    if (handle->context != nullptr) {
-        free(handle->context);
-    }
-    delete handle;
-    /* FIXME, what if this was called on an uinitialized handle */
-    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        alcp_digest_finish(handle_dup);
-        if (handle_dup->context != nullptr) {
-            free(handle_dup->context);
-        }
-        delete handle_dup;
-    }
-    return -1;
-
+    ret = -1;
 exit:
     alcp_digest_finish(handle);
     if (handle->context != nullptr) {
@@ -295,14 +286,13 @@ exit:
     }
     delete handle;
     /* FIXME, what if this was called on an uinitialized handle */
-    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
-        alcp_digest_finish(handle_dup);
-        if (handle_dup->context != nullptr) {
-            free(handle_dup->context);
-        }
-        delete handle_dup;
+    alcp_digest_finish(handle_dup);
+    if (handle_dup->context != nullptr) {
+        free(handle_dup->context);
     }
+    delete handle_dup;
+
     std::cout << "Passed " << sha_mode_len_map[mode]
               << " for Input size:" << size_input << std::endl;
-    return 0;
+    return ret;
 }
