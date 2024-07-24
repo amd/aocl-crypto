@@ -121,7 +121,7 @@ TEST_P(Sha512Test, digest_generation_test)
             default:
                 break;
         }
-        ASSERT_NE(nullptr, digest_obj);
+        ASSERT_NE(nullptr, digest_obj.get());
         vector<Uint8>     hash(digest_size);
         std::stringstream ss;
 

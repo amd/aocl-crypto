@@ -657,9 +657,9 @@ TEST(RsaTest, EncryptOaepPadding)
     // to sizeof(Modulus) - 2* hash_len - 2
     const Uint64 text_size = 62; // size - 2 * hash_len - 2;
     const Uint8  Label[]   = { 'h', 'e', 'l', 'l', 'o' };
-    Uint8        p_seed[256 / 8];
-    Uint8        enc_text[1024 / 8];
-    Uint8        text[text_size];
+    Uint8        p_seed[256 / 8]{};
+    Uint8        enc_text[1024 / 8]{};
+    Uint8        text[text_size]{};
 
     err = rsa_obj.encryptPublicOaep(
         text, text_size, Label, sizeof(Label), p_seed, enc_text);
@@ -673,8 +673,8 @@ TEST(RsaTest, EncryptOaepPadding)
         PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
 
     const Uint64 text_size_2048 = 190; // size - 2 * hash_len - 2;
-    Uint8        enc_text_2048[2048 / 8];
-    Uint8        text_2048[text_size_2048];
+    Uint8        enc_text_2048[2048 / 8]{};
+    Uint8        text_2048[text_size_2048]{};
     err = rsa_obj_2048.encryptPublicOaep(
         text_2048, text_size_2048, Label, sizeof(Label), p_seed, enc_text_2048);
     ASSERT_EQ(err, ALC_ERROR_NONE);
@@ -698,9 +698,9 @@ TEST(RsaTest, DecryptOaepPadding)
     // to sizeof(Modulus) - 2* hash_len - 2
     Uint64      text_size = 62;
     const Uint8 Label[]   = { 'h', 'e', 'l', 'l', 'o' };
-    Uint8       p_seed[256 / 8];
-    Uint8       enc_text[1024 / 8];
-    Uint8       text[62]; // size - 2 * hash_len - 2;
+    Uint8       p_seed[256 / 8]{};
+    Uint8       enc_text[1024 / 8]{};
+    Uint8       text[62]{}; // size - 2 * hash_len - 2;
 
     err = rsa_obj.encryptPublicOaep(
         text, text_size, Label, sizeof(Label), p_seed, enc_text);
@@ -714,7 +714,7 @@ TEST(RsaTest, DecryptOaepPadding)
                                 Modulus,
                                 sizeof(P_Modulus));
 
-    Uint8 text_full[1024 / 8];
+    Uint8 text_full[1024 / 8]{};
 
     err = rsa_obj.decryptPrivateOaep(
         enc_text, sizeof(enc_text), Label, sizeof(Label), text_full, text_size);
@@ -729,9 +729,9 @@ TEST(RsaTest, DecryptOaepPadding)
         PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
 
     Uint64 text_size_2048 = 190;
-    Uint8  enc_text_2048[2048 / 8];
-    Uint8  text_2048[190]; // size - 2 * hash_len - 2;
-    Uint8  text_full_2048[2048 / 8];
+    Uint8  enc_text_2048[2048 / 8]{};
+    Uint8  text_2048[190]{}; // size - 2 * hash_len - 2;
+    Uint8  text_full_2048[2048 / 8]{};
 
     err = rsa_obj_2048.encryptPublicOaep(
         text_2048, text_size_2048, Label, sizeof(Label), p_seed, enc_text_2048);
@@ -757,11 +757,11 @@ TEST(RsaTest, DecryptOaepPadding)
 TEST(RsaTest, PssSanity)
 {
     Rsa    rsa_obj_2048;
-    Uint8  text[2048 / 8];
+    Uint8  text[2048 / 8]{};
     Uint64 text_size = 2048 / 8;
-    Uint8  salt[20];
+    Uint8  salt[20]{};
     Uint64 salt_size = 20;
-    Uint8  signed_buff[2048];
+    Uint8  signed_buff[2048]{};
 
     // null text should fail
     alc_error_t err = rsa_obj_2048.signPrivatePss(
@@ -858,9 +858,9 @@ TEST(RsaTest, PssSignatureVerification)
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
     Uint64 text_size_2048 = 190;
-    Uint8  signed_text_2048[2048 / 8];
-    Uint8  text_2048[190];
-    Uint8  salt[20];
+    Uint8  signed_text_2048[2048 / 8]{};
+    Uint8  text_2048[190]{};
+    Uint8  salt[20]{};
     Uint64 salt_size = 20;
 
     err = rsa_obj_2048.signPrivatePss(

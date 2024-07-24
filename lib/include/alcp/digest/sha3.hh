@@ -124,14 +124,14 @@ class ALCP_API_EXPORT Sha3 : public IDigest
     inline alc_error_t processAndSqueeze(Uint8* pBuf, Uint64 size);
 
     // buffer size to hold the chunk size to be processed
-    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
+    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8]{};
     // state matrix to represent the keccak 1600 bits representation of
     // intermediate hash
-    alignas(64) Uint64 m_state[cDim][cDim];
+    alignas(64) Uint64 m_state[cDim][cDim]{};
     // flat representation of the state, used in absorbing the user message.
     Uint64*    m_state_flat  = &m_state[0][0];
     Uint64     m_shake_index = 0;
-    ShakeState m_processing_state;
+    ShakeState m_processing_state{ STATE_INT };
 };
 
 typedef Sha3<ALC_DIGEST_LEN_224>              Sha3_224;
