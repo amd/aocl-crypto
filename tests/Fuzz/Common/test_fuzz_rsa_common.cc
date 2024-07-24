@@ -868,7 +868,7 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
     Uint64             PublicKeyExponent = 0x10001;
 
     /* Fuzz the hash to be signed */
-    size_t HashSize = stream.ConsumeIntegralInRange<Uint16>(32, 2048);
+    size_t             HashSize = stream.ConsumeIntegralInRange<Uint16>(32, 64);
     std::vector<Uint8> Hash(HashSize);
 
     /* key parameters */
@@ -878,6 +878,9 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
     Uint64 Modulus_BigNum[sizeof(Modulus) / 8];
     BigNum modulus{};
     BigNum public_key{};
+
+    Uint64             salt_size = 256 - HashSize - 2;
+    std::vector<Uint8> salt(salt_size);
 
     int index = 0, digest_info_size = 0;
 
@@ -959,6 +962,35 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
                                                     &Signature[0]);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_publickey_verify_hash_pkcs1v15"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+    } else if (PaddingMode == ALCP_TEST_RSA_PADDING_PSS) {
+        err = alcp_rsa_add_digest(handle, ALC_SHA2_256);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_rsa_add_digest" << std::endl;
+            goto dealloc_exit;
+        }
+        err = alcp_rsa_add_mgf(handle, ALC_SHA2_256);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_rsa_add_mgf" << std::endl;
+            goto dealloc_exit;
+        }
+        err = alcp_rsa_privatekey_sign_hash_pss(handle,
+                                                &Hash[0],
+                                                Hash.size(),
+                                                &salt[0],
+                                                salt.size(),
+                                                &Signature[0]);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_rsa_privatekey_sign_hash_pss"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+        err = alcp_rsa_publickey_verify_hash_pss(
+            handle, &Hash[0], HashSize, &Signature[0]);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_rsa_publickey_verify_hash_pss"
                       << std::endl;
             goto dealloc_exit;
         }

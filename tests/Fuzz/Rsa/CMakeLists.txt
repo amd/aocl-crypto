@@ -53,6 +53,8 @@ ADD_FUZZ_TARGET(test_fuzz_rsa_encrypt_pkcs.cc)
 ADD_FUZZ_TARGET(test_fuzz_rsa_decrypt_pkcs.cc)
 
 ADD_FUZZ_TARGET(test_fuzz_rsa_digest_sign_pkcs.cc)
+ADD_FUZZ_TARGET(test_fuzz_rsa_digest_sign_pss.cc)
+
 
 
 
