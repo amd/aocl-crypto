@@ -242,6 +242,7 @@ ALCP_prov_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
                 }                                                              \
             } else {                                                           \
                 OPENSSL_clear_free(ctx, sizeof(*ctx));                         \
+                return NULL;                                                   \
             }                                                                  \
         }                                                                      \
         return ctx;                                                            \

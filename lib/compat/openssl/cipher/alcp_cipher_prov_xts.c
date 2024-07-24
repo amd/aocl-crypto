@@ -70,6 +70,7 @@ alcp_prov_aes_xts_newctx(void*        provctx,
         ctx->handle.ch_context = OPENSSL_malloc(alcp_cipher_context_size());
         if (ctx->handle.ch_context == NULL) {
             PRINT("\n context allocation failed ");
+            OPENSSL_clear_free(ctx, sizeof(*ctx));
             return NULL;
         }
         alc_error_t err =
@@ -88,6 +89,7 @@ alcp_prov_aes_xts_newctx(void*        provctx,
         } else {
             PRINT("CIPHER PROVIDER: Error in alcp_cipher_request");
             OPENSSL_clear_free(ctx, sizeof(*ctx));
+            return NULL;
         }
     }
     EXIT();

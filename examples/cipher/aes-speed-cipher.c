@@ -105,12 +105,11 @@ alcp_get_time(int x, char* s)
 }
 
 void
-getinput(Uint8* output, int inputLen, int seed)
+getinput(Uint8* output, int inputLen)
 {
-    // generate same random input based on seed value.
-    srand(seed);
     for (int i = 0; i < inputLen; i++) {
-        *output = (Uint8)rand();
+        Uint64 x = i + 20 + (i * 3); // simple equation to get generate input
+        *output  = (Uint8)x;
         output++;
     }
 }
@@ -250,11 +249,7 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
 
         memset(inputText, i, inputLen);
 
-        /*  Generate random input text based on seed.
-            seed is kept constant(1) for simplicity, it can be
-            modified for testing. */
-        int seed = 1;
-        getinput(inputText, inputLen, seed);
+        getinput(inputText, inputLen);
 
         memset(cipherText, 0, inputLen);
         memset(ref, 0, inputLen);

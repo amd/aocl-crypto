@@ -112,7 +112,7 @@ static void*
 siv_dupctx(void* vctx)
 {
     ENTER();
-    ALCP_PROV_AES_CTX* ctx  = (ALCP_PROV_AES_CTX*)vctx;
+    // ALCP_PROV_AES_CTX* ctx  = (ALCP_PROV_AES_CTX*)vctx;
     ALCP_PROV_AES_CTX* dctx = NULL;
 
     dctx = OPENSSL_malloc(sizeof(*dctx));
@@ -120,7 +120,7 @@ siv_dupctx(void* vctx)
         ERR_raise(ERR_LIB_PROV, ERR_R_MALLOC_FAILURE);
         return NULL;
     }
-    dctx = OPENSSL_memdup(ctx, sizeof(*ctx));
+    // dctx = OPENSSL_memdup(ctx, sizeof(*ctx));
     // if (dctx != NULL && dctx->base.prov_cipher_data->pKey != NULL)
     //     dctx->base.prov_cipher_data->pKey = (const Uint8*)&dctx->ks;
     EXIT();

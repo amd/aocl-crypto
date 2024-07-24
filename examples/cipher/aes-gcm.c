@@ -89,17 +89,6 @@ gettimeofday(struct timeval* tv, struct timeval* tv1)
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
-void
-getinput(Uint8* output, int inputLen, int seed)
-{
-    // generate same random input based on seed value.
-    srand(seed);
-    for (int i = 0; i < inputLen; i++) {
-        *output = (Uint8)rand();
-        output++;
-    }
-}
-
 // clang-format off
 
 /*    GCM Encrypt test vector
@@ -490,12 +479,12 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     Uint32 aadLen = test_ad_len[testNumber];
     Uint32 tagLen = test_tag_len[testNumber];
 
-    Uint8* ad = malloc(aadLen);
-    Uint8  tag[16];
+    Uint8 ad[64];
+    Uint8 tag[16];
     if (aadLen) {
         memset(ad, 33, aadLen);
     }
-    memset(tag, 0, tagLen);
+    memset(tag, 0, 16);
 
     printf("\n \t Test number %d", testNumber);
 
@@ -590,9 +579,6 @@ out:
     }
     if (ref) {
         free(ref);
-    }
-    if (ad) {
-        free(ad);
     }
     return retval;
 }
