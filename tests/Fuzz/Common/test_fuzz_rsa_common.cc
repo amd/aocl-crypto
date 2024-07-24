@@ -856,3 +856,127 @@ exit:
               << std::endl;
     return 0;
 }
+
+/* RSA DigestSign */
+int
+ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
+{
+    alc_error_t        err;
+    FuzzedDataProvider stream(buf, len);
+    Uint64             size              = 0;
+    Uint64             size_modulus      = 256;
+    Uint64             PublicKeyExponent = 0x10001;
+
+    /* Fuzz the hash to be signed */
+    size_t HashSize = stream.ConsumeIntegralInRange<Uint16>(32, 2048);
+    std::vector<Uint8> Hash(HashSize);
+
+    /* key parameters */
+    std::vector<Uint8> Modulus(size_modulus);
+    std::vector<Uint8> Signature(size_modulus, 0);
+
+    Uint64 Modulus_BigNum[sizeof(Modulus) / 8];
+    BigNum modulus{};
+    BigNum public_key{};
+
+    int index = 0, digest_info_size = 0;
+
+    /* Pvt key params */
+    Uint64 size_dp = 128, size_dq = 128, size_p_mod = 128, size_q_mod = 128,
+           size_qinv = 128;
+    std::vector<Uint8> dp(size_dp);
+    std::vector<Uint8> dq(size_dq);
+    std::vector<Uint8> p_mod(size_p_mod);
+    std::vector<Uint8> q_mod(size_q_mod);
+    std::vector<Uint8> qinv(size_qinv);
+
+    Uint64 DP_BigNum[size_dp / 8];
+    Uint64 DQ_BigNum[size_dp / 8];
+    Uint64 P_BigNum[size_dp / 8];
+    Uint64 Q_BigNum[size_dp / 8];
+    Uint64 QINV_BigNum[size_dp / 8];
+
+    convert_to_bignum(&dp[0], DP_BigNum, size);
+    convert_to_bignum(&dq[0], DQ_BigNum, size);
+    convert_to_bignum(&p_mod[0], P_BigNum, size);
+    convert_to_bignum(&q_mod[0], Q_BigNum, size);
+    convert_to_bignum(&qinv[0], QINV_BigNum, size);
+
+    BigNum dp_bn   = { DP_BigNum, size / 8 };
+    BigNum dq_bn   = { DQ_BigNum, size / 8 };
+    BigNum p_bn    = { P_BigNum, size / 8 };
+    BigNum q_bn    = { Q_BigNum, size / 8 };
+    BigNum qinv_bn = { QINV_BigNum, size / 8 };
+
+    /* for PKCS*/
+    index            = alcp_rsa_get_digest_info_index(ALC_SHA2_256);
+    digest_info_size = alcp_rsa_get_digest_info_size(ALC_SHA2_256);
+    std::vector<Uint8> HashWithInfo(digest_info_size + HashSize, 0);
+    memcpy(&HashWithInfo[0], DigestInfo[index], digest_info_size);
+    memcpy(&HashWithInfo[0] + digest_info_size, &Hash[0], HashSize);
+
+    size                    = alcp_rsa_context_size();
+    alc_rsa_handle_p handle = new alc_rsa_handle_t;
+    handle->context         = malloc(size);
+    err                     = alcp_rsa_request(handle);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_rsa_request" << std::endl;
+        goto dealloc_exit;
+    }
+    size = sizeof(size_modulus);
+    /* FIXME: if we dont provide a proper sizes Modulus, this function will
+     * fail, so for now not fuzzing the modulus length*/
+    convert_to_bignum(&Modulus[0], Modulus_BigNum, size);
+    modulus    = { Modulus_BigNum, size / 8 };
+    public_key = { &PublicKeyExponent, 1 };
+
+    err = alcp_rsa_set_bignum_public_key(handle, &public_key, &modulus);
+    if (alcp_is_error(err)) {
+        std::cout << "alcp_rsa_set_bignum_public_key failed" << std::endl;
+        goto dealloc_exit;
+    }
+    err = alcp_rsa_set_bignum_private_key(
+        handle, &dp_bn, &dq_bn, &p_bn, &q_bn, &qinv_bn, &modulus);
+    if (alcp_is_error(err)) {
+        std::cout << "alcp_rsa_set_bignum_private_key failed" << std::endl;
+        goto dealloc_exit;
+    }
+    if (PaddingMode == ALCP_TEST_RSA_PADDING_PKCS) {
+        err =
+            alcp_rsa_privatekey_sign_hash_pkcs1v15(handle,
+                                                   &HashWithInfo[0],
+                                                   digest_info_size + HashSize,
+                                                   &Signature[0]);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_rsa_privatekey_sign_hash_pkcs1v15"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+        err =
+            alcp_rsa_publickey_verify_hash_pkcs1v15(handle,
+                                                    &HashWithInfo[0],
+                                                    digest_info_size + HashSize,
+                                                    &Signature[0]);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_rsa_publickey_verify_hash_pkcs1v15"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+    }
+
+    goto exit;
+
+dealloc_exit:
+    alcp_rsa_finish(handle);
+    free(handle->context);
+    delete handle;
+    std::cout << "Failed DigestSignVerify" << std::endl;
+    return -1;
+
+exit:
+    alcp_rsa_finish(handle);
+    free(handle->context);
+    delete handle;
+    std::cout << "Completed DigestSignVerify" << std::endl;
+    return 0;
+}
