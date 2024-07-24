@@ -99,21 +99,12 @@ getinput(Uint8* output, int inputLen)
 void
 create_aes_session(Uint8*                  key,
                    Uint8*                  iv,
-                   const Uint32            key_len,
+                   const Uint32            keyLen,
                    const alc_cipher_mode_t mode)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-
-    alc_cipher_aead_info_t cinfo = { // request params
-                                     .ci_type   = ALC_CIPHER_TYPE_AES,
-                                     .ci_mode   = mode,
-                                     .ci_keyLen = key_len,
-                                     // init params
-                                     .ci_key = key,
-                                     .ci_iv  = iv
-    };
 
     /*
      * Application is expected to allocate for context
@@ -125,7 +116,7 @@ create_aes_session(Uint8*                  key,
     }
 
     /* Request a context with cipher mode and keyLen */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(mode, keyLen, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -279,6 +270,10 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
 #endif
 }
 
+#define IVLEN  12
+#define ADLEN  20
+#define TAGLEN 16
+
 /*
     Demo application for complete path:
     input->encrypt->cipher->decrypt->output.
@@ -299,23 +294,16 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     Uint8* outputText;
     outputText = malloc(inputLen);
 
-    Uint8* iv;
-    iv = malloc(128 * 4);
-    memset(iv, 10, 128 * 4);
-
-    Uint8* ref;
-    ref          = malloc(inputLen);
-    Uint32 ivLen = 12;
+    Uint32 ivLen = IVLEN;
+    Uint8  iv[IVLEN]; // default gcm iv length = 12 bytes
+    memset(iv, 10, IVLEN);
 
     /* additional data, tag used in GCM */
-    Uint32 aadLen = 20;
-    Uint32 tagLen = 16;
-
-    Uint8* ad = malloc(aadLen);
-    Uint8  tag[16];
-    if (aadLen) {
-        memset(ad, 33, aadLen);
-    }
+    Uint32 aadLen = ADLEN;
+    Uint8  ad[ADLEN];
+    Uint32 tagLen = TAGLEN;
+    Uint8  tag[TAGLEN];
+    memset(ad, 33, aadLen);
     memset(tag, 0, tagLen);
 
     int u   = i;
@@ -328,7 +316,6 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     getinput(inputText, inputLen);
 
     memset(cipherText, 0, inputLen);
-    memset(ref, 0, inputLen);
     memset(outputText, 0, inputLen);
 
     create_aes_session(key, iv, keybits, m);
@@ -368,15 +355,6 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
 
     if (outputText) {
         free(outputText);
-    }
-    if (iv) {
-        free(iv);
-    }
-    if (ref) {
-        free(ref);
-    }
-    if (ad) {
-        free(ad);
     }
 
     return 0;

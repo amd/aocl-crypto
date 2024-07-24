@@ -124,15 +124,6 @@ create_aes_session(Uint8*                  key,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    alc_cipher_info_t cinfo = { // request params
-                                .ci_type   = ALC_CIPHER_TYPE_AES,
-                                .ci_mode   = mode,
-                                .ci_keyLen = key_len,
-                                // init params
-                                .ci_key = key,
-                                .ci_iv  = iv
-    };
-
     /*
      * Application is expected to allocate for context
      */
@@ -143,7 +134,7 @@ create_aes_session(Uint8*                  key,
     }
 
     /* Request a context with mode and key length */
-    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_request(mode, key_len, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -151,8 +142,7 @@ create_aes_session(Uint8*                  key,
         goto out;
     }
 
-    err = alcp_cipher_init(
-        &handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+    err = alcp_cipher_init(&handle, key, key_len, iv, 16);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: Unable to init \n");

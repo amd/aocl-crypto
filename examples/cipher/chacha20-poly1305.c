@@ -37,23 +37,11 @@ int
 CreateDemoSession(const Uint8* key,
                   const Uint8* iv,
                   Uint64       ivLength,
-                  const Uint32 cKeyLen)
+                  const Uint32 keyLen)
 {
     alc_error_t err;
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
-
-    alc_cipher_aead_info_t cinfo = { // request params
-                                     .ci_type =
-                                         ALC_CIPHER_TYPE_CHACHA20_POLY1305,
-                                     .ci_mode   = ALC_CHACHA20_POLY1305,
-                                     .ci_keyLen = cKeyLen,
-                                     // init params
-                                     .ci_key   = key,
-                                     .ci_iv    = iv,
-                                     .ci_ivLen = ivLength
-
-    };
 
     /*
      * Application is expected to allocate for context
@@ -63,7 +51,7 @@ CreateDemoSession(const Uint8* key,
         return -1;
 
     /* Request a context with cipher mode and keyLen */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(ALC_CHACHA20_POLY1305, keyLen, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");

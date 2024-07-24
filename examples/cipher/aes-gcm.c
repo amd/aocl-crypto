@@ -300,21 +300,12 @@ static Uint8 test_ad[TEST_VECTOR_COUNT][48] = {{0xe7, 0xe5, 0xe6, 0xf8, 0xda, 0x
 int
 create_aes_session(Uint8*                  key,
                    Uint8*                  iv,
-                   const Uint32            key_len,
+                   const Uint32            keyLen,
                    const alc_cipher_mode_t mode)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-
-    alc_cipher_aead_info_t cinfo = { // request params
-                                     .ci_type   = ALC_CIPHER_TYPE_AES,
-                                     .ci_mode   = ALC_AES_MODE_GCM,
-                                     .ci_keyLen = key_len,
-                                     // init params
-                                     .ci_key = key,
-                                     .ci_iv  = iv
-    };
 
     /*
      * Application is expected to allocate for context
@@ -324,7 +315,7 @@ create_aes_session(Uint8*                  key,
         return -1;
 
     /* Request a context with cipher mode and keyLen */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(ALC_AES_MODE_GCM, keyLen, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -442,6 +433,10 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     return 0;
 }
 
+#define IVLEN_MAX  128
+#define ADLEN_MAX  64
+#define TAGLEN_MAX 16
+
 /* Function takes input data from standard test vector for specific test number
  * & validates tag generated.*/
 int
@@ -465,32 +460,24 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     Uint8* outputText;
     outputText = malloc(inputLen);
 
-    Uint8* iv;
-    iv = malloc(128 * 4);
-    memset(iv, 10, 128 * 4);
-
-    Uint8* ref;
-    ref = malloc(inputLen);
-    memset(ref, 0, inputLen);
-
-    Uint32 ivLen = 16;
+    Uint32 ivLen = 12; // default
 
     /* additional data, tag used in GCM */
     Uint32 aadLen = test_ad_len[testNumber];
     Uint32 tagLen = test_tag_len[testNumber];
 
-    Uint8 ad[64];
-    Uint8 tag[16];
-    if (aadLen) {
-        memset(ad, 33, aadLen);
-    }
-    memset(tag, 0, 16);
+    Uint8 iv[IVLEN_MAX];
+    Uint8 ad[ADLEN_MAX];
+    Uint8 tag[TAGLEN_MAX];
+
+    memset(iv, 10, IVLEN_MAX);
+    memset(ad, 0, ADLEN_MAX);
+    memset(tag, 0, TAGLEN_MAX);
 
     printf("\n \t Test number %d", testNumber);
 
     int u   = i;
     keybits = 128 + u * 64;
-    memset(key, ((i * 10) + m), 32);
 
     ivLen = test_iv_len[testNumber];
     memcpy(inputText, test_pt[testNumber], inputLen);
@@ -499,7 +486,6 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     memcpy(ad, test_ad[testNumber], aadLen);
 
     memset(cipherText, 0, inputLen);
-
     memset(outputText, 0, inputLen);
     printText(key, 16, "key      ", verboseprint);
     printText(inputText, inputLen, "inputText", verboseprint);
@@ -508,6 +494,9 @@ gcm_selftest(Uint8*            inputText,  // plaintext
 
     retval = create_aes_session(key, iv, keybits, m);
     if (retval != 0) {
+        if (outputText) {
+            free(outputText);
+        }
         return retval;
     }
 
@@ -565,21 +554,12 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     }
 
 out:
-    /*
-     * Complete the transaction
-     */
     alcp_cipher_aead_finish(&handle);
     free(handle.ch_context);
-
     if (outputText) {
         free(outputText);
     }
-    if (iv) {
-        free(iv);
-    }
-    if (ref) {
-        free(ref);
-    }
+
     return retval;
 }
 

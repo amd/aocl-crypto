@@ -53,21 +53,11 @@ create_demo_session(alc_cipher_handle_p handle,
                     const Uint8*        key,
                     const Uint8*        iv,
                     Uint64              ivlength,
-                    const alc_key_len_t cKeyLen)
+                    const alc_key_len_t keyLen)
 {
     alc_error_t err      = ALC_ERROR_NONE;
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
-
-    alc_cipher_info_t cinfo = { // request params
-                                .ci_type   = ALC_CIPHER_TYPE_CHACHA20,
-                                .ci_mode   = ALC_CHACHA20,
-                                .ci_keyLen = cKeyLen,
-                                // init params
-                                .ci_key   = key,
-                                .ci_iv    = iv,
-                                .ci_ivLen = ivlength
-    };
 
     /*
      * Application is expected to allocate for context
@@ -81,7 +71,7 @@ create_demo_session(alc_cipher_handle_p handle,
     }
 
     /* Request a context with mode and key length */
-    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle);
+    err = alcp_cipher_request(ALC_CHACHA20, keyLen, handle);
     if (alcp_is_error(err)) {
         free(handle->ch_context);
         printf("Error: Unable to Request \n");
@@ -89,7 +79,7 @@ create_demo_session(alc_cipher_handle_p handle,
     }
     printf("Request Succeeded\n");
 
-    err = alcp_cipher_init(handle, key, cKeyLen, iv, ivlength);
+    err = alcp_cipher_init(handle, key, keyLen, iv, ivlength);
 
     if (alcp_is_error(err)) {
         free(handle->ch_context);
