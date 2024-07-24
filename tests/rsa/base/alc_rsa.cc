@@ -32,6 +32,15 @@
 #include "rsa/rsa_keys.hh"
 #include <cstring>
 
+static inline void
+convert_to_bignum(const Uint8* bytes, Uint64* bigNum, Uint64 size)
+{
+    Uint8* p_res = (Uint8*)(bigNum);
+    for (Int64 i = size - 1, j = 0; i >= 0; --i, ++j) {
+        p_res[j] = bytes[i];
+    }
+}
+
 namespace alcp::testing {
 
 AlcpRsaBase::AlcpRsaBase() {}
@@ -109,6 +118,126 @@ AlcpRsaBase::~AlcpRsaBase()
 }
 
 bool
+AlcpRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
+{
+    alc_error_t err;
+    Uint64      size_2048 = 0, size_1024 = 0;
+
+    m_pub_key_exp     = 0x10001;
+    BigNum public_key = { &m_pub_key_exp, 1 };
+
+    size_2048 = sizeof(PubKey_Modulus_2048);
+    size_1024 = sizeof(PubKey_Modulus_1024);
+
+    /* for keysize 2048*/
+    Uint64 Modulus_BigNum_2048[size_2048 / 8];
+    convert_to_bignum(PubKey_Modulus_2048, Modulus_BigNum_2048, size_2048);
+    BigNum m_modulus_2048 = { Modulus_BigNum_2048, size_2048 / 8 };
+
+    Uint64 Modulus_BigNum_1024[size_1024 / 8];
+    convert_to_bignum(PubKey_Modulus_1024, Modulus_BigNum_1024, size_1024);
+    BigNum m_modulus_1024 = { Modulus_BigNum_1024, size_1024 / 8 };
+
+    /* set bignum keys */
+    if (m_key_len * 8 == KEY_SIZE_2048) {
+        err = alcp_rsa_set_bignum_public_key(
+            m_rsa_handle, &public_key, &m_modulus_2048);
+    } else if (m_key_len * 8 == KEY_SIZE_1024) {
+        err = alcp_rsa_set_bignum_public_key(
+            m_rsa_handle, &public_key, &m_modulus_1024);
+    }
+    if (alcp_is_error(err)) {
+        std::cout << "Error in alcp_rsa_set_publickey " << err << "for keysize "
+                  << m_key_len * 8 << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+AlcpRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
+{
+    alc_error_t err;
+    Uint64      size_2048 = 0, size_1024 = 0;
+
+    size_2048 = sizeof(PvtKey_DP_EXP_2048);
+    size_1024 = sizeof(PvtKey_DP_EXP_1024);
+
+    Uint64 Modulus_BigNum_2048[sizeof(PubKey_Modulus_2048) / 8];
+    convert_to_bignum(
+        PubKey_Modulus_2048, Modulus_BigNum_2048, sizeof(PubKey_Modulus_2048));
+    BigNum m_modulus_2048 = { Modulus_BigNum_2048,
+                              sizeof(PubKey_Modulus_2048) / 8 };
+
+    Uint64 Modulus_BigNum_1024[sizeof(PubKey_Modulus_1024) / 8];
+    convert_to_bignum(
+        PubKey_Modulus_1024, Modulus_BigNum_1024, sizeof(PubKey_Modulus_1024));
+    BigNum m_modulus_1024 = { Modulus_BigNum_1024,
+                              sizeof(PubKey_Modulus_1024) / 8 };
+
+    /* key size 2048 */
+    Uint64 DP_BigNum_2048[size_2048 / 8];
+    Uint64 DQ_BigNum_2048[size_2048 / 8];
+    Uint64 P_BigNum_2048[size_2048 / 8];
+    Uint64 Q_BigNum_2048[size_2048 / 8];
+    Uint64 QINV_BigNum_2048[size_2048 / 8];
+
+    Uint64 DP_BigNum_1024[size_1024 / 8];
+    Uint64 DQ_BigNum_1024[size_1024 / 8];
+    Uint64 P_BigNum_1024[size_1024 / 8];
+    Uint64 Q_BigNum_1024[size_1024 / 8];
+    Uint64 QINV_BigNum_1024[size_1024 / 8];
+
+    convert_to_bignum(PvtKey_DP_EXP_2048, DP_BigNum_2048, size_2048);
+    convert_to_bignum(PvtKey_DQ_EXP_2048, DQ_BigNum_2048, size_2048);
+    convert_to_bignum(PvtKey_P_Modulus_2048, P_BigNum_2048, size_2048);
+    convert_to_bignum(PvtKey_Q_Modulus_2048, Q_BigNum_2048, size_2048);
+    convert_to_bignum(PvtKey_Q_ModulusINV_2048, QINV_BigNum_2048, size_2048);
+
+    convert_to_bignum(PvtKey_DP_EXP_1024, DP_BigNum_1024, size_1024);
+    convert_to_bignum(PvtKey_DQ_EXP_1024, DQ_BigNum_1024, size_1024);
+    convert_to_bignum(PvtKey_P_Modulus_1024, P_BigNum_1024, size_1024);
+    convert_to_bignum(PvtKey_Q_Modulus_1024, Q_BigNum_1024, size_1024);
+    convert_to_bignum(PvtKey_Q_ModulusINV_1024, QINV_BigNum_1024, size_1024);
+
+    BigNum dp_2048   = { DP_BigNum_2048, size_2048 / 8 };
+    BigNum dq_2048   = { DQ_BigNum_2048, size_2048 / 8 };
+    BigNum p_2048    = { P_BigNum_2048, size_2048 / 8 };
+    BigNum q_2048    = { Q_BigNum_2048, size_2048 / 8 };
+    BigNum qinv_2048 = { QINV_BigNum_2048, size_2048 / 8 };
+
+    BigNum dp_1024   = { DP_BigNum_1024, size_1024 / 8 };
+    BigNum dq_1024   = { DQ_BigNum_1024, size_1024 / 8 };
+    BigNum p_1024    = { P_BigNum_1024, size_1024 / 8 };
+    BigNum q_1024    = { Q_BigNum_1024, size_1024 / 8 };
+    BigNum qinv_1024 = { QINV_BigNum_1024, size_1024 / 8 };
+
+    if (m_key_len * 8 == KEY_SIZE_2048) {
+        err = alcp_rsa_set_bignum_private_key(m_rsa_handle,
+                                              &dp_2048,
+                                              &dq_2048,
+                                              &p_2048,
+                                              &q_2048,
+                                              &qinv_2048,
+                                              &m_modulus_2048);
+    } else if (m_key_len * 8 == KEY_SIZE_1024) {
+        err = alcp_rsa_set_bignum_private_key(m_rsa_handle,
+                                              &dp_1024,
+                                              &dq_1024,
+                                              &p_1024,
+                                              &q_1024,
+                                              &qinv_1024,
+                                              &m_modulus_1024);
+    }
+    if (alcp_is_error(err)) {
+        std::cout << "Error in alcp_rsa_set_bignum_private_key " << err
+                  << "for keysize " << m_key_len * 8 << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
 AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
     /*FIXME: where should this be defined? */
@@ -123,7 +252,7 @@ AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         err = alcp_rsa_set_publickey(
             m_rsa_handle, m_pub_key_exp, PubKey_Modulus_2048, data.m_key_len);
     } else {
-        std::cout << "Invalid keysize in RSA SetPublicKey" << std::endl;
+        std::cout << "Invalid keysize in RSA SetPublicKeyBigNum" << std::endl;
         return false;
     }
     if (alcp_is_error(err)) {
@@ -376,7 +505,8 @@ AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
     return true;
 }
 
-/* Perform sign on an arbitrary len message. First calculate digest,and sign*/
+/* Perform sign on an arbitrary len message. First calculate digest,and
+ * sign*/
 bool
 AlcpRsaBase::DigestSign(const alcp_rsa_data_t& data)
 {

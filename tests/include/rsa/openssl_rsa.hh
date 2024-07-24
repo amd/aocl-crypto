@@ -76,13 +76,20 @@ class OpenSSLRsaBase : public RsaBase
     bool init();
     bool reset();
 
+    bool SetPublicKeyBigNum(const alcp_rsa_data_t& data);
+    bool SetPrivateKeyBigNum(const alcp_rsa_data_t& data);
+
     bool SetPublicKey(const alcp_rsa_data_t& data);
     bool SetPrivateKey(const alcp_rsa_data_t& data);
+
     bool ValidateKeys();
-    int  EncryptPubKey(const alcp_rsa_data_t& data);
-    int  DecryptPvtKey(const alcp_rsa_data_t& data);
+
+    int EncryptPubKey(const alcp_rsa_data_t& data);
+    int DecryptPvtKey(const alcp_rsa_data_t& data);
+
     bool DigestSign(const alcp_rsa_data_t& data);
     bool DigestVerify(const alcp_rsa_data_t& data);
+
     bool Sign(const alcp_rsa_data_t& data);
     bool Verify(const alcp_rsa_data_t& data);
 };

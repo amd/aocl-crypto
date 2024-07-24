@@ -104,7 +104,19 @@ IPPRsaBase::init()
 }
 
 bool
+IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+
+bool
 IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+
+bool
+IPPRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 
@@ -211,7 +223,7 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 }
 
 bool
-IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
+IPPRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 

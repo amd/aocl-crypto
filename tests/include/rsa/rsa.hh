@@ -91,16 +91,25 @@ class RsaBase
     int               m_digest_info_index = 0;
     int               m_digest_info_size  = 0;
 
-    virtual bool init()                                     = 0;
-    virtual bool reset()                                    = 0;
+    virtual bool init() = 0;
+
+    virtual bool reset() = 0;
+
+    virtual bool SetPublicKeyBigNum(const alcp_rsa_data_t& data)  = 0;
+    virtual bool SetPrivateKeyBigNum(const alcp_rsa_data_t& data) = 0;
+
     virtual bool SetPublicKey(const alcp_rsa_data_t& data)  = 0;
     virtual bool SetPrivateKey(const alcp_rsa_data_t& data) = 0;
-    virtual int  EncryptPubKey(const alcp_rsa_data_t& data) = 0;
-    virtual int  DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
-    virtual bool ValidateKeys()                             = 0;
-    virtual bool DigestSign(const alcp_rsa_data_t& data)    = 0;
-    virtual bool DigestVerify(const alcp_rsa_data_t& data)  = 0;
-    virtual bool Sign(const alcp_rsa_data_t& data)          = 0;
-    virtual bool Verify(const alcp_rsa_data_t& data)        = 0;
+
+    virtual int EncryptPubKey(const alcp_rsa_data_t& data) = 0;
+    virtual int DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+
+    virtual bool ValidateKeys() = 0;
+
+    virtual bool DigestSign(const alcp_rsa_data_t& data)   = 0;
+    virtual bool DigestVerify(const alcp_rsa_data_t& data) = 0;
+
+    virtual bool Sign(const alcp_rsa_data_t& data)   = 0;
+    virtual bool Verify(const alcp_rsa_data_t& data) = 0;
 };
 } // namespace alcp::testing

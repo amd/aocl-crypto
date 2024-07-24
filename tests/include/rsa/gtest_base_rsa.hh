@@ -260,13 +260,37 @@ Rsa_KAT(std::string             RsaAlgo,
             std::cout << "Error in RSA init" << std::endl;
             FAIL();
         }
-        if (!rb->SetPublicKey(data)) {
-            std::cout << "Error in RSA set pubkey" << std::endl;
-            FAIL();
-        }
-        if (!rb->SetPrivateKey(data)) {
-            std::cout << "Error in RSA set pvt key" << std::endl;
-            FAIL();
+
+        /* FIXME: this is enabled only for ALCP PSS SignVerify */
+        if (LibStr.compare("ALCP") == 0) {
+            if (RsaAlgo.compare("SignVerify") == 0) {
+                if (!rb->SetPublicKeyBigNum(data)) {
+                    std::cout << "Err:RSA set pubkey bignum" << std::endl;
+                    FAIL();
+                }
+                if (!rb->SetPrivateKeyBigNum(data)) {
+                    std::cout << "Err:RSA set pvt key bignum" << std::endl;
+                    FAIL();
+                }
+            } else {
+                if (!rb->SetPublicKey(data)) {
+                    std::cout << "Err:RSA set pubkey" << std::endl;
+                    FAIL();
+                }
+                if (!rb->SetPrivateKey(data)) {
+                    std::cout << "Err:RSA set pvt key" << std::endl;
+                    FAIL();
+                }
+            }
+        } else {
+            if (!rb->SetPublicKeyBigNum(data)) {
+                std::cout << "Err:RSA set pubkey bignum" << std::endl;
+                FAIL();
+            }
+            if (!rb->SetPrivateKeyBigNum(data)) {
+                std::cout << "Err:RSA set pvt key bignum" << std::endl;
+                FAIL();
+            }
         }
 
         /* for signature and verification */
@@ -595,22 +619,22 @@ Rsa_Cross(std::string             RsaAlgo,
             FAIL();
         }
         /* set public, private keys for both libs */
-        if (!rb_main->SetPublicKey(data_main)) {
+        if (!rb_main->SetPublicKeyBigNum(data_main)) {
             std::cout << "Error in RSA set pubkey for " << LibStrMain
                       << std::endl;
             FAIL();
         }
-        if (!rb_ext->SetPublicKey(data_ext)) {
+        if (!rb_ext->SetPublicKeyBigNum(data_ext)) {
             std::cout << "Error in RSA set pubkey for " << LibStrExt
                       << std::endl;
             FAIL();
         }
-        if (!rb_main->SetPrivateKey(data_main)) {
+        if (!rb_main->SetPrivateKeyBigNum(data_main)) {
             std::cout << "Error in RSA set pvt key for " << LibStrMain
                       << std::endl;
             FAIL();
         }
-        if (!rb_ext->SetPrivateKey(data_ext)) {
+        if (!rb_ext->SetPrivateKeyBigNum(data_ext)) {
             std::cout << "Error in RSA set pvt key for " << LibStrExt
                       << std::endl;
             FAIL();

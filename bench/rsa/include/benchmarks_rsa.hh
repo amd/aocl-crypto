@@ -153,10 +153,10 @@ Rsa_Bench(benchmark::State&       state,
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");
     }
-    if (!rb->SetPublicKey(data)) {
+    if (!rb->SetPublicKeyBigNum(data)) {
         state.SkipWithError("Error in RSA SetPublicKey");
     }
-    if (!rb->SetPrivateKey(data)) {
+    if (!rb->SetPrivateKeyBigNum(data)) {
         state.SkipWithError("Error in RSA SetPrivateKey");
     }
 

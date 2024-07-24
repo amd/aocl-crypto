@@ -57,6 +57,9 @@ class IPPRsaBase : public RsaBase
     bool init();
     bool reset();
 
+    bool SetPublicKeyBigNum(const alcp_rsa_data_t& data);
+    bool SetPrivateKeyBigNum(const alcp_rsa_data_t& data);
+
     bool SetPublicKey(const alcp_rsa_data_t& data);
     bool SetPrivateKey(const alcp_rsa_data_t& data);
 

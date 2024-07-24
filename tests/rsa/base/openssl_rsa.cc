@@ -181,6 +181,18 @@ OpenSSLRsaBase::init()
 bool
 OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
+    return true;
+}
+
+bool
+OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
+{
+    return true;
+}
+
+bool
+OpenSSLRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
+{
     if (m_rsa_handle_keyctx_pub != nullptr) {
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
         m_rsa_handle_keyctx_pub = nullptr;
@@ -352,7 +364,7 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 }
 
 bool
-OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
+OpenSSLRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
 {
     if (m_rsa_handle_keyctx_pvt != nullptr) {
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
