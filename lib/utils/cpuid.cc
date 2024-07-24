@@ -41,13 +41,12 @@
 #include <io.h>
 #endif
 #ifdef ALCP_ENABLE_AOCL_UTILS
-#include <alci/alci.h>
-#include <alci/cxx/cpu.hh>
+#include <Au/Cpuid/X86Cpu.hh>
 #endif
 
 namespace alcp::utils {
 #ifdef ALCP_ENABLE_AOCL_UTILS
-using namespace alci;
+using namespace Au;
 #endif
 
 // FIXME: Memory Allocations for static variables
@@ -59,7 +58,7 @@ class CpuId::Impl
     Impl();
     ~Impl() = default;
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    std::unique_ptr<Cpu> m_cpu;
+    std::unique_ptr<X86Cpu> m_cpu;
 #endif
 
   public:
@@ -213,7 +212,7 @@ CpuId::Impl::Impl()
     // highly unlikely
     for (int i = 0; i < CPU_SETSIZE; ++i) {
         if (CPU_ISSET(i, &current_mask)) {
-            m_cpu = std::make_unique<Cpu>(i);
+            m_cpu = std::make_unique<X86Cpu>(i);
             break;
         }
     }
@@ -229,7 +228,7 @@ CpuId::Impl::Impl()
     if (!GetProcessAffinityMask(hProcess, &procAffinity, &sysAffinity))
         std::cout << "CPU AFFINITY FAILURE!" << std::endl;
 
-    m_cpu = std::make_unique<Cpu>(0);
+    m_cpu = std::make_unique<X86Cpu>(0);
 
     bool result = SetProcessAffinityMask(hProcess, procAffinity);
     if (result == 0) {
@@ -255,7 +254,7 @@ CpuId::Impl::cpuHasAvx512f()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_AVX512F);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512f);
 #else
     static bool state = false;
 #endif
@@ -270,7 +269,7 @@ CpuId::Impl::cpuHasAvx512dq()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_AVX512DQ);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512dq);
 #else
     static bool state = false;
 #endif
@@ -285,7 +284,7 @@ CpuId::Impl::cpuHasAvx512bw()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_AVX512BW);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512bw);
 #else
     static bool state = false;
 #endif
@@ -320,7 +319,7 @@ CpuId::Impl::cpuHasVaes()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_VAES);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::vaes);
 #else
     static bool state = false;
 #endif
@@ -334,7 +333,7 @@ CpuId::Impl::cpuHasAesni()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_AES);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::aes);
 #else
     static bool state = true;
 #endif
@@ -348,7 +347,7 @@ CpuId::Impl::cpuHasShani()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_SHA);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::sha_ni);
 #else
     static bool state = true;
 #endif
@@ -362,7 +361,7 @@ CpuId::Impl::cpuHasAvx2()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_AVX2);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx2);
 #else
     static bool state = true;
 #endif
@@ -376,7 +375,7 @@ CpuId::Impl::cpuHasRdRand()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_RDRAND);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::rdrand);
 #else
     static bool state = true;
 #endif
@@ -390,7 +389,7 @@ CpuId::Impl::cpuHasRdSeed()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_RDSEED);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::rdseed);
 #else
     static bool state = true;
 #endif
@@ -404,7 +403,7 @@ CpuId::Impl::cpuHasAdx()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_ADX);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::adx);
 #else
     static bool state = true;
 #endif
@@ -418,7 +417,7 @@ CpuId::Impl::cpuHasBmi2()
     return false;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->hasFlag(ALC_E_FLAG_BMI2);
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::bmi2);
 #else
     static bool state = true;
 #endif
@@ -433,7 +432,7 @@ CpuId::Impl::cpuIsZen1()
     return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->isUarch(Uarch::eZen);
+    static bool state = Impl::m_cpu->isUarch(EUarch::Zen);
 #else
     static bool state = false;
 #endif
@@ -448,7 +447,7 @@ CpuId::Impl::cpuIsZen2()
     return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->isUarch(Uarch::eZen2);
+    static bool state = Impl::m_cpu->isUarch(EUarch::Zen2);
 #else
     static bool state = true;
 #endif
@@ -463,7 +462,7 @@ CpuId::Impl::cpuIsZen3()
     return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->isUarch(Uarch::eZen3);
+    static bool state = Impl::m_cpu->isUarch(EUarch::Zen3);
 #else
     static bool state = false;
 #endif
@@ -478,7 +477,7 @@ CpuId::Impl::cpuIsZen4()
     return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->isUarch(Uarch::eZen4);
+    static bool state = Impl::m_cpu->isUarch(EUarch::Zen4);
 #else
     static bool state = false;
 #endif
@@ -493,7 +492,7 @@ CpuId::Impl::cpuIsZen5()
     return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    static bool state = Impl::m_cpu->isUarch(Uarch::eZen5);
+    static bool state = Impl::m_cpu->isUarch(EUarch::Zen5);
 #else
     static bool state = false;
 #endif
@@ -505,11 +504,11 @@ bool
 CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
 {
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    bool zen1_flag = Impl::m_cpu->isUarch(Uarch::eZen);
-    bool zen2_flag = Impl::m_cpu->isUarch(Uarch::eZen2);
-    bool zen3_flag = Impl::m_cpu->isUarch(Uarch::eZen3);
-    bool zen4_flag = Impl::m_cpu->isUarch(Uarch::eZen4);
-    bool zen5_flag = Impl::m_cpu->isUarch(Uarch::eZen5);
+    bool zen1_flag = Impl::m_cpu->isUarch(EUarch::Zen);
+    bool zen2_flag = Impl::m_cpu->isUarch(EUarch::Zen2);
+    bool zen3_flag = Impl::m_cpu->isUarch(EUarch::Zen3);
+    bool zen4_flag = Impl::m_cpu->isUarch(EUarch::Zen4);
+    bool zen5_flag = Impl::m_cpu->isUarch(EUarch::Zen5);
 #else
     // Default dispatch is to Zen2
     // If this condition is setup, you can never force it to zen3 or zen4
