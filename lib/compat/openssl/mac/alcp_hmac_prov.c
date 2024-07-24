@@ -102,6 +102,7 @@ alcp_prov_hmac_dup(void* vsrc)
         printf("Provider: HMAC copy failed in dupctx\n");
         OPENSSL_clear_free(dst->ctx->handle.ch_context, size);
         OPENSSL_clear_free(dst->ctx, sizeof(*(dst->ctx)));
+        OPENSSL_clear_free(dst, sizeof(alcp_hmac_data_st_t));
         return NULL;
     }
     EXIT();

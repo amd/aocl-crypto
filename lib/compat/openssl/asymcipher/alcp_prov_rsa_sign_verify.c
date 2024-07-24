@@ -524,7 +524,7 @@ alcp_prov_rsa_verify_recover(void*                vprsactx,
                     ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
                     return 0;
                 }
-            } break;
+            }
 
             default:
                 ERR_raise_data(ERR_LIB_PROV,
@@ -1109,8 +1109,8 @@ const OSSL_DISPATCH alcp_rsa_signature_functions[] = {
 
 static const char    ASYM_CIPHERS_DEF_PROP[] = "provider=alcp,fips=no";
 const OSSL_ALGORITHM alc_prov_signature[]    = { { ALCP_PROV_NAMES_RSA,
-                                                   ASYM_CIPHERS_DEF_PROP,
-                                                   alcp_rsa_signature_functions },
-                                                 { NULL, NULL, NULL } };
+                                                ASYM_CIPHERS_DEF_PROP,
+                                                alcp_rsa_signature_functions },
+                                              { NULL, NULL, NULL } };
 
 #endif

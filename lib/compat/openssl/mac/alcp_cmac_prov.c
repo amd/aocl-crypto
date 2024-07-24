@@ -99,6 +99,7 @@ alcp_prov_cmac_dup(void* ctx)
         printf("Provider: cmac copy failed in dupctx\n");
         OPENSSL_clear_free(dst->ctx->handle.ch_context, size);
         OPENSSL_clear_free(dst->ctx, sizeof(*(dst->ctx)));
+        OPENSSL_clear_free(dst, sizeof(alcp_cmac_data_st_t));
         return NULL;
     }
 

@@ -61,7 +61,7 @@ struct MontContextBignum
     Uint64 m_r2_radix_52_bit[KEY_SIZE_IN_RADIX_52]{}; // Montgomery converter in
                                                       // radix 52 bit.
     Uint64 m_mod_radix_52_bit[KEY_SIZE_IN_RADIX_52]{}; // Modulus in radix 52.
-    Uint64 m_k0;                                       // Montgomery parameter
+    Uint64 m_k0   = 0;                                 // Montgomery parameter
     Uint64 m_size = 0;
 };
 

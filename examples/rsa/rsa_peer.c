@@ -172,7 +172,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
 
     if (size_key_peer_1 == 0) {
         printf("\n peer1 key size fetch failed");
-        return ALC_ERROR_INVALID_SIZE;
+        err = ALC_ERROR_INVALID_SIZE;
         goto free_pub_mod_peer_1;
     }
 

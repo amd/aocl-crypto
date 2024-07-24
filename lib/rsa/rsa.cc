@@ -81,11 +81,6 @@ Reset(void* buff, Uint64 size)
     }
 }
 
-Rsa::Rsa()
-    : m_key_size{ 2048 / 8 }
-    , m_digest_info_index{ SHA_UNKNOWN }
-{}
-
 Rsa::Rsa(const Rsa& rsa)
 {
     m_priv_key          = rsa.m_priv_key;

@@ -75,23 +75,22 @@ TEST_P(Sha3_256_Test, digest_generation_test)
 {
     const auto [plaintext, digest]     = GetParam().second;
     std::unique_ptr<Sha3_256> sha3_256 = std::make_unique<Sha3_256>();
-    Uint8*                    hash     = new Uint8[DigestSize];
+    std::unique_ptr<Uint8[]>  hash     = std::make_unique<Uint8[]>(DigestSize);
+    Uint8*                    hash_p   = hash.get();
     std::stringstream         ss;
 
     sha3_256->init();
     ASSERT_EQ(
         sha3_256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_256->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_256->finalize(hash_p, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
-        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss << std::setw(2) << static_cast<unsigned>(hash_p[i]);
 
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
-
-    delete[] hash;
 }
 
 INSTANTIATE_TEST_SUITE_P(

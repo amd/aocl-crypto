@@ -234,9 +234,11 @@ Sha3<digest_len>::Sha3(const Sha3& src)
     m_block_len  = src.m_block_len;
     m_digest_len = src.m_digest_len;
     m_idx        = src.m_idx;
+    m_msg_len    = src.m_msg_len;
     memcpy(m_buffer, src.m_buffer, MaxDigestBlockSizeBits / 8);
     memcpy(m_state, src.m_state, sizeof(m_state));
-    m_finished = src.m_finished;
+    m_finished   = src.m_finished;
+    m_state_flat = &m_state[0][0];
     if constexpr (digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_128
                   || digest_len == ALC_DIGEST_LEN_CUSTOM_SHAKE_256) {
         m_shake_index      = src.m_shake_index;

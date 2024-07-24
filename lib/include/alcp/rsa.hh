@@ -46,7 +46,7 @@ struct RsaPublicKey
 class ALCP_API_EXPORT Rsa
 {
   public:
-    Rsa();
+    Rsa() = default;
     ~Rsa();
     Rsa(const Rsa& rsa);
     /**
@@ -371,13 +371,13 @@ class ALCP_API_EXPORT Rsa
     MontContextBignum   m_context_pub;
     MontContextBignum   m_context_p;
     MontContextBignum   m_context_q;
-    Uint64              m_key_size;
-    Uint64              m_hash_len;
-    Uint64              m_mgf_hash_len;
-    DigestIndex         m_digest_info_index;
-    Uint64              m_digest_info_size;
-    digest::IDigest*    m_digest = nullptr;
-    digest::IDigest*    m_mgf    = nullptr;
+    Uint64              m_key_size          = 2048 / 8;
+    Uint64              m_hash_len          = 0;
+    Uint64              m_mgf_hash_len      = 0;
+    DigestIndex         m_digest_info_index = SHA_UNKNOWN;
+    Uint64              m_digest_info_size  = 0;
+    digest::IDigest*    m_digest            = nullptr;
+    digest::IDigest*    m_mgf               = nullptr;
 };
 
 } // namespace alcp::rsa

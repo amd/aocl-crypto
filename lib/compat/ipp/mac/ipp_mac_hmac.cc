@@ -157,6 +157,9 @@ ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
     printMsg("ippsHMACGetTag_rmf: EXIT");
     return ippStsNoErr;
 }
+// This function is not getting called
+
+#if 0
 IppStatus
 ippsHMACMessage_rmf(const Ipp8u*          pMsg,
                     int                   msgLen,
@@ -186,3 +189,4 @@ ippsHMACMessage_rmf(const Ipp8u*          pMsg,
     printMsg("ippsHMACMessage_rmf: EXIT");
     return ippStsNoErr;
 }
+#endif

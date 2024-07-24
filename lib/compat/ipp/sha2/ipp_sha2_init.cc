@@ -99,7 +99,7 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
     ipp_wrp_sha2_ctx* context = pState;
     alc_error_t       err;
 
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo{};
     dinfo.dt_type = ALC_DIGEST_TYPE_SHA2;
     dinfo.dt_len  = len;
     dinfo.dt_mode = mode;

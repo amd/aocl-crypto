@@ -352,11 +352,13 @@ alcp_prov_rsa_encrypt(void*                vprsactx,
                       size_t               inlen)
 {
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
-    size_t            len     = prsactx->rsa_size;
 
     ENTER();
     if (prsactx == NULL)
         return 0;
+
+    size_t len = prsactx->rsa_size;
+
     if (out == NULL) {
         if (len == 0) {
             printf("Rsa Provider: Invalid key size");
