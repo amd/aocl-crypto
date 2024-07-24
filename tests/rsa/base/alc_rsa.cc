@@ -120,7 +120,7 @@ AlcpRsaBase::~AlcpRsaBase()
 bool
 AlcpRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err       = ALC_ERROR_NONE;
     Uint64      size_2048 = 0, size_1024 = 0;
 
     m_pub_key_exp     = 0x10001;
@@ -145,6 +145,9 @@ AlcpRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
     } else if (m_key_len * 8 == KEY_SIZE_1024) {
         err = alcp_rsa_set_bignum_public_key(
             m_rsa_handle, &public_key, &m_modulus_1024);
+    } else {
+        std::cout << "Invalid keysize in RSA SetPublicKeyBigNum" << std::endl;
+        return false;
     }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_set_publickey " << err << "for keysize "
@@ -157,7 +160,7 @@ AlcpRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
 bool
 AlcpRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err       = ALC_ERROR_NONE;
     Uint64      size_2048 = 0, size_1024 = 0;
 
     size_2048 = sizeof(PvtKey_DP_EXP_2048);
@@ -228,6 +231,9 @@ AlcpRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
                                               &q_1024,
                                               &qinv_1024,
                                               &m_modulus_1024);
+    } else {
+        std::cout << "Invalid keysize in RSA SetPrivateKeyBigNum" << std::endl;
+        return false;
     }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_set_bignum_private_key " << err
@@ -241,8 +247,8 @@ bool
 AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
     /*FIXME: where should this be defined? */
-    m_pub_key_exp = 0x10001;
-    alc_error_t err;
+    m_pub_key_exp   = 0x10001;
+    alc_error_t err = ALC_ERROR_NONE;
 
     /* Adding the public key for applying encryption */
     if (m_key_len * 8 == KEY_SIZE_1024) {
@@ -252,7 +258,7 @@ AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         err = alcp_rsa_set_publickey(
             m_rsa_handle, m_pub_key_exp, PubKey_Modulus_2048, data.m_key_len);
     } else {
-        std::cout << "Invalid keysize in RSA SetPublicKeyBigNum" << std::endl;
+        std::cout << "Invalid keysize in RSA SetPublicKey" << std::endl;
         return false;
     }
     if (alcp_is_error(err)) {
@@ -307,7 +313,7 @@ AlcpRsaBase::ValidateKeys()
 int
 AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
 
     /* no padding mode */
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
@@ -340,7 +346,7 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 int
 AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err       = ALC_ERROR_NONE;
     Uint64      text_size = 0;
 
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
@@ -379,7 +385,7 @@ bool
 AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
 {
     /* first sign then digest */
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
 
     m_rsa_digest_handle          = new alc_digest_handle_t;
     m_rsa_digest_handle->context = malloc(alcp_digest_context_size());
@@ -474,7 +480,7 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
 bool
 AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
 
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         err = alcp_rsa_publickey_verify_hash_pkcs1v15(m_rsa_handle,
@@ -510,7 +516,7 @@ AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
 bool
 AlcpRsaBase::DigestSign(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
 
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         err = alcp_rsa_privatekey_sign_pss(m_rsa_handle,
@@ -543,7 +549,7 @@ AlcpRsaBase::DigestSign(const alcp_rsa_data_t& data)
 bool
 AlcpRsaBase::DigestVerify(const alcp_rsa_data_t& data)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         err = alcp_rsa_publickey_verify_pss(
             m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
