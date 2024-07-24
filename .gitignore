@@ -41,3 +41,4 @@ cscope.out
 #------------------------------------#
 include/config.h
 docker/.bash_history
+scripts/python/Corpus
