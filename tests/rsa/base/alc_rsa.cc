@@ -83,20 +83,31 @@ AlcpRsaBase::init()
         err = alcp_rsa_add_digest(m_rsa_handle, m_digest_info.dt_mode);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_digest" << err << std::endl;
-            return err;
+            return false;
         }
         /*call mask gen function */
         err = alcp_rsa_add_mgf(m_rsa_handle, m_mgf_info.dt_mode);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
-            return err;
+            return false;
         }
-        /* FIXME:check if these return values are valid*/
-        /* FIXME: call this only for PKCS Sign verify*/
-        m_digest_info_index =
-            alcp_rsa_get_digest_info_index(m_digest_info.dt_mode);
-        m_digest_info_size =
-            alcp_rsa_get_digest_info_size(m_digest_info.dt_mode);
+        /* call this only for PKCS*/
+        if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+            m_digest_info_index =
+                alcp_rsa_get_digest_info_index(m_digest_info.dt_mode);
+            if (m_digest_info_index == -1) {
+                std::cout << "Error in alcp_rsa_get_digest_info_index"
+                          << std::endl;
+                return false;
+            }
+            m_digest_info_size =
+                alcp_rsa_get_digest_info_size(m_digest_info.dt_mode);
+            if (m_digest_info_size == 0) {
+                std::cout << "Error in alcp_rsa_get_digest_info_size"
+                          << std::endl;
+                return false;
+            }
+        }
     }
     return true;
 }
