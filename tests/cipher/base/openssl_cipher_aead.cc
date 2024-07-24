@@ -84,7 +84,8 @@ OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
                                              const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{}
+{
+}
 OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
                                              const alc_cipher_mode_t cMode,
                                              const Uint8*            iv,

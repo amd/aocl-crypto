@@ -104,7 +104,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
             memcpy(m_key_final + cKeyLen / 8, m_tkey, cKeyLen / 8);
             m_key  = m_key_final;
             status = ippsAES_XTSGetSize(&m_ctxSize);
-            if (status != 0) {
+            if (status != ippStsNoErr) {
                 PrintErrors(status);
                 return false;
             }
@@ -119,14 +119,14 @@ IPPCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
                                      m_block_size * 8,
                                      m_ctx_xts,
                                      m_ctxSize);
-            if (status != 0) {
+            if (status != ippStsNoErr) {
                 PrintErrors(status);
                 return false;
             }
             break;
         default:
             status = ippsAESGetSize(&m_ctxSize);
-            if (status != 0) {
+            if (status != ippStsNoErr) {
                 PrintErrors(status);
                 return false;
             }
@@ -135,7 +135,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
             }
             m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
             status = ippsAESInit(key, cKeyLen / 8, m_ctx, m_ctxSize);
-            if (status != 0) {
+            if (status != ippStsNoErr) {
                 PrintErrors(status);
                 return false;
             }

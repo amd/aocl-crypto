@@ -311,7 +311,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = rng;
+        _rng = std::move(rng);
     }
     void TestBody() override { CrossTestXTS(_rng, _select1, _select2); }
 

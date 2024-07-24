@@ -433,7 +433,8 @@ main(int argc, char** argv)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+        ->ArgsProduct(
+            { alcp::benchmarking::cipher::blocksizes, std::move(testlibs) });
 
     // if (::benchmark::ReportUnrecognizedArguments(argc, argv))
     //     return 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -83,12 +83,17 @@ ExecRecPlay::~ExecRecPlay()
 void
 ExecRecPlay::init(std::string str_mode, std::string dir_name, bool playback)
 {
+    int retval = 0;
     if (!isPathExist(dir_name)) {
 #ifdef __linux__
-        mkdir(dir_name.c_str(), 0755);
+        retval = mkdir(dir_name.c_str(), 0755);
 #elif WIN32
-        _mkdir(dir_name.c_str());
+        retval = _mkdir(dir_name.c_str());
 #endif
+    }
+    if (retval != 0) {
+        std::cout << "Blackbox creation failure" << std::endl;
+        return;
     }
     if (!playback) { // Record
         // Binary File, need to open binary

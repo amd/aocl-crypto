@@ -97,7 +97,7 @@ Rsa_Bench(benchmark::State&       state,
 #endif
 
     rb->m_padding_mode = padding_mode;
-    rb->m_rsa_algo     = RsaAlgo;
+    rb->m_rsa_algo     = std::move(RsaAlgo);
 
     /* for encrypt/ decrypt */
     if (padding_mode != ALCP_TEST_RSA_NO_PADDING) {

@@ -204,11 +204,11 @@ CrossTestGCM(std::shared_ptr<RngBase> rng,
     }; // bits
     const std::vector<Uint64> cAdditionalTextSizes = {
         20000, 128, 120, 112, 104, 96, 64, 32
-    };                                                       // bits
+    }; // bits
     const std::vector<Uint64> cKeySizes = { 128, 192, 256 }; // bits
     const std::vector<Uint64> cTagSizes = {
         128, 120, 112, 104, 96, 64, 32
-    };                                                          // bits
+    }; // bits
     const std::vector<Uint64> cChunkSizes = { 16, 32 };         // bits
     const std::vector<Uint64> cPtSizes    = { 16, 1000, 2563 }; // bytes
 
@@ -320,7 +320,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = rng;
+        _rng = std::move(rng);
     }
     void TestBody() override { CrossTestGCM(_rng, _select1, _select2); }
 
@@ -387,7 +387,7 @@ main(int argc, char** argv)
     if (std::get<bool>(argsMap["USE_OSSL"].value)) {
         RegisterMyTests("KnownAnswerTest",
                         "GCM_CROSS_EXPERIMENTAL_OPENSSL",
-                        rng,
+                        std::move(rng),
                         LibrarySelect::OPENSSL,
                         LibrarySelect::ALCP);
     }
