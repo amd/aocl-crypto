@@ -936,9 +936,10 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
 
 // ccm, siv, xts to be added.
 
-#if 0 // generic cipher to be enabled after multi-update implementation. Current
+#if 1 // generic cipher to be enabled after multi-update implementation. Current
       // code work with openssl speed without multi-update but its not complete
-    // CTR
+// CTR
+#if 1 // Disable CTR temporarily
     { ALCP_PROV_NAMES_AES_128_CTR,
       CIPHER_DEF_PROP,
       ALCP_prov_aes128ctr_functions },
@@ -948,7 +949,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CTR,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ctr_functions },
+#endif
 
+#if 0 // Disable CBC temporarily
     // CBC
     { ALCP_PROV_NAMES_AES_128_CBC,
       CIPHER_DEF_PROP,
@@ -959,6 +962,7 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CBC,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256cbc_functions },
+#endif
 
     // CFB
     { ALCP_PROV_NAMES_AES_128_CFB,

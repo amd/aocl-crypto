@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,34 +26,26 @@
  *
  */
 
-#include <memory.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#ifndef _OPENSSL_DEBUG_H
-#define _OPENSSL_DEBUG_H 2
-
-// #define DEBUG_PROV
-
-#ifdef DEBUG_PROV
-#define DBG_PRINT(prfx, fmt, ...) printf(prfx##fmt, __VA_ARGS__)
-
-#define ENTRY()    DBG_PRINT("Entry: ", "%s\n", __func__)
-#define ENTER()    printf("Enter : %s\n", __func__)
-#define HERE()     printf("Here : %s:%d\n", __func__, __LINE__)
-#define EXIT()     printf("Exit : %s:%d\n", __func__, __LINE__)
-#define PRINT(MSG) printf(MSG)
-
-#else
-#define ENTRY()
-#define ENTER()
-#define HERE()
-#define EXIT()
-#define PRINT(MSG)
-
-#endif
+#include "debug.h"
 
 void
-printHexString(const char* info, const unsigned char* bytes, int length);
-
-#endif /* _OPENSSL_DEBUG_H */
+printHexString(const char* info, const unsigned char* bytes, int length)
+{
+    char* p_hex_string = (char*)malloc(sizeof(char) * ((length * 2) + 1));
+    for (int i = 0; i < length; i++) {
+        char chararray[2];
+        chararray[0] = (bytes[i] & 0xf0) >> 4;
+        chararray[1] = bytes[i] & 0x0f;
+        for (int j = 0; j < 2; j++) {
+            if (chararray[j] >= 0xa) {
+                chararray[j] = 'a' + chararray[j] - 0xa;
+            } else {
+                chararray[j] = '0' + chararray[j] - 0x0;
+            }
+            p_hex_string[i * 2 + j] = chararray[j];
+        }
+    }
+    p_hex_string[length * 2] = 0x0;
+    printf("%s:%s\n", info, p_hex_string);
+    free(p_hex_string);
+}

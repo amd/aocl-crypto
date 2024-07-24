@@ -181,13 +181,12 @@ namespace alcp::cipher {
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         m_isEnc_aes     = IS_ENC;                                              \
-        if (!(m_ivState_aes && m_isKeySet_aes)) {                              \
+        if (!(m_isKeySet_aes)) {                                               \
             printf("\nError: Key or Iv not set \n");                           \
             return ALC_ERROR_BAD_STATE;                                        \
         }                                                                      \
         if (m_ivLen_aes != 16) {                                               \
-            err = ALC_ERROR_INVALID_SIZE;                                      \
-            return err;                                                        \
+            m_ivLen_aes = 16;                                                  \
         }                                                                      \
         err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
         return err;                                                            \

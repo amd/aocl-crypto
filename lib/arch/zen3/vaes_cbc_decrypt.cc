@@ -54,8 +54,9 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
            Uint8*       pIv          // ptr to Initialization Vector
 )
 {
-    Uint64      blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
+    Uint64      blocks = len / Rijndael::cBlockSize;
+    Uint64      res    = len % Rijndael::cBlockSize;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);
     auto p_out_128 = reinterpret_cast<__m128i*>(pPlainText);
@@ -184,6 +185,17 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         b1 = input_128_a1;
         p_in_128++;
         p_out_128++;
+    }
+
+    if (res) {
+        a1 = _mm256_setzero_si256();
+        std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+        AesDec_1x128(&a1, pkey128, nRounds);
+
+        a1 = _mm256_xor_si256(a1, b1);
+
+        std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_128);
     }
 
 #ifdef AES_MULTI_UPDATE

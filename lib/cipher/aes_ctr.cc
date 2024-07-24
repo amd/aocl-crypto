@@ -49,10 +49,11 @@ namespace vaes {
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        Uint64      res     = len % 16;
         auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
         blocks = ctrProcessAvx256(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+            pInputText, pOutputText, blocks, res, pkey128, pIv, nRounds);
         return err;
     }
 
@@ -67,10 +68,11 @@ namespace vaes {
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        Uint64      res     = len % 16;
         auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
         blocks = ctrProcessAvx256(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+            pInputText, pOutputText, blocks, res, pkey128, pIv, nRounds);
 
         return err;
     }
@@ -88,10 +90,11 @@ namespace vaes {
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        Uint64      res     = len % 16;
         auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
         blocks = ctrProcessAvx256(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+            pInputText, pOutputText, blocks, res, pkey128, pIv, nRounds);
 
         return err;
     }
@@ -109,10 +112,11 @@ namespace aesni {
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        Uint64      res     = len % 16;
         auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
         blocks = ctrProcessAvx2(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+            pInputText, pOutputText, blocks, res, pkey128, pIv, nRounds);
         return err;
     }
 
@@ -125,10 +129,11 @@ namespace aesni {
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        Uint64      res     = len % 16;
         auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
         blocks = ctrProcessAvx2(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+            pInputText, pOutputText, blocks, res, pkey128, pIv, nRounds);
 
         return err;
     }
@@ -142,10 +147,11 @@ namespace aesni {
     {
         alc_error_t err     = ALC_ERROR_NONE;
         Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        Uint64      res     = len % 16;
         auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
         blocks = ctrProcessAvx2(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+            pInputText, pOutputText, blocks, res, pkey128, pIv, nRounds);
 
         return err;
     }

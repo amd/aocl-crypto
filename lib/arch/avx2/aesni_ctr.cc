@@ -76,6 +76,7 @@ Uint64
 ctrProcessAvx2(const Uint8*   p_in_x,
                Uint8*         p_out_x,
                Uint64         blocks,
+               Uint64         res,
                const __m128i* pkey128,
                Uint8*         pIv,
                int            nRounds)
@@ -84,7 +85,7 @@ ctrProcessAvx2(const Uint8*   p_in_x,
     auto p_out_128 = reinterpret_cast<__m128i*>(p_out_x);
 
     return alcp::cipher::aes::ctrBlk(
-        p_in_128, p_out_128, blocks, pkey128, pIv, nRounds, 1);
+        p_in_128, p_out_128, blocks, res, pkey128, pIv, nRounds, 1);
 }
 
 } // namespace alcp::cipher::aesni

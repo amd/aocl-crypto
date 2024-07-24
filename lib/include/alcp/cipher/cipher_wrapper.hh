@@ -246,6 +246,7 @@ namespace aesni {
     Uint64 ctrProcessAvx2(const Uint8*   p_in_x,
                           Uint8*         p_out_x,
                           Uint64         blocks,
+                          Uint64         res,
                           const __m128i* pkey128,
                           Uint8*         pIv,
                           int            nRounds);
@@ -555,6 +556,7 @@ namespace vaes {
     Uint64 ctrProcessAvx256(const Uint8*   p_in_x,
                             Uint8*         p_out_x,
                             Uint64         blocks,
+                            Uint64         res,
                             const __m128i* pkey128,
                             Uint8*         pIv,
                             int            nRounds);

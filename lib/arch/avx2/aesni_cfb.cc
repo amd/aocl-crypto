@@ -59,6 +59,7 @@ namespace alcp::cipher { namespace aesni {
         __m128i iv128 = _mm_loadu_si128((const __m128i*)pIv);
 
         Uint64 blocks = len / Rijndael::cBlockSize;
+        Uint64 res    = len % Rijndael::cBlockSize;
 
         for (; blocks >= 4; blocks -= 4) {
             __m128i blk0 = iv128; // CipherText Feedback
@@ -104,16 +105,30 @@ namespace alcp::cipher { namespace aesni {
         if (blocks) {
             /* Still one block left */
             __m128i blk = iv128;
+            iv128       = _mm_loadu_si128(p_src128);
 
             AesEnc_1x128(&blk, p_key128, nRounds);
 
-            blk = _mm_xor_si128(blk, _mm_loadu_si128(p_src128));
+            blk = _mm_xor_si128(blk, iv128);
 
             _mm_storeu_si128(p_dest128, blk);
 
             p_src128 += 1;
             p_dest128 += 1;
             blocks--;
+        }
+
+        if (res) {
+            __m128i blk = iv128;
+            iv128       = _mm_setzero_si128();
+            std::copy(
+                (Uint8*)p_src128, ((Uint8*)p_src128) + res, (Uint8*)&iv128);
+
+            AesEnc_1x128(&blk, p_key128, nRounds);
+
+            blk = _mm_xor_si128(blk, iv128);
+
+            std::copy((Uint8*)&blk, ((Uint8*)&blk) + res, (Uint8*)p_dest128);
         }
 
 #ifdef AES_MULTI_UPDATE
@@ -143,6 +158,7 @@ namespace alcp::cipher { namespace aesni {
 
         __m128i iv128  = _mm_loadu_si128((const __m128i*)pIv);
         Uint64  blocks = len / Rijndael::cBlockSize;
+        Uint64  res    = len % Rijndael::cBlockSize;
 
         while (blocks >= 4) {
             __m128i tmpblk = iv128;
@@ -196,10 +212,29 @@ namespace alcp::cipher { namespace aesni {
 
             iv128 = tmpblk;
 
+            p_src128 += 1;
+            p_dest128 += 1;
             blocks--;
         }
 
         assert(blocks == 0);
+
+        if (res) {
+            __m128i tmpblk = iv128;
+            __m128i srcblk = _mm_setzero_si128();
+
+            std::copy(
+                (Uint8*)p_src128, ((Uint8*)p_src128) + res, (Uint8*)&srcblk);
+
+            AesEnc_1x128(&tmpblk, p_key128, nRounds);
+            tmpblk = _mm_xor_si128(tmpblk, srcblk);
+
+            /* TODO: Store blocks using ERMS/FSRM or similar */
+            std::copy(
+                (Uint8*)&tmpblk, ((Uint8*)&tmpblk) + res, (Uint8*)p_dest128);
+
+            iv128 = tmpblk;
+        }
 
 #ifdef AES_MULTI_UPDATE
         // IV is no longer needed hence we can write the old ciphertext back to

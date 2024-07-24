@@ -138,6 +138,11 @@ namespace alcp::cipher { namespace vaes512 {
                                 a8,  a9,  a10, a11,
                                 a12, a13, a14, a15);
     }
+
+    static inline void alcp_setzero(__m512i &a){
+        a = _mm512_setzero_si512();
+    }
+
     // clang-format on
 
     // add functions.

@@ -53,6 +53,7 @@ namespace alcp::cipher { namespace vaes512 {
     {
         alc_error_t err    = ALC_ERROR_NONE;
         Uint64      blocks = len / Rijndael::cBlockSize;
+        Uint64      res    = len % Rijndael::cBlockSize;
 
         auto pkey128  = reinterpret_cast<const __m128i*>(pKey);
         auto pa_128   = reinterpret_cast<const __m128i*>(pSrc);
@@ -172,6 +173,8 @@ namespace alcp::cipher { namespace vaes512 {
                     pa_128++;
                     p_out_128++;
                 }
+                // Update back the initial pointer
+                pOut_512 = reinterpret_cast<__m512i*>(p_out_128);
             }
         } else {
             b1             = alcp_loadu_128((const __m512i*)pIv);
@@ -190,12 +193,40 @@ namespace alcp::cipher { namespace vaes512 {
                 pa_128++;
                 p_out_128++;
             }
+            // Update back the initial pointer
+            pOut_512 = reinterpret_cast<__m512i*>(p_out_128);
+        }
+
+        if (res) {
+            // FIXME: To be merged into
+            b1             = alcp_loadu_128((const __m512i*)pIv);
+            auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
+
+            if (isIvUsed) {
+                b1 = alcp_loadu_128((__m512i*)pb_128);
+                pb_128++;
+            }
+            isIvUsed = 1;
+
+            a1 = _mm512_setzero_si512();
+            // Create mask to load bytes
+            Uint64 mask = 0xFFFF >> (16 - res);
+            // Mask load bytes
+            a1 = _mm512_mask_loadu_epi8(a1, mask, (const __m512i*)pa_128);
+
+            AesEncNoLoad_1x512(b1, keys);
+
+            a1 = alcp_xor(a1, b1);
+
+            _mm512_mask_storeu_epi8((__m512i*)p_out_128, mask, a1);
+            // p_in_128++;
+            // p_out_128++;
         }
 
 #ifdef AES_MULTI_UPDATE
         // Store nth ciphertext to iv
         alcp_storeu_128(reinterpret_cast<__m512i*>(pIv),
-                        alcp_loadu_128(((const __m512i*)(p_in_128 - 1))));
+                        alcp_loadu_128(((const __m512i*)(pa_128 - 1))));
 #endif
 
         // clear all keys in registers.

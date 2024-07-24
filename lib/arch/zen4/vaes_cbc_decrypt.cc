@@ -54,13 +54,14 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
                               Uint8*       pIv // ptr to Initialization Vector
 )
 {
-    Uint64      blocks = len / Rijndael::cBlockSize;
-    alc_error_t err    = ALC_ERROR_NONE;
+    alc_error_t err      = ALC_ERROR_NONE;
+    auto        pkey128  = reinterpret_cast<const __m128i*>(pKey);
+    auto        pa_128   = reinterpret_cast<const __m128i*>(pCipherText);
+    auto        pb_128   = pa_128;
+    auto        pOut_512 = reinterpret_cast<__m512i*>(pPlainText);
 
-    auto pkey128  = reinterpret_cast<const __m128i*>(pKey);
-    auto pa_128   = reinterpret_cast<const __m128i*>(pCipherText);
-    auto pb_128   = pa_128;
-    auto pOut_512 = reinterpret_cast<__m512i*>(pPlainText);
+    // pa_128 will lead while pb_128 will lag behind (1 block) due to IV taken
+    // as first block to XOR
 
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
@@ -70,7 +71,8 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 
     Int32 isIvUsed = 0;
 
-    if (blocks >= 4) {
+    // Check if 4 blocks are available
+    if (len >= (4 * 16)) {
         // Load IV into b1 to process 1st block.
         b1          = alcp_loadu_128((const __m512i*)pIv);
         b2          = _mm512_loadu_si512(pb_128);
@@ -78,7 +80,8 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         b2          = _mm512_permutexvar_epi64(idx, b2);
         b1          = _mm512_mask_blend_epi64(252, b1, b2); // pack iv and b2
 
-        for (; blocks >= 16; blocks -= 16) {
+        // loop on 16 blocks
+        for (; len >= 16 * 16; len -= 16 * 16) {
             if (isIvUsed) {
                 b1 = _mm512_loadu_si512(pb_128);
                 pb_128 += 4;
@@ -113,9 +116,10 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
             pOut_512 += 4;
         }
 
-        if (blocks) {
-
-            if (blocks >= 8) {
+        // Input data still exists?
+        if (len) {
+            // Loop on 8 blocks
+            if (len >= 8 * 16) {
                 if (isIvUsed) {
                     b1 = _mm512_loadu_si512(pb_128);
                     pb_128 += 4;
@@ -136,10 +140,11 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 
                 pa_128 += 8;
                 pOut_512 += 2;
-                blocks -= 8;
+                len -= (8 * 16);
             }
 
-            if (blocks >= 4) {
+            // Loop on 4 blocks
+            if (len >= 4 * 16) {
                 if (isIvUsed) {
                     b1 = _mm512_loadu_si512(pb_128);
                     pb_128 += 4;
@@ -154,12 +159,20 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 
                 pa_128 += 4;
                 pOut_512 += 1;
-                blocks -= 4;
+                len -= 4 * 16;
             }
 
             auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
-            for (; blocks != 0; blocks--) {
-                a1 = alcp_loadu_128((const __m512i*)pa_128);
+            // Loop on a block/bytes
+            while (len) {
+                // Create mask to load bytes
+                // FIXME: Convert this to a equation
+                Uint64 current_factor = len > 16 ? 16 : len;
+                Uint64 mask           = (1 << current_factor) - 1;
+                // Mask load bytes
+                a1 = _mm512_setzero_si512();
+                a1 = _mm512_mask_loadu_epi8(a1, mask, pa_128);
+
                 if (isIvUsed) {
                     b1 = alcp_loadu_128((__m512i*)(pb_128));
                 }
@@ -169,34 +182,47 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
                 AesEncNoLoad_1x512(a1, keys);
 
                 a1 = alcp_xor(a1, b1);
-                alcp_storeu_128((__m512i*)p_out_128, a1);
+                // Store decrypted block.
+                _mm512_mask_storeu_epi8((__m512i*)p_out_128, mask, a1);
 
                 pa_128++;
                 p_out_128++;
+                len -= current_factor;
             }
         }
     } else {
         b1             = alcp_loadu_128((const __m512i*)pIv);
         auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
-        for (; blocks != 0; blocks--) {
+        while (len) {
             if (isIvUsed) {
                 b1 = alcp_loadu_128((__m512i*)pb_128);
                 pb_128++;
             }
             isIvUsed = 1;
 
-            a1 = alcp_loadu_128((const __m512i*)pa_128);
+            // Create mask to load bytes
+            // FIXME: Convert this to a equation
+            Uint64 current_factor = len > 16 ? 16 : len;
+            Uint64 mask           = (1 << current_factor) - 1;
+            // Mask load bytes
+            a1 = _mm512_setzero_si512();
+            a1 = _mm512_mask_loadu_epi8(a1, mask, pa_128);
+
             AesEncNoLoad_1x512(a1, keys);
             a1 = alcp_xor(a1, b1);
-            alcp_storeu_128((__m512i*)p_out_128, a1);
+            // Store decrypted block.
+            _mm512_mask_storeu_epi8((__m512i*)p_out_128, mask, a1);
+
             pa_128++;
             p_out_128++;
+            len -= current_factor;
         }
     }
 
 #ifdef AES_MULTI_UPDATE
     // IV is no longer needed hence we can write the old ciphertext back to IV
-    alcp_storeu_128(reinterpret_cast<__m512i*>(pIv), b1);
+    alcp_storeu_128(reinterpret_cast<__m512i*>(pIv),
+                    alcp_loadu_128((const __m512i*)(pb_128)));
 #endif
 
     alcp_clear_keys_zmm(keys);

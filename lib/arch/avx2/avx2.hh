@@ -66,6 +66,11 @@ namespace alcp::cipher { namespace aesni {
         return _mm_set_epi32(a0, a1, a2, a3);
     }
 
+    static inline void alcp_setzero(__m128i& a)
+    {
+        a = _mm_setzero_si128();
+    }
+
     // add functions.
     static inline __m128i alcp_add_epi32(__m128i a, __m128i b)
     {

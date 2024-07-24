@@ -59,13 +59,11 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     __m128i* p_key128 = (__m128i*)pKey;
     __m256i* p_ct256  = (__m256i*)pCipherText;
     __m256i* p_pt256  = (__m256i*)pPlainText;
-#ifdef AES_MULTI_UPDATE
-    __m128i* p_ct128 = (__m128i*)pCipherText;
-#endif
 
     __m256i iv256 = _mm256_set_epi64x(0, 0, p_iv64[1], p_iv64[0]);
 
     Uint64 blocks = len / Rijndael::cBlockSize;
+    Uint64 res    = len % Rijndael::cBlockSize;
     Uint64 chunk  = 4 * 2;
 
     for (; blocks >= chunk; blocks -= chunk) {
@@ -157,11 +155,9 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     /* process single block of 128-bit */
-#ifdef AES_MULTI_UPDATE
-    p_ct128 = reinterpret_cast<__m128i*>(p_ct256);
-#endif
+    __m128i* p_ct128 = reinterpret_cast<__m128i*>(p_ct256);
     if (blocks) {
-        Uint64* p_iv64  = (Uint64*)p_ct256;
+        Uint64* p_iv64  = (Uint64*)p_ct128;
         __m256i mask_lo = _mm256_set_epi64x(0,
                                             0,
                                             static_cast<long long>(1UL) << 63,
@@ -173,13 +169,27 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         __m256i tmpblk = _mm256_permute2x128_si256(blk0, blk0, 1);
         AesEnc_1x256(&y0, p_key128, nRounds);
 
-        blk0 = _mm256_xor_si256(tmpblk, y0);
+        iv256 = blk0;
+        blk0  = _mm256_xor_si256(tmpblk, y0);
         _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);
 
-#ifdef AES_MULTI_UPDATE
         p_ct128 += 1;
-#endif
         blocks--;
+    }
+
+    if (res) {
+        __m256i blk0 = _mm256_setzero_si256();
+
+        Uint64* p_iv64 = (Uint64*)(p_ct128 - 1);
+        std::copy((Uint8*)p_iv64, ((Uint8*)p_iv64) + 16, (Uint8*)&iv256);
+        std::copy((Uint8*)p_ct128, ((Uint8*)p_ct128) + res, (Uint8*)&blk0);
+
+        // __m256i tmpblk = _mm256_permute2x128_si256(blk0, blk0, 1);
+        AesEnc_1x256(&iv256, p_key128, nRounds);
+
+        blk0 = _mm256_xor_si256(blk0, iv256);
+
+        std::copy((Uint8*)&blk0, ((Uint8*)&blk0) + res, (Uint8*)p_pt256);
     }
 
 #ifdef AES_MULTI_UPDATE

@@ -49,6 +49,7 @@ EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
 {
     alc_error_t err    = ALC_ERROR_NONE;
     Uint64      blocks = len / Rijndael::cBlockSize;
+    Uint64      res    = len % Rijndael::cBlockSize;
     __m128i     a1; // plaintext data
     __m128i     b1;
 
@@ -67,6 +68,17 @@ EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
         _mm_storeu_si128(p_out_128, b1);
         p_in_128++;
         p_out_128++;
+    }
+
+    if (res) {
+        a1 = _mm_setzero_si128();
+        std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+        b1 = _mm_xor_si128(a1, b1);
+
+        AesEnc_1x128(&b1, pkey128, nRounds);
+
+        std::copy((Uint8*)&b1, ((Uint8*)&b1) + res, (Uint8*)p_out_128);
     }
 
 #ifdef AES_MULTI_UPDATE

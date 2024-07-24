@@ -87,6 +87,7 @@ namespace aes {
     Uint64 ctrBlk(const T*       p_in_x,
                   T*             p_out_x,
                   Uint64         blocks,
+                  Uint64         res,
                   const __m128i* pkey128,
                   Uint8*         pIv,
                   int            nRounds,
@@ -197,6 +198,21 @@ namespace aes {
             alcp_storeu_128(p_out_x, a1);
             p_in_x  = (T*)(((__uint128_t*)p_in_x) + 1);
             p_out_x = (T*)(((__uint128_t*)p_out_x) + 1);
+        }
+
+        if (res) {
+            alcp_setzero(a1);
+            std::copy((Uint8*)p_in_x, ((Uint8*)p_in_x) + res, (Uint8*)&a1);
+
+            // re-arrange as per spec
+            b1 = alcp_shuffle_epi8(c1, swap_ctr);
+            AesEncrypt(&b1, pkey128, nRounds);
+            a1 = alcp_xor(b1, a1);
+
+            // increment counter
+            c1 = alcp_add_epi64(c1, one_lo);
+
+            std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_x);
         }
 
 #ifdef AES_MULTI_UPDATE

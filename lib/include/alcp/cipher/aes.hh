@@ -72,13 +72,13 @@ class Aes : public Rijndael
     alc_cipher_key_data_t m_cipher_key_data{};
 
     Uint32                             m_keyLen_in_bytes_aes;
-    __attribute__((aligned(16))) Uint8 m_iv_aes[MAX_CIPHER_IV_SIZE];
-    Uint8*                             m_pIv_aes      = NULL;
-    Uint64                             m_ivLen_aes    = 0;
-    Uint32                             m_isKeySet_aes = 0;
-    Uint32                             m_ivState_aes  = 0;
-    Uint32                             m_isEnc_aes    = ALCP_ENC;
-    Uint64                             m_dataLen      = 0;
+    __attribute__((aligned(16))) Uint8 m_iv_aes[MAX_CIPHER_IV_SIZE] = {};
+    Uint8*                             m_pIv_aes                    = m_iv_aes;
+    Uint64                             m_ivLen_aes                  = 0;
+    Uint32                             m_isKeySet_aes               = 0;
+    Uint32                             m_ivState_aes                = 0;
+    Uint32                             m_isEnc_aes                  = ALCP_ENC;
+    Uint64                             m_dataLen                    = 0;
 
     // Data Size Limits
     Uint32 m_ivLen_max = MAX_CIPHER_IV_SIZE;

@@ -104,6 +104,7 @@ ctrBlk128(const __m512i* p_in_x,
 
     Uint8  factor = 4;
     Uint64 blocks = len / Rijndael::cBlockSize;
+    Uint64 res    = len % Rijndael::cBlockSize;
 
     ctrInitx(c1, pIv, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
@@ -212,6 +213,26 @@ ctrBlk128(const __m512i* p_in_x,
         p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
     }
 
+    if (res) {
+        // Create mask to load bytes
+        Uint64 mask = 0xFFFF >> (16 - res);
+        // Mask load bytes
+        alcp_setzero(a1);
+        a1 = _mm512_mask_loadu_epi8(a1, mask, p_in_x);
+
+        // re-arrange as per spec
+        b1 = alcp_shuffle_epi8(c1, swap_ctr);
+
+        AesEncryptNoLoad_1x512Rounds10(b1, keys);
+
+        a1 = alcp_xor(b1, a1);
+
+        // increment counter
+        c1 = alcp_add_epi64(c1, one_lo);
+
+        _mm512_mask_storeu_epi8(p_out_x, mask, a1);
+    }
+
     // clear all keys in registers.
     alcp_clear_keys_zmm_10rounds(keys);
 
@@ -236,6 +257,7 @@ ctrBlk192(const __m512i* p_in_x,
 
     Uint8  factor = 4;
     Uint64 blocks = len / Rijndael::cBlockSize;
+    Uint64 res    = len % Rijndael::cBlockSize;
 
     ctrInitx(c1, pIv, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
@@ -344,6 +366,26 @@ ctrBlk192(const __m512i* p_in_x,
         p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
     }
 
+    if (res) {
+        // Create mask to load bytes
+        Uint64 mask = 0xFFFF >> (16 - res);
+        // Mask load bytes
+        alcp_setzero(a1);
+        a1 = _mm512_mask_loadu_epi8(a1, mask, p_in_x);
+
+        // re-arrange as per spec
+        b1 = alcp_shuffle_epi8(c1, swap_ctr);
+
+        AesEncryptNoLoad_1x512Rounds10(b1, keys);
+
+        a1 = alcp_xor(b1, a1);
+
+        // increment counter
+        c1 = alcp_add_epi64(c1, one_lo);
+
+        _mm512_mask_storeu_epi8(p_out_x, mask, a1);
+    }
+
     // clear all keys in registers.
     alcp_clear_keys_zmm_12rounds(keys);
 
@@ -368,6 +410,7 @@ ctrBlk256(const __m512i* p_in_x,
 
     Uint8  factor = 4;
     Uint64 blocks = len / Rijndael::cBlockSize;
+    Uint64 res    = len % Rijndael::cBlockSize;
 
     ctrInitx(c1, pIv, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
@@ -474,6 +517,26 @@ ctrBlk256(const __m512i* p_in_x,
         alcp_storeu_128(p_out_x, a1);
         p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
         p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
+    }
+
+    if (res) {
+        // Create mask to load bytes
+        Uint64 mask = 0xFFFF >> (16 - res);
+        // Mask load bytes
+        alcp_setzero(a1);
+        a1 = _mm512_mask_loadu_epi8(a1, mask, p_in_x);
+
+        // re-arrange as per spec
+        b1 = alcp_shuffle_epi8(c1, swap_ctr);
+
+        AesEncryptNoLoad_1x512Rounds10(b1, keys);
+
+        a1 = alcp_xor(b1, a1);
+
+        // increment counter
+        c1 = alcp_add_epi64(c1, one_lo);
+
+        _mm512_mask_storeu_epi8(p_out_x, mask, a1);
     }
 
     // clear all keys in registers.

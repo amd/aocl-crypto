@@ -129,6 +129,11 @@ namespace alcp::cipher { namespace vaes {
         return _mm256_set_epi32(a0, a1, a2, a3, a4, a5, a6, a7);
     }
 
+    static inline void alcp_setzero(__m256i& a)
+    {
+        a = _mm256_setzero_si256();
+    }
+
     // add functions.
     static inline __m256i alcp_add_epi32(__m256i a, __m256i b)
     {
