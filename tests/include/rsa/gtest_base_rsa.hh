@@ -210,8 +210,10 @@ Rsa_KAT(std::string             RsaAlgo,
         if (RsaAlgo.compare("EncryptDecrypt") == 0
             && padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
             random_pad_len = KeySize - 3 - input_data.size();
-            random_len_padding.resize(random_pad_len);
-            data.m_random_pad = &(random_len_padding[0]);
+            if (random_pad_len > 0) {
+                random_len_padding.resize(random_pad_len);
+                data.m_random_pad = &(random_len_padding[0]);
+            }
         }
 
         data.m_msg            = getPtr(input_data);
@@ -541,10 +543,11 @@ Rsa_Cross(std::string             RsaAlgo,
         if (RsaAlgo.compare("EncryptDecrypt") == 0
             && padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
             random_pad_len = KeySize - 3 - input_data.size();
-            random_len_padding.resize(random_pad_len);
-            if (random_pad_len > 0)
+            if (random_pad_len > 0) {
+                random_len_padding.resize(random_pad_len);
                 data_main.m_random_pad = data_ext.m_random_pad =
                     &(random_len_padding[0]);
+            }
         }
 
         /* misalign if buffers are aligned */
