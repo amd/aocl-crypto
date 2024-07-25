@@ -41,7 +41,8 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
                                      const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{}
+{
+}
 
 IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
                                      const alc_cipher_mode_t mode,
@@ -103,16 +104,16 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
 IPPCipherAeadBase::~IPPCipherAeadBase()
 {
     if (m_ctx != nullptr) {
-        delete[](Ipp8u*) m_ctx;
+        delete[] (Ipp8u*)m_ctx;
     }
     if (m_ctx_gcm != nullptr) {
-        delete[](Ipp8u*) m_ctx_gcm;
+        delete[] (Ipp8u*)m_ctx_gcm;
     }
     if (m_ctx_ccm != nullptr) {
-        delete[](Ipp8u*) m_ctx_ccm;
+        delete[] (Ipp8u*)m_ctx_ccm;
     }
     if (m_ctx_xts != nullptr) {
-        delete[](Ipp8u*) m_ctx_xts;
+        delete[] (Ipp8u*)m_ctx_xts;
     }
 }
 
@@ -157,50 +158,34 @@ IPPCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             status = ippsAES_GCMGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             if (m_ctx_gcm != nullptr) {
-                delete[](Ipp8u*) m_ctx_gcm;
+                delete[] (Ipp8u*)m_ctx_gcm;
             }
             m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             break;
 
         case ALC_AES_MODE_CCM:
             status = ippsAES_CCMGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             if (m_ctx_ccm != nullptr) {
-                delete[](Ipp8u*) m_ctx_ccm;
+                delete[] (Ipp8u*)m_ctx_ccm;
             }
             m_ctx_ccm = (IppsAES_CCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_CCMInit(key, key_len / 8, m_ctx_ccm, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             break;
 
         case ALC_AES_MODE_SIV:
             break;
 
         default: // Should not come here
-            return false;
+            break;
     }
 
     if (status != ippStsNoErr) {
         std::cout << "Error code: " << status << " from IPP Init" << std::endl;
         return false;
-    } else
-        return true;
+    }
+    return true;
 }
 
 bool

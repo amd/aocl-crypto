@@ -42,15 +42,15 @@ namespace alcp::testing {
 class IPPCipherBase : public CipherBase
 {
   private:
-    alc_cipher_mode_t m_mode;
+    alc_cipher_mode_t m_mode{};
     IppsAESSpec*      m_ctx     = NULL;
     IppsAES_XTSSpec*  m_ctx_xts = NULL;
     IppsAES_GCMState* m_ctx_gcm = NULL;
     IppsAES_CCMState* m_ctx_ccm = NULL;
 
-    const Uint8* m_iv;
-    const Uint8* m_key;
-    Uint32       m_key_len;
+    const Uint8* m_iv{};
+    const Uint8* m_key{};
+    Uint32       m_key_len    = 0;
     const Uint8* m_tkey       = NULL;
     int          m_ctxSize    = 0;
     Uint64       m_block_size = 0;
