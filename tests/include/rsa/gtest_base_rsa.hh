@@ -758,8 +758,9 @@ Rsa_Cross(std::string             RsaAlgo,
                     decrypted_data_main, input_data, InputSize_Max));
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data_ext, input_data, InputSize_Max));
-                EXPECT_TRUE(ArraysMatch(
-                    decrypted_data_ext, decrypted_data_main, InputSize_Max));
+                EXPECT_TRUE(ArraysMatch(std::move(decrypted_data_ext),
+                                        std::move(decrypted_data_main),
+                                        InputSize_Max));
             }
         }
 
