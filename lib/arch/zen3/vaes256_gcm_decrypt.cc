@@ -124,8 +124,8 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
     num_256_blks = dynamicUnroll(blocks);
 
     __m256i* Hsubkey_256_precomputed = (__m256i*)pGcmCtxHashSubkeyTable;
-    __m256i  hashSubkeyTableStack[MAX_NUM_256_BLKS];
-    __m256i* Hsubkey_256 = hashSubkeyTableStack;
+    __m256i  hashSubkeyTableStack[MAX_NUM_256_BLKS] = {};
+    __m256i* Hsubkey_256                            = hashSubkeyTableStack;
 
     if (num_256_blks) {
         getPrecomputedTable(isFirstUpdate,

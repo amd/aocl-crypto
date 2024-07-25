@@ -126,8 +126,8 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
 
     // Get precomputed Hash table for GMUL calculation
     __m256i* Hsubkey_256_precomputed = (__m256i*)pGcmCtxHashSubkeyTable;
-    __m256i  hashSubkeyTableStack[MAX_NUM_256_BLKS];
-    __m256i* Hsubkey_256 = hashSubkeyTableStack;
+    __m256i  hashSubkeyTableStack[MAX_NUM_256_BLKS] = {};
+    __m256i* Hsubkey_256                            = hashSubkeyTableStack;
     if (num_256_blks) {
         getPrecomputedTable(isFirstUpdate,
                             Hsubkey_256_precomputed,
