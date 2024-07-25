@@ -65,7 +65,7 @@ class OpenSSLRsaBase : public RsaBase
 
     const EVP_MD* m_md_type = nullptr;
 
-    const char* m_digest_str;
+    const char* m_digest_str = "";
 
     Uint64 m_sig_len = 0;
 

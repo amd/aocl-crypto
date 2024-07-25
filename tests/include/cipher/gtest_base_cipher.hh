@@ -72,9 +72,9 @@ class CipherTestingCore
     // FIXME: Change these to unique_ptr
     CipherTesting*    m_cipherHandler = {};
     AlcpCipherBase*   m_acb           = {};
-    LIB_TYPE          m_lib;
-    alc_cipher_mode_t m_alcpMode;
-    _alc_cipher_type  m_cipher_type;
+    LIB_TYPE          m_lib{};
+    alc_cipher_mode_t m_alcpMode{};
+    _alc_cipher_type  m_cipher_type{};
 #ifdef USE_IPP
     IPPCipherBase* icb = nullptr;
 #endif
@@ -182,9 +182,9 @@ class CipherAeadTestingCore
     // FIXME: Change these to unique_ptr
     CipherTesting*      m_cipherHandler = {};
     AlcpCipherAeadBase* m_acb           = {};
-    LIB_TYPE            m_lib;
-    alc_cipher_mode_t   m_alcpMode;
-    _alc_cipher_type    m_cipher_type;
+    LIB_TYPE            m_lib{};
+    alc_cipher_mode_t   m_alcpMode{};
+    _alc_cipher_type    m_cipher_type{};
 #ifdef USE_IPP
     IPPCipherAeadBase* icb = nullptr;
 #endif
@@ -549,7 +549,7 @@ CipherCrossTest(int               keySize,
                     ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
                 if (verbose > 1) {
                     PrintTestData(std::move(key), data_alc, mode);
-                    PrintTestData(std::move(key), data_ext, mode);
+                    PrintTestData(key, data_ext, mode);
                 }
             } else {
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
@@ -569,7 +569,7 @@ CipherCrossTest(int               keySize,
 
                 if (verbose > 1) {
                     PrintTestData(std::move(key), data_alc, mode);
-                    PrintTestData(std::move(key), data_ext, mode);
+                    PrintTestData(key, data_ext, mode);
                 }
             }
         }

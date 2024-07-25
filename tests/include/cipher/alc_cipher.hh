@@ -38,11 +38,11 @@ class AlcpCipherBase : public CipherBase
 {
   private:
     alc_cipher_handle_p m_handle = nullptr;
-    alc_cipher_info_t   m_cinfo;
-    alc_cipher_mode_t   m_mode;
-    _alc_cipher_type    m_cipher_type;
-    const Uint8*        m_iv;
-    Uint8               m_key[64];
+    alc_cipher_info_t   m_cinfo{};
+    alc_cipher_mode_t   m_mode{};
+    _alc_cipher_type    m_cipher_type{};
+    const Uint8*        m_iv{};
+    Uint8               m_key[64]{};
     const Uint8*        m_tkey = nullptr;
 
   public:

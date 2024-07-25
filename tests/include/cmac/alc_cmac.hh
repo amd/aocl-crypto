@@ -41,9 +41,9 @@ namespace alcp::testing {
 class AlcpCmacBase : public CmacBase
 {
     alc_mac_handle_t* m_handle{};
-    alc_mac_info_t    m_info;
-    Uint8*            m_key = {};
-    Uint32            m_key_len;
+    alc_mac_info_t    m_info{};
+    Uint8*            m_key     = {};
+    Uint32            m_key_len = 0;
 
   public:
     AlcpCmacBase() = default;

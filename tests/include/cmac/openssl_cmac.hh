@@ -45,9 +45,9 @@ class OpenSSLCmacBase : public CmacBase
 {
     EVP_MAC_CTX*   m_handle = nullptr;
     EVP_MAC*       m_mac    = nullptr;
-    alc_mac_info_t m_info;
-    Uint8*         m_key = {};
-    Uint32         m_key_len;
+    alc_mac_info_t m_info{};
+    Uint8*         m_key     = {};
+    Uint32         m_key_len = 0;
 
   public:
     bool Init(const alc_mac_info_t& info, std::vector<Uint8>& Key);

@@ -111,18 +111,18 @@ class ExecRecPlay
   private:
     File*              m_blackbox_bin = nullptr;
     File*              m_log          = nullptr;
-    time_t             m_start_time;
-    time_t             m_end_time;
+    time_t             m_start_time{};
+    time_t             m_end_time{};
     std::size_t        m_blackbox_start_pos = 0;
     std::size_t        m_blackbox_end_pos   = 0;
-    record_t           m_rec_type;
-    std::vector<Uint8> m_key;
-    std::vector<Uint8> m_iv;
-    std::vector<Uint8> m_data;
+    record_t           m_rec_type{};
+    std::vector<Uint8> m_key{};
+    std::vector<Uint8> m_iv{};
+    std::vector<Uint8> m_data{};
     std::string        m_str_mode = "";
     long m_byte_start = 0, m_byte_end = 0, m_rec_t = 0, m_key_size = 0,
-         m_data_size = 0;
-    long m_prev_log_point;
+         m_data_size      = 0;
+    long m_prev_log_point = 0;
 
   public:
     // Create new files for writing

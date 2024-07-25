@@ -38,15 +38,15 @@ class AlcpCipherAeadBase : public CipherAeadBase
 {
   private:
     alc_cipher_handle_p m_handle = nullptr;
-    alc_cipher_mode_t   m_mode;
-    alc_cipher_type_t   m_cipher_type;
-    Uint64              m_keyLen;
+    alc_cipher_mode_t   m_mode{};
+    alc_cipher_type_t   m_cipher_type{};
+    Uint64              m_keyLen{};
 
-    const Uint8* m_key;
-    const Uint8* m_iv;
-    Uint8        m_combined_key[64];
+    const Uint8* m_key = nullptr;
+    const Uint8* m_iv  = nullptr;
+    Uint8        m_combined_key[64]{};
 
-    alc_cipher_aead_info_t m_cinfo;
+    alc_cipher_aead_info_t m_cinfo{};
     const Uint8*           m_tkey = nullptr;
 
   public:

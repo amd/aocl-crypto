@@ -41,8 +41,8 @@ namespace alcp::testing {
 class AlcpPoly1305Base : public Poly1305Base
 {
     alc_mac_handle_t* m_handle{};
-    Uint8*            m_key = {};
-    Uint32            m_key_len;
+    Uint8*            m_key     = {};
+    Uint32            m_key_len = 0;
 
   public:
     AlcpPoly1305Base() = default;

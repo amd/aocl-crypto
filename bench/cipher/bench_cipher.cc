@@ -174,28 +174,29 @@ CipherBench(benchmark::State& state,
             size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<Uint8>         vec_in(blockSize, 0x01);
-    std::vector<Uint8>         vec_out(blockSize, 0x21);
-    std::unique_ptr<Uint8[]>   tag_buffer = std::make_unique<Uint8[]>(16);
-    Uint8                      key[keylen / 8];
+    std::vector<Uint8>       vec_in(blockSize, 0x01);
+    std::vector<Uint8>       vec_out(blockSize, 0x21);
+    std::unique_ptr<Uint8[]> tag_buffer = std::make_unique<Uint8[]>(16);
+
+    std::vector<Uint8>         key(keylen / 8);
     Uint8                      iv[16];
     Uint8                      tkey[keylen / 8];
     alcp::testing::CipherBase* p_cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, &key[0], keylen, tkey, blockSize);
 
     p_cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, &key[0], keylen, tkey, blockSize);
     if (useipp) {
         p_cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
     alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, &key[0], keylen, tkey, blockSize);
     if (useossl) {
         p_cb = &ocb;
     }

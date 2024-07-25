@@ -38,9 +38,9 @@ namespace alcp::testing {
 class IPPHmacBase : public HmacBase
 {
     IppsHMACState_rmf* m_handle = nullptr;
-    alc_mac_info_t     m_info;
-    Uint8*             m_key;
-    Uint32             m_key_len;
+    alc_mac_info_t     m_info{};
+    Uint8*             m_key{};
+    Uint32             m_key_len = 0;
 
   public:
     IPPHmacBase() = default;
