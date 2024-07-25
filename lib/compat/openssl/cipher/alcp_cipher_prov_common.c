@@ -890,7 +890,8 @@ ALCP_prov_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
     _alc_cipher_generic_data_t* genCipherctx = &(cipherctx->generic);
     ENTER();
 
-    if (ivlen != cipherctx->ivLen || ivlen > sizeof(cipherctx->iv_buff)) {
+    // generic cipher oiv_buff size(16) is smaller than iv_buff(128)
+    if (ivlen != cipherctx->ivLen || ivlen > sizeof(genCipherctx->oiv_buff)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_IV_LENGTH);
         return 0;
     }
