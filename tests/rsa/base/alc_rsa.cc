@@ -398,8 +398,22 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
     /* first sign then digest */
     alc_error_t err = ALC_ERROR_NONE;
 
-    m_rsa_digest_handle          = new alc_digest_handle_t;
-    m_rsa_digest_handle->context = malloc(alcp_digest_context_size());
+    if (m_rsa_digest_handle == nullptr) {
+        m_rsa_digest_handle          = new alc_digest_handle_t;
+        m_rsa_digest_handle->context = malloc(alcp_digest_context_size());
+    } else if (m_rsa_digest_handle->context == nullptr) {
+        m_rsa_digest_handle->context = malloc(alcp_digest_context_size());
+    } else {
+        alcp_digest_finish(m_rsa_digest_handle);
+        if (m_rsa_digest_handle->context != nullptr) {
+            free(m_rsa_digest_handle->context);
+            m_rsa_digest_handle->context = nullptr;
+        }
+        delete m_rsa_digest_handle;
+        m_rsa_digest_handle          = nullptr;
+        m_rsa_digest_handle          = new alc_digest_handle_t;
+        m_rsa_digest_handle->context = malloc(alcp_digest_context_size());
+    }
 
     err = alcp_digest_request(m_digest_info.dt_mode, m_rsa_digest_handle);
     if (alcp_is_error(err)) {
