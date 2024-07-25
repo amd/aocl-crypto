@@ -935,12 +935,7 @@ ALCP_prov_cipher_generic_initkey(void*        vctx,
 static const char    CIPHER_DEF_PROP[]  = "provider=alcp,fips=no";
 const OSSL_ALGORITHM ALC_prov_ciphers[] = {
 
-// ccm, siv, xts to be added.
-
-#if 1 // generic cipher to be enabled after multi-update implementation. Current
-      // code work with openssl speed without multi-update but its not complete
-// CTR
-#if 1 // Disable CTR temporarily
+    // CTR
     { ALCP_PROV_NAMES_AES_128_CTR,
       CIPHER_DEF_PROP,
       ALCP_prov_aes128ctr_functions },
@@ -950,7 +945,6 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CTR,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ctr_functions },
-#endif
 
 #if 0 // Disable CBC temporarily
     // CBC
@@ -987,7 +981,6 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ofb_functions },
 
-#endif
     // XTS
     { ALCP_PROV_NAMES_AES_128_XTS,
       CIPHER_DEF_PROP,
@@ -1016,6 +1009,7 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
       CIPHER_DEF_PROP,
       ALCP_prov_aes256siv_functions },
 #if 0
+    // CCM
     { ALCP_PROV_NAMES_AES_128_CCM,
       CIPHER_DEF_PROP,
       ALCP_prov_aes128ccm_functions },

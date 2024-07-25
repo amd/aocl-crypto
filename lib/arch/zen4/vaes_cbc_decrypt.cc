@@ -55,6 +55,8 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 )
 {
     alc_error_t err      = ALC_ERROR_NONE;
+    Uint64      blocks   = len / Rijndael::cBlockSize;
+    Uint64      res      = len - (blocks * Rijndael::cBlockSize);
     auto        pkey128  = reinterpret_cast<const __m128i*>(pKey);
     auto        pa_128   = reinterpret_cast<const __m128i*>(pCipherText);
     auto        pb_128   = pa_128;
@@ -71,8 +73,7 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 
     Int32 isIvUsed = 0;
 
-    // Check if 4 blocks are available
-    if (len >= (4 * 16)) {
+    if (blocks >= 4) {
         // Load IV into b1 to process 1st block.
         b1          = alcp_loadu_128((const __m512i*)pIv);
         b2          = _mm512_loadu_si512(pb_128);
@@ -81,7 +82,7 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         b1          = _mm512_mask_blend_epi64(252, b1, b2); // pack iv and b2
 
         // loop on 16 blocks
-        for (; len >= 16 * 16; len -= 16 * 16) {
+        for (; blocks >= 16; blocks -= 16) {
             if (isIvUsed) {
                 b1 = _mm512_loadu_si512(pb_128);
                 pb_128 += 4;
@@ -117,9 +118,9 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         }
 
         // Input data still exists?
-        if (len) {
+        if ((blocks != 0) | (res != 0)) {
             // Loop on 8 blocks
-            if (len >= 8 * 16) {
+            if (blocks >= 8) {
                 if (isIvUsed) {
                     b1 = _mm512_loadu_si512(pb_128);
                     pb_128 += 4;
@@ -140,11 +141,11 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 
                 pa_128 += 8;
                 pOut_512 += 2;
-                len -= (8 * 16);
+                blocks -= 8;
             }
 
             // Loop on 4 blocks
-            if (len >= 4 * 16) {
+            if (blocks >= 4) {
                 if (isIvUsed) {
                     b1 = _mm512_loadu_si512(pb_128);
                     pb_128 += 4;
@@ -159,11 +160,12 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
 
                 pa_128 += 4;
                 pOut_512 += 1;
-                len -= 4 * 16;
+                blocks -= 4;
             }
 
             auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
             // Loop on a block/bytes
+            len = (blocks * Rijndael::cBlockSize) + res;
             while (len) {
                 // Create mask to load bytes
                 // FIXME: Convert this to a equation
