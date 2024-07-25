@@ -174,42 +174,47 @@ main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
     ArgsMap argsMap = parseArgs(argc, argv);
-    assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
-    // ::testing::RegisterTest("KnownAnswerTest",
-    // "GCM_Encrypt_experimental", )
-    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && std::get<bool>(argsMap["USE_IPP"].value) == false) {
-        RegisterMyTests<true>("KnownAnswerTest",
-                              "GCM_Encrypt_experimental_ALCP",
-                              LibrarySelect::ALCP);
-        RegisterMyTests<false>("KnownAnswerTest",
-                               "GCM_Decrypt_experimental_ALCP",
-                               LibrarySelect::ALCP);
-    }
+
+    try {
+        assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
+        // ::testing::RegisterTest("KnownAnswerTest",
+        // "GCM_Encrypt_experimental", )
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && std::get<bool>(argsMap["USE_IPP"].value) == false) {
+            RegisterMyTests<true>("KnownAnswerTest",
+                                  "GCM_Encrypt_experimental_ALCP",
+                                  LibrarySelect::ALCP);
+            RegisterMyTests<false>("KnownAnswerTest",
+                                   "GCM_Decrypt_experimental_ALCP",
+                                   LibrarySelect::ALCP);
+        }
 #ifdef USE_OSSL
-    if (std::get<bool>(argsMap["USE_OSSL"].value)) {
-        RegisterMyTests<true>("KnownAnswerTest",
-                              "GCM_Encrypt_experimental_OPENSSL",
-                              LibrarySelect::OPENSSL);
-        RegisterMyTests<false>("KnownAnswerTest",
-                               "GCM_Decrypt_experimental_OPENSSL",
-                               LibrarySelect::OPENSSL);
-    }
+        if (std::get<bool>(argsMap["USE_OSSL"].value)) {
+            RegisterMyTests<true>("KnownAnswerTest",
+                                  "GCM_Encrypt_experimental_OPENSSL",
+                                  LibrarySelect::OPENSSL);
+            RegisterMyTests<false>("KnownAnswerTest",
+                                   "GCM_Decrypt_experimental_OPENSSL",
+                                   LibrarySelect::OPENSSL);
+        }
 #endif
 
 #ifdef USE_IPP
-    if (std::get<bool>(argsMap["USE_IPP"].value)) {
-        RegisterMyTests<true>("KnownAnswerTest",
-                              "GCM_Encrypt_experimental_IPP",
-                              LibrarySelect::IPP);
-        RegisterMyTests<false>("KnownAnswerTest",
-                               "GCM_Decrypt_experimental_IPP",
-                               LibrarySelect::IPP);
-    }
+        if (std::get<bool>(argsMap["USE_IPP"].value)) {
+            RegisterMyTests<true>("KnownAnswerTest",
+                                  "GCM_Encrypt_experimental_IPP",
+                                  LibrarySelect::IPP);
+            RegisterMyTests<false>("KnownAnswerTest",
+                                   "GCM_Decrypt_experimental_IPP",
+                                   LibrarySelect::IPP);
+        }
 #endif
 
-    return RUN_ALL_TESTS();
+        return RUN_ALL_TESTS();
+    } catch (const std::bad_variant_access& e) {
+        std::cout << e.what() << '\n';
+    }
 }
 #endif

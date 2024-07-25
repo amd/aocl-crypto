@@ -329,7 +329,9 @@ EncDecType(encDec_t e_d, big_small_t b_s)
 // Non AEAD Version
 /* print params verbosely */
 inline void
-PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, alc_cipher_mode_t mode)
+PrintTestData(std::vector<Uint8>& key,
+              alcp_dc_ex_t&       data,
+              alc_cipher_mode_t&  mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " Len: " << key.size() << std::endl;
@@ -349,9 +351,9 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, alc_cipher_mode_t mode)
 // FIXME: Reduce the dupication
 // AEAD Version
 inline void
-PrintTestDataAead(std::vector<Uint8> key,
-                  alcp_dca_ex_t      data,
-                  alc_cipher_mode_t  mode)
+PrintTestDataAead(std::vector<Uint8>& key,
+                  alcp_dca_ex_t&      data,
+                  alc_cipher_mode_t&  mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " Len: " << key.size() << std::endl;
@@ -475,7 +477,7 @@ CipherCrossTest(int               keySize,
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
             /* generate multiple iv and adl */
-            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
+            ivl = IVL_START + ((i + 20 + (i * 3)) % (IVL_START - IVL_MAX + 1));
 
             alcp_dc_ex_t data_alc, data_ext;
 
@@ -548,7 +550,7 @@ CipherCrossTest(int               keySize,
                 ASSERT_TRUE(
                     ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
                 if (verbose > 1) {
-                    PrintTestData(std::move(key), data_alc, mode);
+                    PrintTestData(key, data_alc, mode);
                     PrintTestData(key, data_ext, mode);
                 }
             } else {
@@ -568,14 +570,14 @@ CipherCrossTest(int               keySize,
                     ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
 
                 if (verbose > 1) {
-                    PrintTestData(std::move(key), data_alc, mode);
+                    PrintTestData(key, data_alc, mode);
                     PrintTestData(key, data_ext, mode);
                 }
             }
         }
-        delete extTC;
-        delete alcpTC;
     }
+    delete extTC;
+    delete alcpTC;
 }
 
 // FIXME: In future we need a direct path to each aead modes
@@ -720,8 +722,8 @@ CipherAeadCrossTest(int               keySize,
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
             /* generate multiple iv and adl */
-            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
-            adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
+            ivl = IVL_START + ((i + 20 + (i * 3)) % (IVL_START - IVL_MAX + 1));
+            adl = ADL_START + ((i + 20 + (i * 3)) % (ADL_MAX - ADL_START + 1));
 
             alcp_dca_ex_t data_alc, data_ext;
 
@@ -818,8 +820,8 @@ CipherAeadCrossTest(int               keySize,
                         ArraysMatch(std::move(tag_alc), std::move(tag_ext)));
                 }
                 if (verbose > 1) {
-                    PrintTestDataAead(std::move(key), data_alc, mode);
-                    PrintTestDataAead(std::move(key), data_ext, mode);
+                    PrintTestDataAead(key, data_alc, mode);
+                    PrintTestDataAead(key, data_ext, mode);
                 }
             } else {
                 if (isgcm || isccm || issiv || ischachapoly) {
@@ -888,8 +890,8 @@ CipherAeadCrossTest(int               keySize,
                                             std::move(out_ct_ext)));
                 }
                 if (verbose > 1) {
-                    PrintTestDataAead(std::move(key), data_alc, mode);
-                    PrintTestDataAead(std::move(key), data_ext, mode);
+                    PrintTestDataAead(key, data_alc, mode);
+                    PrintTestDataAead(key, data_ext, mode);
                 }
             }
         }
@@ -965,8 +967,10 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             std::cout << "ERROR: Enc" << std::endl;
             EXPECT_TRUE(ret);
         }
-        if (verbose > 1)
-            PrintTestData(csv->getVect("KEY"), data, mode);
+        if (verbose > 1) {
+            auto key = csv->getVect("KEY");
+            PrintTestData(key, data, mode);
+        }
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
@@ -995,9 +999,10 @@ RunCipherKatTest(CipherTestingCore& testingCore,
                     *(testingCore.getCsv()),
                     std::string("AES_" + modeStr + "_" + std::to_string(keySize)
                                 + encDecStr)));
-    if (verbose > 1)
-        PrintTestData(csv->getVect("KEY"), data, mode);
-
+    if (verbose > 1) {
+        auto key = csv->getVect("KEY");
+        PrintTestData(key, data, mode);
+    }
     return ret;
 }
 
@@ -1094,8 +1099,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         }
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
-        if (verbose > 1)
-            PrintTestDataAead(csv->getVect("KEY"), data, mode);
+        if (verbose > 1) {
+            auto key = csv->getVect("KEY");
+            PrintTestDataAead(key, data, mode);
+        }
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
@@ -1132,8 +1139,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
                                     + std::to_string(keySize) + encDecStr)));
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
-        if (verbose > 1)
-            PrintTestDataAead(csv->getVect("KEY"), data, mode);
+        if (verbose > 1) {
+            auto key = csv->getVect("KEY");
+            PrintTestDataAead(key, data, mode);
+        }
     }
     return ret;
 }

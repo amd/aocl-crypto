@@ -132,8 +132,7 @@ AlcpDigestBase::context_copy()
     m_handle_dup->context = malloc(alcp_digest_context_size());
 
     err = alcp_digest_context_copy(m_handle, m_handle_dup);
-    if (alcp_is_error(err) || m_handle_dup == nullptr
-        || m_handle_dup->context == nullptr) {
+    if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_context_copy:" << err
                   << std::endl;
         alcp_digest_finish(m_handle_dup);

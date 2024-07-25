@@ -367,42 +367,47 @@ main(int argc, char** argv)
         std::make_shared<alcp::testing::RngBase>();
 
     ArgsMap argsMap = parseArgs(argc, argv);
-    assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
 
-    /* if no ext lib provided, openssl selected by default */
-    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && (std::get<bool>(argsMap["USE_IPP"].value) == false)) {
-        argsMap["USE_OSSL"].value = true;
-    }
+    try {
+        assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
 
-    // Use openssl for cross test by default
-    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
-        argsMap["USE_OSSL"].value = true;
-    }
+        /* if no ext lib provided, openssl selected by default */
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && (std::get<bool>(argsMap["USE_IPP"].value) == false)) {
+            argsMap["USE_OSSL"].value = true;
+        }
+
+        // Use openssl for cross test by default
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+            argsMap["USE_OSSL"].value = true;
+        }
 
 #ifdef USE_OSSL
-    if (std::get<bool>(argsMap["USE_OSSL"].value)) {
-        RegisterMyTests("KnownAnswerTest",
-                        "GCM_CROSS_EXPERIMENTAL_OPENSSL",
-                        std::move(rng),
-                        LibrarySelect::OPENSSL,
-                        LibrarySelect::ALCP);
-    }
+        if (std::get<bool>(argsMap["USE_OSSL"].value)) {
+            RegisterMyTests("KnownAnswerTest",
+                            "GCM_CROSS_EXPERIMENTAL_OPENSSL",
+                            std::move(rng),
+                            LibrarySelect::OPENSSL,
+                            LibrarySelect::ALCP);
+        }
 #endif
 
 #ifdef USE_IPP
-    if (std::get<bool>(argsMap["USE_IPP"].value)) {
-        RegisterMyTests("KnownAnswerTest",
-                        "GCM_CROSS_EXPERIMENTAL_IPP",
-                        std::move(rng),
-                        LibrarySelect::IPP,
-                        LibrarySelect::ALCP);
-    }
+        if (std::get<bool>(argsMap["USE_IPP"].value)) {
+            RegisterMyTests("KnownAnswerTest",
+                            "GCM_CROSS_EXPERIMENTAL_IPP",
+                            std::move(rng),
+                            LibrarySelect::IPP,
+                            LibrarySelect::ALCP);
+        }
 #endif
 
-    return RUN_ALL_TESTS();
+        return RUN_ALL_TESTS();
+    } catch (const std::bad_variant_access& e) {
+        std::cout << e.what() << '\n';
+    }
 }
 #endif

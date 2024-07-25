@@ -34,6 +34,7 @@
 #include "cipher_experimental/factory.hh"
 #include "common/experimental/gtest_essentials.hh"
 #include "utils.hh"
+#include <variant>
 
 namespace alcp::benchmarking::cipher {
 
@@ -126,8 +127,7 @@ BenchGcmCipherExperimental(benchmark::State&            state,
 
     if constexpr (encryptor == false) { // Decrypt
         // Create a vaid data for decryption (mainly tag and ct)
-        std::unique_ptr<ITestCipher> iTestCipher =
-            std::make_unique<AlcpGcmCipher<true>>();
+        iTestCipher = std::make_unique<AlcpGcmCipher<true>>();
         bool no_err = true;
         no_err &= iTestCipher->init(&dataInit);
         if (no_err == false) {
@@ -361,46 +361,50 @@ main(int argc, char** argv)
 
     ArgsMap argsMap = parseArgs(argc, argv);
 
-    assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_ALCP"].paramType == ParamType::TYPE_BOOL);
+    try {
+        assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_ALCP"].paramType == ParamType::TYPE_BOOL);
 
-    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && std::get<bool>(argsMap["USE_IPP"].value) == false
-        && std::get<bool>(argsMap["USE_ALCP"].value) == false) {
-#ifdef USE_IPP
-        testlibs.insert(testlibs.begin(),
-                        static_cast<Int64>(LibrarySelect::IPP));
-#endif
-#ifdef USE_OSSL
-        testlibs.insert(testlibs.begin(),
-                        static_cast<Int64>(LibrarySelect::OPENSSL));
-#endif
-        testlibs.insert(testlibs.begin(),
-                        static_cast<Int64>(LibrarySelect::ALCP));
-    } else {
-        if (std::get<bool>(argsMap["USE_ALCP"].value) == true) {
-            testlibs.insert(testlibs.begin(),
-                            static_cast<Int64>(LibrarySelect::ALCP));
-        }
-        if (std::get<bool>(argsMap["USE_OSSL"].value) == true) {
-#ifdef USE_OSSL
-            testlibs.insert(testlibs.begin(),
-                            static_cast<Int64>(LibrarySelect::OPENSSL));
-#else
-            printErrors("OpenSSL unavailable at compile time!");
-            return -1;
-#endif
-        }
-        if (std::get<bool>(argsMap["USE_IPP"].value) == true) {
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && std::get<bool>(argsMap["USE_IPP"].value) == false
+            && std::get<bool>(argsMap["USE_ALCP"].value) == false) {
 #ifdef USE_IPP
             testlibs.insert(testlibs.begin(),
                             static_cast<Int64>(LibrarySelect::IPP));
-#else
-            printErrors("IPP unavailable at compile time!");
-            return -1;
 #endif
+#ifdef USE_OSSL
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::OPENSSL));
+#endif
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::ALCP));
+        } else {
+            if (std::get<bool>(argsMap["USE_ALCP"].value) == true) {
+                testlibs.insert(testlibs.begin(),
+                                static_cast<Int64>(LibrarySelect::ALCP));
+            }
+            if (std::get<bool>(argsMap["USE_OSSL"].value) == true) {
+#ifdef USE_OSSL
+                testlibs.insert(testlibs.begin(),
+                                static_cast<Int64>(LibrarySelect::OPENSSL));
+#else
+                printErrors("OpenSSL unavailable at compile time!");
+                return -1;
+#endif
+            }
+            if (std::get<bool>(argsMap["USE_IPP"].value) == true) {
+#ifdef USE_IPP
+                testlibs.insert(testlibs.begin(),
+                                static_cast<Int64>(LibrarySelect::IPP));
+#else
+                printErrors("IPP unavailable at compile time!");
+                return -1;
+#endif
+            }
         }
+    } catch (const std::bad_variant_access& e) {
+        std::cout << e.what() << '\n';
     }
 
     // GCM

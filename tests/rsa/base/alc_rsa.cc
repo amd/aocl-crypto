@@ -440,15 +440,13 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
         return false;
     }
 
-    if (m_rsa_digest_handle != nullptr) {
-        alcp_digest_finish(m_rsa_digest_handle);
-        if (m_rsa_digest_handle->context != nullptr) {
-            free(m_rsa_digest_handle->context);
-            m_rsa_digest_handle->context = nullptr;
-        }
-        delete m_rsa_digest_handle;
-        m_rsa_digest_handle = nullptr;
+    alcp_digest_finish(m_rsa_digest_handle);
+    if (m_rsa_digest_handle->context != nullptr) {
+        free(m_rsa_digest_handle->context);
+        m_rsa_digest_handle->context = nullptr;
     }
+    delete m_rsa_digest_handle;
+    m_rsa_digest_handle = nullptr;
 
     /* now calculate signature on data.m_digest */
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
