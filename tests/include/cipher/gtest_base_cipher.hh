@@ -540,11 +540,15 @@ CipherCrossTest(int               keySize,
                 ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
                 if (!ret) {
                     std::cout << "ERROR: Enc: Main lib" << std::endl;
+                    delete alcpTC;
+                    delete extTC;
                     FAIL();
                 }
                 ret = extTC->getCipherHandler()->testingEncrypt(data_ext, key);
                 if (!ret) {
                     std::cout << "ERROR: Enc: ext lib" << std::endl;
+                    delete alcpTC;
+                    delete extTC;
                     FAIL();
                 }
                 ASSERT_TRUE(
@@ -557,12 +561,16 @@ CipherCrossTest(int               keySize,
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 if (!ret) {
                     std::cout << "ERROR: Dec: main lib" << std::endl;
+                    delete alcpTC;
+                    delete extTC;
                     FAIL();
                 }
 
                 ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
                 if (!ret) {
                     std::cout << "ERROR: Dec: ext lib" << std::endl;
+                    delete alcpTC;
+                    delete extTC;
                     FAIL();
                 }
 
