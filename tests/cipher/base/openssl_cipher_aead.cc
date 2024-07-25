@@ -43,41 +43,56 @@ OpenSSLCipherAeadBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
                                               alc_cipher_mode_t mode,
                                               size_t            keylen)
 {
+    const EVP_CIPHER* p_mode = nullptr;
     switch (mode) {
         case ALC_AES_MODE_GCM:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_gcm();
+                    p_mode = EVP_aes_128_gcm();
+                    break;
                 case 192:
-                    return EVP_aes_192_gcm();
+                    p_mode = EVP_aes_192_gcm();
+                    break;
                 case 256:
-                    return EVP_aes_256_gcm();
+                    p_mode = EVP_aes_256_gcm();
+                    break;
             }
+            break;
         case ALC_AES_MODE_CCM:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_ccm();
+                    p_mode = EVP_aes_128_ccm();
+                    break;
                 case 192:
-                    return EVP_aes_192_ccm();
+                    p_mode = EVP_aes_192_ccm();
+                    break;
                 case 256:
-                    return EVP_aes_256_ccm();
+                    p_mode = EVP_aes_256_ccm();
+                    break;
             }
+            break;
         case ALC_AES_MODE_SIV:
             // Using EVP_CIPHER_fetch here since no such API like
             // EVP_aes_128_siv();
             switch (keylen) {
                 case 128:
-                    return EVP_CIPHER_fetch(NULL, "AES-128-SIV", NULL);
+                    p_mode = EVP_CIPHER_fetch(NULL, "AES-128-SIV", NULL);
+                    break;
                 case 192:
-                    return EVP_CIPHER_fetch(NULL, "AES-192-SIV", NULL);
+                    p_mode = EVP_CIPHER_fetch(NULL, "AES-192-SIV", NULL);
+                    break;
                 case 256:
-                    return EVP_CIPHER_fetch(NULL, "AES-256-SIV", NULL);
+                    p_mode = EVP_CIPHER_fetch(NULL, "AES-256-SIV", NULL);
+                    break;
             }
+            break;
         case ALC_CHACHA20_POLY1305:
-            return EVP_chacha20_poly1305();
+            p_mode = EVP_chacha20_poly1305();
+            break;
         default:
-            return nullptr;
+            break;
     }
+    return p_mode;
 }
 OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
                                              const alc_cipher_mode_t cMode,

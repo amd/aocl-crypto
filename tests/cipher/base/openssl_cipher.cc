@@ -46,53 +46,74 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
                                           alc_cipher_mode_t mode,
                                           size_t            keylen)
 {
+    const EVP_CIPHER* p_mode = nullptr;
     switch (mode) {
         case ALC_AES_MODE_CBC:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_cbc();
+                    p_mode = EVP_aes_128_cbc();
+                    break;
                 case 192:
-                    return EVP_aes_192_cbc();
+                    p_mode = EVP_aes_192_cbc();
+                    break;
                 case 256:
-                    return EVP_aes_256_cbc();
+                    p_mode = EVP_aes_256_cbc();
+                    break;
             }
+            break;
         case ALC_AES_MODE_CTR:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_ctr();
+                    p_mode = EVP_aes_128_ctr();
+                    break;
                 case 192:
-                    return EVP_aes_192_ctr();
+                    p_mode = EVP_aes_192_ctr();
+                    break;
                 case 256:
-                    return EVP_aes_256_ctr();
+                    p_mode = EVP_aes_256_ctr();
+                    break;
             }
+            break;
         case ALC_AES_MODE_CFB:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_cfb();
+                    p_mode = EVP_aes_128_cfb();
+                    break;
                 case 192:
-                    return EVP_aes_192_cfb();
+                    p_mode = EVP_aes_192_cfb();
+                    break;
                 case 256:
-                    return EVP_aes_256_cfb();
+                    p_mode = EVP_aes_256_cfb();
+                    break;
             }
+            break;
         case ALC_AES_MODE_OFB:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_ofb();
+                    p_mode = EVP_aes_128_ofb();
+                    break;
                 case 192:
-                    return EVP_aes_192_ofb();
+                    p_mode = EVP_aes_192_ofb();
+                    break;
                 case 256:
-                    return EVP_aes_256_ofb();
+                    p_mode = EVP_aes_256_ofb();
+                    break;
             }
+            break;
         case ALC_AES_MODE_XTS:
             switch (keylen) {
                 case 128:
-                    return EVP_aes_128_xts();
+                    p_mode = EVP_aes_128_xts();
+                    break;
                 case 256:
-                    return EVP_aes_256_xts();
+                    p_mode = EVP_aes_256_xts();
+                    break;
             }
+            break;
         default:
-            return nullptr;
+            break;
     }
+    return p_mode;
 }
 OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
                                      const alc_cipher_mode_t cMode,
@@ -100,7 +121,8 @@ OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{}
+{
+}
 
 OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
                                      const alc_cipher_mode_t cMode,

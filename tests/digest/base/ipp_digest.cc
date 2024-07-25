@@ -63,8 +63,10 @@ IPPDigestBase::init()
     switch (m_mode) {
         case ALC_SHA1:
             status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA1_TT());
+            break;
         case ALC_MD5:
             status = ippsHashInit_rmf(m_handle, ippsHashMethod_MD5());
+            break;
         case ALC_SHA2_224:
             status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
             break;

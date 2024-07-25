@@ -81,7 +81,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
     std::string TestDataFile = std::string("dataset_CMAC_" + CmacType + "_"
                                            + std::to_string(KeySize) + ".csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -140,8 +140,8 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             std::begin(cmac), std::begin(cmac) + csv.getVect("CMAC").size());
 
         EXPECT_TRUE(ArraysMatch(
-            cmac_vector,         // Actual output
-            csv.getVect("CMAC"), // expected output, from the csv test data
+            std::move(cmac_vector), // Actual output
+            csv.getVect("CMAC"),    // expected output, from the csv test data
             csv,
             std::string("CMAC_" + CmacType + "_" + std::to_string(KeySize)
                         + "_KAT")));

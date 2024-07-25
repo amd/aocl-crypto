@@ -337,7 +337,7 @@ RegisterMyTests(std::string              testSuiteName,
         __LINE__,
         // Important to use the fixture type as the return type here.
         [=]() -> CrossTestFixture* {
-            return new CrossTest(rng, select1, select2);
+            return new CrossTest(std::move(rng), select1, select2);
         });
 }
 } // namespace alcp::testing::cipher::xts

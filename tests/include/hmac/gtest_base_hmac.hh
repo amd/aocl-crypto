@@ -117,7 +117,7 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
 
     std::string TestDataFile = std::string("dataset_HMAC_" + HmacType + "_"
                                            + std::to_string(HmacSize) + ".csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -167,8 +167,8 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
         std::vector<Uint8> hmac_vector(std::begin(hmac), std::end(hmac));
 
         EXPECT_TRUE(ArraysMatch(
-            hmac_vector,         // Actual output
-            csv.getVect("HMAC"), // expected output, from the csv test data
+            std::move(hmac_vector), // Actual output
+            csv.getVect("HMAC"),    // expected output, from the csv test data
             csv,
             std::string("HMAC_" + HmacType + "_" + std::to_string(HmacSize)
                         + "_KAT")));

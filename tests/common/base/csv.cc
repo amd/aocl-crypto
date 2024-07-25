@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -92,7 +92,7 @@ std::vector<Uint8>
 Csv::getVect(const String cName)
 {
     String value = getStr(cName);
-    return parseHexStrToBin(value);
+    return parseHexStrToBin(std::move(value));
 }
 
 int
