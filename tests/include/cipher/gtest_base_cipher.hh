@@ -417,28 +417,33 @@ CipherCrossTest(int               keySize,
     else
         big_small_str.assign("SMALL");
     /* Request from others to validate openssl with ipp */
-    CipherTestingCore* alcpTC = nullptr;
+    std::unique_ptr<CipherTestingCore> alcpTC;
     if (oa_override) {
-        alcpTC = new CipherTestingCore(LIB_TYPE::OPENSSL, cipher_type, mode);
+        alcpTC = std::make_unique<CipherTestingCore>(
+            LIB_TYPE::OPENSSL, cipher_type, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = new CipherTestingCore(LIB_TYPE::ALCP, cipher_type, mode);
+        alcpTC = std::make_unique<CipherTestingCore>(
+            LIB_TYPE::ALCP, cipher_type, mode);
     }
-    CipherTestingCore* extTC = nullptr;
-    RngBase            rb;
+    std::unique_ptr<CipherTestingCore> extTC = nullptr;
+    RngBase                            rb;
 
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = new CipherTestingCore(LIB_TYPE::OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherTestingCore>(
+                LIB_TYPE::OPENSSL, cipher_type, mode);
         else if (useipp)
-            extTC = new CipherTestingCore(LIB_TYPE::IPP, cipher_type, mode);
+            extTC = std::make_unique<CipherTestingCore>(
+                LIB_TYPE::IPP, cipher_type, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = new CipherTestingCore(LIB_TYPE::OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherTestingCore>(
+                LIB_TYPE::OPENSSL, cipher_type, mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -540,15 +545,11 @@ CipherCrossTest(int               keySize,
                 ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
                 if (!ret) {
                     std::cout << "ERROR: Enc: Main lib" << std::endl;
-                    delete alcpTC;
-                    delete extTC;
                     FAIL();
                 }
                 ret = extTC->getCipherHandler()->testingEncrypt(data_ext, key);
                 if (!ret) {
                     std::cout << "ERROR: Enc: ext lib" << std::endl;
-                    delete alcpTC;
-                    delete extTC;
                     FAIL();
                 }
                 ASSERT_TRUE(
@@ -561,16 +562,12 @@ CipherCrossTest(int               keySize,
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 if (!ret) {
                     std::cout << "ERROR: Dec: main lib" << std::endl;
-                    delete alcpTC;
-                    delete extTC;
                     FAIL();
                 }
 
                 ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
                 if (!ret) {
                     std::cout << "ERROR: Dec: ext lib" << std::endl;
-                    delete alcpTC;
-                    delete extTC;
                     FAIL();
                 }
 
@@ -584,8 +581,6 @@ CipherCrossTest(int               keySize,
             }
         }
     }
-    delete extTC;
-    delete alcpTC;
 }
 
 // FIXME: In future we need a direct path to each aead modes
