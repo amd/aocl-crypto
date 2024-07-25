@@ -100,9 +100,9 @@ TEST_P(Sha512Test, digest_generation_test)
 {
     const auto [plaintext, digests] = GetParam().second;
 
-    for (const auto enum_digest : { DigestSha512::DIGEST_SHA_512_224,
-                                    DigestSha512::DIGEST_SHA_512_256,
-                                    DigestSha512::DIGEST_SHA_512_512 }) {
+    for (const auto& enum_digest : { DigestSha512::DIGEST_SHA_512_224,
+                                     DigestSha512::DIGEST_SHA_512_256,
+                                     DigestSha512::DIGEST_SHA_512_512 }) {
         auto digest                           = digests[enum_digest];
         const auto [digest_type, digest_size] = DigestSizes.at(enum_digest);
         std::unique_ptr<IDigest> digest_obj; // Change to unique_ptr

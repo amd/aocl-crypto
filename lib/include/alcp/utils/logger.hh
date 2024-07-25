@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,8 @@ class Priority
 
     Priority(const Level c)
         : m_level{ c }
-    {}
+    {
+    }
 
     inline static const std::string& name(const Level& c)
     {
@@ -145,15 +146,18 @@ class Message
 
     Message(const std::string s)
         : Message{ Priority::Level::eInfo, s }
-    {}
+    {
+    }
 
     Message(const std::string& s)
         : Message{ Priority::Level::eInfo, s }
-    {}
+    {
+    }
 
     Message(const std::string&& s)
         : Message{ Priority::Level::eInfo, s }
-    {}
+    {
+    }
 
     /**
      * @brief    Construct Message with default priority
@@ -216,16 +220,19 @@ class Logger : public ILogger
     Logger(const std::string& name)
         : m_name{ name }
         , m_allowed_priority{ Priority::eWarning }
-    {}
+    {
+    }
 
     Logger(const std::string&& name)
         : m_name{ name }
         , m_allowed_priority{ Priority::eWarning }
-    {}
+    {
+    }
 
     Logger(const char* name)
         : Logger(std::string(name))
-    {}
+    {
+    }
 
     ~Logger() {}
 
@@ -260,7 +267,7 @@ class Logger : public ILogger
     // Stream& warn(void) { return m_stream; }
 
   protected:
-    ILogger*    m_p_ilogger;
+    ILogger*    m_p_ilogger = {};
     std::string m_name;
     Priority    m_allowed_priority;
     Stream      m_stream;
@@ -279,7 +286,8 @@ class DummyLogger final : public Logger
   public:
     DummyLogger()
         : Logger("dummy")
-    {}
+    {
+    }
     ~DummyLogger() {}
 
   public:

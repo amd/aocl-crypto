@@ -328,10 +328,7 @@ main(void)
 
     for (alc_cipher_mode_t m = ALC_AES_MODE_CBC; m < ALC_AES_MODE_XTS; m++) {
 
-        if (m == ALC_AES_MODE_ECB) {
-            printf("\n\nAES-ECB not implemented");
-            continue;
-        } else if (m == ALC_AES_MODE_CBC) {
+        if (m == ALC_AES_MODE_CBC) {
             printf("\n\nAES-CBC");
         } else if (m == ALC_AES_MODE_OFB) {
             printf("\n\nAES-OFB");

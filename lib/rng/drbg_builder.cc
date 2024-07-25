@@ -44,7 +44,7 @@ class CustomRng : public IRng
     std::vector<Uint8> m_entropy;
     std::vector<Uint8> m_nonce;
 
-    Uint64 m_call_count;
+    Uint64 m_call_count = {};
 
   public:
     CustomRng() = default;
@@ -79,7 +79,10 @@ class CustomRng : public IRng
         return s;
     }
 
-    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
+    void setEntropy(std::vector<Uint8> entropy)
+    {
+        m_entropy = std::move(entropy);
+    }
     void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
 
     void reset()

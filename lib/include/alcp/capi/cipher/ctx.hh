@@ -72,7 +72,8 @@ typedef struct Context
     alc_error_t (*finish)(const void*);
 
     Context()
-        : destructed{ 0 }
+        : m_alcp_cipher_data{}
+        , destructed{ 0 }
         , decrypt{ nullptr }
         , encrypt{ nullptr }
         , encryptBlocksXts{ nullptr }

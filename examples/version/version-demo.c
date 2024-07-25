@@ -37,7 +37,7 @@ static Uint64* dummy_var;
 int
 dummy()
 {
-    dummy_var = malloc(1);
+    dummy_var = malloc(sizeof(Uint64));
     if (!dummy_var) {
         return 0;
     }

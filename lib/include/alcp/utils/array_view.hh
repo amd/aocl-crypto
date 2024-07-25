@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -123,13 +123,13 @@ class ArrayView
   private:
     struct _Deleter
     { /* Disable deleting as we dont own the memory */
-        void operator()(pointerT ptr){};
+        void operator()(pointerT ptr) {};
     };
     using uniquePointerT = std::unique_ptr<valueT, _Deleter>;
 
     uniquePointerT m_ptr;
-    std::size_t    m_size;
-    std::size_t    m_num_elements;
+    std::size_t    m_size         = {};
+    std::size_t    m_num_elements = {};
 };
 
 } // namespace alcp

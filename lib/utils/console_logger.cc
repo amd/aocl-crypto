@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -145,9 +145,11 @@ class ConsoleLogger::Impl
          * m_console.setColor(s_levelmap.at(Level::eTrace));
          */
         std::scoped_lock lock(m_mutex);
-        for (auto msg = m_msgs.begin(); msg != m_msgs.end();) {
+
+        auto msg = m_msgs.begin();
+        while (msg != m_msgs.end()) {
             std::cout << msg->c_str() << std::endl;
-            m_msgs.erase(msg);
+            msg = m_msgs.erase(msg);
         }
     }
 
