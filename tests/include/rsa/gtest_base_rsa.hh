@@ -54,31 +54,31 @@ using namespace alcp::testing;
 
 /* print params verbosely */
 inline void
-PrintRsaTestData(alcp_rsa_data_t data, std::string RsaAlgo)
+PrintRsaTestData(alcp_rsa_data_t* data, std::string RsaAlgo)
 {
-    if (data.m_msg)
+    if (data->m_msg)
         std::cout << "InputData: "
-                  << parseBytesToHexStr(data.m_msg, data.m_msg_len)
-                  << " Len : " << data.m_msg_len << std::endl;
+                  << parseBytesToHexStr(data->m_msg, data->m_msg_len)
+                  << " Len : " << data->m_msg_len << std::endl;
     if (RsaAlgo.compare("EncryptDecrypt") == 0) {
-        if (data.m_encrypted_data)
+        if (data->m_encrypted_data)
             std::cout << "EncryptedData: "
-                      << parseBytesToHexStr(data.m_encrypted_data,
-                                            data.m_msg_len)
-                      << " Len : " << data.m_msg_len << std::endl;
-        if (data.m_decrypted_data)
+                      << parseBytesToHexStr(data->m_encrypted_data,
+                                            data->m_msg_len)
+                      << " Len : " << data->m_msg_len << std::endl;
+        if (data->m_decrypted_data)
             std::cout << "DecryptedData: "
-                      << parseBytesToHexStr(data.m_decrypted_data,
-                                            data.m_msg_len)
-                      << " Len : " << data.m_msg_len << std::endl;
+                      << parseBytesToHexStr(data->m_decrypted_data,
+                                            data->m_msg_len)
+                      << " Len : " << data->m_msg_len << std::endl;
     }
     /* for sign verify tests */
     /* FIXME: signature len for now is 256, parameterize this !*/
     if (RsaAlgo.compare("SignVerify") == 0
         || RsaAlgo.compare("DigestSignVerify")) {
-        if (data.m_signature)
+        if (data->m_signature)
             std::cout << "Signature: "
-                      << parseBytesToHexStr(data.m_signature, 256)
+                      << parseBytesToHexStr(data->m_signature, 256)
                       << " Len : " << 256 << std::endl;
     }
     return;
@@ -361,7 +361,7 @@ Rsa_KAT(std::string             RsaAlgo,
             }
         }
         if (verbose > 1) {
-            PrintRsaTestData(data, RsaAlgo);
+            PrintRsaTestData(&data, RsaAlgo);
         }
     }
     return;
@@ -765,8 +765,8 @@ Rsa_Cross(std::string             RsaAlgo,
         }
 
         if (verbose > 1) {
-            PrintRsaTestData(data_main, RsaAlgo);
-            PrintRsaTestData(data_ext, RsaAlgo);
+            PrintRsaTestData(&data_main, RsaAlgo);
+            PrintRsaTestData(&data_ext, RsaAlgo);
         }
     }
 
