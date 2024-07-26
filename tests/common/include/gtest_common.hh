@@ -57,10 +57,10 @@ static bool oa_override = false;
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8>  actual,
-            std::vector<Uint8>  expected,
-            alcp::testing::Csv& csv,
-            std::string         testName)
+ArraysMatch(const std::vector<Uint8>& actual,
+            const std::vector<Uint8>& expected,
+            alcp::testing::Csv&       csv,
+            std::string               testName)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";
@@ -94,7 +94,9 @@ ArraysMatch(std::vector<Uint8>  actual,
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
+ArraysMatch(const std::vector<Uint8>& actual,
+            const std::vector<Uint8>& expected,
+            size_t                    len)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";
@@ -121,7 +123,8 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
+ArraysMatch(const std::vector<Uint8>& actual,
+            const std::vector<Uint8>& expected)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";

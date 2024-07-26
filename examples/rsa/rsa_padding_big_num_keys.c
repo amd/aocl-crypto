@@ -267,7 +267,7 @@ Rsa_Pkcs_Hash_Sign_Verify(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
         ps_rsa_handle, hash_with_info, digest_info_size + hash_size, sign_text);
     if (err != ALC_ERROR_NONE) {
         printf("\n pkcs verify error on hash \n");
-        return 0;
+        goto free_buff;
     }
 
     printf("\n******************************************************"

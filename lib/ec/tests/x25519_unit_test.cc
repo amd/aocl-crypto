@@ -90,10 +90,11 @@ class x25519Test
     {
         // Tuple order
         // {peer1_private_key, peer2_private_key,expected_shared_key}
-        const auto params = GetParam();
-        const auto [peer1_private_key, peer2_private_key, expected_shared_key] =
-            params.second;
-        const auto test_name = params.first;
+        const auto& params                = GetParam();
+        const auto& [peer1_private_key,
+                     peer2_private_key,
+                     expected_shared_key] = params.second;
+        const auto& test_name             = params.first;
 
         // Copy Values to class variables
         m_peer1_private_key   = peer1_private_key;
@@ -117,9 +118,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswerTest,
     x25519Test,
     testing::ValuesIn(KATDataset),
-    [](const testing::TestParamInfo<x25519Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<x25519Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST_P(x25519Test, PublicAndSharedKeyTest)
 {

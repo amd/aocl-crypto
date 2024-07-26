@@ -103,7 +103,7 @@ TEST_P(Sha512Test, digest_generation_test)
     for (const auto& enum_digest : { DigestSha512::DIGEST_SHA_512_224,
                                      DigestSha512::DIGEST_SHA_512_256,
                                      DigestSha512::DIGEST_SHA_512_512 }) {
-        auto digest                           = digests[enum_digest];
+        const auto& digest                    = digests[enum_digest];
         const auto [digest_type, digest_size] = DigestSizes.at(enum_digest);
         std::unique_ptr<IDigest> digest_obj; // Change to unique_ptr
         switch (digest_type) {
@@ -119,6 +119,7 @@ TEST_P(Sha512Test, digest_generation_test)
                 digest_obj = std::make_unique<Sha512>(); // Change to unique_ptr
                 break;
             default:
+                FAIL() << "Digest does not exist / is not implemented!";
                 break;
         }
         ASSERT_NE(nullptr, digest_obj.get());
@@ -145,9 +146,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha512Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha512Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha512Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST(Sha512Test, invalid_input_update_test)
 {

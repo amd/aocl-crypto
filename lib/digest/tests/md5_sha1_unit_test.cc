@@ -69,9 +69,9 @@ typedef tuple<const string, string>        ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 static const KnownAnswerMap                message_digest = {
     { "Case1",
-      { "ffff",
-        "ab2a0d28de6b77ffdd6c72afead099aba19f987b885f5a96069f4bc7f12b9e84ceba7d"
-        "fa" } }
+                     { "ffff",
+                       "ab2a0d28de6b77ffdd6c72afead099aba19f987b885f5a96069f4bc7f12b9e84ceba7d"
+                                      "fa" } }
 };
 
 class MD5_Sha1Test
@@ -106,8 +106,7 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     MD5_Sha1Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<MD5_Sha1Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<MD5_Sha1Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 } // namespace

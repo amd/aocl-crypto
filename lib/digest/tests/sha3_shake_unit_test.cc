@@ -87,7 +87,7 @@ TEST_P(Shake, digest_generation_test)
 
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        auto digest = digests[enum_digest];
+        const auto& digest = digests[enum_digest];
 
         std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
@@ -119,9 +119,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Shake,
     testing::ValuesIn(message_digest_array),
-    [](const testing::TestParamInfo<Shake::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Shake::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST(Shake, invalid_input_update_test)
 {
@@ -195,7 +194,7 @@ TEST(Shake, digest_correction_with_reset_test)
 
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        auto digest = digests[enum_digest];
+        const auto& digest = digests[enum_digest];
 
         std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128
@@ -332,7 +331,7 @@ TEST_P(Shake, setShakeLength_digest_generation_test)
 
     for (const auto enum_digest : { DigestShake::DIGEST_SHA3_SHAKE_128,
                                     DigestShake::DIGEST_SHA3_SHAKE_256 }) {
-        auto digest = digests[enum_digest];
+        const auto& digest = digests[enum_digest];
 
         std::unique_ptr<IDigest> sha3_shake_ptr(
             (enum_digest == DIGEST_SHA3_SHAKE_128

@@ -95,9 +95,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha384Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha384Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha384Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST(Sha384Test, invalid_input_update_test)
 {

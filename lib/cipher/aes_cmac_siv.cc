@@ -78,12 +78,14 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 
     if (pKey != nullptr) {
 
-        if (utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8)) {
+        if (utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8)
+            != ALC_ERROR_NONE) {
             return ALC_ERROR_INVALID_SIZE;
         }
 
         if (utils::SecureCopy<Uint8>(
-                m_key2, 32, pKey + (keyLength / 8), keyLength / 8)) {
+                m_key2, 32, pKey + (keyLength / 8), keyLength / 8)
+            != ALC_ERROR_NONE) {
             return ALC_ERROR_INVALID_SIZE;
         }
 

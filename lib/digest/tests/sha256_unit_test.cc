@@ -91,9 +91,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha256Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha256Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha256Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST(Sha256Test, invalid_input_update_test)
 {

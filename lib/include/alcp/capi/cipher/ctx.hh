@@ -82,6 +82,7 @@ typedef struct Context
         , setAad{ nullptr }
         , getTag{ nullptr }
         , setTagLength{ nullptr }
+        , setPlainTextLength{ nullptr }
         , finish{ nullptr } {};
 
     ~Context() { destructed = 1; }

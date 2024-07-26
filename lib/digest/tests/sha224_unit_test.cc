@@ -111,12 +111,12 @@ class Sha224Kat
     std::vector<Uint8>      m_message, m_digest;
     void                    SetUp() override
     {
-        const auto params            = GetParam();
-        const auto [message, digest] = params.second;
-        const auto test_name         = params.first;
-        m_message                    = message;
-        m_digest                     = digest;
-        sha224                       = std::make_unique<Sha224>();
+        const auto& params            = GetParam();
+        const auto& [message, digest] = params.second;
+        // const auto& test_name         = params.first; // Unused variable
+        m_message = message;
+        m_digest  = digest;
+        sha224    = std::make_unique<Sha224>();
         sha224->init();
     }
 
@@ -147,9 +147,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha224Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha224Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha224Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST(Sha224Test, invalid_input_update_test)
 {
@@ -245,8 +244,7 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswerTest,
     Sha224Kat,
     testing::ValuesIn(KATDataset2),
-    [](const testing::TestParamInfo<Sha224Kat::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha224Kat::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 } // namespace
