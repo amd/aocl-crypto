@@ -70,7 +70,6 @@ alcp_digest_init(alc_digest_handle_p pDigestHandle)
     ALCP_BAD_PTR_ERR_RET(ctx, err);
     ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
 
-    // FIMXE: Change update to return Status and assign it to ctx->status
     err = ctx->init(ctx->m_digest);
     return err;
 }
@@ -88,7 +87,6 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
     ALCP_BAD_PTR_ERR_RET(pMsgBuf, err);
     ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
 
-    // FIMXE: Change update to return Status and assign it to ctx->status
     err = ctx->update(ctx->m_digest, pMsgBuf, size);
 
     return err;
@@ -106,7 +104,6 @@ alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
     ALCP_BAD_PTR_ERR_RET(ctx, err);
     ALCP_BAD_PTR_ERR_RET(buf, err);
     ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
-    // FIMXE: Modify finalize to return Status and assign it to ctx->status
     err = ctx->finalize(ctx->m_digest, buf, size);
 
     return err;

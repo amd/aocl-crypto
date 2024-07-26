@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,7 @@
 #pragma once
 
 #include "alcp/alcp.hh"
-#include "alcp/base/status.hh"
+#include "alcp/error.h"
 
 namespace alcp {
 
@@ -39,7 +39,7 @@ class ALCP_API_EXPORT IRng
     /**
      * TODO: Delete this in favour of randomize
      */
-    virtual Status readRandom(Uint8* pBuf, Uint64 size) = 0;
+    virtual alc_error_t readRandom(Uint8* pBuf, Uint64 size) = 0;
 
     /**
      * Randomize a buffer array (byte-wise)
@@ -49,7 +49,7 @@ class ALCP_API_EXPORT IRng
      * \param        length          length of output
      * \throws       RngNotSeeded    exception (if available)
      */
-    virtual Status randomize(Uint8 output[], size_t length) = 0;
+    virtual alc_error_t randomize(Uint8 output[], size_t length) = 0;
 
     /**
      * \return  Name of the RNG
@@ -69,7 +69,7 @@ class ALCP_API_EXPORT IRng
      */
     virtual size_t reseed() = 0;
 
-    virtual Status setPredictionResistance(bool value) = 0;
+    virtual alc_error_t setPredictionResistance(bool value) = 0;
 
   public:
     virtual ~IRng() = default;

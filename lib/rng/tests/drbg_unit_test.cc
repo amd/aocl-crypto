@@ -66,8 +66,7 @@ DebugPrintPretty(std::vector<Uint8>& output)
 #else
 void
 DebugPrintPretty(std::vector<Uint8>& output)
-{
-}
+{}
 #endif
 
 class NullGenerator : public IRng
@@ -75,11 +74,14 @@ class NullGenerator : public IRng
   public:
     NullGenerator() = default;
 
-    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
-
-    Status randomize(Uint8 output[], size_t length) override
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) override
     {
-        Status s = StatusOk();
+        return ALC_ERROR_NONE;
+    }
+
+    alc_error_t randomize(Uint8 output[], size_t length) override
+    {
+        alc_error_t s = ALC_ERROR_NONE;
         memset(output, 0, length);
         return s;
     }
@@ -90,10 +92,9 @@ class NullGenerator : public IRng
 
     size_t reseed() override { return 0; }
 
-    Status setPredictionResistance(bool value) override
+    alc_error_t setPredictionResistance(bool value) override
     {
-        Status s = StatusOk();
-        return s;
+        return ALC_ERROR_NONE;
     }
 };
 
@@ -106,9 +107,15 @@ class MockGenerator : public IRng
   public:
     MockGenerator() = default;
 
-    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) override
+    {
+        return ALC_ERROR_NONE;
+    }
 
-    MOCK_METHOD(Status, randomize, (Uint8 output[], size_t length), (override));
+    MOCK_METHOD(alc_error_t,
+                randomize,
+                (Uint8 output[], size_t length),
+                (override));
 
     std::string name() const override { return "Mock DRBG"; }
 
@@ -116,10 +123,9 @@ class MockGenerator : public IRng
 
     size_t reseed() override { return 0; }
 
-    Status setPredictionResistance(bool value) override
+    alc_error_t setPredictionResistance(bool value) override
     {
-        Status s = StatusOk();
-        return s;
+        return ALC_ERROR_NONE;
     }
 };
 
@@ -263,12 +269,11 @@ TEST(DRBG_HMAC, GenerateMock)
 
     std::vector<Uint8> personalization_string(0);
     personalization_string.reserve(1);
-    // const auto         s = testing::Action<Status>(StatusOk());
     EXPECT_CALL(*(sys_rng.get()), randomize(::testing::_, ::testing::_))
         .Times(2)
         .WillRepeatedly([](Uint8 output[], size_t length) {
             memset(output, 0, length);
-            return StatusOk();
+            return ALC_ERROR_NONE;
         });
 
     hmac_drbg.initialize(128, personalization_string);
@@ -296,11 +301,13 @@ class CustomRng : public IRng
         m_nonce.reserve(1);
     };
 
-    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
-
-    Status randomize(Uint8 output[], size_t length) override
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) override
     {
-        Status s = StatusOk();
+        return ALC_ERROR_NONE;
+    }
+
+    alc_error_t randomize(Uint8 output[], size_t length) override
+    {
         if (m_call_count == 0) {
             utils::CopyBytes(output, &m_entropy[0], length);
             m_call_count++;
@@ -312,7 +319,7 @@ class CustomRng : public IRng
             printf("Not Allowed\n");
         }
 
-        return s;
+        return ALC_ERROR_NONE;
     }
 
     std::string name() const override { return "Dummy DRBG"; }
@@ -321,10 +328,9 @@ class CustomRng : public IRng
 
     size_t reseed() override { return 0; }
 
-    Status setPredictionResistance(bool value) override
+    alc_error_t setPredictionResistance(bool value) override
     {
-        Status s = StatusOk();
-        return s;
+        return ALC_ERROR_NONE;
     }
 
     void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }

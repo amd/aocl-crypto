@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,13 +43,13 @@ class HardwareRng : public IRng
 
   public:
     HardwareRng();
-    Status randomize(Uint8 output[], size_t length) override;
-    Status readRandom(Uint8* pBuf, Uint64 size) override;
-    String name() const override { return "HwRNG"; }
-    Uint8  nextByte();
-    bool   isSeeded() const override;
-    size_t reseed() override;
-    Status setPredictionResistance(bool value) override;
+    alc_error_t randomize(Uint8 output[], size_t length) override;
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) override;
+    String      name() const override { return "HwRNG"; }
+    Uint8       nextByte();
+    bool        isSeeded() const override;
+    size_t      reseed() override;
+    alc_error_t setPredictionResistance(bool value) override;
 };
 
 } // namespace alcp::rng

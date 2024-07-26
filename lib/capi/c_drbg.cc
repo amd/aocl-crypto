@@ -53,14 +53,7 @@ alcp_drbg_supported(const alc_drbg_info_p pcDrbgInfo)
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pcDrbgInfo, err);
     // FIXME: Implement Digest Support check
-    Status s = drbg::DrbgBuilder::isSupported(*pcDrbgInfo);
-
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!s.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    err = drbg::DrbgBuilder::isSupported(*pcDrbgInfo);
 
     return err;
 }
@@ -77,12 +70,8 @@ alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
 
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
     new (p_ctx) drbg::Context;
-    p_ctx->status = drbg::DrbgBuilder::build(*pDrbgInfo, *p_ctx);
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    err = drbg::DrbgBuilder::build(*pDrbgInfo, *p_ctx);
+
     return err;
 }
 
@@ -100,16 +89,11 @@ alcp_drbg_initialize(alc_drbg_handle_p pDrbgHandle,
     ALCP_BAD_PTR_ERR_RET(p_ctx->m_drbg, err);
     ALCP_BAD_PTR_ERR_RET(p_ctx->initialize, err);
 
-    p_ctx->status = p_ctx->initialize(p_ctx->m_drbg,
-                                      cSecurityStrength,
-                                      personalization_string,
-                                      personalization_string_length);
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    err = p_ctx->initialize(p_ctx->m_drbg,
+                            cSecurityStrength,
+                            personalization_string,
+                            personalization_string_length);
+
     return err;
 }
 
@@ -129,18 +113,13 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
     ALCP_BAD_PTR_ERR_RET(p_ctx->m_drbg, err);
     ALCP_BAD_PTR_ERR_RET(p_ctx->randomize, err);
-    p_ctx->status = p_ctx->randomize(p_ctx->m_drbg,
-                                     p_Output,
-                                     cOutputLength,
-                                     cSecurityStrength,
-                                     cAdditionalInput,
-                                     cAdditionalInputLength);
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    err = p_ctx->randomize(p_ctx->m_drbg,
+                           p_Output,
+                           cOutputLength,
+                           cSecurityStrength,
+                           cAdditionalInput,
+                           cAdditionalInputLength);
+
     return err;
 }
 
@@ -153,17 +132,9 @@ alcp_drbg_finish(alc_drbg_handle_p pDrbgHandle)
 
     auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
 
-    if(p_ctx->m_drbg && p_ctx->finish){
-
-    p_ctx->status = p_ctx->finish(p_ctx->m_drbg);
-    
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!p_ctx->status.ok()) {
-        err = ALC_ERROR_EXISTS;
+    if (p_ctx->m_drbg && p_ctx->finish) {
+        p_ctx->finish(p_ctx->m_drbg);
     } else {
-        err = ALC_ERROR_NONE;
-    }
-    }else{
         err = ALC_ERROR_EXISTS;
     }
     p_ctx->~Context();

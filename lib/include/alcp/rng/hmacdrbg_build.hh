@@ -37,17 +37,17 @@ namespace alcp::drbg {
 class HmacDrbgBuilder
 {
   public:
-    static Status build(const alc_drbg_info_t& drbgInfo, Context& ctx);
+    static alc_error_t build(const alc_drbg_info_t& drbgInfo, Context& ctx);
 
     static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
 };
 
-Status
+alc_error_t
 HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
-    auto  status   = StatusOk();
-    auto  addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-    auto* hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
+    alc_error_t err      = ALC_ERROR_NONE;
+    auto        addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    auto*       hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
     std::shared_ptr<alcp::digest::IDigest> p_digest;
     switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode) {
         case ALC_SHA2_256: {
@@ -83,21 +83,19 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             break;
         }
         default: {
-            status.update(InternalError("Digest algorithm Unknown"));
+            // Digest algorithm Unknown
+            err = ALC_ERROR_INVALID_ARG;
             break;
         }
     }
-    if (!status.ok()) {
-        return status;
+    if (alcp_is_error(err)) {
+        return err;
     }
     ctx.m_drbg = static_cast<void*>(hmacdrbg);
 
-    status = hmacdrbg->setDigest(p_digest);
-    if (!status.ok()) {
-        return status;
-    }
+    hmacdrbg->setDigest(p_digest);
 
-    return status;
+    return err;
 }
 Uint64
 HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)

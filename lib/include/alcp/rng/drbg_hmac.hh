@@ -66,7 +66,7 @@ class ALCP_API_EXPORT HmacDrbg : public Drbg
      * @param digestObject - Object of Digest class.
      * @return Status
      */
-    Status setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
+    void setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
 
   protected:
     /**

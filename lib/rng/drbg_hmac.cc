@@ -258,9 +258,8 @@ class HmacDrbg::Impl
      * @brief Set the IDigest object
      *
      * @param digestObject - Object of IDigest class.
-     * @return Status
      */
-    Status setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
+    void setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
 
     /**
      * @brief Get a copy of internal Key
@@ -551,16 +550,13 @@ HmacDrbg::Impl::internalReseed(const std::vector<Uint8>& cEntropyInput,
                    &cAdditionalInput[0],
                    cAdditionalInput.size());
 }
-
-Status
+void
 HmacDrbg::Impl::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    Status s = StatusOk();
     m_digest = digest_obj;
     // Initialize Internal States (Will serve also as reset)
     m_v   = std::vector<Uint8>(m_digest->getHashSize());
     m_key = std::vector<Uint8>(m_digest->getHashSize());
-    return s;
 }
 
 void
@@ -635,10 +631,10 @@ HmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
     p_impl->internalReseed(cEntropyInput, cAdditionalInput);
 }
 
-Status
+void
 HmacDrbg::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    return p_impl->setDigest(digest_obj);
+    p_impl->setDigest(digest_obj);
 }
 
 std::string

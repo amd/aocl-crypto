@@ -31,7 +31,6 @@
 #include "alcp/utils/cpuid.hh"
 #include "hardware_rng.hh"
 #include "system_rng.hh"
-using namespace alcp::base::status;
 namespace alcp::rng {
 
 static alc_error_t
@@ -73,7 +72,7 @@ __finish_wrapper(void* pRng)
 }
 
 template<typename SOURCENAME>
-static Status
+static alc_error_t
 __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
     Uint8* ctx_uint8 = reinterpret_cast<Uint8*>(&rCtx);
@@ -83,7 +82,7 @@ __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
     rCtx.reseed      = __reseed_wrapper;
     rCtx.finish      = __finish_wrapper<SOURCENAME>;
 
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
 #if 0
@@ -111,7 +110,7 @@ __buld_rng_class(const alc_rng_info_t& rRngInfo, void*& placed_memory)
 alc_error_t
 RngBuilder::build(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    Status sts = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
 #if 0
         rCtx->rng_info.ri_distrib = rRngInfo.ri_distrib;
         rCtx->rng_info.ri_type    = rRngInfo.ri_type;
@@ -120,17 +119,18 @@ RngBuilder::build(const alc_rng_info_t& rRngInfo, Context& rCtx)
 #endif
     switch (rRngInfo.ri_source) {
         case ALC_RNG_SOURCE_OS:
-            sts.update(__build_rng<SystemRng>(rRngInfo, rCtx));
+            err = __build_rng<SystemRng>(rRngInfo, rCtx);
             break;
         case ALC_RNG_SOURCE_ARCH:
-            sts.update(__build_rng<HardwareRng>(rRngInfo, rCtx));
+            err = __build_rng<HardwareRng>(rRngInfo, rCtx);
             break;
         default:
-            sts.update(status::NotPermitted("RNG type specified is unknown"));
+            // Not Permitted: RNG type specified is unknown
+            return ALC_ERROR_NOT_PERMITTED;
             break;
     }
 
-    return sts.code();
+    return err;
 }
 Uint64
 RngBuilder::getSize(const alc_rng_info_t& rRngInfo)
@@ -148,25 +148,26 @@ RngBuilder::getSize(const alc_rng_info_t& rRngInfo)
     }
 }
 
-Status
+alc_error_t
 RngBuilder::isSupported(const alc_rng_info_t& rRngInfo)
 {
-    Status s{ StatusOk() };
+    alc_error_t err{ ALC_ERROR_NONE };
     switch (rRngInfo.ri_source) {
         case ALC_RNG_SOURCE_OS:
-            return s;
+            return err;
         case ALC_RNG_SOURCE_ARCH:
             if (!alcp::utils::CpuId::cpuHasRdRand()) {
-                return status::Unavailable("");
+                return ALC_ERROR_NOT_SUPPORTED;
             }
-            return s;
+            return err;
         case ALC_RNG_SOURCE_ALGO:
         case ALC_RNG_SOURCE_DEV:
         case ALC_RNG_SOURCE_MAX:
         default:
-            InvalidArgument("RNG Type not supported");
+            // InvalidArgument: RNG Type not supported
+            return ALC_ERROR_INVALID_ARG;
     }
-    return s;
+    return err;
 }
 
 } // namespace alcp::rng

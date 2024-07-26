@@ -34,19 +34,18 @@ struct Context
 {
     void* m_drbg = nullptr;
     // TODO: Add the remaining functions
-    alcp::base::Status status{ StatusOk() };
 
-    Status (*initialize)(void*        m_drbg,
-                         int          cSecurityStrength,
-                         const Uint8* buff,
-                         Uint64       size) = nullptr;
-    Status (*randomize)(void*        m_drbg,
-                        Uint8        p_Output[],
-                        const size_t cOutputLength,
-                        int          cSecurityStrength,
-                        const Uint8  cAdditionalInput[],
-                        const size_t cAdditionalInputLength) = nullptr;
-    Status (*finish)(void* m_drbg) = nullptr;
+    alc_error_t (*initialize)(void*        m_drbg,
+                              int          cSecurityStrength,
+                              const Uint8* buff,
+                              Uint64       size)                        = nullptr;
+    alc_error_t (*randomize)(void*        m_drbg,
+                             Uint8        p_Output[],
+                             const size_t cOutputLength,
+                             int          cSecurityStrength,
+                             const Uint8  cAdditionalInput[],
+                             const size_t cAdditionalInputLength) = nullptr;
+    void (*finish)(void* m_drbg)                                  = nullptr;
 };
 
 } // namespace alcp::drbg

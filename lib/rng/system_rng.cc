@@ -63,21 +63,19 @@ class SystemRngImpl
 
     ~SystemRngImpl() {}
 
-    static Status randomize(Uint8 output[], size_t length)
+    static alc_error_t randomize(Uint8 output[], size_t length)
     {
 #ifdef DEBUG
         printf("Engine system_randomize_devrandom\n");
 #endif
-        Status     sts  = StatusOk();
         static int m_fd = -1;
         size_t     out  = 0;
 
         if (m_fd < 0) {
             m_fd = open("/dev/urandom", O_RDONLY | O_NOCTTY);
             if (m_fd < 0) {
-                auto rngerr = RngError(rng::ErrorCode::eNotPermitted);
-                sts.update(rngerr, rngerr.message());
-                return sts;
+                // Not Permitted
+                return ALC_ERROR_NOT_PERMITTED;
             }
         }
 
@@ -90,10 +88,9 @@ class SystemRngImpl
             }
         }
         if (out != length) { // not enough entropy , throw here,
-            auto rngerr = RngError{ rng::ErrorCode::eNoEntropy };
-            sts.update(rngerr, rngerr.message());
+            return ALC_ERROR_NO_ENTROPY;
         }
-        return StatusOk();
+        return ALC_ERROR_NONE;
     }
 };
 
@@ -102,9 +99,9 @@ class SystemRngImpl
 class SystemRngImpl
 {
   public:
-    static Status randomize(Uint8 output[], size_t length)
+    static alc_error_t randomize(Uint8 output[], size_t length)
     {
-        Status sts = StatusOk();
+        alc_error_t err = ALC_ERROR_NONE;
 #ifdef DEBUG
         printf("Engine system_randomize_getrandom\n");
 #endif
@@ -122,8 +119,7 @@ class SystemRngImpl
         }
 
         if (out != length) { // not enough entropy , throw here,
-            sts.update(RngError{ rng::ErrorCode::eNoEntropy });
-            return sts;
+            return ALC_ERROR_NO_ENTROPY;
         }
 #else
         /*
@@ -138,22 +134,20 @@ class SystemRngImpl
         if (!CryptAcquireContext(
                 &hCryptSProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
             printf("CSP context not acquired. \n");
-            sts.update(
-                Status(GenericError(alcp::base::ErrorCode::eNotAvailable)));
-            return sts;
+            return ALC_ERROR_GENERIC;
         }
         if (CryptGenRandom(
                 hCryptSProv, length, reinterpret_cast<BYTE*>(output))) {
         } else {
-            sts.update(Status(RngError(rng::ErrorCode::eNoEntropySource)));
-            return sts;
+            // No Entropy Source
+            return ALC_ERROR_NO_ENTROPY;
         }
 
         if (hCryptSProv)
             CryptReleaseContext(hCryptSProv, 0);
 
 #endif
-        return sts;
+        return err;
     }
 };
 
@@ -172,13 +166,13 @@ SystemRng::SystemRng(ISeeder& iss)
     // UNUSED(rRngInfo);
 }
 
-Status
+alc_error_t
 SystemRng::readRandom(Uint8* buf, size_t length)
 {
     return SystemRngImpl::randomize(buf, length);
 }
 
-Status
+alc_error_t
 SystemRng::randomize(Uint8 output[], size_t length)
 {
     return SystemRngImpl::randomize(output, length);
@@ -196,12 +190,11 @@ SystemRng::reseed()
     return 0;
 }
 
-Status
+alc_error_t
 SystemRng::setPredictionResistance(bool value)
 {
-    Status s                = StatusOk();
     m_prediction_resistance = value;
-    return s;
+    return ALC_ERROR_NONE;
 }
 
 } // namespace alcp::rng

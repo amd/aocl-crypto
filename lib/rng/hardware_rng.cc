@@ -98,36 +98,35 @@ HardwareRng::HardwareRng()
     // UNUSED(rRngInfo);
 }
 
-Status
+alc_error_t
 HardwareRng::readRandom(Uint8* buf, size_t length)
 {
     return randomize(buf, length);
 }
 
-Status
+alc_error_t
 HardwareRng::randomize(Uint8 output[], size_t length)
 {
-    const int stride     = 2;
-    size_t    new_length = length / stride;
-    Status    sts        = StatusOk();
-    Uint16*   ptr        = reinterpret_cast<Uint16*>(&output[0]);
+    const int   stride     = 2;
+    size_t      new_length = length / stride;
+    alc_error_t err        = ALC_ERROR_NONE;
+    Uint16*     ptr        = reinterpret_cast<Uint16*>(&output[0]);
 
     while (new_length--) {
 
         bool is_success = false;
 
         is_success = read_rdrand<Uint16>(ptr);
-        if (!is_success) { /* THROW HERE */
-            auto rer = RngError{ rng::ErrorCode::eNoEntropy };
-            sts.update(rer, rer.message());
-            return sts;
+        if (!is_success) {
+            // No Entropy
+            return ALC_ERROR_NO_ENTROPY;
         }
 
         ptr++;
     }
 
     /* TODO: check if length is odd */
-    return sts;
+    return err;
 }
 
 bool
@@ -142,12 +141,11 @@ HardwareRng::reseed()
     return 0;
 }
 
-Status
+alc_error_t
 HardwareRng::setPredictionResistance(bool value)
 {
-    Status s                = StatusOk();
     m_prediction_resistance = value;
-    return s;
+    return ALC_ERROR_NONE;
 }
 
 } // namespace alcp::rng

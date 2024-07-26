@@ -38,7 +38,6 @@
 
 using namespace alcp::rng::drbg;
 using namespace alcp::digest;
-using alcp::base::Status;
 
 typedef std::tuple<int,                // Number of generate Calls
                    alc_digest_type_t,  // IDigest Class
@@ -146,9 +145,9 @@ class TestingHmacDrbg : public HmacDrbg
         generate(cAdditionalInput, cOutput);
     }
 
-    Status testingSetDigest(std::shared_ptr<IDigest> digestObj)
+    void testingSetDigest(std::shared_ptr<IDigest> digestObj)
     {
-        return setDigest(digestObj);
+        setDigest(digestObj);
     }
 
     std::vector<Uint8> testingGetKCopy() { return getKCopy(); }

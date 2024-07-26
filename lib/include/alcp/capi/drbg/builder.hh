@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,10 +38,10 @@ class DrbgBuilder
   public:
     static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
 
-    static Status isSupported(const alc_drbg_info_t& drbgInfo);
+    static alc_error_t isSupported(const alc_drbg_info_t& drbgInfo);
 
-    static alcp::base::Status build(const alc_drbg_info_t& cipherInfo,
-                                    alcp::drbg::Context&   ctx);
+    static alc_error_t build(const alc_drbg_info_t& cipherInfo,
+                             alcp::drbg::Context&   ctx);
 };
 
 } // namespace alcp::drbg

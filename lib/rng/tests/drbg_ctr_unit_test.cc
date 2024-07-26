@@ -35,7 +35,6 @@
 
 #include "alcp/utils/benchmark.hh"
 using namespace alcp::rng::drbg;
-using alcp::base::Status;
 Uint8
 parseHexToNum(const Uint8 c)
 {
