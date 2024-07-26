@@ -37,8 +37,6 @@ using namespace alcp::base;
 using alcp::mac::Cmac;
 using alcp::utils::CpuId;
 
-using namespace alcp::mac::status;
-
 typedef std::tuple<std::vector<Uint8>, // key
                    std::vector<Uint8>, // plaintext
                    std::vector<Uint8>  // mac
@@ -305,8 +303,8 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 
     /* FIXME: Usage of Status is not done properly in the library. Status and
      alc_error_t usage is mixed. */
-    // step 1: remove Status usage fully.
-    // step 2: Add Status for all api-s one shot.
+    // step 1: remove Status usage fully. ==> PENDING;
+    // step 2: Add Status for all api-s one shot ==> PENDING.
     alc_error_t err = ALC_ERROR_NONE;
     err             = cmac2.init(key, sizeof(key));
     EXPECT_EQ(err, ALC_ERROR_NONE);

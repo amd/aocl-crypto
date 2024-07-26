@@ -58,42 +58,43 @@ getCpuArchFeature()
     return cpu_feature;
 }
 
-Status
+alc_error_t
 MacBuilder::build(alc_mac_type_t mi_type, Context* ctx)
 {
-    using namespace status;
-    Status status = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
     switch (mi_type) {
         case ALC_MAC_HMAC:
-            status = HmacBuilder::build(ctx);
+            err = HmacBuilder::build(ctx);
             break;
         case ALC_MAC_CMAC:
-            status = CmacBuilder::build(ctx);
+            err = CmacBuilder::build(ctx);
             break;
         case ALC_MAC_POLY1305:
-            status = Poly1305Builder::build(ctx);
+            err = Poly1305Builder::build(ctx);
             break;
         default:
-            status.update(InvalidArgument("Unknown MAC Type"));
+            // Unknown MAC Type
+            return ALC_ERROR_INVALID_ARG;
             break;
     }
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 MacBuilder::BuildWithCopy(mac::Context* srcCtx, mac::Context* destCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    Status      s   = StatusOk();
     if (srcCtx->duplicate) {
         err = srcCtx->duplicate(srcCtx, destCtx);
         if (err != ALC_ERROR_NONE) {
-            s.update(InternalError("Copy Failed!"));
+            // Copy Failed!
+            return ALC_ERROR_BAD_STATE;
         }
     } else {
-        s.update(NotImplemented("Unknown MAC Type"));
+        // Not Implemented
+        return ALC_ERROR_NOT_PERMITTED;
     }
-    return s;
+    return err;
 }
 
 } // namespace alcp::mac

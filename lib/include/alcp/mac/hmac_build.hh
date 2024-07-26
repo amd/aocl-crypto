@@ -44,7 +44,7 @@ using namespace status;
 class HmacBuilder
 {
   public:
-    static Status build(Context* ctx);
+    static alc_error_t build(Context* ctx);
 };
 
 static alc_error_t
@@ -220,15 +220,15 @@ __build_with_copy_hmac(Context* srcCtx, Context* destCtx)
     return ALC_ERROR_NONE;
 }
 
-Status
+alc_error_t
 HmacBuilder::build(Context* ctx)
 {
-    Status status = StatusOk();
+    alc_error_t err{ ALC_ERROR_NONE };
 
     auto hmac_algo = new Hmac();
     if (hmac_algo == nullptr) {
-        status.update(InternalError("Out of Memory"));
-        return status;
+        // Out of Memory
+        return ALC_ERROR_NO_MEMORY;
     }
     ctx->m_mac = static_cast<void*>(hmac_algo);
 
@@ -239,7 +239,7 @@ HmacBuilder::build(Context* ctx)
     ctx->init      = __hmac_wrapperInit;
     ctx->duplicate = __build_with_copy_hmac;
 
-    return status;
+    return err;
 }
 
 } // namespace alcp::mac

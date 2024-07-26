@@ -55,14 +55,8 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
 
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
     new (p_ctx) mac::Context;
-    Status s = mac::MacBuilder::build(mi_type, p_ctx);
+    err = mac::MacBuilder::build(mi_type, p_ctx);
 
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!s.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
     return err;
 }
 
@@ -174,13 +168,7 @@ alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
 
     new (dest_ctx) mac::Context;
 
-    Status status = mac::MacBuilder::BuildWithCopy(src_ctx, dest_ctx);
-    // TODO: Convert status to proper alc_error_t code and return
-    if (!status.ok()) {
-        err = ALC_ERROR_EXISTS;
-    } else {
-        err = ALC_ERROR_NONE;
-    }
+    err = mac::MacBuilder::BuildWithCopy(src_ctx, dest_ctx);
 
     return err;
 }

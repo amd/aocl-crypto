@@ -410,12 +410,11 @@ namespace alcp::cipher { namespace aesni {
         _mm_store_si128(pTweakBlock128, block128);
     }
 
-    ALCP_API_EXPORT Status InitializeTweakBlock(const Uint8  pIv[],
-                                                Uint8        pTweak[],
-                                                const Uint8* pTweakKey,
-                                                int          nRounds)
+    ALCP_API_EXPORT void InitializeTweakBlock(const Uint8  pIv[],
+                                              Uint8        pTweak[],
+                                              const Uint8* pTweakKey,
+                                              int          nRounds)
     {
-        Status s = StatusOk();
         // IV
         __m128i init_vect = _mm_loadu_si128(reinterpret_cast<const __m128i*>(
             pIv)); // pIv from User can be unaligned
@@ -424,8 +423,6 @@ namespace alcp::cipher { namespace aesni {
             &init_vect, reinterpret_cast<const __m128i*>(pTweakKey), nRounds);
 
         _mm_store_si128(reinterpret_cast<__m128i*>(pTweak), init_vect);
-
-        return s;
     }
 
     alc_error_t EncryptXts128(const Uint8* pSrc,

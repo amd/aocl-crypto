@@ -134,7 +134,7 @@ class Aes : public Rijndael
     }
 
   protected:
-    ALCP_API_EXPORT virtual Status setMode(alc_cipher_mode_t mode);
+    ALCP_API_EXPORT virtual alc_error_t setMode(alc_cipher_mode_t mode);
 
   protected:
     alc_cipher_mode_t m_mode;

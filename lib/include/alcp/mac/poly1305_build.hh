@@ -41,7 +41,7 @@ using namespace alcp::base::status;
 class Poly1305Builder
 {
   public:
-    static Status build(Context* ctx);
+    static alc_error_t build(Context* ctx);
 };
 
 template<CpuArchFeature feature>
@@ -114,16 +114,16 @@ __poly1305_build_with_copy(Context* srcCtx, Context* destCtx)
 }
 
 template<CpuArchFeature feature>
-static Status
+static alc_error_t
 __build_poly1305_arch(Context* ctx)
 {
-    using namespace status;
-    Status status = StatusOk();
+    alc_error_t err{ ALC_ERROR_NONE };
 
     auto p_algo = new Poly1305<feature>();
 
     if (p_algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for CMAC Object");
+        // Unable to Allocate Memory for Poly1305 Object
+        return ALC_ERROR_NO_MEMORY;
     }
     ctx->m_mac = static_cast<void*>(p_algo);
 
@@ -134,10 +134,10 @@ __build_poly1305_arch(Context* ctx)
     ctx->reset     = __poly1305_wrapperReset<feature>;
     ctx->duplicate = __poly1305_build_with_copy<feature>;
 
-    return status;
+    return err;
 }
 
-Status
+alc_error_t
 Poly1305Builder::build(Context* ctx)
 {
     CpuArchFeature feature = getCpuArchFeature();
@@ -153,7 +153,8 @@ Poly1305Builder::build(Context* ctx)
             return __build_poly1305_arch<CpuArchFeature::eDynamic>(ctx);
     }
     // Should be in theory unreachable code
-    return status::InternalError("Dispatch Failure");
+    // Dispatch Failure
+    return ALC_ERROR_NOT_SUPPORTED;
 }
 
 } // namespace alcp::mac::poly1305

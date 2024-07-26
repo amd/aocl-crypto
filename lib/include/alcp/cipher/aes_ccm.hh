@@ -95,10 +95,10 @@ class ALCP_API_EXPORT Ccm
     ccm_data_t   m_ccm_data;
 
   protected:
-    Status setIv(ccm_data_t* ccm_data,
-                 const Uint8 pIv[],
-                 Uint64      ivLen,
-                 Uint64      dataLen);
+    alc_error_t setIv(ccm_data_t* ccm_data,
+                      const Uint8 pIv[],
+                      Uint64      ivLen,
+                      Uint64      dataLen);
 
   public:
     Ccm(Uint32 keyLen_in_bytes)
@@ -112,10 +112,10 @@ class ALCP_API_EXPORT Ccm
                      const Uint8* pIv,
                      Uint64       ivLen) override;
 
-    Status cryptUpdate(const Uint8 pInput[],
-                       Uint8       pOutput[],
-                       Uint64      dataLen,
-                       bool        isEncrypt);
+    alc_error_t cryptUpdate(const Uint8 pInput[],
+                            Uint8       pOutput[],
+                            Uint64      dataLen,
+                            bool        isEncrypt);
 };
 
 // AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual iCipherAuth);

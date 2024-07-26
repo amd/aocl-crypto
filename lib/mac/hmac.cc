@@ -50,8 +50,6 @@ getK0(const Uint8*     pKey,
         utils::CopyBlock<Uint64>(pK0, pKey, keylen);
     } else {
         // Optimization: Reusing pDigest for calculating
-        /*TODO: For all the following digest calls check and update proper
-        error status */
         pDigest->init();
         err = pDigest->update(pKey, keylen);
         if (alcp_is_error(err)) {

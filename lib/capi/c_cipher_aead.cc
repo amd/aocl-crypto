@@ -175,7 +175,6 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
 
     auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
-    // FIXME: Modify setIv to return Status and assign to context status
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     // ALCP_BAD_PTR_ERR_RET(i->init, err);
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {

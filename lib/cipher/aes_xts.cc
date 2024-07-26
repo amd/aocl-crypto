@@ -41,7 +41,7 @@ namespace alcp::cipher {
 alc_error_t
 Xts::setIv(const Uint8* pIv, const Uint64 ivLen)
 {
-    Status s = StatusOk();
+    alc_error_t err{ ALC_ERROR_NONE };
     utils::CopyBytes(m_xts.m_iv_xts, pIv, ivLen); // Keep a copy of iv
 
     // FIXME: In future we need to dispatch it correctly
@@ -50,7 +50,7 @@ Xts::setIv(const Uint8* pIv, const Uint64 ivLen)
 
     m_xts.m_aes_block_id = 0; // Initialized BlockId to 0
 
-    return s.code();
+    return err;
 }
 
 alc_error_t

@@ -40,7 +40,6 @@
 
 #define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
-using namespace alcp::base;  // for Status
 using namespace alcp::utils; // for CpuId
 
 static inline void
@@ -712,8 +711,7 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
     return ALC_ERROR_NONE;
 }
 
-void
-Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     encryptBlockKernel(blk0, blk0, pkey, nr);
 }

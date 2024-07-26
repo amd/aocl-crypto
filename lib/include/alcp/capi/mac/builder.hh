@@ -38,10 +38,9 @@ using utils::CpuArchFeature;
 class MacBuilder
 {
   public:
-    static alcp::base::Status build(alc_mac_type_t      mi_type,
-                                    alcp::mac::Context* ctx);
-    static alcp::base::Status BuildWithCopy(mac::Context* srcCtx,
-                                            mac::Context* destCtx);
+    static alc_error_t build(alc_mac_type_t mi_type, alcp::mac::Context* ctx);
+    static alc_error_t BuildWithCopy(mac::Context* srcCtx,
+                                     mac::Context* destCtx);
 };
 
 CpuArchFeature

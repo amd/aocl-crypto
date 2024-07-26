@@ -42,14 +42,14 @@ namespace alcp::cipher {
     alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
         const Uint8* pInput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
-        Status s    = StatusOk();                                              \
-        m_isEnc_aes = IS_ENC;                                                  \
+        alc_error_t err = ALC_ERROR_NONE;                                      \
+        m_isEnc_aes     = IS_ENC;                                              \
         if (!(m_ivState_aes && m_isKeySet_aes)) {                              \
             printf("\nError: Key or Iv not set \n");                           \
             return ALC_ERROR_BAD_STATE;                                        \
         }                                                                      \
-        s = Ccm::FUNC_NAME(pInput, pOutput, len, IS_ENC);                      \
-        return s.code();                                                       \
+        err = Ccm::FUNC_NAME(pInput, pOutput, len, IS_ENC);                    \
+        return err;                                                            \
     } // namespace alcp::cipher
 
 inline void
@@ -120,33 +120,32 @@ Ccm::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
     return ALC_ERROR_NONE;
 }
 
-Status
+alc_error_t
 copyTag(ccm_data_t* ctx, Uint8 ptag[], Uint64 tagLen)
 {
     // Retrieve the tag length
-    Status s = StatusOk();
 
     if (ptag == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
+        // InvalidValue("Null Pointer is not expected!")
+        return ALC_ERROR_INVALID_ARG;
     }
     unsigned int t = (ctx->nonce[0] >> 3) & 7;
 
     t *= 2;
     t += 2;
     if (tagLen != t) {
-        s = status::InvalidValue(
-            "Tag length is not what we agreed upon during start!");
-        return s;
+        // InvalidValue(
+        //     "Tag length is not what we agreed upon during start!");
+        return ALC_ERROR_INVALID_ARG;
     }
     utils::CopyBytes(ptag, ctx->cmac, t);
     memset(ctx->cmac, 0, tagLen);
 
-    return s;
+    return ALC_ERROR_NONE;
 }
 
 // FIXME: nRounds needs to be constexpr to be more efficient
-Status
+alc_error_t
 Ccm::cryptUpdate(const Uint8 pInput[],
                  Uint8       pOutput[],
                  Uint64      dataLen,
@@ -155,12 +154,14 @@ Ccm::cryptUpdate(const Uint8 pInput[],
 
 #ifdef CCM_MULTI_UPDATE
     if (!m_ccm_data.key) {
-        return status::InvalidValue("Key has to be set before update");
+        // InvalidValue : Key has to be set before update
+        return ALC_ERROR_BAD_STATE;
     }
 #endif
-    Status s = StatusOk();
+    alc_error_t err = ALC_ERROR_NONE;
     if ((pInput == NULL) || (pOutput == NULL)) {
-        s = status::InvalidValue("Input or Output Null Pointer!");
+        // InvalidValue: "Input or Output Null Pointer!"
+        err = ALC_ERROR_INVALID_ARG;
     }
 
 #ifndef CCM_MULTI_UPDATE
@@ -170,7 +171,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     m_ccm_data.rounds    = cRounds;
 
     // Below Operations has to be done in order
-    s.update(setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen));
+    err = setIv(&m_ccm_data, m_iv_aes, m_ivLen_aes, dataLen);
 #endif
     // Accelerate with AESNI
     if (m_updatedLength == 0) {
@@ -180,59 +181,53 @@ Ccm::cryptUpdate(const Uint8 pInput[],
                            m_plainTextLength);
     }
     if (isEncrypt) {
-        CCM_ERROR err =
+        CCM_ERROR ccm_err =
             aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, dataLen);
-        switch (err) {
+        switch (ccm_err) {
             case CCM_ERROR::LEN_MISMATCH:
-                s = status::EncryptFailed("Length of plainText mismatch!");
+                // EncryptFailed("Length of plainText mismatch!")
+                err = ALC_ERROR_INVALID_DATA;
                 break;
             case CCM_ERROR::DATA_OVERFLOW:
-                s = status::EncryptFailed(
-                    "Overload of plaintext. Please reduce it!");
+                // EncryptFailed("Overload of plaintext. Please reduce it!"
+                err = ALC_ERROR_INVALID_DATA;
                 break;
             default:
                 break;
         }
     } else {
-        CCM_ERROR err =
+        CCM_ERROR ccm_err =
             aesni::ccm::Decrypt(&m_ccm_data, pInput, pOutput, dataLen);
-        switch (err) {
+        switch (ccm_err) {
+            // DecryptFailed("Length of plainText mismatch!")
             case CCM_ERROR::LEN_MISMATCH:
-                s = status::DecryptFailed("Length of plainText mismatch!");
+                err = ALC_ERROR_INVALID_DATA;
                 break;
             default:
                 break;
         }
     }
-    if (s.ok() != true) {
+    if (alcp_is_error(err)) {
         // Burn everything
         memset(m_ccm_data.nonce, 0, 16);
         memset(m_ccm_data.cmac, 0, 16);
         memset(pOutput, 0, dataLen);
-        return s;
+        return err;
     }
 #ifdef CCM_MULTI_UPDATE
-    if (s.ok()) {
+    if (!alcp_is_error(err)) {
         m_updatedLength += dataLen;
     }
 #endif
-    return s;
-
-#ifdef CCM_MULTI_UPDATE
-    if (s.ok()) {
-        m_updatedLength += dataLen;
-    }
-#endif
-    return s;
+    return err;
 }
 
-Status
+alc_error_t
 Ccm::setIv(ccm_data_t* ccm_data,
            const Uint8 pIv[],
            Uint64      ivLen,
            Uint64      dataLen)
 {
-    Status       s   = StatusOk();
     unsigned int q   = ccm_data->nonce[0] & 7;
     Uint64       len = dataLen;
 #ifdef CCM_MULTI_UPDATE
@@ -240,13 +235,13 @@ Ccm::setIv(ccm_data_t* ccm_data,
 #endif
 
     if (ccm_data == nullptr || pIv == nullptr) {
-        s = status::InvalidValue("Null Pointer is not expected!");
-        return s;
+        // InvalidValue("Null Pointer is not expected!")
+        return ALC_ERROR_INVALID_ARG;
     }
 
     if (ivLen < (14 - q)) {
-        s = status::InvalidValue("Length of nonce is too small!");
-        return s;
+        // InvalidValue("Length of nonce is too small!")
+        return ALC_ERROR_INVALID_ARG;
     }
 
     if (q >= 3) {
@@ -268,21 +263,20 @@ Ccm::setIv(ccm_data_t* ccm_data,
 
     m_ivState_aes = 1;
     // EXITG();
-    return s;
+    return ALC_ERROR_NONE;
 }
 
 // Auth class definitions
 alc_error_t
 CcmHash::setTagLength(Uint64 tagLen)
 {
-    Status s = StatusOk();
     if (tagLen < 4 || tagLen > 16) {
-        s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
-        return s.code();
+        // InvalidValue("Length of tag should be 4 < len < 16 ");
+        return ALC_ERROR_INVALID_ARG;
     }
     // Stored to verify in the getTagLength API
     m_tagLen = tagLen;
-    return s.code();
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t
@@ -307,8 +301,8 @@ CcmHash::setAad(const Uint8* pInput, Uint64 aadLen)
 alc_error_t
 CcmHash::getTag(Uint8* pOutput, Uint64 tagLen)
 {
+    alc_error_t err = ALC_ERROR_NONE;
 #ifdef CCM_MULTI_UPDATE
-    Status s = StatusOk();
     // Check if total updated data so far has exceeded the preestablished
     // plaintext Length. This check is here rather than in encrypt/decrypt
     // to allow multiupdate calls in benchmarking.
@@ -316,34 +310,34 @@ CcmHash::getTag(Uint8* pOutput, Uint64 tagLen)
         return ALC_ERROR_INVALID_DATA;
     }
     if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
-        s = status::InvalidValue(
-            "Tag length is not what we agreed upon during start!");
-        return s.code();
+        // InvalidValue("Tag length is not what we agreed upon during start!")
+        return ALC_ERROR_INVALID_ARG;
     }
     // If tagLen is 0 that means something seriously went south
     if (m_tagLen == 0) {
-        s = status::InvalidValue(
-            "Tag length is unknown!, need to agree on tag before hand!");
+        // InvalidValue("Tag length is unknown!, need to agree on tag before
+        // hand!")
+        return ALC_ERROR_BAD_STATE;
+
     } else {
         aesni::ccm::Finalize(&m_ccm_data);
         s.update(copyTag(&m_ccm_data, pOutput, tagLen));
     }
     return s.code();
 #else
-    Status s = StatusOk();
     if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
-        s = status::InvalidValue(
-            "Tag length is not what we agreed upon during start!");
-        return s.code();
+        // InvalidValue("Tag length is not what we agreed upon during start!")
+        return ALC_ERROR_INVALID_ARG;
     }
     // If tagLen is 0 that means something seriously went south
     if (m_tagLen != 0) {
-        s.update(copyTag(&m_ccm_data, pOutput, tagLen));
+        err = copyTag(&m_ccm_data, pOutput, tagLen);
     } else {
-        s = status::InvalidValue(
-            "Tag length is unknown!, need to agree on tag before hand!");
+        // InvalidValue("Tag length is unknown!, need to agree on tag before
+        // hand!")
+        return ALC_ERROR_BAD_STATE;
     }
-    return s.code();
+    return err;
 #endif
 }
 

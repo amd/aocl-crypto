@@ -41,7 +41,6 @@
 using alcp::mac::Hmac;
 using namespace alcp::digest;
 using namespace alcp::base;
-using namespace alcp::mac::status;
 
 // #define DEBUG 1
 

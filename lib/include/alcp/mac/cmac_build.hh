@@ -37,7 +37,7 @@ using namespace alcp::base::status;
 class CmacBuilder
 {
   public:
-    static Status build(Context* ctx);
+    static alc_error_t build(Context* ctx);
 };
 
 static alc_error_t
@@ -97,14 +97,15 @@ __cmac_build_with_copy(Context* srcCtx, Context* destCtx)
     return ALC_ERROR_NONE;
 }
 
-Status
+alc_error_t
 CmacBuilder::build(Context* ctx)
 {
-    Status status = StatusOk();
-    auto   p_algo = new Cmac();
+    alc_error_t err{ ALC_ERROR_NONE };
+    auto        p_algo = new Cmac();
 
     if (p_algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for CMAC Object");
+        // Unable to Allocate Memory for CMAC Object
+        return ALC_ERROR_NO_MEMORY;
     }
     ctx->m_mac     = static_cast<void*>(p_algo);
     ctx->init      = __cmac_wrapperInit;
@@ -113,7 +114,7 @@ CmacBuilder::build(Context* ctx)
     ctx->finish    = __cmac_wrapperFinish;
     ctx->reset     = __cmac_wrapperReset;
     ctx->duplicate = __cmac_build_with_copy;
-    return status;
+    return err;
 }
 
 } // namespace alcp::mac
