@@ -27,6 +27,7 @@
  */
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> /* for malloc */
@@ -210,7 +211,7 @@ verify(Uint64 size, Uint8 expected[size], Uint8 actual[size])
 {
     for (Uint64 i = 0; i < size; i++) {
         if (expected[i] != actual[i]) {
-            printf("Mismatch in i:%ld ", i);
+            printf("Mismatch in i: %10" PRId64, i);
             printf("Expected %x", expected[i]);
             printf("Actual %x\n", actual[i]);
             printf("Failure!, something might have went wrong with the"

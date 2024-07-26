@@ -48,6 +48,7 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
     , m_iv{ iv }
 {
     init(iv, key, cKeyLen);
+    UNREF(cIpherType);
 }
 
 /* xts */
@@ -86,6 +87,7 @@ AlcpCipherAeadBase::init(const Uint8* iv,
     this->m_iv  = iv;
     this->m_key = key;
     return init(key, cKeyLen);
+    UNREF(cIvLen);
 }
 
 /* for XTS */

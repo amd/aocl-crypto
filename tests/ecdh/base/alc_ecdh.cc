@@ -112,6 +112,7 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
         }
     }
     return true;
+    UNREF(len);
 }
 
 bool

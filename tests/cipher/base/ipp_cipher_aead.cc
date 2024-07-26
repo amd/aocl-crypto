@@ -42,6 +42,7 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
     : m_mode{ mode }
     , m_iv{ iv }
 {
+    UNREF(cipher_type);
 }
 
 IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
@@ -58,6 +59,7 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
     , m_block_size{ block_size }
 {
     init(key, key_len);
+    UNREF(cipher_type);
 }
 
 IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
@@ -99,6 +101,7 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
         default: // Should not come here
             break;
     }
+    UNREF(cipher_type);
 }
 
 IPPCipherAeadBase::~IPPCipherAeadBase()
@@ -385,7 +388,7 @@ IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc)
 }
 
 bool
-IPPCipherAeadBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
+IPPCipherAeadBase::encrypt()
 {
     return false;
 }
@@ -412,7 +415,7 @@ IPPCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 }
 
 bool
-IPPCipherAeadBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
+IPPCipherAeadBase::decrypt()
 {
     return false;
 }

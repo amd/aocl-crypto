@@ -42,6 +42,7 @@ IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_iv{ iv }
 {
+    UNREF(cIpherType);
 }
 
 IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
@@ -58,6 +59,7 @@ IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
     , m_block_size{ cBlockSize }
 {
     init(key, cKeyLen);
+    UNREF(cIpherType);
 }
 
 IPPCipherBase::~IPPCipherBase()

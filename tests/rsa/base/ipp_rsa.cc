@@ -107,12 +107,14 @@ bool
 IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
     return true;
+    UNREF(data);
 }
 
 bool
 IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
     return true;
+    UNREF(data);
 }
 
 bool
@@ -220,6 +222,7 @@ IPPRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
     m_scratchBuffer_Pvt = new Ipp8u[m_buffSize];
 
     return true;
+    UNREF(data);
 }
 
 bool
@@ -311,6 +314,7 @@ IPPRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
     m_scratchBuffer_Pub = new Ipp8u[m_buffSizePublic];
 
     return true;
+    UNREF(data);
 }
 
 bool
@@ -505,11 +509,13 @@ bool
 IPPRsaBase::Sign(const alcp_rsa_data_t& data)
 {
     return true;
+    UNREF(data);
 }
 bool
 IPPRsaBase::Verify(const alcp_rsa_data_t& data)
 {
     return true;
+    UNREF(data);
 }
 
 bool

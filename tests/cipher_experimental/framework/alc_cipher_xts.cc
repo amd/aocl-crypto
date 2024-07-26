@@ -121,6 +121,7 @@ AlcpXtsCipher<encryptor>::finalize(alc_test_finalize_data_p data)
         m_handle.ch_context = nullptr;
     }
     return true;
+    UNREF(data);
 };
 
 template class AlcpXtsCipher<true>;

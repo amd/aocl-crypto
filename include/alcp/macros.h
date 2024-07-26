@@ -39,7 +39,6 @@
 #else
 #define EXTERN_C_BEGIN
 #define EXTERN_C_END
-#define EXTERN_C
 #endif
 
 /**
@@ -53,4 +52,5 @@
 #define ALCP_API_EXPORT
 #endif
 
+#define UNREF(x) (void)(x)
 #endif /* _ALCP_MACROS_H_ */

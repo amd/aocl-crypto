@@ -27,6 +27,7 @@
  */
 
 #include "alcp/alcp.h"
+#include <inttypes.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -70,13 +71,13 @@ run_cmac(Uint8*         cipherText,
 
     err = alcp_mac_request(&handle, ALC_MAC_CMAC);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %lu\n", err);
+        printf("Error Occurred on MAC Request - %10" PRId64 "\n", err);
         return err;
     }
 
     err = alcp_mac_init(&handle, key, key_size, &macinfo);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC init - %lu\n", err);
+        printf("Error Occurred on MAC init - %10" PRId64 "\n", err);
         return err;
     }
 

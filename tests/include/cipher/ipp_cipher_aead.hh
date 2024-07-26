@@ -117,9 +117,9 @@ class IPPCipherAeadBase : public CipherAeadBase
     bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
     // FIXME: Legacy functions needs to be removed like the one below
-    bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);
+    bool encrypt(/*/const Uint8* plaintxt, size_t len, Uint8* ciphertxt*/);
     bool encrypt(alcp_dc_ex_t& data);
-    bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
+    bool decrypt(/*const Uint8* ciphertxt, size_t len, Uint8* plaintxt*/);
     bool decrypt(alcp_dc_ex_t& data);
     bool reset();
 };

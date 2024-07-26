@@ -57,8 +57,7 @@ using namespace alcp::testing;
 /* print params verbosely */
 inline void
 PrintCmacTestData(std::vector<Uint8> key,
-                  alcp_cmac_data_t   data,
-                  std::string        mode)
+                  alcp_cmac_data_t   data)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
@@ -241,7 +240,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /* run test with main lib */
         if (verbose > 1)
-            PrintCmacTestData(key, data_alc, CmacType);
+            PrintCmacTestData(key, data_alc);
         if (!cb->Init(info, key)) {
             std::cout << "Error in cmac init function" << std::endl;
             FAIL();
@@ -261,7 +260,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /* run test with ext lib */
         if (verbose > 1)
-            PrintCmacTestData(key, data_ext, CmacType);
+            PrintCmacTestData(key, data_ext);
         if (!extCb->Init(info, key)) {
             printf("Error in cmac ext init function\n");
             FAIL();
@@ -280,4 +279,5 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         }
         EXPECT_TRUE(ArraysMatch(CmacAlcp, CmacExt, i));
     }
+    UNREF(CmacType);
 }

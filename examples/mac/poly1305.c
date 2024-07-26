@@ -27,6 +27,7 @@
  */
 
 #include "alcp/alcp.h"
+#include <inttypes.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,7 +53,7 @@ poly1305_demo(Uint8*       data,
 
     err = alcp_mac_request(&handle, ALC_MAC_POLY1305);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %lu\n", err);
+        printf("Error Occurred on MAC Request - %10" PRId64 "\n", err);
         return err;
     }
 
@@ -60,7 +61,7 @@ poly1305_demo(Uint8*       data,
 
     err = alcp_mac_init(&handle, key, key_size, NULL);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Init - %lu\n", err);
+        printf("Error Occurred on MAC Init - %10" PRId64 "\n", err);
         return err;
     }
 

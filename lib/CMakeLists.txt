@@ -93,7 +93,9 @@ ADD_LIBRARY(alcp_static STATIC
 # Some linux distros will prefer RPATH not RUNPATH, enforce RUNPATH use
 # RUNPATH will give priority to LD_LIBRARY_PATH, at last RUNPATH will use
 # original path which was used in linking
-TARGET_LINK_OPTIONS(alcp PUBLIC -Wl,--enable-new-dtags)
+IF(UNIX)
+	TARGET_LINK_OPTIONS(alcp PUBLIC -Wl,--enable-new-dtags)
+ENDIF(UNIX)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     alcp_add_coverage_flags()

@@ -166,6 +166,7 @@ AlcpRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
         return false;
     }
     return true;
+    UNREF(data);
 }
 
 bool
@@ -252,6 +253,7 @@ AlcpRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
         return false;
     }
     return true;
+    UNREF(data);
 }
 
 bool
@@ -313,6 +315,7 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
         return false;
     }
     return true;
+    UNREF(data);
 }
 
 bool

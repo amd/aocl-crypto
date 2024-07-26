@@ -28,6 +28,7 @@
 
 #include "hmac/alc_hmac.hh"
 #include "hmac/hmac.hh"
+#include <inttypes.h>
 
 namespace alcp::testing {
 
@@ -50,13 +51,13 @@ AlcpHmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 
     err = alcp_mac_request(m_handle, ALC_MAC_HMAC);
     if (alcp_is_error(err)) {
-        printf("Error code in alcp_mac_request: %ld\n", err);
+        printf("Error code in alcp_mac_request: %10" PRId64 "\n", err);
         return false;
     }
 
     err = alcp_mac_init(m_handle, m_key, m_key_len, &m_info);
     if (alcp_is_error(err)) {
-        printf("Error code in alcp_mac_init: %ld\n", err);
+        printf("Error code in alcp_mac_init: %10" PRId64 "\n", err);
         return false;
     }
     return true;

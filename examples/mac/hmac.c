@@ -27,6 +27,7 @@
  */
 
 #include "alcp/alcp.h"
+#include <inttypes.h>
 #include <malloc.h>
 #include <stdio.h>
 
@@ -76,7 +77,7 @@ run_hmac(Uint8*            cipherText,
     Uint8 error_message[1024] = "";
     err                       = alcp_mac_request(&handle, ALC_MAC_HMAC);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %lu\n", err);
+        printf("Error Occurred on MAC Request - %10" PRId64 "\n", err);
         goto out;
     }
 
@@ -84,7 +85,7 @@ run_hmac(Uint8*            cipherText,
     // info.hmac.digest_mode = mode;
     err = alcp_mac_init(&handle, key, size, &info);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Init - %lu\n", err);
+        printf("Error Occurred on MAC Init - %10" PRId64 "\n", err);
         goto out;
     }
     // Update can be called multiple times with smaller chunks of the cipherText
@@ -632,7 +633,7 @@ demo_Hmac_Sha3_384_Reset()
 
     err = alcp_mac_init(&handle, key, sizeof(key), &hmac_info);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Init - %lu\n", err);
+        printf("Error Occurred on MAC Init - %10" PRId64 "\n", err);
         return -1;
     }
 

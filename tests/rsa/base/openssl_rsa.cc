@@ -182,12 +182,14 @@ bool
 OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
     return true;
+    UNREF(data);
 }
 
 bool
 OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
     return true;
+    UNREF(data);
 }
 
 bool
