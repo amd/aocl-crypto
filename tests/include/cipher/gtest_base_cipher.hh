@@ -1092,7 +1092,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
                         std::string("AES_" + modeStr + "_"
                                     + std::to_string(keySize) + encDecStr)));
 
-        if ((isGcm && isSiv)) {
+        if ((isGcm || isSiv)) {
             EXPECT_TRUE(ArraysMatch(std::move(outtag),
                                     csv->getVect("TAG"),
                                     *(csv.get()),

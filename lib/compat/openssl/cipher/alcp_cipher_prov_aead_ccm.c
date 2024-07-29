@@ -447,11 +447,15 @@ alcp_prov_ccm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
                 goto err;
             }
 
-            // TODO: Tag verification
+            Uint8 buf[16];
             if (alcp_cipher_aead_get_tag(
-                    &(ctx->handle), cipherctx->buf, cipherctx->ccm.m)) {
+                    &(ctx->handle), buf, cipherctx->ccm.m)) {
                 printf("Error getting the tag\n");
                 goto err;
+            }
+            if (memcmp(cipherctx->buf, buf, cipherctx->ccm.m) != 0) {
+                rv = 0;
+                return rv;
             }
 
             cipherctx->ivState      = 0;
