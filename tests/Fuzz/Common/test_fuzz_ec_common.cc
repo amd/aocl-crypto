@@ -93,6 +93,10 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
 
     std::cout << "Generating for Key size: " << key_size << std::endl;
 
+    if (key_size != 256 / 8) {
+        return -1;
+    }
+
     /* handles for peers */
     alc_ec_handle_p handle_peer1 = new alc_ec_handle_t;
     alc_ec_handle_p handle_peer2 = new alc_ec_handle_t;
