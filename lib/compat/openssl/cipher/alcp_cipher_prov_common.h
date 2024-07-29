@@ -103,10 +103,7 @@ ALCP_prov_cipher_generic_initiv(ALCP_PROV_CIPHER_CTX* ctx,
                                 size_t                ivlen);
 
 // this macro needs to be removed.
-#define OSSL_PARAM_END                                                         \
-    {                                                                          \
-        NULL, 0, NULL, 0, 0                                                    \
-    }
+#define OSSL_PARAM_END { NULL, 0, NULL, 0, 0 }
 
 #define CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_START(name)                         \
     static const OSSL_PARAM name##_known_gettable_ctx_params[] = {             \

@@ -166,9 +166,12 @@ alcp_prov_digest_final(void* vctx, unsigned char* out, size_t outsize)
     return 1;
 }
 
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST
 static const char DIGEST_DEF_PROP[] = "provider=alcp,fips=no";
+#endif
 
 const OSSL_ALGORITHM ALC_prov_digests[] = {
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA2
     { ALCP_PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_sha2_functions },
     { ALCP_PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_sha2_functions },
     { ALCP_PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_sha2_functions },
@@ -179,13 +182,19 @@ const OSSL_ALGORITHM ALC_prov_digests[] = {
     { ALCP_PROV_NAMES_SHA2_512_256,
       DIGEST_DEF_PROP,
       sha512_256_sha2_functions },
+#endif
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA3
     { ALCP_PROV_NAMES_SHA3_512, DIGEST_DEF_PROP, sha512_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_384, DIGEST_DEF_PROP, sha384_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_256, DIGEST_DEF_PROP, sha256_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_224, DIGEST_DEF_PROP, sha224_sha3_functions },
+#endif
 
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHAKE
     { ALCP_PROV_NAMES_SHAKE_128, DIGEST_DEF_PROP, shake128_sha3_functions },
     { ALCP_PROV_NAMES_SHAKE_256, DIGEST_DEF_PROP, shake256_sha3_functions },
+#endif
 
     { NULL, NULL, NULL },
 };

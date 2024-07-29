@@ -80,14 +80,16 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
  * internally tries to use CBC from alcp and multi update is not
  * supported in ALCP as of now.  */
 #if OPENSSL_API_LEVEL < 30200
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
         case OSSL_OP_CIPHER:
             EXIT();
             return ALC_prov_ciphers;
             break;
 #endif
+#endif
 
 // Digest providers are disabled as of now due to provider overhead
-#ifdef DIGEST_PROVIDER_ENABLED
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST
         case OSSL_OP_DIGEST:
             EXIT();
             return ALC_prov_digests;
@@ -95,6 +97,7 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 #endif
 
 #if OPENSSL_API_LEVEL >= 30100
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
         case OSSL_OP_ASYM_CIPHER:
             if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
                 return alc_prov_asym_ciphers;
@@ -119,10 +122,15 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             //     }
             //     break;
 #endif
+#endif
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
         case OSSL_OP_MAC:
             EXIT();
             return ALC_prov_macs;
             break;
+#endif
+
 #if 0
 /*  FIXME: Disabled  RNG Providers as of now to shift
                 focus to Cipher and Digest Provider Apps Integration*/

@@ -41,6 +41,7 @@
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
 #include "provider/alcp_provider_cipherdata.h"
+#include "provider/config.h"
 
 #if defined(WIN32) || defined(WIN64)
 #define strcasecmp _stricmp

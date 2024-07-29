@@ -946,7 +946,7 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ctr_functions },
 
-#if 0 // Disable CBC temporarily
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CBC
     // CBC
     { ALCP_PROV_NAMES_AES_128_CBC,
       CIPHER_DEF_PROP,
@@ -959,6 +959,7 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
       ALCP_prov_aes256cbc_functions },
 #endif
 
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CFB
     // CFB
     { ALCP_PROV_NAMES_AES_128_CFB,
       CIPHER_DEF_PROP,
@@ -969,7 +970,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CFB,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256cfb_functions },
+#endif
 
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_OFB
     // OFB
     { ALCP_PROV_NAMES_AES_128_OFB,
       CIPHER_DEF_PROP,
@@ -980,7 +983,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_OFB,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ofb_functions },
+#endif
 
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_XTS
     // XTS
     { ALCP_PROV_NAMES_AES_128_XTS,
       CIPHER_DEF_PROP,
@@ -988,6 +993,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_XTS,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256xts_functions },
+#endif
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_GCM
     // GCM
     { ALCP_PROV_NAMES_AES_128_GCM,
       CIPHER_DEF_PROP,
@@ -998,6 +1006,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_GCM,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256gcm_functions },
+#endif
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_SIV
     // SIV
     { ALCP_PROV_NAMES_AES_128_SIV,
       CIPHER_DEF_PROP,
@@ -1008,7 +1019,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_SIV,
       CIPHER_DEF_PROP,
       ALCP_prov_aes256siv_functions },
-#if 0
+#endif
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CCM
     // CCM
     { ALCP_PROV_NAMES_AES_128_CCM,
       CIPHER_DEF_PROP,
