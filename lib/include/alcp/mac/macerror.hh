@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -60,15 +60,18 @@ class MacError final : public ErrorBase
   public:
     MacError()
         : ErrorBase{ ErrorCode::eOk }
-    {}
+    {
+    }
 
     MacError(Uint64 ecode)
         : ErrorBase{ MacError::toUint16(ecode) }
-    {}
+    {
+    }
 
     MacError(mac::ErrorCode ecode)
         : ErrorBase{ ecode }
-    {}
+    {
+    }
 
     MacError(base::ErrorCode bcode, mac::ErrorCode ecode)
         : ErrorBase{ ecode }
@@ -105,8 +108,7 @@ class MacError final : public ErrorBase
               "HMAC Digest cannot be empty" },
             { alcp::mac::ErrorCode::eDigestOperationError,
               "HMAC Failed During Internal Digest Operation" },
-            { alcp::mac::ErrorCode::eInitError,
-              "Init Error" },
+            { alcp::mac::ErrorCode::eInitError, "Init Error" },
         };
 
         MacErrorMapT::const_iterator it =

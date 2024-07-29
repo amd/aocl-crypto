@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,13 +29,14 @@
 #include "alcp/dynlib.hh"
 #include "alcp/types.hh"
 
-enum DynLoadError : alcp::Uint32 {
-  Success = 0,
-  None = Success,
+enum DynLoadError : alcp::Uint32
+{
+    Success = 0,
+    None    = Success,
 
-  LibNotFound,
-  SymNotFound,
-  Other,
+    LibNotFound,
+    SymNotFound,
+    Other,
 };
 
 #ifdef ALCP_BUILD_OS_LINUX
@@ -46,18 +47,32 @@ enum DynLoadError : alcp::Uint32 {
 
 namespace alcp {
 
-DynamicLibrary::DynamicLibrary(const std::string &path)
-    : m_pimpl{std::make_unique<DynamicLibrary::Impl>(path)} {}
+DynamicLibrary::DynamicLibrary(const std::string& path)
+    : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path) }
+{
+}
 
-DynamicLibrary::DynamicLibrary(const std::string &path, int flags)
-    : m_pimpl{std::make_unique<DynamicLibrary::Impl>(path, flags)} {}
+DynamicLibrary::DynamicLibrary(const std::string& path, int flags)
+    : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path, flags) }
+{
+}
 
-bool DynamicLibrary::isLoaded() const { return m_pimpl->isLoaded(); }
+bool
+DynamicLibrary::isLoaded() const
+{
+    return m_pimpl->isLoaded();
+}
 
-void DynamicLibrary::load(const std::string &path) { m_pimpl->load(path, 0); }
+void
+DynamicLibrary::load(const std::string& path)
+{
+    m_pimpl->load(path, 0);
+}
 
-void DynamicLibrary::load(const std::string &path, int flags) {
-  m_pimpl->load(path, flags);
+void
+DynamicLibrary::load(const std::string& path, int flags)
+{
+    m_pimpl->load(path, flags);
 }
 
 DynamicLibrary::~DynamicLibrary() {}

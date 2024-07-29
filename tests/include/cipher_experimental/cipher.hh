@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@ class ITestCipher
     virtual bool init(alc_test_init_data_p data)         = 0;
     virtual bool update(alc_test_update_data_p data)     = 0;
     virtual bool finalize(alc_test_finalize_data_p data) = 0;
-    virtual ~ITestCipher(){};
+    virtual ~ITestCipher() {};
 };
 
 } // namespace alcp::testing::cipher

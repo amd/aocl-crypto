@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -148,7 +148,7 @@ class X25519 : public Ec
 class ALCP_API_EXPORT P256 : public Ec
 {
   public:
-     P256() = default;
+    P256() = default;
     ~P256();
 
     /**
@@ -169,8 +169,7 @@ class ALCP_API_EXPORT P256 : public Ec
      * publicKey
      * @return Status Error code
      */
-    Status generatePublicKey(Uint8*       pPublicKey,
-                                             const Uint8* pPrivKey) override;
+    Status generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey) override;
 
     /**
      * @brief Function computes p256 secret key with publicKey from remotePeer
@@ -183,8 +182,8 @@ class ALCP_API_EXPORT P256 : public Ec
      * @return Status Error code
      */
     Status computeSecretKey(Uint8*       pSecretKey,
-                                            const Uint8* pPublicKey,
-                                            Uint64*      pKeyLength) override;
+                            const Uint8* pPublicKey,
+                            Uint64*      pKeyLength) override;
 
     /**
      * @brief Function validates public key from remote peer
