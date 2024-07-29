@@ -266,7 +266,7 @@ TEST(CMACRobustnessTest, CMAC_CreateObject)
 TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
 {
     Cmac  cmac2;
-    Uint8 data[20];
+    Uint8 data[20]{};
 
     alc_error_t err = cmac2.update(data, sizeof(data));
     ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
@@ -275,7 +275,7 @@ TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
 TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
 {
     Cmac  cmac2;
-    Uint8 data[20];
+    Uint8 data[20]{};
 
     alc_error_t err = cmac2.finalize(data, sizeof(data));
     ASSERT_EQ(err, ALC_ERROR_BAD_STATE);

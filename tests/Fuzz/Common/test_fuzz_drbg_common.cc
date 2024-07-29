@@ -94,9 +94,8 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType,
     securitystrength          = id(rng);
 
     /* FIXME: add other digest modes */
-    alc_drbg_handle_p handle;
+    alc_drbg_handle_p handle{};
 
-    handle = new alc_drbg_handle;
     alc_drbg_info_t drbg_info{};
 
     drbg_info.di_type = DrbgType;
@@ -133,12 +132,9 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType,
         return -1;
     }
 
+    handle             = new alc_drbg_handle;
     handle->ch_context = malloc(alcp_drbg_context_size(&drbg_info));
-    if (handle->ch_context == nullptr) {
-        std::cout << "Error alcp_drbg_context_size" << std::endl;
-        return -1;
-    }
-    err = alcp_drbg_request(handle, &drbg_info);
+    err                = alcp_drbg_request(handle, &drbg_info);
     if (alcp_is_error(err)) {
         std::cout << "Error alcp_drbg_request" << std::endl;
         goto dealloc_exit;
@@ -217,12 +213,12 @@ ALCP_Fuzz_Rng(const Uint8* buf, size_t len, bool TestNegLifecycle)
 
     if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
         std::cout << "Error: alcp_rng_supported" << std::endl;
-        return -1;
+        goto rng_dealloc_exit;
     }
     handle->rh_context = malloc(alcp_rng_context_size(&rng_info));
     if (handle->rh_context == nullptr) {
         std::cout << "Error: alcp_rng_context_size" << std::endl;
-        return -1;
+        goto rng_dealloc_exit;
     }
     if (alcp_rng_request(&rng_info, handle) != ALC_ERROR_NONE) {
         std::cout << "Error: alcp_rng_request" << std::endl;

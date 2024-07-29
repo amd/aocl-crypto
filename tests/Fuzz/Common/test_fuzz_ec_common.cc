@@ -110,16 +110,11 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
     size = alcp_ec_context_size(&ecinfo);
 
     handle_peer1->context = malloc(size);
-    err                   = alcp_ec_request(&ecinfo, handle_peer1);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_ec_request for peer1" << std::endl;
-        goto dealloc_exit;
-    }
-
     handle_peer2->context = malloc(size);
-    err                   = alcp_ec_request(&ecinfo, handle_peer2);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_ec_request for peer2" << std::endl;
+
+    if (alcp_is_error(alcp_ec_request(&ecinfo, handle_peer1))
+        || alcp_is_error(alcp_ec_request(&ecinfo, handle_peer2))) {
+        std::cout << "Error: alcp_ec_request" << std::endl;
         goto dealloc_exit;
     }
 

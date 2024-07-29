@@ -337,7 +337,7 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
     if (handle_decrypt->ch_context == NULL) {
         std::cout << "Error: Memory Allocation Failed" << std::endl;
-        return -1;
+        goto DEC_ERROR_EXIT;
     }
 
     std::cout << "Running for InputSize:" << fuzz_ct.size()
@@ -450,7 +450,7 @@ ALCP_Fuzz_Cipher_Encrypt(alc_cipher_mode_t Mode,
     handle_encrypt->ch_context = malloc(alcp_cipher_context_size());
     if (handle_encrypt->ch_context == NULL) {
         std::cout << "Error: Memory Allocation Failed" << std::endl;
-        return -1;
+        goto ENC_ERROR_EXIT;
     }
 
     std::cout << "Running for Inputsize:" << fuzz_pt.size()
@@ -576,7 +576,7 @@ ALCP_Fuzz_AEAD_Cipher_Encrypt(alc_cipher_mode_t Mode,
     handle_encrypt->ch_context = malloc(alcp_cipher_aead_context_size());
     if (handle_encrypt->ch_context == NULL) {
         std::cout << "Error: Memory Allocation Failed" << std::endl;
-        return -1;
+        goto AEAD_ENC_ERROR_EXIT;
     }
 
     std::cout << "Running for Input size: " << pt_len << " and Key size "
@@ -715,7 +715,7 @@ ALCP_Fuzz_AEAD_Cipher_Decrypt(alc_cipher_mode_t Mode,
 
     if (handle_decrypt->ch_context == NULL) {
         std::cout << "Error: Memory Allocation Failed" << std::endl;
-        return -1;
+        goto AEAD_DEC_ERROR_EXIT;
     }
 
     std::cout << "Running for Input size:" << ct_len << ",Key size:" << keySize
