@@ -637,8 +637,9 @@ void
 alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle)
 {
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
-    if (ctx->finish) {
+    if (ctx->finish && ctx->m_rsa) {
         ctx->finish(ctx->m_rsa);
+        ctx->m_rsa = nullptr;
     }
 
     if (ctx->m_digest) {
