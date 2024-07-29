@@ -103,7 +103,8 @@ class ALCP_API_EXPORT Ccm
   public:
     Ccm(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
-    {}
+    {
+    }
 
     ~Ccm() = default;
 
@@ -119,14 +120,15 @@ class ALCP_API_EXPORT Ccm
 };
 
 // AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual iCipherAuth);
-class CcmHash
+class ALCP_API_EXPORT CcmHash
     : public Ccm
     , public virtual iCipherAuth
 {
   public:
     CcmHash(Uint32 keyLen_in_bytes)
         : Ccm(keyLen_in_bytes)
-    {}
+    {
+    }
     ~CcmHash() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;

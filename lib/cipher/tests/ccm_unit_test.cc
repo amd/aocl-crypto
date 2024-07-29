@@ -25,14 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#if 0
 
 #include "alcp/cipher/aes_ccm.hh"
 #include "alcp/cipher/cipher_error.hh"
 
-// FIXME: Remove all the includes from gtest_base related to capi
-#include "cipher/gtest_base_cipher.hh"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 // KAT Data
 // clang-format off
@@ -288,12 +285,53 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
+/**
+ * @brief Key Size to Mode string
+ *
+ * @param keySize Key size in Bytes
+ * @return std::string, mode
+ */
+std::string
+keyToModStr(Uint64 keySize)
+{
+    std::string mode_str = "";
+    switch (keySize) {
+        case 16:
+            mode_str = "aes-ccm-128";
+            break;
+        case 24:
+            mode_str = "aes-ccm-192";
+            break;
+        case 32:
+            mode_str = "aes-ccm-256";
+            break;
+        default:
+            mode_str = "aes-ccm-128";
+            std::cout
+                << "Mode string defaulting to 'aes-ccm-128', invalid keysize"
+                << std::endl;
+    }
+    return mode_str;
+}
+
+template<typename T>
+T*
+getPtr(std::vector<T>& vect)
+{
+    if (vect.size() == 0) {
+        return nullptr;
+    } else {
+        return &vect[0];
+    }
+}
+
 using namespace alcp::cipher;
 class CCM_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    Ccm*               pCcmObj = nullptr;
+    CipherFactory<iCipherAead>* alcpCipher = nullptr;
+    iCipherAead*                pCcmObj    = nullptr;
     std::vector<Uint8> m_key, m_nonce, m_aad, m_plaintext, m_ciphertext, m_tag;
     std::string        m_test_name;
     alc_error_t        m_err;
@@ -316,38 +354,27 @@ class CCM_KAT
         m_tag        = tag;
         m_test_name  = test_name;
 
-        /* Initialization */
-
-        // clang-format off
-        const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                         ALC_KEY_FMT_RAW,
-                                         {},
-                                         {},
-                                         static_cast<Uint32>(key.size()*8),
-                                         &(key.at(0)) };
-        // clang-format on
-
         // Setup CCM Object
-        pCcmObj = new Ccm(keyInfo.key, keyInfo.len);
+        alcpCipher = new CipherFactory<iCipherAead>;
+        // FIXME: Add feature selection
+        pCcmObj = alcpCipher->create(keyToModStr(m_key.size()));
     }
-    void TearDown() override { delete pCcmObj; }
+    void TearDown() override { delete alcpCipher; }
 };
 
 TEST(CCM, Initiantiation)
 {
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    // clang-format off
-    const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                     ALC_KEY_FMT_RAW,
-                                     {},
-                                     {},
-                                     128,
-                                     key };
-    Ccm                  ccm_obj =Ccm(keyInfo.key, keyInfo.len);
+
+    // Setup CCM Object
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    // FIXME: Add feature selection
+    auto pCcmObj = alcpCipher->create(keyToModStr(sizeof(key)));
     // clang-format on
-    EXPECT_EQ(ccm_obj.getRounds(), 10U);
-    EXPECT_EQ(ccm_obj.getNr(), 10U);
+    EXPECT_TRUE(pCcmObj != nullptr);
+
+    delete alcpCipher;
 }
 
 // Test disabled as ZeroLength checks moved to C_API
@@ -391,37 +418,35 @@ TEST_P(CCM_KAT, Encrypt)
         err = pCcmObj->setTagLength(m_tag.size());
     }
 
-    // Nonce
-     err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
-    EXPECT_EQ(err, ALC_ERROR_NONE);
+    /* Initialization */
+    pCcmObj->init(
+        getPtr(m_key), m_key.size() * 8, getPtr(m_nonce), m_nonce.size());
 
     // Additional Data
     if (!m_aad.empty()) {
-        err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+        err = pCcmObj->setAad(getPtr(m_aad), m_aad.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 
     // Encrypt the plaintext into ciphertext.
     if (!m_plaintext.empty()) {
-        err = pCcmObj->encrypt(&(m_plaintext.at(0)),
-                                     &(out_ciphertext.at(0)),
-                                     m_plaintext.size(),
-                                     &(m_nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
+        err = pCcmObj->encrypt(
+            getPtr(m_plaintext), getPtr(out_ciphertext), m_plaintext.size());
+        EXPECT_EQ(out_ciphertext, m_ciphertext);
     } else {
         // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = pCcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
+        err = pCcmObj->encrypt(&a, &a, 0);
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // If there is tag, try to get the tag.
     if (!m_tag.empty()) {
-        err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+        err = pCcmObj->getTag(getPtr(out_tag), m_tag.size());
         if (m_test_name.at(0) == 'P')
-            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(out_tag, m_tag);
         else
-            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_NE(out_tag, m_tag);
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 }
@@ -440,37 +465,36 @@ TEST_P(CCM_KAT, Encrypt_Double)
             err = pCcmObj->setTagLength(m_tag.size());
         }
 
-        // Nonce
-         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
-        EXPECT_EQ(err, ALC_ERROR_NONE);
+        /* Initialization */
+        pCcmObj->init(
+            getPtr(m_key), m_key.size() * 8, getPtr(m_nonce), m_nonce.size());
 
         // Additional Data
         if (!m_aad.empty()) {
-            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            err = pCcmObj->setAad(getPtr(m_aad), m_aad.size());
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
 
         // Encrypt the plaintext into ciphertext.
         if (!m_plaintext.empty()) {
-            err = pCcmObj->encrypt(&(m_plaintext.at(0)),
-                                         &(out_ciphertext.at(0)),
-                                         m_plaintext.size(),
-                                         &(m_nonce.at(0)));
-            EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
+            err = pCcmObj->encrypt(getPtr(m_plaintext),
+                                   getPtr(out_ciphertext),
+                                   m_plaintext.size());
+            EXPECT_EQ(out_ciphertext, m_ciphertext);
         } else {
             // Call encrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->encrypt(&a, &a, 0);
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // If there is tag, try to get the tag.
         if (!m_tag.empty()) {
-            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            err = pCcmObj->getTag(getPtr(out_tag), m_tag.size());
             if (m_test_name.at(0) == 'P')
-                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+                EXPECT_EQ(out_tag, m_tag);
             else
-                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+                EXPECT_NE(out_tag, m_tag);
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
     }
@@ -486,37 +510,36 @@ TEST_P(CCM_KAT, Encrypt_Double)
             err = pCcmObj->setTagLength(m_tag.size());
         }
 
-        // Nonce
-         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
-        EXPECT_EQ(err, ALC_ERROR_NONE);
+        /* Initialization */
+        pCcmObj->init(
+            getPtr(m_key), m_key.size() * 8, getPtr(m_nonce), m_nonce.size());
 
         // Additional Data
         if (!m_aad.empty()) {
-            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            err = pCcmObj->setAad(getPtr(m_aad), m_aad.size());
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
 
         // Encrypt the plaintext into ciphertext.
         if (!m_plaintext.empty()) {
-            err = pCcmObj->encrypt(&(m_plaintext.at(0)),
-                                         &(out_ciphertext.at(0)),
-                                         m_plaintext.size(),
-                                         &(m_nonce.at(0)));
-            EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
+            err = pCcmObj->encrypt(getPtr(m_plaintext),
+                                   getPtr(out_ciphertext),
+                                   m_plaintext.size());
+            EXPECT_EQ(out_ciphertext, m_ciphertext);
         } else {
             // Call encrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->encrypt(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->encrypt(&a, &a, 0);
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // If there is tag, try to get the tag.
         if (!m_tag.empty()) {
-            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            err = pCcmObj->getTag(getPtr(out_tag), m_tag.size());
             if (m_test_name.at(0) == 'P')
-                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+                EXPECT_EQ(out_tag, m_tag);
             else
-                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+                EXPECT_NE(out_tag, m_tag);
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
     }
@@ -536,40 +559,39 @@ TEST_P(CCM_KAT, Decrypt)
         err = pCcmObj->setTagLength(m_tag.size());
     }
 
-    // Nonce
-     err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
-    EXPECT_EQ(err, ALC_ERROR_NONE);
+    /* Initialization */
+    pCcmObj->init(
+        getPtr(m_key), m_key.size() * 8, getPtr(m_nonce), m_nonce.size());
 
     // Additional Data
     if (!m_aad.empty()) {
-        err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+        err = pCcmObj->setAad(getPtr(m_aad), m_aad.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 
     // Decrypt the ciphertext into plaintext
     if (!m_ciphertext.empty()) {
-        err = pCcmObj->decrypt(&(m_ciphertext.at(0)),
-                                     &(out_plaintext.at(0)),
-                                     m_ciphertext.size(),
-                                     &(m_nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
+        err = pCcmObj->decrypt(
+            getPtr(m_ciphertext), getPtr(out_plaintext), m_ciphertext.size());
+        EXPECT_EQ(out_plaintext, m_plaintext);
     } else {
         // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = pCcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
+        err = pCcmObj->decrypt(&a, &a, 0);
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // If there is tag, try to get the tag.
     if (!m_tag.empty()) {
-        err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+        err = pCcmObj->getTag(getPtr(out_tag), m_tag.size());
         if (m_test_name.at(0) == 'P')
-            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(out_tag, m_tag);
         else
-            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_NE(out_tag, m_tag);
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 }
+
 TEST_P(CCM_KAT, Decrypt_Double)
 {
     {
@@ -585,37 +607,36 @@ TEST_P(CCM_KAT, Decrypt_Double)
             err = pCcmObj->setTagLength(m_tag.size());
         }
 
-        // Nonce
-         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
-        EXPECT_EQ(err, ALC_ERROR_NONE);
+        /* Initialization */
+        pCcmObj->init(
+            getPtr(m_key), m_key.size() * 8, getPtr(m_nonce), m_nonce.size());
 
         // Additional Data
         if (!m_aad.empty()) {
-            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            err = pCcmObj->setAad(getPtr(m_aad), m_aad.size());
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
 
         // Decrypt the ciphertext into plaintext
         if (!m_ciphertext.empty()) {
-            err = pCcmObj->decrypt(&(m_ciphertext.at(0)),
-                                         &(out_plaintext.at(0)),
-                                         m_ciphertext.size(),
-                                         &(m_nonce.at(0)));
-            EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
+            err = pCcmObj->decrypt(getPtr(m_ciphertext),
+                                   getPtr(out_plaintext),
+                                   m_ciphertext.size());
+            EXPECT_EQ(out_plaintext, m_plaintext);
         } else {
             // Call decrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->decrypt(&a, &a, 0);
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // If there is tag, try to get the tag.
         if (!m_tag.empty()) {
-            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            err = pCcmObj->getTag(getPtr(out_tag), m_tag.size());
             if (m_test_name.at(0) == 'P')
-                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+                EXPECT_EQ(out_tag, m_tag);
             else
-                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+                EXPECT_NE(out_tag, m_tag);
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
     }
@@ -632,37 +653,36 @@ TEST_P(CCM_KAT, Decrypt_Double)
             err = pCcmObj->setTagLength(m_tag.size());
         }
 
-        // Nonce
-         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
-        EXPECT_EQ(err, ALC_ERROR_NONE);
+        /* Initialization */
+        pCcmObj->init(
+            getPtr(m_key), m_key.size() * 8, getPtr(m_nonce), m_nonce.size());
 
         // Additional Data
         if (!m_aad.empty()) {
-            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            err = pCcmObj->setAad(getPtr(m_aad), m_aad.size());
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
 
         // Decrypt the ciphertext into plaintext
         if (!m_ciphertext.empty()) {
-            err = pCcmObj->decrypt(&(m_ciphertext.at(0)),
-                                         &(out_plaintext.at(0)),
-                                         m_ciphertext.size(),
-                                         &(m_nonce.at(0)));
-            EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
+            err = pCcmObj->decrypt(getPtr(m_ciphertext),
+                                   getPtr(out_plaintext),
+                                   m_ciphertext.size());
+            EXPECT_EQ(out_plaintext, m_plaintext);
         } else {
             // Call decrypt update with a valid memory if no plaintext
             Uint8 a;
-            err = pCcmObj->decrypt(&a, &a, 0, &(m_nonce.at(0)));
+            err = pCcmObj->decrypt(&a, &a, 0);
         }
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // If there is tag, try to get the tag.
         if (!m_tag.empty()) {
-            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            err = pCcmObj->getTag(getPtr(out_tag), m_tag.size());
             if (m_test_name.at(0) == 'P')
-                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+                EXPECT_EQ(out_tag, m_tag);
             else
-                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+                EXPECT_NE(out_tag, m_tag);
             EXPECT_EQ(err, ALC_ERROR_NONE);
         }
     }
@@ -680,83 +700,48 @@ TEST(CCM, InvalidTagLen)
 {
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    // clang-format off
-    const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                     ALC_KEY_FMT_RAW,
-                                     {},
-                                     {},
-                                     128,
-                                     key };
-    Ccm                  ccm_obj = Ccm(keyInfo.key, keyInfo.len);
+
+    // Setup CCM Object
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    // FIXME: Add feature selection
+    auto pCcmObj = alcpCipher->create(keyToModStr(sizeof(key)));
+
     alc_error_t err;
 
     // TODO: Create a parametrized test
-    err = ccm_obj.setTagLength(
-            17);
+    err = pCcmObj->setTagLength(17);
 
-    auto s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
+    EXPECT_EQ(err, ALC_ERROR_INVALID_ARG);
 
-
-    EXPECT_EQ(err,s.code());
-
+    delete alcpCipher;
 }
 
 TEST(CCM, InvalidNonceLen)
 {
     Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8              tagbuff[16];
     std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
-    std::vector<Uint8> nonce(14,0);
-    // clang-format off
-    const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                     ALC_KEY_FMT_RAW,
-                                     {},
-                                     {},
-                                     128,
-                                     key };
-    Ccm                  ccm_obj = Ccm(keyInfo.key, keyInfo.len);
+    std::vector<Uint8> nonce(14, 0);
+
+    // Setup CCM Object
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    // FIXME: Add feature selection
+    auto pCcmObj = alcpCipher->create(keyToModStr(sizeof(key)));
+
     alc_error_t err;
 
     // TODO: Create a parametrized test
-    err = ccm_obj.setTagLength(
-            out_tag.size());
-
+    err = pCcmObj->setTagLength(out_tag.size());
 
     Status s = alcp::base::StatusOk();
 
-
-    EXPECT_EQ(err,s.code());
+    EXPECT_EQ(err, s.code());
 
     // Nonce
-    err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
+    err = pCcmObj->init(key, sizeof(key) * 8, getPtr(nonce), nonce.size());
 
-    s = status::InvalidValue(
-            "IV length needs to be between 7 and 13 both not included!");
-    EXPECT_EQ(err, s.code());
+    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+
+    delete alcpCipher;
 }
-
-#if 0
-int
-main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners =
-        testing::UnitTest::GetInstance()->listeners();
-    auto default_printer =
-        listeners.Release(listeners.default_result_printer());
-
-    ConfigurableEventListener* listener =
-        new ConfigurableEventListener(default_printer);
-
-    listener->showEnvironment    = true;
-    listener->showTestCases      = true;
-    listener->showTestNames      = true;
-    listener->showSuccesses      = true;
-    listener->showInlineFailures = true;
-    listeners.Append(listener);
-    return RUN_ALL_TESTS();
-}
-#endif
-
-#endif
