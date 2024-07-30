@@ -39,21 +39,12 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    alc_cipher_info_t cinfo = {
-        .ci_type   = ALC_CIPHER_TYPE_AES,
-        .ci_mode   = ALC_AES_MODE_XTS,
-        .ci_keyLen = (data_xts->m_key_len) * 8,
-
-        .ci_key = data_xts->m_key,
-        .ci_iv  = data_xts->m_iv,
-    };
-
     m_handle.ch_context = malloc(alcp_cipher_context_size());
     if (!m_handle.ch_context)
         return false;
 
-    err =
-        alcp_cipher_segment_request(cinfo.ci_mode, cinfo.ci_keyLen, &m_handle);
+    err = alcp_cipher_segment_request(
+        ALC_AES_MODE_XTS, (data_xts->m_key_len) * 8, &m_handle);
     if (alcp_is_error(err)) {
         free(m_handle.ch_context);
         printf("Error: unable to request \n");
@@ -63,8 +54,8 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
 
     // encrypt init:
     err = alcp_cipher_segment_init(&m_handle,
-                                   cinfo.ci_key,
-                                   cinfo.ci_keyLen,
+                                   data_xts->m_key,
+                                   (data_xts->m_key_len) * 8,
                                    data_xts->m_iv,
                                    data_xts->m_iv_len);
     if (alcp_is_error(err)) {

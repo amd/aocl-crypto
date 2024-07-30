@@ -6,11 +6,7 @@ Cipher is a cryptographic technique used to secure information by transforming m
 
 Data Structures
 ---------------
-.. doxygenstruct:: alc_cipher_info_t
 .. doxygenstruct:: alc_cipher_handle_t
-.. doxygenstruct:: alc_cipher_mode_gcm_info_t
-.. doxygenstruct:: alc_cipher_mode_siv_info_t
-.. doxygenstruct:: alc_key_info_t
 
 ----
 
@@ -40,7 +36,6 @@ Variables
 ---------
 .. doxygenvariable:: alc_cipher_type_t
 .. doxygenvariable:: alc_cipher_mode_t
-.. doxygenvariable:: alc_key_type_t
 .. doxygenvariable:: alc_key_alg_t
 .. doxygenvariable:: alc_key_len_t
 .. doxygenvariable:: alc_key_fmt_t

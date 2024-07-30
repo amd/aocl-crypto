@@ -39,19 +39,12 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type   = ALC_CIPHER_TYPE_AES,
-        .ci_mode   = ALC_AES_MODE_GCM,
-        .ci_keyLen = (data_gcm->m_key_len) * 8,
-        .ci_key    = data_gcm->m_key,
-        .ci_iv     = data_gcm->m_iv,
-    };
-
     m_handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!m_handle.ch_context)
         return false;
 
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &m_handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_GCM, (data_gcm->m_key_len) * 8, &m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);

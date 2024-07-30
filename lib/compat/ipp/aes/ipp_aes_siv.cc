@@ -41,27 +41,10 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
                    int          numAD)
 {
     static alc_cipher_handle_t handle;
-    alc_key_info_t             kinfo = {
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-    };
 
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-
-    kinfo.key = pConfKey;
-    kinfo.len = ((Uint32)keyLen) * 8;
-
-    alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
-
-    alc_cipher_aead_info_t cinfo = { ALC_CIPHER_TYPE_AES,
-                                     ALC_AES_MODE_SIV,
-                                     ((Uint32)keyLen) * 8,
-                                     pAuthKey,
-                                     NULL };
-
-    cinfo.ci_algo_info.ai_siv = siv_info;
 
     Uint8 combined_key[64] = {};
     std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
@@ -75,7 +58,8 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -83,8 +67,8 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
         return ippStsErr;
     }
 
-    err =
-        alcp_cipher_aead_init(&handle, combined_key, cinfo.ci_keyLen, pSIV, 16);
+    err = alcp_cipher_aead_init(
+        &handle, combined_key, ((Uint32)keyLen) * 8, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -137,27 +121,10 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
                    const Ipp8u* pSIV)
 {
     static alc_cipher_handle_t handle;
-    alc_key_info_t             kinfo = {
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-    };
 
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-
-    kinfo.key = pConfKey;
-    kinfo.len = ((Uint32)keyLen) * 8;
-
-    alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
-
-    alc_cipher_aead_info_t cinfo = { ALC_CIPHER_TYPE_AES,
-                                     ALC_AES_MODE_SIV,
-                                     ((Uint32)keyLen) * 8,
-                                     pAuthKey,
-                                     NULL };
-
-    cinfo.ci_algo_info.ai_siv = siv_info;
 
     Uint8 combined_key[64] = {};
     std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
@@ -171,7 +138,8 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -179,8 +147,8 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
         return ippStsErr;
     }
 
-    err =
-        alcp_cipher_aead_init(&handle, combined_key, cinfo.ci_keyLen, pSIV, 16);
+    err = alcp_cipher_aead_init(
+        &handle, combined_key, ((Uint32)keyLen) * 8, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -223,26 +191,12 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
                  Ipp8u*       pSIV)
 {
     static alc_cipher_handle_t handle;
-    alc_key_info_t             kinfo = {
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-    };
 
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
     std::unique_ptr<Uint8> pConfKey = std::make_unique<Uint8>(keyLen);
-
-    kinfo.key = pConfKey.get();
-    kinfo.len = ((Uint32)keyLen) * 8;
-
-    alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
-
-    alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES, ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, pKey, NULL
-    };
-    cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
      * Application is expected to allocate for context
@@ -252,7 +206,8 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);

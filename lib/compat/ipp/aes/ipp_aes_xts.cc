@@ -83,22 +83,19 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     Uint32                 key_size = static_cast<Uint32>(
         keyBitSize / 2); // casting to prevent narrowing conversion
                                          // from int to Uint32 warning
-    alc_error_t       err;
-    const int         err_size = 256;
-    Uint8             err_buf[err_size];
-    alc_cipher_info_t cinfo = {};
+    alc_error_t err;
+    const int   err_size = 256;
+    Uint8       err_buf[err_size];
 
-    cinfo.ci_type   = ALC_CIPHER_TYPE_AES;
-    cinfo.ci_key    = pKey;
-    cinfo.ci_keyLen = key_size;
-    cinfo.ci_mode   = ALC_AES_MODE_XTS;
-    cinfo.ci_iv     = pTweakPT;
+    auto key    = pKey;
+    auto keyLen = key_size;
+    auto mode   = ALC_AES_MODE_XTS;
 
     handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context)
         return ippStsErr;
 
-    err = alcp_cipher_segment_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
+    err = alcp_cipher_segment_request(mode, keyLen, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -107,8 +104,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     }
 
     // xts init
-    err = alcp_cipher_segment_init(
-        &handle, cinfo.ci_key, cinfo.ci_keyLen, pTweakPT, iv_len);
+    err = alcp_cipher_segment_init(&handle, key, keyLen, pTweakPT, iv_len);
     if (alcp_is_error(err)) {
         printf("Error: unable to init\n");
         alcp_error_str(err, err_buf, err_size);

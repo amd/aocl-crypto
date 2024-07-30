@@ -46,9 +46,8 @@ ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
     printMsg(ss.str());
     ipp_wrp_aes_ctx* context = reinterpret_cast<ipp_wrp_aes_ctx*>(pCtx);
     if (pKey != nullptr) {
-        context->cinfo.ci_type     = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_key      = (Uint8*)pKey;
-        context->cinfo.ci_keyLen   = keyLen * 8;
+        context->key               = (Uint8*)pKey;
+        context->keyLen            = keyLen * 8;
         context->handle.ch_context = nullptr;
     }
     printMsg("Init End");

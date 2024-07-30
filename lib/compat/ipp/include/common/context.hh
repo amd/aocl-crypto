@@ -33,10 +33,11 @@
 #pragma once
 typedef struct _ipp_wrp_aes_ctx
 {
-    alc_cipher_handle_t    handle;
-    alc_cipher_info_t      cinfo;
-    alc_cipher_aead_info_t c_aeadinfo;
-
+    alc_cipher_handle_t handle;
+    alc_cipher_mode_t   mode;
+    Uint64              keyLen; /*! Key length in bits */
+    const Uint8*        key;    /*! key data */
+    const Uint8*        iv;     /*! Initialization Vector */
 } ipp_wrp_aes_ctx;
 typedef struct _ipp_wrp_aes_aead_ctx
 {

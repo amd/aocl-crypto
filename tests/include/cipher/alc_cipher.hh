@@ -34,6 +34,19 @@
 
 #pragma once
 namespace alcp::testing {
+typedef struct _alc_cipher_info
+{
+    // request params
+    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_CTR etc */
+    Uint64            ci_keyLen; /*! Key length in bits */
+
+    // init params
+    const Uint8* ci_key;   /*! key data */
+    const Uint8* ci_iv;    /*! Initialization Vector */
+    Uint64       ci_ivLen; /*! Initialization Vector length */
+
+} alc_cipher_info_t;
 class AlcpCipherBase : public CipherBase
 {
   private:

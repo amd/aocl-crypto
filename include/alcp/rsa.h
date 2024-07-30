@@ -423,7 +423,7 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pRsaHandle  - Handler of the Context for the session
  * @param [in]  pText       - pointer to input hash
  * @param [in]  textSize    - size of input hash
- * @param [out] pSignedBuff - pointer to signed text
+ * @param [out] pSignedText - pointer to signed text
  *
  * @return Error Code for the API called . if alc_error_t is not zero then
  * alcp_error_str needs to be called to know about error occurred

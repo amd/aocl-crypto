@@ -24,6 +24,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 include (FindPackageHandleStandardArgs)
+include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 
 ## Look for an executable called sphinx-build
 find_program (SPHINX_EXECUTABLE

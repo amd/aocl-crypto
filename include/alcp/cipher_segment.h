@@ -42,7 +42,7 @@ EXTERN_C_BEGIN
  */
 
 /**
- * @brief  Cipher init.
+ * @brief  Cipher Segment init.
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_request is
  * called.</b>
@@ -53,7 +53,7 @@ EXTERN_C_BEGIN
  * @param[in] pIv  IV/Nonce
  * @param[in] ivLen  iv Length in bits
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then  @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -89,15 +89,16 @@ alcp_cipher_segment_request(const alc_cipher_mode_t cipherMode,
  * handle.
  * @parblock <br> &nbsp;
  * <b>This XTS specific API should be called only after @ref
- * alcp_cipher_request and alcp_cipher_init . API is meant to be used with XTS
- * mode.</b>
+ * alcp_cipher_segment_request and alcp_cipher_segment_init. API is meant to be
+ * used with XTS mode.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, ctx to be
- * considered valid.
- * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
- * it's the last call. Also last call if there is a paritial block, both partial
- * and a complete block has to be included in the last call to this function.
+ *           valid only if @ref alcp_is_error (ret) is false
+ *
+ * @note    XTS: Argument currPlainTextLen should be multiple of 16bytes unless
+ * it's the last call. By the last call,if there is a paritial block, both
+ * partial and a complete block has to be included in the last call to this
+ * function.
  * @param [in]   pCipherHandle Session handle for future encrypt decrypt
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
@@ -118,15 +119,15 @@ alcp_cipher_segment_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
  * provided handle.
  * @parblock <br> &nbsp;
  * <b>This XTS specific API should be called only after @ref
- * alcp_cipher_request and alcp_cipher_init. API is meant to be used with XTS
- * mode.</b>
+ * alcp_cipher_segment_init. API is meant to be used with XTS mode.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
- *           is valid.
+ *           valid only if @ref alcp_is_error (ret) is false
  * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
- * it's the last call. Also last call if there is a partial block, both partial
- * and a complete block has to be included in the last call to this function.
+ * it's the last call. By the last call,if there is a paritial block, both
+ * partial and a complete block has to be included in the last call to this
+ * function.
+ *
  * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
  * operation
  * @param[out]    pPlainText    Pointer to Plain Text
@@ -143,17 +144,15 @@ alcp_cipher_segment_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
                                 Uint64                    startBlockNum);
 
 /**
- * FIXME: Need to fix return type of API
  * @brief       Release resources allocated by alcp_cipher_request.
  * @parblock <br> &nbsp;
- * <b>This API is called to free resources so should be called to free the
- * session</b>
+ * <b>This API is called to free the session resources</b>
  * @endparblock
- * @note       alcp_cipher_finish to be called at the end of the transaction,
- * context will be unusable after this call.
+ * @note       alcp_cipher_finish to be called at the end of the transaction.
+ * Context will be unusable after this call.
  *
- * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
- *                         operation
+ * @param[in]    pCipherHandle    Session handle for completed encrypt/decrypt
+ * operations whose resources has to be freed.
  * @return            None
  */
 

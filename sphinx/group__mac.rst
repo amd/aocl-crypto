@@ -8,20 +8,17 @@ Data Structures
 ---------------
 .. doxygenstruct:: alc_hmac_info_t
 .. doxygenstruct:: alc_cmac_info_t
-.. doxygenstruct:: alc_poly1305_info_t
-.. doxygenstruct:: alc_mac_info_t
 .. doxygenstruct:: alc_mac_handle_t
+.. doxygenunion:: alc_mac_info_t
 
 ----
 
 Functions
 ---------
-.. doxygenfunction:: alcp_mac_supported
 .. doxygenfunction:: alcp_mac_context_size
 .. doxygenfunction:: alcp_mac_request
 .. doxygenfunction:: alcp_mac_update
 .. doxygenfunction:: alcp_mac_finalize
-.. doxygenfunction:: alcp_mac_copy 
 .. doxygenfunction:: alcp_mac_finish
 .. doxygenfunction:: alcp_mac_reset 
 .. doxygenfunction:: alcp_mac_error 

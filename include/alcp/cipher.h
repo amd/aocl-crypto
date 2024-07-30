@@ -101,34 +101,6 @@ typedef struct _alc_cipher_data
 } alc_cipher_data_t;
 
 /**
- *
- * @brief  Opaque cipher context, populated from the library.
- *
- * @param ci_type Specify which cipher type (request param)
- * @param ci_mode Specify which cipher mode (request param)
- * @param ci_keyLen Specify key length in bits (request param)
- * @param ci_key key data (init param)
- * @param ci_iv  Initialization Vector (init param)
- * @param ci_algo_info Algorithm specific info is stored
- *
- * @struct  alc_cipher_info_t
- *
- */
-typedef struct _alc_cipher_info
-{
-    // request params
-    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
-    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_CTR etc */
-    Uint64            ci_keyLen; /*! Key length in bits */
-
-    // init params
-    const Uint8* ci_key;   /*! key data */
-    const Uint8* ci_iv;    /*! Initialization Vector */
-    Uint64       ci_ivLen; /*! Initialization Vector length */
-
-} alc_cipher_info_t;
-
-/**
  * @brief  Opaque type of a cipher context, comes from the library.
  *
  * @typedef void alc_cipher_context_t
@@ -152,8 +124,7 @@ typedef struct _alc_cipher_handle
 } alc_cipher_handle_t, *alc_cipher_handle_p;
 
 /**
- * @brief       Gets the size of the context for a session described by
- *              pCipherInfo
+ * @brief       Gets the size of the context for a session
  * @parblock <br> &nbsp;
  * <b>This API should be called before @ref alcp_cipher_request to identify the
  * memory to be allocated for context </b>
@@ -171,9 +142,8 @@ alcp_cipher_context_size(void);
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_context_size is called </b>
  * @endparblock
- * @note     Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, ctx
- * to be considered valid.
+ * @note     Error needs to be checked for each call.
+ *           Valid only if @ref alcp_is_error (ret) is false
  * @param [in]    cipherMode       cipher mode to be set
  * @param [in]    keyLen           key length in bits
  * @param [out]   pCipherHandle    Library populated session handle for future
@@ -197,7 +167,7 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
  * @param[in] pIv  IV/Nonce
  * @param[in] ivLen  iv Length in bits
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * is not ALC_ERROR_NONE then  @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
@@ -211,13 +181,13 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
  * @brief    Encrypt plain text and write it to cipher text with provided
  * handle.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called and at the
- * end of session call @ref alcp_cipher_finish</b>
+ * <b>This API can be called after @ref alcp_cipher_request and before  @ref
+ * alcp_cipher_finish</b> <b>API is meant to be used with CBC,CTR,CFB,OFB,XTS
+ * mode.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, ctx to be
- * considered valid.
- * @param [in]   pCipherHandle Session handle for future encrypt decrypt
+ *           valid only if @ref alcp_is_error (ret) is false
+ * @param [in]   pCipherHandle Session handle for future encrypt/decrypt
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
@@ -231,15 +201,15 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint64                    datalen);
 
 /**
- * @brief    Decryption of cipher text and write it to plain text with
+ * @brief    Decrypt the cipher text and write it to plain text with
  * provided handle.
  * @parblock <br> &nbsp;
- * <b>This API should be called only after @ref alcp_cipher_request.
- * API is meant to be used with CBC,CTR,CFB,OFB,XTS mode.</b>
+ * <b>This API can be called after @ref alcp_cipher_request and before  @ref
+ * alcp_cipher_finish</b> <b>API is meant to be used with CBC,CTR,CFB,OFB,XTS
+ * mode.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
- *           is valid.
+ *           valid only if @ref alcp_is_error (ret) is false
  * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
@@ -254,16 +224,14 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint64                    datalen);
 
 /**
- * FIXME: Need to fix return type of API
  * @brief       Release resources allocated by alcp_cipher_request.
  * @parblock <br> &nbsp;
- * <b>This API is called to free resources so should be called to free the
- * session</b>
+ * <b>This API is called to free the session resources</b>
  * @endparblock
- * @note       alcp_cipher_finish to be called at the end of the transaction,
- * context will be unusable after this call.
+ * @note       alcp_cipher_finish has to be called at the end of the
+ * transaction. Context will be unusable after this call.
  *
- * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
+ * @param[in]    pCipherHandle    Session handle for future encrypt/decrypt
  *                         operation
  * @return            None
  */

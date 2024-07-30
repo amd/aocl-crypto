@@ -43,7 +43,7 @@
  *
  * @typedef enum   alc_key_alg_t
  */
-typedef enum
+typedef enum alc_key_alg
 {
     ALC_KEY_ALG_WILDCARD,
     ALC_KEY_ALG_DERIVATION,
@@ -62,7 +62,7 @@ typedef enum
  *
  * @typedef enum   alc_key_len_t
  */
-typedef enum
+typedef enum alc_key_len
 {
     ALC_KEY_LEN_128 = 128,
     ALC_KEY_LEN_192 = 192,
@@ -83,24 +83,11 @@ typedef enum
  *
  * @typedef enum   alc_key_fmt_t
  */
-typedef enum
+typedef enum alc_key_fmt
 {
     ALC_KEY_FMT_RAW,    /* Default should be fine */
     ALC_KEY_FMT_BASE64, /* Base64 encoding */
 } alc_key_fmt_t;
-
-/**
- * @brief Store info related to key.
- *
- * @struct alc_key_info_t
- */
-typedef struct _alc_key_info
-{
-    alc_key_alg_t algo;
-    Uint64        len; /* Key length in bits */
-    const Uint8*  key; /* Key follows the rest of the structure */
-
-} alc_key_info_t, *alc_key_info_p;
 
 #endif /* _ALCP_KEY_H_ */
        /**

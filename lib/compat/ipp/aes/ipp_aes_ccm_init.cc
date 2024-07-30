@@ -50,11 +50,10 @@ ippsAES_CCMInit(const Ipp8u*      pKey,
     ipp_wrp_aes_ctx* context_cipher =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     if (pKey != nullptr) {
-        context_cipher->c_aeadinfo.ci_type   = ALC_CIPHER_TYPE_AES;
-        context_cipher->c_aeadinfo.ci_key    = (Uint8*)pKey;
-        context_cipher->c_aeadinfo.ci_keyLen = keyLen * 8;
-        context_cipher->c_aeadinfo.ci_mode   = ALC_AES_MODE_CCM;
-        context_cipher->handle.ch_context    = nullptr;
+        context_cipher->key               = (Uint8*)pKey;
+        context_cipher->keyLen            = keyLen * 8;
+        context_cipher->mode              = ALC_AES_MODE_CCM;
+        context_cipher->handle.ch_context = nullptr;
     } else {
         if (context_cipher->handle.ch_context != nullptr) {
             alcp_cipher_finish(&(context_cipher->handle));

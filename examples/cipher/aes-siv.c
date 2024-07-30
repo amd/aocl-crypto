@@ -188,6 +188,7 @@ decrypt_demo(const Uint8* ciphertxt,
     }
 
     // Initialize the session handle with proper key and iv.
+    // Iv passed here is the tag generated from encrypt call.
     err = alcp_cipher_aead_init(&handle, pKey, key_len, iv, iv_len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to init \n");

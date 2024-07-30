@@ -91,7 +91,10 @@ typedef struct _alc_cmac_info
 /**
  * @brief Stores details for algo info for mac
  *
- * @union _mac_info
+ * @param hmac Stores the hmac info in case MAC to be used is HMAC
+ * @param cmac Stores the cmac info in case MAC to be used is CMAC
+ *
+ * @union alc_mac_info_t
  */
 typedef union _mac_info
 {
@@ -125,7 +128,6 @@ typedef struct alc_mac_handle
  * to be allocated for context </b>
  * @endparblock
  *
- * @param [in] pMacInfo Description of the requested MAC session
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
@@ -159,6 +161,8 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t macType);
  * @param [in]   pMacHandle Library populated session handle for future
  * @param [in]   key  pointer to key for mac operations.
  * @param [in]   size size of key.
+ * @param [in] info Macinfo populated based on the type of the MAC
+
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_mac_error or @ref alcp_error_str needs
  * to be called to know about error occurred

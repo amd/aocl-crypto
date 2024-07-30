@@ -72,9 +72,8 @@ alcp_encdecAES(const Ipp8u*       pSrc,
        already initialized. */
 
     if (context->handle.ch_context == nullptr) {
-        context->cinfo.ci_type = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_mode = mode;
-        context->cinfo.ci_iv   = (Uint8*)pCtrValue;
+        context->mode = mode;
+        context->iv   = (Uint8*)pCtrValue;
 
         auto size                  = alcp_cipher_context_size();
         context->handle.ch_context = (alc_cipher_context_p)(malloc(size));
@@ -85,18 +84,16 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         if (mode == ALC_AES_MODE_XTS) {
             std::cout << "MODE:XTS" << std::endl;
             std::cout << "KEY:"
-                      << parseBytesToHexStr(context->cinfo.ci_key,
-                                            (context->cinfo.ci_keyLen) / 8)
+                      << parseBytesToHexStr(context->key, (context->keyLen) / 8)
                       << std::endl;
-            std::cout << "KEYLen:" << context->cinfo.ci_keyLen / 8 << std::endl;
+            std::cout << "KEYLen:" << context->keyLen / 8 << std::endl;
             std::cout << "TKEY:"
-                      << parseBytesToHexStr(
-                             context->cinfo.ci_key
-                                 + ((context->cinfo.ci_keyLen) / 8),
-                             ((context->cinfo.ci_keyLen) / 8))
+                      << parseBytesToHexStr(context->key
+                                                + ((context->keyLen) / 8),
+                                            ((context->keyLen) / 8))
                       << std::endl;
-            std::cout << "KEYLen:" << context->cinfo.ci_keyLen / 8 << std::endl;
-            std::cout << "IV:" << parseBytesToHexStr(context->cinfo.ci_iv, 16)
+            std::cout << "KEYLen:" << context->keyLen / 8 << std::endl;
+            std::cout << "IV:" << parseBytesToHexStr(context->iv, 16)
                       << std::endl;
             std::cout << "INLEN:" << len << std::endl;
             std::cout << "IN:"
@@ -105,9 +102,7 @@ alcp_encdecAES(const Ipp8u*       pSrc,
                       << std::endl;
         }
 #endif
-        err = alcp_cipher_request(context->cinfo.ci_mode,
-                                  context->cinfo.ci_keyLen,
-                                  &(context->handle));
+        err = alcp_cipher_request(mode, context->keyLen, &(context->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
             alcp_error_str(err, err_buf, err_size);
@@ -119,9 +114,9 @@ alcp_encdecAES(const Ipp8u*       pSrc,
 
     // init
     err = alcp_cipher_init(&(context->handle),
-                           context->cinfo.ci_key,
-                           context->cinfo.ci_keyLen,
-                           context->cinfo.ci_iv,
+                           context->key,
+                           context->keyLen,
+                           context->iv,
                            16); // FIXME: 16 should be variable
     if (alcp_is_error(err)) {
         printErr("Error in init\n");

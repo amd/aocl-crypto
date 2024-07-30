@@ -34,6 +34,55 @@
 
 #pragma once
 namespace alcp::testing {
+
+// FIXME: alc_key_info_t, alc_cipher_aead_mode_siv_info_t,
+// alc_cipher_aead_algo_info_t,alc_cipher_aead_info_t should all be completely
+// removed from testing code
+typedef struct _alc_key_info
+{
+    alc_key_alg_t algo;
+    Uint64        len; /* Key length in bits */
+    const Uint8*  key; /* Key follows the rest of the structure */
+
+} alc_key_info_t, *alc_key_info_p;
+
+typedef struct _alc_cipher_aead_mode_siv_info
+{
+    const alc_key_info_t* xi_ctr_key;
+} alc_cipher_aead_mode_siv_info_t, alc_cipher_aead_mode_siv_info_p;
+
+typedef struct _alc_cipher_aead_mode_gcm_info
+{
+    // FIXME: C do not support empty structures, populate with actual ones
+    char dummy;
+} alc_cipher_aead_mode_gcm_info_t, *alc_cipher_aead_mode_gcm_info_p;
+
+typedef struct _alc_cipher_aead_algo_info
+{
+
+    union
+    {
+        alc_cipher_aead_mode_gcm_info_t ai_gcm;
+        alc_cipher_aead_mode_siv_info_t ai_siv;
+    };
+} alc_cipher_aead_algo_info_t, *alc_cpher_aead_algo_info_p;
+
+typedef struct _alc_cipher_aead_info
+{
+    // request params
+    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_GCM etc */
+    Uint64            ci_keyLen; /*! Key length in bits */
+
+    // init params
+    const Uint8* ci_key;   /*! key data */
+    const Uint8* ci_iv;    /*! Initialization Vector */
+    Uint64       ci_ivLen; /*! Initialization Vector length */
+
+    // algo params
+    alc_cipher_aead_algo_info_t ci_algo_info; /*! mode specific data */
+
+} alc_cipher_aead_info_t, *alc_cipher_aead_info_p;
 class AlcpCipherAeadBase : public CipherAeadBase
 {
   private:

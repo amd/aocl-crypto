@@ -52,15 +52,13 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
        already initialized. */
     // Continue Enc
     if (context_aead->handle.ch_context == nullptr) {
-        context_aead->c_aeadinfo.ci_type = ALC_CIPHER_TYPE_AES;
-        context_aead->c_aeadinfo.ci_iv   = (Uint8*)pIV;
+        context_aead->iv = (Uint8*)pIV;
 
         context_aead->handle.ch_context =
             malloc(alcp_cipher_aead_context_size());
 
-        err = alcp_cipher_aead_request(context_aead->c_aeadinfo.ci_mode,
-                                       context_aead->c_aeadinfo.ci_keyLen,
-                                       &(context_aead->handle));
+        err = alcp_cipher_aead_request(
+            context_aead->mode, context_aead->keyLen, &(context_aead->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
             alcp_error_str(err, err_buf, err_size);
@@ -83,8 +81,8 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
 
     // ccm init
     err = alcp_cipher_aead_init(&(context_aead->handle),
-                                context_aead->c_aeadinfo.ci_key,
-                                context_aead->c_aeadinfo.ci_keyLen,
+                                context_aead->key,
+                                context_aead->keyLen,
                                 (Uint8*)pIV,
                                 ivLen);
     if (alcp_is_error(err)) {

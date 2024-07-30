@@ -48,6 +48,7 @@ Always you can use `--help` to know all the command line arguments which can be 
 7. AES_CCM             (128,192,256)
 8. AES_SIV             (128,192,256)
 9. CHACHA20            (256)
+10. CHACHA20_POLY1305
 
 ##### Cipher_experimental
 

@@ -1,7 +1,7 @@
 
 # Welcome to AOCL-Cryptography
 
-**AOCL-Cryptography** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), Chacha20 Stream Cipher routines, SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC, Poly1305 MAC), ECDH (Elliptic-curve Diffie–Hellman), RSA (Rivest, Shamir, and Adleman) key generation functions, etc.
+**AOCL-Cryptography** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), Chacha20 Stream Cipher routines, Chacha20-Poly1305 AEAD, SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC, Poly1305 MAC), ECDH (Elliptic-curve Diffie–Hellman), RSA (Rivest, Shamir, and Adleman) key generation functions, etc.
 
 - For building, please refer to [Build.md](md_BUILD.html)
 
@@ -27,6 +27,8 @@ AES - Block Cipher algorithms
         -  CBC, CFB, OFB, CTR, GCM, XTS, CCM, SIV.
 
 Chacha20 - Stream Cipher algorithms
+
+Chacha20-Poly1305 AEAD
 
 ```
 -   Click to know about more about [AOCL Cipher API](group__cipher.html)
@@ -128,4 +130,4 @@ To build and run the examples, please refer to the document
 
 ## CONTACTS {#Contact}
 
-<b>AOCL Cryptography is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>
+<b>AOCL Cryptography is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/toolchain-technical-support.html</b>

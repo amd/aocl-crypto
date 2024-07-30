@@ -64,9 +64,6 @@ class EncryptAes : public cipher::Aes
     EncryptAes(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {}
-
-  public:
-    bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 };
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {

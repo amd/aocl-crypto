@@ -52,10 +52,9 @@ ippsAES_XTSInit(const Ipp8u*     pKey,
         &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->cipher_ctx);
     if (pKey != nullptr) {
 
-        context_cipher->cinfo.ci_type     = ALC_CIPHER_TYPE_AES;
-        context_cipher->cinfo.ci_key      = pKey;
-        context_cipher->cinfo.ci_keyLen   = keyLen / 2;
-        context_cipher->cinfo.ci_mode     = ALC_AES_MODE_XTS;
+        context_cipher->key               = pKey;
+        context_cipher->keyLen            = keyLen / 2;
+        context_cipher->mode              = ALC_AES_MODE_XTS;
         context_cipher->handle.ch_context = nullptr;
     } else {
         if (context_cipher->handle.ch_context != nullptr) {
