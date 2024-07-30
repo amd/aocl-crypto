@@ -32,7 +32,8 @@ IppStatus
 ippsAES_GCMGetSize(int* pSize)
 {
     printMsg("GCM GetSize");
-    *pSize = sizeof(ipp_wrp_aes_aead_ctx);
+    // Size of the context is the wrapper context size with alcp context size
+    *pSize = sizeof(ipp_wrp_aes_aead_ctx) + alcp_cipher_aead_context_size();
     printMsg("GCM GetSize End");
     return ippStsNoErr;
 }
@@ -44,18 +45,39 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
                 int               ctxSize)
 {
     printMsg("GCM Init");
+
     std::stringstream ss;
     ss << "KeyLength:" << keyLen;
     printMsg(ss.str());
+
+    // Cast the context into the correct data type
     ipp_wrp_aes_ctx* context_aead =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
-    if (pKey != nullptr) {
+    alc_error_t err = ALC_ERROR_NONE;
 
-        context_aead->key               = (Uint8*)pKey;
-        context_aead->keyLen            = keyLen * 8;
-        context_aead->mode              = ALC_AES_MODE_GCM;
-        context_aead->handle.ch_context = nullptr;
+    // Calculate the pointer of the alcp cipher context
+    Uint8* alcp_ctx =
+        reinterpret_cast<Uint8*>(pState) + sizeof(ipp_wrp_aes_aead_ctx);
+    context_aead->handle.ch_context = alcp_ctx;
+
+    // Wipe the alcp context
+    std::fill(alcp_ctx, alcp_ctx + alcp_cipher_aead_context_size(), 0);
+
+    // Request for the GCM Cipher
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_GCM, keyLen * 8, &(context_aead->handle));
+    if (alcp_is_error(err)) {
+        printErr("Unable to request");
+        return ippStsErr;
     }
+
+    // Initialize the context with the key
+    err = alcp_cipher_aead_init(
+        &(context_aead->handle), pKey, keyLen * 8, nullptr, 0);
+    if (alcp_is_error(err)) {
+        printMsg("GCM: Error Initializing with Key!");
+    }
+
     printMsg("GCM Init End");
     return ippStsNoErr;
 }

@@ -40,6 +40,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
                    const int    ADlen[],
                    int          numAD)
 {
+    printMsg("Cipher: SIV Encrypt");
     static alc_cipher_handle_t handle;
 
     alc_error_t err;
@@ -120,6 +121,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
                    int          numAD,
                    const Ipp8u* pSIV)
 {
+    printMsg("Cipher: SIV Decrypt");
     static alc_cipher_handle_t handle;
 
     alc_error_t err;
