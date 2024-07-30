@@ -47,7 +47,7 @@ TEST(CMACSIV, setKeys)
     auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
-    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
     delete alcpCipher;
 }
