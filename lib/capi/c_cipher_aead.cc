@@ -176,7 +176,6 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
     auto i = static_cast<iCipherAead*>(ctx->m_cipher);
 
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
-    // ALCP_BAD_PTR_ERR_RET(i->init, err);
     if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {
         err = i->init(pKey, keyLen, pIv, ivLen);
     }
@@ -304,9 +303,6 @@ alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
         delete alcpCipher;
     }
 
-    if (ctx->destructed == 1) {
-        return;
-    }
     // ctx->finish(ctx);
 
     ctx->~Context();

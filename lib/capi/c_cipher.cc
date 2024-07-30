@@ -178,6 +178,9 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    if (ctx->destructed == 1) {
+        return ALC_ERROR_BAD_STATE;
+    }
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
 
     auto i = static_cast<iCipher*>(ctx->m_cipher);
@@ -198,6 +201,9 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
         return;
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    if (ctx->destructed == 1) {
+        return;
+    }
     auto alcpCipher =
         static_cast<CipherFactory<iCipher>*>(ctx->m_cipher_factory);
 

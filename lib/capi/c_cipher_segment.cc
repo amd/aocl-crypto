@@ -28,8 +28,8 @@
 
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
-#include "alcp/cipher_segment.h"
 #include "alcp/cipher.hh"
+#include "alcp/cipher_segment.h"
 
 #include "alcp/capi/cipher/ctx.hh"
 #include "alcp/capi/defs.hh"
@@ -102,6 +102,9 @@ alcp_cipher_segment_init(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    if (ctx->destructed == 1) {
+        return ALC_ERROR_BAD_STATE;
+    }
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
 
     auto i = static_cast<iCipherSeg*>(ctx->m_cipher);
@@ -174,6 +177,9 @@ alcp_cipher_segment_finish(const alc_cipher_handle_p pCipherHandle)
         return;
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    if (ctx->destructed == 1) {
+        return;
+    }
     auto alcpCipher =
         static_cast<CipherFactory<iCipherSeg>*>(ctx->m_cipher_factory);
 
