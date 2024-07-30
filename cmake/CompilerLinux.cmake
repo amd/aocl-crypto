@@ -225,7 +225,12 @@ function(alcp_add_coverage_flags)
             -O0
             -fprofile-arcs
             -ftest-coverage
+            CACHE INTERNAL ""
+    )
+    #link flags
+    set(ALCP_LFLAGS_COV_GCC
             --coverage
+            -lgcov
             CACHE INTERNAL ""
     )
     # coverage flags supported by clang compiler
@@ -242,14 +247,18 @@ function(alcp_add_coverage_flags)
         if (NOT LCOV)
             message(FATAL_ERROR "lcov installation not found, coverage build with gcc will not work!")
         endif()
-	    add_compile_options(${ALCP_CFLAGS_COV_GCC})
-        link_libraries(gcov)
+	    target_compile_options(alcp PUBLIC ${ALCP_CFLAGS_COV_GCC})
+	    target_compile_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_GCC})
+        target_link_options(alcp PUBLIC ${ALCP_LFLAGS_COV_GCC})
+        target_link_options(alcp_static PUBLIC ${ALCP_LFLAGS_COV_GCC})
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         # check if lcov is installed
         find_program(LLVM_COV llvm-cov-14)
         if (NOT LLVM_COV)
             message(FATAL_ERROR "llvm-cov installation not found, coverage build with AOCC/Clang will not work!")
         endif()
+        target_compile_options(alcp PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+	    target_compile_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
         target_link_options(alcp PUBLIC ${ALCP_CFLAGS_COV_CLANG})
         target_link_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
     endif()
