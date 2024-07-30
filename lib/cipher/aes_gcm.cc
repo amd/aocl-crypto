@@ -108,6 +108,10 @@ GcmAuth::setAad(const Uint8* pInput, Uint64 aadLen)
 
     return err;
 }
+
+// Internal tag matching is disable for ipp compat support
+#define INTERNAL_TAG_MATCH 0
+
 alc_error_t
 GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
 {
@@ -122,6 +126,7 @@ GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
     printf("\n getTag taglen %ld isEnc %d", tagLen, ctx->enc);
 #endif
 
+#if INTERNAL_TAG_MATCH
     // During decrypt, tag generated should be compared with
     // input Tag.
     Uint8 tagInput[ALCP_GCM_TAG_MAX_SIZE];
@@ -129,6 +134,7 @@ GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
         // create a copy of input
         memcpy(tagInput, ptag, tagLen);
     }
+#endif
 
     err = aesni::GetTagGcm(tagLen,
                            m_dataLen,
@@ -139,6 +145,7 @@ GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
                            m_gcm_local_data.m_reverse_mask_128,
                            ptag);
 
+#if INTERNAL_TAG_MATCH
     // During decrypt, tag generated should be compared with
     // input Tag.
     if (!m_isEnc_aes) {
@@ -150,6 +157,7 @@ GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
             return ALC_ERROR_TAG_MISMATCH;
         }
     }
+#endif
 
     return err;
 }

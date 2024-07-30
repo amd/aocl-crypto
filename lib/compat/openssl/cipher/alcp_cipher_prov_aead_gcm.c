@@ -649,12 +649,23 @@ gcm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
 #if PROV_GCM_DEBUG
         printf(" tag %lu ", cipherctx->tagLength);
 #endif
-        err = alcp_cipher_aead_get_tag(
-            &(ctx->handle), cipherctx->buf, cipherctx->tagLength);
 
+        Uint8 tagBuf[AES_BLOCK_SIZE];
+
+        err = alcp_cipher_aead_get_tag(
+            &(ctx->handle), tagBuf, cipherctx->tagLength);
         if (alcp_is_error(err)) {
             printf("Error: gcm getTag failed \n");
             goto err;
+        }
+
+        if (cipherctx->enc) {
+            memcpy(cipherctx->buf, tagBuf, cipherctx->tagLength);
+        } else {
+            if (memcmp(cipherctx->buf, tagBuf, cipherctx->tagLength)) {
+                printf("Error: gcm Tag mismatched \n");
+                goto err;
+            }
         }
 
         cipherctx->ivState = IV_STATE_FINISHED; /* Don't reuse the IV */
@@ -762,10 +773,21 @@ alcp_gcm_one_shot(ALCP_PROV_CIPHER_CTX* ctx,
     }
 
     cipherctx->tagLength = GCM_TAG_MAX_SIZE;
-    err = alcp_cipher_aead_get_tag(&(ctx->handle), tag, cipherctx->tagLength);
+    Uint8 tagBuf[GCM_TAG_MAX_SIZE];
+    err =
+        alcp_cipher_aead_get_tag(&(ctx->handle), tagBuf, cipherctx->tagLength);
     if (alcp_is_error(err)) {
         printf("Error: gcm getTag failed \n");
         goto err;
+    }
+
+    if (cipherctx->enc) {
+        memcpy(tag, tagBuf, cipherctx->tagLength);
+    } else {
+        if (memcmp(tag, tagBuf, cipherctx->tagLength)) {
+            printf("Error: gcm Tag mismatched \n");
+            goto err;
+        }
     }
 
     ret = 1;
