@@ -251,12 +251,6 @@ IF (ALCP_ENABLE_EXAMPLES)
 	# examples which should be part of release package
 	FILE(GLOB EXAMPLES_FILES_CIPHER
 			${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.c)
-
-    #FIXME: temporarily disabling this for coverage build, due to a known runtime issue in these examples
-    IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-		list(FILTER EXAMPLES_FILES_CIPHER EXCLUDE REGEX "-speed-")
-    ENDIF()
-
 	FILE(GLOB EXAMPLES_FILES_DIGEST
 			${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.c)
 	FILE(GLOB EXAMPLES_FILES_MAC
