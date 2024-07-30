@@ -414,14 +414,14 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
     std::vector<Uint8> fuzz_salt  = stream.ConsumeBytes<Uint8>(size_salt);
 
     /* key component sizes */
-    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
+    size_t size_modulus = 256 * 8, size_pvt_key_exp = 256, size_p_modulus = 64,
            size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
            size_q_mod_inv = 64;
 
     Uint64 PublicKeyExponent = 0x10001;
 
-    /* fuzzed buffers */
-    std::vector<Uint8> fuzz_modulus = stream.ConsumeBytes<Uint8>(size_modulus);
+    Uint8 fuzz_modulus[size_modulus];
+
     std::vector<Uint8> fuzz_pvt_key_exp =
         stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
     std::vector<Uint8> fuzz_p_modulus =
@@ -447,7 +447,7 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
         goto dealloc;
     }
     err = alcp_rsa_set_publickey(
-        handle, PublicKeyExponent, &fuzz_modulus[0], size_modulus);
+        handle, PublicKeyExponent, fuzz_modulus, size_modulus);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_rsa_set_publickey" << std::endl;
         goto dealloc;
@@ -459,7 +459,7 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
                                   &fuzz_p_modulus[0],
                                   &fuzz_q_modulus[0],
                                   &fuzz_q_mod_inv[0],
-                                  &fuzz_modulus[0],
+                                  fuzz_modulus,
                                   size_p_modulus);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_rsa_set_privatekey" << std::endl;
