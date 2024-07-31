@@ -62,6 +62,7 @@ TestDigestLifecycle_1(alc_digest_handle_p handle,
                       Uint8*              output1,
                       Uint64              out_size)
 {
+    std::cout << "Inside " << __FUNCTION__ << std::endl;
     if (alcp_is_error(alcp_digest_init(handle))
         || (alcp_is_error(alcp_digest_init(handle)))
         || (alcp_is_error(
@@ -91,6 +92,7 @@ TestDigestLifecycle_2(alc_digest_handle_p handle,
                       Uint8*              output1,
                       Uint64              out_size)
 {
+    std::cout << "Inside " << __FUNCTION__ << std::endl;
     if (alcp_is_error(alcp_digest_init(handle))
         || (alcp_is_error(alcp_digest_init(handle)))
         || (alcp_is_error(alcp_digest_finalize(handle, output1, out_size)))
@@ -118,13 +120,14 @@ TestDigestLifecycle_ctx_copy(alc_digest_handle_p handle,
                              Uint8*              output2,
                              Uint64              out_size)
 {
+    std::cout << "Inside " << __FUNCTION__ << std::endl;
     /* invalid call, finalize on initialized dup handle, and trying to squeeze
      * output , then try to call update from the dup handle */
     if (alcp_is_error(
             alcp_digest_init(handle)
             || alcp_is_error(alcp_digest_finalize(handle, output1, out_size))
             || (alcp_is_error(
-                alcp_digest_update(handle_dup, &fuzz_input[0], InputSize)))
+                alcp_digest_update(handle, &fuzz_input[0], InputSize)))
             || alcp_is_error(alcp_digest_context_copy(handle, handle_dup))
             || alcp_is_error(
                 alcp_digest_shake_squeeze(handle_dup, output2, out_size)))
@@ -135,7 +138,7 @@ TestDigestLifecycle_ctx_copy(alc_digest_handle_p handle,
                   << std::endl;
         return false;
     } else {
-        alcp_digest_finish(handle_dup);
+        // alcp_digest_finish(handle_dup);
     }
     return true;
 }
@@ -203,13 +206,14 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         goto dealloc_exit;
     }
 
-    handle_dup          = new alc_digest_handle_t;
-    handle_dup->context = malloc(context_size);
-    if (handle_dup->context == nullptr) {
-        std::cout << "Error: Mem alloc for digest dup context" << std::endl;
-        goto dealloc_exit;
+    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+        handle_dup          = new alc_digest_handle_t;
+        handle_dup->context = malloc(context_size);
+        if (handle_dup->context == nullptr) {
+            std::cout << "Error: Mem alloc for digest dup context" << std::endl;
+            goto dealloc_exit;
+        }
     }
-
     std::cout << "Running for Input size:" << size_input << std::endl;
     err = alcp_digest_request(mode, handle);
     if (alcp_is_error(err)) {
@@ -217,22 +221,17 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
         goto dealloc_exit;
     }
 
+    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+        err = alcp_digest_request(mode, handle_dup);
+        if (alcp_is_error(err)) {
+            std::cout << "Error! alcp_digest_request for main handle"
+                      << std::endl;
+            goto dealloc_exit;
+        }
+    }
     if (TestNegLifeCycle) {
-        if (!TestDigestLifecycle_1(handle,
-                                   &fuzz_input[0],
-                                   fuzz_input.size(),
-                                   &Output1[0],
-                                   out_size))
-            goto dealloc_exit;
-        if (!TestDigestLifecycle_2(handle,
-                                   &fuzz_input[0],
-                                   fuzz_input.size(),
-                                   &Output1[0],
-                                   out_size))
-            goto dealloc_exit;
-
         /* for shake variants */
-        if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos)
+        if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
             if (!TestDigestLifecycle_ctx_copy(handle,
                                               handle_dup,
                                               &fuzz_input[0],
@@ -241,28 +240,21 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                                               &Output1[0],
                                               out_size))
                 goto dealloc_exit;
-    } else {
-        err = alcp_digest_init(handle);
-        if (alcp_is_error(err)) {
-            std::cout << "Error! alcp_digest_init" << std::endl;
-            goto dealloc_exit;
-        }
-        /* context copy */
-        err = alcp_digest_context_copy(handle, handle_dup);
-        if (alcp_is_error(err)) {
-            std::cout << "Error! alcp_digest_context_copy" << std::endl;
-            goto dealloc_exit;
-        }
-        /* call this multiple times in the positive lifecycle tests */
-        for (int i = 0; i < digest_update_call_cout; i++) {
-            std::cout << "Running digest update for loop:" << i << std::endl;
-            err = alcp_digest_update(handle, &fuzz_input[0], fuzz_input.size());
-            if (alcp_is_error(err)) {
-                std::cout << "Error! alcp_digest_update" << std::endl;
+        } else {
+            if (!TestDigestLifecycle_1(handle,
+                                       &fuzz_input[0],
+                                       fuzz_input.size(),
+                                       &Output1[0],
+                                       out_size))
                 goto dealloc_exit;
-            }
+            if (!TestDigestLifecycle_2(handle,
+                                       &fuzz_input[0],
+                                       fuzz_input.size(),
+                                       &Output1[0],
+                                       out_size))
+                goto dealloc_exit;
         }
-
+    } else {
         /* for shake variants */
         if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
             // Finish handle_dup to deallocate any objects before calling
@@ -279,6 +271,29 @@ ALCP_Fuzz_Digest(alc_digest_mode_t mode,
                 std::cout << "Error! alcp_digest_shake_squeeze" << std::endl;
                 goto dealloc_exit;
             }
+        } else {
+            err = alcp_digest_init(handle);
+            if (alcp_is_error(err)) {
+                std::cout << "Error! alcp_digest_init" << std::endl;
+                goto dealloc_exit;
+            }
+            /* context copy */
+            err = alcp_digest_context_copy(handle, handle_dup);
+            if (alcp_is_error(err)) {
+                std::cout << "Error! alcp_digest_context_copy" << std::endl;
+                goto dealloc_exit;
+            }
+            /* call this multiple times in the positive lifecycle tests */
+            for (int i = 0; i < digest_update_call_cout; i++) {
+                std::cout << "Running digest update for loop:" << i
+                          << std::endl;
+                err = alcp_digest_update(
+                    handle, &fuzz_input[0], fuzz_input.size());
+                if (alcp_is_error(err)) {
+                    std::cout << "Error! alcp_digest_update" << std::endl;
+                    goto dealloc_exit;
+                }
+            }
         }
         err = alcp_digest_finalize(handle, &Output1[0], out_size);
         if (alcp_is_error(err)) {
@@ -294,12 +309,13 @@ dealloc_exit:
         free(handle->context);
     }
     delete handle;
-    /* FIXME, what if this was called on an uinitialized handle */
-    alcp_digest_finish(handle_dup);
-    if (handle_dup->context != nullptr) {
-        free(handle_dup->context);
+    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+        alcp_digest_finish(handle_dup);
+        if (handle_dup->context != nullptr) {
+            free(handle_dup->context);
+        }
+        delete handle_dup;
     }
-    delete handle_dup;
     return -1;
 exit:
     alcp_digest_finish(handle);
@@ -307,13 +323,13 @@ exit:
         free(handle->context);
     }
     delete handle;
-    /* FIXME, what if this was called on an uinitialized handle */
-    alcp_digest_finish(handle_dup);
-    if (handle_dup->context != nullptr) {
-        free(handle_dup->context);
+    if (sha_mode_string_map[mode].find("SHAKE") != std::string::npos) {
+        alcp_digest_finish(handle_dup);
+        if (handle_dup->context != nullptr) {
+            free(handle_dup->context);
+        }
+        delete handle_dup;
     }
-    delete handle_dup;
-
     std::cout << "Passed " << sha_mode_len_map[mode]
               << " for Input size:" << size_input << std::endl;
     return ret;
