@@ -232,7 +232,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
 
     /* key component sizes */
-    size_t size_modulus = 256 * 8, size_pvt_key_exp = 256, size_p_modulus = 64,
+    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
            size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
            size_q_mod_inv = 64;
     size_t size_label     = stream.ConsumeIntegral<Uint16>();
@@ -242,7 +242,6 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
     std::vector<Uint8> fuzz_seed         = stream.ConsumeBytes<Uint8>(hash_len);
 
     /* fuzzed buffers */
-    Uint8              fuzz_modulus[size_modulus];
     std::vector<Uint8> fuzz_pvt_key_exp =
         stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
     std::vector<Uint8> fuzz_p_modulus =
@@ -414,13 +413,11 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
     std::vector<Uint8> fuzz_salt  = stream.ConsumeBytes<Uint8>(size_salt);
 
     /* key component sizes */
-    size_t size_modulus = 256 * 8, size_pvt_key_exp = 256, size_p_modulus = 64,
+    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
            size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
            size_q_mod_inv = 64;
 
     Uint64 PublicKeyExponent = 0x10001;
-
-    Uint8 fuzz_modulus[size_modulus];
 
     std::vector<Uint8> fuzz_pvt_key_exp =
         stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
@@ -561,8 +558,7 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
 
     size_t             size_input   = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input   = stream.ConsumeBytes<Uint8>(size_input);
-    size_t             size_modulus = 256 * 8;
-    Uint8              fuzz_modulus[size_modulus];
+    size_t             size_modulus = 256;
 
     std::vector<Uint8> input(size_input, 0);
     std::vector<Uint8> encrypted_text(size_input, 0);
@@ -649,7 +645,8 @@ ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
     size_t size_label     = stream.ConsumeIntegral<Uint16>();
 
     /* fuzzed buffers */
-    std::vector<Uint8> fuzz_modulus = stream.ConsumeBytes<Uint8>(size_modulus);
+    // std::vector<Uint8> fuzz_modulus =
+    // stream.ConsumeBytes<Uint8>(size_modulus);
     std::vector<Uint8> fuzz_pvt_key_exp =
         stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
     std::vector<Uint8> fuzz_p_modulus =
@@ -756,11 +753,11 @@ ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec)
     std::vector<Uint8> fuzz_random_pad =
         stream.ConsumeBytes<Uint8>(random_pad_len);
     /* key parameters */
-    std::vector<Uint8> Modulus(size_modulus);
+    // std::vector<Uint8> Modulus(size_modulus);
     std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
     std::vector<Uint8> decrypted_text(size_encrypted_data, 0);
 
-    Uint64 Modulus_BigNum[sizeof(Modulus) / 8];
+    Uint64 Modulus_BigNum[sizeof(fuzz_modulus) / 8];
     BigNum modulus{};
     BigNum public_key{};
 
@@ -802,7 +799,7 @@ ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec)
     size = sizeof(size_modulus);
     /* FIXME: if we dont provide a proper sizes Modulus, this function will
      * fail, so for now not fuzzing the modulus length*/
-    convert_to_bignum(&Modulus[0], Modulus_BigNum, size);
+    convert_to_bignum(fuzz_modulus, Modulus_BigNum, size);
     modulus    = { Modulus_BigNum, size / 8 };
     public_key = { &PublicKeyExponent, 1 };
 
@@ -872,10 +869,10 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
     std::vector<Uint8> Hash(HashSize);
 
     /* key parameters */
-    std::vector<Uint8> Modulus(size_modulus);
+    // std::vector<Uint8> Modulus(size_modulus);
     std::vector<Uint8> Signature(size_modulus, 0);
 
-    Uint64 Modulus_BigNum[sizeof(Modulus) / 8];
+    Uint64 Modulus_BigNum[sizeof(fuzz_modulus) / 8];
     BigNum modulus{};
     BigNum public_key{};
 
@@ -929,7 +926,7 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
     size = sizeof(size_modulus);
     /* FIXME: if we dont provide a proper sizes Modulus, this function will
      * fail, so for now not fuzzing the modulus length*/
-    convert_to_bignum(&Modulus[0], Modulus_BigNum, size);
+    convert_to_bignum(fuzz_modulus, Modulus_BigNum, size);
     modulus    = { Modulus_BigNum, size / 8 };
     public_key = { &PublicKeyExponent, 1 };
 
