@@ -55,7 +55,7 @@ TestRsaEncryptLifecycle_0(alc_rsa_handle_p handle,
                           Uint8*           EncryptedOutput)
 {
     /* try to call encrypt on a finished handle */
-    alcp_rsa_set_publickey(handle, PublicKeyExponent, &Modulus[0], ModulusSize);
+    alcp_rsa_set_publickey(handle, PublicKeyExponent, Modulus, ModulusSize);
     Uint64 KeySize = alcp_rsa_get_key_size(handle);
     alcp_rsa_publickey_encrypt(handle, &Input[0], KeySize, &EncryptedOutput[0]);
     alcp_rsa_finish(handle);
@@ -232,7 +232,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
 
     /* key component sizes */
-    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
+    size_t size_modulus = 256 * 8, size_pvt_key_exp = 256, size_p_modulus = 64,
            size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
            size_q_mod_inv = 64;
     size_t size_label     = stream.ConsumeIntegral<Uint16>();
@@ -242,7 +242,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
     std::vector<Uint8> fuzz_seed         = stream.ConsumeBytes<Uint8>(hash_len);
 
     /* fuzzed buffers */
-    std::vector<Uint8> fuzz_modulus = stream.ConsumeBytes<Uint8>(size_modulus);
+    Uint8              fuzz_modulus[size_modulus];
     std::vector<Uint8> fuzz_pvt_key_exp =
         stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
     std::vector<Uint8> fuzz_p_modulus =
@@ -275,7 +275,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
         if (EncDec == ALCP_TEST_FUZZ_RSA_ENCRYPT)
             TestRsaOAEPEncryptLifecycle_0(handle,
                                           PublicKeyExponent,
-                                          &fuzz_modulus[0],
+                                          fuzz_modulus,
                                           size_modulus,
                                           &fuzz_input[0],
                                           fuzz_input.size(),
@@ -290,7 +290,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
                                           &fuzz_p_modulus[0],
                                           &fuzz_q_modulus[0],
                                           &fuzz_q_mod_inv[0],
-                                          &fuzz_modulus[0],
+                                          fuzz_modulus,
                                           fuzz_p_modulus.size(),
                                           size_modulus,
                                           &encrypted_text[0],
@@ -302,7 +302,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
     } else {
         /* generate keys */
         err = alcp_rsa_set_publickey(
-            handle, PublicKeyExponent, &fuzz_modulus[0], size_modulus);
+            handle, PublicKeyExponent, fuzz_modulus, size_modulus);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_set_publickey" << std::endl;
             goto dealloc;
@@ -313,7 +313,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
                                       &fuzz_p_modulus[0],
                                       &fuzz_q_modulus[0],
                                       &fuzz_q_mod_inv[0],
-                                      &fuzz_modulus[0],
+                                      fuzz_modulus,
                                       size_p_modulus);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_set_privatekey" << std::endl;
@@ -561,8 +561,8 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
 
     size_t             size_input   = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_input   = stream.ConsumeBytes<Uint8>(size_input);
-    size_t             size_modulus = 256;
-    std::vector<Uint8> fuzz_modulus = stream.ConsumeBytes<Uint8>(size_modulus);
+    size_t             size_modulus = 256 * 8;
+    Uint8              fuzz_modulus[size_modulus];
 
     std::vector<Uint8> input(size_input, 0);
     std::vector<Uint8> encrypted_text(size_input, 0);
@@ -586,13 +586,13 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
     if (TestNegLifeCycle) {
         TestRsaEncryptLifecycle_0(handle_encrypt,
                                   PublicKeyExponent,
-                                  &fuzz_modulus[0],
+                                  fuzz_modulus,
                                   size_modulus,
                                   &input[0],
                                   &encrypted_text[0]);
     } else {
         err = alcp_rsa_set_publickey(
-            handle_encrypt, PublicKeyExponent, &fuzz_modulus[0], size_modulus);
+            handle_encrypt, PublicKeyExponent, fuzz_modulus, size_modulus);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_set_publickey" << std::endl;
             goto free_enc;
