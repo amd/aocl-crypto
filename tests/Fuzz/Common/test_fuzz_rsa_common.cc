@@ -563,12 +563,12 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
     FuzzedDataProvider stream(buf, len);
     Uint64             size_key;
 
-    size_t             size_input   = stream.ConsumeIntegral<Uint16>();
+    size_t             size_input   = 256;
     std::vector<Uint8> fuzz_input   = stream.ConsumeBytes<Uint8>(size_input);
     size_t             size_modulus = 256;
 
     std::vector<Uint8> input(size_input, 0);
-    std::vector<Uint8> encrypted_text(size_input, 0);
+    std::vector<Uint8> encrypted_text(size_modulus, 0);
 
     /* FIXME, randomize this as well? */
     Uint64 PublicKeyExponent = 0x10001;
