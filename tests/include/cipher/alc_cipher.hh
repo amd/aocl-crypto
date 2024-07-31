@@ -37,7 +37,6 @@ namespace alcp::testing {
 typedef struct _alc_cipher_info
 {
     // request params
-    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
     alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_CTR etc */
     Uint64            ci_keyLen; /*! Key length in bits */
 
@@ -51,9 +50,7 @@ class AlcpCipherBase : public CipherBase
 {
   private:
     alc_cipher_handle_p m_handle = nullptr;
-    alc_cipher_info_t   m_cinfo{};
     alc_cipher_mode_t   m_mode{};
-    _alc_cipher_type    m_cipher_type{};
     const Uint8*        m_iv{};
     Uint8               m_key[64]{};
     const Uint8*        m_tkey = nullptr;
@@ -68,9 +65,7 @@ class AlcpCipherBase : public CipherBase
      * @param mode         Mode of Cipher XTS, CTR, GCM etc..
      * @param iv           Initialization vector or start of counter (CTR mode)
      */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
-                   const Uint8*            iv);
+    AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
      * @brief Construct a new Cipher Base object
@@ -84,8 +79,7 @@ class AlcpCipherBase : public CipherBase
      * @param tkey         Tweak key for XTS
      * @param block_size   Size of the block division in bytes
      */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
+    AlcpCipherBase(const alc_cipher_mode_t mode,
                    const Uint8*            iv,
                    const Uint32            iv_len,
                    const Uint8*            key,

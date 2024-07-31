@@ -42,9 +42,7 @@ OpenSSLCipherBase::handleErrors()
     ERR_print_errors_fp(stderr);
 }
 const EVP_CIPHER*
-OpenSSLCipherBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
-                                          alc_cipher_mode_t mode,
-                                          size_t            keylen)
+OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_cipher_mode_t mode, size_t keylen)
 {
     const EVP_CIPHER* p_mode = nullptr;
     switch (mode) {
@@ -115,17 +113,14 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
     }
     return p_mode;
 }
-OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
-                                     const alc_cipher_mode_t cMode,
+OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t cMode,
                                      const Uint8*            iv)
     : m_mode{ cMode }
-    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
 {
 }
 
-OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
-                                     const alc_cipher_mode_t cMode,
+OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t cMode,
                                      const Uint8*            iv,
                                      const Uint32            cIvLen,
                                      const Uint8*            key,
@@ -133,7 +128,6 @@ OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
                                      const Uint8*            tkey,
                                      const Uint64            cBlockSize)
     : m_mode{ cMode }
-    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
     , m_iv_len{ cIvLen }
     , m_key{ key }
@@ -207,7 +201,7 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
     }
 
     /* for non AES types */
-    if (isNonAESCipherType(m_cipher_type)) {
+    if (isNonAESCipherType(m_mode)) {
         EVP_CIPHER_free(m_cipher);
         m_cipher = EVP_CIPHER_fetch(NULL, "ChaCha20", NULL);
         if (1 != EVP_CipherInit_ex(m_ctx_enc, m_cipher, NULL, m_key, m_iv, 1)) {
@@ -216,12 +210,11 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
         }
     } else {
         if (1
-            != EVP_EncryptInit_ex(
-                m_ctx_enc,
-                alcpModeKeyLenToCipher(ALC_CIPHER_TYPE_AES, m_mode, m_key_len),
-                NULL,
-                m_key,
-                m_iv)) {
+            != EVP_EncryptInit_ex(m_ctx_enc,
+                                  alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                  NULL,
+                                  m_key,
+                                  m_iv)) {
             handleErrors();
             return false;
         }
@@ -236,19 +229,18 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
     }
 
     /* for non AES types */
-    if (isNonAESCipherType(m_cipher_type)) {
+    if (isNonAESCipherType(m_mode)) {
         if (1 != EVP_CipherInit_ex(m_ctx_dec, m_cipher, NULL, m_key, m_iv, 1)) {
             handleErrors();
             return false;
         }
     } else {
         if (1
-            != EVP_DecryptInit_ex(
-                m_ctx_dec,
-                alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                NULL,
-                m_key,
-                m_iv)) {
+            != EVP_DecryptInit_ex(m_ctx_dec,
+                                  alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                  NULL,
+                                  m_key,
+                                  m_iv)) {
             handleErrors();
             return false;
         }
@@ -274,7 +266,7 @@ OpenSSLCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     int len_ct = 0;
     /* for non aes*/
-    if (isNonAESCipherType(m_cipher_type)) {
+    if (isNonAESCipherType(m_mode)) {
         if (1
             != EVP_CipherUpdate(
                 m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
@@ -314,7 +306,7 @@ OpenSSLCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     int len_pt = 0;
     /* for non aes*/
-    if (isNonAESCipherType(m_cipher_type)) {
+    if (isNonAESCipherType(m_mode)) {
         if (1
             != EVP_CipherUpdate(
                 m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {

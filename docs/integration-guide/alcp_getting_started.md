@@ -84,6 +84,7 @@ Every API mentioned above will return an `alc_error_t` which will let you know i
 ### Cipher
 #### An example C code for encryption using a Cipher AES algorithm
 ```C
+// FIXME: Example to be revised
 #include <stdio.h>
 #include <alcp/alcp.h>
 

@@ -172,7 +172,6 @@ ALCP_Fuzz_Mac(_alc_mac_type     mac_type,
 
     /* only for cmac */
     if (mac_type == ALC_MAC_CMAC) {
-        macinfo.cmac.ci_type = ALC_CIPHER_TYPE_AES;
         macinfo.cmac.ci_mode = ALC_AES_MODE_NONE;
     }
 

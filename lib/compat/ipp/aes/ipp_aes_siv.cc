@@ -44,8 +44,6 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     static alc_cipher_handle_t handle;
 
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     Uint8 combined_key[64] = {};
     std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
@@ -63,7 +61,6 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
         ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -72,7 +69,6 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
         &handle, combined_key, ((Uint32)keyLen) * 8, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -81,7 +77,6 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
@@ -90,14 +85,14 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     err = alcp_cipher_aead_encrypt(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
+
         return ippStsErr;
     }
 
     err = alcp_cipher_aead_get_tag(&handle, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
+
         return ippStsErr;
     }
 
@@ -124,9 +119,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     printMsg("Cipher: SIV Decrypt");
     static alc_cipher_handle_t handle;
 
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err = ALC_ERROR_NONE;
 
     Uint8 combined_key[64] = {};
     std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
@@ -144,7 +137,6 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
         ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -153,7 +145,6 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
         &handle, combined_key, ((Uint32)keyLen) * 8, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -162,7 +153,6 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
@@ -195,10 +185,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     static alc_cipher_handle_t handle;
 
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
-    std::unique_ptr<Uint8> pConfKey = std::make_unique<Uint8>(keyLen);
 
     /*
      * Application is expected to allocate for context
@@ -212,7 +198,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
         ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -221,7 +206,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
@@ -233,7 +217,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
             &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size());
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
@@ -241,7 +224,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     err = alcp_cipher_aead_get_tag(&handle, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 

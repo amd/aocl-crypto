@@ -32,28 +32,27 @@
 
 using namespace alcp::testing;
 
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_AES
-#define ALC_MODE        ALC_AES_MODE_XTS
-#define STR_MODE        "AES_XTS"
+#define ALC_MODE ALC_AES_MODE_XTS
+#define STR_MODE "AES_XTS"
 
 TEST(AES_ENC_128, KAT_128)
 {
-    CipherKatTest(128, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(128, ENCRYPT, ALC_MODE);
 }
 
 TEST(AES_ENC_256, KAT_256)
 {
-    CipherKatTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(256, ENCRYPT, ALC_MODE);
 }
 
 TEST(AES_DEC_128, KAT_128)
 {
-    CipherKatTest(128, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(128, DECRYPT, ALC_MODE);
 }
 
 TEST(AES_DEC_256, KAT_256)
 {
-    CipherKatTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(256, DECRYPT, ALC_MODE);
 }
 
 int

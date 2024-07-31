@@ -30,17 +30,14 @@
 
 namespace alcp::testing {
 
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
-                               const alc_cipher_mode_t cMode,
-                               const Uint8*            iv)
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t cMode, const Uint8* iv)
     : m_mode{ cMode }
-    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{}
+{
+}
 
 /* xts */
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
-                               const alc_cipher_mode_t cMode,
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t cMode,
                                const Uint8*            iv,
                                const Uint32            cIvLen,
                                const Uint8*            key,
@@ -48,7 +45,6 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
                                const Uint8*            tkey,
                                const Uint64            cBlockSize)
     : m_mode{ cMode }
-    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
     , m_tkey{ tkey }
 {
@@ -106,33 +102,13 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
         goto out;
     }
 
-    m_cinfo.ci_type = m_cipher_type;
-    if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
-        // m_cinfo.ci_mode   = ALC_AES_MODE_NONE;
-        m_cinfo.ci_mode   = m_mode;
-        m_cinfo.ci_keyLen = cKeyLen;
-
-        m_cinfo.ci_key   = key;
-        m_cinfo.ci_iv    = m_iv;
-        m_cinfo.ci_ivLen = 16 * 8; /* FIXME is it always 16 bytes ?*/
-
-    } else {
-
-        // request params
-        m_cinfo.ci_mode   = m_mode;
-        m_cinfo.ci_keyLen = cKeyLen;
-
-        // init params
-        m_cinfo.ci_key = key;
-        m_cinfo.ci_iv  = m_iv;
-
-        /* set these only for XTS */
-        if (m_mode == ALC_AES_MODE_XTS) {
-            memcpy(m_key, key, cKeyLen / 8);
-            memcpy(m_key + (cKeyLen / 8), m_tkey, cKeyLen / 8);
-            m_cinfo.ci_key = m_key;
-        }
+    /* set these only for XTS */
+    if (m_mode == ALC_AES_MODE_XTS) {
+        memcpy(m_key, key, cKeyLen / 8);
+        memcpy(m_key + (cKeyLen / 8), m_tkey, cKeyLen / 8);
+        key = m_key;
     }
+
 #if 0
     else if (m_mode == ALC_AES_MODE_SIV) {
         alc_key_info_t* p_kinfo =
@@ -146,7 +122,7 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 #endif
 
     /* Request Handle */
-    err = alcp_cipher_request(m_cinfo.ci_mode, m_cinfo.ci_keyLen, m_handle);
+    err = alcp_cipher_request(m_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -155,9 +131,9 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 
     // encrypt init:
     err = alcp_cipher_init(m_handle,
-                           m_cinfo.ci_key,
-                           m_cinfo.ci_keyLen,
-                           m_cinfo.ci_iv,
+                           key,
+                           cKeyLen,
+                           m_iv,
                            16); // FIXME: set iv length
     if (alcp_is_error(err)) {
         printf("Error in cipher init\n");

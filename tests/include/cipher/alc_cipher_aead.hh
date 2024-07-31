@@ -70,7 +70,6 @@ typedef struct _alc_cipher_aead_algo_info
 typedef struct _alc_cipher_aead_info
 {
     // request params
-    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
     alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_GCM etc */
     Uint64            ci_keyLen; /*! Key length in bits */
 
@@ -88,15 +87,13 @@ class AlcpCipherAeadBase : public CipherAeadBase
   private:
     alc_cipher_handle_p m_handle = nullptr;
     alc_cipher_mode_t   m_mode{};
-    alc_cipher_type_t   m_cipher_type{};
     Uint64              m_keyLen{};
 
     const Uint8* m_key = nullptr;
     const Uint8* m_iv  = nullptr;
     Uint8        m_combined_key[64]{};
 
-    alc_cipher_aead_info_t m_cinfo{};
-    const Uint8*           m_tkey = nullptr;
+    const Uint8* m_tkey = nullptr;
 
   public:
     AlcpCipherAeadBase() {}
@@ -109,8 +106,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param key_len
      * @param tkey
      */
-    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
-                       const alc_cipher_mode_t mode,
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
                        const Uint8*            iv,
                        const Uint32            iv_len,
                        const Uint8*            key,
@@ -124,9 +120,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param mode
      * @param iv
      */
-    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
-                       const alc_cipher_mode_t mode,
-                       const Uint8*            iv);
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -136,8 +130,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param key
      * @param key_len
      */
-    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
-                       const alc_cipher_mode_t mode,
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
                        const Uint8*            iv,
                        const Uint8*            key,
                        const Uint32            key_len);

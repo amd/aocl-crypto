@@ -235,7 +235,7 @@ Library Defines following types
 All types have prefix of `alc_` followed by type/module and end with `_t` , for example
   - Error type : `alc_error_t` and `alc_key_t` `alc_algorithm_t`
   - Operation type: `alc_cipher_ops_t` and `alc_hashing_ops_t`
-  - Attributes: `alc_key_info_t` `alc_module_info_t`, `alc_cipher_info_t`
+  - Attributes: `alc_key_info_t` `alc_module_info_t`
 
 ### Directory Structure
 This section details the very initial directory structure layout, though heavily

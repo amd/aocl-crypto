@@ -36,17 +36,14 @@ IPPCipherAeadBase::PrintErrors(IppStatus status)
     std::cout << "IPP Error: " << status << std::endl;
 }
 
-IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {
-    UNREF(cipher_type);
 }
 
-IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
                                      const Uint32            iv_len,
                                      const Uint8*            key,
@@ -59,11 +56,9 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
     , m_block_size{ block_size }
 {
     init(key, key_len);
-    UNREF(cipher_type);
 }
 
-IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
                                      const Uint8*            key,
                                      const Uint32            key_len)
@@ -101,7 +96,6 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
         default: // Should not come here
             break;
     }
-    UNREF(cipher_type);
 }
 
 IPPCipherAeadBase::~IPPCipherAeadBase()

@@ -71,9 +71,7 @@ class IPPCipherBase : public CipherBase
      * @param mode         Mode of Cipher XTS, CTR, GCM etc..
      * @param iv           Initialization vector or start of counter (CTR mode)
      */
-    IPPCipherBase(const _alc_cipher_type  cipher_type,
-                  const alc_cipher_mode_t mode,
-                  const Uint8*            iv);
+    IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
      * @brief Construct a new Cipher Base object
@@ -87,8 +85,7 @@ class IPPCipherBase : public CipherBase
      * @param tkey         Tweak key for XTS
      * @param block_size   Size of the block division in bytes
      */
-    IPPCipherBase(const _alc_cipher_type  cipher_type,
-                  const alc_cipher_mode_t mode,
+    IPPCipherBase(const alc_cipher_mode_t mode,
                   const Uint8*            iv,
                   const Uint32            iv_len,
                   const Uint8*            key,

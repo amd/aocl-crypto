@@ -39,8 +39,7 @@ OpenSSLCipherAeadBase::handleErrors()
     ERR_print_errors_fp(stderr);
 }
 const EVP_CIPHER*
-OpenSSLCipherAeadBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
-                                              alc_cipher_mode_t mode,
+OpenSSLCipherAeadBase::alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
                                               size_t            keylen)
 {
     const EVP_CIPHER* p_mode = nullptr;
@@ -94,15 +93,13 @@ OpenSSLCipherAeadBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
     }
     return p_mode;
 }
-OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                             const alc_cipher_mode_t cMode,
+OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
 {
 }
-OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                             const alc_cipher_mode_t cMode,
+OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv,
                                              const Uint32            cIvLen,
                                              const Uint8*            key,
@@ -119,8 +116,7 @@ OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
     init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
 }
 
-OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                             const alc_cipher_mode_t cMode,
+OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv,
                                              const Uint8*            key,
                                              const Uint32            cKeyLen)
@@ -132,20 +128,6 @@ OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
     init(key, cKeyLen);
 }
 
-OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                             const alc_cipher_mode_t cMode,
-                                             const Uint8*            iv,
-                                             const Uint32            cIvLen,
-                                             const Uint8*            key,
-                                             const Uint32            cKeyLen)
-    : m_mode{ cMode }
-    , m_iv{ iv }
-    , m_iv_len{ cIvLen }
-    , m_key{ key }
-    , m_key_len{ cKeyLen }
-{
-    init(key, cKeyLen);
-}
 OpenSSLCipherAeadBase::~OpenSSLCipherAeadBase()
 {
     // Destroy call contexts
@@ -229,12 +211,11 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             if (1
-                != EVP_EncryptInit_ex(
-                    m_ctx_enc,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    NULL,
-                    NULL)) {
+                != EVP_EncryptInit_ex(m_ctx_enc,
+                                      alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                      NULL,
+                                      NULL,
+                                      NULL)) {
                 handleErrors();
                 return false;
             }
@@ -252,12 +233,11 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             break;
         case ALC_AES_MODE_CCM:
             if (1
-                != EVP_EncryptInit_ex(
-                    m_ctx_enc,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    NULL,
-                    NULL)) {
+                != EVP_EncryptInit_ex(m_ctx_enc,
+                                      alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                      NULL,
+                                      NULL,
+                                      NULL)) {
                 handleErrors();
                 return false;
             }
@@ -272,8 +252,7 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             // For SIV (Synthetic Initialization Vector), there is no IV
             // passed from Application side.
             EVP_CIPHER_free((EVP_CIPHER*)m_cipher_siv);
-            m_cipher_siv =
-                alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len);
+            m_cipher_siv = alcpModeKeyLenToCipher(m_mode, m_key_len);
             if (1
                 != EVP_EncryptInit_ex(
                     m_ctx_enc, m_cipher_siv, NULL, m_key, NULL)) {
@@ -283,12 +262,11 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             break;
         case ALC_CHACHA20_POLY1305:
             if (1
-                != EVP_EncryptInit_ex(
-                    m_ctx_enc,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    NULL,
-                    NULL)) {
+                != EVP_EncryptInit_ex(m_ctx_enc,
+                                      alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                      NULL,
+                                      NULL,
+                                      NULL)) {
                 handleErrors();
                 return false;
             }
@@ -319,12 +297,11 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             if (1
-                != EVP_DecryptInit_ex(
-                    m_ctx_dec,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    NULL,
-                    NULL)) {
+                != EVP_DecryptInit_ex(m_ctx_dec,
+                                      alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                      NULL,
+                                      NULL,
+                                      NULL)) {
                 handleErrors();
                 return false;
             }
@@ -344,12 +321,11 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             break;
         case ALC_AES_MODE_CCM:
             if (1
-                != EVP_DecryptInit_ex(
-                    m_ctx_dec,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    NULL,
-                    NULL)) {
+                != EVP_DecryptInit_ex(m_ctx_dec,
+                                      alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                      NULL,
+                                      NULL,
+                                      NULL)) {
                 handleErrors();
                 return false;
             }
@@ -365,8 +341,7 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             // For SIV (Synthetic Initialization Vector), there is no IV
             // passed from Application side.
             EVP_CIPHER_free((EVP_CIPHER*)m_cipher_siv);
-            m_cipher_siv =
-                alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len);
+            m_cipher_siv = alcpModeKeyLenToCipher(m_mode, m_key_len);
             if (1
                 != EVP_DecryptInit_ex(
                     m_ctx_dec, m_cipher_siv, NULL, m_key, NULL)) {
@@ -376,12 +351,11 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
             break;
         case ALC_CHACHA20_POLY1305:
             if (1
-                != EVP_DecryptInit_ex(
-                    m_ctx_dec,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    NULL,
-                    NULL)) {
+                != EVP_DecryptInit_ex(m_ctx_dec,
+                                      alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                      NULL,
+                                      NULL,
+                                      NULL)) {
                 handleErrors();
                 return false;
             }

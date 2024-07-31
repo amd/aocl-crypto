@@ -37,7 +37,6 @@
 TEST(CMAC_AES, CROSS_128)
 {
     alc_mac_info_t info;
-    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Cross(128, "AES", info);
 }
@@ -45,7 +44,6 @@ TEST(CMAC_AES, CROSS_128)
 TEST(CMAC_AES, CROSS_192)
 {
     alc_mac_info_t info;
-    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Cross(192, "AES", info);
 }
@@ -53,7 +51,6 @@ TEST(CMAC_AES, CROSS_192)
 TEST(CMAC_AES, CROSS_256)
 {
     alc_mac_info_t info;
-    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Cross(256, "AES", info);
 }

@@ -37,13 +37,13 @@ TEST(CHACHA20_ENC_256, KAT_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
-    CipherKatTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20, ALC_CHACHA20);
+    CipherKatTest(256, ENCRYPT, ALC_CHACHA20);
 }
 TEST(CHACHA20_DEC_256, KAT_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
-    CipherKatTest(256, DECRYPT, ALC_CIPHER_TYPE_CHACHA20, ALC_CHACHA20);
+    CipherKatTest(256, DECRYPT, ALC_CHACHA20);
 }
 
 int

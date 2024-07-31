@@ -32,22 +32,21 @@
 
 using namespace alcp::testing;
 
-#define ALC_MODE        ALC_CHACHA20_POLY1305
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_CHACHA20_POLY1305
+#define ALC_MODE ALC_CHACHA20_POLY1305
 
 TEST(ChachaPoly_ENC_256, KAT_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP()
             << "IPP doesnt have Chacha20-Poly1305 cipher implemented yet";
-    CipherAeadKatTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(256, ENCRYPT, ALC_MODE);
 }
 TEST(ChachaPoly_DEC_256, KAT_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP()
             << "IPP doesnt have Chacha20-Poly1305 cipher implemented yet";
-    CipherAeadKatTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(256, DECRYPT, ALC_MODE);
 }
 
 int

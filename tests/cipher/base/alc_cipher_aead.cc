@@ -31,16 +31,14 @@
 namespace alcp::testing {
 
 // AlcpCipherAeadBase class functions
-AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                       const alc_cipher_mode_t cMode,
+AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv)
     : m_mode{ cMode }
-    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{}
+{
+}
 
-AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                       const alc_cipher_mode_t cMode,
+AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv,
                                        const Uint8*            key,
                                        const Uint32            cKeyLen)
@@ -48,12 +46,10 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
     , m_iv{ iv }
 {
     init(iv, key, cKeyLen);
-    UNREF(cIpherType);
 }
 
 /* xts */
-AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
-                                       const alc_cipher_mode_t cMode,
+AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv,
                                        const Uint32            cIvLen,
                                        const Uint8*            key,
@@ -61,7 +57,6 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const Uint8*            tkey,
                                        const Uint64            cBlockSize)
     : m_mode{ cMode }
-    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
 {
     init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
@@ -118,10 +113,9 @@ AlcpCipherAeadBase::init(const Uint8* iv,
 bool
 AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
-    alc_error_t    err;
-    const int      cErrSize = 256;
-    Uint8          err_buf[cErrSize];
-    alc_key_info_t key_info{};
+    alc_error_t err;
+    const int   cErrSize = 256;
+    Uint8       err_buf[cErrSize];
 
     if (m_handle != nullptr) {
         alcp_cipher_aead_finish(m_handle);
@@ -142,16 +136,8 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
         goto out;
     }
 
-    // request params
-    m_cinfo.ci_type = m_cipher_type;
-    m_cinfo.ci_mode = m_mode;
-
-    // init params
-    m_cinfo.ci_iv  = m_iv;
-    m_cinfo.ci_key = key;
-
 #if 1
-    if (m_cinfo.ci_mode == ALC_AES_MODE_SIV) {
+    if (m_mode == ALC_AES_MODE_SIV) {
         // m_cinfo.ci_key    = m_tkey; // Using tkey as CTR key for SIV
         // m_cinfo.ci_keyLen = cKeyLen;
         std::copy(key, key + (m_keyLen / 8), m_combined_key);
@@ -163,12 +149,9 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     }
 #endif
 
-    // algo params
-    m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = &key_info;
-
     /* Request Handle */
     // FIXME:  m_cinfo.ci_mode getting corrupt
-    err = alcp_cipher_aead_request(m_cinfo.ci_mode, cKeyLen, m_handle);
+    err = alcp_cipher_aead_request(m_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -352,7 +335,7 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             return false;
         }
 
-        if (m_cinfo.ci_mode == ALC_AES_MODE_GCM) {
+        if (m_mode == ALC_AES_MODE_GCM) {
 
             // Tag verification done in getTag api for gcm, other aead modes to
             // be made similar to gcm. Encrypt tag is shared has input to

@@ -61,7 +61,6 @@ class OpenSSLCipherBase : public CipherBase
     EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
     EVP_CIPHER*       m_cipher  = nullptr;
     alc_cipher_mode_t m_mode    = {};
-    _alc_cipher_type  m_cipher_type{};
     const Uint8*      m_iv      = nullptr;
     Uint32            m_iv_len  = 12;
     const Uint8*      m_key     = nullptr;
@@ -73,8 +72,7 @@ class OpenSSLCipherBase : public CipherBase
 #endif
 
     void              handleErrors();
-    const EVP_CIPHER* alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
-                                             alc_cipher_mode_t mode,
+    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
                                              size_t            keylen);
 
   public:
@@ -85,9 +83,7 @@ class OpenSSLCipherBase : public CipherBase
      * @param mode         Mode of Cipher XTS, CTR, GCM etc..
      * @param iv           Initialization vector or start of counter (CTR mode)
      */
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
-                      const Uint8*            iv);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
      * @brief Construct a new Cipher Base object
@@ -101,8 +97,7 @@ class OpenSSLCipherBase : public CipherBase
      * @param tkey         Tweak key for XTS
      * @param block_size   Size of the block division in bytes
      */
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
+    OpenSSLCipherBase(const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint32            iv_len,
                       const Uint8*            key,

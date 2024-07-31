@@ -39,7 +39,7 @@ using alcp::testing::utils::parseHexStrToBin;
 
 /* to check cipher type is AES */
 bool
-isNonAESCipherType(_alc_cipher_type cipher_type);
+isNonAESCipherType(alc_cipher_mode_t mode);
 
 /* to check if cipher mode is AEAD */
 bool

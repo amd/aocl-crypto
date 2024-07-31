@@ -36,17 +36,13 @@ IPPCipherBase::PrintErrors(IppStatus status)
     std::cout << "IPP Error: " << status << std::endl;
 }
 
-IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
-                             const alc_cipher_mode_t cMode,
-                             const Uint8*            iv)
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t cMode, const Uint8* iv)
     : m_mode{ cMode }
     , m_iv{ iv }
 {
-    UNREF(cIpherType);
 }
 
-IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
-                             const alc_cipher_mode_t cMode,
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t cMode,
                              const Uint8*            iv,
                              const Uint32            cIvLen,
                              const Uint8*            key,
@@ -59,7 +55,6 @@ IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
     , m_block_size{ cBlockSize }
 {
     init(key, cKeyLen);
-    UNREF(cIpherType);
 }
 
 IPPCipherBase::~IPPCipherBase()

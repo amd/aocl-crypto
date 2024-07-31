@@ -74,7 +74,6 @@ class CipherTestingCore
     AlcpCipherBase*   m_acb           = {};
     LIB_TYPE          m_lib{};
     alc_cipher_mode_t m_alcpMode{};
-    _alc_cipher_type  m_cipher_type{};
 #ifdef USE_IPP
     IPPCipherBase* icb = nullptr;
 #endif
@@ -82,13 +81,10 @@ class CipherTestingCore
     OpenSSLCipherBase* ocb = nullptr;
 #endif
   public:
-    CipherTestingCore(LIB_TYPE          lib,
-                      _alc_cipher_type  cipher_type,
-                      alc_cipher_mode_t alcpMode)
+    CipherTestingCore(LIB_TYPE lib, alc_cipher_mode_t alcpMode)
     {
         m_lib           = lib;
         m_alcpMode      = alcpMode;
-        m_cipher_type   = cipher_type;
         m_cipherHandler = new CipherTesting();
         switch (lib) {
             case LIB_TYPE::OPENSSL:
@@ -96,7 +92,7 @@ class CipherTestingCore
                 delete m_cipherHandler;
                 throw "OpenSSL not available!";
 #else
-                ocb = new OpenSSLCipherBase(cipher_type, alcpMode, NULL);
+                ocb = new OpenSSLCipherBase(alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
@@ -109,19 +105,17 @@ class CipherTestingCore
                     delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
-                icb = new IPPCipherBase(cipher_type, alcpMode, NULL);
+                icb = new IPPCipherBase(alcpMode, NULL);
                 m_cipherHandler->setcb(icb);
 #endif
                 break;
             case LIB_TYPE::ALCP:
-                m_acb = new AlcpCipherBase(cipher_type, alcpMode, NULL);
+                m_acb = new AlcpCipherBase(alcpMode, NULL);
                 m_cipherHandler->setcb(m_acb);
                 break;
         }
     }
-    CipherTestingCore(std::string       modeStr,
-                      _alc_cipher_type  cipher_type,
-                      alc_cipher_mode_t alcpMode)
+    CipherTestingCore(std::string modeStr, alc_cipher_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
@@ -130,10 +124,10 @@ class CipherTestingCore
         // Initialize cipher testing classes
         /* alcpMode is valid only for AES schemes */
         m_cipherHandler = new CipherTesting();
-        m_acb           = new AlcpCipherBase(cipher_type, alcpMode, NULL);
+        m_acb           = new AlcpCipherBase(alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
-        icb = new IPPCipherBase(cipher_type, alcpMode, NULL);
+        icb = new IPPCipherBase(alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
             m_cipherHandler->setcb(icb);
@@ -144,7 +138,7 @@ class CipherTestingCore
         }
 #endif
 #ifdef USE_OSSL
-        ocb = new OpenSSLCipherBase(cipher_type, alcpMode, NULL);
+        ocb = new OpenSSLCipherBase(alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
             m_cipherHandler->setcb(ocb);
@@ -184,7 +178,6 @@ class CipherAeadTestingCore
     AlcpCipherAeadBase* m_acb           = {};
     LIB_TYPE            m_lib{};
     alc_cipher_mode_t   m_alcpMode{};
-    _alc_cipher_type    m_cipher_type{};
 #ifdef USE_IPP
     IPPCipherAeadBase* icb = nullptr;
 #endif
@@ -192,12 +185,9 @@ class CipherAeadTestingCore
     OpenSSLCipherAeadBase* ocb = nullptr;
 #endif
   public:
-    CipherAeadTestingCore(LIB_TYPE          lib,
-                          _alc_cipher_type  cipher_type,
-                          alc_cipher_mode_t alcpMode)
+    CipherAeadTestingCore(LIB_TYPE lib, alc_cipher_mode_t alcpMode)
     {
         m_lib           = lib;
-        m_cipher_type   = cipher_type;
         m_alcpMode      = alcpMode;
         m_cipherHandler = new CipherTesting();
         switch (lib) {
@@ -207,7 +197,7 @@ class CipherAeadTestingCore
                 delete m_cipherHandler;
                 throw "OpenSSL not available!";
 #else
-                ocb = new OpenSSLCipherAeadBase(cipher_type, alcpMode, NULL);
+                ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
@@ -220,19 +210,17 @@ class CipherAeadTestingCore
                     delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
-                icb = new IPPCipherAeadBase(cipher_type, alcpMode, NULL);
+                icb = new IPPCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(icb);
 #endif
                 break;
             case LIB_TYPE::ALCP:
-                m_acb = new AlcpCipherAeadBase(cipher_type, alcpMode, NULL);
+                m_acb = new AlcpCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(m_acb);
                 break;
         }
     }
-    CipherAeadTestingCore(std::string       modeStr,
-                          _alc_cipher_type  cipher_type,
-                          alc_cipher_mode_t alcpMode)
+    CipherAeadTestingCore(std::string modeStr, alc_cipher_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
@@ -241,10 +229,10 @@ class CipherAeadTestingCore
 
         // Initialize cipher testing classes
         m_cipherHandler = new CipherTesting();
-        m_acb           = new AlcpCipherAeadBase(cipher_type, alcpMode, NULL);
+        m_acb           = new AlcpCipherAeadBase(alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
-        icb = new IPPCipherAeadBase(cipher_type, alcpMode, NULL);
+        icb = new IPPCipherAeadBase(alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
             m_cipherHandler->setcb(icb);
@@ -255,7 +243,7 @@ class CipherAeadTestingCore
         }
 #endif
 #ifdef USE_OSSL
-        ocb = new OpenSSLCipherAeadBase(cipher_type, alcpMode, NULL);
+        ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
             m_cipherHandler->setcb(ocb);
@@ -389,7 +377,6 @@ PrintTestDataAead(std::vector<Uint8>& key,
 void
 CipherCrossTest(int               keySize,
                 encDec_t          encDec,
-                _alc_cipher_type  cipher_type,
                 alc_cipher_mode_t mode,
                 big_small_t       big_small)
 {
@@ -419,15 +406,13 @@ CipherCrossTest(int               keySize,
     /* Request from others to validate openssl with ipp */
     std::unique_ptr<CipherTestingCore> alcpTC;
     if (oa_override) {
-        alcpTC = std::make_unique<CipherTestingCore>(
-            LIB_TYPE::OPENSSL, cipher_type, mode);
+        alcpTC = std::make_unique<CipherTestingCore>(LIB_TYPE::OPENSSL, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = std::make_unique<CipherTestingCore>(
-            LIB_TYPE::ALCP, cipher_type, mode);
+        alcpTC = std::make_unique<CipherTestingCore>(LIB_TYPE::ALCP, mode);
     }
     std::unique_ptr<CipherTestingCore> extTC = nullptr;
     RngBase                            rb;
@@ -435,15 +420,14 @@ CipherCrossTest(int               keySize,
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = std::make_unique<CipherTestingCore>(
-                LIB_TYPE::OPENSSL, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherTestingCore>(LIB_TYPE::OPENSSL, mode);
         else if (useipp)
-            extTC = std::make_unique<CipherTestingCore>(
-                LIB_TYPE::IPP, cipher_type, mode);
+            extTC = std::make_unique<CipherTestingCore>(LIB_TYPE::IPP, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = std::make_unique<CipherTestingCore>(
-                LIB_TYPE::OPENSSL, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherTestingCore>(LIB_TYPE::OPENSSL, mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -596,7 +580,6 @@ CipherCrossTest(int               keySize,
 void
 CipherAeadCrossTest(int               keySize,
                     encDec_t          encDec,
-                    _alc_cipher_type  cipher_type,
                     alc_cipher_mode_t mode,
                     big_small_t       big_small)
 {
@@ -661,15 +644,14 @@ CipherAeadCrossTest(int               keySize,
     /* Request from others to validate openssl with ipp */
     std::unique_ptr<CipherAeadTestingCore> alcpTC;
     if (oa_override) {
-        alcpTC = std::make_unique<CipherAeadTestingCore>(
-            LIB_TYPE::OPENSSL, cipher_type, mode);
+        alcpTC =
+            std::make_unique<CipherAeadTestingCore>(LIB_TYPE::OPENSSL, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = std::make_unique<CipherAeadTestingCore>(
-            LIB_TYPE::ALCP, cipher_type, mode);
+        alcpTC = std::make_unique<CipherAeadTestingCore>(LIB_TYPE::ALCP, mode);
     }
     std::unique_ptr<CipherAeadTestingCore> extTC = nullptr;
     RngBase                                rb;
@@ -677,15 +659,15 @@ CipherAeadCrossTest(int               keySize,
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = std::make_unique<CipherAeadTestingCore>(
-                LIB_TYPE::OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherAeadTestingCore>(LIB_TYPE::OPENSSL,
+                                                            mode);
         else if (useipp)
-            extTC = std::make_unique<CipherAeadTestingCore>(
-                LIB_TYPE::IPP, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherAeadTestingCore>(LIB_TYPE::IPP, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = std::make_unique<CipherAeadTestingCore>(
-                LIB_TYPE::OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherAeadTestingCore>(LIB_TYPE::OPENSSL,
+                                                            mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -1158,10 +1140,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
  * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
  */
 void
-CipherKatTest(int               keySize,
-              encDec_t          encDec,
-              _alc_cipher_type  cipher_type,
-              alc_cipher_mode_t mode)
+CipherKatTest(int keySize, encDec_t encDec, alc_cipher_mode_t mode)
 {
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
@@ -1172,8 +1151,7 @@ CipherKatTest(int               keySize,
     else
         encDecStr = "_DEC";
 
-    CipherTestingCore testing_core =
-        CipherTestingCore(cModeStr, cipher_type, mode);
+    CipherTestingCore testing_core = CipherTestingCore(cModeStr, mode);
 
     bool retval = false;
 
@@ -1203,10 +1181,7 @@ CipherKatTest(int               keySize,
  * @param mode Aode of encryption/Decryption (GCM,CCM,SIV,Chacha20-Poly1305)
  */
 void
-CipherAeadKatTest(int               keySize,
-                  encDec_t          encDec,
-                  _alc_cipher_type  cipher_type,
-                  alc_cipher_mode_t mode)
+CipherAeadKatTest(int keySize, encDec_t encDec, alc_cipher_mode_t mode)
 {
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
@@ -1228,8 +1203,7 @@ CipherAeadKatTest(int               keySize,
     else
         encDecStr = "_DEC";
 
-    CipherAeadTestingCore testing_core =
-        CipherAeadTestingCore(cModeStr, cipher_type, mode);
+    CipherAeadTestingCore testing_core = CipherAeadTestingCore(cModeStr, mode);
 
     bool retval = false;
 

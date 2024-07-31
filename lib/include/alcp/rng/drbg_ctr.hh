@@ -63,7 +63,8 @@ class EncryptAes : public cipher::Aes
   public:
     EncryptAes(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
-    {}
+    {
+    }
 };
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {

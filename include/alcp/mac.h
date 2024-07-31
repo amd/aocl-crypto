@@ -83,7 +83,6 @@ typedef struct _alc_hmac_info
  */
 typedef struct _alc_cmac_info
 {
-    alc_cipher_type_t ci_type; /*! Type: ALC_CIPHER_AES etc */
     alc_cipher_mode_t ci_mode; /*! Mode: ALC_AES_MODE_CTR etc */
     // Other specific info about CMAC
 } alc_cmac_info_t, *alc_cmac_info_p;

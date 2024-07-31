@@ -46,27 +46,6 @@ EXTERN_C_BEGIN
  */
 
 /**
- *
- * @brief Specify which type of cipher to be used.
- *
- * @typedef enum alc_cipher_type_t
- *
- */
-typedef enum _alc_cipher_type
-{
-    ALC_CIPHER_TYPE_NONE = 0,
-
-    ALC_CIPHER_TYPE_AES,
-    ALC_CIPHER_TYPE_DES,
-    ALC_CIPHER_TYPE_3DES,
-    ALC_CIPHER_TYPE_TWOFISH,
-    ALC_CIPHER_TYPE_SERPENT,
-    ALC_CIPHER_TYPE_CHACHA20,
-    ALC_CIPHER_TYPE_CHACHA20_POLY1305,
-    ALC_CIPHER_TYPE_MAX,
-} alc_cipher_type_t;
-
-/**
  * @brief Specify which Mode of AES to be used for encrypt and decrypt.
  *
  * @typedef enum  alc_cipher_mode_t

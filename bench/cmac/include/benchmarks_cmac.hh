@@ -113,7 +113,6 @@ static void
 BENCH_CMAC_AES_128(benchmark::State& state)
 {
     alc_mac_info_t info;
-    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 128);
 }
@@ -122,7 +121,6 @@ static void
 BENCH_CMAC_AES_192(benchmark::State& state)
 {
     alc_mac_info_t info;
-    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 192);
 }
@@ -131,7 +129,6 @@ static void
 BENCH_CMAC_AES_256(benchmark::State& state)
 {
     alc_mac_info_t info;
-    info.cmac.ci_type = ALC_CIPHER_TYPE_AES;
     info.cmac.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 256);
 }

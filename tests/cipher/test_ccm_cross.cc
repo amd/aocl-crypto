@@ -48,37 +48,37 @@ ExecRecPlay* fr = nullptr;
 /* encrypt tests */
 TEST(AES_ENC_128, CROSS_SMALL_128)
 {
-    CipherAeadCrossTest(128, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(128, ENCRYPT, ALC_MODE, SMALL);
 }
 TEST(AES_ENC_128, CROSS_BIG_128)
 {
-    CipherAeadCrossTest(128, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(128, ENCRYPT, ALC_MODE, BIG);
 }
 TEST(AES_ENC_256, CROSS_BIG_256)
 {
-    CipherAeadCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(256, ENCRYPT, ALC_MODE, BIG);
 }
 TEST(AES_ENC_256, CROSS_SMALL_256)
 {
-    CipherAeadCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(256, ENCRYPT, ALC_MODE, SMALL);
 }
 
 /* decrypt tests */
 TEST(AES_DEC_128, CROSS_SMALL_128)
 {
-    CipherAeadCrossTest(128, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(128, DECRYPT, ALC_MODE, SMALL);
 }
 TEST(AES_DEC_128, CROSS_BIG_128)
 {
-    CipherAeadCrossTest(128, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(128, DECRYPT, ALC_MODE, BIG);
 }
 TEST(AES_DEC_256, CROSS_BIG_256)
 {
-    CipherAeadCrossTest(256, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, BIG);
+    CipherAeadCrossTest(256, DECRYPT, ALC_MODE, BIG);
 }
 TEST(AES_DEC_256, CROSS_SMALL_256)
 {
-    CipherAeadCrossTest(256, DECRYPT, ALC_CIPHER_TYPE_AES, ALC_MODE, SMALL);
+    CipherAeadCrossTest(256, DECRYPT, ALC_MODE, SMALL);
 }
 
 int

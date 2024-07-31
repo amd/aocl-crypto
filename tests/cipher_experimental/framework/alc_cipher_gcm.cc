@@ -35,9 +35,7 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
 {
     alc_test_gcm_init_data_p data_gcm =
         reinterpret_cast<alc_test_gcm_init_data_p>(data);
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err = ALC_ERROR_NONE;
 
     m_handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!m_handle.ch_context)
@@ -47,7 +45,6 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
         ALC_AES_MODE_GCM, (data_gcm->m_key_len) * 8, &m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
@@ -59,7 +56,6 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
                                 data_gcm->m_iv_len);
     if (alcp_is_error(err)) {
         printf("Error: GCM encrypt init failure!\n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
@@ -69,7 +65,6 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
             &m_handle, data_gcm->m_aad, data_gcm->m_aad_len);
         if (alcp_is_error(err)) {
             printf("Error: unable gcm add data processing \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     }

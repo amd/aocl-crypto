@@ -41,9 +41,15 @@ namespace alcp::testing {
 /* to check if cipher type is non-AES
  TO DO: Update this when we have more non-AES types */
 bool
-isNonAESCipherType(_alc_cipher_type cipher_type)
+isNonAESCipherType(alc_cipher_mode_t mode)
 {
-    return cipher_type != ALC_CIPHER_TYPE_AES;
+    switch (mode) {
+        case ALC_CHACHA20:
+        case ALC_CHACHA20_POLY1305:
+            return true;
+        default:
+            return false;
+    }
 }
 
 /**

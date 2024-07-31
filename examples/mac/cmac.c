@@ -157,8 +157,7 @@ demo_cmac()
     Uint8 expectedMac[] = { 0x07, 0x0A, 0x16, 0xB4, 0x6B, 0x4D, 0x41, 0x44,
                             0xF7, 0x9B, 0xDD, 0x9D, 0xD0, 0x4A, 0x28, 0x7C };
 
-    alc_mac_info_t macinfo = { .cmac.ci_type = ALC_CIPHER_TYPE_AES,
-                               .cmac.ci_mode = ALC_AES_MODE_NONE };
+    alc_mac_info_t macinfo = { .cmac.ci_mode = ALC_AES_MODE_NONE };
 
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];

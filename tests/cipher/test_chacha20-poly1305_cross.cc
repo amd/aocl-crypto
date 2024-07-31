@@ -43,8 +43,7 @@ using namespace alcp::testing;
 
 ExecRecPlay* fr = nullptr;
 
-#define ALC_MODE        ALC_CHACHA20_POLY1305
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_CHACHA20_POLY1305
+#define ALC_MODE ALC_CHACHA20_POLY1305
 
 TEST(ChachaPoly_ENC_256, CROSS_SMALL_256)
 {
@@ -52,7 +51,7 @@ TEST(ChachaPoly_ENC_256, CROSS_SMALL_256)
         GTEST_SKIP()
             << "IPP doesnt have Chacha20-poly1305 cipher implemented yet";
 
-    CipherAeadCrossTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherAeadCrossTest(256, ENCRYPT, ALC_MODE, SMALL);
 }
 TEST(ChachaPoly_DEC_256, CROSS_SMALL_256)
 {
@@ -60,7 +59,7 @@ TEST(ChachaPoly_DEC_256, CROSS_SMALL_256)
         GTEST_SKIP()
             << "IPP doesnt have Chacha20-poly1305 cipher implemented yet";
 
-    CipherAeadCrossTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherAeadCrossTest(256, DECRYPT, ALC_MODE, SMALL);
 }
 
 int

@@ -87,15 +87,11 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    auto key    = pKey;
-    auto keyLen = key_size;
-    auto mode   = ALC_AES_MODE_XTS;
-
     handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context)
         return ippStsErr;
 
-    err = alcp_cipher_segment_request(mode, keyLen, &handle);
+    err = alcp_cipher_segment_request(ALC_AES_MODE_XTS, key_size, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -104,7 +100,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     }
 
     // xts init
-    err = alcp_cipher_segment_init(&handle, key, keyLen, pTweakPT, iv_len);
+    err = alcp_cipher_segment_init(&handle, pKey, key_size, pTweakPT, iv_len);
     if (alcp_is_error(err)) {
         printf("Error: unable to init\n");
         alcp_error_str(err, err_buf, err_size);
