@@ -42,7 +42,6 @@ TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256)
 {
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT(
         "SignVerify", ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
@@ -51,7 +50,6 @@ TEST(RSA_SignVerify_PKCS_2048, KAT_SHA2_256)
 {
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT(
         "SignVerify", ALCP_TEST_RSA_PADDING_PKCS, 2048, dinfo_256, mgfinfo_256);
@@ -64,7 +62,6 @@ TEST(RSA_DigestSignVerify_PKCS_2048, KAT_SHA2_256)
         GTEST_SKIP();
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT("DigestSignVerify",
             ALCP_TEST_RSA_PADDING_PKCS,
@@ -78,7 +75,6 @@ TEST(RSA_DigestSignVerify_PSS_2048, KAT_SHA2_256)
         GTEST_SKIP();
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT("DigestSignVerify",
             ALCP_TEST_RSA_PADDING_PSS,
@@ -109,7 +105,6 @@ TEST(RSA_EncryptDecrypt_PKCS_2048, KAT)
 {
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT("EncryptDecrypt",
             ALCP_TEST_RSA_PADDING_PKCS,
@@ -123,7 +118,6 @@ TEST(RSA_EncryptDecrypt_OAEP_1024, KAT_SHA2_256_MGF_256)
 {
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT("EncryptDecrypt",
             ALCP_TEST_RSA_PADDING_OAEP,
@@ -135,7 +129,6 @@ TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_256_MGF_256)
 {
     dinfo_256.dt_mode = ALC_SHA2_256;
     dinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256       = dinfo_256;
     Rsa_KAT("EncryptDecrypt",
             ALCP_TEST_RSA_PADDING_OAEP,
@@ -151,10 +144,8 @@ TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_512_MGF_256)
                "schemes, skipping this test";
     dinfo_512.dt_mode   = ALC_SHA2_512;
     dinfo_512.dt_len    = ALC_DIGEST_LEN_512;
-    dinfo_512.dt_type   = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256.dt_mode = ALC_SHA2_256;
     mgfinfo_256.dt_len  = ALC_DIGEST_LEN_256;
-    mgfinfo_256.dt_type = ALC_DIGEST_TYPE_SHA2;
     Rsa_KAT("EncryptDecrypt",
             ALCP_TEST_RSA_PADDING_OAEP,
             2048,
@@ -169,10 +160,8 @@ TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_256_MGF_512)
                "schemes, skipping this test";
     dinfo_256.dt_mode   = ALC_SHA2_256;
     dinfo_256.dt_len    = ALC_DIGEST_LEN_256;
-    dinfo_256.dt_type   = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_512.dt_mode = ALC_SHA2_512;
     mgfinfo_512.dt_len  = ALC_DIGEST_LEN_512;
-    mgfinfo_512.dt_type = ALC_DIGEST_TYPE_SHA2;
     Rsa_KAT("EncryptDecrypt",
             ALCP_TEST_RSA_PADDING_OAEP,
             2048,
@@ -183,7 +172,6 @@ TEST(RSA_EncryptDecrypt_OAEP_2048, KAT_SHA2_512_MGF_512)
 {
     dinfo_512.dt_mode = ALC_SHA2_512;
     dinfo_512.dt_len  = ALC_DIGEST_LEN_512;
-    dinfo_512.dt_type = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_512       = dinfo_512;
     Rsa_KAT("EncryptDecrypt",
             ALCP_TEST_RSA_PADDING_OAEP,

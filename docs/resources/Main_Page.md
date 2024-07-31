@@ -1,7 +1,7 @@
 
 # Welcome to AOCL-Cryptography
 
-**AOCL-Cryptography** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), Chacha20 Stream Cipher routines, Chacha20-Poly1305 AEAD, SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC, Poly1305 MAC), ECDH (Elliptic-curve Diffie–Hellman), RSA (Rivest, Shamir, and Adleman) key generation functions, etc.
+**AOCL-Cryptography** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), Chacha20 Stream Cipher routines, Chacha20-Poly1305, SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC, Poly1305 MAC), ECDH (Elliptic-curve Diffie–Hellman), RSA (Rivest, Shamir, and Adleman) Encrypt/Decrypt and Sign/Verify Functions.
 
 - For building, please refer to [Build.md](md_BUILD.html)
 
@@ -92,8 +92,10 @@ Poly 1305 MAC routines
 
 RSA
 
-    - Encrypt text with public key
-    - Decrypt text with private Key
+    - Public and Private Key generation functions (1024,2048)
+    - Encrypt text with public key (Non Padded, OAEP, PKCS)
+    - Decrypt text with private Key (Non Padded,OAEP, PKCS)
+    - Sign with private key and verify with public key (PKCS,PSS)
 
 ```
 

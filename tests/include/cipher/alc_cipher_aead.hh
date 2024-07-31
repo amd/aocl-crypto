@@ -40,9 +40,8 @@ namespace alcp::testing {
 // removed from testing code
 typedef struct _alc_key_info
 {
-    alc_key_alg_t algo;
-    Uint64        len; /* Key length in bits */
-    const Uint8*  key; /* Key follows the rest of the structure */
+    Uint64       len; /* Key length in bits */
+    const Uint8* key; /* Key follows the rest of the structure */
 
 } alc_key_info_t, *alc_key_info_p;
 

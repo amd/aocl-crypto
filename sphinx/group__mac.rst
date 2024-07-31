@@ -17,11 +17,12 @@ Functions
 ---------
 .. doxygenfunction:: alcp_mac_context_size
 .. doxygenfunction:: alcp_mac_request
+.. doxygenfunction:: alcp_mac_init
 .. doxygenfunction:: alcp_mac_update
 .. doxygenfunction:: alcp_mac_finalize
 .. doxygenfunction:: alcp_mac_finish
 .. doxygenfunction:: alcp_mac_reset 
-.. doxygenfunction:: alcp_mac_error 
+.. doxygenfunction:: alcp_mac_context_copy
     
 ----
 

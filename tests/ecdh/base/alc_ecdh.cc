@@ -36,8 +36,7 @@ namespace alcp::testing {
 
 AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{
-}
+{}
 
 bool
 AlcpEcdhBase::init(const alc_ec_info_t& info)
@@ -57,7 +56,6 @@ AlcpEcdhBase::init(const alc_ec_info_t& info)
 
     err = alcp_ec_request(&dinfo, m_ec_handle);
     if (alcp_is_error(err)) {
-        alcp_ec_error(m_ec_handle, err_buff, 256);
         /*FIXME: get a peerID to indicate which peer*/
         std::cout << "Error in alcp_ec_request:Peer1 " << err_buff << std::endl;
         return false;
@@ -86,7 +84,6 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
     err = alcp_ec_get_publickey(
         m_ec_handle, data.m_Peer_PubKey, data.m_Peer_PvtKey);
     if (alcp_is_error(err)) {
-        alcp_ec_error(m_ec_handle, err_buff, 256);
         std::cout << "Error in alcp_ec_get_publickey peer: " << err_buff
                   << std::endl;
         return false;
@@ -105,7 +102,6 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
         Uint8       err_buff[256];
         err = alcp_ec_set_privatekey(m_ec_handle, private_key);
         if (alcp_is_error(err)) {
-            alcp_ec_error(m_ec_handle, err_buff, 256);
             std::cout << "Error in alcp_ec_set_privatekey : " << err_buff
                       << std::endl;
             return err;
@@ -129,7 +125,6 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                 &keyLength);
 
     if (alcp_is_error(err)) {
-        alcp_ec_error(m_ec_handle, err_buff, 256);
         std::cout << "Error in alcp_ec_get_secretkey : " << err_buff
                   << std::endl;
         return false;
@@ -138,7 +133,6 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
     if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
         alcp_ec_finish(m_ec_handle);
         if (alcp_is_error(err)) {
-            alcp_ec_error(m_ec_handle, err_buff, 256);
             std::cout << "Error in alcp_ec_finish : " << err_buff << std::endl;
             return false;
         }

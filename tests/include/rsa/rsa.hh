@@ -47,6 +47,17 @@ namespace alcp::testing {
 #define ALCP_TEST_RSA_ALGO_SIGN_VERIFY 4
 #define ALCP_TEST_RSA_ALGO_ENC_DEC     5
 
+// FIXME: digest_info should be removed from RSA testing
+
+typedef struct _alc_digest_info
+{
+    alc_digest_len_t dt_len;
+    /* valid when dgst_len == ALC_DIGEST_LEN_CUSTOM */
+    /* length is bits */
+    Uint32            dt_custom_len;
+    alc_digest_mode_t dt_mode;
+} alc_digest_info_t, *alc_digest_info_p;
+
 typedef struct _alcp_rsa_data
 {
     const Uint8* m_msg     = nullptr;

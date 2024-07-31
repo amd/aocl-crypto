@@ -42,8 +42,8 @@ EXTERN_C_BEGIN
 /**
  * @brief Function sets input privateKey
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_request and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_request and before @ref
+ * alcp_ec_finish</b>
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [in] pPrivKey - pointer to Input privateKey
@@ -57,8 +57,8 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
  * @brief Function generates public key using input privateKey generated
  * public key is shared with the peer.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_request and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_request and before @ref
+ * alcp_ec_finish</b>
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [out] pPublicKey - pointer to Output Publickey generated
@@ -76,8 +76,8 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
  * @brief Function compute secret key with publicKey from remotePeer and
  * local privatekey.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_request and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_request and before @ref
+ * alcp_ec_finish</b>
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [out] pSecretKey - pointer to output secretKey

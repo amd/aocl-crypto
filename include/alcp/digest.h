@@ -46,17 +46,6 @@ EXTERN_C_BEGIN
  */
 
 /**
- * @brief Stores info about type of digest used
- *
- * @typedef enum alc_digest_type_t
- */
-typedef enum _alc_digest_type
-{
-    ALC_DIGEST_TYPE_SHA2,
-    ALC_DIGEST_TYPE_SHA3,
-} alc_digest_type_t;
-
-/**
  * @brief Stores info about digest length used for digest
  *
  * @typedef enum alc_digest_len_t
@@ -121,39 +110,6 @@ typedef enum _alc_digest_mode
     *alc_diget_mode_p;
 
 /**
- * @brief Stores info about digest data
- *
- * @param dd_ptr used to store digest data
- *
- * @struct alc_digest_data_t
- */
-typedef struct _alc_digest_data
-{
-    void* dd_ptr;
-} alc_digest_data_t;
-
-/**
- * @brief Stores all info about digest
- *
- * @param dt_type Stores info about type of digest used
- * @param dt_len  Stores info about digest length used for digest
- * @param dt_custom_len Stores digest length valid when dgst_len ==
- * ALC_DIGEST_LEN_CUSTOM
- * @param dt_mode Stores info about digest mode to be used
- *
- * @struct alc_digest_info_t
- */
-typedef struct _alc_digest_info
-{
-    alc_digest_type_t dt_type;
-    alc_digest_len_t  dt_len;
-    /* valid when dgst_len == ALC_DIGEST_LEN_CUSTOM */
-    /* length is bits */
-    Uint32            dt_custom_len;
-    alc_digest_mode_t dt_mode;
-} alc_digest_info_t, *alc_digest_info_p;
-
-/**
  * @brief Store Context for the future operation of digest
  *
  */
@@ -206,8 +162,8 @@ alcp_digest_request(alc_digest_mode_t   mode,
  * @brief       Initializes the digest handle
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_request and before
- * session call @ref alcp_digest_finish</b>
+ * <b>This API can be called only after @ref alcp_digest_request and before @ref
+ * alcp_digest_finish</b>
  * @endparblock
  *
  * @param [in]  p_digest_handle  Library populated session handle
@@ -222,8 +178,8 @@ alcp_digest_init(alc_digest_handle_p p_digest_handle);
  *              as mentioned by size in bytes.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_init and before
- * session call @ref alcp_digest_finalize</b>
+ * <b>This API can be called only after @ref alcp_digest_init and before @ref
+ * alcp_digest_finalize</b>
  * @endparblock
  *
  * @note        repeated calls to this is allowed and the handle will
@@ -246,8 +202,8 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  * @brief       Finalize the digest with digest copy.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_update and before
- * session call @ref alcp_digest_finish</b>
+ * <b>This API can be called only after @ref alcp_digest_update and before @ref
+ * alcp_digest_finish</b>
  * @endparblock
  *
  * @param [in]   p_digest_handle  Handle created by alcp_digest_request()
@@ -289,8 +245,8 @@ alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
  * @brief        copies the context from source to destination
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_init and before
- * session call @ref alcp_digest_finish</b> on pSrcHandle
+ * <b>This API can be called only after @ref alcp_digest_init and before @ref
+ * alcp_digest_finish</b> on pSrcHandle
  * @endparblock
  *
  * @param [in]   pSrcHandle   source digest handle
@@ -308,8 +264,8 @@ alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
  * @ref alcp_digest_finalize
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called only after @ref alcp_digest_update and before
- * session call @ref alcp_digest_finish</b>
+ * <b>This API can be called only after @ref alcp_digest_update and before @ref
+ * alcp_digest_finish</b>
  * @endparblock
  *
  * @param [in]   pDigestHandle  Handle created by alcp_digest_request()

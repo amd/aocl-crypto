@@ -20,7 +20,6 @@ Functions
 .. doxygenfunction:: alcp_rng_init
 .. doxygenfunction:: alcp_rng_seed
 .. doxygenfunction:: alcp_rng_finish
-.. doxygenfunction:: alcp_rng_error 
     
 ----
 

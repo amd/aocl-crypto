@@ -177,21 +177,4 @@ alcp_rng_finish(alc_rng_handle_p pRngHandle)
     return ALC_ERROR_NONE;
 }
 
-alc_error_t
-alcp_rng_error(alc_rng_handle_p pRngHandle, Uint8* pBuff, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pRngHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, err);
-
-    auto p_ctx = static_cast<alcp::rng::Context*>(pRngHandle->rh_context);
-
-    alcp::String message = alcp::String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
-
-    return err;
-}
-
 EXTERN_C_END

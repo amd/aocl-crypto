@@ -57,7 +57,8 @@ typedef struct _ipp_wrp_aes_xts_ctx
 typedef struct _ipp_wrp_sha2_ctx
 {
     alc_digest_handle_t handle;
-    alc_digest_info_t   dinfo;
+    alc_digest_len_t    dlen;
+    alc_digest_mode_t   dmode;
 } ipp_wrp_sha2_ctx;
 
 typedef struct _ipp_sha2_rmf_algo_ctx

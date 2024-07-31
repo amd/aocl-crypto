@@ -21,8 +21,13 @@ mv libnew.a libalcp.a
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#aocl-utils)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#debug)
 4. [Enable Address Sanitizer Support ](#asan)
-5. [Enable Bench - To compile bench code.](#bench)
-6. [Enable Tests - To compile test code](#tests)
+5. [Enable Valgrind Memcheck Support ](#memcheck)
+6. [Enable Bench - To compile bench code.](#bench)
+7. [Enable Tests - To compile test code](#tests)
+8. [Build docs in pdf form](#internal-doc)
+9. [Build Doxygen and Sphinx docs](#doxygen)
+10. [Build with dynamic compiler selection ](#dyncompile)
+11. [Build with assembly disabled](#assembly)
 
 #### Enable Examples {#example}
 
@@ -51,6 +56,14 @@ To enable sanitizers (asan, tsan etc), append `-DALCP_SANITIZE=ON` to the cmake 
 ```sh
 $ cmake -DALCP_SANITIZE=ON ../
 ```
+
+#### For Compiling with Valgrind Memcheck {#memcheck}
+
+In order to build ALCP to run binaries with valgrind to detect any memory leaks
+```sh
+$ cmake -DALCP_MEMCHECK_VALGRIND=ON ../
+```
+
 
 #### Build Benches {#bench}
 
@@ -86,3 +99,38 @@ For more details see **[README.md](md_tests_README.html)** from tests.
  ```  shell
  $ ./tests/{algorithm_type}/test_{algorithm_type}
  ```
+
+
+### Documentation
+
+#### To enable all PDF documentation {#internal-doc}
+These documentations include design documents, Provider documentation etc in PDF format which will be generated.
+```sh
+$ cmake -DALCP_ENABLE_DOCS=ON ../
+```
+
+#### To enable both Doxygen and Sphinx{#doxygen}
+```sh
+$ cmake -DALCP_ENABLE_HTML=ON ../
+```
+
+To generate only the Doxygen html documentation without Sphinx documentation
+```sh
+$ cmake -DALCP_ENABLE_HTML=ON  -DALCP_ENABLE_DOXYGEN=ON -DALCP_ENABLE_SPHINX=OFF ../ 
+```
+
+### To enable Dynamic compiler selection while building{#dyncompile}
+If this option is enabled it will dynamically select between gcc/clang for compiling certain files to improve performance.
+```sh
+$ cmake -DALCP_ENABLE_DYNAMIC_COMPILER_PICK=ON  ../ 
+```
+
+### To disable assembly implementation and use intrinsics Kernels{#assembly}
+```sh
+$ cmake -DALCP_DISABLE_ASSEMBLY=ON  ../ 
+```
+
+### Disabling/Enabling Specific Features 
+- To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. By default its off.
+- To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. By default its off.
+- To Enable OFB multi update feature append flag `-DALCP_ENABLE_OFB_MULTI_UPDATE=ON` to build flags. By default its off

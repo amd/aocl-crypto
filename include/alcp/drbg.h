@@ -42,7 +42,7 @@ typedef enum _alc_drbg_type
 
 typedef struct _alc_hmac_drbg_info
 {
-    alc_digest_info_t digest_info;
+    alc_digest_mode_t digest_mode;
 } alc_hmac_drbg_info_t, *alc_hmac_drbg_info_p;
 
 typedef struct _alc_ctr_drbg_info

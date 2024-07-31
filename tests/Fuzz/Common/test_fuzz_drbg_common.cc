@@ -28,11 +28,7 @@
 
 #include "Fuzz/alcp_fuzz_test.hh"
 
-alc_digest_info_t rng_dinfo = {
-    .dt_type = ALC_DIGEST_TYPE_SHA2,
-    .dt_len  = ALC_DIGEST_LEN_256,
-    .dt_mode = ALC_SHA2_256,
-};
+alc_digest_mode_t rng_digest_mode = ALC_SHA2_256;
 
 bool
 TestDrbgNegLifecycle_0(alc_drbg_handle_p handle,
@@ -100,7 +96,8 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType,
 
     drbg_info.di_type = DrbgType;
     if (DrbgType == ALC_DRBG_HMAC) {
-        drbg_info.di_algoinfo = { .hmac_drbg = { .digest_info = rng_dinfo } };
+        drbg_info.di_algoinfo = { .hmac_drbg = { .digest_mode =
+                                                     rng_digest_mode } };
     } else if (DrbgType == ALC_DRBG_CTR) {
         drbg_info.di_algoinfo = {
             .ctr_drbg = { .di_keysize = 128, .use_derivation_function = true }

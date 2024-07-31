@@ -27,14 +27,21 @@
  */
 
 #include "Fuzz/alcp_fuzz_test.hh"
+// FIXME: alc_digest_info_t Should be removed from testing
+typedef struct _alc_digest_info
+{
+    alc_digest_len_t dt_len;
+    /* valid when dgst_len == ALC_DIGEST_LEN_CUSTOM */
+    /* length is bits */
+    Uint32            dt_custom_len;
+    alc_digest_mode_t dt_mode;
+} alc_digest_info_t, *alc_digest_info_p;
 
 alc_digest_info_t dinfo = {
-    .dt_type = ALC_DIGEST_TYPE_SHA2,
     .dt_len  = ALC_DIGEST_LEN_256,
     .dt_mode = ALC_SHA2_256,
 };
 alc_digest_info_t mgf_info = {
-    .dt_type = ALC_DIGEST_TYPE_SHA2,
     .dt_len  = ALC_DIGEST_LEN_256,
     .dt_mode = ALC_SHA2_256,
 };

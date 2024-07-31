@@ -141,8 +141,8 @@ test_ctr_drbg()
                       .max_entropy_len   = sizeof(customEntropy),
                       .max_nonce_len     = sizeof(nonce),
                       .di_algoinfo       = { .ctr_drbg = { .di_keysize = 128,
-                                                           .use_derivation_function =
-                                                               true } },
+                                                     .use_derivation_function =
+                                                         true } },
                       .di_rng_sourceinfo = {
                           .custom_rng    = true,
                           .di_sourceinfo = {
@@ -175,26 +175,20 @@ test_hmac_drbg()
 
     Uint8 nonce[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len  = ALC_DIGEST_LEN_256,
-        .dt_mode = ALC_SHA2_256,
-    };
-
-    alc_drbg_info_t drbg_info = { .di_type         = ALC_DRBG_HMAC,
-                                  .max_entropy_len = sizeof(customEntropy),
-                                  .max_nonce_len   = sizeof(nonce),
-                                  .di_algoinfo = { .hmac_drbg = { .digest_info =
-                                                                      dinfo } },
-                                  .di_rng_sourceinfo = {
-                                      .custom_rng    = true,
-                                      .di_sourceinfo = {
-                                          .custom_rng_info = {
-                                              .entropy = customEntropy,
-                                              .entropylen =
-                                                  sizeof(customEntropy),
-                                              .nonce    = nonce,
-                                              .noncelen = sizeof(nonce) } } } };
+    alc_drbg_info_t
+        drbg_info = { .di_type           = ALC_DRBG_HMAC,
+                      .max_entropy_len   = sizeof(customEntropy),
+                      .max_nonce_len     = sizeof(nonce),
+                      .di_algoinfo       = { .hmac_drbg = { .digest_mode =
+                                                          ALC_SHA2_256 } },
+                      .di_rng_sourceinfo = {
+                          .custom_rng    = true,
+                          .di_sourceinfo = {
+                              .custom_rng_info = {
+                                  .entropy    = customEntropy,
+                                  .entropylen = sizeof(customEntropy),
+                                  .nonce      = nonce,
+                                  .noncelen   = sizeof(nonce) } } } };
 
     alc_error_t ret = test_drbg(drbg_info, NULL, 0, NULL, 0, NULL, 0);
     return ret;

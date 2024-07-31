@@ -6,9 +6,7 @@ A digest is a one way cryptographic function by which a message of any length ca
 
 Data Structures
 ---------------
-.. doxygenunion:: alc_digest_mode_t
-.. doxygenstruct:: alc_digest_data_t
-.. doxygenstruct:: alc_digest_info_t
+.. doxygenenum:: alc_digest_mode_t
 .. doxygenstruct:: alc_digest_handle_t
 
 ----
@@ -17,14 +15,16 @@ Functions
 ---------
 .. doxygenfunction:: alcp_digest_context_size
 .. doxygenfunction:: alcp_digest_request
+.. doxygenfunction:: alcp_digest_init
 .. doxygenfunction:: alcp_digest_update
 .. doxygenfunction:: alcp_digest_finalize
 .. doxygenfunction:: alcp_digest_finish
+.. doxygenfunction:: alcp_digest_context_copy
+.. doxygenfunction:: alcp_digest_shake_squeeze
    
 ----
 
 Variables
 ---------
-.. doxygenvariable:: alc_digest_type_t
 .. doxygenvariable:: alc_digest_len_t
 .. doxygenvariable:: alc_digest_context_t

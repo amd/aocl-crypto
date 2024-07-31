@@ -74,8 +74,7 @@ run_hmac(Uint8*            cipherText,
         return ALC_ERROR_GENERIC;
     }
 
-    Uint8 error_message[1024] = "";
-    err                       = alcp_mac_request(&handle, ALC_MAC_HMAC);
+    err = alcp_mac_request(&handle, ALC_MAC_HMAC);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request - %10" PRId64 "\n", err);
         goto out;
@@ -101,10 +100,6 @@ run_hmac(Uint8*            cipherText,
     }
 
 out:
-    if (alcp_is_error(err)) {
-        alcp_mac_error(&handle, error_message, sizeof(error_message));
-        printf("MAC Error Detail is: %s\n", (char*)error_message);
-    }
 
     alcp_mac_finish(&handle);
     free(handle.ch_context);
@@ -687,7 +682,7 @@ demo_Hmac_Sha512_224()
 
     alc_error_t err;
     Uint8       key[] = { 0x8b, 0x1d, 0x42, 0xaa, 0xd7, 0x89, 0x0b, 0xd4,
-                          0x82, 0x40, 0x59, 0x2a, 0xd7, 0x88, 0x45, 0x17 };
+                    0x82, 0x40, 0x59, 0x2a, 0xd7, 0x88, 0x45, 0x17 };
 
     Uint8 cipherText[] = { 0x47, 0xb7, 0x76, 0xb5, 0x2c, 0x13, 0x9a, 0x65,
                            0xbf, 0x98, 0xac, 0x2e, 0xda, 0xcc, 0xfb, 0x26 };

@@ -49,7 +49,7 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     auto        addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto*       hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
     std::shared_ptr<alcp::digest::IDigest> p_digest;
-    switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode) {
+    switch (drbgInfo.di_algoinfo.hmac_drbg.digest_mode) {
         case ALC_SHA2_256: {
             p_digest = std::make_shared<alcp::digest::Sha256>();
             break;

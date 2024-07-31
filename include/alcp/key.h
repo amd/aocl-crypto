@@ -39,25 +39,6 @@
  */
 
 /**
- * @brief Stores Algorithm for key
- *
- * @typedef enum   alc_key_alg_t
- */
-typedef enum alc_key_alg
-{
-    ALC_KEY_ALG_WILDCARD,
-    ALC_KEY_ALG_DERIVATION,
-    ALC_KEY_ALG_AGREEMENT,
-    ALC_KEY_ALG_SYMMETRIC,
-    ALC_KEY_ALG_SIGN,
-    ALC_KEY_ALG_AEAD,
-    ALC_KEY_ALG_MAC,
-    ALC_KEY_ALG_HASH,
-
-    ALC_KEY_ALG_MAX,
-} alc_key_alg_t;
-
-/**
  * @brief Stores length of key
  *
  * @typedef enum   alc_key_len_t
@@ -77,17 +58,6 @@ typedef enum alc_key_len
     ALC_KEY_LEN_CUSTOM,
     ALC_KEY_LEN_DEFAULT = ALC_KEY_LEN_128,
 } alc_key_len_t;
-
-/**
- * @brief Stores Format of key
- *
- * @typedef enum   alc_key_fmt_t
- */
-typedef enum alc_key_fmt
-{
-    ALC_KEY_FMT_RAW,    /* Default should be fine */
-    ALC_KEY_FMT_BASE64, /* Base64 encoding */
-} alc_key_fmt_t;
 
 #endif /* _ALCP_KEY_H_ */
        /**

@@ -180,7 +180,8 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
 /**
  * @brief Function encrypts text using using public key
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ alcp_rsa_finish</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -189,8 +190,7 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * @param [out] pEncText           - pointer to encrypted bytes
  * bytes
 
- * @note  ALCP_RSA_PADDING_NONE is only supported as
- *        padding scheme. This has following limitations
+ * @note   This has following limitations
  *         - textSize should equal to the modulus/private_key size
  *         - pText absolute value should be less than modulus
  *
@@ -206,7 +206,8 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function encrypts text using using public key and oaep padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ alcp_rsa_finish</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -234,7 +235,8 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @brief Function adds the digest algorithm to be used in oaep / pss / pkcsv15
  * padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ alcp_rsa_finish</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -250,7 +252,8 @@ alcp_rsa_add_digest(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
  * @brief Function adds the digest algorithm for mask generation in oaep /
  * pkcsv15 padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+alcp_rsa_finish </b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -266,11 +269,10 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
  * @brief Function decrypts encrypted text using private key.
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
- * @note  ALCP_RSA_PADDING_NONE is only supported as
- *        padding scheme. This has following limitations
+ * @note   This has following limitations
  *         - textSize should equal to the modulus/private_key size
  *         - pText absolute value should be less than modulus
  *
@@ -292,8 +294,8 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function decrypts encrypted text using private key and OAEP padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -320,7 +322,7 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @brief Function signs text using private key and PSS padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -348,7 +350,7 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
  * @brief Function verifies text using public key and PSS padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -369,8 +371,8 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function signs text using private key and PKCS1-v1_5 padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -393,8 +395,8 @@ alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function verifies text using public key and PKCS1-v1_5 padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -415,8 +417,8 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function signs hash using private key and PKCS1-v1_5 padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -437,8 +439,8 @@ alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function verifies hash using public key and PKCS1-v1_5 padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -459,7 +461,8 @@ alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function encrypts text using using public key and pkcs padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ * alcp_rsa_finish</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -481,8 +484,8 @@ alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function decrypts encrypted text using private key and pkcs padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -502,8 +505,8 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function signs hash using private key and PSS padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -528,8 +531,8 @@ alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function verifies hash using public key and PSS padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
- * before the session call @ref alcp_rsa_finish</b>
+ * <b>This API can be called after @ref alcp_rsa_request and
+ * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
  *
@@ -550,7 +553,8 @@ alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function sets the public key inside the handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ alcp_rsa_finish</b>
  * @endparblock
  * @param [in]   pRsaHandle - Handler of the Context for the session
  * @param [in]   exponent   - public key exponent
@@ -570,7 +574,8 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function sets the public key in big num format inside the handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ alcp_rsa_finish</b>
  * @endparblock
  * @param [in]   pRsaHandle - Handler of the Context for the session
  * @param [in]   exponent   - BigNum pointer to public key exponent
@@ -587,7 +592,8 @@ alcp_rsa_set_bignum_public_key(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function sets the private key inside the handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ * alcp_rsa_finish</b>
  * @endparblock
  * @param [in]   pRsaHandle - handler of the Context for the session
  * @param [in]   dp         - pointer to first exponent
@@ -614,7 +620,8 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function sets the private key inside the handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
+ * <b>This API can be called after @ref alcp_rsa_request and before @ref
+ * alcp_rsa_finish</b>
  * @endparblock
  * @param [in]   pRsaHandle - handler of the Context for the session
  * @param [in]   dp         - pointer to BigNum first exponent
@@ -661,9 +668,8 @@ alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
  *
  * @note       Must be called to ensure memory allotted (if any) is cleaned.
  *
- * @param [in] pRsaHandle The handle that was returned as part of call
- *                       together alcp_rsa_request(), once this function
- *                       is called. The handle will not be valid for future
+ * @param [in] pRsaHandle The handle used with alcp_rsa_request(),
+ * once this function is called. The handle will not be valid for future
  *
  * @return      None
  */

@@ -116,24 +116,6 @@ alcp_mac_reset(alc_mac_handle_p pMacHandle)
 }
 
 alc_error_t
-alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* pBuff, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
-
-#if 0 // There is no message to copy post status removal
-    auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
-    String message = String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
-#endif
-
-    return err;
-}
-
-alc_error_t
 alcp_mac_init(alc_mac_handle_p pMacHandle,
               const Uint8*     key,
               Uint64           size,
