@@ -86,7 +86,7 @@ To enable fuzz tests set the compiler to clang
 $ export CXX=clang++
 ```
 ```sh
-$ export CCC=clang
+$ export CC=clang
 ```
 
 Then build crypto library by appending the flag ALCP_ENABLE_FUZZ_TESTS=ON

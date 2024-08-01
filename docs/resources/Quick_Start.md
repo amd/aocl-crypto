@@ -50,8 +50,7 @@ mkdir build
 cd build
 
 # Configure AOCL-Utils with make build system.
-export CC=gcc-12; export CXX=g++-12
-cmake ../ -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF
+cmake ../ -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release
 
 # Build the project with all available threads.
 make -j $(nproc --all)

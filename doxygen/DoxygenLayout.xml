@@ -32,4 +32,24 @@
     <!-- Not needed Currently uncomment if we need documentation tab in future -->
     <!-- <tab type="user" url="md_Combine_build.html" visible="no" title="Documentation"/> -->
 </navindex>
+
+<!-- This is required to keep the brief description and remove the detailed description -->
+ <group>
+    <briefdescription visible="yes"/>
+    <detaileddescription visible = "no" title="Description"/>
+    <memberdecl>
+      <nestedgroups visible="yes" title=""/>
+      <classes visible="yes" title=""/>
+      <enums title=""/>
+      <functions title=""/>
+      <variables title=""/>
+      <membergroups visible="yes"/>
+    </memberdecl>
+    <memberdef>
+      <pagedocs/>
+      <enums title=""/>
+      <functions title=""/>
+      <variables title=""/>
+    </memberdef>
+  </group>
 </doxygenlayout>

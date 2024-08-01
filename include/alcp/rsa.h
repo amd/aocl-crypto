@@ -190,7 +190,7 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * @param [out] pEncText           - pointer to encrypted bytes
  * bytes
 
- * @note   This has following limitations
+ * @note   This API has following limitations
  *         - textSize should equal to the modulus/private_key size
  *         - pText absolute value should be less than modulus
  *
@@ -268,11 +268,11 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
 /**
  * @brief Function decrypts encrypted text using private key.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request and the
+ * <b>This API can be called after @ref alcp_rsa_request and
  * before @ref alcp_rsa_finish</b>
  * @endparblock
  *
- * @note   This has following limitations
+ * @note   This API has following limitations
  *         - textSize should equal to the modulus/private_key size
  *         - pText absolute value should be less than modulus
  *
@@ -659,7 +659,8 @@ ALCP_API_EXPORT Uint64
 alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
 
 /**
- * @brief       Performs any cleanup actions
+ * @brief       Performs any cleanup actions. Once this function is called, the
+ * handle will not be valid for future calls
  *
  * @parblock <br> &nbsp;
  * <b>This API is called to free resources so should be called to free the
@@ -668,8 +669,8 @@ alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
  *
  * @note       Must be called to ensure memory allotted (if any) is cleaned.
  *
- * @param [in] pRsaHandle The handle used with alcp_rsa_request(),
- * once this function is called. The handle will not be valid for future
+ * @param [in] pRsaHandle The handle used with alcp_rsa_request()
+ *
  *
  * @return      None
  */

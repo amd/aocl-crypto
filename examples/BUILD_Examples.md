@@ -20,8 +20,6 @@ Please make sure the below paths are added to the environment variables
 Export the following paths:  
 
 ```bash
-export LIBRARY_PATH=\<path to openssl crypto lib\>:$LIBRARY_PATH;
-export LIBRARY_PATH=\<path to AOCL Utils lib\>:$LIBRARY_PATH;
 export LD_LIBRARY_PATH=\<path to openssl crypto lib\>:$LD_LIBRARY_PATH;
 export LD_LIBRARY_PATH=\<path to AOCL Utils lib\>:$LD_LIBRARY_PATH;
 ```
