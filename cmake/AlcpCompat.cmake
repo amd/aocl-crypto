@@ -25,6 +25,13 @@
 
 # check compat lib compilation options
 FUNCTION(alcp_check_compat_option)
+    # check if valid option passed
+	if(NOT("${AOCL_COMPAT_LIBS}" STREQUAL "openssl"
+		OR "${AOCL_COMPAT_LIBS}" STREQUAL "ipp"
+		OR "${AOCL_COMPAT_LIBS}" STREQUAL "openssl,ipp"
+		OR "${AOCL_COMPAT_LIBS}" STREQUAL "ipp,openssl"))
+		message(FATAL_ERROR "Invalid option: Supported options are: openssl/ipp/openssl,ipp")
+	endif()
 	# Make comma seperated values (CSV), semicolen seperated values (SSV)
 	STRING (REPLACE "," ";" AOCL_COMPAT_LIBS ${AOCL_COMPAT_LIBS})
 	# Iterate through each value as it is a proper list
