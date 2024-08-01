@@ -28,6 +28,6 @@
 #	${CMAKE_SOURCE_DIR}/lib/include
 #	)
 
-ADD_EXAMPLE(hmac hmac.c)
-ADD_EXAMPLE(cmac cmac.c)
-ADD_EXAMPLE(poly1305 poly1305.c)
+ADD_C_EXAMPLE(hmac hmac.c)
+ADD_C_EXAMPLE(cmac cmac.c)
+ADD_C_EXAMPLE(poly1305 poly1305.c)

@@ -24,31 +24,8 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 
- ADD_EXAMPLE ( test_logger logger.cc)
+ADD_CXX_EXAMPLE(test_logger logger.cc)
 
-TARGET_INCLUDE_DIRECTORIES ( test_logger PRIVATE 
-	${CMAKE_SOURCE_DIR}/lib/include )
+ADD_CXX_EXAMPLE(test_cpuid cpuid.cc)
 
-TARGET_INCLUDE_DIRECTORIES ( test_logger-static PRIVATE 
-	${CMAKE_SOURCE_DIR}/lib/include )
-
-ADD_EXAMPLE ( test_cpuid cpuid.cc)
-
-TARGET_INCLUDE_DIRECTORIES ( test_cpuid PRIVATE 
-	${CMAKE_SOURCE_DIR}/lib/include
-	${CMAKE_SOURCE_DIR}/tests/common/include )
-
-TARGET_INCLUDE_DIRECTORIES ( test_cpuid-static PRIVATE 
-	${CMAKE_SOURCE_DIR}/lib/include
-	${CMAKE_SOURCE_DIR}/tests/common/include )
-
-
-#ADD_EXAMPLE ( filecrypt filecrypt.cc)
-
-#TARGET_INCLUDE_DIRECTORIES ( filecrypt PRIVATE 
-#	${CMAKE_SOURCE_DIR}/lib/include
-#	${CMAKE_SOURCE_DIR}/tests/common/include )
-
-#TARGET_INCLUDE_DIRECTORIES ( filecrypt-static PRIVATE 
-#	${CMAKE_SOURCE_DIR}/lib/include
-#	${CMAKE_SOURCE_DIR}/tests/common/include )
+ADD_CXX_EXAMPLE(filecrypt filecrypt.cc)

@@ -37,7 +37,6 @@
 #include "alcp/cipher.hh"
 #include <alcp/alcp.h>
 
-#if 0
 namespace filecrypt {
 namespace utilities {
     /* Utilities */
@@ -66,6 +65,7 @@ namespace utilities {
         }
         return vector;
     }
+    /* Depriciate padding once its implemented in all algorithms internally */
     class Padding
     {
       private:
@@ -258,17 +258,42 @@ namespace framework {
 
         // FIXME: Implement Vectorization of Param Values
     };
+
+    template<typename T>
+    T* getPtr(std::vector<T>& vect)
+    {
+        if (vect.size() == 0) {
+            return nullptr;
+        } else {
+            return &vect[0];
+        }
+    }
+
+    template<typename T>
+    const T* getPtr(const std::vector<T>& vect)
+    {
+        if (vect.size() == 0) {
+            return nullptr;
+        } else {
+            return &vect[0];
+        }
+    }
 } // namespace framework
 
 namespace crypto {
+    using alcp::cipher::CipherFactory;
+    using alcp::cipher::iCipher;
+    using framework::getPtr;
     class ICrypt
     {
       public:
-        virtual std::vector<Uint8> encrypt(const std::vector<Uint8>& in,
+        virtual std::vector<Uint8> encrypt(std::string&              mode,
+                                           const std::vector<Uint8>& in,
                                            const std::vector<Uint8>& key,
                                            const std::vector<Uint8>& iv) = 0;
 
-        virtual std::vector<Uint8> decrypt(const std::vector<Uint8>& in,
+        virtual std::vector<Uint8> decrypt(std::string&              mode,
+                                           const std::vector<Uint8>& in,
                                            const std::vector<Uint8>& key,
                                            const std::vector<Uint8>& iv) = 0;
         virtual void               setEncrypt()                          = 0;
@@ -278,12 +303,12 @@ namespace crypto {
     class Crypt : public ICrypt
     {
       private:
-        alc_cipher_handle_t handle;
-        bool                isEncrypt = false;
+        bool isEncrypt = false;
 
       public:
         void               setEncrypt() { isEncrypt = true; };
-        std::vector<Uint8> encrypt(const std::vector<Uint8>& in,
+        std::vector<Uint8> encrypt(std::string&              mode,
+                                   const std::vector<Uint8>& in,
                                    const std::vector<Uint8>& key,
                                    const std::vector<Uint8>& iv)
         {
@@ -293,69 +318,37 @@ namespace crypto {
 
             std::vector<Uint8> out(in.size());
             alc_error_t        err;
-            const int          cErrSize = 256;
-            Uint8              err_buf[cErrSize];
 
-            alc_cipher_info_t cinfo = {
-                // request params
-                .ci_type   = ALC_CIPHER_TYPE_AES,
-                .ci_mode   = ALC_AES_MODE_CFB,
-                .ci_keyLen = static_cast<Uint32>(key.size()) * 8,
-                // init params
-                .ci_key   = &key.at(0),
-                .ci_iv    = &iv.at(0),
-                .ci_ivLen = iv.size(),
-            };
+            auto alcpCipher = new CipherFactory<iCipher>;
+            auto aead       = alcpCipher->create(mode);
 
-            /*
-             * Application is expected to allocate for context
-             */
-            handle.ch_context = malloc(alcp_cipher_context_size());
-
-            // Memory allocation failure checking
-            if (handle.ch_context == NULL) {
-                printf("Error: Memory Allocation Failed!\n");
-                // goto out;
+            if (aead == nullptr) {
+                assert(aead != nullptr); // To be caught in debugging
+                return std::vector<Uint8>(0);
             }
-
-            /* Request a context with cinfo */
-            err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
-            if (alcp_is_error(err)) {
-                free(handle.ch_context);
-                printf("Error: Unable to Request \n");
-                // goto out;
-            }
-            printf("Request Succeeded\n");
-
-            // Initialize the cipher with IV and Key
-            err = alcp_cipher_init(&handle,
-                                   cinfo.ci_key,
-                                   cinfo.ci_keyLen,
-                                   cinfo.ci_iv,
-                                   cinfo.ci_ivLen);
-            if (alcp_is_error(err)) {
-                free(handle.ch_context);
-                printf("Error: Unable to Init \n");
-                // goto out;
-            }
-            printf("Init Succeeded\n");
 
             err =
-                alcp_cipher_encrypt(&handle, &in.at(0), &out.at(0), in.size());
-            if (alcp_is_error(err)) {
-                printf("Error: Unable to Encrypt \n");
-                alcp_error_str(err, err_buf, cErrSize);
-                printf("%s\n", err_buf);
-                // return -1;
+                aead->init(getPtr(key), key.size() * 8, getPtr(iv), iv.size());
+            if (err != ALC_ERROR_NONE) {
+                printf("Error: Unable to Init \n");
+                delete alcpCipher;
+                return std::vector<Uint8>(0);
             }
 
-            alcp_cipher_finish(&handle);
+            err = aead->encrypt(getPtr(in), getPtr(out), in.size());
+            if (err != ALC_ERROR_NONE) {
+                printf("Error: Unable to Encrypt \n");
+                delete alcpCipher;
+                return std::vector<Uint8>(0);
+            }
 
-            free(handle.ch_context);
+            err = aead->finish(NULL);
 
+            delete alcpCipher;
             return out;
         }
-        std::vector<Uint8> decrypt(const std::vector<Uint8>& in,
+        std::vector<Uint8> decrypt(std::string&              mode,
+                                   const std::vector<Uint8>& in,
                                    const std::vector<Uint8>& key,
                                    const std::vector<Uint8>& iv)
         {
@@ -365,60 +358,32 @@ namespace crypto {
             std::vector<Uint8> out(in.size());
 
             alc_error_t err;
-            const int   cErrSize = 256;
-            Uint8       err_buf[cErrSize];
+            auto        alcpCipher = new CipherFactory<iCipher>;
+            auto        aead       = alcpCipher->create(mode);
 
-            alc_cipher_info_t cinfo = {
-                // request params
-                .ci_type   = ALC_CIPHER_TYPE_AES,
-                .ci_mode   = ALC_AES_MODE_CFB,
-                .ci_keyLen = static_cast<Uint32>(key.size()) * 8,
-                // init params
-                .ci_key   = &key.at(0),
-                .ci_iv    = &iv.at(0),
-                .ci_ivLen = iv.size(),
-            };
-
-            /*
-             * Application is expected to allocate for context
-             */
-            handle.ch_context = malloc(alcp_cipher_context_size());
-
-            // Memory allocation failure checking
-            if (handle.ch_context == NULL) {
-                printf("Error: Memory Allocation Failed!\n");
-                // goto out;
+            if (aead == nullptr) {
+                assert(aead != nullptr); // To be caught in debugging
+                return std::vector<Uint8>(0);
             }
-
-            /* Request a context with mode and key length */
-            err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
-            if (alcp_is_error(err)) {
-                free(handle.ch_context);
-                printf("Error: Unable to Request \n");
-                // goto out;
-            }
-            printf("Request Succeeded\n");
-
-            // Initialize the cipher with IV and Key
-            err = alcp_cipher_init(&handle,
-                                   cinfo.ci_key,
-                                   cinfo.ci_keyLen,
-                                   cinfo.ci_iv,
-                                   cinfo.ci_ivLen);
 
             err =
-                alcp_cipher_decrypt(&handle, &in.at(0), &out.at(0), in.size());
-            if (alcp_is_error(err)) {
-                printf("Error: Unable to Decrypt \n");
-                alcp_error_str(err, err_buf, cErrSize);
-                printf("%s\n", err_buf);
-                // return -1;
+                aead->init(getPtr(key), key.size() * 8, getPtr(iv), iv.size());
+            if (err != ALC_ERROR_NONE) {
+                printf("Error: Unable to Init \n");
+                delete alcpCipher;
+                return std::vector<Uint8>(0);
             }
 
-            alcp_cipher_finish(&handle);
+            err = aead->decrypt(getPtr(in), getPtr(out), in.size());
+            if (err != ALC_ERROR_NONE) {
+                printf("Error: Unable to Encrypt \n");
+                delete alcpCipher;
+                return std::vector<Uint8>(0);
+            }
 
-            free(handle.ch_context);
+            err = aead->finish(NULL);
 
+            delete alcpCipher;
             return out;
         }
         ~Crypt() { std::cout << "Crypt Destructor" << std::endl; }
@@ -440,12 +405,13 @@ namespace crypto {
             crypt->setEncrypt();
         }
 
-        std::vector<Uint8>& encrypt(const std::vector<Uint8>& in,
+        std::vector<Uint8>& encrypt(std::string&              mode,
+                                    const std::vector<Uint8>& in,
                                     const std::vector<Uint8>& key,
                                     const std::vector<Uint8>& iv)
         {
             std::vector<Uint8> padded_in = utilities::Padding::padZeros(in);
-            cipherText                   = crypt->encrypt(padded_in, key, iv);
+            cipherText = crypt->encrypt(mode, padded_in, key, iv);
             return cipherText;
         };
 
@@ -464,11 +430,12 @@ namespace crypto {
       public:
         Decryptor(std::unique_ptr<ICrypt> e) { crypt = std::move(e); }
 
-        std::vector<Uint8>& decrypt(const std::vector<Uint8>& in,
+        std::vector<Uint8>& decrypt(std::string&              mode,
+                                    const std::vector<Uint8>& in,
                                     const std::vector<Uint8>& key,
                                     const std::vector<Uint8>& iv)
         {
-            std::vector<Uint8> padded_out = crypt->decrypt(in, key, iv);
+            std::vector<Uint8> padded_out = crypt->decrypt(mode, in, key, iv);
             plainText = utilities::Padding::unpadZeros(padded_out);
             return plainText;
         };
@@ -476,6 +443,22 @@ namespace crypto {
         ~Decryptor() = default;
     };
 } // namespace crypto
+
+void
+printHelp()
+{
+    std::cout << "+-------------------------------------------+" << std::endl
+              << "|  AOCL-Cryptography file-encryptor utility |" << std::endl
+              << "+-------------------------------------------+" << std::endl
+              << "| Command    |   Args                       |" << std::endl
+              << "|-------------------------------------------|" << std::endl
+              << "| --help/-h  |   None                       |" << std::endl
+              << "| --iv       |   32 char hex encoded IV     |" << std::endl
+              << "| --key      |   32-64 char hex encoded Key |" << std::endl
+              << "| --alg      |   --alg aes-ctr-128          |" << std::endl
+              << "+-------------------------------------------+" << std::endl;
+}
+
 } // namespace filecrypt
 
 using namespace filecrypt;
@@ -491,10 +474,29 @@ main(int argc, char const* argv[])
     using crypto::Decryptor; // Byte Decryptor
     using crypto::Encryptor; // Byte Encryptor
 
+    std::string algorithm = "aes-cfb-128";
     /* code */
-    ArgParse           args = ArgParse(argc, argv);
-    std::vector<Uint8> key  = parseHexStrToBin(args.getParamStr("--key"));
-    std::vector<Uint8> iv   = parseHexStrToBin(args.getParamStr("--iv"));
+    ArgParse args = ArgParse(argc, argv);
+
+    if (args.exists("--help") || args.exists("-h")) {
+        printHelp();
+        return 0;
+    }
+
+    if (!args.exists("--alg")) {
+        std::cout << "Using default alg " << algorithm << std::endl;
+    } else {
+        algorithm = args.getParamStr("--alg");
+    }
+
+    std::vector<Uint8> key = parseHexStrToBin(args.getParamStr("--key"));
+    std::vector<Uint8> iv  = parseHexStrToBin(args.getParamStr("--iv"));
+
+    if (key.size() < 16 || iv.size() < 16) {
+        std::cout << "Invalid argument!" << std::endl;
+        printHelp();
+        return -1;
+    }
 
     bool isEncrypt = args.exists("-e");
     bool isDecrypt = args.exists("-d");
@@ -502,14 +504,20 @@ main(int argc, char const* argv[])
     if (isEncrypt == isDecrypt) {
         std::cout << "One of encrypt, decrypt must be specified, not both!"
                   << std::endl;
+        printHelp();
         return -1;
     }
 
     File fi = File(args.getParamStr("-i"));
     File fo = File(args.getParamStr("-o"), false);
 
-    if (!(fi.isExists() && fo.isExists())) {
-        std::cout << "One of the files do not exist!" << std::endl;
+    if (!fi.isExists()) {
+        std::cout << "Input file of the file do not exist!" << std::endl;
+        return -1;
+    }
+
+    if (!fo.isExists()) {
+        std::cout << "Cannot open output file for writing!" << std::endl;
         return -1;
     }
 
@@ -517,16 +525,16 @@ main(int argc, char const* argv[])
 
     if (isEncrypt) {
         Encryptor e(std::make_unique<Crypt>());
-        data = e.encrypt(data, key, iv);
+        data = e.encrypt(algorithm, data, key, iv);
     }
     if (isDecrypt) {
         Decryptor d(std::make_unique<Crypt>());
-        data = d.decrypt(data, key, iv);
+        data = d.decrypt(algorithm, data, key, iv);
     }
 
     fo.writeBytes(data);
 
+    std::cout << "Success!" << std::endl;
+
     return 0;
 }
-
-#endif
