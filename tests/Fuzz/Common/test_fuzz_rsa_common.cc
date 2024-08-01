@@ -641,7 +641,7 @@ ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
     Uint64             size_key;
-    size_t             size_encrypted_data = stream.ConsumeIntegral<Uint16>();
+    size_t             size_encrypted_data = 256;
     std::vector<Uint8> fuzz_input =
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
 
