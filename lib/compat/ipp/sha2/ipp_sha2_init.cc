@@ -198,10 +198,10 @@ ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
             return alcp_SHA2Init(context, ALC_DIGEST_LEN_512, ALC_SHA2_512);
         case ippHashAlg_SHA512_224:
             printMsg("SHA2-512_224");
-            return alcp_SHA2Init(context, ALC_DIGEST_LEN_224, ALC_SHA2_512);
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_224, ALC_SHA2_512_224);
         case ippHashAlg_SHA512_256:
             printMsg("SHA2-512_256");
-            return alcp_SHA2Init(context, ALC_DIGEST_LEN_256, ALC_SHA2_512);
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_256, ALC_SHA2_512_256);
         default:
             return ippStsNotSupportedModeErr;
     }

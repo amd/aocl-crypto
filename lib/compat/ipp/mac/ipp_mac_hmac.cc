@@ -71,12 +71,22 @@ createHmacInfo(const IppsHashMethod* pMethod)
         }
         case ippHashAlg_SHA512_224: {
             printMsg("SHA2-512_224");
-            sha2_mode = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512_224;
             break;
         }
         case ippHashAlg_SHA512_256: {
             printMsg("SHA2-512_256");
-            sha2_mode = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512_256;
+            break;
+        }
+        case ippHashAlg_SHA1: {
+            printMsg("SHA1");
+            sha2_mode = ALC_SHA1;
+            break;
+        }
+        case ippHashAlg_MD5: {
+            printMsg("MD5");
+            sha2_mode = ALC_MD5;
             break;
         }
         default:
