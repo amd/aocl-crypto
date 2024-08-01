@@ -99,21 +99,6 @@ __sha_shakeSqueeze_wrapper(void* pDigest, Uint8* pBuff, Uint64 len)
     return e;
 }
 
-#if 0
-template<typename DIGESTTYPE,
-         alc_error_t (DIGESTTYPE::*func)(void*, const Uint8*, Uint64)>
-static alc_error_t
-__digest_func_wrapper(void* pDigest, const Uint8* pBuf, Uint64 len)
-{
-    alc_error_t e = ALC_ERROR_NONE;
-
-    auto ap = static_cast<DIGESTTYPE*>(pDigest);
-    e       = ap->func(pBuf, len);
-
-    return e;
-}
-#endif
-
 template<typename DIGESTTYPE>
 static alc_error_t
 __sha_dtor(void* pDigest)

@@ -136,10 +136,8 @@ aclp_aes_ccm_encrypt_demo(
     const Uint8* pKey,
     Uint32       keyLen)
 {
-    alc_error_t err      = ALC_ERROR_NONE;
-    int         retval   = 0;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
+    alc_error_t err    = ALC_ERROR_NONE;
+    int         retval = 0;
 
     // Create session for encryption
     retval = create_demo_session(sizeof(sample_key) * 8);
@@ -151,7 +149,6 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 
@@ -159,8 +156,6 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting plaintext Length \n");
-        alcp_error_str(err, err_buf, err_size);
-        return close_demo_session_exit();
         return close_demo_session_exit();
     }
 #endif
@@ -169,7 +164,6 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm encrypt init \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 
@@ -177,7 +171,6 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 #if MULTI_UPDATE_ENABLED
@@ -186,8 +179,6 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len - 16);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return close_demo_session_exit();
         return close_demo_session_exit();
     }
 
@@ -195,15 +186,12 @@ aclp_aes_ccm_encrypt_demo(
         &handle, plaintxt + (len - 16), ciphertxt + (len - 16), 16);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return close_demo_session_exit();
         return close_demo_session_exit();
     }
 #else
     err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 #endif
@@ -212,7 +200,6 @@ aclp_aes_ccm_encrypt_demo(
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 
@@ -237,10 +224,8 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
                           const Uint8* pKey,
                           Uint32       keyLen)
 {
-    alc_error_t err      = ALC_ERROR_NONE;
-    int         retval   = 0;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
+    alc_error_t err    = ALC_ERROR_NONE;
+    int         retval = 0;
     Uint8       tag_decrypt[16];
 
     // Create session for decrypt
@@ -253,7 +238,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 
@@ -262,7 +246,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting Plaintext Length \n");
-        alcp_error_str(err, err_buf, err_size);
         return close_demo_session_exit();
     }
 #endif
@@ -271,7 +254,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm decrypt init \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 
@@ -279,7 +261,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 
@@ -289,7 +270,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return close_demo_session_exit();
     }
 
@@ -297,7 +277,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         &handle, ciphertxt + 16, plaintxt + 16, len - 16);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return close_demo_session_exit();
     }
 #else
@@ -305,7 +284,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 #endif
@@ -314,7 +292,6 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return close_demo_session_exit();
     }
 

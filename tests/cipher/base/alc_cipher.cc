@@ -33,8 +33,7 @@ namespace alcp::testing {
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t cMode, const Uint8* iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 
 /* xts */
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t cMode,
@@ -80,8 +79,6 @@ bool
 AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
 
     if (m_handle != nullptr) {
         alcp_cipher_finish(m_handle);
@@ -125,7 +122,6 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
     err = alcp_cipher_request(m_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, cErrSize);
         goto out;
     }
 
@@ -157,8 +153,6 @@ bool
 AlcpCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buff[cErrSize];
 
     err = alcp_cipher_encrypt(m_handle, data.m_in, data.m_out, data.m_inl);
     if (alcp_is_error(err)) {
@@ -167,8 +161,7 @@ AlcpCipherBase::encrypt(alcp_dc_ex_t& data)
 
     return true;
 enc_out:
-    alcp_error_str(err, err_buff, cErrSize);
-    std::cout << "Error:" << err_buff << std::endl;
+    std::cout << "Error occurred in encrypt" << std::endl;
     return false;
 }
 
@@ -176,8 +169,6 @@ bool
 AlcpCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buff[cErrSize];
 
     err = alcp_cipher_decrypt(m_handle, data.m_in, data.m_out, data.m_inl);
     if (alcp_is_error(err)) {
@@ -186,8 +177,7 @@ AlcpCipherBase::decrypt(alcp_dc_ex_t& data)
 
     return true;
 dec_out:
-    alcp_error_str(err, err_buff, cErrSize);
-    std::cout << "Error:" << err_buff << std::endl;
+    std::cout << "Error occurred in decrypt" << std::endl;
     return false;
 }
 

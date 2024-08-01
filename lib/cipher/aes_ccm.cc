@@ -27,7 +27,6 @@
  */
 
 #include "alcp/cipher/aes_ccm.hh"
-#include "alcp/cipher/cipher_error.hh"
 
 #include <immintrin.h>
 #include <sstream>

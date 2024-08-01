@@ -28,7 +28,6 @@ Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 # Enforcing File Name
 set(TEST_FILES
   bignum_test.cc
-  array_view_test.cc
   copy_test.cc
   )
 

@@ -30,7 +30,6 @@
 #include "gtest/gtest.h"
 #include <tuple>
 
-#include "alcp/mac/macerror.hh"
 #include "alcp/utils/cpuid.hh"
 
 using namespace alcp::base;

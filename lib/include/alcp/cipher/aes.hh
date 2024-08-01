@@ -53,8 +53,6 @@ typedef struct alc_cipher_key_data
     const Uint8* m_dec_key;
 } alc_cipher_key_data_t;
 
-using Status = alcp::base::Status;
-
 /*
  * @brief       AES (Advanced Encryption Standard)
  *

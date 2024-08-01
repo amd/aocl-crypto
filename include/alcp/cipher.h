@@ -146,8 +146,8 @@ alcp_cipher_request(const alc_cipher_mode_t cipherMode,
  * @param[in] pIv  IV/Nonce
  * @param[in] ivLen  iv Length in bits
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then  @ref alcp_error_str
- * needs to be called to know about error occurred
+ * is not ALC_ERROR_NONE then an error has occurred and handle will be invalid
+ * for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,

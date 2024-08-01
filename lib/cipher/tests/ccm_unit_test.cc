@@ -27,8 +27,6 @@
  */
 
 #include "alcp/cipher/aes_ccm.hh"
-#include "alcp/cipher/cipher_error.hh"
-
 #include <gtest/gtest.h>
 
 // KAT Data
@@ -719,7 +717,7 @@ TEST(CCM, InvalidTagLen)
 TEST(CCM, InvalidNonceLen)
 {
     Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8              tagbuff[16];
     std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
     std::vector<Uint8> nonce(14, 0);
@@ -734,9 +732,7 @@ TEST(CCM, InvalidNonceLen)
     // TODO: Create a parametrized test
     err = pCcmObj->setTagLength(out_tag.size());
 
-    Status s = alcp::base::StatusOk();
-
-    EXPECT_EQ(err, s.code());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Nonce
     err = pCcmObj->init(key, sizeof(key) * 8, getPtr(nonce), nonce.size());

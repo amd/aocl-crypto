@@ -34,8 +34,6 @@
 #include "alcp/base.hh"
 #include "alcp/interface/Irng.hh"
 #include "config.h"
-#include "rng/rngerror.hh"
-
 namespace alcp::rng {
 
 class Rng : public IRng

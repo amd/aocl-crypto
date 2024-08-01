@@ -84,8 +84,6 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
         keyBitSize / 2); // casting to prevent narrowing conversion
                                          // from int to Uint32 warning
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context)
@@ -95,7 +93,6 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
@@ -103,7 +100,6 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     err = alcp_cipher_segment_init(&handle, pKey, key_size, pTweakPT, iv_len);
     if (alcp_is_error(err)) {
         printf("Error: unable to init\n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
@@ -132,8 +128,6 @@ ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
     printMsg("ippsAESEncryptXTS_Direct : START");
     alc_cipher_handle_t handle;
     alc_error_t         err;
-    const int           err_size = 256;
-    Uint8               err_buf[err_size];
     IppStatus status = alcp_initXTSDirect(handle, pKey, keyBitSize, pTweakPT);
     if (status != 0) {
         return status;
@@ -142,7 +136,6 @@ ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
     alcp_finalizeXTSDirect(handle);
@@ -164,8 +157,6 @@ ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
 
     alc_cipher_handle_t handle;
     alc_error_t         err;
-    const int           err_size = 256;
-    Uint8               err_buf[err_size];
     IppStatus status = alcp_initXTSDirect(handle, pKey, keyBitSize, pTweakPT);
     if (status != 0) {
         return status;
@@ -174,7 +165,6 @@ ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
     alcp_finalizeXTSDirect(handle);

@@ -28,7 +28,6 @@
 
 #include "alcp/mac/cmac.hh"
 #include "alcp/cipher/common.hh"
-#include "alcp/mac/macerror.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
 

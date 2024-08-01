@@ -36,8 +36,7 @@ namespace alcp::testing {
 
 AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{
-}
+{}
 
 bool
 AlcpEcdhBase::init(const alc_ec_info_t& info)
@@ -57,7 +56,7 @@ AlcpEcdhBase::init(const alc_ec_info_t& info)
     err = alcp_ec_request(&dinfo, m_ec_handle);
     if (alcp_is_error(err)) {
         /*FIXME: get a peerID to indicate which peer*/
-        std::cout << "Error in alcp_ec_request:Peer1 " << err << std::endl;
+        std::cout << "Error in alcp_ec_request:Peer1 " << std::endl;
         return false;
     }
     return true;
@@ -83,8 +82,7 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
     err = alcp_ec_get_publickey(
         m_ec_handle, data.m_Peer_PubKey, data.m_Peer_PvtKey);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_publickey peer: " << err
-                  << std::endl;
+        std::cout << "Error in alcp_ec_get_publickey peer " << std::endl;
         return false;
     }
     return true;
@@ -101,9 +99,8 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
     } else {
         err = alcp_ec_set_privatekey(m_ec_handle, private_key);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_ec_set_privatekey : " << err
-                      << std::endl;
-            return false;
+            std::cout << "Error in alcp_ec_set_privatekey " << std::endl;
+            return err;
         }
     }
     return true;
@@ -123,14 +120,14 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                 &keyLength);
 
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_secretkey : " << err << std::endl;
+        std::cout << "Error in alcp_ec_get_secretkey " << std::endl;
         return false;
     }
 
     if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
         alcp_ec_finish(m_ec_handle);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_ec_finish : " << err << std::endl;
+            std::cout << "Error in alcp_ec_finish " << std::endl;
             return false;
         }
         free(m_ec_handle->context);

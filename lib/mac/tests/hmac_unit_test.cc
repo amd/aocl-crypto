@@ -33,7 +33,6 @@
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
 #include "alcp/mac/hmac.hh"
-#include "alcp/mac/macerror.hh"
 #include "alcp/types.h"
 #include "gtest/gtest.h"
 

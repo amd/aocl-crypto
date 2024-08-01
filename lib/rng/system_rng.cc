@@ -28,7 +28,6 @@
 
 #include <cstdlib>
 
-#include "alcp/rng/rngerror.hh"
 #include "system_rng.hh"
 // Enable debug for debugging the code
 // #define DEBUG

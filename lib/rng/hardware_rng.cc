@@ -28,7 +28,6 @@
 
 #include "hardware_rng.hh"
 #include "alcp/base.hh"
-#include "alcp/rng/rngerror.hh"
 
 #include <immintrin.h>
 

@@ -120,9 +120,7 @@ create_aes_session(Uint8*                  key,
                    const Uint32            key_len,
                    const alc_cipher_mode_t mode)
 {
-    alc_error_t err      = ALC_ERROR_NONE;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err = ALC_ERROR_NONE;
 
     /*
      * Application is expected to allocate for context
@@ -138,7 +136,6 @@ create_aes_session(Uint8*                  key,
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         goto out;
     }
 
@@ -152,8 +149,6 @@ create_aes_session(Uint8*                  key,
 
     // Incase of error, program execution will come here
 out:
-    alcp_error_str(err, err_buf, err_size);
-    printf("%s\n", err_buf);
     return -1;
 }
 
@@ -175,13 +170,10 @@ aclp_aes_encrypt_demo(
     Uint8*       ciphertxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return;
     }
 }
@@ -193,13 +185,10 @@ aclp_aes_decrypt_demo(
     Uint8*       plaintxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return;
     }
 }

@@ -36,7 +36,6 @@
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
 #include "alcp/rsa.hh"
-#include "alcp/rsa/rsaerror.hh"
 
 namespace alcp::rsa {
 

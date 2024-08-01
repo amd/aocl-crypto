@@ -31,7 +31,6 @@
 #include "alcp/base.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_ctr.hh"
-#include "alcp/cipher/cipher_error.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/cpuid.hh"
 

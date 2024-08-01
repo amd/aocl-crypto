@@ -26,8 +26,6 @@
  *
  */
 
-#include "alcp/cipher/cipher_error.hh"
-
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aesni.hh"
 

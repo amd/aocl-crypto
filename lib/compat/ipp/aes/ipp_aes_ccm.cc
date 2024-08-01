@@ -44,9 +44,6 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
 
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
     /* Continue initialization as we didnt have iv in initialization function
        if we already have context then it's already good, we can take it as
        already initialized. */
@@ -61,7 +58,6 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
             context_aead->mode, context_aead->keyLen, &(context_aead->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
-            alcp_error_str(err, err_buf, err_size);
             free(context_aead->handle.ch_context);
             context_aead->handle.ch_context = nullptr;
             return ippStsErr;
@@ -75,7 +71,6 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         alcp_cipher_aead_set_tag_length(&(context_aead->handle), ctx->tag_len);
     if (alcp_is_error(err)) {
         printErr("CCM decrypt init failure! code:11\n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
@@ -87,7 +82,6 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
                                 ivLen);
     if (alcp_is_error(err)) {
         printf("Error: CCM encrypt init failure! code:11\n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
@@ -111,8 +105,6 @@ ippsAES_CCMEncrypt(const Ipp8u*      pSrc,
 {
     printMsg("CCMEncrypt Start");
     alc_error_t err;
-    // const int   err_size = 256;
-    // Uint8     err_buf[err_size];
 
     ipp_wrp_aes_ctx* context_aead =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
@@ -136,8 +128,6 @@ ippsAES_CCMDecrypt(const Ipp8u*      pSrc,
 {
     printMsg("CCMDecrypt Start");
     alc_error_t err;
-    // const int   err_size = 256;
-    // Uint8     err_buf[err_size];
 
     ipp_wrp_aes_ctx* context_aead =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
@@ -157,8 +147,6 @@ ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
 {
     printMsg("CCMGetTag Start");
     alc_error_t      err;
-    const int        err_size = 256;
-    Uint8            err_buf[err_size];
     ipp_wrp_aes_ctx* context_aead =
         &(((ipp_wrp_aes_aead_ctx*)(pState))->aead_ctx);
     if (((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt == true) {
@@ -181,7 +169,6 @@ ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
 
     if (alcp_is_error(err)) {
         printf("CCM tag fetch failure! code:4\n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
     printMsg("CCMGetTag End");

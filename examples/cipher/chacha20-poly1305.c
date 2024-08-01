@@ -40,8 +40,6 @@ CreateDemoSession(const Uint8* key,
                   const Uint32 keyLen)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
 
     /*
      * Application is expected to allocate for context
@@ -55,7 +53,6 @@ CreateDemoSession(const Uint8* key,
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
     printf("request succeeded\n");
@@ -77,13 +74,10 @@ AlcpChacha20Poly1305EncryptDemo(
     const Uint32 keyLen)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
 
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable init \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -91,7 +85,6 @@ AlcpChacha20Poly1305EncryptDemo(
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -99,7 +92,6 @@ AlcpChacha20Poly1305EncryptDemo(
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable Chacha20-Poly1305 add data processing \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -107,7 +99,6 @@ AlcpChacha20Poly1305EncryptDemo(
     err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -116,7 +107,6 @@ AlcpChacha20Poly1305EncryptDemo(
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -137,14 +127,12 @@ AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
                                 const Uint32 keyLen)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
-    Uint8       tag_decrypt[16];
+
+    Uint8 tag_decrypt[16];
 
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable init \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -152,7 +140,6 @@ AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -160,7 +147,6 @@ AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable Chacha20-Poly1305 add data processing \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -170,7 +156,6 @@ AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -178,7 +163,6 @@ AlcpChacha20Poly1305DecryptDemo(const Uint8* ciphertxt,
     err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 

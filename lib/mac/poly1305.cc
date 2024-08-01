@@ -28,7 +28,6 @@
 
 #include "alcp/mac/poly1305.hh"
 #include "alcp/base.hh"
-#include "alcp/mac/macerror.hh"
 #include "alcp/mac/poly1305_zen4.hh"
 #include "alcp/utils/cpuid.hh"
 #include <algorithm>
@@ -54,8 +53,7 @@ Poly1305<feature>::Poly1305()
 }
 template<utils::CpuArchFeature feature>
 Poly1305<feature>::Poly1305(const Poly1305& src)
-{
-}
+{}
 
 template<utils::CpuArchFeature feature>
 alc_error_t

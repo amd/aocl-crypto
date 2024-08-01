@@ -16,7 +16,6 @@ Functions
 .. doxygenfunction:: alcp_ec_context_size
 .. doxygenfunction:: alcp_ec_supported 
 .. doxygenfunction:: alcp_ec_request 
-.. doxygenfunction:: alcp_ec_error 
 .. doxygenfunction:: alcp_ec_set_privatekey 
 .. doxygenfunction:: alcp_ec_get_publickey
 .. doxygenfunction:: alcp_ec_get_secretkey

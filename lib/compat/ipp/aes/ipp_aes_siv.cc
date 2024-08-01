@@ -85,14 +85,12 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     err = alcp_cipher_aead_encrypt(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-
         return ippStsErr;
     }
 
     err = alcp_cipher_aead_get_tag(&handle, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-
         return ippStsErr;
     }
 
@@ -119,9 +117,8 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     printMsg("Cipher: SIV Decrypt");
     static alc_cipher_handle_t handle;
 
-    alc_error_t err = ALC_ERROR_NONE;
-
-    Uint8 combined_key[64] = {};
+    alc_error_t err              = ALC_ERROR_NONE;
+    Uint8       combined_key[64] = {};
     std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
     std::copy(pConfKey, pConfKey + keyLen, combined_key + keyLen);
 

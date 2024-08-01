@@ -27,7 +27,6 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
 # Enforcing File Name
 SET(TEST_FILES 
-  bufferwriter_test.cc
   status_test.cc
   )
 

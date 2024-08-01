@@ -79,8 +79,6 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
     alc_test_gcm_update_data_p p_gcm_update_data =
         reinterpret_cast<alc_test_gcm_update_data_p>(data);
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
     if constexpr (encryptor == true) {
         err = alcp_cipher_aead_encrypt(&m_handle,
                                        p_gcm_update_data->m_input,
@@ -88,7 +86,6 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
                                        p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     } else {
@@ -98,7 +95,6 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
                                        p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable decrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     }
@@ -111,14 +107,11 @@ AlcpGcmCipher<encryptor>::finalize(alc_test_finalize_data_p data)
     alc_test_gcm_finalize_data_p p_gcm_finalize_data =
         reinterpret_cast<alc_test_gcm_finalize_data_p>(data);
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
     err = alcp_cipher_aead_get_tag(
         &m_handle, p_gcm_finalize_data->m_tag, p_gcm_finalize_data->m_tag_len);
     if (alcp_is_error(err)) {
         printf(
             "Error: unable getting tag, possible tag mismatch if decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
     alcp_cipher_aead_finish(&m_handle);

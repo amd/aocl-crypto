@@ -32,7 +32,6 @@
 #include "alcp/interface/Irng.hh"
 #include "alcp/rng/ctrdrbg_build.hh"
 #include "alcp/rng/hmacdrbg_build.hh"
-#include "alcp/rng/rngerror.hh"
 #include "alcp/utils/cpuid.hh"
 #include "hardware_rng.hh"
 #include "system_rng.hh"

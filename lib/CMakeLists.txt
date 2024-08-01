@@ -42,15 +42,12 @@ SET(ALCP_VRS_SRC
 	version.cc)
 
 SET(ALCP_COMMON_SRCS
-	dynlib.cc
 	error.cc
 	exception.cc
 	module.cc
 	modulemanager.cc
 	sourcelocation.cc
-  status.cc
-  bufferwriter.cc
-  padding.cc
+	status.cc
 	)
 
 INCLUDE(AlcpUtils)

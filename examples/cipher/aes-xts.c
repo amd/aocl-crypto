@@ -96,9 +96,6 @@ int
 create_demo_session(const alc_key_len_t key_len)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
-
     /*
      * Application is expected to allocate for context
      */
@@ -113,7 +110,6 @@ create_demo_session(const alc_key_len_t key_len)
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 

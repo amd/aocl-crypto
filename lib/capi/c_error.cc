@@ -29,7 +29,6 @@
 #include "alcp/error.h"
 
 #include "alcp/base/error.hh"
-#include "alcp/modulemanager.hh"
 #include "alcp/types.hh"
 
 #include <cstring>
@@ -38,26 +37,6 @@ EXTERN_C_BEGIN
 
 using namespace alcp;
 using namespace alcp::base;
-using namespace alcp::module;
-
-void
-alc_error_str_internal(
-    alc_error_t err, Uint8* buf, Uint64 size, const char* file, Uint64 line)
-{
-}
-
-void
-alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
-{
-    auto  _code = static_cast<Uint64>(err);
-    auto& m     = ModuleManager::getModule(_code);
-    auto& e     = m.getModuleError(_code);
-
-    auto str = e->message();
-    size     = std::min(str.size(), size);
-
-    snprintf((char*)buf, size, "%s", str.c_str());
-}
 
 Uint8
 alcp_is_error(alc_error_t err)

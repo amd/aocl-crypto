@@ -146,8 +146,8 @@ alcp_mac_context_size(void);
  * @param [out]  pMacHandle  Library populated session handle for future
  * mac operations.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs
- * to be called to know about error occurred
+ * is not ALC_ERROR_NONE then, an error has occurred and handle will be invalid
+ * for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t macType);
@@ -165,8 +165,8 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t macType);
  * @param [in] info Macinfo populated based on the type of the MAC
 
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then  @ref alcp_error_str needs
- * to be called to know about error occurred
+ * is not ALC_ERROR_NONE then, an error has occurred and handle will be invalid
+ for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_init(alc_mac_handle_p pMacHandle,
@@ -188,8 +188,8 @@ alcp_mac_init(alc_mac_handle_p pMacHandle,
  * @param [in]   buff       The chunk of the message to be updated
  * @param [in]   size       Length of input buffer in bytes
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then  @ref alcp_error_str needs
- * to be called to know about error occurred
+ * is not ALC_ERROR_NONE then, an error has occurred and handle will be invalid
+ * for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
@@ -209,8 +209,8 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
  * @param [in]   buff        The buffer holding mac
  * @param [in]   size        mac size in bytes.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs
- * to be called to know about error occurred
+ * is not ALC_ERROR_NONE then, an error has occurred and handle will be invalid
+ * for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
@@ -228,8 +228,8 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
  *
  * @param [in]   pMacHandle Session handle used for the MAC operations
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE  @ref alcp_error_str needs to be called to know about
- * error occurred
+ * is not ALC_ERROR_NONE then, an error has occurred and handle will be invalid
+ * for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle);
@@ -244,8 +244,8 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle);
  * @endparblock
  * @param [in]   pMacHandle Session handle for future MAC operation
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * is not ALC_ERROR_NONE, an error has occurred and handle will be invalid for
+ * future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle);

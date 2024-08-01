@@ -28,9 +28,6 @@
 
 #include "alcp/cipher/chacha20_poly1305.hh"
 #include "alcp/base.hh"
-#include <openssl/bio.h>
-
-// #define DEBUG
 
 namespace alcp::cipher {
 

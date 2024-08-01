@@ -39,7 +39,6 @@
 #include "alcp/digest/sha512.hh"
 #include "alcp/rng/drbg_hmac.hh"
 #include "alcp/rsa.h"
-#include "alcp/rsa/rsaerror.hh"
 
 using namespace alcp;
 
@@ -230,7 +229,7 @@ alcp_rsa_add_digest(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode)
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa, ALC_ERROR_NONE);
-    
+
     if (ctx->m_digest) {
         delete static_cast<digest::IDigest*>(ctx->m_digest);
     }
@@ -255,7 +254,7 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode)
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa, ALC_ERROR_NONE);
-    
+
     if (ctx->m_mgf) {
         delete static_cast<digest::IDigest*>(ctx->m_mgf);
     }

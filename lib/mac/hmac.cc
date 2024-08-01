@@ -28,7 +28,6 @@
 
 #include "alcp/mac/hmac.hh"
 #include "alcp/base.hh"
-#include "alcp/mac/macerror.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
 #include <cstring> // for std::memset

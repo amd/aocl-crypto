@@ -171,8 +171,8 @@ alcp_rsa_context_size(void);
  * rsa operations.
  *
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * is not ALC_ERROR_NONE, an error has occurred and handle will be invalid for
+ * future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
@@ -194,8 +194,8 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  *         - textSize should equal to the modulus/private_key size
  *         - pText absolute value should be less than modulus
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
@@ -219,8 +219,8 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
  * @param [out] pEncText           - pointer to encrypted bytes
  * bytes
 
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
@@ -242,8 +242,8 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pRsaHandle         - Handler of the Context for the session
  * @param [in]  mode               - Description of the digest
 
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_add_digest(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
@@ -259,8 +259,8 @@ alcp_rsa_finish </b>
  * @param [in]  pRsaHandle         - Handler of the Context for the session
 * @param [in]   mode               - Description of the digest
 
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
@@ -281,8 +281,8 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
  * @param [in]  pEncText   - pointer to encrypted bytes
  * @param [in]  encSize    - pointer to encrypted bytes
  * @param [out] pText      - pointer to decrypted bytes
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
@@ -306,8 +306,8 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  labelSize  - sizeof label
  * @param [out] pText      - pointer to decrypted text
  * @param [out] textSize   - pointer to size of decrypted text
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
@@ -334,8 +334,8 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  saltSize    - size of salt
  * @param [out] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
@@ -359,8 +359,8 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in] textSize    - size of input text
  * @param [in] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
@@ -382,8 +382,8 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  textSize    - size of input text
  * @param [out] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -405,8 +405,8 @@ alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in] textSize    - size of input text
  * @param [in] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -427,8 +427,8 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  textSize    - size of input hash
  * @param [out] pSignedText - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -449,8 +449,8 @@ alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in] textSize    - size of input hash
  * @param [in] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -471,8 +471,8 @@ alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [out] pEncryptText       - pointer to encrypted bytes
  * @param [in]  randomPad          - random pad
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -493,8 +493,8 @@ alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pText   - pointer to encrypted bytes
  * @param [out] pDecryptText      - pointer to decrypted text
  * @param [out] textSize   - pointer to size of decrypted text
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
@@ -517,8 +517,8 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  saltSize    - size of salt
  * @param [out] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
@@ -541,8 +541,8 @@ alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in] hashSize    - size of input hash
  * @param [in] pSignedBuff - pointer to signed text
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
@@ -561,8 +561,8 @@ alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in]   pModulus   - pointer to modulus
  * @param [in]   size       - size of modulus
 
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ error has occurred and handle will be invalid for future operations
  */
 
 ALCP_API_EXPORT alc_error_t
@@ -581,8 +581,8 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
  * @param [in]   exponent   - BigNum pointer to public key exponent
  * @param [in]   pModulus   - BigNum pointer to modulus
 
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_bignum_public_key(const alc_rsa_handle_p pRsaHandle,
@@ -604,8 +604,8 @@ alcp_rsa_set_bignum_public_key(const alc_rsa_handle_p pRsaHandle,
  * @param [in]   mod        - pointer to mult of first and second modulus
  * @param [in]   size       - size of modulus
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
@@ -631,8 +631,8 @@ alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
  * @param [in]   qinv       - pointer to BigNum inverse of second modulus
  * @param [in]   mod        - pointer to BigNum mult of first and second modulus
  *
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_bignum_private_key(const alc_rsa_handle_p pRsaHandle,
@@ -685,8 +685,8 @@ alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle);
  * @param [out] pDestHandle      - Output source handle.
  *
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * is not ALC_ERROR_NONE, an error has occurred and handle will be invalid for
+ * future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_context_copy(const alc_rsa_handle_p pSrcHandle,

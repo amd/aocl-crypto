@@ -66,9 +66,7 @@ mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
     for (int i = 0; i < NUM_MB; i++) {
         err = alcp_ec_request(&ecinfo, &handle[i]);
         if (alcp_is_error(err)) {
-            Uint8 err_buff[1024];
-            alcp_error_str(err, err_buff, 1024);
-            printErr(reinterpret_cast<char*>(err_buff));
+            printErr("Error occurred in EC Request");
         }
     }
 
@@ -78,9 +76,7 @@ mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
                                   static_cast<Uint8*>(pa_public_key[i]),
                                   static_cast<const Uint8*>(pa_private_key[i]));
         if (alcp_is_error(err)) {
-            Uint8 err_buff[1024];
-            alcp_error_str(err, err_buff, 1024);
-            printErr(reinterpret_cast<char*>(err_buff));
+            printErr("Error occurred while getting publickey");
         }
     }
 
@@ -122,9 +118,7 @@ mbx_x25519_mb8(int8u* const       pa_shared_key[NUM_MB],
     for (int i = 0; i < NUM_MB; i++) {
         err = alcp_ec_request(&ecinfo, &handle[i]);
         if (alcp_is_error(err)) {
-            Uint8 err_buff[1024];
-            alcp_error_str(err, err_buff, 1024);
-            printErr(reinterpret_cast<char*>(err_buff));
+            printErr("Error in EC Request");
         }
     }
 
@@ -139,9 +133,7 @@ mbx_x25519_mb8(int8u* const       pa_shared_key[NUM_MB],
                                     static_cast<const Uint8*>(pa_public_key[i]),
                                     &length);
         if (alcp_is_error(err)) {
-            Uint8 err_buff[1024];
-            alcp_error_str(err, err_buff, 1024);
-            printErr(reinterpret_cast<char*>(err_buff));
+            printErr("Error in getting EC secretkey");
         }
     }
 

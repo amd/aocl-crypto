@@ -35,8 +35,7 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv,
@@ -114,8 +113,6 @@ bool
 AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
 
     if (m_handle != nullptr) {
         alcp_cipher_aead_finish(m_handle);
@@ -154,7 +151,6 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     err = alcp_cipher_aead_request(m_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, cErrSize);
         goto out;
     }
     return true;
@@ -213,15 +209,11 @@ bool
 AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buff[cErrSize];
 
     err =
         alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {
         std::cout << __func__ << ":Err:alcp_cipher_aead_init" << std::endl;
-        alcp_error_str(err, err_buff, cErrSize);
-        std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
 
@@ -231,8 +223,6 @@ AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
         if (alcp_is_error(err)) {
             std::cout << __func__ << ":Err:alcp_cipher_aead_set_aad"
                       << std::endl;
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
     }
@@ -243,8 +233,6 @@ AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
         if (alcp_is_error(err)) {
             std::cout << __func__ << ":Err:alcp_cipher_aead_encrypt"
                       << std::endl;
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         err = alcp_cipher_aead_get_tag(
@@ -252,8 +240,7 @@ AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
         if (alcp_is_error(err)) {
             std::cout << __func__ << ":Err:alcp_cipher_aead_get_tag"
                       << std::endl;
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
+
             return false;
         }
     } else {
@@ -262,8 +249,7 @@ AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
         if (alcp_is_error(err)) {
             std::cout << __func__ << ":Err:alcp_cipher_aead_decrypt"
                       << std::endl;
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
+
             return false;
         }
 
@@ -272,8 +258,7 @@ AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
         if (alcp_is_error(err)) {
             std::cout << __func__ << ":Err:alcp_cipher_aead_get_tag"
                       << std::endl;
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
+
             return false;
         }
     }
@@ -285,15 +270,11 @@ bool
 AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buff[cErrSize];
 
     err =
         alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {
         printf("Err:aead init\n");
-        alcp_error_str(err, err_buff, cErrSize);
-        std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
 
@@ -302,8 +283,6 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             alcp_cipher_aead_set_aad(m_handle, aead_data.m_ad, aead_data.m_adl);
         if (alcp_is_error(err)) {
             printf("Err:Setadl\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
     }
@@ -313,16 +292,12 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Encrypt Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         err = alcp_cipher_aead_get_tag(
             m_handle, aead_data.m_tag, aead_data.m_tagl);
         if (alcp_is_error(err)) {
             printf("TAG Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
     } else {
@@ -330,8 +305,6 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
 
@@ -344,8 +317,6 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
                 m_handle, aead_data.m_tag, aead_data.m_tagl);
             if (alcp_is_error(err)) {
                 printf("TAG Error\n");
-                alcp_error_str(err, err_buff, cErrSize);
-                std::cout << "Error:" << err_buff << std::endl;
                 return false;
             }
 
@@ -356,8 +327,6 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
                 m_handle, aead_data.m_tag, aead_data.m_tagl);
             if (alcp_is_error(err)) {
                 printf("TAG Error\n");
-                alcp_error_str(err, err_buff, cErrSize);
-                std::cout << "Error:" << err_buff << std::endl;
                 return false;
             }
         }
@@ -370,13 +339,9 @@ bool
 AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buff[cErrSize];
     err = alcp_cipher_aead_set_tag_length(m_handle, aead_data.m_tagl);
     if (alcp_is_error(err)) {
         printf("Err:setting tagl\n");
-        alcp_error_str(err, err_buff, cErrSize);
-        std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
 
@@ -385,7 +350,6 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
     err = alcp_cipher_aead_set_ccm_plaintext_length(m_handle, aead_data.m_inl);
     if (err != ALC_ERROR_NONE) {
         printf("Error: Setting the plaintext Length\n");
-        alcp_error_str(err, err_buff, cErrSize);
         return -1;
     }
 #endif
@@ -394,7 +358,6 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {
         printf("Error: init failure! code\n");
-        alcp_error_str(err, err_buff, cErrSize);
         return false;
     }
 
@@ -403,8 +366,6 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             alcp_cipher_aead_set_aad(m_handle, aead_data.m_ad, aead_data.m_adl);
         if (alcp_is_error(err)) {
             printf("Err:Setadl\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
     }
@@ -419,8 +380,6 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         }
         if (alcp_is_error(err)) {
             printf("Encrypt Update Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         // Get Tag
@@ -429,8 +388,6 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
                 m_handle, aead_data.m_tag, aead_data.m_tagl);
             if (alcp_is_error(err)) {
                 printf("TAG Error\n");
-                alcp_error_str(err, err_buff, cErrSize);
-                std::cout << "Error:" << err_buff << std::endl;
                 return false;
             }
         }
@@ -444,16 +401,12 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         }
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         err = alcp_cipher_aead_get_tag(
             m_handle, aead_data.m_tagBuff, aead_data.m_tagl);
         if (alcp_is_error(err)) {
             printf("TAG Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         // Tag verification
@@ -471,8 +424,6 @@ bool
 AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buff[cErrSize];
 
     err = alcp_cipher_aead_init(
         m_handle, m_combined_key, m_keyLen, m_iv, aead_data.m_ivl);
@@ -481,8 +432,6 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
 
     if (alcp_is_error(err)) {
         printf("Err:Setadd\n");
-        alcp_error_str(err, err_buff, cErrSize);
-        std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
 
@@ -491,8 +440,6 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Encrypt Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         if (aead_data.m_tagl > 0) {
@@ -500,8 +447,6 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
                 m_handle, aead_data.m_tag, aead_data.m_tagl);
             if (alcp_is_error(err)) {
                 printf("TAG Error\n");
-                alcp_error_str(err, err_buff, cErrSize);
-                std::cout << "Error:" << err_buff << std::endl;
                 return false;
             }
         }
@@ -510,8 +455,6 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");
-            alcp_error_str(err, err_buff, cErrSize);
-            std::cout << "Error:" << err_buff << std::endl;
             return false;
         }
         if (aead_data.m_tagl > 0) {
@@ -519,8 +462,6 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
                 m_handle, aead_data.m_tagBuff, aead_data.m_tagl);
             if (alcp_is_error(err)) {
                 printf("Tag Error\n");
-                alcp_error_str(err, err_buff, cErrSize);
-                std::cout << "Error:" << err_buff << std::endl;
                 return false;
             }
             // Tag verification

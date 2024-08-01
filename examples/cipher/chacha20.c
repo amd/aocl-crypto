@@ -55,9 +55,7 @@ create_demo_session(alc_cipher_handle_p handle,
                     Uint64              ivlength,
                     const alc_key_len_t keyLen)
 {
-    alc_error_t err      = ALC_ERROR_NONE;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
+    alc_error_t err = ALC_ERROR_NONE;
 
     /*
      * Application is expected to allocate for context
@@ -92,8 +90,7 @@ create_demo_session(alc_cipher_handle_p handle,
 
 // Incase of error, program execution will come here
 out:
-    alcp_error_str(err, err_buf, cErrSize);
-    printf("%s\n", err_buf);
+
     return -1;
 }
 
@@ -104,14 +101,11 @@ encrypt_demo(alc_cipher_handle_p handle,
              Uint8*              ciphertxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        printf("%s\n", err_buf);
+
         return -1;
     }
 
@@ -126,14 +120,11 @@ decrypt_demo(alc_cipher_handle_p handle,
              Uint8*              plaintxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        printf("%s\n", err_buf);
+
         return -1;
     }
 

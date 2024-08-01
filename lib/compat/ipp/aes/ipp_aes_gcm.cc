@@ -117,8 +117,6 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
 {
     printMsg("GCMGetTag Start");
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     ipp_wrp_aes_ctx* context_aead =
         &(((ipp_wrp_aes_aead_ctx*)(pState))->aead_ctx);
@@ -132,7 +130,6 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
 
     if (alcp_is_error(err)) {
         printf("GCM tag fetch failure! code:4\n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
 

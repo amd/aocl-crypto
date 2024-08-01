@@ -24,8 +24,6 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 
-ADD_CXX_EXAMPLE(test_logger logger.cc)
-
 ADD_CXX_EXAMPLE(test_cpuid cpuid.cc)
 
 ADD_CXX_EXAMPLE(filecrypt filecrypt.cc)

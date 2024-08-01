@@ -39,9 +39,7 @@ ENDIF(ENABLE_AOCL_UTILS)
 
 SET(UTILS_SRCS
   bignum.cc
-  logger.cc
   #mempool.cc
-  console_logger.cc
   cpuid.cc
   memory.cc
   )

@@ -64,8 +64,6 @@ alcp_encdecAES(const Ipp8u*       pSrc,
     // Should replace below with something better as it does discard const
     ipp_wrp_aes_ctx* context = (ipp_wrp_aes_ctx*)(pCtx);
     alc_error_t      err;
-    const int        err_size = 256;
-    Uint8            err_buf[err_size];
 
     /* Continue initialization as we didnt have iv in initialization function
        if we already have context then it's already good, we can take it as
@@ -105,7 +103,6 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         err = alcp_cipher_request(mode, context->keyLen, &(context->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
-            alcp_error_str(err, err_buf, err_size);
             free(context->handle.ch_context);
             context->handle.ch_context = nullptr;
             return ippStsErr;
@@ -148,7 +145,6 @@ alcp_encdecAES(const Ipp8u*       pSrc,
 
     if (alcp_is_error(err)) {
         printErr("Unable decrypt");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsUnderRunErr;
     }
     printMsg("Decrypt succeeded");
