@@ -72,8 +72,6 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 
 #if OPENSSL_API_LEVEL >= 30100
     const char* openssl_version = OpenSSL_version(OPENSSL_VERSION_STRING);
-#endif
-
     switch (operation_id) {
 /*FIXME: When Cipher Provider is enabled and MAC provider is
  * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
@@ -96,7 +94,6 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             break;
 #endif
 
-#if OPENSSL_API_LEVEL >= 30100
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
         case OSSL_OP_ASYM_CIPHER:
             if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
@@ -122,7 +119,6 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             //     }
             //     break;
 #endif
-#endif
 
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
         case OSSL_OP_MAC:
@@ -143,7 +139,7 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
         default:
             break;
     }
-
+#endif
 #if LOAD_DEFAULT_PROV
     return OSSL_PROVIDER_query_operation(
         prov_openssl_default, operation_id, no_cache);
