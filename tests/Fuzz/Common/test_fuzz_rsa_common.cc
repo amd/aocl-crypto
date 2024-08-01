@@ -89,7 +89,7 @@ TestRsaDecryptLifecycle_0(alc_rsa_handle_p handle,
                             &p_mod[0],
                             &q_mod[0],
                             &q_mod_inv[0],
-                            &mod[0],
+                            mod,
                             size_p_mod);
     Uint64 size_key = alcp_rsa_get_key_size(handle);
     alcp_rsa_privatekey_decrypt(handle,
@@ -234,31 +234,31 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
     Uint64             decrypted_output_size;
-    size_t             size_encrypted_data = stream.ConsumeIntegral<Uint16>();
+    size_t             size_encrypted_data = 256;
     std::vector<Uint8> fuzz_input =
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
 
     /* key component sizes */
-    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
-           size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
-           size_q_mod_inv = 64;
-    size_t size_label     = stream.ConsumeIntegral<Uint16>();
+    size_t size_modulus = 256, size_p_modulus = 128;
+    // size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 128,
+    // size_q_mod_inv = 64 size_pvt_key_exp = 256;
+    size_t size_label = stream.ConsumeIntegral<Uint16>();
 
     Uint64             PublicKeyExponent = 0x10001;
-    Uint64             hash_len          = dinfo.dt_custom_len / 8;
+    Uint64             hash_len          = dinfo.dt_len / 8;
     std::vector<Uint8> fuzz_seed         = stream.ConsumeBytes<Uint8>(hash_len);
 
     /* fuzzed buffers */
-    std::vector<Uint8> fuzz_pvt_key_exp =
-        stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
-    std::vector<Uint8> fuzz_p_modulus =
-        stream.ConsumeBytes<Uint8>(size_p_modulus);
-    std::vector<Uint8> fuzz_q_modulus =
-        stream.ConsumeBytes<Uint8>(size_q_modulus);
-    std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
-    std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
-    std::vector<Uint8> fuzz_q_mod_inv =
-        stream.ConsumeBytes<Uint8>(size_q_mod_inv);
+    // std::vector<Uint8> fuzz_pvt_key_exp =
+    //     stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
+    // std::vector<Uint8> fuzz_p_modulus =
+    //     stream.ConsumeBytes<Uint8>(size_p_modulus);
+    // std::vector<Uint8> fuzz_q_modulus =
+    //     stream.ConsumeBytes<Uint8>(size_q_modulus);
+    // std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
+    // std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
+    // std::vector<Uint8> fuzz_q_mod_inv =
+    //     stream.ConsumeBytes<Uint8>(size_q_mod_inv);
     std::vector<Uint8> fuzz_label = stream.ConsumeBytes<Uint8>(size_label);
 
     std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
@@ -291,13 +291,13 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
                                           &encrypted_text[0]);
         else {
             TestRsaOAEPDecryptLifecycle_0(handle,
-                                          &fuzz_dp_exp[0],
-                                          &fuzz_dq_exp[0],
-                                          &fuzz_p_modulus[0],
-                                          &fuzz_q_modulus[0],
-                                          &fuzz_q_mod_inv[0],
+                                          fuzz_dp_exp,
+                                          fuzz_dq_exp,
+                                          fuzz_p_modulus,
+                                          fuzz_q_modulus,
+                                          fuzz_q_mod_inv,
                                           fuzz_modulus,
-                                          fuzz_p_modulus.size(),
+                                          size_p_modulus,
                                           size_modulus,
                                           &encrypted_text[0],
                                           &fuzz_label[0],
@@ -314,11 +314,11 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
             goto dealloc;
         }
         err = alcp_rsa_set_privatekey(handle,
-                                      &fuzz_dp_exp[0],
-                                      &fuzz_dq_exp[0],
-                                      &fuzz_p_modulus[0],
-                                      &fuzz_q_modulus[0],
-                                      &fuzz_q_mod_inv[0],
+                                      fuzz_dp_exp,
+                                      fuzz_dq_exp,
+                                      fuzz_p_modulus,
+                                      fuzz_q_modulus,
+                                      fuzz_q_mod_inv,
                                       fuzz_modulus,
                                       size_p_modulus);
         if (alcp_is_error(err)) {
@@ -345,7 +345,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
         if (EncDec == ALCP_TEST_FUZZ_RSA_ENCRYPT) {
             err = alcp_rsa_publickey_encrypt_oaep(handle,
                                                   &fuzz_input[0],
-                                                  fuzz_input.size(),
+                                                  size_encrypted_data,
                                                   &fuzz_label[0],
                                                   fuzz_label.size(),
                                                   &fuzz_seed[0],
@@ -358,7 +358,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
         } else if (EncDec == ALCP_TEST_FUZZ_RSA_DECRYPT) {
             err = alcp_rsa_publickey_encrypt_oaep(handle,
                                                   &fuzz_input[0],
-                                                  fuzz_input.size(),
+                                                  size_encrypted_data,
                                                   &fuzz_label[0],
                                                   fuzz_label.size(),
                                                   &fuzz_seed[0],
@@ -646,24 +646,22 @@ ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
 
     /* key component sizes */
-    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
-           size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
-           size_q_mod_inv = 64;
-    size_t size_label     = stream.ConsumeIntegral<Uint16>();
+    size_t size_modulus = 256, size_p_modulus = 128;
+    // size_pvt_key_exp = 256, size_p_modulus = 128,
+    //  size_q_modulus = 128, size_dp_exp = 128, size_dq_exp = 128;
+    //  size_q_mod_inv = 128;
+    size_t size_label = stream.ConsumeIntegral<Uint16>();
 
-    /* fuzzed buffers */
-    // std::vector<Uint8> fuzz_modulus =
-    // stream.ConsumeBytes<Uint8>(size_modulus);
-    std::vector<Uint8> fuzz_pvt_key_exp =
-        stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
-    std::vector<Uint8> fuzz_p_modulus =
-        stream.ConsumeBytes<Uint8>(size_p_modulus);
-    std::vector<Uint8> fuzz_q_modulus =
-        stream.ConsumeBytes<Uint8>(size_q_modulus);
-    std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
-    std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
-    std::vector<Uint8> fuzz_q_mod_inv =
-        stream.ConsumeBytes<Uint8>(size_q_mod_inv);
+    // std::vector<Uint8> fuzz_pvt_key_exp =
+    //     stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
+    // std::vector<Uint8> fuzz_p_modulus =
+    //     stream.ConsumeBytes<Uint8>(size_p_modulus);
+    // std::vector<Uint8> fuzz_q_modulus =
+    //     stream.ConsumeBytes<Uint8>(size_q_modulus);
+    // std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
+    // std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
+    // std::vector<Uint8> fuzz_q_mod_inv =
+    //     stream.ConsumeBytes<Uint8>(size_q_mod_inv);
     std::vector<Uint8> fuzz_label = stream.ConsumeBytes<Uint8>(size_label);
 
     std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
@@ -684,23 +682,23 @@ ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
 
     if (TestNegLifeCycle) {
         TestRsaDecryptLifecycle_0(handle_decrypt,
-                                  &fuzz_dp_exp[0],
-                                  &fuzz_dq_exp[0],
-                                  &fuzz_p_modulus[0],
-                                  &fuzz_q_modulus[0],
-                                  &fuzz_q_mod_inv[0],
-                                  &fuzz_modulus[0],
+                                  fuzz_dp_exp,
+                                  fuzz_dq_exp,
+                                  fuzz_p_modulus,
+                                  fuzz_q_modulus,
+                                  fuzz_q_mod_inv,
+                                  fuzz_modulus,
                                   size_p_modulus,
                                   &encrypted_text[0],
                                   &decrypted_text[0]);
     } else {
         err = alcp_rsa_set_privatekey(handle_decrypt,
-                                      &fuzz_dp_exp[0],
-                                      &fuzz_dq_exp[0],
-                                      &fuzz_p_modulus[0],
-                                      &fuzz_q_modulus[0],
-                                      &fuzz_q_mod_inv[0],
-                                      &fuzz_modulus[0],
+                                      fuzz_dp_exp,
+                                      fuzz_dq_exp,
+                                      fuzz_p_modulus,
+                                      fuzz_q_modulus,
+                                      fuzz_q_mod_inv,
+                                      fuzz_modulus,
                                       size_p_modulus);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_set_privatekey" << std::endl;
