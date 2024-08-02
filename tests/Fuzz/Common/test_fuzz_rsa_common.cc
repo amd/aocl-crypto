@@ -240,25 +240,12 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
 
     /* key component sizes */
     size_t size_modulus = 256, size_p_modulus = 128;
-    // size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 128,
-    // size_q_mod_inv = 64 size_pvt_key_exp = 256;
     size_t size_label = stream.ConsumeIntegral<Uint16>();
 
     Uint64             PublicKeyExponent = 0x10001;
     Uint64             hash_len          = dinfo.dt_len / 8;
     std::vector<Uint8> fuzz_seed         = stream.ConsumeBytes<Uint8>(hash_len);
 
-    /* fuzzed buffers */
-    // std::vector<Uint8> fuzz_pvt_key_exp =
-    //     stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
-    // std::vector<Uint8> fuzz_p_modulus =
-    //     stream.ConsumeBytes<Uint8>(size_p_modulus);
-    // std::vector<Uint8> fuzz_q_modulus =
-    //     stream.ConsumeBytes<Uint8>(size_q_modulus);
-    // std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
-    // std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
-    // std::vector<Uint8> fuzz_q_mod_inv =
-    //     stream.ConsumeBytes<Uint8>(size_q_mod_inv);
     std::vector<Uint8> fuzz_label = stream.ConsumeBytes<Uint8>(size_label);
 
     std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
@@ -413,29 +400,13 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    /* Fuzz this for a negative test case , 48 is the valid case!*/
-    size_t             size_input = 48;
-    std::vector<Uint8> fuzz_input = stream.ConsumeBytes<Uint8>(size_input);
-    size_t             size_salt  = stream.ConsumeIntegral<Uint16>();
-    std::vector<Uint8> fuzz_salt  = stream.ConsumeBytes<Uint8>(size_salt);
+    std::vector<Uint8> fuzz_input = stream.ConsumeRemainingBytes<Uint8>();
+    std::vector<Uint8> fuzz_salt  = stream.ConsumeRemainingBytes<Uint8>();
 
     /* key component sizes */
-    size_t size_modulus = 256, size_pvt_key_exp = 256, size_p_modulus = 64,
-           size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
-           size_q_mod_inv = 64;
+    size_t size_modulus = 256, size_p_modulus = 128;
 
     Uint64 PublicKeyExponent = 0x10001;
-
-    std::vector<Uint8> fuzz_pvt_key_exp =
-        stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
-    std::vector<Uint8> fuzz_p_modulus =
-        stream.ConsumeBytes<Uint8>(size_p_modulus);
-    std::vector<Uint8> fuzz_q_modulus =
-        stream.ConsumeBytes<Uint8>(size_q_modulus);
-    std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
-    std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
-    std::vector<Uint8> fuzz_q_mod_inv =
-        stream.ConsumeBytes<Uint8>(size_q_mod_inv);
 
     /* signature output */
     std::vector<Uint8> signature_output(size_modulus, 0);
@@ -458,11 +429,11 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
     }
 
     err = alcp_rsa_set_privatekey(handle,
-                                  &fuzz_dp_exp[0],
-                                  &fuzz_dq_exp[0],
-                                  &fuzz_p_modulus[0],
-                                  &fuzz_q_modulus[0],
-                                  &fuzz_q_mod_inv[0],
+                                  fuzz_dp_exp,
+                                  fuzz_dq_exp,
+                                  fuzz_p_modulus,
+                                  fuzz_q_modulus,
+                                  fuzz_q_mod_inv,
                                   fuzz_modulus,
                                   size_p_modulus);
     if (alcp_is_error(err)) {
@@ -486,15 +457,15 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
             TestRsaSignLifecycle_0(handle,
                                    PaddingMode,
                                    &fuzz_input[0],
-                                   size_input,
+                                   fuzz_input.size(),
                                    &fuzz_salt[0],
-                                   size_salt,
+                                   fuzz_salt.size(),
                                    &signature_output[0]);
         } else {
             TestRsaVerifyLifecycle_0(handle,
                                      PaddingMode,
                                      &fuzz_input[0],
-                                     size_input,
+                                     fuzz_input.size(),
                                      &fuzz_salt[0],
                                      fuzz_salt.size(),
                                      &signature_output[0]);
@@ -504,31 +475,38 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
             err = alcp_rsa_privatekey_sign_pss(handle,
                                                true,
                                                &fuzz_input[0],
-                                               size_input,
+                                               fuzz_input.size(),
                                                &fuzz_salt[0],
-                                               size_salt,
+                                               fuzz_salt.size(),
                                                &signature_output[0]);
             if (alcp_is_error(err)) {
                 std::cout << "Error: alcp_rsa_privatekey_sign_pss" << std::endl;
                 goto dealloc;
             }
-            err = alcp_rsa_publickey_verify_pss(
-                handle, &fuzz_input[0], size_input, &signature_output[0]);
+            err = alcp_rsa_publickey_verify_pss(handle,
+                                                &fuzz_input[0],
+                                                fuzz_input.size(),
+                                                &signature_output[0]);
             if (alcp_is_error(err)) {
                 std::cout << "Error: alcp_rsa_publickey_verify_pss"
                           << std::endl;
                 goto dealloc;
             }
         } else if (PaddingMode == ALCP_TEST_RSA_PADDING_PKCS) {
-            err = alcp_rsa_privatekey_sign_pkcs1v15(
-                handle, true, &fuzz_input[0], size_input, &signature_output[0]);
+            err = alcp_rsa_privatekey_sign_pkcs1v15(handle,
+                                                    true,
+                                                    &fuzz_input[0],
+                                                    fuzz_input.size(),
+                                                    &signature_output[0]);
             if (alcp_is_error(err)) {
                 std::cout << "Error: alcp_rsa_privatekey_sign_pkcs1v15"
                           << std::endl;
                 goto dealloc;
             }
-            err = alcp_rsa_publickey_verify_pkcs1v15(
-                handle, &fuzz_input[0], size_input, &signature_output[0]);
+            err = alcp_rsa_publickey_verify_pkcs1v15(handle,
+                                                     &fuzz_input[0],
+                                                     fuzz_input.size(),
+                                                     &signature_output[0]);
             if (alcp_is_error(err)) {
                 std::cout << "Error: alcp_rsa_publickey_verify_pkcs1v15"
                           << std::endl;
@@ -646,22 +624,8 @@ ALCP_Fuzz_Rsa_DecryptPvtKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
 
     /* key component sizes */
-    size_t size_modulus = 256, size_p_modulus = 128;
-    // size_pvt_key_exp = 256, size_p_modulus = 128,
-    //  size_q_modulus = 128, size_dp_exp = 128, size_dq_exp = 128;
-    //  size_q_mod_inv = 128;
-    size_t size_label = stream.ConsumeIntegral<Uint16>();
-
-    // std::vector<Uint8> fuzz_pvt_key_exp =
-    //     stream.ConsumeBytes<Uint8>(size_pvt_key_exp);
-    // std::vector<Uint8> fuzz_p_modulus =
-    //     stream.ConsumeBytes<Uint8>(size_p_modulus);
-    // std::vector<Uint8> fuzz_q_modulus =
-    //     stream.ConsumeBytes<Uint8>(size_q_modulus);
-    // std::vector<Uint8> fuzz_dp_exp = stream.ConsumeBytes<Uint8>(size_dp_exp);
-    // std::vector<Uint8> fuzz_dq_exp = stream.ConsumeBytes<Uint8>(size_dq_exp);
-    // std::vector<Uint8> fuzz_q_mod_inv =
-    //     stream.ConsumeBytes<Uint8>(size_q_mod_inv);
+    size_t             size_modulus = 256, size_p_modulus = 128;
+    size_t             size_label = stream.ConsumeIntegral<Uint16>();
     std::vector<Uint8> fuzz_label = stream.ConsumeBytes<Uint8>(size_label);
 
     std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
@@ -758,7 +722,6 @@ ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec)
     std::vector<Uint8> fuzz_random_pad =
         stream.ConsumeBytes<Uint8>(random_pad_len);
     /* key parameters */
-    // std::vector<Uint8> Modulus(size_modulus);
     std::vector<Uint8> encrypted_text(size_encrypted_data, 0);
     std::vector<Uint8> decrypted_text(size_encrypted_data, 0);
 
@@ -874,7 +837,6 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
     std::vector<Uint8> Hash(HashSize);
 
     /* key parameters */
-    // std::vector<Uint8> Modulus(size_modulus);
     std::vector<Uint8> Signature(size_modulus, 0);
 
     Uint64 Modulus_BigNum[sizeof(fuzz_modulus) / 8];
