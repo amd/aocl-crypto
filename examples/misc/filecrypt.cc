@@ -324,6 +324,7 @@ namespace crypto {
 
             if (aead == nullptr) {
                 assert(aead != nullptr); // To be caught in debugging
+                delete alcpCipher;
                 return std::vector<Uint8>(0);
             }
 
@@ -363,6 +364,7 @@ namespace crypto {
 
             if (aead == nullptr) {
                 assert(aead != nullptr); // To be caught in debugging
+                delete alcpCipher;
                 return std::vector<Uint8>(0);
             }
 
