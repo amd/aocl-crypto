@@ -40,7 +40,7 @@ IppStatus
 ippsSHA224GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -49,7 +49,7 @@ IppStatus
 ippsSHA256GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -58,7 +58,7 @@ IppStatus
 ippsSHA384GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -67,7 +67,7 @@ IppStatus
 ippsSHA512GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -76,7 +76,7 @@ IppStatus
 ippsHashGetSize(int* pSize)
 {
     printMsg("HashGetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("HashGetSize End");
     return ippStsNoErr;
 }
@@ -85,7 +85,7 @@ IppStatus
 ippsHashGetSize_rmf(int* pSize)
 {
     printMsg("HashGetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("HashGetSize End");
     return ippStsNoErr;
 }
@@ -97,10 +97,11 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
 {
     printMsg("Init");
     ipp_wrp_sha2_ctx* context = pState;
-    alc_error_t       err;
+    Uint8*            alcp_ctx =
+        reinterpret_cast<Uint8*>(pState) + sizeof(ipp_wrp_sha2_ctx);
+    alc_error_t err;
 
-    Uint64 size             = alcp_digest_context_size();
-    context->handle.context = malloc(size);
+    context->handle.context = alcp_ctx;
     context->dmode          = mode;
     context->dlen           = len;
 

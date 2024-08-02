@@ -61,8 +61,7 @@ alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
         return ippStsUnderRunErr;
     }
 
-    alcp_digest_init(&(context->handle));
-    // Messup digest to test wrapper
-    // *(reinterpret_cast<Uint8*>(pMD)) = 0x00;
+    alcp_digest_finish(&(context->handle));
+
     return ippStsNoErr;
 }
