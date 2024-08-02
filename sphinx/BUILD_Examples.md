@@ -5,8 +5,8 @@ The example snippets can be found in the source code and the package under `aocl
 **An example [snippet](https://github.com/amd/aocl-crypto/blob/main/examples/cipher/aes-cfb.c) for AES CFB Cipher**
 
 To compile AOCL-Cryptography with examples, refer to
-- [ Linux ](BUILD)
-- [ Windows ](BUILD_Windows)
+- [ Linux ](md_BUILD)
+- [ Windows ](md_BUILD_Windows)
 
 The examples executables for each module will be generated in aocl-crypto/build/examples/
 
@@ -20,8 +20,6 @@ Please make sure the below paths are added to the environment variables
 Export the following paths:  
 
 ```bash
-export LIBRARY_PATH=\<path to openssl crypto lib\>:$LIBRARY_PATH;
-export LIBRARY_PATH=\<path to AOCL Utils lib\>:$LIBRARY_PATH;
 export LD_LIBRARY_PATH=\<path to openssl crypto lib\>:$LD_LIBRARY_PATH;
 export LD_LIBRARY_PATH=\<path to AOCL Utils lib\>:$LD_LIBRARY_PATH;
 ```
@@ -39,7 +37,7 @@ Now to run any executable:
 `.\examples\cipher\release\aes-cfb.exe`
 
 
-### Build and Run AOCL-Cryptography examples from the AOCL Crypto release package (Linux)
+## Build and Run AOCL-Cryptography examples from the AOCL Crypto release package (Linux)
 
 **Download the tar package from https://www.amd.com/en/developer/aocl/cryptography.html (under the downloads section)**
 

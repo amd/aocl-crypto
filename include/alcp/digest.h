@@ -87,7 +87,7 @@ typedef enum alc_digest_block_size
 /**
  * @brief Stores info about digest mode to be used
  *
- * @union alc_digest_mode_t
+ * @typedef enum alc_digest_mode_t
  */
 typedef enum _alc_digest_mode
 {

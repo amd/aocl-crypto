@@ -291,7 +291,7 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
 
-### Enabling compat libs
+## Enabling compat libs
 
 
 1. [Enable OpenSSL - To compare performance .](#win-OSSL)

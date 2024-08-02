@@ -38,7 +38,6 @@ Functions
 
 Variables
 ---------
-.. doxygenvariable:: alc_cipher_type_t
 .. doxygenvariable:: alc_cipher_mode_t
 .. doxygenvariable:: alc_key_len_t
 .. doxygenvariable:: alc_cipher_context_t

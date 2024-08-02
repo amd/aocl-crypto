@@ -123,12 +123,12 @@ To Build AOCL-Cryptography for different platform please refer to the document r
     - [ Linux ](md_Combine_build.html#md_BUILD)
     - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
 
-### Examples {#Example}
+## Examples {#Example}
 
 To build and run the examples, please refer to the document
     - [Examples](md_examples_BUILD_Examples.html#md_examples_BUILD_Examples)
 
-### Compat Support {#Compat}
+## Compat Support {#Compat}
 
  For applications using ippcp or openssl, it is possible to use AOCL-Cryptography library without replacing existing APIs using our compat libraries. 
   - [ OpenSSL Provider ](md_lib_compat_openssl_README.html)
