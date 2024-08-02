@@ -35,20 +35,32 @@ class Context
   public:
     void* m_ec = nullptr;
 
-    Status (*setPrivateKey)(void* pEc, const Uint8* pPrivKey);
+    Status (*setPrivateKey)(void* pEc, const Uint8* pPrivKey) = nullptr;
 
-    Status (*getPublicKey)(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey);
+    Status (*getPublicKey)(void*        pEc,
+                           Uint8*       pPublicKey,
+                           const Uint8* pPrivKey) = nullptr;
 
     Status (*getSecretKey)(void*        pEc,
                            Uint8*       pSecretKey,
                            const Uint8* pPublicKey,
-                           Uint64*      pKeyLength);
+                           Uint64*      pKeyLength) = nullptr;
 
-    Status (*finish)(void*);
+    Status (*finish)(void*) = nullptr;
 
-    Status (*reset)(void*);
+    Status (*reset)(void*) = nullptr;
 
     Status status{ StatusOk() };
+
+    ~Context()
+    {
+        m_ec          = nullptr;
+        setPrivateKey = nullptr;
+        getPublicKey  = nullptr;
+        getSecretKey  = nullptr;
+        finish        = nullptr;
+        reset         = nullptr;
+    }
 };
 
 } // namespace alcp::ec

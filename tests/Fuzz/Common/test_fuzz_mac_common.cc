@@ -57,7 +57,7 @@ std::map<_alc_mac_type, std::string> mac_type_string_map = {
 
 /**
  * @brief Life cycle testing
- Init->Init->Update->Init->Update->Finalize->Finalize->Init->Finalize
+ Init->Init->Update->Init->Update->Finalize->Finalize->Init->Finalize->Finish->update
  */
 bool
 TestMacLifecycle_1(alc_mac_handle_t handle,
@@ -81,10 +81,11 @@ TestMacLifecycle_1(alc_mac_handle_t handle,
             alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
         || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
         || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
+        || alcp_is_error(alcp_mac_finish(&handle))
         || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))) {
         std::cout << "MAC Neg lifecycle Test! "
                      "Init->Init->Update->Init->Update->Finalize->Finalize->"
-                     "Init->Finalize->update"
+                     "Init->Finalize->Finish->update"
                   << std::endl;
         return false;
     }
@@ -93,7 +94,7 @@ TestMacLifecycle_1(alc_mac_handle_t handle,
 
 /**
  * @brief Life cycle testing
-  "Init->Update->Update->Finalize->Update->"
+  "Init->Init->Update->Init->Update->Finalize->Finish->Update"
  */
 bool
 TestMacLifecycle_2(alc_mac_handle_t handle,
@@ -113,10 +114,12 @@ TestMacLifecycle_2(alc_mac_handle_t handle,
             alcp_mac_init(&handle, &fuzz_key[0], KeySize, &macinfo))
         || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))
         || alcp_is_error(alcp_mac_finalize(&handle, mac, MacSize))
+        || alcp_is_error(alcp_mac_finish(&handle))
         || alcp_is_error(alcp_mac_update(&handle, &fuzz_input[0], InputSize))) {
-        std::cout << "MAC Neg lifecycle Test! "
-                     "Init->Update->Update->Finalize->Update->"
-                  << std::endl;
+        std::cout
+            << "MAC Neg lifecycle Test! "
+               "Init->Init->Update->Init->Update->Finalize->Finish->Update"
+            << std::endl;
         return false;
     }
     return true;

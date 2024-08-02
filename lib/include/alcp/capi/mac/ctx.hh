@@ -34,7 +34,6 @@ struct Context
 {
     void* m_mac    = nullptr;
     void* m_digest = nullptr;
-    //    alc_cipher_data_t data     = {};
     alc_error_t (*init)(Context*        ctx,
                         const Uint8*    key,
                         Uint64          size,
@@ -44,6 +43,18 @@ struct Context
     alc_error_t (*duplicate)(Context* srcCtx, Context* destCtx);
     void (*finish)(void* mac, void* digest);
     alc_error_t (*reset)(void* mac);
+
+    ~Context()
+    {
+        m_mac     = nullptr;
+        m_digest  = nullptr;
+        init      = nullptr;
+        update    = nullptr;
+        finalize  = nullptr;
+        duplicate = nullptr;
+        finish    = nullptr;
+        reset     = nullptr;
+    }
 };
 
 } // namespace alcp::mac

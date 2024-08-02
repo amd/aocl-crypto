@@ -37,9 +37,16 @@ struct Context
 {
     void* m_rng = nullptr;
 
-    alc_error_t (*read_random)(void* pRng, Uint8* buffer, int size);
-    alc_error_t (*reseed)(void* pRng);
-    alc_error_t (*finish)(void* pRng);
+    alc_error_t (*read_random)(void* pRng, Uint8* buffer, int size) = nullptr;
+    alc_error_t (*reseed)(void* pRng)                               = nullptr;
+    alc_error_t (*finish)(void* pRng)                               = nullptr;
+
+    ~Context()
+    {
+        read_random = nullptr;
+        reseed      = nullptr;
+        finish      = nullptr;
+    }
 };
 
 } // namespace alcp::rng

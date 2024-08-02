@@ -32,9 +32,7 @@ namespace alcp::drbg {
 
 struct Context
 {
-    void* m_drbg = nullptr;
-    // TODO: Add the remaining functions
-
+    void* m_drbg                                                  = nullptr;
     alc_error_t (*initialize)(void*        m_drbg,
                               int          cSecurityStrength,
                               const Uint8* buff,
@@ -46,6 +44,14 @@ struct Context
                              const Uint8  cAdditionalInput[],
                              const size_t cAdditionalInputLength) = nullptr;
     void (*finish)(void* m_drbg)                                  = nullptr;
+
+    ~Context()
+    {
+        m_drbg     = nullptr;
+        initialize = nullptr;
+        randomize  = nullptr;
+        finish     = nullptr;
+    }
 };
 
 } // namespace alcp::drbg
