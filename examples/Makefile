@@ -36,11 +36,11 @@ LIB_DIR := lib
 CFLAGS := -I$(INCLUDE_DIR)
 
 # if linking to shared lib
-LFLAGS := -L $(LIB_DIR) -lalcp -lau_cpuid
+LFLAGS := -L $(LIB_DIR) -lalcp -laoclutils
 
 # if linking to static lib
 ifeq ($(LIB_TYPE), static)
-    LFLAGS = -no-pie -L$(LIB_DIR) -L$(OPENSSL_INSTALL_DIR) -Wl,-Bstatic -l:libalcp.a -l:libau_cpuid.a -lcrypto -Wl,-Bdynamic -lcrypto -lstdc++ -lpthread -ldl
+    LFLAGS = -no-pie -L$(LIB_DIR) -L$(OPENSSL_INSTALL_DIR) -Wl,-Bstatic -l:libalcp.a -l:libaoclutils.a -lcrypto -Wl,-Bdynamic -lcrypto -lstdc++ -lpthread -ldl
 endif
 
 # Add more targets as they come.

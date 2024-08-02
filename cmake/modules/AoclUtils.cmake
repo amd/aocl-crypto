@@ -36,10 +36,10 @@ IF(ENABLE_AOCL_UTILS)
 	)
 	IF(AOCL_UTILS_INSTALL_DIR)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR set, overriding fetch path")
-		set(AOCL_UTILS_STATIC_LIB ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a PARENT_SCOPE)
+		set(AOCL_UTILS_STATIC_LIB ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.a PARENT_SCOPE)
 	ELSE(AOCL_UTILS_INSTALL_DIR)
 		# FIXME: Bug, binary not found in external directory!
-		set(AOCL_UTILS_STATIC_LIB ${CMAKE_BINARY_DIR}/libau_cpuid.a PARENT_SCOPE)
+		set(AOCL_UTILS_STATIC_LIB ${CMAKE_BINARY_DIR}/libaoclutils.a PARENT_SCOPE)
 		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION}/aoclutils)
 
         # # FIXME: Workaround, need to find, this directory is not being created - Possobily created as build time
@@ -53,37 +53,37 @@ IF(ENABLE_AOCL_UTILS)
         add_library(aoclutils-static STATIC IMPORTED)
         IF(MSVC)
             set_target_properties(aoclutils-shared PROPERTIES
-                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/au_cpuid.dll
-                IMPORTED_IMPLIB     ${AOCL_UTILS_INSTALL_DIR}/bin/au_cpuid.lib
+                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/aoclutils.dll
+                IMPORTED_IMPLIB     ${AOCL_UTILS_INSTALL_DIR}/bin/aoclutils.lib
                 COMPILE_OPTIONS "-Wno-microsoft-enum-value"
             ) 
             set_target_properties(aoclutils-static PROPERTIES
-                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/au_cpuid.lib
+                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/aoclutils.lib
             )  
             target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
             target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
         ELSE(MSVC)
             IF(AOCL_UTILS_FETCHED)
                 set_target_properties(aoclutils-shared PROPERTIES
-                    IMPORTED_LOCATION   ${CMAKE_BINARY_DIR}/libau_cpuid.so
+                    IMPORTED_LOCATION   ${CMAKE_BINARY_DIR}/libaoclutils.so
                     INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
                     INTERFACE_INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
                 )  
                 target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_SRC}/SDK/Include)
                 set_target_properties(aoclutils-static PROPERTIES
-                    IMPORTED_LOCATION   ${CMAKE_BINARY_DIR}/libau_cpuid.a
+                    IMPORTED_LOCATION   ${CMAKE_BINARY_DIR}/libaoclutils.a
                     INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
                     INTERFACE_INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
                 )
                 target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_SRC}/SDK/Include)
             ELSE(AOCL_UTILS_FETCHED)
                 set_target_properties(aoclutils-shared PROPERTIES
-                    IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.so
+                    IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.so
                     INCLUDE_DIRECTORIES ${AOCL_UTILS_INSTALL_DIR}/include
                 )      
                 target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
                 set_target_properties(aoclutils-static PROPERTIES
-                    IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a
+                    IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.a
                     INCLUDE_DIRECTORIES ${AOCL_UTILS_INSTALL_DIR}/include
                 )  
                 target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)

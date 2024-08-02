@@ -216,7 +216,7 @@ Linux and alcrypto.dll on Windows)
 For build system we have opted for industry standard CMake (version >=3.18.4),
 and for testing 'Gtest' (Google Test) framework is used.
 
-This library depends on libau_cpuid(A CPU Identification Library), version >= 1.0
+This library depends on libaoclutils (A CPU Identification Library), version >= 1.0
 used by the dynamic dispatcher to select appropriate function.
 
 Documentation is maintained in 'markdown' format, 'pandoc' (version >= 2.9.2.1 )
