@@ -137,8 +137,8 @@ To end with, here is a script which runs everything. Feel free to save this scri
 # AOCL-Cryptography source code directory.
 
 # Global Variables to be modifed depending on repo location
-AOCL_CRYPTO_REPO="git@er.github.amd.com:AOCL/aocl-crypto"
-AOCL_UTILS_REPO="git@github.amd.com:AOCL/aocl-utils"
+AOCL_CRYPTO_REPO="https://github.com/amd/aocl-crypto.git"
+AOCL_UTILS_REPO="https://github.com/amd/aocl-utils.git"
 AOCL_BRANCH="amd-main"
 
 # Function to check if lsb_release is installed
