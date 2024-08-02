@@ -38,6 +38,20 @@ AOCL_BRANCH="amd-main"
 
 # Function to check if lsb_release is installed
 ensure_lsb_release(){
+    if ! type "lsb_release" > /dev/null; then
+        if type "apt" > /dev/null; then
+            if type "sudo" > /dev/null; then
+                sudo apt update
+                sudo apt install lsb-release
+            else
+                echo "lsb-release not found, cannot install! missing \"sudo\" binary"
+                exit -1; # We cannot do anything anymore
+            fi
+        else
+            echo "lsb-release not found, cannot install! missing \"apt\" binary"
+        fi
+    fi
+
     type lsb_release > /dev/null
     if [ $? -ne 0 ]; then
         echo "lsb_release not found!"
@@ -49,6 +63,7 @@ ensure_lsb_release(){
 
 # Function to check if OS is ubuntu with a specific version
 detect_ubuntu(){
+
     lsb_release --id | grep "Ubuntu" > /dev/null
     if [ $? -eq 0 ]; then
         # Detected Ubuntu
@@ -72,10 +87,14 @@ quit_if_status_not_zero(){
 
 # Function to install all packages, OS indipendant (eventually)
 ensure_packages(){
-    detect_ubuntu 22.04
+    detect_ubuntu 24.04
     if [ $? -eq 0 ]; then
         echo "Running \"sudo apt update\""
         sudo apt update                      # Sync repository information
+        echo "Running \"apt install build-essential\""
+        sudo apt install build-essential     # Basic packages to support compilation
+        echo "Running \"apt install lsb-release\""
+        sudo apt install lsb-release         # LSB release to identify OS
         quit_if_status_not_zero $?
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories
@@ -149,8 +168,8 @@ compile_aocl_utils(){
     mkdir build
     echo "cd into build directory"
     cd build
-    echo "Setting GCC-12 as the compiler"
-    export CC=gcc-12; export CXX=g++-12
+    echo "Setting GCC-13 as the compiler"
+    export CC=gcc-13; export CXX=g++-13
     echo "Running \"cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF\""
     cmake ../ -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF
     echo "Running \"make -j $(nproc --all)\""
@@ -172,18 +191,18 @@ compile_aocl_crypto(){
     mkdir build
     echo "cd into build directory"
     cd build
-    echo "Setting GCC-12 as the compiler"
-    export CC=gcc-12; export CXX=g++-12
+    echo "Setting GCC-13 as the compiler"
+    export CC=gcc-13; export CXX=g++-13
     echo "Running \"cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
 -DOPENSSL_INSTALL_DIR=/usr \
 -DCMAKE_INSTALL_PREFIX=$PWD/install \
 -DENABLE_AOCL_UTILS=ON \
--DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install\""
+-DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)\""
     cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
               -DOPENSSL_INSTALL_DIR=/usr \
               -DCMAKE_INSTALL_PREFIX=$PWD/install \
               -DENABLE_AOCL_UTILS=ON \
-              -DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install
+              -DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)
     echo "Running \"make -j $(nproc --all)\""
     make -j $(nproc --all)
     quit_if_status_not_zero $?
@@ -226,6 +245,3 @@ compile_aocl_utils
 compile_aocl_crypto
 # Run an example to show that, its indeed working.
 run_example_cfb
-
-
-

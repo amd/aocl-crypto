@@ -3,7 +3,7 @@
 AOCL-Cryptography is a powerful and flexible cryptography library from AOCL.  
 This guide is meant for people who want to get this library setup without going through all the nitty gritty of cmake, linux and prerequisite setup.
 
-This guide will only focus on Ubuntu-22.04 as its a popular and desktop and server OS. In future this guide might get extended to other operating systems as well.
+This guide will only focus on Ubuntu-24.04 as its a popular and desktop and server OS. In future this guide might get extended to other operating systems as well.
 
 **Note: Below AOCL-Cryptography will be shortened to the repository name AOCL-Crypto.**
 
@@ -15,12 +15,14 @@ Some packages which are required for AOCL-Cryptography can be installed with bel
 
 ```bash
 sudo apt update                      # Sync repository information
+sudo apt install build-essential     # Basic packages to support compilation
+sudo apt install lsb-release         # LSB release to identify OS
 sudo apt install git                 # To clone github repositories
 sudo apt install libssl-dev          # For openssl
 sudo apt install make                # Build system
 sudo apt install cmake               # Build system generator
 sudo apt install p7zip-full          # Re-archive static libs
-sudo apt install gcc-12 g++-12       # Compiler
+sudo apt install gcc-13 g++-13       # Compiler
 ```
 
 What is given above should be sufficient for most users but if your OS did not come with a working install of `sudo`, you can install it by running `apt install sudo` as root. Make sure repository list is upto date.
@@ -76,17 +78,17 @@ mkdir build
 cd build
 
 # Configure AOCL-Cryptography with make build system.
-export CC=gcc-12; export CXX=g++-12
+export CC=gcc-13; export CXX=g++-13
 echo "Running \"cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
 -DOPENSSL_INSTALL_DIR=/usr \
 -DCMAKE_INSTALL_PREFIX=$PWD/install \
 -DENABLE_AOCL_UTILS=ON \
--DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install\""
+-DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)\""
 cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
             -DOPENSSL_INSTALL_DIR=/usr \
             -DCMAKE_INSTALL_PREFIX=$PWD/install \
             -DENABLE_AOCL_UTILS=ON \
-            -DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install
+            -DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)
 
 # Build the project with all available threads.
 make -j $(nproc --all)
@@ -127,7 +129,7 @@ To end with, here is a script which runs everything. Feel free to save this scri
 ```bash
 #!/usr/bin/env bash
 
-# This file is supposed to be a guide to compile AOCL-Cryptography with examples 
+# This file is supposed to be a guide to compile aocl-crypto with examples 
 # from source.
 # It should only require minimal interaction from user.
 # All functions in this file should be straight forward and minimal.
@@ -135,12 +137,26 @@ To end with, here is a script which runs everything. Feel free to save this scri
 # AOCL-Cryptography source code directory.
 
 # Global Variables to be modifed depending on repo location
-AOCL_CRYPTO_REPO="https://github.com/amd/aocl-crypto.git"
-AOCL_UTILS_REPO="https://github.com/amd/aocl-utils.git"
+AOCL_CRYPTO_REPO="git@er.github.amd.com:AOCL/aocl-crypto"
+AOCL_UTILS_REPO="git@github.amd.com:AOCL/aocl-utils"
 AOCL_BRANCH="amd-main"
 
 # Function to check if lsb_release is installed
 ensure_lsb_release(){
+    if ! type "lsb_release" > /dev/null; then
+        if type "apt" > /dev/null; then
+            if type "sudo" > /dev/null; then
+                sudo apt update
+                sudo apt install lsb-release
+            else
+                echo "lsb-release not found, cannot install! missing \"sudo\" binary"
+                exit -1; # We cannot do anything anymore
+            fi
+        else
+            echo "lsb-release not found, cannot install! missing \"apt\" binary"
+        fi
+    fi
+
     type lsb_release > /dev/null
     if [ $? -ne 0 ]; then
         echo "lsb_release not found!"
@@ -152,6 +168,7 @@ ensure_lsb_release(){
 
 # Function to check if OS is ubuntu with a specific version
 detect_ubuntu(){
+
     lsb_release --id | grep "Ubuntu" > /dev/null
     if [ $? -eq 0 ]; then
         # Detected Ubuntu
@@ -175,27 +192,31 @@ quit_if_status_not_zero(){
 
 # Function to install all packages, OS indipendant (eventually)
 ensure_packages(){
-    detect_ubuntu 22.04
+    detect_ubuntu 24.04
     if [ $? -eq 0 ]; then
         echo "Running \"sudo apt update\""
         sudo apt update                      # Sync repository information
+        echo "Running \"apt install build-essential\""
+        sudo apt install build-essential     # Basic packages to support compilation
+        echo "Running \"apt install lsb-release\""
+        sudo apt install lsb-release         # LSB release to identify OS
         quit_if_status_not_zero $?
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories
         quit_if_status_not_zero $?
-        echo "Running \"sudo install libssl-dev\""
+        echo "Running \"sudo apt install libssl-dev\""
         sudo apt install libssl-dev          # For openssl
         quit_if_status_not_zero $?
-        echo "Running \"sudo install make\""
+        echo "Running \"sudo apt install make\""
         sudo apt install make                # Build system
         quit_if_status_not_zero $?
-        echo "Running \"sudo install cmake\""
+        echo "Running \"sudo apt install cmake\""
         sudo apt install cmake               # Build system generator
         quit_if_status_not_zero $?
-        echo "Running \"sudo install p7zip-full\""
+        echo "Running \"sudo apt install p7zip-full\""
         sudo apt install p7zip-full          # Re-archive static libs
         quit_if_status_not_zero $?
-        echo "Running \"sudo install gcc-12 g++-12\""
+        echo "Running \"sudo apt install gcc-12 g++-12\""
         sudo apt install gcc-12 g++-12       # Compiler
         quit_if_status_not_zero $?
         return 0
@@ -252,8 +273,8 @@ compile_aocl_utils(){
     mkdir build
     echo "cd into build directory"
     cd build
-    echo "Setting GCC-12 as the compiler"
-    export CC=gcc-12; export CXX=g++-12
+    echo "Setting GCC-13 as the compiler"
+    export CC=gcc-13; export CXX=g++-13
     echo "Running \"cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF\""
     cmake ../ -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF
     echo "Running \"make -j $(nproc --all)\""
@@ -265,7 +286,7 @@ compile_aocl_utils(){
 
 }
 
-# Function to build AOCL-Cryptography with minimal configuration
+# Function to build aocl-crypto with minimal configuration
 compile_aocl_crypto(){
     
     pushd .
@@ -275,18 +296,18 @@ compile_aocl_crypto(){
     mkdir build
     echo "cd into build directory"
     cd build
-    echo "Setting GCC-12 as the compiler"
-    export CC=gcc-12; export CXX=g++-12
+    echo "Setting GCC-13 as the compiler"
+    export CC=gcc-13; export CXX=g++-13
     echo "Running \"cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
 -DOPENSSL_INSTALL_DIR=/usr \
 -DCMAKE_INSTALL_PREFIX=$PWD/install \
 -DENABLE_AOCL_UTILS=ON \
--DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install\""
+-DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)\""
     cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
               -DOPENSSL_INSTALL_DIR=/usr \
               -DCMAKE_INSTALL_PREFIX=$PWD/install \
               -DENABLE_AOCL_UTILS=ON \
-              -DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install
+              -DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)
     echo "Running \"make -j $(nproc --all)\""
     make -j $(nproc --all)
     quit_if_status_not_zero $?
