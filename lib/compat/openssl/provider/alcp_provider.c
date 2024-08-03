@@ -77,14 +77,17 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
  * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
  * internally tries to use CBC from alcp and multi update is not
  * supported in ALCP as of now.  */
-#if OPENSSL_API_LEVEL < 30200
+
+// FIXME: OpenSSL Test test_quic_multistream fails on OpenSSL 3.3.
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
         case OSSL_OP_CIPHER:
-            EXIT();
-            return ALC_prov_ciphers;
+            // Check if openssl is same as compiled "with" version
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
+                return ALC_prov_ciphers;
+            }
             break;
-#endif
-#endif
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
 
 // Digest providers are disabled as of now due to provider overhead
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST
@@ -92,21 +95,24 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             EXIT();
             return ALC_prov_digests;
             break;
-#endif
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST
 
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
         case OSSL_OP_ASYM_CIPHER:
             if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
                 return alc_prov_asym_ciphers;
             }
             break;
         case OSSL_OP_SIGNATURE:
             if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
                 return alc_prov_signature;
             }
             break;
         case OSSL_OP_KEYMGMT:
             if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
                 return alc_prov_keymgmt;
             }
             break;
@@ -118,14 +124,14 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             //             prov_openssl_default, operation_id, no_cache);
             //     }
             //     break;
-#endif
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
 
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
         case OSSL_OP_MAC:
             EXIT();
             return ALC_prov_macs;
             break;
-#endif
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
 
 #if 0
 /*  FIXME: Disabled  RNG Providers as of now to shift
@@ -135,18 +141,19 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
             EXIT();
             return ALC_prov_rng;
             break;
-#endif
+#endif // if 0
         default:
             break;
     }
-#endif
+
+#endif // if OPENSSL_API_LEVEL >= 30100
 #if LOAD_DEFAULT_PROV
     return OSSL_PROVIDER_query_operation(
         prov_openssl_default, operation_id, no_cache);
 #else
     EXIT();
     return NULL;
-#endif
+#endif // if LOAD_DEFAULT_PROV
 }
 
 /* The error reasons used here */
