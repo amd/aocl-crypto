@@ -53,12 +53,12 @@ IF(ENABLE_AOCL_UTILS)
         add_library(aoclutils-static STATIC IMPORTED)
         IF(MSVC)
             set_target_properties(aoclutils-shared PROPERTIES
-                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/aoclutils.dll
-                IMPORTED_IMPLIB     ${AOCL_UTILS_INSTALL_DIR}/bin/aoclutils.lib
+                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.dll
+                IMPORTED_IMPLIB     ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.lib
                 COMPILE_OPTIONS "-Wno-microsoft-enum-value"
             ) 
             set_target_properties(aoclutils-static PROPERTIES
-                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/aoclutils.lib
+                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.lib
             )  
             target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
             target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
