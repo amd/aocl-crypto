@@ -38,6 +38,7 @@ AOCL-July2024
     - Cipher API homogenization and C++ Interface
     - Performance improvements in CFB, CBC Decrypt algorithms for vaes512 kernel.
     - Padding support in CBC, CTR, OFB, CFB modes.
+    - Unit tests added for all algorithms.
 
   - RSA:
       - PKCS Encrypt & Decrypt algorithms.
@@ -80,10 +81,13 @@ AOCL-July2024
       - Ninja build support added.
       - Checks for dependencies (git-lfs, valgrind, lcov, etc)
       - Windows build system updates
-      - Linking to au_cpuid instead of aocl utils
 
   - Bug fixes in dynamic dispatcher.
-  - Documentation updates.
+  - Documentation updates related to Doxygen and Sphinx.
   - Secure memcopy utilily function.
-  - Memory errors fixed across various algorithms
+  - Memory errors fixed across various algorithms.
+  - High severity defects reported from coverity static analysis tool fixed.
+  - Code clean up.
 
+  - Known issues:
+    - IPP Compat library is in experimental state in 5.0 release
