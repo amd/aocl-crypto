@@ -20,7 +20,7 @@ Please refer to `openssl.pdf` which is present in docs.
 Summary is given below
 
 ### Benchmarking
-​	To bench with the provider, use the following example assuming you are executing command from the root of the package directory.
+​   To bench using provider path, use the following example assuming you are executing command from the root of the package directory.
 
 ​	```openssl speed -provider-path $PWD/lib  -provider libopenssl-compat -evp aes-128-gcm```
 

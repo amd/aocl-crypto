@@ -2,6 +2,19 @@
 
 AOCL-Cryptography uses CMAKE as a build system generator and supports make and Ninja build systems. This document explains the different build flags which can be used to disable/enable specific features for the project. For a quick start into AOCL-Cryptography, please refer to [AOCL-Cryptography Linux Quick Starter](md_docs_resources_Quick_Start.html).
 
+#### Build
+`Run from build directory`
+
+```sh
+$ cmake  -DOPENSSL_INSTALL_DIR=[path_to_openssl_install_dir]  -DAOCL_UTILS_INSTALL_DIR=[path_to_utils_install_dir] ../
+$ make -j 
+```
+#### Using Ninja build System
+
+```sh
+$ cmake -G "Ninja" -DOPENSSL_INSTALL_DIR=[path_to_openssl_install_dir]  -DAOCL_UTILS_INSTALL_DIR=[path_to_utils_install_dir] ../
+$ ninja 
+```
 #### Enabling Features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#example)
@@ -132,7 +145,7 @@ $ cmake -DALCP_DISABLE_ASSEMBLY=ON  ../
 ALCP_DISABLE_ASSEMBLY is OFF by default 
 
 ### Disabling/Enabling Optional Features {#optional}
-By default all of the below features are OFF by default and they can be enabled optionally by setting their corresponding flags to ON
+By default all of the below features are OFF and they can be enabled optionally by setting their corresponding flags to ON
 
 - To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
 - To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 

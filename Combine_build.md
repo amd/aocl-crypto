@@ -8,6 +8,19 @@ To Build AOCL Cryptography for different platforms please refer to the document 
 
 AOCL-Cryptography uses CMAKE as a build system generator and supports make and Ninja build systems. This document explains the different build flags which can be used to disable/enable specific features for the project. For a quick start into AOCL-Cryptography, please refer to [AOCL-Cryptography Linux Quick Starter](md_docs_resources_Quick_Start.html).
 
+#### Build
+`Run from build directory`
+
+```sh
+$ cmake  -DOPENSSL_INSTALL_DIR=[path_to_openssl_install_dir]  -DAOCL_UTILS_INSTALL_DIR=[path_to_aoclutils_install_dir] ../
+$ make -j 
+```
+#### Using Ninja build System
+
+```sh
+$ cmake -G "Ninja" -DOPENSSL_INSTALL_DIR=[path_to_openssl_install_dir]  -DAOCL_UTILS_INSTALL_DIR=[path_to_aoclutils_install_dir] ../
+$ ninja 
+```
 #### Enabling Features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#example)
@@ -139,7 +152,7 @@ $ cmake -DALCP_DISABLE_ASSEMBLY=ON  ../
 ALCP_DISABLE_ASSEMBLY is OFF by default 
 
 ### Disabling/Enabling Optional Features {#optional}
-By default all of the below features are OFF by default and they can be enabled optionally by setting their corresponding flags to ON
+By default all of the below features are OFF and they can be enabled optionally by setting their corresponding flags to ON
 
 - To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
 - To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 
@@ -151,9 +164,9 @@ By default all of the below features are OFF by default and they can be enabled 
 
 - MS Visual Studio (2019 or greater)
 - Clang 15.0 or above
-- Python 3.7 or greater
 - Cmake 3.21 or greater
 - Git
+- Ninja(Alternative to Visual Studio Build System)
 
 ### Environment Setup:
 
@@ -174,6 +187,8 @@ Using Powershell:
 
 ### Build
 
+#### Using VS-Studio Generator
+
 `Run from source directory`
 ```
 PS > cmake -A [platform: x86/x64] -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE] -G "[generator: Visual Studio 17 2022]" -T [toolset:ClangCl/LLVM]
@@ -182,6 +197,11 @@ Default set values:
 - Generator:'Visual Studio Generator'
 - platform: 'x64' if external LLVM toolset use: -T LLVM (otherwise,ClangCl)
 - Available features: EXAMPLES, ADDRESS SANITIZER, TESTS, BENCH
+
+#### Using Ninja build System
+```
+PS > cmake -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE/DEBUG] -DCMAKE_C_COMPILER:FILEPATH=[path to C compiler] -DCMAKE_CXX_COMPILER:FILEPATH=[path_to_cxx_compiler] -G "Ninja"
+```
 
 `Powershell`
 ```
@@ -196,8 +216,10 @@ Default set values:
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
 4. [Enable Address Sanitizer Support ](#win-asan)
-5. [Enable Bench - To compile bench code.](#win-bench)
-6. [Enable Tests - To compile test code](#win-tests)
+5. [Enable Tests - To compile test code](#win-tests)
+6. [Enable Bench - To compile bench code.](#win-bench)
+7. [Enable Compat - To compare with compat libs.](#win-compat)
+8. [Disabling/Enabling Optional Features](#win-optional)
 
 
 #### Steps to find binaries/dll's by setting an environment variable
@@ -210,7 +232,6 @@ PS> scripts\Set_Env_Path.bat
 ```
 
 
-
 #### Enable Examples {#win-ex}
 
 ```
@@ -220,7 +241,7 @@ PS> cmake --build .\build --config=release
 #### Run Examples
 Run from build directory after setting an environment path.
 ```
-$ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
+$ .\examples\{algorithm_type}\release\*.exe
 ```
 
 
@@ -258,6 +279,7 @@ PS> cmake --build . --config=release
 ```
  .\build\tests\{algorithm_type}\release\*.exe
 ```
+For more details see **[README.md](md_tests_README.html)** from tests.
 
 #### To Run Tests:
  ``` PS
@@ -291,7 +313,14 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
 
-## Enabling compat libs
+### Disabling/Enabling Optional Features {#win-optional}
+By default all of the below features are OFF and they can be enabled optionally by setting their corresponding flags to ON
+- To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
+- To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 
+- To Enable OFB multi update feature append flag `-DALCP_ENABLE_OFB_MULTI_UPDATE=ON` to build flags.
+
+
+## Enabling compat libs{#win-compat}
 
 
 1. [Enable OpenSSL - To compare performance .](#win-OSSL)
@@ -304,16 +333,24 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 
 Enabling openSSL
 ```
-PS> cmake -DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl ./
-PS> cmake --build build/ --config=release
+PS> cd aocl-crypto/build
+PS> cmake -DAOCL_COMPAT_LIBS=openssl ../
+PS> cmake --build build --config=release
 ```
+After running all the above commands you should see a `openssl-compat.dll` in \lib\compat\openssl\Release directory
+
+#### Benchmarking
+	To bench using provider path, use the following example assuming you are executing command from openssl bin directory.
+
+	``` .\openssl.exe speed -provider-path {path_to_openssl-compat} -provider openssl-compat -evp aes-128-cbc```
 
 #### Building IPP-CP Compatibility Libs {#win-IPPCP}
 
 Enabling IPP-Crypto
 ```
-PS> cmake -DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=path/to/ipp_crypto ./
-PS> cmake --build build/ --config=release
+PS> cd aocl-crypto/build
+PS> cmake --DAOCL_COMPAT_LIBS=ipp ../
+PS> cmake --build build --config=release
 ```
 
 #### NOTES:
