@@ -43,6 +43,7 @@ struct Context
 
     ~Context()
     {
+        m_rng       = nullptr;
         read_random = nullptr;
         reseed      = nullptr;
         finish      = nullptr;
