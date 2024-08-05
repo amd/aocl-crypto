@@ -1,5 +1,7 @@
 # Instructions to Build/Use IPP-CP plugin
-By preloading the IPP Compat library you will be able to run any applications using AOCL-Cryptography without changing the APIs to crypto from IPPCP. Currently, its verified with KAT and Cross Tests.
+By preloading the IPP Compat library you will be able to run any applications using AOCL-Cryptography without changing the APIs to crypto from IPPCP. 
+
+> <span style="color:red">__Note:__</span> IPP Compat Library is experimental and has currently only been verified on KAT and Cross tests.
 
 ## Building
 
