@@ -70,6 +70,8 @@ $ cmake -DALCP_MEMCHECK_VALGRIND=ON ../
 ```
 ALCP_MEMCHECK_VALGRIND is OFF by default
 
+<span style="color:red"> __Note__: </span> Due to a known limitation in AOCL-Utils, any executables exercising RSA / EC routines might fail when ran with valgrind.
+
 #### Build Benches {#bench}
 
 To build benchmarking support with alcp library, append `-DALCP_ENABLE_BENCH=ON` to the cmake configuration command.

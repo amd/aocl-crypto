@@ -1,7 +1,7 @@
 # Instructions to Build/Use OpenSSL plugin
 AOCL Cryptography's OpenSSL compat library works as an OpenSSL Provider which will redirect API calls from within OpenSSL to AOCL-Cryptography. Currently its enabled only for OpenSSL versions above 3.1 .
  
-> <span style="color:red">__Note:__</span> test_quic_multistream test in OpenSSL make test has failure
+> <span style="color:red">__Note:__</span> Known issue with test_quick_multistream test
 
 ## Building
 
