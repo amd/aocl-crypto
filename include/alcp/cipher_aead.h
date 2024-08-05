@@ -45,29 +45,6 @@ EXTERN_C_BEGIN
  */
 
 /**
- * @brief  Opaque type of a cipher context, comes from the library.
- *
- * @typedef void alc_cipher_context_t
- */
-typedef void                  alc_cipher_context_t;
-typedef alc_cipher_context_t* alc_cipher_context_p;
-
-/**
- *
- * @brief Handle for maintaining session.
- *
- * @param alc_cipher_context_p pointer to the user allocated context of the
- * cipher
- *
- * @struct alc_cipher_handle_t
- *
- */
-typedef struct _alc_cipher_aead_handle
-{
-    alc_cipher_context_p ch_context;
-} alc_cipher_aead_handle_t, *alc_cipher_aead_handle_p;
-
-/**
  * @brief       Gets the size of the context for a session
  * @parblock <br> &nbsp;
  * <b>This AEAD API should be called before @ref alcp_cipher_aead_request to
@@ -90,7 +67,7 @@ alcp_cipher_aead_context_size(void);
  * @endparblock
  * @note     Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false
- * @param [in]    cipherMode       cipher mode to be set
+ * @param [in]    cipherMode       AEAD cipher mode to be set
  * @param [in]    keyLen           key length in bits
  * @param [out]   pCipherHandle    Library populated session handle for future
  * cipher operations.
