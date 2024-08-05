@@ -28,68 +28,47 @@ IF(ENABLE_AOCL_UTILS)
 	MESSAGE(STATUS "Implementing AOCL-UTILS imported library")
 	set(EXTERNAL_INSTALL_LOCATION "${CMAKE_BINARY_DIR}/external")
     set(AOCL_UTILS_SRC "${CMAKE_BINARY_DIR}/external/src/aoclutils")
-	FetchContent_Declare(aoclutils
-		GIT_REPOSITORY git@github.amd.com:AOCL/aocl-utils.git
-		GIT_TAG amd-main
-		SOURCE_DIR ${AOCL_UTILS_SRC}
-		BINARY_DIR "${EXTERNAL_INSTALL_LOCATION}/aoclutils"
-	)
 	IF(AOCL_UTILS_INSTALL_DIR)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR set, overriding fetch path")
-		set(AOCL_UTILS_STATIC_LIB ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.a PARENT_SCOPE)
 	ELSE(AOCL_UTILS_INSTALL_DIR)
-		# FIXME: Bug, binary not found in external directory!
-		set(AOCL_UTILS_STATIC_LIB ${CMAKE_BINARY_DIR}/libaoclutils.a PARENT_SCOPE)
-		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION}/aoclutils)
+        ExternalProject_Add(aoclutils
+            GIT_REPOSITORY git@github.amd.com:AOCL/aocl-utils.git
+            GIT_TAG amd-main
+            SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
+            BINARY_DIR "${EXTERNAL_INSTALL_LOCATION}/aoclutils"
+            CMAKE_ARGS  -DAU_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
+            BYPRODUCTS ${EXTERNAL_INSTALL_LOCATION}/lib/libaoclutils.so ${EXTERNAL_INSTALL_LOCATION}/lib/libaoclutils.a
+        )
 
-        # # FIXME: Workaround, need to find, this directory is not being created - Possobily created as build time
-		# file(MAKE_DIRECTORY ${EXTERNAL_INSTALL_LOCATION}/aoclutils)
+        add_dependencies(alcp aoclutils)
+        add_dependencies(alcp_static aoclutils)
+
+		# FIXME: Bug, binary not found in external directory!
+		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION})
+
+        # FIXME: Workaround, need to find, this directory is not being created - Possobily created as build time
+		file(MAKE_DIRECTORY ${EXTERNAL_INSTALL_LOCATION})
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
-		FetchContent_MakeAvailable(aoclutils)
-		set(AOCL_UTILS_FETCHED ON)
 	ENDIF(AOCL_UTILS_INSTALL_DIR)
-	IF(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
-        add_library(aoclutils-shared SHARED IMPORTED)
-        add_library(aoclutils-static STATIC IMPORTED)
+	IF(EXISTS ${AOCL_UTILS_INSTALL_DIR})
+        set(AOCL_UTILS_STATIC_LIB ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.a)
+        set(AOCL_UTILS_SHARED_LIB ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.so)
+        set(AOCL_UTILS_INCLUDES   ${AOCL_UTILS_INSTALL_DIR}/include)
+        TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INCLUDES})
+		TARGET_INCLUDE_DIRECTORIES(alcp_static PUBLIC ${AOCL_UTILS_INCLUDES})
         IF(MSVC)
-            set_target_properties(aoclutils-shared PROPERTIES
-                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.dll
-                IMPORTED_IMPLIB     ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.lib
-                COMPILE_OPTIONS "-Wno-microsoft-enum-value"
-            ) 
-            set_target_properties(aoclutils-static PROPERTIES
-                IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.lib
-            )  
-            target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
-            target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
+            # Dynamic
+            TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.lib)
+			TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/bin)
+			TARGET_COMPILE_OPTIONS(alcp PRIVATE "-Wno-microsoft-enum-value")
+
+            # Static
+			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.lib)
         ELSE(MSVC)
-            IF(AOCL_UTILS_FETCHED)
-                set_target_properties(aoclutils-shared PROPERTIES
-                    IMPORTED_LOCATION   ${CMAKE_BINARY_DIR}/libaoclutils.so
-                    INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
-                    INTERFACE_INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
-                )  
-                target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_SRC}/SDK/Include)
-                set_target_properties(aoclutils-static PROPERTIES
-                    IMPORTED_LOCATION   ${CMAKE_BINARY_DIR}/libaoclutils.a
-                    INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
-                    INTERFACE_INCLUDE_DIRECTORIES ${AOCL_UTILS_SRC}/SDK/Include
-                )
-                target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_SRC}/SDK/Include)
-            ELSE(AOCL_UTILS_FETCHED)
-                set_target_properties(aoclutils-shared PROPERTIES
-                    IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.so
-                    INCLUDE_DIRECTORIES ${AOCL_UTILS_INSTALL_DIR}/include
-                )      
-                target_include_directories(aoclutils-shared INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
-                set_target_properties(aoclutils-static PROPERTIES
-                    IMPORTED_LOCATION   ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.a
-                    INCLUDE_DIRECTORIES ${AOCL_UTILS_INSTALL_DIR}/include
-                )  
-                target_include_directories(aoclutils-static INTERFACE ${AOCL_UTILS_INSTALL_DIR}/include)
-            ENDIF()
+			TARGET_LINK_LIBRARIES(alcp PRIVATE ${AOCL_UTILS_SHARED_LIB})
+			TARGET_LINK_LIBRARIES(alcp_static PRIVATE ${AOCL_UTILS_STATIC_LIB})
         ENDIF() 
-	ELSE(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
+	ELSE(EXISTS ${AOCL_UTILS_INSTALL_DIR})
 		MESSAGE(FATAL_ERROR "AOCL UTILS fallback error, external directory not found!")
-	ENDIF(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
+	ENDIF(EXISTS ${AOCL_UTILS_INSTALL_DIR})
 ENDIF(ENABLE_AOCL_UTILS)

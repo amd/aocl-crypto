@@ -27,16 +27,6 @@ include(ExternalProject)
 include(FetchContent)
 include(modules/AoclUtils)
 
-
-
-
-# Enable UTILS if enabled and available
-IF(ENABLE_AOCL_UTILS)
-	MESSAGE(STATUS "Enabling AOCL UTILS Support")
-	TARGET_LINK_LIBRARIES(alcp PRIVATE aoclutils-shared)
-	TARGET_LINK_LIBRARIES(alcp_static PRIVATE aoclutils-static)
-ENDIF(ENABLE_AOCL_UTILS)
-
 SET(UTILS_SRCS
   bignum.cc
   #mempool.cc
