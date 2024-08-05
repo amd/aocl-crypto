@@ -416,8 +416,8 @@ CipherFactory<iCipher>::initCipherMap()
         { "aes-cfb-192", { CipherMode::eAesCFB, CipherKeyLen::eKey192Bit } },
         { "aes-cfb-256", { CipherMode::eAesCFB, CipherKeyLen::eKey256Bit } },
 
-        { "aes-xts-128", { CipherMode::eAesCBC, CipherKeyLen::eKey128Bit } },
-        { "aes-xts-256", { CipherMode::eAesCBC, CipherKeyLen::eKey256Bit } },
+        { "aes-xts-128", { CipherMode::eAesXTS, CipherKeyLen::eKey128Bit } },
+        { "aes-xts-256", { CipherMode::eAesXTS, CipherKeyLen::eKey256Bit } },
 
         { "chacha20", { CipherMode::eCHACHA20, CipherKeyLen::eKey256Bit } },
     };
@@ -428,8 +428,8 @@ void
 CipherFactory<iCipherSeg>::initCipherMap()
 {
     m_cipherMap = {
-        { "aes-xts-128", { CipherMode::eAesCBC, CipherKeyLen::eKey128Bit } },
-        { "aes-xts-256", { CipherMode::eAesCBC, CipherKeyLen::eKey256Bit } },
+        { "aes-xts-128", { CipherMode::eAesXTS, CipherKeyLen::eKey128Bit } },
+        { "aes-xts-256", { CipherMode::eAesXTS, CipherKeyLen::eKey256Bit } },
     };
 }
 
