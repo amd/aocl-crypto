@@ -90,4 +90,5 @@ AOCL-July2024
   - Code clean up.
 
   - Known issues:
-    - IPP Compat library is in experimental state in 5.0 release
+    - IPP Compat library is in experimental state in 5.0 release.
+    - RSA and EC algorithms are unsupported in pre-AVX2 architectures.
