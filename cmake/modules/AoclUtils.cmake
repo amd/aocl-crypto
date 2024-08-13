@@ -58,8 +58,8 @@ IF(ENABLE_AOCL_UTILS)
 		TARGET_INCLUDE_DIRECTORIES(alcp_static PUBLIC ${AOCL_UTILS_INCLUDES})
         IF(MSVC)
             # Dynamic
-            TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/bin/libaoclutils.lib)
-			TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/bin)
+            TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.lib)
+			TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib)
 			TARGET_COMPILE_OPTIONS(alcp PRIVATE "-Wno-microsoft-enum-value")
 
             # Static
