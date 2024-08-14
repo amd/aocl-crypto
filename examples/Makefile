@@ -60,12 +60,28 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 			rsa/rsa_pkcs1-v1_5_sign_verify rsa/rsa_pss_sign_verify rsa/rsa_padding_big_num_keys \
 			version/version-demo
 
+define MULTILINE_PYTHON_SCRIPT
+from packaging.version import Version
+import os
+import re
+output = os.popen("openssl version").read()
+print ("Checking openssl version")
+ossl_version = re.findall('[0-9]+\.[0-9]+\.?[0-9]*', output)[0]
+if Version(ossl_version) < Version('3.0.7'):
+	print("Warning!, Using openssl version " + ossl_version)
+	print("Use openssl version > 3.0.7")
+endef
+
+export MULTILINE_PYTHON_SCRIPT
+EMBEDDED_PY := python3 -c "$$MULTILINE_PYTHON_SCRIPT"
+
 .PHONY: all
 
 all: banner create build
 
 banner:
 	@echo "Building examples for AOCL Cryptography"
+	$(EMBEDDED_PY)
 
 create:
 	@mkdir -p  $(OBJ)/cipher
