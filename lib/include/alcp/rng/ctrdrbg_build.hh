@@ -63,6 +63,10 @@ CtrDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 alc_error_t
 CtrDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
+    static bool avx2_available = utils::CpuId::cpuHasAvx2();
+    if (!avx2_available) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
     if ((drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 128)
         | (drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 192)
         | (drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 256)) {
