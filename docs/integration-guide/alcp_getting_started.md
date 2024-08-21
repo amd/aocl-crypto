@@ -26,7 +26,11 @@ colorlinks: true
 
   Using AOCL-Crypto's Native API is better than using Providers or Wrappers as there are some performance overheads associated with them. Our suggested workflow is to get stated with the Providers or Wrapper interfaces, once convinced with the performance, dedicate effort to move to native API.
 
-  Link to other documentations can be found in [Appendix](#appendix)
+  Link to other documentations:
+
+  1. [AOCL-Crypto API Documentation](https://amd.github.io/aocl-crypto/crypto/html/aocl_crypto.html)
+  
+  2. [AOCL Documentation](https://www.amd.com/en/developer/aocl.html)
 
 ## What to use?
 
@@ -40,15 +44,11 @@ colorlinks: true
   If you trying to integrate with already exisiting application, it will take time for you to change from your current library provider to AOCL-Cryptography in one go. Hence we recommend you to use OpenSSL provider (if already using OpenSSL) or (IPP Provider), then rewrite the parts of your code step by step slowly until you replace the dependency with OpenSSL or IPP.
 
 #### OpenSSL 3.x Based Application
-  Application based on OpenSSL can easily use AOCL-Crypto by configuring it to use the provider. AOCL-Crypto's OpenSSL provider documentation found [here](https://github.com/amd/aocl-crypto/blob/main/docs/compat/openssl.pdf), will provide the necessary steps to configure openssl provider for your application. Taking each module, removing OpenSSL code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
+  Application based on OpenSSL can easily use AOCL-Crypto by configuring it to use the provider. AOCL-Crypto's OpenSSL provider documentation found [here](https://amd.github.io/aocl-crypto/crypto/html/openssl_README.html), will provide the necessary steps to configure openssl provider for your application. Taking each module, removing OpenSSL code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
 
 #### IPP-CP based Application
-  Application based on IPP-CP can easily use AOCL-Crypto by configuring it to use the wrapper, IPP-CP provider documentation can be found [here](https://github.com/amd/aocl-crypto/blob/main/docs/compat/ipp.pdf). Taking each module, removing IPP-CP code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
+  Application based on IPP-CP can easily use AOCL-Crypto by configuring it to use the wrapper, IPP-CP provider documentation can be found [here](https://amd.github.io/aocl-crypto/crypto/html/ipp_README.html). Taking each module, removing IPP-CP code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort. Note:   (Note: IPP  Compat  library is in experimental  state in 5.0 release) 
 
-**Note**
-    *Additional overhead due to no direct one on one mapping of api's for few algorithms.*
-    *Example: AESEncryptXTS_Direct, where additional init and de-init performed causes additional overhead.*
-    *In such cases, using OpenSSL provider based approach or direct AOCL-cryptography API is recommended.*
 
 #### Other library based Application
   Other Libraries can be a fork of OpenSSL or IPP-CP, in that case the provider or wrapper interface may still work, its not recommended to use provider or wrapper interface in the perticular situation as it may result in undefined behaviour in the cryptographic application and this can cause security vulnerabilities. Some other libraries like libsodium, libsalt, WolfSSL, MbedTLS etc does not have any provider or wrapper implementation.
@@ -67,50 +67,29 @@ For more info go to doxygen
 
 ## Flow of AOCL-Crypto
 
-Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps.
+Life cycle of any algorithm of AOCL-Crypto is divided into 5 steps.
 
-1. Support Check - After creating the necessary data-strutures (alc_<algo>_info_t), one has to check if it's supported. Calling `alc_error_t err = alcp_<algo>_supported(info)` will return `alc_error_t` which will indicate if support succeded. You can check if the support did indeed succeed by calling `alcp_is_error(err)`, this will return true if support is successful.
+1. Context Allocation - `alc_<algo>_handle_t handle` contains context `handle.context`, this context is used for storing information internal to AOCL Crypto. You can allocate the context by involking  `handle.context = malloc(alcp_<algo>_context_size(info))`. As this memory is allocated by the application, deallocation has to be handled by the application itself.
 
-2. Context Allocation - `alc_<algo>_handle_t handle` contains context `handle.context`, this context is used for storing information internal to AOCL Crypto. You can allocate the context by involking  `handle.context = malloc(alcp_<algo>_context_size(info))`. As this memory is allocated by the application, deallocation has to be handled by the application itself.
+2. Request - Requesting a context from AOCL-Crypto will finalize the internal paths required to achieve the requested task.
+Certain APIS also have an API to check for support, `alcp_<algo>_supported(alc_<algo>_info_t)` indicating based on the given info whether the algorithm is supported. You can request by invoking `alcp_<algo>_request(&info,handle)`.
 
-3. Request - Requesting a context from AOCL-Crypto will finalize the internal paths required to achieve the requested task. You can request by invoking `alcp_<algo>_request(&info,handle)`.
+3. Init - Initialise the handle with the input variables depending on the algorithm. For example, for cipher init will take key and iv as input arguments.
 
 4. Core Operation - Core Operations of the algorithm involes feeding in the data required by the algorithm. Each algotithm will have its own core operations.
 
-5. Finish/Finalize - Some algorithms require `finish` and `finalize` but most of them only require `finish`. To `finish` the operation, you can involk `alcp_<algo>_finish(&handle)`, once finished the handle is no longer valid and must be destroyed by deallocating context. Optionally you can also write zeros to the context memory.
+5. Finish/Finalize - Some algorithms require `finish` and `finalize` but most of them only require `finish`. To `finish` the operation, you can invoke `alcp_<algo>_finish(&handle)`. Once finished the handle is no longer valid and must be destroyed by deallocating context. Optionally you can also write zeros to the context memory.
 
 Every API mentioned above will return an `alc_error_t` which will let you know if any error occured.
 
 ### Cipher
 #### An example C code for encryption using a Cipher AES algorithm
 ```C
-// FIXME: Example to be revised
 #include <stdio.h>
 #include <alcp/alcp.h>
 
-int main(){
 
-  alc_cipher_info_t cinfo = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info     = {
-        .key     = key,
-        .len     = cKeyLen,
-    },
-    .ci_iv   = iv,
-    .ci_mode = ALC_AES_MODE_CFB
-  };
-
-  /* Step 1 Support Phase */
-  err = alcp_cipher_supported(&cinfo);
-  if (alcp_is_error(err)) {
-    printf("Error: Not Supported \n");
-    goto out;
-  }
-  else{
-    printf("Support succeeded\n");
-  }
-
-  /* Step 2 Context Creation Phase */
+  /* Context Creation Phase */
   handle->ch_context = malloc(alcp_cipher_context_size(&cinfo));
   // Memory allocation failure checking
   if (handle->ch_context == NULL) {
@@ -118,10 +97,10 @@ int main(){
       goto out;
   }
 
-  /* Step 3 Request a conext */
-  // Request a context with cinfo
-  err = alcp_cipher_request(&cinfo, handle);
-  if (alcp_is_error(err)) {
+  /* Request a context */
+    // Request a cipher session with AES mode and key
+    err = alcp_cipher_request(ALC_AES_MODE_CFB, keyLen, &handle);
+    if (alcp_is_error(err)) {
       printf("Error: Unable to Request \n");
       goto out;
   }
@@ -130,20 +109,26 @@ int main(){
     return 0;
   }
 
+    // Initialize the session handle with proper key and iv.
+    err = alcp_cipher_init(&handle, pKey, keyLen, iv, ivLen);
+    if (alcp_is_error(err)) {
+        printf("Error: Unable to init \n");
+        goto out;
+    }
+
   /* Core Operations Step specific to algorithm */
-  err = alcp_cipher_encrypt(handle, plaintext, ciphertext, len, iv);
-  if (alcp_is_error(err)) {
+    // Encrypt the plaintext with the initialized key and iv
+    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len);
+    if (alcp_is_error(err)) {
       printf("Error: Unable to Encrypt \n");
-      alcp_error_str(err, err_buf, err_size);
-      printf("%s\n", err_buf);
-      return -1;
+      goto out;
   }
 
-  /* Step 4 Finish/Finalize */
+  out:
+
+  /*Finish/Finalize */
   alcp_cipher_finish(&handle);
   free(handle.ch_context);
-
-}
 
 ```
 In the above code plaintext, ciphertext, len, iv are assumed to be declared.
@@ -175,7 +160,7 @@ There are different ciphers which are supported by ALCP, these ciphers can be gr
 2. ChaCha
 
     i. Stream Cipher Mode
-    ii. Chache20-Poly1305 AEAD
+    ii. Chacha20-Poly1305 AEAD
 
 ##### AES (Advanced Encryption Standard)
 
@@ -193,8 +178,7 @@ All AEAD API has this format `alcp_cipher_aead_<operation>`. Any API which start
 
 Life Cycle of AEAD Core Operations
 
-1. Setting IV - Every AEAD except SIV expects an Initialization vector to be set. For SIV this step is skipped. For CCM mode, it requires tag length to be set prior to IV.
-
+1. Setting IV - Every AEAD except SIV expects an Initialization vector to be set. For SIV this step is skipped.
 2. Setting AAD - `Additional Data` is the `Authentication Data`. This data will influence the final tag generation. It will serve to improve the authenticity of message as any difference in this authentication data will result in an entirely different tag.
 
 3. Encrypt/Decrypt - A plaintext or ciphertext can be given to the algorithm at this stage. Plaintext will be encrypted into ciphertext whereas ciphertext will be decrypted into plaintext.
@@ -208,29 +192,9 @@ Conceptual example not a working example of SIV operation.
 
 Example Code for AES-SIV,
 ```C
-// Info about the cipher operation
-alc_cipher_aead_info_t cinfo = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_algo_info   = {
-        .ai_siv.xi_ctr_key = &kinfo,
-    },
-    .ci_iv   = NULL,
-    /* No padding, Not Implemented yet*/
-    //.pad     = ALC_CIPHER_PADDING_NONE,
-    .ci_key_info     = {
-        .fmt     = ALC_KEY_FMT_RAW,
-        .key     = key_cmac,
-        .len     = key_len,
-    },
-    .ci_mode = ALC_AES_MODE_SIV,
-};
 
-// Support Check
-err = alcp_cipher_aead_supported(&cinfo);
-if (alcp_is_error(err)) {
-    printf("Error: not supported \n");
-}
-printf("supported succeeded\n");
+#include <stdio.h>
+#include <alcp/alcp.h>
 /*
   * Application is expected to allocate for context
   */
@@ -239,258 +203,42 @@ printf("supported succeeded\n");
 handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
 
 // Request
-err = alcp_cipher_aead_request(&cinfo, &handle);
+err = alcp_cipher_aead_request(ALC_AES_MODE_SIV, key_len, &handle);
 if (alcp_is_error(err)) {
     printf("Error: unable to request \n");
-    alcp_error_str(err, err_buf, err_size);
+    goto out;
 }
 printf("request succeeded\n");
 
 /* For SIV directly step 2 as IV is generated synthetically */
-err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
+err = alcp_cipher_aead_init(&handle, pKey, key_len, iv, iv_len);
 if (alcp_is_error(err)) {
-    printf("Error: unable to encrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return false;
+    printf("Error: Unable to init \n");
+    goto out;
 }
 
-/* Step 3 Encrypt stage, tag gets generated here */
+
+
+/* Encrypt stage, tag gets generated here */
 // Memory for IV can be memory for tag, its unused by the API
-err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
 if (alcp_is_error(err)) {
     printf("Error: unable to encrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return false;
+    goto out;
 }
 
-/* Step 4 Tag Generation */
+/* Tag Generation */
 // Tag in this case generated will be the synthetic IV
 err = alcp_cipher_aead_get_tag(&handle, iv, 16);
 if (alcp_is_error(err)) {
     printf("Error: unable to encrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return false;
+    goto out;
 }
 
+out:
 // Finish the operation
 alcp_cipher_aead_finish(&handle);
-
 // Deallocate context
 free(handle.context);
 ```
 
-
-###### CCM
-
-Conceptual example not a working example of CCM operation.
-
-Example Code for AES-CCM,
-```C
-// Info about the cipher operation
-alc_cipher_aead_info_t cinfo = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_iv   = iv,
-    /* No padding, Not Implemented yet*/
-    //.pad     = ALC_CIPHER_PADDING_NONE,
-    .ci_key_info     = {
-        .fmt     = ALC_KEY_FMT_RAW,
-        .key     = key,
-        .len     = key_len,
-    },
-    .ci_mode = ALC_AES_MODE_CCM,
-};
-
-// Support Check
-err = alcp_cipher_aead_supported(&cinfo);
-if (alcp_is_error(err)) {
-    printf("Error: not supported \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-printf("supported succeeded\n");
-
-// Context Allocation
-handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
-if (!handle.ch_context)
-    return -1;
-
-// Request
-err = alcp_cipher_aead_request(&cinfo, &handle);
-if (alcp_is_error(err)) {
-    printf("Error: unable to request \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-printf("request succeeded\n");
-
-/* Step 0 Additional step for CCM, set tag length */
-err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
-if (alcp_is_error(err)) {
-    printf("Error: unable getting tag \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 1 set IV */
-err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
-if (alcp_is_error(err)) {
-    printf("Error: unable ccm encrypt init \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 2 set Additional Data */
-err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
-if (alcp_is_error(err)) {
-    printf("Error: unable ccm add data processing \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 3 Encrypt/Decrypt */
-err =
-    alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
-if (alcp_is_error(err)) {
-    printf("Error: unable encrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 4 Get the Tag */
-err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
-if (alcp_is_error(err)) {
-    printf("Error: unable getting tag \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-// Finish
-alcp_cipher_aead_finish(&handle);
-
-// Deallocate the context
-free(handle.ch_context);
-
-```
-
-###### GCM
-
-Conceptual example not a working example of GCM operation.
-
-Example Code for AES-GCM,
-
-```C
-// Info about the cipher operation
-alc_cipher_aead_info_t cinfo = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_iv   = iv,
-    /* No padding, Not Implemented yet*/
-    //.pad     = ALC_CIPHER_PADDING_NONE,
-    .ci_key_info     = {
-        .fmt     = ALC_KEY_FMT_RAW,
-        .key     = key,
-        .len     = key_len,
-    },
-    .ci_mode = ALC_AES_MODE_GCM
-};
-
-// Support Check
-err = alcp_cipher_aead_supported(&cinfo);
-if (alcp_is_error(err)) {
-    printf("Error: not supported \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-// Context Allocation
-handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
-if (!handle.ch_context)
-    return -1;
-
-// Request
-err = alcp_cipher_aead_request(&cinfo, &handle);
-if (alcp_is_error(err)) {
-    printf("Error: unable to request \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 1 Set IV */
-err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
-if (alcp_is_error(err)) {
-    printf("Error: unable gcm encrypt init \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 2 set additional data */
-err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
-if (alcp_is_error(err)) {
-    printf("Error: unable gcm add data processing \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 3 Encrypt or Decrypt */
-err =
-    alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
-if (alcp_is_error(err)) {
-    printf("Error: unable encrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-/* Step 4 Get Tag */
-err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
-if (alcp_is_error(err)) {
-    printf("Error: unable getting tag \n");
-    alcp_error_str(err, err_buf, err_size);
-    return -1;
-}
-
-// Finish the operation
-alcp_cipher_aead_finish(&handle);
-
-// Deallocate the context
-free(handle.context)
-
-```
-# [ Work in Progress ]
-
-#### Asymmetric Cipher Algorithms
-
-### Digest
-
-### Message Authentication Code (MAC)
-
-### Random Number Generator (RNG)
-
-
-# Appendix
-
-## Link to Other Documentations
-
-### Github [pdf]
-
-Latest documentation from Github repo.
-
-1. [OpenSSL Provider Documentation](https://github.com/amd/aocl-crypto/blob/main/docs/compat/openssl.pdf)
-
-2. [IPP Wrapper Documetation](https://github.com/amd/aocl-crypto/blob/main/docs/compat/ipp.pdf)
-
-3. [AOCL-Crypto API Documentation]()
-
-4. [AOCL Documentation](https://www.amd.com/en/developer/aocl.html)
-
-### Local [markdown]
-
-If viewing as markdown, you can use below links
-
-1. [OpenSSL Provider Documentation](../../compat/openssl.pdf)
-
-2. [IPP Wrapper Documetation](../../compat/ipp.pdf)
-
-3. [AOCL-Crypto API Documentation]()
-
-4. [AOCL Documentation](https://www.amd.com/en/developer/aocl.html)
-
-5. [AOCL-Crypto Examples](../../examples/)

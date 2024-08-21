@@ -41,4 +41,5 @@
  ELSE()
      add_subdirectory(internal)
      add_subdirectory(compat)
+     add_subdirectory(integration-guide)
  ENDIF()
