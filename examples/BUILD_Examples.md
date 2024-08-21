@@ -4,10 +4,6 @@ The example snippets can be found in the source code and the package under `aocl
 
 **An example [snippet](https://github.com/amd/aocl-crypto/blob/main/examples/cipher/aes-cfb.c) for AES CFB Cipher**
 
-To compile AOCL-Cryptography with examples, refer to
-    - [ Linux ](md_Combine_build.html#md_BUILD)
-    - [ Windows ](md_Combine_build.html#md_BUILD_Windows)
-
 The examples executables for each module will be generated in aocl-crypto/build/examples/
 
 **NOTE:**  

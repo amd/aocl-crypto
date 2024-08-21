@@ -1,6 +1,6 @@
 # AOCL Cryptography Library Build
 
-AOCL-Cryptography uses CMAKE as a build system generator and supports make and Ninja build systems. This document explains the different build flags which can be used to disable/enable specific features for the project. For a quick start into AOCL-Cryptography, please refer to [AOCL-Cryptography Linux Quick Starter](md_docs_resources_Quick_Start.html).
+AOCL-Cryptography uses CMAKE as a build system generator and supports make and Ninja build systems. This document explains the different build flags which can be used to disable/enable specific features for the project. For a quick start into AOCL-Cryptography, please refer to [AOCL-Cryptography Linux Quick Starter](./docs/resources/Quick_Start.md).
 
 #### Build
 `Run from build directory`
@@ -17,20 +17,20 @@ $ ninja
 ```
 #### Enabling Features of AOCL Cryptography
 
-1. [Enable Examples - To compile example/demo code.](#example)
-2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#aocl-utils)
-3. [Enable DEBUG Build - To compile code in Debug Mode.](#debug)
-4. [Enable Address Sanitizer Support ](#asan)
-5. [Enable Valgrind Memcheck Support ](#memcheck)
-6. [Enable Bench - To compile bench code.](#bench)
-7. [Enable Tests - To compile test code](#tests)
-8. [Build docs in pdf form](#internal-doc)
-9. [Build Doxygen and Sphinx docs](#doxygen)
-10. [Build with dynamic compiler selection ](#dyncompile)
-11. [Build with assembly disabled](#assembly)
-12. [Disabling/Enabling Optional Features](#optional)
+1. [Enable Examples - To compile example/demo code.](#enable-examples)
+2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#enable-aocl-utils)
+3. [Enable DEBUG Build - To compile code in Debug Mode.](#build-debug-configuration)
+4. [Enable Address Sanitizer Support ](#for-compiling-with-address-sanitizer-support)
+5. [Enable Valgrind Memcheck Support ](#for-compiling-with-valgrind-memcheck)
+6. [Enable Bench - To compile bench code.](#build-benches)
+7. [Enable Tests - To compile test code](#build-tests-using-kat-vectors)
+8. [Build docs in pdf form](#to-enable-all-pdf-documentation)
+9. [Build Doxygen and Sphinx docs](#to-enable-both-doxygen-and-sphinx)
+10. [Build with dynamic compiler selection ](#to-enable-dynamic-compiler-selection-while-building)
+11. [Build with assembly disabled](#to-disable-assembly-implementation-and-use-intrinsics-kernels)
+12. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
 
-#### Enable Examples {#example}
+#### Enable Examples
 
 To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuration command.
 ```sh
@@ -38,7 +38,7 @@ $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 ALCP_ENABLE_EXAMPLES is ON by default
 
-#### Enable AOCL-UTILS {#aocl-utils}
+#### Enable AOCL-UTILS
 
 To enable aocl utils checks, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
 ```bash
@@ -46,7 +46,7 @@ $ cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/sourc
 ```
 ENABLE_AOCL_UTILS is ON by default
 
-#### Build Debug Configuration {#debug}
+#### Build Debug Configuration
 
 To build in debug mode, append `-DCMAKE_BUILD_TYPE=DEBUG` to the cmake configuration command.
 ```sh
@@ -54,7 +54,7 @@ $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ```
 CMAKE_BUILD_TYPE is set to RELEASE by default
 
-#### For Compiling with Address Sanitizer Support {#asan}
+#### For Compiling with Address Sanitizer Support
 
 To enable sanitizers (asan, tsan etc), append `-DALCP_SANITIZE=ON` to the cmake configuration command.
 ```sh
@@ -62,7 +62,7 @@ $ cmake -DALCP_SANITIZE=ON ../
 ```
 ENABLE_AOCL_UTILS is OFF by default
 
-#### For Compiling with Valgrind Memcheck {#memcheck}
+#### For Compiling with Valgrind Memcheck
 
 In order to build ALCP to run binaries with valgrind to detect any memory leaks
 ```sh
@@ -72,7 +72,7 @@ ALCP_MEMCHECK_VALGRIND is OFF by default
 
 <span style="color:red"> __Note__: </span> Due to a known limitation in AOCL-Utils, any executables exercising RSA / EC routines might fail when ran with valgrind.
 
-#### Build Benches {#bench}
+#### Build Benches
 
 To build benchmarking support with alcp library, append `-DALCP_ENABLE_BENCH=ON` to the cmake configuration command.
 ```sh
@@ -82,7 +82,7 @@ ALCP_ENABLE_BENCH is OFF by default
 
 Benchmarks will be built into `bench/{algorithm_type}/`
 
-Please look into **[ README.md ](md_bench_README.html)** from bench.
+Please look into **[ README.md ](./bench/README.md)** from bench.
 
 #### Execute Benchmarks
 ```
@@ -95,7 +95,7 @@ $ ./bench/digest/bench_digest --benchmark_filter=SHA2_512_16 (runs SHA256 scheme
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
 
-#### Build Tests (using KAT vectors) {#tests}
+#### Build Tests (using KAT vectors)
 To enable tests, append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_TESTS=ON ../
@@ -104,7 +104,7 @@ ALCP_ENABLE_TESTS is OFF by default
 
 Test executables can be found inside `tests/{algorithm_type}` directory 
 
-For more details see **[README.md](md_tests_README.html)** from tests.
+For more details see **[README.md](./tests/README.md)** from tests.
 
 #### Execute Tests
  ```  shell
@@ -114,14 +114,24 @@ For more details see **[README.md](md_tests_README.html)** from tests.
 
 ### Documentation
 
-#### To enable all PDF documentation {#internal-doc}
+#### To enable all PDF documentation
 These documentations include design documents, Provider documentation etc in PDF format which will be generated.
 ```sh
 $ cmake -DALCP_ENABLE_DOCS=ON ../
 ```
 ALCP_ENABLE_DOCS is OFF by default
 
-#### To enable both Doxygen and Sphinx{#doxygen}
+Note: Needs the proprietary font “Klavika” to be installed in the system
+
+#### To enable both Doxygen and Sphinx
+
+To enable sphinx documentation before running the CMAKE command install the required python dependencies by
+
+```sh
+cd aocl-crypto
+pip install -r sphinx/requirements.txt
+```
+To enable the HTML documentations - Sphinx and doxygen
 ```sh
 $ cmake -DALCP_ENABLE_HTML=ON ../
 ```
@@ -133,20 +143,20 @@ $ cmake -DALCP_ENABLE_HTML=ON  -DALCP_ENABLE_DOXYGEN=ON -DALCP_ENABLE_SPHINX=OFF
 ```
 ALCP_ENABLE_DOXYGEN, ALCP_ENABLE_SPHINX both are OFF by default 
 
-### To enable Dynamic compiler selection while building{#dyncompile}
+### To enable Dynamic compiler selection while building
 If this option is enabled it will dynamically select between gcc/clang for compiling certain files to improve performance.
 ```sh
 $ cmake -DALCP_ENABLE_DYNAMIC_COMPILER_PICK=ON  ../ 
 ```
 ALCP_ENABLE_DYNAMIC_COMPILER_PICK is on by default 
 
-### To disable assembly implementation and use intrinsics Kernels{#assembly}
+### To disable assembly implementation and use intrinsics Kernels
 ```sh
 $ cmake -DALCP_DISABLE_ASSEMBLY=ON  ../ 
 ```
 ALCP_DISABLE_ASSEMBLY is OFF by default 
 
-### Disabling/Enabling Optional Features {#optional}
+### Disabling/Enabling Optional Features
 By default all of the below features are OFF and they can be enabled optionally by setting their corresponding flags to ON
 
 - To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 

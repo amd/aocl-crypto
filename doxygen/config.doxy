@@ -973,7 +973,6 @@ WARN_LOGFILE           =
 # shown in doxygen docs
 INPUT                  = BUILD.md \
                          BUILD_Windows.md \
-                         Combine_build.md \
                          docs/examples \
                          lib/compat/ipp/README.md \
                          lib/compat/openssl/README.md \

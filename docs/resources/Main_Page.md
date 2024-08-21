@@ -120,8 +120,8 @@ RNG
 ### Building
 
 To Build AOCL-Cryptography for different platform please refer to the document related to your platform
-    - [ Linux ](md_Combine_build.html#md_BUILD)
-    - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
+    - [ Linux ]( md_docs_resources_Combine_build.html#md_BUILD)
+    - [ Windows ](md_docs_resources_Combine_build.html#md_BUILD_Windows)
 
 ## Examples {#Example}
 

@@ -30,7 +30,7 @@
     <tab type="user" visible="yes" url = "md_docs_resources_Related_Pages.html" title="Related Pages" intro=""/>
     <tab type="modules" visible="yes" title="APIs" intro=""/>
     <!-- Not needed Currently uncomment if we need documentation tab in future -->
-    <!-- <tab type="user" url="md_Combine_build.html" visible="no" title="Documentation"/> -->
+    <!-- <tab type="user" url="md_docs_resources_Combine_build.html" visible="no" title="Documentation"/> -->
 </navindex>
 
 <!-- This is required to keep the brief description and remove the detailed description -->

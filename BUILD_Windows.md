@@ -53,14 +53,14 @@ PS > cmake -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE/DE
 
 ### Enabling features of AOCL Cryptography
 
-1. [Enable Examples - To compile example/demo code.](#win-ex)
-2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)
-3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
-4. [Enable Address Sanitizer Support ](#win-asan)
-5. [Enable Tests - To compile test code](#win-tests)
-6. [Enable Bench - To compile bench code.](#win-bench)
-7. [Enable Compat - To compare with compat libs.](#win-compat)
-8. [Disabling/Enabling Optional Features](#win-optional)
+1. [Enable Examples - To compile example/demo code.](#enable-examples)
+2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#enable-aocl-utils)
+3. [Enable DEBUG Build - To compile code in Debug Mode.](#for-debug-build)
+4. [Enable Address Sanitizer Support ](#for-compiling-with-address-sanitizer-support)
+5. [Enable Tests - To compile test code](#to-build-tests-using-kat-vectors)
+6. [Enable Bench - To compile bench code.](#build-benchmarks)
+7. [Enable Compat - To compare with compat libs.](#enabling-compat-libs)
+8. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
 
 
 #### Steps to find binaries/dll's by setting an environment variable
@@ -73,8 +73,7 @@ PS> scripts\Set_Env_Path.bat
 ```
 
 
-#### Enable Examples {#win-ex}
-
+#### Enable Examples 
 ```
 PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
 PS> cmake --build .\build --config=release
@@ -86,21 +85,21 @@ $ .\examples\{algorithm_type}\release\*.exe
 ```
 
 
-#### Enable AOCL-UTILS {#win-cpu}
+#### Enable AOCL-UTILS 
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
 ```
 
 
-#### For Debug Build {#win-debug}
+#### For Debug Build 
 
 ```
 PS> cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
 PS> cmake --build .\build --config=debug
 ```
 
-#### For Compiling with Address Sanitizer Support {#win-asan}
+#### For Compiling with Address Sanitizer Support 
 
 ```
 PS> cmake -DALCP_SANITIZE=ON -B build
@@ -110,7 +109,7 @@ PS> cmake --build .\build --config=release
  Running from build directory
 PS>cd build
 
-#### To Build Tests (using KAT vectors) {#win-tests}
+#### To Build Tests (using KAT vectors) 
 ```
 $ Append the argument '-DALCP_ENABLE_TESTS=ON'
 PS> cmake -DALCP_ENABLE_TESTS=ON ./
@@ -129,7 +128,7 @@ PS> cmake --build . --config=release
 PS> ctest -C release
 ```
 
-#### Build Benchmarks {#win-bench}
+#### Build Benchmarks 
 
 ##### To Build Bench
 
@@ -157,38 +156,37 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
 
-### Disabling/Enabling Optional Features {#win-optional}
+### Disabling/Enabling Optional Features
 By default all of the below features are OFF and they can be enabled optionally by setting their corresponding flags to ON
 - To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
 - To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 
 - To Enable OFB multi update feature append flag `-DALCP_ENABLE_OFB_MULTI_UPDATE=ON` to build flags.
 
-### Enabling compat libs{#win-compat}
+### Enabling compat libs
 
-1. [Enable OpenSSL - To compare performance .](#win-OSSL)
-2. [Enable IPPCP - To compare performance.](#win-IPPCP)
+1. [Enable OpenSSL - To compare performance .](#building-openssl-compatibility-libs)
+2. [Enable IPPCP - To compare performance.](#building-ipp-cp-compatibility-libs)
 
 ### Build after enabling compat libs
 
-#### Building OpenSSL Compatibility Libs {#win-OSSL}
-
-```
+#### Building OpenSSL Compatibility Libs
 Enabling openSSL
 ```
 PS> cd aocl-crypto/build
 PS> cmake -DAOCL_COMPAT_LIBS=openssl ../
 PS> cmake --build build --config=release
+
 ```
 After running all the above commands you should see a openssl-compat.dll in \lib\compat\openssl\Release directory
 
 #### Benchmarking
 ​	To bench using provider path, use the following example assuming you are executing command from the openssl bin directory.
 
-​	``` .\openssl.exe speed -provider-path {path_to_openssl-compat} -provider openssl-compat -evp aes-128-cbc```
-
-#### Building IPP-CP Compatibility Libs {#win-IPPCP}
-
 ```
+.\openssl.exe speed -provider-path {path_to_openssl-compat} -provider openssl-compat -evp aes-128-cbc
+```
+#### Building IPP-CP Compatibility Libs
+
 Enabling IPP-Crypto
 ```
 PS> cd aocl-crypto/build
