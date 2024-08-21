@@ -73,6 +73,7 @@ Each algorithm would exist in at least 2 forms
   2. An Optimized Implementation.
         - AVX  SIMD
         - AVX2 SIMD
+        - AVX512 SIMD
         - AESNI accelerated instructions
         - Hardware off-load processing
 
@@ -82,13 +83,6 @@ full implementation of AVX.
 
 Each of them are dynamically dispatched to at runtime based on CPUID features.
 
-Offloading Support: Accelerators are the new trend in high-end computing to take
-the load of computing and are becoming de-facto standard in the industry. The
-library supports device plugins which extends the functionality to work with a
-device for offloading. For ex: Hash computation SHA256, greatly useful in
-Cryptocurrency mining need not waste CPU time, could generate millions of hashes
-per second using offloading.
-
 ## Design Consideration
 
 AOCL Cryptography is expected to cater new as well as existing customers. Current
@@ -97,13 +91,6 @@ BoringSSL-crypto, MbedTLS etc, and may not want to recompile their entire
 software stack with AOCL Cryptography. A solution must be provided to experiment with
 AOCL Cryptography and to enable existing software stacks to easily migrate.
 
-A module is a subsystem of AOCL Cryptography like Symmetric Cipher or a Digest. Each
-module has various algorithms listed under them for easier management.
-
-A plugin is a loadable module which extends a module or adds new modules. This
-enables AMD to deliver new algorithms as an extension to the existing software
-early and safely.
-
 All are version checked, and time to time libraries are updated and upgraded so
 that all versions need not be maintained.
 
@@ -111,28 +98,25 @@ that all versions need not be maintained.
 AOCL Cryptography assumes following libraries/tools available on system where it is
 built or running.
 
-  - CMake (3.18.4 or later)
-  - GCC (11.0 or later)
-  - Git (2.30.2 or later)
-  - OpenSSL ( 3.1 or later)
-  - Pandoc ( + LaTeX for generating pdf docs)
+  - Required Dependancies
+    - CMake (3.22 or later)
+    - GCC (11.0 or later)
+    - Git (2.30.2 or later)
+    - OpenSSL ( 3.0.7 or later )
+    - LSB Release
+    - Make ( 4.0 or later )
+    - 7zip ( 15.0 or later )
+  - Optional Dependancies
+    - Pandoc ( + LaTeX for generating pdf docs)
+    - Doxygen
+    - Sphinx
 
 ## General Constraints (TODO: TBD)
-The library will contain all the listed algorithms eventually. At the library
-completeness level the priority is only for implementing one over other for a
-given release than choosing one over the other algorithm to include in library.
+The library will contain all the listed algorithms eventually.
 
 OpenSSL compatibility library needs to be co-developed along with AOCL Cryptography,
 as the requirement for drop-in replacement is crucial for AOCL Cryptography to
 succeed.
-
-## Goals and Guidelines
-AOCL Cryptography aims at achieving FIPS certification. Source code is expected to be
-highly secure and tamper resistant.
-All developers are requested to adhere to coding standard and guidelines
-provided. Recommended Readings:
-  - Writing Secure Code (Microsoft Press)
-  - Secure Coding Cookbook
 
 # Architectural Strategies (TODO: TBD)
 ## Programming Details
@@ -147,22 +131,6 @@ AOCL Cryptography makes use of AMD's CPUID identification library and RNG (rando
 number generator) library to provide additional functionality like dynamic
 dispatcher. The RNG library also provides needed seeds for the algorithms
 in need.
-
-Plugins feature enables useful and necessary functionality to extend the
-library\'s capability itself. By providing new algorithms and new modes to
-existing algorithm it allows to extend current library without need for upgrade.
-
-Later versions of the library also supports offloading of some of the
-computation using various device plugins. These computations may be partial or
-fully supported by additional accelerators in the system/platform.
-
-Crypto library\'s errors are cleverly designed to report all possible error from
-modules and algorithms. With support to extend the current error reporting
-mechanism to add new errors.
-
-Concurrency is in the heart of the design where no locks are needed allow the
-functionality itself. However locks are used when adding/removing
-modules/plugins to/from the library.
 
 ## Apps for testing
 
@@ -266,178 +234,106 @@ subjected to change, overall structure would be comparable to following
 ### Design
 
 ### API
-This section needs to be populated from Detailed Subsystem design, and each
-subsystem needs to either make use of existing error codes or define new ones
-that may be relevant only to that subsystem.
-
-If any subsystem requires a specific error code, such system should fill in the
-error code in specified `alc_error_t` with their name as one of the prefixes.
-For example, Key management subsystem would add `ALC_E_KEY_INVALID` instead of
-using existing `ALC_E_INVALID`.
-
-TODO: This structure needs to go to proper section
-
-The `alc_error_t` is designed to contain all the information in a single 64-bit
-value. For external API user, its just an opaque type defined to be a pointer.
+Error in AOCL Cryptography library is handled using an `uint64_t` value. It has
+few possible values which is defined in `alcp/error.h`. Errors are defined in
+an enum `alc_error_generic_t`. 
 
 ```c
 typedef uint64_t alc_error_t;
 
 ```
 
-All modules in AOCL Cryptography library has an assigned ID which is internal
-to the library. However detailed error message can be printed using the function
-`alc_error_str()`.
-
-The function `alc_error_str_internal()` will perform the same action as
-`alc_error_str()`. Just that it prints the filename and line number where the
-error function was called. This is used only internally in the library.
-
 ```c
-/**
-* \brief        Converts AOCL Cryptography errors to human readable form
-* \notes        This is internal usage only, prints Filename and line number
-*
-* \param err    Actual Error
-* \param buf    Buffer to write the Error message to
-* \param size   Size of the buffer @buf
-* \param file   Name of the file where error occurred
-* \param line   Line number in @file where error occurred
-*/
-
-void
-alc_error_str_internal(alc_error_t err,
-                       uint8_t    *buf,
-                       uint64_t    size,
-                       const char *file,
-                       uint64_t      line
-                       )
+typedef enum _alc_error_generic
 {
-    assert(buf != NULL);
-    assert(size != 0);
-}
+    /*
+     * All is well
+     */
+    ALC_ERROR_NONE = 0UL,
+
+    /*
+     * An Error,
+     *    but cant be categorized correctly
+     */
+    ALC_ERROR_GENERIC,
+
+    /*
+     * Not Supported,
+     *  Any of Feature, configuration,  Algorithm or  Keysize not supported
+     */
+    ALC_ERROR_NOT_SUPPORTED,
+
+    /*
+     * Not Permitted,
+     *  Operation supported but not permitted by this module/user etc.
+     *  Kind of permission Denied situation, could be from the OS
+     */
+    ALC_ERROR_NOT_PERMITTED,
+
+    /*
+     * Exists,
+     *  Something that is already exists is requested to register or replace
+     */
+    ALC_ERROR_EXISTS,
+
+    /*
+     * Does not Exist,
+     *   Requested configuration/algorithm/module/feature  does not exists
+     */
+    ALC_ERROR_NOT_EXISTS,
+
+    /*
+     * Invalid argument
+     */
+    ALC_ERROR_INVALID_ARG,
+
+    /*
+     * Bad Internal State,
+     *   Algorithm/context is in bad state due to internal Error
+     */
+    ALC_ERROR_BAD_STATE,
+
+    /*
+     * No Memory,
+     *  Not enough free space available, Unable to allocate memory
+     */
+    ALC_ERROR_NO_MEMORY,
+
+    /*
+     * Data validation failure,
+     *   Invalid pointer / Sent data is invalid
+     */
+    ALC_ERROR_INVALID_DATA,
+
+    /*
+     * Size Error,
+     *   Data/Key size is invalid
+     */
+    ALC_ERROR_INVALID_SIZE,
+
+    /*
+     * Hardware Error,
+     *   not in sane state, or failed during operation
+     */
+    ALC_ERROR_HARDWARE_FAILURE,
+
+    /* There is not enough entropy for RNG
+        retry needed with more entropy */
+    ALC_ERROR_NO_ENTROPY,
+
+    /*
+     *The Tweak key and Encryption is same
+     *for AES-XTS mode
+     */
+    ALC_ERROR_DUPLICATE_KEY,
+
+    /*
+     * Mismatch is tag observed in Decrypt
+     */
+    ALC_ERROR_TAG_MISMATCH,
+
+} alc_error_generic_t;
 ```
-
-The function `alc_error_str()` will decode a given error to message string, both
-the buffer and length of the buffer needs to be passed by the user to know the
-error.
-
-```c
-/**
-* \brief        Converts AOCL Cryptography errors to human readable form
-*/
-void
-alcp_error_str(alc_error_t err,
-               al_u8* buf,
-               size_t size)
-{
-    assert(buf != NULL);
-    assert(size != 0);
-
-    /* Write to Buffer */
-}
-
-```
-
-
-
-### Implementation
-Internally errors are represented as `class Error`
-
-
-
-
-## Module Manager
-
-The AOCL Cryptography library has internal module management for easy house keeping. A
-module is a collection of algorithms, and each algorithm will register itself
-with the Module Manager; each algorithm registers itself using the following
-APIs.
-
-  - `alcp_module_register()`
-  - `alcp_module_deregister()`
-  - `alcp_module_available()`
-
-Some of the modules internally recognized at the time of writing are:
-  - Digests   (`ALC_MODULE_DIGEST`)
-  - Symmetric Ciphers (`ALC_MODULE_CIPHER`)
-  - Message Authentication Codes (MAC) (`ALC_MODULE_MAC`)
-  - Key Derivation Functions (KDF) (`ALC_MODULE_KEY`)
-  - Random Number Generator (RNG) (`ALC_MODULE_RNG`)
-  - Digest Signing and Verification (`ALC_MODULE_SIGN`)
-  - Padding (`ALC_MODULE_PAD`)
-
-Each module supports its own operation. For example, a Symmetric key module
-supports
-  - `alcp_cipher_encrypt()`
-  - `alcp_cipher_decrypt()`
-  - `alcp_cipher_available()`
-
-The module also supports downward API's to register and manage algorithms. An
-algorithm is a unit, an indivisible entity, that allows operations that are
-specific to each type of module.
-
-### Design
-Each module is identified by the `alc_module_info_t` structure. It describes the
-module type and supported operations.
-
-The Module Manager is constructed as 'Singleton' pattern, a single instance
-exists per process.
-
-```c
-typedef enum {
-    ALC_MODULE_TYPE_INVALID = 0,
-
-    ALC_MODULE_TYPE_DIGEST,
-    ALC_MODULE_TYPE_MAC,
-    ALC_MODULE_TYPE_EC,
-    ALC_MODULE_TYPE_CIPHER,
-    ALC_MODULE_TYPE_KDF,
-    ALC_MODULE_TYPE_RNG,
-    ALC_MODULE_TYPE_PADDING,
-
-    ACL_MODULE_TYPE_MAX,
-} alc_module_type_t;
-
-```
-
-The `alc_module_info_t` describes the module. The simple signature is checked to see if
-the module belongs to aocl stack.
-
-```c
-typedef struct {
-    const char         *name;
-    alc_signature_t     signature;
-    alc_module_type_t   type;
-    void               *ops;
-} alc_module_info_t;
-```
-
-Each module will have its own operations structure, for example: A Symmetric
-Cipher algorithm will provide its own 'ops' structure as described in [Symmetric
-Cipher Ops](#the-alc-cipher-ops-t-structure)
-
-### APIs
-
-The API `alcp_module_register()` tries to register the module with the module
-manager, the registration process returns appropriate error codes to identify
-the registration process's outcome.
-Like other parts of AOCL Cryptography, use the `alcp_is_error()` API to detect success
-or error. For more description see [ALC Error Types](#error-types)
-
-```c
-if (alcp_is_error(err)) {
-
-}
-```
-
-
-```c
-alc_error_t
-alcp_module_register(alc_module_info_t *info);
-```
-
-
 
 ## Dispatcher
 The dynamic dispatcher will populate each kind of algorithm with best suitable
@@ -469,13 +365,6 @@ the algorithms supported by the newly loaded plugin.
 Detailed Subsystem Design
         #include design/02-subsystem-design.md
 -->
-
-
-<!--
-Plugin system design
-        #include design/plugins.md
--->
-
 
 <!--
 Device offloading

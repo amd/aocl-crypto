@@ -1,78 +1,6 @@
 # Detailed Subsystem Design
 
-## Key Management (TODO: WIP)
-Key management is decoupled from algorithms, allowing any algorithm to use any
-key. However each algorithm checker will ensure that only supported keys are
-passed down to the actual implementation.
-
-The Key types enumeration `alc_key_type_t` suggest what keys are in possession,
-and `alc_key_alg_t` determines the algorithm to be used for key derivation (if
-any). The `alc_key_fmt_t` suggests if the keys are encoded in some format, and
-needed to be converted in order to use. The `alc_key_attr_t` suggest type of key
-in each of `alc_key_type_t`. For ex:
-
-### Key Types
-```c
-typedef enum {
-    ALC_KEY_TYPE_UNKNOWN   = 0,
-
-    ALC_KEY_TYPE_SYMMETRIC = 0x10,  /* Will cover all AES,DES,CHACHA20 etc */
-    ALC_KEY_TYPE_PRIVATE   = 0x20,
-    ALC_KEY_TYPE_PUBLIC    = 0x40,
-    ALC_KEY_TYPE_DER       = 0x80,
-    ALC_KEY_TYPE_PEM       = 0x100,
-    ALC_KEY_TYPE_CUSTOM    = 0x200,
-
-    ALC_KEY_TYPE_MAX,
-} alc_key_type_t;
-```
-
-Key management module returns following errors,
-
-  - `ALC_KEY_ERROR_INVALID` : When an Invalid key type or pattern is sent to the API
-  - `ALC_KEY_ERROR_BAD_LEN` : When key length is not matching with keytype
-  - `ALC_KEY_ERROR_NOSUPPORT` : When key type is not supported.
-
-### Key Algorithm
-```c
-typedef enum {
-    ALC_KEY_ALG_WILDCARD,
-    ALC_KEY_ALG_DERIVATION,
-    ALC_KEY_ALG_AGREEMENT,
-    ALC_KEY_ALG_SYMMETRIC,
-    ALC_KEY_ALG_SIGN,
-    ALC_KEY_ALG_AEAD,
-    ALC_KEY_ALG_MAC,
-    ALC_KEY_ALG_HASH,
-
-    ALC_KEY_ALG_MAX,
-} alc_key_alg_t;
-```
-
-### The Key format
-Key format specifies if the key represented by the buffer is encoded in some
-form or its just a series of bytes
-
-```c
-typedef enum {
-    ALC_KEY_FMT_RAW,    /* Default should be fine */
-    ALC_KEY_FMT_BASE64, /* Base64 encoding*/
-} alc_key_fmt_t ;
-```
-
-```c
-\#define ALC_KEY_LEN_DEFAULT  128
-\#define BITS_TO_BYTES(x) (x >> 8)
-
-typedef struct {
-    uint32_t          k_len;    /* Key length in bits */
-    uint8_t           k_key[0]; /* Key follows the rest of the structure */
-} alc_key_info_t;
-```
-
-
 ## Digests
-
 ### Design
 The datatype `alc_digest_mode_t` describes the digest that is being requested or
 operated on.
@@ -80,6 +8,9 @@ operated on.
 ```c
 typedef enum _alc_digest_mode
 {
+    ALC_MD5,
+    ALC_SHA1,
+    ALC_MD5_SHA1,
     ALC_SHA2_224,
     ALC_SHA2_256,
     ALC_SHA2_384,
@@ -268,110 +199,56 @@ accepts various parameters to determine cipher and exact mode to operate.
 
 ```c
 alc_error_t
-alcp_cipher_request(alc_cipher_info_t *cinfo,
-                    alc_key_info_t    *kinfo,
-                    alc_context_t     *ctx
-                    );
+alcp_cipher_request(const alc_cipher_mode_t cipherMode,
+                    const Uint64            keyLen,
+                    alc_cipher_handle_p     pCipherHandle);
 ```
 
-In the above api, `alc_cipher_info_t` is described as in
-[`alc_cipher_info_t`](#the-alc-cipher-info-t-structure), which describes the
-cipher action with specific key information indicated by
-[`alc_key_info_t`](#the-alc-key-info-t-structure) and A context for the session
-is described by [`alc_context_t`](#the-alc-context-t-structure). The Context
-describes everything needed for the algorithm to start and finish the operation.
-The key type is as described in the
-[`alc_key_info_t`](#the-alc-key-info-t-structure).
+In the above api, `alc_cipher_mode_t` is described as in
+[`alc_cipher_mode_t`](#the-alc_cipher_mode_t-type), which describes the
+cipher type and mode of operation
 
-#### The `alc_cipher_ctx_t` structure ####
+```c
+
+```
+
+#### The `alc_cipher_context_t` structure ####
 
 The Cipher's context is very specific to a given cipher algorithm. This
-structure or its contents are purely internal to the library, hence it will be
-sent as a handle with opaque type.
+type is an opaque pointer which is purely internal to the library.
 
 ```c
-typedef struct {
-    void *private;
-} alc_cipher_ctx_t;
-```
-
-#### The `alc_cipher_ops_t` structure ####
-
-This is a structure intended to be handled by the "Module Manager". Each cipher
-algorithm will present following functions to the module manager.
-
-```c
-
-```
-
-#### The `alc_cipher_info_t` structure ####
-
-Cipher metadata is contained in the `alc_cipher_info_t`, describes the Cipher
-algorithm and Cipher mode along with additional padding needed.
-
-```c
-typedef struct {
-    alc_cipher_algo_t    c_algo;
-    alc_cipher_mode_t    c_mode;
-    alc_cipher_padding_t c_pad;
-    alc_key_info_t       c_keyinfo;
-} alc_cipher_info_t;
-```
-
-#### The `alc_cipher_algo_t` type ####
-
-Any new algo needs to be added towards the end of the enumeration but before the
-`ALC_CIPHER_ALGO_MAX`.
-
-```c
-typedef enum {
-    ALC_CIPHER_ALGO_NONE = 0, /* INVALID: Catch the default case */
-
-    ALC_CIPHER_ALGO_DES,
-    ALC_CIPHER_ALGO_3DES,
-    ALC_CIPHER_ALGO_BLOWFISH,
-    ALC_CIPHER_ALGO_CAST_128,
-    ALC_CIPHER_ALGO_IDEA,
-    ALC_CIPHER_ALGO_RC2,
-    ALC_CIPHER_ALGO_RC4,
-    ALC_CIPHER_ALGO_RC5,
-    ALC_CIPHER_ALGO_AES,
-
-    ALC_CIPHER_ALGO_MAX
-} alc_cipher_algo_t ;
+typedef void alc_cipher_context_t;
 ```
 
 #### The `alc_cipher_mode_t` type ####
 
 Cipher modes are expressed in one of the following enumerations
 ```c
-typedef enum {
-    ALC_CIPHER_MODE_NONE = 0, /* INVALID: Catch the default case */
+typedef enum _alc_cipher_mode
+{
+    ALC_AES_MODE_NONE = 0,
 
-    ALC_CIPHER_MODE_ECB,
-    ALC_CIPHER_MODE_CBC,
-    ALC_CIPHER_MODE_CFB,
-    ALC_CIPHER_MODE_OFB,
-    ALC_CIPHER_MODE_CTR,
+    // aes ciphers
+    ALC_AES_MODE_ECB,
+    ALC_AES_MODE_CBC,
+    ALC_AES_MODE_OFB,
+    ALC_AES_MODE_CTR,
+    ALC_AES_MODE_CFB,
+    ALC_AES_MODE_XTS,
+    // non-aes ciphers
+    ALC_CHACHA20,
+    // aes aead ciphers
+    ALC_AES_MODE_GCM,
+    ALC_AES_MODE_CCM,
+    ALC_AES_MODE_SIV,
+    // non-aes aead ciphers
+    ALC_CHACHA20_POLY1305,
 
-    ALC_CIPHER_MODE_CCM,
-    ALC_CIPHER_MODE_GCM,
+    ALC_AES_MODE_MAX,
+
 } alc_cipher_mode_t;
 ```
-
-
-#### The `alc_cipher_padding_t` type ####
-
-```c
-typedef enum {
-    ALC_CIPHER_PADDING_NONE = 0,
-    ALC_CIPHER_PADDING_ISO7816,
-    ALC_CIPHER_PADDING_PKCS7,
-} alc_cipher_padding_t;
-
-```
-
-
 
 ### AES (Advanced Encryption Standard) ###
 
@@ -393,28 +270,6 @@ initially was supplied as IV (Initialization Vector).
 ### AEAD Ciphers (TODO: WIP) ###
 
 ### Key Derivation Functions (KDF) (TODO: WIP) ###
-
-
-#### Padding ####
-
-Padding will take care of aligning the data to given length and filling the
-newly aligned area with provided pattern.
-
-```c
-/* \fn alcrypt_padding_pad Pads the given input to the size specified
- * @param ctx AlCrypto Context
- */
-alc_status_t
-alcp_padding_pad(alc_context_t *ctx, alc_u8 *in, size_t size);
-```
-
-```c
-size_t alcp_padding_size(alc_context_t *ctx);
-```
-
-```c
-alc_status_t alcrypt_padding_unpad(alc_context_t *ctx);
-```
 
 
 
@@ -445,45 +300,12 @@ distribution formats. The library also supports 'Descrete' and 'Continuous'
 distribution formats.
 RNG type specified
   - i : Integer based
-  - s : Single Precision
-  - d : Double Precision
-
-Continuous Distribution formats:
-
-| Distribution | Datatype             | RNG  | Description                                           |
-| :--          | :--:                 | :--: | :--                                                   |
-| Beta         | s,d                  |      | Beta distribution                                     |
-| Cauchy       | s,d                  |      | Cauchy distribution                                   |
-| ChiSquare    | s,d                  |      | Chi-Square distribution                               |
-| Dirichlet    | alpha[, size])       |      | Dirichlet distribution.                               |
-| Exponential  | s,d                  |      | Exponential Distribution                              |
-| Gamma        | s,d                  |      | Gamma distribution                                    |
-| Gaussian     | s,d                  |      | Normal (Gaussian) distribution                        |
-| Gumbel       | s,d                  |      | Gumbel (extreme value) distribution                   |
-| Laplace      | s,d                  |      | Laplace distribution (double exponent)                |
-| Logistic     | [loc, scale, size])  |      | logistic distribution.                                |
-| Lognormal    | s,d                  |      | Lognormal distribution                                |
-| Pareto       | a[, size])           |      | Pareto II or Lomax distribution with specified shape. |
-| Rayleigh     | s,d                  |      | Rayleigh distribution                                 |
-| Uniform      | s,d                  |      | Uniform continuous distribution on [a,b)              |
-| Vonmises     | mu, kappa[, size])   |      | von Mises distribution.                               |
-| Weibull      | s,d                  |      | Weibull distribution                                  |
-| Wald         | mean, scale[, size]) |      | Wald, or inverse Gaussian, distribution.              |
-| Zipf         | a[, size])           |      | Zipf distribution.                                    |
 
 Descrete Distribution formats:
 
 | Type of Distribution | Data Types | RNG  | Description                                             |
 | :--                  | :--:       | :--: | :--                                                     |
-| Bernoulli            | i          | s    | Bernoulli distribution                                  |
-| Binomial             | i          | d    | Binomial distribution                                   |
-| Geometric            | i          | s    | Geometric distribution                                  |
-| Hypergeometric       | i          | d    | Hypergeometric distribution                             |
-| Multinomial          | i          | d    | Multinomial distribution                                |
-| Negbinomial          | i          | d    | Negative binomial distribution, or Pascal distribution  |
-| Poisson_V            | i          | s    | Poisson distribution with varying mean                  |
-| Uniform_Bits         | i          | i    | Uniformly distributed bits in 32-bit chunks             |
-| Uniform              | i          | d    | Uniform discrete distribution on the interval [a,b)     |
+| Uniform              | i          | i    | Uniform discrete distribution on the interval [a,b)     |
 |                      | i          | i    | Uniformly distributed bits in 64-bit chunks             |
 
 
@@ -537,8 +359,8 @@ typedef enum {
 } alc_rng_source_t;
 ```
 
-Random Generation algorithms and their distribution are described by enumeration
-`alc_rng_distribution_t`.
+Random Generation algorithms and their distribution are described by 
+enumeration `alc_rng_distribution_t`.
 
 ```c
 typedef enum {
@@ -619,48 +441,6 @@ alcp_rng_gen_random(alc_context_t *tt,
                     uint8_t       *buf,  /* RNG output buffer */
                     uint64_t       size  /* output buffer size */
                     );
-```
-
-
-
-
-
-
-### Utilities ###
-
-#### Base-64 encoding and decoding ####
-
-Encoding to Base-64 helps to print the long data into textual format. It uses
-6-bits of input to encode into one of the following characters.
-First 26 letters of uppercase alphabets, and next 26 letters are using lowercase
-alphabets, rest of them use the digits 0-9 and ' + ', ' / '.
-
-```c
-static char base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                           "abcdefghijklmnopqrstuvwxyz"
-                           "0123456789+/";
-```
-
-APIs include `alcp_base64_encode()` and `alcp_base64_decode()`
-
-```c
-alc_error_t
-alcp_base64_encode(unsigned char *in,
-                   uint64_t       in_size,
-                   unsigned char *out,
-                   uint64_t       out_len
-                   );
-```
-
-
-```c
-alc_error_t
-alcp_base64_decode(unsigned char *in,
-                   uint64_t       in_len,
-                   unsigned char *out,
-                   uint64_t       out_len
-                   );
-
 ```
 
 ## Random Number Generator (RNG)
