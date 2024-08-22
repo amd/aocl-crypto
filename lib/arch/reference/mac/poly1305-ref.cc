@@ -70,6 +70,7 @@ alc_error_t
 Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
 {
     alc_error_t err       = ALC_ERROR_NONE;
+    m_finalized = false;
     Uint8*      p_m_key_8 = reinterpret_cast<Uint8*>(m_key);
     // Uint8* m_acc_8 = reinterpret_cast<Uint8*>(m_accumulator);
 
