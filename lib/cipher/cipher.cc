@@ -379,7 +379,7 @@ CipherFactory<INTERFACE>::getCpuCipherFeature()
                                        // no acceleration, Fall back to
                                        // reference
 
-    if (CpuId::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni() && CpuId::cpuHasAvx2()) {
         cpu_feature = CpuCipherFeatures::eAesni;
 
         if (CpuId::cpuHasVaes()) {
