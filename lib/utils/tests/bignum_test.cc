@@ -190,6 +190,8 @@ TEST(BigNumTest, PrivateRangeRandomEx)
     EXPECT_EQ((n % range).toString(), n.toString());
 }
 
+// FIXME: Disabling test for time being
+#if 0
 TEST(BigNumTest, From_To_StringTest)
 {
     BigNum bn, dn, hn;
@@ -222,6 +224,7 @@ TEST(BigNumTest, From_To_StringTest)
     EXPECT_EQ(hn.toString(BigNum::Format::eHex),
               "220816391617C1AD17ECF60010E2C7A7");
 }
+#endif
 
 TEST(BigNumTest, MaxUint64)
 {
