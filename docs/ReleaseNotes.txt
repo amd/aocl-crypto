@@ -23,7 +23,7 @@ Highlights of AOCL Crypto version 4.2.1
 AOCL-July2024
 ---------------------------------------------------------------------------
   - OpenSSL Provider:
-    - Enabled support for CMAC, Poly1305, Cipher, RSA, Algorithms
+    - Enabled support for CMAC, Poly1305, Cipher, RSA Algorithms
     - Various Bug fixes in provider path.
 
   - Cipher:
@@ -91,4 +91,4 @@ AOCL-July2024
 
   - Known issues:
     - IPP Compat library is in experimental state in 5.0 release.
-    - RSA and EC algorithms are unsupported in pre-AVX2 architectures.
+    - AES Ciphers, RSA and EC algorithms are not supported in pre-AVX2 architectures.
