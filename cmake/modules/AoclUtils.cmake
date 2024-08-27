@@ -37,7 +37,7 @@ IF(ENABLE_AOCL_UTILS)
             SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
             BINARY_DIR "${EXTERNAL_INSTALL_LOCATION}/aoclutils"
             CMAKE_ARGS  -DAU_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
-            BYPRODUCTS ${EXTERNAL_INSTALL_LOCATION}/lib/libaoclutils.so ${EXTERNAL_INSTALL_LOCATION}/lib/libaoclutils.a
+            BYPRODUCTS ${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.so ${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libaoclutils.a
         )
 
         add_dependencies(alcp aoclutils)
