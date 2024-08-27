@@ -117,7 +117,7 @@ TEST(OFB, creation)
 {
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
-    EXPECT_TRUE(ofb != nullptr);
+    ASSERT_TRUE(ofb != nullptr);
     delete alcpCipher;
 }
 
@@ -127,7 +127,7 @@ TEST(OFB, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb != nullptr);
+    ASSERT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -144,7 +144,7 @@ TEST(OFB, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb != nullptr);
+    ASSERT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(plainText.size());
 
@@ -164,7 +164,7 @@ TEST(OFB, MultiUpdateEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb != nullptr);
+    ASSERT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -196,7 +196,7 @@ TEST(OFB, MultiUpdateDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    EXPECT_TRUE(ofb != nullptr);
+    ASSERT_TRUE(ofb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -243,7 +243,7 @@ TEST(OFB, RandomEncryptDecryptTest)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ofb        = alcpCipher->create("aes-ofb-256");
 
-        EXPECT_TRUE(ofb != nullptr);
+        ASSERT_TRUE(ofb != nullptr);
 
         alc_error_t s = ofb->init(key_256, 256, &iv[0], sizeof(iv));
         if (s != ALC_ERROR_NONE) {

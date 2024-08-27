@@ -35,7 +35,7 @@ TEST(CMACSIV, Initiantiation)
 {
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto siv        = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
-    EXPECT_TRUE(siv != nullptr);
+    ASSERT_TRUE(siv != nullptr);
     delete alcpCipher;
 }
 
@@ -45,6 +45,8 @@ TEST(CMACSIV, setKeys)
     Uint8     key[cKeySize * 2] = {};
     auto      alcpCipher        = new CipherFactory<iCipherAead>;
     auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+
+    ASSERT_TRUE(siv != nullptr);
 
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
@@ -60,6 +62,8 @@ TEST(CMACSIV, addAdditionalInput)
     auto      alcpCipher        = new CipherFactory<iCipherAead>;
     auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
+    ASSERT_TRUE(siv != nullptr);
+
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
     err = siv->setAad(aad, cAadSize);
@@ -72,8 +76,8 @@ TEST(CMACSIV, encTest1)
 {
     const int cKeySize = 16, cAadSize = 24, cPtSize = 14, padLen = 2;
     Uint8     aad[cAadSize] = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-                            0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+                                0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+                                0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
     Uint8     key[cKeySize * 2] = {
         0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8, 0xf7, 0xf6, 0xf5,
         0xf4, 0xf3, 0xf2, 0xf1, 0xf0, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5,
@@ -83,7 +87,7 @@ TEST(CMACSIV, encTest1)
                                    0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc,
                                    0xdd, 0xee, 0x00, 0x00 };
     std::vector<Uint8> ct_exp  = { 0x40, 0xc0, 0x2b, 0x96, 0x90, 0xc4, 0xdc,
-                                  0x04, 0xda, 0xef, 0x7f, 0x6a, 0xfe, 0x5c };
+                                   0x04, 0xda, 0xef, 0x7f, 0x6a, 0xfe, 0x5c };
     std::vector<Uint8> ct_act(cPtSize + padLen, 0);
 
     std::vector<Uint8> v_exp = {
@@ -93,6 +97,8 @@ TEST(CMACSIV, encTest1)
     std::vector<Uint8> v_act(16, 0);
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+
+    ASSERT_TRUE(siv != nullptr);
 
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
@@ -129,7 +135,7 @@ TEST(CMACSIV, encTest2)
         0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xa0
     };
     Uint8 nonce[]           = { 0x09, 0xf9, 0x11, 0x02, 0x9d, 0x74, 0xe3, 0x5b,
-                      0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
+                                0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
     Uint8 key[cKeySize * 2] = {
         0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x7a, 0x79, 0x78, 0x77, 0x76, 0x75,
         0x74, 0x73, 0x72, 0x71, 0x70, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45,
@@ -156,6 +162,8 @@ TEST(CMACSIV, encTest2)
     std::vector<Uint8> v_act(16, 0);
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+
+    ASSERT_TRUE(siv != nullptr);
 
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
@@ -210,6 +218,8 @@ TEST(CMACSIV, decTest1)
     std::vector<Uint8> v_act(16, 0);
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+
+    ASSERT_TRUE(siv != nullptr);
 
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
@@ -274,6 +284,8 @@ TEST(CMACSIV, decTest2)
     std::vector<Uint8> v_act(16, 0);
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+
+    ASSERT_TRUE(siv != nullptr);
 
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);

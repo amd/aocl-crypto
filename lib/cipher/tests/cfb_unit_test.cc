@@ -125,7 +125,7 @@ TEST(CFB, creation)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cfb        = alcpCipher->create("aes-cfb-128", feature);
         delete alcpCipher;
-        EXPECT_TRUE(cfb != nullptr);
+        ASSERT_TRUE(cfb != nullptr);
     }
 }
 
@@ -134,7 +134,7 @@ TEST(CFB, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    EXPECT_TRUE(cfb != nullptr);
+    ASSERT_TRUE(cfb != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -151,7 +151,7 @@ TEST(CFB, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    EXPECT_TRUE(cfb != nullptr);
+    ASSERT_TRUE(cfb != nullptr);
 
     std::vector<Uint8> output(plainText.size());
 
@@ -171,7 +171,7 @@ TEST(CFB, MultiUpdateEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    EXPECT_TRUE(cfb != nullptr);
+    ASSERT_TRUE(cfb != nullptr);
 
     std::vector<Uint8> output(plainText.size());
 
@@ -202,7 +202,7 @@ TEST(CFB, MultiUpdateDecryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cfb        = alcpCipher->create("aes-cfb-128", feature);
 
-        EXPECT_TRUE(cfb != nullptr);
+        ASSERT_TRUE(cfb != nullptr);
 
         std::vector<Uint8> output(plainText.size());
 
@@ -263,7 +263,7 @@ TEST(CFB, RandomEncryptDecryptTest)
             auto                     alcpCipher = new CipherFactory<iCipher>;
             auto cfb = alcpCipher->create("aes-cfb-256", feature);
 
-            EXPECT_TRUE(cfb != nullptr);
+            ASSERT_TRUE(cfb != nullptr);
 
             cfb->init(key_256, 256, &iv[0], sizeof(iv));
 

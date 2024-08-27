@@ -108,7 +108,9 @@ class ChaChaPolyTest : public testing::Test
     {
         alcpCipher = new CipherFactory<iCipherAead>();
         aead       = alcpCipher->create("chachapoly");
+        ASSERT_TRUE(aead != nullptr);
     }
+
     void destroyChachaPolyObject() { delete alcpCipher; }
 
     void setInputValues()

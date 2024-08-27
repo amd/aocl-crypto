@@ -181,7 +181,7 @@ TEST(CTR, creation)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ctr        = alcpCipher->create("aes-ctr-128", feature);
         delete alcpCipher;
-        EXPECT_TRUE(ctr != nullptr);
+        ASSERT_TRUE(ctr != nullptr);
     }
 }
 
@@ -190,7 +190,7 @@ TEST(CTR, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ctr        = alcpCipher->create("aes-ctr-128");
 
-    EXPECT_TRUE(ctr != nullptr);
+    ASSERT_TRUE(ctr != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -219,7 +219,7 @@ TEST(CTR, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ctr        = alcpCipher->create("aes-ctr-128");
 
-    EXPECT_TRUE(ctr != nullptr);
+    ASSERT_TRUE(ctr != nullptr);
 
     std::vector<Uint8> output(plainText.size());
 
@@ -258,7 +258,7 @@ TEST(CTR, MultiUpdateEncryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ctr        = alcpCipher->create("aes-ctr-128", feature);
 
-        EXPECT_TRUE(ctr != nullptr);
+        ASSERT_TRUE(ctr != nullptr);
 
         std::vector<Uint8> output(plainText.size());
 
@@ -290,7 +290,7 @@ TEST(CTR, MultiUpdateDecryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ctr        = alcpCipher->create("aes-ctr-128", feature);
 
-        EXPECT_TRUE(ctr != nullptr);
+        ASSERT_TRUE(ctr != nullptr);
 
         std::vector<Uint8> output(plainText.size());
 
@@ -351,7 +351,7 @@ TEST(CTR, RandomEncryptDecryptTest)
             auto                     alcpCipher = new CipherFactory<iCipher>;
             auto ctr = alcpCipher->create("aes-ctr-256", feature);
 
-            EXPECT_TRUE(ctr != nullptr);
+            ASSERT_TRUE(ctr != nullptr);
 
             alc_error_t err = ctr->init(key_256, 256, &iv[0], sizeof(iv));
 

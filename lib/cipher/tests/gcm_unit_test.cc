@@ -257,6 +257,8 @@ class GCM_KAT
         alcpCipher = new CipherFactory<iCipherAead>;
         pGcmObj    = alcpCipher->create(keyToModStr(key.size()));
 
+        ASSERT_TRUE(pGcmObj != nullptr);
+
         // Key
         m_err = pGcmObj->init(getPtr(key), key.size() * 8, nullptr, 0);
         EXPECT_EQ(m_err, ALC_ERROR_NONE);
@@ -288,11 +290,13 @@ TEST(GCM, Instantiation)
         auto        alcpCipher = new CipherFactory<iCipherAead>;
         auto        aead       = alcpCipher->create("aes-gcm-128");
         alc_error_t err        = ALC_ERROR_NONE;
-        if (aead != nullptr)
-            aead->init(key, 128, nullptr, 0);
-        else
-            EXPECT_NE(aead, nullptr);
+
+        ASSERT_TRUE(aead != nullptr);
+
+        aead->init(key, 128, nullptr, 0);
+
         EXPECT_EQ(err, ALC_ERROR_NONE);
+
         delete alcpCipher;
     }
 
@@ -300,11 +304,13 @@ TEST(GCM, Instantiation)
         auto        alcpCipher = new CipherFactory<iCipherAead>;
         auto        aead       = alcpCipher->create("aes-gcm-192");
         alc_error_t err        = ALC_ERROR_NONE;
-        if (aead != nullptr)
-            aead->init(key, 192, nullptr, 0);
-        else
-            EXPECT_NE(aead, nullptr);
+
+        ASSERT_TRUE(aead != nullptr);
+
+        aead->init(key, 192, nullptr, 0);
+
         EXPECT_EQ(err, ALC_ERROR_NONE);
+
         delete alcpCipher;
     }
 
@@ -312,11 +318,13 @@ TEST(GCM, Instantiation)
         auto        alcpCipher = new CipherFactory<iCipherAead>;
         auto        aead       = alcpCipher->create("aes-gcm-256");
         alc_error_t err        = ALC_ERROR_NONE;
-        if (aead != nullptr)
-            err = aead->init(key, 256, nullptr, 0);
-        else
-            EXPECT_NE(aead, nullptr);
+
+        ASSERT_TRUE(aead != nullptr);
+
+        err = aead->init(key, 256, nullptr, 0);
+
         EXPECT_EQ(err, ALC_ERROR_NONE);
+
         delete alcpCipher;
     }
 }
@@ -434,6 +442,8 @@ TEST(GCM, InvalidTagLen)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
+    ASSERT_TRUE(aead != nullptr);
+
     err = aead->init(key, 128, iv, 7);
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -481,6 +491,8 @@ TEST(GCM, EncryptUpdateSingle)
 
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
+
+    ASSERT_TRUE(aead != nullptr);
 
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -532,6 +544,8 @@ TEST(GCM, EncryptUpdateMultiple)
 
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
+
+    ASSERT_TRUE(aead != nullptr);
 
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -587,6 +601,8 @@ TEST(GCM, DecryptUpdateSingle)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
+    ASSERT_TRUE(aead != nullptr);
+
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -636,6 +652,8 @@ TEST(GCM, DecryptUpdateMultiple)
 
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
+
+    ASSERT_TRUE(aead != nullptr);
 
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -692,6 +710,8 @@ TEST(GCM, EncryptUpdateMultipleStream)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
+    ASSERT_TRUE(aead != nullptr);
+
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -745,6 +765,8 @@ TEST(GCM, DecryptUpdateMultipleStream)
 
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
+
+    ASSERT_TRUE(aead != nullptr);
 
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);

@@ -127,7 +127,7 @@ TEST(CBC, creation)
 #endif
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cbc        = alcpCipher->create("aes-cbc-128", feature);
-        EXPECT_TRUE(cbc != nullptr);
+        ASSERT_TRUE(cbc != nullptr);
         delete alcpCipher;
     }
 }
@@ -137,7 +137,7 @@ TEST(CBC, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cbc        = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-    EXPECT_TRUE(cbc != nullptr);
+    ASSERT_TRUE(cbc != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -155,7 +155,7 @@ TEST(CBC, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cbc        = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-    EXPECT_TRUE(cbc != nullptr);
+    ASSERT_TRUE(cbc != nullptr);
 
     std::vector<Uint8> output(plainText.size());
 
@@ -176,7 +176,7 @@ TEST(CBC, MultiUpdateEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cbc        = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-    EXPECT_TRUE(cbc != nullptr);
+    ASSERT_TRUE(cbc != nullptr);
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -216,7 +216,7 @@ TEST(CBC, MultiUpdateDecryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cbc = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-        EXPECT_TRUE(cbc != nullptr);
+        ASSERT_TRUE(cbc != nullptr);
 
         std::vector<Uint8> output(cipherText.size());
 
@@ -284,7 +284,7 @@ TEST(CBC, PaddingEncryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cbc        = alcpCipher->create("aes-cbc-128", feature);
 
-        EXPECT_TRUE(cbc != nullptr);
+        ASSERT_TRUE(cbc != nullptr);
 
         std::vector<Uint8> output(pt.size());
 
@@ -345,7 +345,7 @@ TEST(CBC, RandomEncryptDecryptTest)
             auto                     alcpCipher = new CipherFactory<iCipher>;
             auto cbc = alcpCipher->create("aes-cbc-256", feature);
 
-            EXPECT_TRUE(cbc != nullptr);
+            ASSERT_TRUE(cbc != nullptr);
 
             cbc->init(key_256, 256, &iv[0], sizeof(iv));
 
