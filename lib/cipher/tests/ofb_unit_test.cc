@@ -117,7 +117,10 @@ TEST(OFB, creation)
 {
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
-    ASSERT_TRUE(ofb != nullptr);
+    if (ofb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     delete alcpCipher;
 }
 
@@ -127,8 +130,10 @@ TEST(OFB, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    ASSERT_TRUE(ofb != nullptr);
-
+    if (ofb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(cipherText.size());
 
     ofb->init(&key[0], 128, &iv[0], iv.size());
@@ -144,8 +149,10 @@ TEST(OFB, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    ASSERT_TRUE(ofb != nullptr);
-
+    if (ofb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(plainText.size());
 
     ofb->init(&key[0], 128, &iv[0], iv.size());
@@ -164,8 +171,10 @@ TEST(OFB, MultiUpdateEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    ASSERT_TRUE(ofb != nullptr);
-
+    if (ofb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(cipherText.size());
 
     alc_error_t err = ofb->init(&key[0], 128, &iv[0], iv.size());
@@ -196,8 +205,10 @@ TEST(OFB, MultiUpdateDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ofb        = alcpCipher->create("aes-ofb-128");
 
-    ASSERT_TRUE(ofb != nullptr);
-
+    if (ofb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(cipherText.size());
 
     alc_error_t err = ofb->init(&key[0], 128, &iv[0], iv.size());
@@ -243,8 +254,10 @@ TEST(OFB, RandomEncryptDecryptTest)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ofb        = alcpCipher->create("aes-ofb-256");
 
-        ASSERT_TRUE(ofb != nullptr);
-
+        if (ofb == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         alc_error_t s = ofb->init(key_256, 256, &iv[0], sizeof(iv));
         if (s != ALC_ERROR_NONE) {
             std::cout << "RANDOM_TEST: Init Failure!" << std::endl;

@@ -127,7 +127,10 @@ TEST(CBC, creation)
 #endif
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cbc        = alcpCipher->create("aes-cbc-128", feature);
-        ASSERT_TRUE(cbc != nullptr);
+        if (cbc == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         delete alcpCipher;
     }
 }
@@ -137,8 +140,10 @@ TEST(CBC, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cbc        = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(cbc != nullptr);
-
+    if (cbc == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(cipherText.size());
 
     cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -155,8 +160,10 @@ TEST(CBC, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cbc        = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(cbc != nullptr);
-
+    if (cbc == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(plainText.size());
 
     cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -176,8 +183,10 @@ TEST(CBC, MultiUpdateEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cbc        = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(cbc != nullptr);
-
+    if (cbc == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(cipherText.size());
 
     alc_error_t err = cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -216,8 +225,10 @@ TEST(CBC, MultiUpdateDecryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cbc = alcpCipher->create("aes-cbc-128"); // KeySize is 128 bits
 
-        ASSERT_TRUE(cbc != nullptr);
-
+        if (cbc == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         std::vector<Uint8> output(cipherText.size());
 
         alc_error_t err = cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -284,8 +295,10 @@ TEST(CBC, PaddingEncryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cbc        = alcpCipher->create("aes-cbc-128", feature);
 
-        ASSERT_TRUE(cbc != nullptr);
-
+        if (cbc == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         std::vector<Uint8> output(pt.size());
 
         alc_error_t err = cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -345,8 +358,10 @@ TEST(CBC, RandomEncryptDecryptTest)
             auto                     alcpCipher = new CipherFactory<iCipher>;
             auto cbc = alcpCipher->create("aes-cbc-256", feature);
 
-            ASSERT_TRUE(cbc != nullptr);
-
+            if (cbc == nullptr) {
+                delete alcpCipher;
+                FAIL();
+            }
             cbc->init(key_256, 256, &iv[0], sizeof(iv));
 
             cbc->encrypt(

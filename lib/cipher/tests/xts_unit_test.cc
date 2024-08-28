@@ -226,8 +226,10 @@ TEST(XTS, initiantiation_with_valid_input)
 
         alc_error_t err = ALC_ERROR_NONE;
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, nullptr, 0);
 
         EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -291,8 +293,10 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
             auto alcpCipher = new CipherFactory<iCipher>;
             auto xts        = alcpCipher->create("aes-xts-256", feature);
 
-            ASSERT_TRUE(xts != nullptr);
-
+            if (xts == nullptr) {
+                delete alcpCipher;
+                FAIL();
+            }
             alc_error_t err = xts->init(key, 256, iv, 16);
             EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -381,8 +385,10 @@ TEST(XTS, encrypt_huge)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto xts        = alcpCipher->create("aes-xts-128", feature);
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, iv, 16);
 
         EXPECT_TRUE(err == ALC_ERROR_NONE);
@@ -456,8 +462,10 @@ TEST(XTS, decrypt_huge)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto xts        = alcpCipher->create("aes-xts-128", feature);
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, iv, 16);
 
         EXPECT_TRUE(err == ALC_ERROR_NONE);
@@ -532,8 +540,10 @@ TEST(XTS, encrypt_huge_multi_update)
         auto               alcpCipher = new CipherFactory<iCipher>;
         auto               xts = alcpCipher->create("aes-xts-128", feature);
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, iv, 16);
 
         Uint64 res = plainText.size() % 16;
@@ -637,8 +647,10 @@ TEST(XTS, encrypt_huge_multi_update_serial)
         auto alcpCipher = new CipherFactory<iCipherSeg>;
         auto xts        = alcpCipher->create("aes-xts-128", feature);
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, iv, 16);
 
         err = xts->encryptSegment(
@@ -785,8 +797,10 @@ TEST(XTS, encrypt_huge_multi_update_arbitrary)
         auto alcpCipher = new CipherFactory<iCipherSeg>;
         auto xts        = alcpCipher->create("aes-xts-128", feature);
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, iv, 16);
 
         Uint64 res = plainText.size() % 16;
@@ -896,8 +910,10 @@ TEST(XTS, decrypt_huge_multi_update)
         auto alcpCipher = new CipherFactory<iCipherSeg>;
         auto xts        = alcpCipher->create("aes-xts-128", feature);
 
-        ASSERT_TRUE(xts != nullptr);
-
+        if (xts == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = xts->init(key, 128, iv, 16);
 
         Uint64 res = cipherText.size() % 16;

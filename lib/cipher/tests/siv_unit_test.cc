@@ -35,7 +35,10 @@ TEST(CMACSIV, Initiantiation)
 {
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto siv        = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
-    ASSERT_TRUE(siv != nullptr);
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     delete alcpCipher;
 }
 
@@ -46,8 +49,10 @@ TEST(CMACSIV, setKeys)
     auto      alcpCipher        = new CipherFactory<iCipherAead>;
     auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(siv != nullptr);
-
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
 
@@ -62,8 +67,10 @@ TEST(CMACSIV, addAdditionalInput)
     auto      alcpCipher        = new CipherFactory<iCipherAead>;
     auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(siv != nullptr);
-
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
     err = siv->setAad(aad, cAadSize);
@@ -98,8 +105,10 @@ TEST(CMACSIV, encTest1)
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(siv != nullptr);
-
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
 
@@ -163,8 +172,10 @@ TEST(CMACSIV, encTest2)
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(siv != nullptr);
-
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
 
@@ -219,8 +230,10 @@ TEST(CMACSIV, decTest1)
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(siv != nullptr);
-
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
 
@@ -285,8 +298,10 @@ TEST(CMACSIV, decTest2)
     auto               alcpCipher = new CipherFactory<iCipherAead>;
     auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    ASSERT_TRUE(siv != nullptr);
-
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
     EXPECT_TRUE(err == ALC_ERROR_NONE);
 

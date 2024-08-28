@@ -291,8 +291,10 @@ TEST(GCM, Instantiation)
         auto        aead       = alcpCipher->create("aes-gcm-128");
         alc_error_t err        = ALC_ERROR_NONE;
 
-        ASSERT_TRUE(aead != nullptr);
-
+        if (aead == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         aead->init(key, 128, nullptr, 0);
 
         EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -305,8 +307,10 @@ TEST(GCM, Instantiation)
         auto        aead       = alcpCipher->create("aes-gcm-192");
         alc_error_t err        = ALC_ERROR_NONE;
 
-        ASSERT_TRUE(aead != nullptr);
-
+        if (aead == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         aead->init(key, 192, nullptr, 0);
 
         EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -319,8 +323,10 @@ TEST(GCM, Instantiation)
         auto        aead       = alcpCipher->create("aes-gcm-256");
         alc_error_t err        = ALC_ERROR_NONE;
 
-        ASSERT_TRUE(aead != nullptr);
-
+        if (aead == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         err = aead->init(key, 256, nullptr, 0);
 
         EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -442,8 +448,10 @@ TEST(GCM, InvalidTagLen)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(key, 128, iv, 7);
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -492,8 +500,10 @@ TEST(GCM, EncryptUpdateSingle)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -545,8 +555,10 @@ TEST(GCM, EncryptUpdateMultiple)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -601,8 +613,10 @@ TEST(GCM, DecryptUpdateSingle)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -653,8 +667,10 @@ TEST(GCM, DecryptUpdateMultiple)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -710,8 +726,10 @@ TEST(GCM, EncryptUpdateMultipleStream)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
@@ -766,8 +784,10 @@ TEST(GCM, DecryptUpdateMultipleStream)
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-128");
 
-    ASSERT_TRUE(aead != nullptr);
-
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 

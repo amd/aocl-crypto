@@ -180,8 +180,11 @@ TEST(CTR, creation)
 #endif
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ctr        = alcpCipher->create("aes-ctr-128", feature);
+        if (ctr == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         delete alcpCipher;
-        ASSERT_TRUE(ctr != nullptr);
     }
 }
 
@@ -190,8 +193,10 @@ TEST(CTR, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ctr        = alcpCipher->create("aes-ctr-128");
 
-    ASSERT_TRUE(ctr != nullptr);
-
+    if (ctr == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(cipherText.size());
 
     alc_error_t err = ctr->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -219,8 +224,10 @@ TEST(CTR, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto ctr        = alcpCipher->create("aes-ctr-128");
 
-    ASSERT_TRUE(ctr != nullptr);
-
+    if (ctr == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(plainText.size());
 
     // ctr->setKey(128, &key[0]);
@@ -258,8 +265,10 @@ TEST(CTR, MultiUpdateEncryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ctr        = alcpCipher->create("aes-ctr-128", feature);
 
-        ASSERT_TRUE(ctr != nullptr);
-
+        if (ctr == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         std::vector<Uint8> output(plainText.size());
 
         alc_error_t err = ctr->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -290,8 +299,10 @@ TEST(CTR, MultiUpdateDecryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto ctr        = alcpCipher->create("aes-ctr-128", feature);
 
-        ASSERT_TRUE(ctr != nullptr);
-
+        if (ctr == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         std::vector<Uint8> output(plainText.size());
 
         alc_error_t err = ctr->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -351,8 +362,10 @@ TEST(CTR, RandomEncryptDecryptTest)
             auto                     alcpCipher = new CipherFactory<iCipher>;
             auto ctr = alcpCipher->create("aes-ctr-256", feature);
 
-            ASSERT_TRUE(ctr != nullptr);
-
+            if (ctr == nullptr) {
+                delete alcpCipher;
+                FAIL();
+            }
             alc_error_t err = ctr->init(key_256, 256, &iv[0], sizeof(iv));
 
             if (alcp_is_error(err)) {

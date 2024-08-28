@@ -372,8 +372,10 @@ TEST(CCM, Initiantiation)
     // FIXME: Add feature selection
     auto pCcmObj = alcpCipher->create(keyToModStr(sizeof(key)));
     // clang-format on
-    ASSERT_TRUE(pCcmObj != nullptr);
-
+    if (pCcmObj == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     delete alcpCipher;
 }
 
@@ -706,8 +708,10 @@ TEST(CCM, InvalidTagLen)
     // FIXME: Add feature selection
     auto pCcmObj = alcpCipher->create(keyToModStr(sizeof(key)));
 
-    ASSERT_TRUE(pCcmObj != nullptr);
-
+    if (pCcmObj == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err;
 
     // TODO: Create a parametrized test
@@ -731,8 +735,10 @@ TEST(CCM, InvalidNonceLen)
     // FIXME: Add feature selection
     auto pCcmObj = alcpCipher->create(keyToModStr(sizeof(key)));
 
-    ASSERT_TRUE(pCcmObj != nullptr);
-
+    if (pCcmObj == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     alc_error_t err;
 
     // TODO: Create a parametrized test

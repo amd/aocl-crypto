@@ -124,8 +124,11 @@ TEST(CFB, creation)
 #endif
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cfb        = alcpCipher->create("aes-cfb-128", feature);
+        if (cfb == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         delete alcpCipher;
-        ASSERT_TRUE(cfb != nullptr);
     }
 }
 
@@ -134,7 +137,10 @@ TEST(CFB, BasicEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    ASSERT_TRUE(cfb != nullptr);
+    if (cfb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
 
     std::vector<Uint8> output(cipherText.size());
 
@@ -151,7 +157,10 @@ TEST(CFB, BasicDecryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    ASSERT_TRUE(cfb != nullptr);
+    if (cfb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
 
     std::vector<Uint8> output(plainText.size());
 
@@ -171,8 +180,10 @@ TEST(CFB, MultiUpdateEncryption)
     auto alcpCipher = new CipherFactory<iCipher>;
     auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    ASSERT_TRUE(cfb != nullptr);
-
+    if (cfb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
     std::vector<Uint8> output(plainText.size());
 
     alc_error_t err = cfb->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -202,8 +213,10 @@ TEST(CFB, MultiUpdateDecryption)
         auto alcpCipher = new CipherFactory<iCipher>;
         auto cfb        = alcpCipher->create("aes-cfb-128", feature);
 
-        ASSERT_TRUE(cfb != nullptr);
-
+        if (cfb == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
         std::vector<Uint8> output(plainText.size());
 
         alc_error_t err = cfb->init(&key[0], key.size() * 8, &iv[0], iv.size());
@@ -263,8 +276,10 @@ TEST(CFB, RandomEncryptDecryptTest)
             auto                     alcpCipher = new CipherFactory<iCipher>;
             auto cfb = alcpCipher->create("aes-cfb-256", feature);
 
-            ASSERT_TRUE(cfb != nullptr);
-
+            if (cfb == nullptr) {
+                delete alcpCipher;
+                FAIL();
+            }
             cfb->init(key_256, 256, &iv[0], sizeof(iv));
 
             cfb->encrypt(
