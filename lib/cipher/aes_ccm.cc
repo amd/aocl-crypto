@@ -320,9 +320,9 @@ CcmHash::getTag(Uint8* pOutput, Uint64 tagLen)
 
     } else {
         aesni::ccm::Finalize(&m_ccm_data);
-        s.update(copyTag(&m_ccm_data, pOutput, tagLen));
+        err = copyTag(&m_ccm_data, pOutput, tagLen);
     }
-    return s.code();
+    return err;
 #else
     if (tagLen < 4 || tagLen > 16 || tagLen == 0) {
         // InvalidValue("Tag length is not what we agreed upon during start!")

@@ -271,9 +271,9 @@ alcp_cipher_aead_set_ccm_plaintext_length(
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-    ALCP_BAD_PTR_ERR_RET(ctx->setPlainTextLength, err);
-    err = ctx->setPlainTextLength(ctx, plaintextLength);
+    auto ctx = static_cast<alcp::cipher::Context*>(pCipherHandle->ch_context);
+    auto i   = static_cast<iCipherAead*>(ctx->m_cipher);
+    err      = i->setPlainTextLength(plaintextLength);
 
     return err;
 #else

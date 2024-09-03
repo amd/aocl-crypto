@@ -134,9 +134,14 @@ namespace alcp { namespace cipher {
         virtual ~iCipherAuth()                                       = default;
         virtual alc_error_t setAad(const Uint8* pAad, Uint64 aadLen) = 0;
         virtual alc_error_t getTag(Uint8* pTag, Uint64 tagLen)       = 0;
-
+        // FIXME: Clean up setting lengths
         /* setPlaintextLength and setTageLength to be one single api */
         /* setLength(void*ctx, typeofLen, Uint64 len) */
+        virtual alc_error_t setPlainTextLength(Uint64 plaintextLen)
+        {
+            // Only supported in CCM. Will be overridden there.
+            return ALC_ERROR_EXISTS;
+        }
         virtual alc_error_t setTagLength(Uint64 tagLen) = 0;
     };
 
