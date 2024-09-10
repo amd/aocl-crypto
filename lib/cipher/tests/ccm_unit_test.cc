@@ -415,6 +415,11 @@ TEST_P(CCM_KAT, Encrypt)
         out_ciphertext(m_plaintext.size(), 0);
 
     alc_error_t err;
+
+#ifdef CCM_MULTI_UPDATE
+    err = pCcmObj->setPlainTextLength(m_plaintext.size());
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
     /* Encryption begins here */
     if (!m_tag.empty()) {
         err = pCcmObj->setTagLength(m_tag.size());
@@ -462,6 +467,11 @@ TEST_P(CCM_KAT, Encrypt_Double)
             out_ciphertext(m_plaintext.size(), 0x01);
 
         alc_error_t err;
+
+#ifdef CCM_MULTI_UPDATE
+        err = pCcmObj->setPlainTextLength(m_plaintext.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
         /* Encryption begins here */
         if (!m_tag.empty()) {
             err = pCcmObj->setTagLength(m_tag.size());
@@ -507,6 +517,10 @@ TEST_P(CCM_KAT, Encrypt_Double)
             out_ciphertext(m_plaintext.size(), 0x01);
 
         alc_error_t err;
+#ifdef CCM_MULTI_UPDATE
+        err = pCcmObj->setPlainTextLength(m_plaintext.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
         /* Encryption begins here */
         if (!m_tag.empty()) {
             err = pCcmObj->setTagLength(m_tag.size());
@@ -556,6 +570,11 @@ TEST_P(CCM_KAT, Decrypt)
 
     alc_error_t err;
 
+#ifdef CCM_MULTI_UPDATE
+    err = pCcmObj->setPlainTextLength(m_plaintext.size());
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
+
     /* Decryption begins here*/
     if (!m_tag.empty()) {
         err = pCcmObj->setTagLength(m_tag.size());
@@ -604,6 +623,11 @@ TEST_P(CCM_KAT, Decrypt_Double)
 
         alc_error_t err;
 
+#ifdef CCM_MULTI_UPDATE
+        err = pCcmObj->setPlainTextLength(out_plaintext.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
+
         /* Decryption begins here*/
         if (!m_tag.empty()) {
             err = pCcmObj->setTagLength(m_tag.size());
@@ -649,6 +673,10 @@ TEST_P(CCM_KAT, Decrypt_Double)
             out_plaintext(m_ciphertext.size(), 0x01);
 
         alc_error_t err;
+#ifdef CCM_MULTI_UPDATE
+        err = pCcmObj->setPlainTextLength(out_plaintext.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
 
         /* Decryption begins here*/
         if (!m_tag.empty()) {
@@ -725,7 +753,7 @@ TEST(CCM, InvalidTagLen)
 TEST(CCM, InvalidNonceLen)
 {
     Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8              tagbuff[16];
     std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
     std::vector<Uint8> nonce(14, 0);
@@ -746,6 +774,10 @@ TEST(CCM, InvalidNonceLen)
 
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
+#ifdef CCM_MULTI_UPDATE
+    err = pCcmObj->setPlainTextLength(0);
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+#endif
     // Nonce
     err = pCcmObj->init(key, sizeof(key) * 8, getPtr(nonce), nonce.size());
 
