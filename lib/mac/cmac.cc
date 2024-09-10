@@ -27,6 +27,7 @@
  */
 
 #include "alcp/mac/cmac.hh"
+#include "alcp/cipher.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
@@ -37,7 +38,7 @@ namespace alcp::mac {
 using utils::CpuId;
 Cmac::Cmac()
 {
-    setMode(ALC_AES_MODE_NONE);
+    setMode(alcp::cipher::CipherMode::eCipherModeNone);
 }
 
 Cmac::Cmac(const Cmac& cmac)

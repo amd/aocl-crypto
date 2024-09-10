@@ -110,9 +110,9 @@ Aes::setKey(const Uint8* pUserKey, Uint64 len)
 #endif
 
 alc_error_t
-Aes::setMode(alc_cipher_mode_t mode)
+Aes::setMode(CipherMode mode)
 {
-    if ((mode <= ALC_AES_MODE_CBC) || (mode >= ALC_AES_MODE_MAX)) {
+    if ((mode <= CipherMode::eAesCBC) || (mode >= CipherMode::eCipherModeMax)) {
         // InvalidMode("aes mode not supported")
         return ALC_ERROR_NOT_SUPPORTED;
     }

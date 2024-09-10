@@ -35,7 +35,6 @@
 #include <immintrin.h>
 
 namespace alcp::cipher::vaes {
-
 template<void AesEnc_1x256(__m256i* pBlk0, const __m128i* pKey, int nRounds),
          void AesEnc_2x256(
              __m256i* pBlk0, __m256i* pBlk1, const __m128i* pKey, int nRounds),
@@ -45,12 +44,13 @@ template<void AesEnc_1x256(__m256i* pBlk0, const __m128i* pKey, int nRounds),
                            __m256i*       pBlk3,
                            const __m128i* pKey,
                            int            nRounds)>
-alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
-                              Uint8*       pPlainText,  // ptr to plaintext
-                              Uint64       len,     // message length in bytes
-                              const Uint8* pKey,    // ptr to Key
-                              int          nRounds, // No. of rounds
-                              Uint8*       pIv // ptr to Initialization Vector
+alc_error_t inline DecryptCfbKernel(
+    const Uint8* pCipherText, // ptr to ciphertext
+    Uint8*       pPlainText,  // ptr to plaintext
+    Uint64       len,         // message length in bytes
+    const Uint8* pKey,        // ptr to Key
+    int          nRounds,     // No. of rounds
+    Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -200,41 +200,71 @@ alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
 
     return err;
 }
-
-alc_error_t
-DecryptCfb128(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptCfb192(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptCfb256(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
 } // namespace alcp::cipher::vaes
+
+namespace alcp::cipher {
+
+template<CipherKeyLen T, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+DecryptCfb(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv)
+{
+    return alcp::cipher::vaes::DecryptCfbKernel<alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+template<>
+alc_error_t
+DecryptCfb<alcp::cipher::CipherKeyLen::eKey128Bit,
+           alcp::utils::CpuCipherFeatures::eVaes256>(const Uint8* pSrc,
+                                                     Uint8*       pDest,
+                                                     Uint64       len,
+                                                     const Uint8* pKey,
+                                                     int          nRounds,
+                                                     Uint8*       pIv)
+{
+    return alcp::cipher::vaes::DecryptCfbKernel<alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, 10, pIv);
+}
+
+template<>
+alc_error_t
+DecryptCfb<alcp::cipher::CipherKeyLen::eKey192Bit,
+           alcp::utils::CpuCipherFeatures::eVaes256>(const Uint8* pSrc,
+                                                     Uint8*       pDest,
+                                                     Uint64       len,
+                                                     const Uint8* pKey,
+                                                     int          nRounds,
+                                                     Uint8*       pIv)
+{
+    return alcp::cipher::vaes::DecryptCfbKernel<alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, 12, pIv);
+}
+
+template<>
+alc_error_t
+DecryptCfb<alcp::cipher::CipherKeyLen::eKey256Bit,
+           alcp::utils::CpuCipherFeatures::eVaes256>(const Uint8* pSrc,
+                                                     Uint8*       pDest,
+                                                     Uint64       len,
+                                                     const Uint8* pKey,
+                                                     int          nRounds,
+                                                     Uint8*       pIv)
+{
+    return alcp::cipher::vaes::DecryptCfbKernel<alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt,
+                                                alcp::cipher::vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, 14, pIv);
+}
+
+} // namespace alcp::cipher

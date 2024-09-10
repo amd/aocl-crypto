@@ -48,12 +48,11 @@ using alcp::utils::CpuCipherFeatures;
 using alcp::utils::CpuId;
 
 namespace alcp { namespace cipher {
-
     enum class CipherKeyLen
     {
-        eKey128Bit,
-        eKey192Bit,
-        eKey256Bit
+        eKey128Bit = 128,
+        eKey192Bit = 192,
+        eKey256Bit = 256
     };
 
     enum class CipherMode
@@ -175,10 +174,10 @@ namespace alcp { namespace cipher {
         // cipher creators
         INTERFACE* create(const string& name);
         INTERFACE* create(const string& name, CpuCipherFeatures arch);
-        INTERFACE* create(CipherMode mode, CipherKeyLen keyLen);
-        INTERFACE* create(CipherMode        mode,
-                          CipherKeyLen      keyLen,
-                          CpuCipherFeatures arch);
+        INTERFACE* create(const CipherMode mode, const CipherKeyLen keyLen);
+        INTERFACE* create(const CipherMode        mode,
+                          const CipherKeyLen      keyLen,
+                          const CpuCipherFeatures arch);
 
       private:
         void              initCipherMap();

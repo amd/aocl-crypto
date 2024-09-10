@@ -33,14 +33,40 @@
 
 #include "alcp/error.h"
 
+//#include "alcp/base.hh"
+
 #include "aes.hh"
 #include "aes_gcm.hh"
+#include "alcp/cipher.hh"
 
 #include "alcp/utils/copy.hh"
 
 #include <alcp/types.h>
 
 namespace alcp::cipher {
+
+template<alcp::cipher::CipherKeyLen keyLen, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tDecryptCbc(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv);
+
+template<alcp::cipher::CipherKeyLen keyLen, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+DecryptCfb(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv);
+
+template<alcp::cipher::CipherKeyLen keyLen, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+CryptCtr(const Uint8* pSrc,
+         Uint8*       pDest,
+         Uint64       len,
+         const Uint8* pKey,
+         int          nRounds,
+         Uint8*       pIv);
 
 namespace aesni {
 
@@ -53,47 +79,19 @@ namespace aesni {
                                 Uint8*       pEncKey,
                                 int          nRounds);
 
-    alc_error_t EncryptCbc128(const Uint8* pPlainText,
-                              Uint8*       pCipherText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t EncryptCfb(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
-    alc_error_t EncryptCbc192(const Uint8* pPlainText,
-                              Uint8*       pCipherText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t EncryptCbc256(const Uint8* pPlainText,
-                              Uint8*       pCipherText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCbc128(const Uint8* pCipherText,
-                              Uint8*       pPlainText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCbc192(const Uint8* pCipherText,
-                              Uint8*       pPlainText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCbc256(const Uint8* pCipherText,
-                              Uint8*       pPlainText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t EncryptCbc(const Uint8* pPlainText,
+                           Uint8*       pCipherText,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
     alc_error_t EncryptOfb(const Uint8* pPlainText,
                            Uint8*       pCipherText,
@@ -122,48 +120,6 @@ namespace aesni {
                            const Uint8* pKey,
                            int          nRounds,
                            const Uint8* pIv);
-
-    alc_error_t DecryptCfb128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCfb192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCfb256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t EncryptCfb128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t EncryptCfb192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t EncryptCfb256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
 
     alc_error_t EncryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -261,72 +217,6 @@ namespace aesni {
 
 namespace vaes512 {
 
-    alc_error_t CryptCtr128(const Uint8* p_in_x,
-                            Uint8*       p_out_x,
-                            Uint64       len,
-                            const Uint8* pKey,
-                            int          nRounds,
-                            Uint8*       pIv);
-
-    alc_error_t CryptCtr192(const Uint8* p_in_x,
-                            Uint8*       p_out_x,
-                            Uint64       len,
-                            const Uint8* pKey,
-                            int          nRounds,
-                            Uint8*       pIv);
-
-    alc_error_t CryptCtr256(const Uint8* p_in_x,
-                            Uint8*       p_out_x,
-                            Uint64       len,
-                            const Uint8* pKey,
-                            int          nRounds,
-                            Uint8*       pIv);
-
-    alc_error_t DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
-                              Uint8*       pDest,   // ptr to plaintext
-                              Uint64       len,     // message length in bytes
-                              const Uint8* pKey,    // ptr to Key
-                              int          nRounds, // No. of rounds
-                              Uint8*       pIv // ptr to Initialization Vector
-    );
-
-    alc_error_t DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
-                              Uint8*       pDest,   // ptr to plaintext
-                              Uint64       len,     // message length in bytes
-                              const Uint8* pKey,    // ptr to Key
-                              int          nRounds, // No. of rounds
-                              Uint8*       pIv // ptr to Initialization Vector
-    );
-
-    alc_error_t DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
-                              Uint8*       pDest,   // ptr to plaintext
-                              Uint64       len,     // message length in bytes
-                              const Uint8* pKey,    // ptr to Key
-                              int          nRounds, // No. of rounds
-                              Uint8*       pIv // ptr to Initialization Vector
-    );
-
-    alc_error_t DecryptCfb128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCfb192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCfb256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
     alc_error_t EncryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -417,48 +307,6 @@ namespace vaes {
                            Uint8*       pEncKey,
                            Uint8*       pDecKey,
                            int          nRounds);
-
-    alc_error_t DecryptCfb128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCfb192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCfb256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCbc128(const Uint8* pCipherText,
-                              Uint8*       pPlainText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCbc192(const Uint8* pCipherText,
-                              Uint8*       pPlainText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptCbc256(const Uint8* pCipherText,
-                              Uint8*       pPlainText,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
 
     alc_error_t EncryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,

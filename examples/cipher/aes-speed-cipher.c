@@ -173,7 +173,7 @@ aclp_aes_encrypt_demo(
 
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
-        printf("Error: unable decrypt \n");
+        printf("Error: unable encrypt \n");
         return;
     }
 }

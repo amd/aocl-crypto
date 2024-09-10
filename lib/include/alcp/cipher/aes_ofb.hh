@@ -49,7 +49,7 @@ class ALCP_API_EXPORT Ofb
     Ofb(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {
-        setMode(ALC_AES_MODE_CFB);
+        setMode(CipherMode::eAesCFB);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };

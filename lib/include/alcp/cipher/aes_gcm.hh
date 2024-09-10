@@ -83,7 +83,7 @@ class ALCP_API_EXPORT Gcm
     Gcm(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {
-        setMode(ALC_AES_MODE_GCM);
+        setMode(CipherMode::eAesGCM);
         // default ivLength is 12 bytes or 96bits
         m_ivLen_aes = 12;
 

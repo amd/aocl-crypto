@@ -141,6 +141,62 @@ getMode(CipherKeyLen keyLen, CpuCipherFeatures arch)
     }
 }
 
+template<typename INTERFACE>
+INTERFACE*
+getCbc(const CipherMode        mode,
+       const CipherKeyLen      keyLen,
+       const CpuCipherFeatures arch)
+{
+    if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tCbc<CipherKeyLen::eKey128Bit,
+                                CpuCipherFeatures::eVaes512>();
+            case CipherKeyLen::eKey192Bit:
+                return new tCbc<CipherKeyLen::eKey192Bit,
+                                CpuCipherFeatures::eVaes512>();
+            case CipherKeyLen::eKey256Bit:
+                return new tCbc<CipherKeyLen::eKey256Bit,
+                                CpuCipherFeatures::eVaes512>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eVaes256) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tCbc<CipherKeyLen::eKey128Bit,
+                                CpuCipherFeatures::eVaes256>();
+            case CipherKeyLen::eKey192Bit:
+                return new tCbc<CipherKeyLen::eKey192Bit,
+                                CpuCipherFeatures::eVaes256>();
+            case CipherKeyLen::eKey256Bit:
+                return new tCbc<CipherKeyLen::eKey256Bit,
+                                CpuCipherFeatures::eVaes256>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eAesni) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tCbc<CipherKeyLen::eKey128Bit,
+                                CpuCipherFeatures::eAesni>();
+            case CipherKeyLen::eKey192Bit:
+                return new tCbc<CipherKeyLen::eKey192Bit,
+                                CpuCipherFeatures::eAesni>();
+            case CipherKeyLen::eKey256Bit:
+                return new tCbc<CipherKeyLen::eKey256Bit,
+                                CpuCipherFeatures::eAesni>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
 template<>
 void
 CipherFactory<iCipher>::getCipher()
@@ -148,16 +204,7 @@ CipherFactory<iCipher>::getCipher()
     // Non-AEAD ciphers
     switch (m_cipher_mode) {
         case CipherMode::eAesCBC:
-            m_iCipher = getMode<iCipher,
-                                Cbc128_vaes512,
-                                Cbc192_vaes512,
-                                Cbc256_vaes512,
-                                Cbc128_vaes,
-                                Cbc192_vaes,
-                                Cbc256_vaes,
-                                Cbc128_aesni,
-                                Cbc192_aesni,
-                                Cbc256_aesni>(m_keyLen, m_arch);
+            m_iCipher = getCbc<iCipher>(m_cipher_mode, m_keyLen, m_arch);
             break;
         case CipherMode::eAesOFB:
             m_iCipher = getMode<iCipher,
@@ -172,6 +219,8 @@ CipherFactory<iCipher>::getCipher()
                                 Ofb256_aesni>(m_keyLen, m_arch);
             break;
         case CipherMode::eAesCTR:
+#if 0
+
             m_iCipher = getMode<iCipher,
                                 Ctr128_vaes512,
                                 Ctr192_vaes512,
@@ -182,8 +231,10 @@ CipherFactory<iCipher>::getCipher()
                                 Ctr128_aesni,
                                 Ctr192_aesni,
                                 Ctr256_aesni>(m_keyLen, m_arch);
+#endif
             break;
         case CipherMode::eAesCFB:
+#if 0
             m_iCipher = getMode<iCipher,
                                 Cfb128_vaes512,
                                 Cfb192_vaes512,
@@ -194,6 +245,7 @@ CipherFactory<iCipher>::getCipher()
                                 Cfb128_aesni,
                                 Cfb192_aesni,
                                 Cfb256_aesni>(m_keyLen, m_arch);
+#endif
             break;
         case CipherMode::eAesXTS:
             m_iCipher = getMode<iCipher,
@@ -271,6 +323,7 @@ CipherFactory<iCipherAead>::getCipher()
                                 Ccm256_aesni>(m_keyLen, m_arch);
             break;
         case CipherMode::eAesSIV:
+#if 0
             m_iCipher = getMode<iCipherAead,
                                 Siv128_vaes512,
                                 Siv192_vaes512,
@@ -281,6 +334,7 @@ CipherFactory<iCipherAead>::getCipher()
                                 Siv128_aesni,
                                 Siv192_aesni,
                                 Siv256_aesni>(m_keyLen, m_arch);
+#endif
             break;
         case CipherMode::eCHACHA20_POLY1305:
             if (m_arch == CpuCipherFeatures::eVaes512) {
@@ -339,7 +393,8 @@ CipherFactory<INTERFACE>::create(const string& name, CpuCipherFeatures arch)
 
 template<class INTERFACE>
 INTERFACE*
-CipherFactory<INTERFACE>::create(CipherMode mode, CipherKeyLen keyLen)
+CipherFactory<INTERFACE>::create(const CipherMode   mode,
+                                 const CipherKeyLen keyLen)
 {
     m_cipher_mode = mode;
     m_keyLen      = keyLen;
@@ -350,22 +405,24 @@ CipherFactory<INTERFACE>::create(CipherMode mode, CipherKeyLen keyLen)
 
 template<class INTERFACE>
 INTERFACE*
-CipherFactory<INTERFACE>::create(CipherMode        mode,
-                                 CipherKeyLen      keyLen,
-                                 CpuCipherFeatures arch)
+CipherFactory<INTERFACE>::create(const CipherMode        mode,
+                                 const CipherKeyLen      keyLen,
+                                 const CpuCipherFeatures arch)
 {
     m_cipher_mode = mode;
     m_keyLen      = keyLen;
+    m_arch        = arch;
+
     // limit based on arch available in the cpu.
-    if (arch > m_currentArch) {
+    if (m_arch > m_currentArch) {
 #if 0 /* when default feature set to highest level, avoid multiple warnings */
         std::cout << "\n warning! requested ISA is not supported by platform, "
                      "lowering to ISA supported "
                   << std::endl;
 #endif
-        arch = m_currentArch;
+        m_arch = m_currentArch;
     }
-    m_arch = arch;
+
     getCipher();
     return m_iCipher;
 }

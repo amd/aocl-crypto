@@ -47,7 +47,7 @@ class ALCP_API_EXPORT Cfb
     Cfb(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {
-        setMode(ALC_AES_MODE_CFB);
+        setMode(CipherMode::eAesCFB);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
@@ -61,19 +61,25 @@ class ALCP_API_EXPORT Cfb
     }
 };
 
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Cfb128, Cfb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cfb192, Cfb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cfb256, Cfb, virtual iCipher, 256 / 8)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class tCfb
+    : public Cfb
+    , public virtual iCipher
+{
+  public:
+    tCfb()
+        : Cfb((static_cast<Uint32>(keyLenBits)) / 8)
+    {}
+    ~tCfb() = default;
 
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Cfb128, Cfb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cfb192, Cfb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cfb256, Cfb, virtual iCipher, 256 / 8)
-
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Cfb128, Cfb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cfb192, Cfb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cfb256, Cfb, virtual iCipher, 256 / 8)
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher

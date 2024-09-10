@@ -206,43 +206,55 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     return err;
 }
 
-alc_error_t
-DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
-              Uint8*       pDest,   // ptr to plaintext
-              Uint64       len,     // message length in bytes
-              const Uint8* pKey,    // ptr to Key
-              int          nRounds, // No. of rounds
-              Uint8*       pIv      // ptr to Initialization Vector
-)
-{
-    return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
-              Uint8*       pDest,   // ptr to plaintext
-              Uint64       len,     // message length in bytes
-              const Uint8* pKey,    // ptr to Key
-              int          nRounds, // No. of rounds
-              Uint8*       pIv      // ptr to Initialization Vector
-)
-{
-    return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
-              Uint8*       pDest,   // ptr to plaintext
-              Uint64       len,     // message length in bytes
-              const Uint8* pKey,    // ptr to Key
-              int          nRounds, // No. of rounds
-              Uint8*       pIv      // ptr to Initialization Vector
-)
-{
-    return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
 } // namespace alcp::cipher::vaes
+
+namespace alcp::cipher {
+
+// primary template
+template<alcp::cipher::CipherKeyLen T, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tDecryptCbc(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
+{
+    return alcp::cipher::vaes::DecryptCbc<alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, 10, pIv);
+}
+
+template<>
+alc_error_t
+tDecryptCbc<alcp::cipher::CipherKeyLen::eKey128Bit,
+            alcp::utils::CpuCipherFeatures::eVaes256>(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
+{
+    return alcp::cipher::vaes::DecryptCbc<alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, 10, pIv);
+}
+
+template<>
+alc_error_t
+tDecryptCbc<alcp::cipher::CipherKeyLen::eKey192Bit,
+            alcp::utils::CpuCipherFeatures::eVaes256>(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
+{
+    return alcp::cipher::vaes::DecryptCbc<alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, 12, pIv);
+}
+
+template<>
+alc_error_t
+tDecryptCbc<alcp::cipher::CipherKeyLen::eKey256Bit,
+            alcp::utils::CpuCipherFeatures::eVaes256>(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
+{
+    return alcp::cipher::vaes::DecryptCbc<alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt,
+                                          alcp::cipher::vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, 14, pIv);
+}
+} // namespace alcp::cipher

@@ -28,8 +28,6 @@
 
 #pragma once
 
-#include "alcp/base.hh"
-#include "alcp/cipher.h"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 
@@ -50,7 +48,7 @@ class ALCP_API_EXPORT Cbc
     Cbc(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {
-        setMode(ALC_AES_MODE_CBC);
+        setMode(CipherMode::eAesCBC);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
@@ -64,18 +62,25 @@ class ALCP_API_EXPORT Cbc
     }
 };
 
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Cbc128, Cbc, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cbc192, Cbc, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cbc256, Cbc, virtual iCipher, 256 / 8)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class tCbc
+    : public Cbc
+    , public virtual iCipher
+{
+  public:
+    tCbc()
+        : Cbc((static_cast<Uint32>(keyLenBits)) / 8)
+    {}
+    ~tCbc() = default;
 
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Cbc128, Cbc, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cbc192, Cbc, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cbc256, Cbc, virtual iCipher, 256 / 8)
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Cbc128, Cbc, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cbc192, Cbc, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cbc256, Cbc, virtual iCipher, 256 / 8)
 } // namespace alcp::cipher

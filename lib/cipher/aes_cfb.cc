@@ -37,140 +37,76 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
-// cfb uses encKey for both encrypt and decrypt
-// vaes512 member functions
-CRYPT_WRAPPER_FUNC(vaes512,
-                   Cfb128,
-                   encrypt,
-                   aesni::EncryptCfb128,
-                   m_cipher_key_data.m_enc_key,
-                   10,
-                   ALCP_ENC)
-CRYPT_WRAPPER_FUNC(vaes512,
-                   Cfb192,
-                   encrypt,
-                   aesni::EncryptCfb192,
-                   m_cipher_key_data.m_enc_key,
-                   12,
-                   ALCP_ENC)
-CRYPT_WRAPPER_FUNC(vaes512,
-                   Cfb256,
-                   encrypt,
-                   aesni::EncryptCfb256,
-                   m_cipher_key_data.m_enc_key,
-                   14,
-                   ALCP_ENC)
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tCfb<keyLenBits, arch>::encrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    m_isEnc_aes     = 1;
+    if (!(m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    if (m_ivLen_aes != 16) {
+        m_ivLen_aes = 16;
+    }
+    if constexpr (arch >= CpuCipherFeatures::eAesni) {
+        err = aesni::EncryptCfb(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_pIv_aes);
+    } else {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+    return err;
+}
 
-CRYPT_WRAPPER_FUNC(vaes512,
-                   Cfb128,
-                   decrypt,
-                   vaes512::DecryptCfb128,
-                   m_cipher_key_data.m_enc_key,
-                   10,
-                   ALCP_DEC)
-CRYPT_WRAPPER_FUNC(vaes512,
-                   Cfb192,
-                   decrypt,
-                   vaes512::DecryptCfb192,
-                   m_cipher_key_data.m_enc_key,
-                   12,
-                   ALCP_DEC)
-CRYPT_WRAPPER_FUNC(vaes512,
-                   Cfb256,
-                   decrypt,
-                   vaes512::DecryptCfb256,
-                   m_cipher_key_data.m_enc_key,
-                   14,
-                   ALCP_DEC)
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tCfb<keyLenBits, arch>::decrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    m_isEnc_aes     = 0;
+    if (!(m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    if (m_ivLen_aes != 16) {
+        m_ivLen_aes = 16;
+    }
+    err = DecryptCfb<keyLenBits, arch>(
+        pinput,
+        pOutput,
+        len,
+        m_cipher_key_data.m_enc_key,
+        getRounds(), // getCipherRounds(keyLenBits),
+        m_pIv_aes);
+    return err;
+}
 
-// vaes member functions
-CRYPT_WRAPPER_FUNC(vaes,
-                   Cfb128,
-                   encrypt,
-                   aesni::EncryptCfb128,
-                   m_cipher_key_data.m_enc_key,
-                   10,
-                   ALCP_ENC)
-CRYPT_WRAPPER_FUNC(vaes,
-                   Cfb192,
-                   encrypt,
-                   aesni::EncryptCfb192,
-                   m_cipher_key_data.m_enc_key,
-                   12,
-                   ALCP_ENC)
-CRYPT_WRAPPER_FUNC(vaes,
-                   Cfb256,
-                   encrypt,
-                   aesni::EncryptCfb256,
-                   m_cipher_key_data.m_enc_key,
-                   14,
-                   ALCP_ENC)
+template class tCfb<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class tCfb<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class tCfb<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes512>;
 
-CRYPT_WRAPPER_FUNC(vaes,
-                   Cfb128,
-                   decrypt,
-                   vaes::DecryptCfb128,
-                   m_cipher_key_data.m_enc_key,
-                   10,
-                   ALCP_DEC)
-CRYPT_WRAPPER_FUNC(vaes,
-                   Cfb192,
-                   decrypt,
-                   vaes::DecryptCfb192,
-                   m_cipher_key_data.m_enc_key,
-                   12,
-                   ALCP_DEC)
-CRYPT_WRAPPER_FUNC(vaes,
-                   Cfb256,
-                   decrypt,
-                   vaes::DecryptCfb256,
-                   m_cipher_key_data.m_enc_key,
-                   14,
-                   ALCP_DEC)
+template class tCfb<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class tCfb<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class tCfb<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes256>;
 
-// aesni member functions
-CRYPT_WRAPPER_FUNC(aesni,
-                   Cfb128,
-                   encrypt,
-                   aesni::EncryptCfb128,
-                   m_cipher_key_data.m_enc_key,
-                   10,
-                   ALCP_ENC)
-CRYPT_WRAPPER_FUNC(aesni,
-                   Cfb192,
-                   encrypt,
-                   aesni::EncryptCfb192,
-                   m_cipher_key_data.m_enc_key,
-                   12,
-                   ALCP_ENC)
-CRYPT_WRAPPER_FUNC(aesni,
-                   Cfb256,
-                   encrypt,
-                   aesni::EncryptCfb256,
-                   m_cipher_key_data.m_enc_key,
-                   14,
-                   ALCP_ENC)
-
-CRYPT_WRAPPER_FUNC(aesni,
-                   Cfb128,
-                   decrypt,
-                   aesni::DecryptCfb128,
-                   m_cipher_key_data.m_enc_key,
-                   10,
-                   ALCP_DEC)
-CRYPT_WRAPPER_FUNC(aesni,
-                   Cfb192,
-                   decrypt,
-                   aesni::DecryptCfb192,
-                   m_cipher_key_data.m_enc_key,
-                   12,
-                   ALCP_DEC)
-CRYPT_WRAPPER_FUNC(aesni,
-                   Cfb256,
-                   decrypt,
-                   aesni::DecryptCfb256,
-                   m_cipher_key_data.m_enc_key,
-                   14,
-                   ALCP_DEC)
+template class tCfb<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eAesni>;
+template class tCfb<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eAesni>;
+template class tCfb<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

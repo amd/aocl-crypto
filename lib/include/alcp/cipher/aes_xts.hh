@@ -72,7 +72,6 @@ class ALCP_API_EXPORT Xts
     Xts(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
     {
-        setMode(ALC_AES_MODE_CTR);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
 
@@ -82,7 +81,7 @@ class ALCP_API_EXPORT Xts
         m_ptweak_round_key     = m_xts.m_tweak_round_key;
         m_tweak_round_key_size = sizeof(m_xts.m_tweak_round_key);
 
-        Aes::setMode(ALC_AES_MODE_XTS);
+        Aes::setMode(CipherMode::eAesXTS);
         m_xts.m_aes_block_id = -1;
         memset(m_xts.m_iv_xts, 0, m_iv_xts_size);
         memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
