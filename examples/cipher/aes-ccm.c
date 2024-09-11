@@ -152,13 +152,11 @@ aclp_aes_ccm_encrypt_demo(
         return close_demo_session_exit();
     }
 
-#if MULTI_UPDATE_ENABLED
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting plaintext Length \n");
         return close_demo_session_exit();
     }
-#endif
 
     // CCM init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
@@ -173,28 +171,12 @@ aclp_aes_ccm_encrypt_demo(
         printf("Error: unable ccm add data processing \n");
         return close_demo_session_exit();
     }
-#if MULTI_UPDATE_ENABLED
 
-    // CCM encrypt
-    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len - 16);
-    if (alcp_is_error(err)) {
-        printf("Error: unable encrypt \n");
-        return close_demo_session_exit();
-    }
-
-    err = alcp_cipher_aead_encrypt(
-        &handle, plaintxt + (len - 16), ciphertxt + (len - 16), 16);
-    if (alcp_is_error(err)) {
-        printf("Error: unable encrypt \n");
-        return close_demo_session_exit();
-    }
-#else
     err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         return close_demo_session_exit();
     }
-#endif
 
     // get tag
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
@@ -241,14 +223,12 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         return close_demo_session_exit();
     }
 
-#if MULTI_UPDATE_ENABLED
     // set plaintext length only after key and iv has both set with init
     err = alcp_cipher_aead_set_ccm_plaintext_length(&handle, len);
     if (alcp_is_error(err)) {
         printf("Error: unable setting Plaintext Length \n");
         return close_demo_session_exit();
     }
-#endif
 
     // ccm init
     err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
@@ -265,28 +245,12 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // CCM decrypt
-#if MULTI_UPDATE_ENABLED
-    // Decrypt can be called multiple times in case of multi-update
-    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, 16);
-    if (alcp_is_error(err)) {
-        printf("Error: unable decrypt \n");
-        return close_demo_session_exit();
-    }
-
-    err = alcp_cipher_aead_decrypt(
-        &handle, ciphertxt + 16, plaintxt + 16, len - 16);
-    if (alcp_is_error(err)) {
-        printf("Error: unable decrypt \n");
-        return close_demo_session_exit();
-    }
-#else
     // Decrypt can be called only single time in case of single-update
     err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         return close_demo_session_exit();
     }
-#endif
 
     // Get Tag
     err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, tagLen);

@@ -265,7 +265,6 @@ alc_error_t
 alcp_cipher_aead_set_ccm_plaintext_length(
     const alc_cipher_handle_p pCipherHandle, Uint64 plaintextLength)
 {
-#ifdef CCM_MULTI_UPDATE
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -276,11 +275,6 @@ alcp_cipher_aead_set_ccm_plaintext_length(
     err      = i->setPlainTextLength(plaintextLength);
 
     return err;
-#else
-    printf("Plaintext length cannot be set in advance without compiling with "
-           "multi update support enabled\n");
-    return ALC_ERROR_NOT_PERMITTED;
-#endif
 }
 
 void
