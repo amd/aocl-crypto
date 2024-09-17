@@ -88,11 +88,11 @@ class ALCP_API_EXPORT Ccm
   protected:
     Uint64       m_tagLen            = 12; // default taglen
     Uint64       m_additionalDataLen = 0;
-    const Uint8* m_additionalData;
+    const Uint8* m_additionalData{};
     Uint64       m_plainTextLength      = 0;
     bool         m_is_plaintext_len_set = false;
     Uint64       m_updatedLength        = 0;
-    ccm_data_t   m_ccm_data;
+    ccm_data_t   m_ccm_data{};
 
   protected:
     alc_error_t setIv(ccm_data_t* ccm_data,

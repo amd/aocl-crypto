@@ -149,14 +149,14 @@ ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
     alc_error_t      err;
     ipp_wrp_aes_ctx* context_aead =
         &(((ipp_wrp_aes_aead_ctx*)(pState))->aead_ctx);
-    if (((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt == true) {
-        err = alcp_cipher_aead_get_tag(
-            &(context_aead->handle), (Uint8*)pDstTag, tagLen);
-    } else {
-        err = alcp_cipher_aead_get_tag(
-            &(context_aead->handle), (Uint8*)pDstTag, tagLen);
-    }
 
+    err = alcp_cipher_aead_get_tag(
+        &(context_aead->handle), (Uint8*)pDstTag, tagLen);
+    if (alcp_is_error(err)) {
+        std::cout << "alcp_cipher_aead_get_tag failed! code:" << err
+                  << std::endl;
+        return false;
+    }
     // As per IPP Documentation once CCMGetTag is called, the AES_CCMStart where
     // alcp_cipher_aead_request is called and memory again allocated for
     // context thus preserving the lifecycle without memory leaks

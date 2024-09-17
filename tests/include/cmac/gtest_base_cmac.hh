@@ -56,8 +56,7 @@ using namespace alcp::testing;
 
 /* print params verbosely */
 inline void
-PrintCmacTestData(std::vector<Uint8> key,
-                  alcp_cmac_data_t   data)
+PrintCmacTestData(std::vector<Uint8> key, alcp_cmac_data_t data)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
@@ -80,7 +79,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
     std::string TestDataFile = std::string("dataset_CMAC_" + CmacType + "_"
                                            + std::to_string(KeySize) + ".csv");
-    Csv         csv          = Csv(std::move(TestDataFile));
+    Csv         csv          = Csv(TestDataFile);
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -139,8 +138,8 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             std::begin(cmac), std::begin(cmac) + csv.getVect("CMAC").size());
 
         EXPECT_TRUE(ArraysMatch(
-            std::move(cmac_vector), // Actual output
-            csv.getVect("CMAC"),    // expected output, from the csv test data
+            cmac_vector,         // Actual output
+            csv.getVect("CMAC"), // expected output, from the csv test data
             csv,
             std::string("CMAC_" + CmacType + "_" + std::to_string(KeySize)
                         + "_KAT")));

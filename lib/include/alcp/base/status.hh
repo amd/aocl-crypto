@@ -85,7 +85,7 @@ class Status final
     // Move contructor
     Status(const Status&& s)
         : m_code{ s.m_code }
-        , m_message{ std::move(s.m_message) }
+        , m_message{ s.m_message }
     {
     }
 

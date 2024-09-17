@@ -53,19 +53,19 @@ ExecRecPlay::ExecRecPlay()
 
 ExecRecPlay::ExecRecPlay(std::string str_mode)
 {
-    init(std::move(str_mode), "digest_test_data", false);
+    init(str_mode, "digest_test_data", false);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode, bool playback)
 {
-    init(std::move(str_mode), "digest_test_data", playback);
+    init(str_mode, "digest_test_data", playback);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode,
                          std::string dir_name,
                          bool        playback)
 {
-    init(std::move(str_mode), std::move(dir_name), playback);
+    init(str_mode, dir_name, playback);
 }
 
 ExecRecPlay::~ExecRecPlay()
@@ -224,14 +224,14 @@ ExecRecPlay::endRecEvent()
 void
 ExecRecPlay::setRecEvent(std::vector<Uint8> data, record_t rec)
 {
-    setRecData(std::move(data));
+    setRecData(data);
     setRecType(rec);
 }
 
 void
 ExecRecPlay::setRecData(std::vector<Uint8> data)
 {
-    m_data = std::move(data);
+    m_data = data;
 }
 
 void

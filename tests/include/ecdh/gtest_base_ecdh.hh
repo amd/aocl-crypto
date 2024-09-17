@@ -115,7 +115,7 @@ ecdh_KAT(alc_ec_info_t info)
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
-    Csv         csv          = Csv(std::move(TestDataFile));
+    Csv         csv          = Csv(TestDataFile);
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -178,10 +178,8 @@ ecdh_KAT(alc_ec_info_t info)
             FAIL();
         }
         /* now check both Peers' secret keys match or not */
-        EXPECT_TRUE(ArraysMatch(std::move(Peer1_SecretKey),
-                                std::move(Peer2_SecretKey),
-                                csv,
-                                std::string("ECDH")));
+        EXPECT_TRUE(ArraysMatch(
+            Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
         EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen)
@@ -240,7 +238,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH_p256.csv");
-    Csv         csv          = Csv(std::move(TestDataFile));
+    Csv         csv          = Csv(TestDataFile);
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -290,7 +288,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
         }
 
         /* now check both Peers' secret keys match or not */
-        EXPECT_TRUE(ArraysMatch(std::move(Peer1_SecretKey),
+        EXPECT_TRUE(ArraysMatch(Peer1_SecretKey,
                                 csv.getVect("SECRET_KEY"),
                                 csv,
                                 std::string("ECDH_P256")));

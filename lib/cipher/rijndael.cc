@@ -697,10 +697,13 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
                 "Plaintext length is not a multiple of cBlockSize");
 
     while (n_words >= 4) {
-        auto   pt = reinterpret_cast<const Uint32(*)[4]>(&pPlaintxt);
+        // auto   pt = reinterpret_cast<const Uint32(*)[4]>(&pPlaintxt);
+        Uint32 pt[4];
         Uint32 ct[4];
 
-        encryptBlockKernel(*pt, ct, getEncryptKeys(), getRounds());
+        utils::CopyBytes(pt, pPlaintxt, sizeof(pt));
+        encryptBlockKernel(
+            *(const Uint32(*)[4])pt, ct, getEncryptKeys(), getRounds());
         utils::CopyBytes(pCiphertxt, ct, sizeof(ct));
 
         pPlaintxt += cBlockSize;
@@ -711,7 +714,8 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
     return ALC_ERROR_NONE;
 }
 
-void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void
+Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     encryptBlockKernel(blk0, blk0, pkey, nr);
 }

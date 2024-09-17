@@ -80,10 +80,7 @@ class CustomRng : public IRng
         return ALC_ERROR_NONE;
     }
 
-    void setEntropy(std::vector<Uint8> entropy)
-    {
-        m_entropy = std::move(entropy);
-    }
+    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
     void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
 
     void reset()

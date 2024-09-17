@@ -204,9 +204,6 @@ namespace vaes512 {
     alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
         alc_error_t err = Poly1305::finalize(pOutput, len);
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
         return err;
     }
 
@@ -394,9 +391,6 @@ namespace ref {
     alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
         alc_error_t err = Poly1305::finalize(pOutput, len);
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
         return err;
     }
 

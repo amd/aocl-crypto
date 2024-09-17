@@ -311,7 +311,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = std::move(rng);
+        _rng = rng;
     }
     void TestBody() override { CrossTestXTS(_rng, _select1, _select2); }
 
@@ -337,7 +337,7 @@ RegisterMyTests(std::string              testSuiteName,
         __LINE__,
         // Important to use the fixture type as the return type here.
         [=]() -> CrossTestFixture* {
-            return new CrossTest(std::move(rng), select1, select2);
+            return new CrossTest(rng, select1, select2);
         });
 }
 } // namespace alcp::testing::cipher::xts

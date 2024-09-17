@@ -320,7 +320,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = std::move(rng);
+        _rng = rng;
     }
     void TestBody() override { CrossTestGCM(_rng, _select1, _select2); }
 
@@ -346,7 +346,7 @@ RegisterMyTests(std::string              testSuiteName,
         __LINE__,
         // Important to use the fixture type as the return type here.
         [=]() -> CrossTestFixture* {
-            return new CrossTest(std::move(rng), select1, select2);
+            return new CrossTest(rng, select1, select2);
         });
 }
 } // namespace alcp::testing::cipher::gcm
@@ -389,7 +389,7 @@ main(int argc, char** argv)
         if (std::get<bool>(argsMap["USE_OSSL"].value)) {
             RegisterMyTests("KnownAnswerTest",
                             "GCM_CROSS_EXPERIMENTAL_OPENSSL",
-                            std::move(rng),
+                            rng,
                             LibrarySelect::OPENSSL,
                             LibrarySelect::ALCP);
         }
@@ -399,7 +399,7 @@ main(int argc, char** argv)
         if (std::get<bool>(argsMap["USE_IPP"].value)) {
             RegisterMyTests("KnownAnswerTest",
                             "GCM_CROSS_EXPERIMENTAL_IPP",
-                            std::move(rng),
+                            rng,
                             LibrarySelect::IPP,
                             LibrarySelect::ALCP);
         }

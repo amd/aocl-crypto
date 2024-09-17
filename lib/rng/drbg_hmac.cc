@@ -63,7 +63,8 @@ DebugPrint(const std::vector<Uint8>& in,
            std::string               message,
            std::string               file,
            int                       line)
-{}
+{
+}
 #endif
 
 class HmacDrbg::Impl
@@ -657,7 +658,8 @@ HmacDrbg::getVCopy()
 
 HmacDrbg::HmacDrbg()
     : p_impl{ std::make_unique<Impl>() }
-{}
+{
+}
 
 HmacDrbg::~HmacDrbg() = default;
 } // namespace alcp::rng::drbg

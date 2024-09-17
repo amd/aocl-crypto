@@ -536,8 +536,7 @@ CipherCrossTest(int               keySize,
                     std::cout << "ERROR: Enc: ext lib" << std::endl;
                     FAIL();
                 }
-                ASSERT_TRUE(
-                    ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
+                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 if (verbose > 1) {
                     PrintTestData(key, data_alc, mode);
                     PrintTestData(key, data_ext, mode);
@@ -555,8 +554,7 @@ CipherCrossTest(int               keySize,
                     FAIL();
                 }
 
-                ASSERT_TRUE(
-                    ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
+                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
 
                 if (verbose > 1) {
                     PrintTestData(key, data_alc, mode);
@@ -797,12 +795,10 @@ CipherAeadCrossTest(int               keySize,
                     std::cout << "ERROR: Enc: ext lib" << std::endl;
                     FAIL();
                 }
-                ASSERT_TRUE(
-                    ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
+                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 /* for gcm*/
                 if (isgcm || isccm || ischachapoly) {
-                    EXPECT_TRUE(
-                        ArraysMatch(std::move(tag_alc), std::move(tag_ext)));
+                    EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
                 if (verbose > 1) {
                     PrintTestDataAead(key, data_alc, mode);
@@ -860,19 +856,16 @@ CipherAeadCrossTest(int               keySize,
                 if (isgcm || isccm) {
                     /* Verify only if tag contains valid data */
                     if (!data_alc.m_isTagValid || !data_ext.m_isTagValid) {
-                        ASSERT_TRUE(ArraysMatch(std::move(out_pt_alc),
-                                                std::move(out_pt_ext)));
+                        ASSERT_TRUE(ArraysMatch(out_pt_alc, out_pt_ext));
                         if (!(isgcm
                               && (encDec == DECRYPT))) { // gcm decrypt tag is
                                                          // validated in getTag
                                                          // c-api itself
-                            EXPECT_TRUE(ArraysMatch(std::move(tag_alc),
-                                                    std::move(tag_ext)));
+                            EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                         }
                     }
                 } else if (!(isgcm || isccm || ischachapoly)) {
-                    ASSERT_TRUE(ArraysMatch(std::move(out_ct_alc),
-                                            std::move(out_ct_ext)));
+                    ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
                 if (verbose > 1) {
                     PrintTestDataAead(key, data_alc, mode);
@@ -938,7 +931,7 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             data.m_inl = pt.size();
         }
 
-        expected_output   = std::move(ct);
+        expected_output   = ct;
         actual_output     = std::vector<Uint8>(expected_output.size());
         data.m_block_size = actual_output.size();
 
@@ -962,7 +955,7 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             data.m_inl = ct.size();
         }
 
-        expected_output   = std::move(pt);
+        expected_output   = pt;
         actual_output     = std::vector<Uint8>(expected_output.size());
         data.m_block_size = actual_output.size();
 
@@ -979,8 +972,8 @@ RunCipherKatTest(CipherTestingCore& testingCore,
     }
 
     EXPECT_TRUE(
-        ArraysMatch(std::move(actual_output),
-                    std::move(expected_output),
+        ArraysMatch(actual_output,
+                    expected_output,
                     *(testingCore.getCsv()),
                     std::string("AES_" + modeStr + "_" + std::to_string(keySize)
                                 + encDecStr)));
@@ -1068,14 +1061,14 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             EXPECT_TRUE(ret);
         }
         EXPECT_TRUE(
-            ArraysMatch(std::move(outct),
+            ArraysMatch(outct,
                         csv->getVect("CIPHERTEXT"),
                         *(csv.get()),
                         std::string("AES_" + modeStr + "_"
                                     + std::to_string(keySize) + encDecStr)));
 
         if ((isGcm || isSiv)) {
-            EXPECT_TRUE(ArraysMatch(std::move(outtag),
+            EXPECT_TRUE(ArraysMatch(outtag,
                                     csv->getVect("TAG"),
                                     *(csv.get()),
                                     std::string("AES_" + modeStr + "_"
@@ -1117,7 +1110,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             EXPECT_TRUE(ret);
         }
         EXPECT_TRUE(
-            ArraysMatch(std::move(outpt),
+            ArraysMatch(outpt,
                         csv->getVect("PLAINTEXT"),
                         *(testingCore.getCsv()),
                         std::string("AES_" + modeStr + "_"

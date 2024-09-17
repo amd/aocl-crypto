@@ -118,19 +118,19 @@ ExecRecPlay::ExecRecPlay()
 
 ExecRecPlay::ExecRecPlay(std::string str_mode)
 {
-    init(std::move(str_mode), "cipher_test_data", false);
+    init(str_mode, "cipher_test_data", false);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode, bool playback)
 {
-    init(std::move(str_mode), "cipher_test_data", playback);
+    init(str_mode, "cipher_test_data", playback);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode,
                          std::string dir_name,
                          bool        playback)
 {
-    init(std::move(str_mode), std::move(dir_name), playback);
+    init(str_mode, dir_name, playback);
 }
 
 ExecRecPlay::~ExecRecPlay()
@@ -313,28 +313,28 @@ ExecRecPlay::setRecEvent(std::vector<Uint8> key,
                          std::vector<Uint8> data,
                          record_t           rec)
 {
-    setRecKey(std::move(key));
-    setRecIv(std::move(iv));
-    setRecData(std::move(data));
+    setRecKey(key);
+    setRecIv(iv);
+    setRecData(data);
     setRecType(rec);
 }
 
 void
 ExecRecPlay::setRecKey(std::vector<Uint8> key)
 {
-    m_key = std::move(key);
+    m_key = key;
 }
 
 void
 ExecRecPlay::setRecIv(std::vector<Uint8> iv)
 {
-    m_iv = std::move(iv);
+    m_iv = iv;
 }
 
 void
 ExecRecPlay::setRecData(std::vector<Uint8> data)
 {
-    m_data = std::move(data);
+    m_data = data;
 }
 
 void

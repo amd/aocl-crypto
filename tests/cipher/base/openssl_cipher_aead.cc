@@ -176,8 +176,9 @@ OpenSSLCipherAeadBase::init(const Uint8* iv,
 bool
 OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
-    m_key     = key;
-    m_key_len = cKeyLen;
+    m_key           = key;
+    m_key_len       = cKeyLen;
+    alc_error_t err = ALC_ERROR_NONE;
 
 #ifdef USE_PROVIDER
     if (m_alcp_provider == nullptr) {
@@ -195,8 +196,13 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     // Key
     if (m_mode == ALC_AES_MODE_SIV) {
         CopyBytes(m_key_final, m_key, cKeyLen / 8);
-        CopyBytes(m_key_final + cKeyLen / 8, m_tkey, cKeyLen / 8);
+        err = alcp::utils::SecureCopy<Uint8>(
+            m_key_final + cKeyLen / 8, cKeyLen / 8, m_tkey, cKeyLen / 8);
         m_key = m_key_final;
+        if (alcp_is_error(err)) {
+            std::cout << "Error from Secure copy" << std::endl;
+            return false;
+        }
     }
 
     // Create context for encryption and initialize

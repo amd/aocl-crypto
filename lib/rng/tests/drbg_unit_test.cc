@@ -66,7 +66,8 @@ DebugPrintPretty(std::vector<Uint8>& output)
 #else
 void
 DebugPrintPretty(std::vector<Uint8>& output)
-{}
+{
+}
 #endif
 
 class NullGenerator : public IRng

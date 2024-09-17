@@ -170,8 +170,7 @@ Poly_Cross()
             PrintmacTestData(key_full, data_ext, LibStrExt);
 
         /* now check if the macs match */
-        EXPECT_TRUE(
-            ArraysMatch(std::move(MacMainLib), std::move(MacExtLib), macSize));
+        EXPECT_TRUE(ArraysMatch(MacMainLib, MacExtLib, macSize));
     }
     return;
 }
@@ -240,15 +239,15 @@ Poly_Kat()
         }
 
         if (verbose > 1)
-            PrintmacTestData(std::move(key), data, LibStr);
+            PrintmacTestData(key, data, LibStr);
 
         /*conv mac output into a vector */
         /* we need only the no of bytes needed, from the output */
         std::vector<Uint8> mac_vector(
             std::begin(mac), std::begin(mac) + csv.getVect("MAC").size());
         EXPECT_TRUE(ArraysMatch(
-            std::move(mac_vector), // Actual output
-            csv.getVect("MAC"),    // expected output, from the csv test data
+            mac_vector,         // Actual output
+            csv.getVect("MAC"), // expected output, from the csv test data
             csv,
             LibStr));
     }

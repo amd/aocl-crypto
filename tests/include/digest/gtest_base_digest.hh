@@ -119,7 +119,7 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
         TestDataFile = "dataset_" + GetDigestStr(mode) + "_"
                        + std::to_string(GetDigestLen(mode)) + ".csv";
     }
-    Csv csv = Csv(std::move(TestDataFile));
+    Csv csv = Csv(TestDataFile);
     // check if file is valid
     if (!csv.m_file_exists) {
         FAIL();
@@ -191,7 +191,7 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
                 FAIL();
             }
             EXPECT_TRUE(ArraysMatch(
-                std::move(digest_),    // output
+                digest_,               // output
                 csv.getVect("DIGEST"), // expected, from the KAT test data
                 csv,
                 std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
@@ -200,8 +200,7 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
             /* for squeeze test, check digest outputs from both handles */
             if (test_squeeze) {
                 EXPECT_TRUE(ArraysMatch(
-                    std::move(
-                        digest_dup_), // output squeezed out of m_handle_dup
+                    digest_dup_, // output squeezed out of m_handle_dup
                     csv.getVect("DIGEST"), // expected, from the KAT test data
                     csv,
                     std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
@@ -251,8 +250,8 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
                                              std::end(digest));
 
             EXPECT_TRUE(ArraysMatch(
-                std::move(digest_vector), // output
-                csv.getVect("DIGEST"),    // expected, from the KAT test data
+                digest_vector,         // output
+                csv.getVect("DIGEST"), // expected, from the KAT test data
                 csv,
                 std::string(GetDigestStr(mode) + "_"
                             + std::to_string(GetDigestLen(mode)) + "_KAT")));

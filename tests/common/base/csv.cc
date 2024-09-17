@@ -92,7 +92,7 @@ std::vector<Uint8>
 Csv::getVect(const String cName)
 {
     String value = getStr(cName);
-    return parseHexStrToBin(std::move(value));
+    return parseHexStrToBin(value);
 }
 
 int

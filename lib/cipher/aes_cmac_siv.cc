@@ -28,6 +28,7 @@
 
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/utils/compare.hh"
+#include <string.h>
 
 namespace alcp::cipher {
 
@@ -66,6 +67,9 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 {
     alc_error_t err       = ALC_ERROR_NONE;
     Uint64      keyLength = keyLen;
+    if (pKey == nullptr) {
+        return ALC_ERROR_INVALID_DATA;
+    }
 
     if (pIv != nullptr) {
         if (ivLen == 16) {
@@ -77,25 +81,22 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
     }
 
     if (pKey != nullptr) {
-
-        if (utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8)
-            != ALC_ERROR_NONE) {
-            return ALC_ERROR_INVALID_SIZE;
+        err = utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-
-        if (utils::SecureCopy<Uint8>(
-                m_key2, 32, pKey + (keyLength / 8), keyLength / 8)
-            != ALC_ERROR_NONE) {
-            return ALC_ERROR_INVALID_SIZE;
+        err = utils::SecureCopy<Uint8>(
+            m_key2, 32, pKey + (keyLength / 8), keyLength / 8);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-
         err = setKeys(m_key1, keyLength);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
     }
 
-    return ALC_ERROR_NONE;
+    return err;
 }
 
 alc_error_t
