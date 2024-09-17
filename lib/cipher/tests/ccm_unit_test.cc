@@ -776,7 +776,7 @@ TEST(CCM, InvalidNonceLen)
 
 #ifdef CCM_MULTI_UPDATE
     err = pCcmObj->setPlainTextLength(0);
-    ASSERT_EQ(err, ALC_ERROR_NONE);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 #endif
     // Nonce
     err = pCcmObj->init(key, sizeof(key) * 8, getPtr(nonce), nonce.size());
