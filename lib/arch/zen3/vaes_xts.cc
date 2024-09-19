@@ -49,12 +49,12 @@ template<
                       const __m128i* pKey,
                       int            nRounds)>
 inline alc_error_t
-EncryptXts(const Uint8* pSrc,
-           Uint8*       pDest,
-           Uint64       len,
-           const Uint8* pKey,
-           int          nRounds,
-           Uint8*       pIv)
+EncryptXtsKernel(const Uint8* pSrc,
+                 Uint8*       pDest,
+                 Uint64       len,
+                 const Uint8* pKey,
+                 int          nRounds,
+                 Uint8*       pIv)
 {
 
     auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
@@ -397,12 +397,12 @@ template<
                       const __m128i* pKey,
                       int            nRounds)>
 inline alc_error_t
-DecryptXts(const Uint8* pSrc,
-           Uint8*       pDest,
-           Uint64       len,
-           const Uint8* pKey,
-           int          nRounds,
-           Uint8*       pIv)
+DecryptXtsKernel(const Uint8* pSrc,
+                 Uint8*       pDest,
+                 Uint64       len,
+                 const Uint8* pKey,
+                 int          nRounds,
+                 Uint8*       pIv)
 {
     auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
     auto p_src256  = reinterpret_cast<const __m256i*>(pSrc);
@@ -761,59 +761,31 @@ DecryptXts(const Uint8* pSrc,
 }
 
 alc_error_t
-EncryptXts128(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
+EncryptXts(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv)
 {
     // AesEncrypt 1Block, 2Block, 3Block, 4Block
-    return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
+    return EncryptXtsKernel<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
-EncryptXts256(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
+DecryptXts(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv)
 {
-    // AesEncrypt 1Block, 2Block, 3Block, 4Block
-    return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptXts128(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    return DecryptXts<AesEncrypt,
-                      AesDecrypt,
-                      AesDecrypt,
-                      AesDecrypt,
-                      AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptXts256(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    return DecryptXts<AesEncrypt,
-                      AesDecrypt,
-                      AesDecrypt,
-                      AesDecrypt,
-                      AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+    return DecryptXtsKernel<AesEncrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes

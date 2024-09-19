@@ -28,13 +28,10 @@
 
 #include "alcp/cipher/aes.hh"
 
-#include "alcp/cipher/aes_cbc.hh"
 #include "alcp/cipher/aes_ccm.hh"
-#include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/aes_cmac_siv.hh"
-#include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/aes_gcm.hh"
-#include "alcp/cipher/aes_ofb.hh"
+#include "alcp/cipher/aes_generic.hh"
 #include "alcp/cipher/aes_xts.hh"
 #include "alcp/cipher/chacha20.hh"
 #include "alcp/cipher/chacha20_poly1305.hh"
@@ -141,22 +138,80 @@ getMode(CipherKeyLen keyLen, CpuCipherFeatures arch)
     }
 }
 
-template<typename INTERFACE>
+template<typename INTERFACE, CipherMode MODE>
 INTERFACE*
-getCbc(const CipherMode        mode,
-       const CipherKeyLen      keyLen,
-       const CpuCipherFeatures arch)
+getGenericCiphers(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
 {
     if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
         switch (keyLen) {
             case CipherKeyLen::eKey128Bit:
-                return new tCbc<CipherKeyLen::eKey128Bit,
-                                CpuCipherFeatures::eVaes512>();
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey128Bit,
+                                             CpuCipherFeatures::eVaes512>();
             case CipherKeyLen::eKey192Bit:
-                return new tCbc<CipherKeyLen::eKey192Bit,
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey192Bit,
+                                             CpuCipherFeatures::eVaes512>();
+            case CipherKeyLen::eKey256Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey256Bit,
+                                             CpuCipherFeatures::eVaes512>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eVaes256) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey128Bit,
+                                             CpuCipherFeatures::eVaes256>();
+            case CipherKeyLen::eKey192Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey192Bit,
+                                             CpuCipherFeatures::eVaes256>();
+            case CipherKeyLen::eKey256Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey256Bit,
+                                             CpuCipherFeatures::eVaes256>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eAesni) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey128Bit,
+                                             CpuCipherFeatures::eAesni>();
+            case CipherKeyLen::eKey192Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey192Bit,
+                                             CpuCipherFeatures::eAesni>();
+            case CipherKeyLen::eKey256Bit:
+                return new AesGenericCiphers<MODE,
+                                             CipherKeyLen::eKey256Bit,
+                                             CpuCipherFeatures::eAesni>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
+template<typename INTERFACE>
+INTERFACE*
+getXts(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
+{
+    if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tXts<CipherKeyLen::eKey128Bit,
                                 CpuCipherFeatures::eVaes512>();
             case CipherKeyLen::eKey256Bit:
-                return new tCbc<CipherKeyLen::eKey256Bit,
+                return new tXts<CipherKeyLen::eKey256Bit,
                                 CpuCipherFeatures::eVaes512>();
             default:
                 printf("\n Error: key length not supported ");
@@ -165,13 +220,10 @@ getCbc(const CipherMode        mode,
     } else if (arch == alcp::utils::CpuCipherFeatures::eVaes256) {
         switch (keyLen) {
             case CipherKeyLen::eKey128Bit:
-                return new tCbc<CipherKeyLen::eKey128Bit,
-                                CpuCipherFeatures::eVaes256>();
-            case CipherKeyLen::eKey192Bit:
-                return new tCbc<CipherKeyLen::eKey192Bit,
+                return new tXts<CipherKeyLen::eKey128Bit,
                                 CpuCipherFeatures::eVaes256>();
             case CipherKeyLen::eKey256Bit:
-                return new tCbc<CipherKeyLen::eKey256Bit,
+                return new tXts<CipherKeyLen::eKey256Bit,
                                 CpuCipherFeatures::eVaes256>();
             default:
                 printf("\n Error: key length not supported ");
@@ -180,14 +232,56 @@ getCbc(const CipherMode        mode,
     } else if (arch == alcp::utils::CpuCipherFeatures::eAesni) {
         switch (keyLen) {
             case CipherKeyLen::eKey128Bit:
-                return new tCbc<CipherKeyLen::eKey128Bit,
-                                CpuCipherFeatures::eAesni>();
-            case CipherKeyLen::eKey192Bit:
-                return new tCbc<CipherKeyLen::eKey192Bit,
+                return new tXts<CipherKeyLen::eKey128Bit,
                                 CpuCipherFeatures::eAesni>();
             case CipherKeyLen::eKey256Bit:
-                return new tCbc<CipherKeyLen::eKey256Bit,
+                return new tXts<CipherKeyLen::eKey256Bit,
                                 CpuCipherFeatures::eAesni>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
+template<typename INTERFACE>
+INTERFACE*
+getXtsBlock(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
+{
+    if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tXtsBlock<CipherKeyLen::eKey128Bit,
+                                     CpuCipherFeatures::eVaes512>();
+            case CipherKeyLen::eKey256Bit:
+                return new tXtsBlock<CipherKeyLen::eKey256Bit,
+                                     CpuCipherFeatures::eVaes512>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eVaes256) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tXtsBlock<CipherKeyLen::eKey128Bit,
+                                     CpuCipherFeatures::eVaes256>();
+            case CipherKeyLen::eKey256Bit:
+                return new tXtsBlock<CipherKeyLen::eKey256Bit,
+                                     CpuCipherFeatures::eVaes256>();
+            default:
+                printf("\n Error: key length not supported ");
+                return nullptr;
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eAesni) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new tXtsBlock<CipherKeyLen::eKey128Bit,
+                                     CpuCipherFeatures::eAesni>();
+            case CipherKeyLen::eKey256Bit:
+                return new tXtsBlock<CipherKeyLen::eKey256Bit,
+                                     CpuCipherFeatures::eAesni>();
             default:
                 printf("\n Error: key length not supported ");
                 return nullptr;
@@ -204,57 +298,24 @@ CipherFactory<iCipher>::getCipher()
     // Non-AEAD ciphers
     switch (m_cipher_mode) {
         case CipherMode::eAesCBC:
-            m_iCipher = getCbc<iCipher>(m_cipher_mode, m_keyLen, m_arch);
+            m_iCipher = getGenericCiphers<iCipher, CipherMode::eAesCBC>(
+                m_keyLen, m_arch);
             break;
         case CipherMode::eAesOFB:
-            m_iCipher = getMode<iCipher,
-                                Ofb128_aesni,
-                                Ofb192_aesni,
-                                Ofb256_aesni,
-                                Ofb128_aesni,
-                                Ofb192_aesni,
-                                Ofb256_aesni,
-                                Ofb128_aesni,
-                                Ofb192_aesni,
-                                Ofb256_aesni>(m_keyLen, m_arch);
+            m_iCipher = getGenericCiphers<iCipher, CipherMode::eAesOFB>(
+                m_keyLen, m_arch);
             break;
         case CipherMode::eAesCTR:
-#if 0
-
-            m_iCipher = getMode<iCipher,
-                                Ctr128_vaes512,
-                                Ctr192_vaes512,
-                                Ctr256_vaes512,
-                                Ctr128_vaes,
-                                Ctr192_vaes,
-                                Ctr256_vaes,
-                                Ctr128_aesni,
-                                Ctr192_aesni,
-                                Ctr256_aesni>(m_keyLen, m_arch);
-#endif
+            m_iCipher = getGenericCiphers<iCipher, CipherMode::eAesCTR>(
+                m_keyLen, m_arch);
             break;
         case CipherMode::eAesCFB:
-#if 0
-            m_iCipher = getMode<iCipher,
-                                Cfb128_vaes512,
-                                Cfb192_vaes512,
-                                Cfb256_vaes512,
-                                Cfb128_vaes,
-                                Cfb192_vaes,
-                                Cfb256_vaes,
-                                Cfb128_aesni,
-                                Cfb192_aesni,
-                                Cfb256_aesni>(m_keyLen, m_arch);
-#endif
+            m_iCipher = getGenericCiphers<iCipher, CipherMode::eAesCFB>(
+                m_keyLen, m_arch);
             break;
         case CipherMode::eAesXTS:
-            m_iCipher = getMode<iCipher,
-                                Xts128_vaes512,
-                                Xts256_vaes512,
-                                Xts128_vaes,
-                                Xts256_vaes,
-                                Xts128_aesni,
-                                Xts256_aesni>(m_keyLen, m_arch);
+            // printf("\n %d keylen", (int)m_keyLen);
+            m_iCipher = getXts<iCipher>(m_keyLen, m_arch);
             break;
         case CipherMode::eCHACHA20:
             if (m_arch == CpuCipherFeatures::eVaes512) {
@@ -278,13 +339,7 @@ CipherFactory<iCipherSeg>::getCipher()
     // Non-AEAD ciphers
     switch (m_cipher_mode) {
         case CipherMode::eAesXTS:
-            m_iCipher = getMode<iCipherSeg,
-                                XtsBlock128_vaes512,
-                                XtsBlock256_vaes512,
-                                XtsBlock128_vaes,
-                                XtsBlock256_vaes,
-                                XtsBlock128_aesni,
-                                XtsBlock256_aesni>(m_keyLen, m_arch);
+            m_iCipher = getXtsBlock<iCipherSeg>(m_keyLen, m_arch);
             break;
         default:
             m_iCipher = nullptr;

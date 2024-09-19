@@ -27,7 +27,6 @@
  */
 
 #include "alcp/cipher/aes.hh"
-#include "alcp/cipher/aes_ctr.hh"
 #include "alcp/types.hh"
 
 #include "avx512.hh"

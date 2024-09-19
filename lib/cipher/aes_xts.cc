@@ -175,125 +175,264 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
         return err;                                                                    \
     };
 
-// vaes512 functions
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes512, Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes512, Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tXts<keyLenBits, arch>::encrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
 
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes512, Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes512, Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
+    if constexpr ((keyLenBits != CipherKeyLen::eKey128Bit)
+                  && (keyLenBits != CipherKeyLen::eKey256Bit)) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
 
-// vaes functions
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
+    Uint64 blocks_in = len / 16;
 
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
+    if constexpr (arch == CpuCipherFeatures::eVaes512) {
+        err = vaes512::EncryptXts(pinput,
+                                  pOutput,
+                                  len,
+                                  m_cipher_key_data.m_enc_key,
+                                  getRounds(),
+                                  m_xts.m_tweak_block);
 
-// aesni functions
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, Xts128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, Xts256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
+    } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
+        err = vaes::EncryptXts(pinput,
+                               pOutput,
+                               len,
+                               m_cipher_key_data.m_enc_key,
+                               getRounds(),
+                               m_xts.m_tweak_block);
+    } else if constexpr (arch == CpuCipherFeatures::eAesni) {
+        err = aesni::EncryptXts(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_xts.m_tweak_block);
+    }
+    m_xts.m_aes_block_id += blocks_in;
+    return err;
+};
 
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, Xts128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, Xts256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tXts<keyLenBits, arch>::decrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+
+    if constexpr ((keyLenBits != CipherKeyLen::eKey128Bit)
+                  && (keyLenBits != CipherKeyLen::eKey256Bit)) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+
+    Uint64 blocks_in = len / 16;
+    if constexpr (arch == CpuCipherFeatures::eVaes512) {
+        err = vaes512::DecryptXts(pinput,
+                                  pOutput,
+                                  len,
+                                  m_cipher_key_data.m_dec_key,
+                                  getRounds(),
+                                  m_xts.m_tweak_block);
+
+    } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
+        err = vaes::DecryptXts(pinput,
+                               pOutput,
+                               len,
+                               m_cipher_key_data.m_dec_key,
+                               getRounds(),
+                               m_xts.m_tweak_block);
+    } else if constexpr (arch == CpuCipherFeatures::eAesni) {
+        err = aesni::DecryptXts(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_dec_key,
+                                getRounds(),
+                                m_xts.m_tweak_block);
+    }
+
+    m_xts.m_aes_block_id += blocks_in;
+    return err;
+};
 
 /*******************************************/
 /** iCipher segment implementation of XTS **/
 /*******************************************/
-#if 1
-// vaes512 functions
-CRYPT_XTS_WRAPPER_FUNC(vaes512,
-                       XtsBlock128,
-                       encrypt,
-                       EncryptXts128,
-                       m_cipher_key_data.m_enc_key,
-                       10)
-CRYPT_XTS_WRAPPER_FUNC(vaes512,
-                       XtsBlock256,
-                       encrypt,
-                       EncryptXts256,
-                       m_cipher_key_data.m_enc_key,
-                       14)
 
-CRYPT_XTS_WRAPPER_FUNC(vaes512,
-                       XtsBlock128,
-                       decrypt,
-                       DecryptXts128,
-                       m_cipher_key_data.m_dec_key,
-                       10)
-CRYPT_XTS_WRAPPER_FUNC(vaes512,
-                       XtsBlock256,
-                       decrypt,
-                       DecryptXts256,
-                       m_cipher_key_data.m_dec_key,
-                       14)
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tXtsBlock<keyLenBits, arch>::encrypt(const Uint8* pinput,
+                                     Uint8*       pOutput,
+                                     Uint64       len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+    Uint64 blocks_in = len / 16;
 
-// vaes functions
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, XtsBlock128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, XtsBlock256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
-
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, XtsBlock128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    vaes, XtsBlock256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
-
-// aesni functions
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, XtsBlock128, encrypt, EncryptXts128, m_cipher_key_data.m_enc_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, XtsBlock256, encrypt, EncryptXts256, m_cipher_key_data.m_enc_key, 14)
-
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, XtsBlock128, decrypt, DecryptXts128, m_cipher_key_data.m_dec_key, 10)
-CRYPT_XTS_WRAPPER_FUNC(
-    aesni, XtsBlock256, decrypt, DecryptXts256, m_cipher_key_data.m_dec_key, 14)
-
-#define CRYPT_BLOCKS_XTS_WRAPPER_FUNC(                                         \
-    NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)                            \
-    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
-        const Uint8* pinput, Uint8* pOutput, Uint64 len, Uint64 startBlockNum) \
-                                                                               \
-    {                                                                          \
-        alc_error_t err = ALC_ERROR_NONE;                                      \
-        alcp::cipher::Xts::tweakBlockSet(startBlockNum);                       \
-        err = FUNC_NAME(pinput, pOutput, len);                                 \
-                                                                               \
-        return err;                                                            \
+    if constexpr ((keyLenBits != CipherKeyLen::eKey128Bit)
+                  && (keyLenBits != CipherKeyLen::eKey256Bit)) {
+        return ALC_ERROR_NOT_SUPPORTED;
     }
 
-// vaes512 classes
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes512, XtsBlock128, encryptSegment, encrypt)
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes512, XtsBlock256, encryptSegment, encrypt)
+    if constexpr (arch == CpuCipherFeatures::eVaes512) {
+        err = vaes512::EncryptXts(pinput,
+                                  pOutput,
+                                  len,
+                                  m_cipher_key_data.m_enc_key,
+                                  getRounds(),
+                                  m_xts.m_tweak_block);
 
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes512, XtsBlock128, decryptSegment, decrypt)
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes512, XtsBlock256, decryptSegment, decrypt)
+    } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
+        err = vaes::EncryptXts(pinput,
+                               pOutput,
+                               len,
+                               m_cipher_key_data.m_enc_key,
+                               getRounds(),
+                               m_xts.m_tweak_block);
+    } else if constexpr (arch == CpuCipherFeatures::eAesni) {
+        err = aesni::EncryptXts(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_xts.m_tweak_block);
+    }
+    m_xts.m_aes_block_id += blocks_in;
+    return err;
+};
 
-// vaes classes
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes, XtsBlock128, encryptSegment, encrypt)
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes, XtsBlock256, encryptSegment, encrypt)
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tXtsBlock<keyLenBits, arch>::decrypt(const Uint8* pinput,
+                                     Uint8*       pOutput,
+                                     Uint64       len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+    Uint64 blocks_in = len / 16;
 
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes, XtsBlock128, decryptSegment, decrypt)
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(vaes, XtsBlock256, decryptSegment, decrypt)
+    if constexpr ((keyLenBits != CipherKeyLen::eKey128Bit)
+                  && (keyLenBits != CipherKeyLen::eKey256Bit)) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
 
-// aesni classes
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(aesni, XtsBlock128, encryptSegment, encrypt)
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(aesni, XtsBlock256, encryptSegment, encrypt)
+    if constexpr (arch == CpuCipherFeatures::eVaes512) {
+        err = vaes512::DecryptXts(pinput,
+                                  pOutput,
+                                  len,
+                                  m_cipher_key_data.m_dec_key,
+                                  getRounds(),
+                                  m_xts.m_tweak_block);
+    } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
+        err = vaes::DecryptXts(pinput,
+                               pOutput,
+                               len,
+                               m_cipher_key_data.m_dec_key,
+                               getRounds(),
+                               m_xts.m_tweak_block);
+    } else if constexpr (arch == CpuCipherFeatures::eAesni) {
+        err = aesni::DecryptXts(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_dec_key,
+                                getRounds(),
+                                m_xts.m_tweak_block);
+    }
 
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(aesni, XtsBlock128, decryptSegment, decrypt)
-CRYPT_BLOCKS_XTS_WRAPPER_FUNC(aesni, XtsBlock256, decryptSegment, decrypt)
-#endif
+    m_xts.m_aes_block_id += blocks_in;
+    return err;
+};
+
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tXtsBlock<keyLenBits, arch>::encryptSegment(const Uint8* pinput,
+                                            Uint8*       pOutput,
+                                            Uint64       len,
+                                            Uint64       startBlockNum)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    alcp::cipher::Xts::tweakBlockSet(startBlockNum);
+    err = encrypt(pinput, pOutput, len);
+    return err;
+}
+
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+tXtsBlock<keyLenBits, arch>::decryptSegment(const Uint8* pinput,
+                                            Uint8*       pOutput,
+                                            Uint64       len,
+                                            Uint64       startBlockNum)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    alcp::cipher::Xts::tweakBlockSet(startBlockNum);
+    err = decrypt(pinput, pOutput, len);
+    return err;
+}
+
+template class tXts<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class tXts<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes512>;
+
+template class tXts<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class tXts<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes256>;
+
+template class tXts<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eAesni>;
+template class tXts<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eAesni>;
+
+template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey128Bit,
+                         CpuCipherFeatures::eVaes512>;
+template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey256Bit,
+                         CpuCipherFeatures::eVaes512>;
+
+template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey128Bit,
+                         CpuCipherFeatures::eVaes256>;
+template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey256Bit,
+                         CpuCipherFeatures::eVaes256>;
+
+template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey128Bit,
+                         CpuCipherFeatures::eAesni>;
+template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey256Bit,
+                         CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

@@ -69,9 +69,10 @@ class ALCP_API_EXPORT Xts
 
     _alc_cipher_xts_data_t m_xts;
 
-    Xts(Uint32 keyLen_in_bytes)
+    Xts(Uint32 keyLen_in_bytes, CipherMode mode)
         : Aes(keyLen_in_bytes)
     {
+        setMode(mode);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
 
@@ -81,7 +82,7 @@ class ALCP_API_EXPORT Xts
         m_ptweak_round_key     = m_xts.m_tweak_round_key;
         m_tweak_round_key_size = sizeof(m_xts.m_tweak_round_key);
 
-        Aes::setMode(CipherMode::eAesXTS);
+        // Aes::setMode(CipherMode::eAesXTS);
         m_xts.m_aes_block_id = -1;
         memset(m_xts.m_iv_xts, 0, m_iv_xts_size);
         memset(m_ptweak_round_key, 0, m_tweak_round_key_size);
@@ -110,30 +111,62 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
     return utils::GetSbox(offset, use_invsbox);
 }
 
-/* iCipher classes */
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Xts128, Xts, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Xts256, Xts, virtual iCipher, 256 / 8)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class tXts
+    : public Xts
+    , public virtual iCipher
+{
+  public:
+    tXts()
+        : Xts((static_cast<Uint32>(keyLenBits)) / 8, CipherMode::eAesXTS)
+    {}
+    ~tXts() = default;
 
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Xts128, Xts, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Xts256, Xts, virtual iCipher, 256 / 8)
-
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Xts128, Xts, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Xts256, Xts, virtual iCipher, 256 / 8)
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 /* iCipherSeg classes */
-// vaes512 classes
-CIPHERBLOCKS_CLASS_GEN_N(vaes512, XtsBlock128, Xts, virtual iCipherSeg, 128 / 8)
-CIPHERBLOCKS_CLASS_GEN_N(vaes512, XtsBlock256, Xts, virtual iCipherSeg, 256 / 8)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class tXtsBlock
+    : public Xts
+    , public virtual iCipherSeg
+{
+  public:
+    tXtsBlock()
+        : Xts((static_cast<Uint32>(keyLenBits)) / 8, CipherMode::eAesXTS)
+    {}
+    ~tXtsBlock() = default;
 
-// vaes classes
-CIPHERBLOCKS_CLASS_GEN_N(vaes, XtsBlock128, Xts, virtual iCipherSeg, 128 / 8)
-CIPHERBLOCKS_CLASS_GEN_N(vaes, XtsBlock256, Xts, virtual iCipherSeg, 256 / 8)
-
-// aesni classes
-CIPHERBLOCKS_CLASS_GEN_N(aesni, XtsBlock128, Xts, virtual iCipherSeg, 128 / 8)
-CIPHERBLOCKS_CLASS_GEN_N(aesni, XtsBlock256, Xts, virtual iCipherSeg, 256 / 8)
+  public:
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override
+    {
+        return Xts::init(pKey, keyLen, pIv, ivLen);
+    }
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t encryptSegment(const Uint8* pSrc,
+                               Uint8*       pDest,
+                               Uint64       currSrcLen,
+                               Uint64       startBlockNum) override;
+    alc_error_t decryptSegment(const Uint8* pSrc,
+                               Uint8*       pDest,
+                               Uint64       currSrcLen,
+                               Uint64       startBlockNum) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher

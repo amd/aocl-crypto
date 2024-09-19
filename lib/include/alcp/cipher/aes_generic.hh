@@ -26,12 +26,7 @@
  *
  */
 
-#ifndef _CIPHER_AES_OFB_HH_
-#define _CIPHER_AES_OFB_HH_ 2
-
-#include <cstdint>
-
-#include "alcp/error.h"
+#pragma once
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
@@ -39,21 +34,26 @@
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
+
 namespace alcp::cipher {
 
-class ALCP_API_EXPORT Ofb
+/*
+ * @brief        AES Encryption
+ */
+
+class ALCP_API_EXPORT AesGenericInit
     : public Aes
     , public virtual iCipher
 {
   public:
-    Ofb(Uint32 keyLen_in_bytes)
+    AesGenericInit(Uint32 keyLen_in_bytes, CipherMode mode)
         : Aes(keyLen_in_bytes)
     {
-        setMode(CipherMode::eAesCFB);
+        setMode(mode);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
-    ~Ofb() {}
+    ~AesGenericInit() {}
     alc_error_t init(const Uint8* pKey,
                      Uint64       keyLen,
                      const Uint8* pIv,
@@ -63,11 +63,25 @@ class ALCP_API_EXPORT Ofb
     }
 };
 
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Ofb128, Ofb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Ofb192, Ofb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Ofb256, Ofb, virtual iCipher, 256 / 8)
+template<CipherMode mode, CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class AesGenericCiphers
+    : public AesGenericInit
+    , public virtual iCipher
+{
+  public:
+    AesGenericCiphers()
+        : AesGenericInit((static_cast<Uint32>(keyLenBits)) / 8, mode)
+    {}
+    ~AesGenericCiphers() = default;
+
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher
-
-#endif /* _CIPHER_AES_OFB_HH_ */

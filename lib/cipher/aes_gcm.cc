@@ -305,7 +305,7 @@ Gcm128_aesni::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_dataLen += len;
-    m_isEnc_aes = 0;
+    m_isEnc_aes = ALCP_DEC;
     // to be modified to decryptGcm128 function
     err = aesni::CryptGcm(
         pInput,
@@ -325,7 +325,7 @@ Gcm192_aesni::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_dataLen += len;
-    m_isEnc_aes = 0;
+    m_isEnc_aes = ALCP_DEC;
     // to be modified to decryptGcm192 function
     err = aesni::CryptGcm(
         pInput,
@@ -345,7 +345,7 @@ Gcm256_aesni::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_dataLen += len;
-    m_isEnc_aes = 0;
+    m_isEnc_aes = ALCP_DEC;
     // to be modified to decryptGcm256 function
     err = aesni::CryptGcm(
         pInput,
@@ -365,7 +365,7 @@ Gcm128_aesni::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_dataLen += len;
-    m_isEnc_aes = 1;
+    m_isEnc_aes = ALCP_ENC;
     // to be modified to encryptGcm128 function
     err = aesni::CryptGcm(
         pInput,
@@ -385,7 +385,7 @@ Gcm192_aesni::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_dataLen += len;
-    m_isEnc_aes = 1;
+    m_isEnc_aes = ALCP_ENC;
     // to be modified to encryptGcm192 function
     err = aesni::CryptGcm(
         pInput,
@@ -405,7 +405,7 @@ Gcm256_aesni::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_dataLen += len;
-    m_isEnc_aes = 1;
+    m_isEnc_aes = ALCP_ENC;
     // to be modified to encryptGcm192 function
     err = aesni::CryptGcm(
         pInput,

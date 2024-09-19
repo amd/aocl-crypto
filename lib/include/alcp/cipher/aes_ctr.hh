@@ -35,56 +35,8 @@
 #include "alcp/error.h"
 
 #include <immintrin.h>
-namespace alcp::cipher {
 
-/*
- * @brief        AES Encryption in Ctr(Counter mode)
- * @note        TODO: Move this to a aes_Ctr.hh or other
- */
-class ALCP_API_EXPORT Ctr
-    : public Aes
-    , public virtual iCipher
-{
-  public:
-    Ctr(Uint32 keyLen_in_bytes)
-        : Aes(keyLen_in_bytes)
-    {
-        setMode(CipherMode::eAesCTR);
-        m_ivLen_max = 16;
-        m_ivLen_min = 16;
-    };
-    ~Ctr() {}
-    alc_error_t init(const Uint8* pKey,
-                     Uint64       keyLen,
-                     const Uint8* pIv,
-                     Uint64       ivLen) override
-    {
-        return Aes::init(pKey, keyLen, pIv, ivLen);
-    }
-};
-
-template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
-class tCtr
-    : public Ctr
-    , public virtual iCipher
-{
-  public:
-    tCtr()
-        : Ctr((static_cast<Uint32>(keyLenBits)) / 8)
-    {}
-    ~tCtr() = default;
-
-  public:
-    alc_error_t encrypt(const Uint8* pPlainText,
-                        Uint8*       pCipherText,
-                        Uint64       len) override;
-    alc_error_t decrypt(const Uint8* pCipherText,
-                        Uint8*       pPlainText,
-                        Uint64       len) override;
-    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
-};
-
-namespace aes {
+namespace alcp::cipher { namespace aes {
 
     using namespace aesni;
     using namespace vaes;
@@ -230,5 +182,4 @@ namespace aes {
         return blocks;
     }
 
-} // namespace aes
-} // namespace alcp::cipher
+}} // namespace alcp::cipher::aes

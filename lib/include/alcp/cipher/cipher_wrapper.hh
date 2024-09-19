@@ -70,6 +70,13 @@ CryptCtr(const Uint8* pSrc,
 
 namespace aesni {
 
+    alc_error_t CryptCtr(const Uint8* pSrc,
+                         Uint8*       pDest,
+                         Uint64       len,
+                         const Uint8* pKey,
+                         int          nRounds,
+                         Uint8*       pIv);
+
     alc_error_t ExpandKeys(const Uint8* pUserKey,
                            Uint8*       pEncKey,
                            Uint8*       pDecKey,
@@ -121,33 +128,19 @@ namespace aesni {
                            int          nRounds,
                            const Uint8* pIv);
 
-    alc_error_t EncryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t EncryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
-    alc_error_t EncryptXts256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptXts256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t DecryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
     alc_error_t DecryptGcm(const Uint8* pInput,
                            Uint8*       pOutput,
@@ -217,33 +210,19 @@ namespace aesni {
 
 namespace vaes512 {
 
-    alc_error_t EncryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t EncryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
-    alc_error_t EncryptXts256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptXts256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t DecryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
     alc_error_t encryptGcm128(const Uint8*          pPlainText,
                               Uint8*                pCipherText,
@@ -302,39 +281,31 @@ namespace vaes512 {
 } // namespace vaes512
 
 namespace vaes {
+    alc_error_t CryptCtr(const Uint8* pSrc,
+                         Uint8*       pDest,
+                         Uint64       len,
+                         const Uint8* pKey,
+                         int          nRounds,
+                         Uint8*       pIv);
 
     alc_error_t ExpandKeys(const Uint8* pUserKey,
                            Uint8*       pEncKey,
                            Uint8*       pDecKey,
                            int          nRounds);
 
-    alc_error_t EncryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t EncryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
-    alc_error_t EncryptXts256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
-
-    alc_error_t DecryptXts256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv);
+    alc_error_t DecryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv);
 
     alc_error_t encryptGcm128(const Uint8*          pPlainText,
                               Uint8*                pCipherText,

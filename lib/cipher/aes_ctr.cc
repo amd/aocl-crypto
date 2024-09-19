@@ -28,7 +28,7 @@
 
 #include "alcp/cipher/aes.hh"
 //
-#include "alcp/cipher/aes_ctr.hh"
+//#include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 
 #include "alcp/utils/cpuid.hh"
@@ -37,8 +37,6 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
-// FIXME: separate ctr implementation (ctrProcessAvx256) needs to be done
-// for different key size
 namespace vaes {
     alc_error_t CryptCtr(const Uint8* pInputText,
                          Uint8*       pOutputText,
@@ -58,8 +56,6 @@ namespace vaes {
     }
 } // namespace vaes
 
-// FIXME: separate ctr implementation (ctrProcessAvx2) needs to be done
-// for different key size
 namespace aesni {
     alc_error_t CryptCtr(const Uint8* pInputText,
                          Uint8*       pOutputText,
@@ -78,107 +74,5 @@ namespace aesni {
         return err;
     }
 } // namespace aesni
-
-template<alcp::cipher::CipherKeyLen     keyLenBits,
-         alcp::utils::CpuCipherFeatures arch>
-alc_error_t
-tCtr<keyLenBits, arch>::encrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    m_isEnc_aes     = 1;
-    if (!(m_isKeySet_aes)) {
-        printf("\nError: Key or Iv not set \n");
-        return ALC_ERROR_BAD_STATE;
-    }
-    if (m_ivLen_aes != 16) {
-        m_ivLen_aes = 16;
-    }
-
-    if constexpr (arch == CpuCipherFeatures::eVaes512) {
-        err = CryptCtr<keyLenBits, arch>(pinput,
-                                         pOutput,
-                                         len,
-                                         m_cipher_key_data.m_enc_key,
-                                         getRounds(),
-                                         m_pIv_aes);
-    } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
-        err = vaes::CryptCtr(pinput,
-                             pOutput,
-                             len,
-                             m_cipher_key_data.m_enc_key,
-                             getRounds(),
-                             m_pIv_aes);
-    } else if constexpr (arch == CpuCipherFeatures::eAesni) {
-        err = aesni::CryptCtr(pinput,
-                              pOutput,
-                              len,
-                              m_cipher_key_data.m_enc_key,
-                              getRounds(),
-                              m_pIv_aes);
-    }
-
-    return err;
-}
-
-template<alcp::cipher::CipherKeyLen     keyLenBits,
-         alcp::utils::CpuCipherFeatures arch>
-alc_error_t
-tCtr<keyLenBits, arch>::decrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    m_isEnc_aes     = 0;
-    if (!(m_isKeySet_aes)) {
-        printf("\nError: Key or Iv not set \n");
-        return ALC_ERROR_BAD_STATE;
-    }
-    if (m_ivLen_aes != 16) {
-        m_ivLen_aes = 16;
-    }
-
-    if constexpr (arch == CpuCipherFeatures::eVaes512) {
-        err = CryptCtr<keyLenBits, arch>(pinput,
-                                         pOutput,
-                                         len,
-                                         m_cipher_key_data.m_enc_key,
-                                         getRounds(),
-                                         m_pIv_aes);
-    } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
-        err = vaes::CryptCtr(pinput,
-                             pOutput,
-                             len,
-                             m_cipher_key_data.m_enc_key,
-                             getRounds(),
-                             m_pIv_aes);
-    } else if constexpr (arch == CpuCipherFeatures::eAesni) {
-        err = aesni::CryptCtr(pinput,
-                              pOutput,
-                              len,
-                              m_cipher_key_data.m_enc_key,
-                              getRounds(),
-                              m_pIv_aes);
-    }
-    return err;
-}
-
-template class tCtr<alcp::cipher::CipherKeyLen::eKey128Bit,
-                    CpuCipherFeatures::eVaes512>;
-template class tCtr<alcp::cipher::CipherKeyLen::eKey192Bit,
-                    CpuCipherFeatures::eVaes512>;
-template class tCtr<alcp::cipher::CipherKeyLen::eKey256Bit,
-                    CpuCipherFeatures::eVaes512>;
-
-template class tCtr<alcp::cipher::CipherKeyLen::eKey128Bit,
-                    CpuCipherFeatures::eVaes256>;
-template class tCtr<alcp::cipher::CipherKeyLen::eKey192Bit,
-                    CpuCipherFeatures::eVaes256>;
-template class tCtr<alcp::cipher::CipherKeyLen::eKey256Bit,
-                    CpuCipherFeatures::eVaes256>;
-
-template class tCtr<alcp::cipher::CipherKeyLen::eKey128Bit,
-                    CpuCipherFeatures::eAesni>;
-template class tCtr<alcp::cipher::CipherKeyLen::eKey192Bit,
-                    CpuCipherFeatures::eAesni>;
-template class tCtr<alcp::cipher::CipherKeyLen::eKey256Bit,
-                    CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

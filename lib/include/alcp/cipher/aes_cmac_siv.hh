@@ -30,7 +30,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher/aes.hh"
-#include "alcp/cipher/aes_ctr.hh"
+#include "alcp/cipher/aes_generic.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/cpuid.hh"
 
@@ -122,13 +122,13 @@ class tSiv
     , public virtual iCipherAead
 {
   private:
-    tCtr<keyLenBits, arch>* ctrobj;
+    AesGenericCiphers<CipherMode::eAesCTR, keyLenBits, arch>* ctrobj;
 
   public:
     tSiv()
         : SivHash((static_cast<Uint32>(keyLenBits)) / 8)
     {
-        ctrobj = new tCtr<keyLenBits, arch>();
+        ctrobj = new AesGenericCiphers<CipherMode::eAesCTR, keyLenBits, arch>();
     }
     ~tSiv() { delete ctrobj; }
 
