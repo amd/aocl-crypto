@@ -64,15 +64,15 @@ class ALCP_API_EXPORT AesGenericInit
 };
 
 template<CipherMode mode, CipherKeyLen keyLenBits, CpuCipherFeatures arch>
-class AesGenericCiphers
+class AesGenericCiphersT
     : public AesGenericInit
     , public virtual iCipher
 {
   public:
-    AesGenericCiphers()
+    AesGenericCiphersT()
         : AesGenericInit((static_cast<Uint32>(keyLenBits)) / 8, mode)
     {}
-    ~AesGenericCiphers() = default;
+    ~AesGenericCiphersT() = default;
 
   public:
     alc_error_t encrypt(const Uint8* pPlainText,

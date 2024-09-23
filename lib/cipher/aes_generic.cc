@@ -42,9 +42,9 @@ template<alcp::cipher::CipherMode       mode,
          alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-AesGenericCiphers<mode, keyLenBits, arch>::encrypt(const Uint8* pinput,
-                                                   Uint8*       pOutput,
-                                                   Uint64       len)
+AesGenericCiphersT<mode, keyLenBits, arch>::encrypt(const Uint8* pinput,
+                                                    Uint8*       pOutput,
+                                                    Uint64       len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_isEnc_aes     = ALCP_ENC;
@@ -119,9 +119,9 @@ template<alcp::cipher::CipherMode       mode,
          alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-AesGenericCiphers<mode, keyLenBits, arch>::decrypt(const Uint8* pinput,
-                                                   Uint8*       pOutput,
-                                                   Uint64       len)
+AesGenericCiphersT<mode, keyLenBits, arch>::decrypt(const Uint8* pinput,
+                                                    Uint8*       pOutput,
+                                                    Uint64       len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     m_isEnc_aes     = ALCP_DEC;
@@ -190,128 +190,128 @@ AesGenericCiphers<mode, keyLenBits, arch>::decrypt(const Uint8* pinput,
     eAesOFB,
     eAesCTR,
     eAesCFB,*/
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes512>;
 
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes256>;
 
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesCBC,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCBC,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eAesni>;
 
 /* eAesOFB */
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes512>;
 
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes256>;
 
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesOFB,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesOFB,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eAesni>;
 
 /* eAesCTR */
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes512>;
 
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes256>;
 
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesCTR,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCTR,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eAesni>;
 
 /* eAesCFB */
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes512>;
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes512>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes512>;
 
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eVaes256>;
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eVaes256>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eVaes256>;
 
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey128Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey192Bit,
-                                 CpuCipherFeatures::eAesni>;
-template class AesGenericCiphers<CipherMode::eAesCFB,
-                                 alcp::cipher::CipherKeyLen::eKey256Bit,
-                                 CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey128Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey192Bit,
+                                  CpuCipherFeatures::eAesni>;
+template class AesGenericCiphersT<CipherMode::eAesCFB,
+                                  alcp::cipher::CipherKeyLen::eKey256Bit,
+                                  CpuCipherFeatures::eAesni>;
 
 // other generic modes to be added.
 #endif

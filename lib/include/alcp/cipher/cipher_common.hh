@@ -41,72 +41,6 @@ namespace alcp::cipher {
 #define UNROLL_4 _Pragma("GCC unroll 4")
 
 // class generator with interface
-#define CIPHER_CLASS_GEN_N(                                                    \
-    NAMESPACE, CHILD_NEW, PARENT, INTERFACE, KEYLEN_IN_BYTES)                  \
-    class ALCP_API_EXPORT CHILD_NEW##_##NAMESPACE                              \
-        : public PARENT                                                        \
-        , public INTERFACE                                                     \
-                                                                               \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW##_##NAMESPACE()                                              \
-            : PARENT(KEYLEN_IN_BYTES)                                          \
-        {}                                                                     \
-        ~CHILD_NEW##_##NAMESPACE() = default;                                  \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(const Uint8* pPlainText,                           \
-                            Uint8*       pCipherText,                          \
-                            Uint64       len) override;                              \
-                                                                               \
-        alc_error_t decrypt(const Uint8* pCipherText,                          \
-                            Uint8*       pPlainText,                           \
-                            Uint64       len) override;                              \
-        alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
-    };
-
-#define CIPHERBLOCKS_CLASS_GEN_N(                                              \
-    NAMESPACE, CHILD_NEW, PARENT, INTERFACE, KEYLEN_IN_BYTES)                  \
-    class ALCP_API_EXPORT CHILD_NEW##_##NAMESPACE                              \
-        : public PARENT                                                        \
-        , public INTERFACE                                                     \
-                                                                               \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW##_##NAMESPACE()                                              \
-            : PARENT(KEYLEN_IN_BYTES)                                          \
-        {}                                                                     \
-        ~CHILD_NEW##_##NAMESPACE() = default;                                  \
-                                                                               \
-      public:                                                                  \
-        alc_error_t init(const Uint8* pKey,                                    \
-                         Uint64       keyLen,                                  \
-                         const Uint8* pIv,                                     \
-                         Uint64       ivLen) override                                \
-        {                                                                      \
-            return Xts::init(pKey, keyLen, pIv, ivLen);                        \
-        }                                                                      \
-                                                                               \
-        alc_error_t encrypt(const Uint8* pPlainText,                           \
-                            Uint8*       pCipherText,                          \
-                            Uint64       len) override;                              \
-                                                                               \
-        alc_error_t decrypt(const Uint8* pCipherText,                          \
-                            Uint8*       pPlainText,                           \
-                            Uint64       len) override;                              \
-        alc_error_t encryptSegment(const Uint8* pSrc,                          \
-                                   Uint8*       pDest,                         \
-                                   Uint64       currSrcLen,                    \
-                                   Uint64       startBlockNum) override;             \
-                                                                               \
-        alc_error_t decryptSegment(const Uint8* pSrc,                          \
-                                   Uint8*       pDest,                         \
-                                   Uint64       currSrcLen,                    \
-                                   Uint64       startBlockNum) override;             \
-        alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
-    };
-
-// class generator with interface
 #define CIPHER_CLASS_GEN_(CHILD_NEW, PARENT, INTERFACE, KEYLEN_IN_BYTES)       \
     class ALCP_API_EXPORT CHILD_NEW                                            \
         : public PARENT                                                        \
@@ -124,33 +58,6 @@ namespace alcp::cipher {
                             Uint8*       pCipherText,                          \
                             Uint64       len) override;                              \
                                                                                \
-        alc_error_t decrypt(const Uint8* pCipherText,                          \
-                            Uint8*       pPlainText,                           \
-                            Uint64       len) override;                              \
-        alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }    \
-    };
-
-#define CIPHER_CLASS_GEN_DOUBLE(                                               \
-    NAMESPACE, CHILD_NEW, PARENT1, PARENT2, INTERFACE, KEYLEN_IN_BYTES)        \
-    class ALCP_API_EXPORT CHILD_NEW##_##NAMESPACE                              \
-        : public PARENT2                                                       \
-        , public INTERFACE                                                     \
-    {                                                                          \
-      private:                                                                 \
-        PARENT1##_##NAMESPACE* ctrobj;                                         \
-                                                                               \
-      public:                                                                  \
-        CHILD_NEW##_##NAMESPACE()                                              \
-            : PARENT2(KEYLEN_IN_BYTES)                                         \
-        {                                                                      \
-            ctrobj = new PARENT1##_##NAMESPACE();                              \
-        }                                                                      \
-        ~CHILD_NEW##_##NAMESPACE() { delete ctrobj; }                          \
-                                                                               \
-      public:                                                                  \
-        alc_error_t encrypt(const Uint8* pInput,                               \
-                            Uint8*       pOutput,                              \
-                            Uint64       len) override;                              \
         alc_error_t decrypt(const Uint8* pCipherText,                          \
                             Uint8*       pPlainText,                           \
                             Uint64       len) override;                              \

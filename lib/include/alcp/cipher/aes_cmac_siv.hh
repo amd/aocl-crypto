@@ -47,10 +47,6 @@ namespace alcp::cipher {
 
 using utils::CpuId;
 
-// RFC5297
-
-// #define MAX_ADD_SIZE_SIV (126 * 16) // 126*16
-
 class ALCP_API_EXPORT Siv
     : public Aes
     , public virtual iCipher
@@ -91,14 +87,11 @@ class ALCP_API_EXPORT Siv
 
     Siv(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
-    {
-    }
+    {}
     ~Siv();
 };
 
-// AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual iCipherAuth);
-
-// GCM authentication class
+// SIV authentication class
 class ALCP_API_EXPORT SivHash
     : public Siv
     , public virtual iCipherAuth
@@ -106,8 +99,7 @@ class ALCP_API_EXPORT SivHash
   public:
     SivHash(Uint32 keyLen_in_bytes)
         : Siv(keyLen_in_bytes)
-    {
-    }
+    {}
     ~SivHash() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
@@ -115,22 +107,22 @@ class ALCP_API_EXPORT SivHash
     alc_error_t setTagLength(Uint64 tagLen) override;
 };
 
-// Declare AEAD Classes
 template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
-class tSiv
+class SivT
     : public SivHash
     , public virtual iCipherAead
 {
   private:
-    AesGenericCiphers<CipherMode::eAesCTR, keyLenBits, arch>* ctrobj;
+    AesGenericCiphersT<CipherMode::eAesCTR, keyLenBits, arch>* ctrobj;
 
   public:
-    tSiv()
+    SivT()
         : SivHash((static_cast<Uint32>(keyLenBits)) / 8)
     {
-        ctrobj = new AesGenericCiphers<CipherMode::eAesCTR, keyLenBits, arch>();
+        ctrobj =
+            new AesGenericCiphersT<CipherMode::eAesCTR, keyLenBits, arch>();
     }
-    ~tSiv() { delete ctrobj; }
+    ~SivT() { delete ctrobj; }
 
   public:
     alc_error_t encrypt(const Uint8* pInput,

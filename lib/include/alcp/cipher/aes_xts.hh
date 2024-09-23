@@ -112,15 +112,15 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
 }
 
 template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
-class tXts
+class XtsT
     : public Xts
     , public virtual iCipher
 {
   public:
-    tXts()
+    XtsT()
         : Xts((static_cast<Uint32>(keyLenBits)) / 8, CipherMode::eAesXTS)
     {}
-    ~tXts() = default;
+    ~XtsT() = default;
 
   public:
     alc_error_t encrypt(const Uint8* pPlainText,
@@ -134,15 +134,15 @@ class tXts
 
 /* iCipherSeg classes */
 template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
-class tXtsBlock
+class XtsBlockT
     : public Xts
     , public virtual iCipherSeg
 {
   public:
-    tXtsBlock()
+    XtsBlockT()
         : Xts((static_cast<Uint32>(keyLenBits)) / 8, CipherMode::eAesXTS)
     {}
-    ~tXtsBlock() = default;
+    ~XtsBlockT() = default;
 
   public:
     alc_error_t init(const Uint8* pKey,

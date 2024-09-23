@@ -178,7 +178,7 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tXts<keyLenBits, arch>::encrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
+XtsT<keyLenBits, arch>::encrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (!(m_ivState_aes && m_isKeySet_aes)) {
@@ -227,7 +227,7 @@ tXts<keyLenBits, arch>::encrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tXts<keyLenBits, arch>::decrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
+XtsT<keyLenBits, arch>::decrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (!(m_ivState_aes && m_isKeySet_aes)) {
@@ -280,7 +280,7 @@ tXts<keyLenBits, arch>::decrypt(const Uint8* pinput, Uint8* pOutput, Uint64 len)
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tXtsBlock<keyLenBits, arch>::encrypt(const Uint8* pinput,
+XtsBlockT<keyLenBits, arch>::encrypt(const Uint8* pinput,
                                      Uint8*       pOutput,
                                      Uint64       len)
 {
@@ -330,7 +330,7 @@ tXtsBlock<keyLenBits, arch>::encrypt(const Uint8* pinput,
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tXtsBlock<keyLenBits, arch>::decrypt(const Uint8* pinput,
+XtsBlockT<keyLenBits, arch>::decrypt(const Uint8* pinput,
                                      Uint8*       pOutput,
                                      Uint64       len)
 {
@@ -380,7 +380,7 @@ tXtsBlock<keyLenBits, arch>::decrypt(const Uint8* pinput,
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tXtsBlock<keyLenBits, arch>::encryptSegment(const Uint8* pinput,
+XtsBlockT<keyLenBits, arch>::encryptSegment(const Uint8* pinput,
                                             Uint8*       pOutput,
                                             Uint64       len,
                                             Uint64       startBlockNum)
@@ -394,7 +394,7 @@ tXtsBlock<keyLenBits, arch>::encryptSegment(const Uint8* pinput,
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tXtsBlock<keyLenBits, arch>::decryptSegment(const Uint8* pinput,
+XtsBlockT<keyLenBits, arch>::decryptSegment(const Uint8* pinput,
                                             Uint8*       pOutput,
                                             Uint64       len,
                                             Uint64       startBlockNum)
@@ -405,34 +405,34 @@ tXtsBlock<keyLenBits, arch>::decryptSegment(const Uint8* pinput,
     return err;
 }
 
-template class tXts<alcp::cipher::CipherKeyLen::eKey128Bit,
+template class XtsT<alcp::cipher::CipherKeyLen::eKey128Bit,
                     CpuCipherFeatures::eVaes512>;
-template class tXts<alcp::cipher::CipherKeyLen::eKey256Bit,
+template class XtsT<alcp::cipher::CipherKeyLen::eKey256Bit,
                     CpuCipherFeatures::eVaes512>;
 
-template class tXts<alcp::cipher::CipherKeyLen::eKey128Bit,
+template class XtsT<alcp::cipher::CipherKeyLen::eKey128Bit,
                     CpuCipherFeatures::eVaes256>;
-template class tXts<alcp::cipher::CipherKeyLen::eKey256Bit,
+template class XtsT<alcp::cipher::CipherKeyLen::eKey256Bit,
                     CpuCipherFeatures::eVaes256>;
 
-template class tXts<alcp::cipher::CipherKeyLen::eKey128Bit,
+template class XtsT<alcp::cipher::CipherKeyLen::eKey128Bit,
                     CpuCipherFeatures::eAesni>;
-template class tXts<alcp::cipher::CipherKeyLen::eKey256Bit,
+template class XtsT<alcp::cipher::CipherKeyLen::eKey256Bit,
                     CpuCipherFeatures::eAesni>;
 
-template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey128Bit,
+template class XtsBlockT<alcp::cipher::CipherKeyLen::eKey128Bit,
                          CpuCipherFeatures::eVaes512>;
-template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey256Bit,
+template class XtsBlockT<alcp::cipher::CipherKeyLen::eKey256Bit,
                          CpuCipherFeatures::eVaes512>;
 
-template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey128Bit,
+template class XtsBlockT<alcp::cipher::CipherKeyLen::eKey128Bit,
                          CpuCipherFeatures::eVaes256>;
-template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey256Bit,
+template class XtsBlockT<alcp::cipher::CipherKeyLen::eKey256Bit,
                          CpuCipherFeatures::eVaes256>;
 
-template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey128Bit,
+template class XtsBlockT<alcp::cipher::CipherKeyLen::eKey128Bit,
                          CpuCipherFeatures::eAesni>;
-template class tXtsBlock<alcp::cipher::CipherKeyLen::eKey256Bit,
+template class XtsBlockT<alcp::cipher::CipherKeyLen::eKey256Bit,
                          CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

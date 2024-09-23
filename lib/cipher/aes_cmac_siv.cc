@@ -298,7 +298,7 @@ SivHash::setTagLength(Uint64 tagLength)
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tSiv<keyLenBits, arch>::encrypt(const Uint8* pPlainText,
+SivT<keyLenBits, arch>::encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
                                 Uint64       len)
 {
@@ -328,7 +328,7 @@ tSiv<keyLenBits, arch>::encrypt(const Uint8* pPlainText,
 template<alcp::cipher::CipherKeyLen     keyLenBits,
          alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-tSiv<keyLenBits, arch>::decrypt(const Uint8* pCipherText,
+SivT<keyLenBits, arch>::decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len)
 
@@ -379,5 +379,26 @@ tSiv<keyLenBits, arch>::decrypt(const Uint8* pCipherText,
     }
     return err;
 }
+
+template class SivT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes512>;
+
+template class SivT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes256>;
+
+template class SivT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eAesni>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eAesni>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

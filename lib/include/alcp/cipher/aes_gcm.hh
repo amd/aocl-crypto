@@ -127,8 +127,7 @@ class ALCP_API_EXPORT GcmAuth
   public:
     GcmAuth(Uint32 keyLen_in_bytes)
         : Gcm(keyLen_in_bytes)
-    {
-    }
+    {}
     ~GcmAuth() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
@@ -136,19 +135,25 @@ class ALCP_API_EXPORT GcmAuth
     alc_error_t setTagLength(Uint64 tagLen) override;
 };
 
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class GcmT
+    : public GcmAuth
+    , public virtual iCipherAead
+{
+  public:
+    GcmT()
+        : GcmAuth((static_cast<Uint32>(keyLenBits)) / 8)
+    {}
+    ~GcmT() = default;
 
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
-
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher
