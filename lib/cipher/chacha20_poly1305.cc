@@ -250,9 +250,6 @@ namespace ref {
         m_len_input_processed.u64 = 0;
         m_len_aad_processed.u64   = 0;
 
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
         return ALC_ERROR_NONE;
     }
 

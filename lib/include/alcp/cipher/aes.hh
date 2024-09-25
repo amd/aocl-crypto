@@ -135,8 +135,8 @@ class Aes : public Rijndael
     ALCP_API_EXPORT virtual alc_error_t setMode(alc_cipher_mode_t mode);
 
   protected:
-    alc_cipher_mode_t m_mode;
-    void*             m_this;
+    alc_cipher_mode_t m_mode{};
+    void*             m_this{};
 };
 
 } // namespace alcp::cipher

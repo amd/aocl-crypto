@@ -160,7 +160,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     alc_error_t err = ALC_ERROR_NONE;
     if ((pInput == NULL) || (pOutput == NULL)) {
         // InvalidValue: "Input or Output Null Pointer!"
-        err = ALC_ERROR_INVALID_ARG;
+        return ALC_ERROR_INVALID_ARG;
     }
 
 #ifndef CCM_MULTI_UPDATE
@@ -227,7 +227,7 @@ Ccm::setIv(ccm_data_t* ccm_data,
            Uint64      ivLen,
            Uint64      dataLen)
 {
-    unsigned int q   = ccm_data->nonce[0] & 7;
+    unsigned int q;
     Uint64       len = dataLen;
 #ifdef CCM_MULTI_UPDATE
     len = m_plainTextLength;
@@ -237,6 +237,8 @@ Ccm::setIv(ccm_data_t* ccm_data,
         // InvalidValue("Null Pointer is not expected!")
         return ALC_ERROR_INVALID_ARG;
     }
+
+    q = ccm_data->nonce[0] & 7;
 
     if (ivLen < (14 - q)) {
         // InvalidValue("Length of nonce is too small!")

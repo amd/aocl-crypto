@@ -127,7 +127,8 @@ class ALCP_API_EXPORT GcmAuth
   public:
     GcmAuth(Uint32 keyLen_in_bytes)
         : Gcm(keyLen_in_bytes)
-    {}
+    {
+    }
     ~GcmAuth() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
