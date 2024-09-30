@@ -178,33 +178,24 @@ function(alcp_add_sanitize_flags)
     # memory sanitizer supported only by clang
     # FIXME: since memsan is not supported by all the dependency libraries,
     # compilation is disabled with memsan.
-    set (ALCP_SANITIZE_OPTIONS_CLANG
+    set (ALCP_OPTIONS_SANITIZE
             #-fsanitize=memory
             #-fsanitize-memory-track-origins
+            -fsanitize=address
+            -fsanitize=undefined
+            -fsanitize=pointer-subtract
+            -fsanitize=pointer-compare
             -fPIC
             -fno-omit-frame-pointer
             CACHE INTERNAL ""
         )
 
-    set(ALCP_OPTIONS_SANITIZE
-            -fsanitize=address
-            -fsanitize=undefined
-            -fsanitize=pointer-subtract
-            -fsanitize=pointer-compare
-            CACHE INTERNAL ""
-        )
-
-    # now check compiler and link to asan libs
-    add_compile_definitions(ALCP_COMPILE_OPTIONS_SANITIZE)
-
+    # if gcc, link to libasan
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         link_libraries(asan)
-        add_compile_options(${ALCP_OPTIONS_SANITIZE})
-        add_link_options(${ALCP_OPTIONS_SANITIZE})
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        add_compile_options(${ALCP_SANITIZE_OPTIONS_CLANG})
-        add_link_options(${ALCP_SANITIZE_OPTIONS_CLANG})
     endif()
+    add_compile_options(${ALCP_OPTIONS_SANITIZE})
+    add_link_options(${ALCP_OPTIONS_SANITIZE})
 endfunction(alcp_add_sanitize_flags)
 
 # coverage flags
