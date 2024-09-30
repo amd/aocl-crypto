@@ -36,47 +36,6 @@ AOCL_CRYPTO_REPO="git@er.github.amd.com:AOCL/aocl-crypto"
 AOCL_UTILS_REPO="git@github.amd.com:AOCL/aocl-utils"
 AOCL_BRANCH="amd-main"
 
-# Function to check if lsb_release is installed
-ensure_lsb_release(){
-    if ! type "lsb_release" > /dev/null; then
-        if type "apt" > /dev/null; then
-            if type "sudo" > /dev/null; then
-                sudo apt update
-                sudo apt install lsb-release
-            else
-                echo "lsb-release not found, cannot install! missing \"sudo\" binary"
-                exit -1; # We cannot do anything anymore
-            fi
-        else
-            echo "lsb-release not found, cannot install! missing \"apt\" binary"
-        fi
-    fi
-
-    type lsb_release > /dev/null
-    if [ $? -ne 0 ]; then
-        echo "lsb_release not found!"
-        exit -1;
-    else
-        echo "lsb_release found"
-    fi
-}
-
-# Function to check if OS is ubuntu with a specific version
-detect_ubuntu(){
-
-    lsb_release --id | grep "Ubuntu" > /dev/null
-    if [ $? -eq 0 ]; then
-        # Detected Ubuntu
-        echo "Detected Ubuntu"
-        lsb_release --release | grep $1 > /dev/null
-        if [ $? -eq 0 ]; then
-            echo "Detected OS Release Version $1"
-            return 0
-        fi
-    fi
-    return 1 # Return error
-}
-
 # Function to exit with an error if some execution failed
 quit_if_status_not_zero(){
     if [ $1 -ne 0 ]; then
@@ -233,8 +192,6 @@ run_example_cfb(){
 
 # Make sure we dont destroy anything
 ensure_no_directory_conflict
-# Make sure we can detect the OS
-ensure_lsb_release
 # Make sure all the needed packages (dependancies) are installed
 ensure_packages
 # Clone Utils and Crypto
