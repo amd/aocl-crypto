@@ -81,22 +81,4 @@ namespace alcp::cipher {
         alc_error_t getTag(Uint8* pOutput, Uint64 tagLen);                     \
     };
 
-#define CRYPT_WRAPPER_FUNC(                                                    \
-    NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS, IS_ENC)  \
-    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
-        const Uint8* pinput, Uint8* pOutput, Uint64 len)                       \
-    {                                                                          \
-        alc_error_t err = ALC_ERROR_NONE;                                      \
-        m_isEnc_aes     = IS_ENC;                                              \
-        if (!(m_isKeySet_aes)) {                                               \
-            printf("\nError: Key or Iv not set \n");                           \
-            return ALC_ERROR_BAD_STATE;                                        \
-        }                                                                      \
-        if (m_ivLen_aes != 16) {                                               \
-            m_ivLen_aes = 16;                                                  \
-        }                                                                      \
-        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_pIv_aes);    \
-        return err;                                                            \
-    }
-
 } // namespace alcp::cipher

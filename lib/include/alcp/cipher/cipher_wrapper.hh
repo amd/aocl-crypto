@@ -114,20 +114,6 @@ namespace aesni {
                            int          nRounds,
                            Uint8*       pIv);
 
-    alc_error_t EncryptCtr(const Uint8* pPlainText,
-                           Uint8*       pCipherText,
-                           Uint64       len,
-                           const Uint8* pKey,
-                           int          nRounds,
-                           const Uint8* pIv);
-
-    alc_error_t DecryptCtr(const Uint8* pCipherText,
-                           Uint8*       pPlainText,
-                           Uint64       len,
-                           const Uint8* pKey,
-                           int          nRounds,
-                           const Uint8* pIv);
-
     alc_error_t EncryptXts(const Uint8* pSrc,
                            Uint8*       pDest,
                            Uint64       len,
@@ -141,13 +127,6 @@ namespace aesni {
                            const Uint8* pKey,
                            int          nRounds,
                            Uint8*       pIv);
-
-    alc_error_t DecryptGcm(const Uint8* pInput,
-                           Uint8*       pOutput,
-                           Uint64       len,
-                           const Uint8* pKey,
-                           int          nRounds,
-                           const Uint8* pIv);
 
     alc_error_t InitGcm(const Uint8* pKey,
                         int          nRounds,
