@@ -350,14 +350,13 @@ SivT<keyLenBits, arch>::decrypt(const Uint8* pCipherText,
         err = ALC_ERROR_BAD_STATE;
         return err;
     }
-
+    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (err != ALC_ERROR_NONE) {
         return err;
     }
 
     // Create the tag from generated plain text
     err = s2v(pPlainText, len);
-
     if (err != ALC_ERROR_NONE) {
         return err;
     }
@@ -370,12 +369,8 @@ SivT<keyLenBits, arch>::decrypt(const Uint8* pCipherText,
             cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
         s.update(cer, cer.message());
 #else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
+        return ALC_ERROR_TAG_MISMATCH;
 #endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
     }
     return err;
 }

@@ -69,7 +69,7 @@ typedef struct _alc_gcm_local_data
     __m128i m_tag_128;
     Uint64  m_additionalDataLen;
 
-    _alc_cipher_gcm_data_t m_gcm;
+    _alc_cipher_gcm_data_t m_gcm{};
 
 } alc_gcm_local_data_t;
 class ALCP_API_EXPORT Gcm
@@ -127,7 +127,8 @@ class ALCP_API_EXPORT GcmAuth
   public:
     GcmAuth(Uint32 keyLen_in_bytes)
         : Gcm(keyLen_in_bytes)
-    {}
+    {
+    }
     ~GcmAuth() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;

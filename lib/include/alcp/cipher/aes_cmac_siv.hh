@@ -66,8 +66,8 @@ class ALCP_API_EXPORT Siv
 
     alignas(16) Uint8 m_cmacTemp[SIZE_CMAC] = {};
     Uint64 m_additionalDataProcessedSize    = {};
-    Uint8  m_key1[32];
-    Uint8  m_key2[32];
+    Uint8  m_key1[32]{};
+    Uint8  m_key2[32]{};
     Uint64 m_padLen = 0;
     Cmac   m_cmac;
 
@@ -87,7 +87,8 @@ class ALCP_API_EXPORT Siv
 
     Siv(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
-    {}
+    {
+    }
     ~Siv();
 };
 
@@ -99,7 +100,8 @@ class ALCP_API_EXPORT SivHash
   public:
     SivHash(Uint32 keyLen_in_bytes)
         : Siv(keyLen_in_bytes)
-    {}
+    {
+    }
     ~SivHash() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
