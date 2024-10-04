@@ -47,4 +47,8 @@ TARGET_SOURCES(alcp_static
 	)
 
 
-ADD_SUBDIRECTORY(tests)
+# FIXME: due to a known failure from valgrind + AOCL Utils' cpuid checks, disabling cipher unit tests with valgrind
+# for more details, refer to https://ontrack-internal.amd.com/browse/CPUPL-4109
+if(NOT ALCP_MEMCHECK_VALGRIND)
+	ADD_SUBDIRECTORY(tests)
+endif()
