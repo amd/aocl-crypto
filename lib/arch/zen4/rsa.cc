@@ -1599,9 +1599,7 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_2048>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = context.m_r1;
         Uint64* r2               = context.m_r2;
-        Uint64* r3               = context.m_r3;
         Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
         Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
@@ -1611,14 +1609,6 @@ namespace alcp::rsa { namespace zen4 {
         BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
 
         computeMontConverter(res, inp);
-
-        MontMultHalf(r3, r2, r2, mod, context.m_k0);
-
-        auto param     = std::make_unique<Uint64[]>(size * 2);
-        auto param_ptr = param.get();
-        alcp::utils::CopyChunk(param_ptr, r2, size * 8);
-
-        MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
         if (size == 32) {
             Rsa2048Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
@@ -1670,9 +1660,7 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = context.m_r1;
         Uint64* r2               = context.m_r2;
-        Uint64* r3               = context.m_r3;
         Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
         Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
@@ -1682,14 +1670,6 @@ namespace alcp::rsa { namespace zen4 {
         BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
 
         computeMontConverter(res, inp);
-
-        MontMultHalf(r3, r2, r2, mod, context.m_k0);
-
-        auto param     = std::make_unique<Uint64[]>(size * 2);
-        auto param_ptr = param.get();
-        alcp::utils::CopyChunk(param_ptr, r2, size * 8);
-
-        MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
         if (size <= 8) {
             // If size is less than 512 bits which is the case for RSA
@@ -1909,14 +1889,14 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
                                          r1_radix_52_bit_contig + 20 };
         Uint64* input_radix_52[2]    = { input_radix_52_contig,
-                                         input_radix_52_contig + 20 };
+                                      input_radix_52_contig + 20 };
         Uint64* res_radix_52[2]      = { res_radix_52_contig,
-                                         res_radix_52_contig + 20 };
+                                    res_radix_52_contig + 20 };
 
         Uint64* mult_radix_52[2] = { mult_radix_52_contig,
                                      mult_radix_52_contig + 20 };
         Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
-                                     sq_radix_52_contig + 20 };
+                                   sq_radix_52_contig + 20 };
 
         __m256i mod_reg[10];
         LoadReg256(mod_reg, modRadix52Bit[0]);
