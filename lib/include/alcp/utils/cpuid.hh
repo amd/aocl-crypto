@@ -140,6 +140,13 @@ class ALCP_API_EXPORT CpuId
      */
     static bool cpuHasAvx2();
     /**
+     * @brief Returns true if CPU supports SSE3 instructions
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasSse3();
+    /**
      * @brief Returns true if RDRAND, secure RNG number generator is supported
      * by CPU
      *

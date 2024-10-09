@@ -127,6 +127,13 @@ class CpuId::Impl
      */
     bool cpuHasAvx2();
     /**
+     * @brief Returns true if CPU supports SSE3 instructions
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasSse3();
+    /**
      * @brief Returns true if RDRAND, secure RNG number generator is
      * supported by CPU
      *
@@ -369,6 +376,17 @@ CpuId::Impl::cpuHasAvx2()
 #endif
 }
 bool
+CpuId::Impl::cpuHasSse3()
+{
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::sse3);
+#else
+    static bool state = true;
+#endif
+    return state;
+#endif
+}
+bool
 CpuId::Impl::cpuHasRdRand()
 {
 #ifdef ALCP_CPUID_DISABLE_RAND
@@ -581,6 +599,12 @@ bool
 CpuId::cpuHasAvx2()
 {
     return pImpl.get()->cpuHasAvx2();
+}
+
+bool
+CpuId::cpuHasSse3()
+{
+    return pImpl.get()->cpuHasSse3();
 }
 
 bool
