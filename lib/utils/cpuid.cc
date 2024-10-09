@@ -384,7 +384,6 @@ CpuId::Impl::cpuHasSse3()
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasRdRand()
