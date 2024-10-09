@@ -1660,7 +1660,9 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
+        Uint64* r1               = context.m_r1;
         Uint64* r2               = context.m_r2;
+        Uint64* r3               = context.m_r3;
         Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
         Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
@@ -1670,6 +1672,14 @@ namespace alcp::rsa { namespace zen4 {
         BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
 
         computeMontConverter(res, inp);
+
+        MontMultHalf(r3, r2, r2, mod, context.m_k0);
+
+        auto param     = std::make_unique<Uint64[]>(size * 2);
+        auto param_ptr = param.get();
+        alcp::utils::CopyChunk(param_ptr, r2, size * 8);
+
+        MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
         if (size <= 8) {
             // If size is less than 512 bits which is the case for RSA
