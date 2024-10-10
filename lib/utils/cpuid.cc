@@ -85,6 +85,20 @@ class CpuId::Impl
      */
     bool cpuHasAvx512bw();
     /**
+     * @brief Returns true if CPU has AVX512IFMA Flag
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasAvx512ifma();
+    /**
+     * @brief Returns true if CPU has AVX512VL Flag
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasAvx512vl();
+    /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
      * @param flag Which AVX512 flag to get info on.
@@ -300,6 +314,36 @@ CpuId::Impl::cpuHasAvx512bw()
 }
 
 bool
+CpuId::Impl::cpuHasAvx512ifma()
+{
+#ifdef ALCP_CPUID_DISABLE_AVX512
+    return false;
+#else
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512ifma);
+#else
+    static bool state = false;
+#endif
+    return state;
+#endif
+}
+
+bool
+CpuId::Impl::cpuHasAvx512vl()
+{
+#ifdef ALCP_CPUID_DISABLE_AVX512
+    return false;
+#else
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512vl);
+#else
+    static bool state = false;
+#endif
+    return state;
+#endif
+}
+
+bool
 CpuId::Impl::cpuHasAvx512(Avx512Flags flag)
 {
 #ifdef ALCP_CPUID_DISABLE_AVX512
@@ -312,6 +356,10 @@ CpuId::Impl::cpuHasAvx512(Avx512Flags flag)
             return cpuHasAvx512f();
         case Avx512Flags::AVX512_BW:
             return cpuHasAvx512bw();
+        case Avx512Flags::AVX512_IFMA:
+            return cpuHasAvx512ifma();
+        case Avx512Flags::AVX512_VL:
+            return cpuHasAvx512vl();
         default:
             // FIXME: Raise an exception
             return false;
@@ -628,6 +676,18 @@ bool
 CpuId::cpuHasAvx512f()
 {
     return pImpl.get()->cpuHasAvx512f();
+}
+
+bool
+CpuId::cpuHasAvx512ifma()
+{
+    return pImpl.get()->cpuHasAvx512ifma();
+}
+
+bool
+CpuId::cpuHasAvx512vl()
+{
+    return pImpl.get()->cpuHasAvx512vl();
 }
 
 bool
