@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -60,7 +60,6 @@ class OpenSSLCipherBase : public CipherBase
     EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
     EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
     EVP_CIPHER*       m_cipher  = nullptr;
-    _alc_cipher_type  m_cipher_type{};
     alc_cipher_mode_t m_mode    = {};
     const Uint8*      m_iv      = nullptr;
     Uint32            m_iv_len  = 12;
@@ -73,45 +72,68 @@ class OpenSSLCipherBase : public CipherBase
 #endif
 
     void              handleErrors();
-    const EVP_CIPHER* alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
-                                             alc_cipher_mode_t mode,
+    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
                                              size_t            keylen);
 
   public:
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
-                      const Uint8*            iv);
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint8*            key,
-                      const Uint32            key_len);
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
+    /**
+     * @brief Construct a new Cipher Base object
+     *
+     * @param cipher_type  Type of Cipher AES, CHACHA etc..
+     * @param mode         Mode of Cipher XTS, CTR, GCM etc..
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     */
+    OpenSSLCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
+
+    /**
+     * @brief Construct a new Cipher Base object
+     *
+     * @param cipher_type  Type of Cipher AES, CHACHA etc..
+     * @param mode         Mode of Cipher XTS, CTR, GCM etc..
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     * @param iv_len       Length of initialization vector
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @param tkey         Tweak key for XTS
+     * @param block_size   Size of the block division in bytes
+     */
+    OpenSSLCipherBase(const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint32            iv_len,
                       const Uint8*            key,
                       const Uint32            key_len,
                       const Uint8*            tkey,
                       const Uint64            block_size);
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint32            iv_len,
-                      const Uint8*            key,
-                      const Uint32            key_len);
+
     ~OpenSSLCipherBase();
-    bool init(const Uint8* iv,
-              const Uint32 iv_len,
-              const Uint8* key,
-              const Uint32 key_len);
+
+    /**
+     * @brief Initialize or Reinitialize Cipher Base
+     *
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     * @param iv_len       Length of initialization vector
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @param tkey         Tweak key for XTS
+     * @param block_size   Size of the block division in bytes
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,
               const Uint32 key_len,
               const Uint8* tkey,
               const Uint64 block_size);
-    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
+
+    /**
+     * @brief Initialize or Reinitialize Cipher Base
+     *
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
     bool init(const Uint8* key, const Uint32 key_len);
     // FIXME: Legacy functions needs to be removed like the one below
     bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);

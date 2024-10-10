@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -26,20 +26,17 @@
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
 set(TEST_FILES 
-  sha256_unit_test.cc    sha3_256_unit_test.cc  sha3_512_unit_test.cc  sha3_shake_unit_test.cc
+  md5_sha1_unit_test.cc sha1_unit_test.cc sha256_unit_test.cc    sha3_256_unit_test.cc  sha3_512_unit_test.cc  sha3_shake_unit_test.cc
   sha224_unit_test.cc  sha3_224_unit_test.cc  sha3_384_unit_test.cc  sha384_unit_test.cc    sha512_unit_test.cc
   )
 
 alcp_module("Digest")
-
-#message(STATUS "Digest Unit Tests Imported ${TEST_FILES}")
+message(STATUS "Digest Unit Tests Imported ${TEST_FILES}")
 
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)
-    #get_filename_component(currentTestDir ${testFile} BASE_DIR)
-    #message("Test-> " ${currentTestName} " file " ${currentTestFile} )
-    alcp_cc_test(${currentTestName}
+    alcp_cc_test(${currentTestName} ${CMAKE_BINARY_DIR}/lib/digest/tests
              DIRECTORY tests/
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp/alcp.h"
 #include "cipher/cipher.hh"
+#include "alcp/alcp.h"
 #include <sstream>
 #ifdef USE_IPP
 #include "cipher/ipp_cipher.hh"
@@ -41,9 +41,73 @@ namespace alcp::testing {
 /* to check if cipher type is non-AES
  TO DO: Update this when we have more non-AES types */
 bool
-isNonAESCipherType(_alc_cipher_type cipher_type)
+isNonAESCipherType(alc_cipher_mode_t mode)
 {
-    return cipher_type != ALC_CIPHER_TYPE_AES;
+    switch (mode) {
+        case ALC_CHACHA20:
+        case ALC_CHACHA20_POLY1305:
+            return true;
+        default:
+            return false;
+    }
+}
+
+/**
+ * returns respective string based on AES modes
+ */
+std::string
+GetModeSTR(alc_cipher_mode_t mode)
+{
+    switch (mode) {
+        case ALC_AES_MODE_ECB:
+            return "ECB";
+        case ALC_AES_MODE_CBC:
+            return "CBC";
+        case ALC_AES_MODE_OFB:
+            return "OFB";
+        case ALC_AES_MODE_CTR:
+            return "CTR";
+        case ALC_AES_MODE_CFB:
+            return "CFB";
+        case ALC_AES_MODE_XTS:
+            return "XTS";
+        case ALC_AES_MODE_GCM:
+            return "GCM";
+        case ALC_AES_MODE_CCM:
+            return "CCM";
+        case ALC_AES_MODE_SIV:
+            return "SIV";
+        case ALC_CHACHA20:
+            return "Chacha20";
+        case ALC_CHACHA20_POLY1305:
+            return "chacha20-poly1305";
+        default:
+            return "";
+    }
+}
+
+/** check if cipher mode is AEAD **/
+bool
+CheckCipherIsAEAD(alc_cipher_mode_t mode)
+{
+    switch (mode) {
+        case ALC_AES_MODE_ECB:
+        case ALC_AES_MODE_CBC:
+        case ALC_AES_MODE_OFB:
+        case ALC_AES_MODE_CTR:
+        case ALC_AES_MODE_CFB:
+        case ALC_AES_MODE_XTS:
+        case ALC_CHACHA20:
+            return false;
+        case ALC_AES_MODE_GCM:
+        case ALC_AES_MODE_CCM:
+        case ALC_AES_MODE_SIV:
+        case ALC_CHACHA20_POLY1305:
+            return true;
+        default:
+            return false;
+    }
+    return false;
 }
 
 // Class ExecRecPlay - FlightRecorder/FlightReplay
@@ -54,19 +118,19 @@ ExecRecPlay::ExecRecPlay()
 
 ExecRecPlay::ExecRecPlay(std::string str_mode)
 {
-    init(str_mode, "cipher_test_data", false);
+    init(std::move(str_mode), "cipher_test_data", false);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode, bool playback)
 {
-    init(str_mode, "cipher_test_data", playback);
+    init(std::move(str_mode), "cipher_test_data", playback);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode,
                          std::string dir_name,
                          bool        playback)
 {
-    init(str_mode, dir_name, playback);
+    init(std::move(str_mode), std::move(dir_name), playback);
 }
 
 ExecRecPlay::~ExecRecPlay()
@@ -84,13 +148,19 @@ ExecRecPlay::~ExecRecPlay()
 void
 ExecRecPlay::init(std::string str_mode, std::string dir_name, bool playback)
 {
+    int retval = 0;
     if (!isPathExist(dir_name)) {
 #ifdef __linux__
-        mkdir(dir_name.c_str(), 0755);
+        retval = mkdir(dir_name.c_str(), 0755);
 #elif WIN32
-        _mkdir(dir_name.c_str());
+        retval = _mkdir(dir_name.c_str());
 #endif
     }
+    if (retval != 0) {
+        std::cout << "Blackbox creation failure" << std::endl;
+        return;
+    }
+
     if (!playback) { // Record
         // Binary File, need to open binary
         m_blackbox_bin = new File(
@@ -243,28 +313,28 @@ ExecRecPlay::setRecEvent(std::vector<Uint8> key,
                          std::vector<Uint8> data,
                          record_t           rec)
 {
-    setRecKey(key);
-    setRecIv(iv);
-    setRecData(data);
+    setRecKey(std::move(key));
+    setRecIv(std::move(iv));
+    setRecData(std::move(data));
     setRecType(rec);
 }
 
 void
 ExecRecPlay::setRecKey(std::vector<Uint8> key)
 {
-    m_key = key;
+    m_key = std::move(key);
 }
 
 void
 ExecRecPlay::setRecIv(std::vector<Uint8> iv)
 {
-    m_iv = iv;
+    m_iv = std::move(iv);
 }
 
 void
 ExecRecPlay::setRecData(std::vector<Uint8> data)
 {
-    m_data = data;
+    m_data = std::move(data);
 }
 
 void
@@ -362,6 +432,7 @@ CipherAeadBase::isAead(const alc_cipher_mode_t& mode)
         case ALC_AES_MODE_GCM:
         case ALC_AES_MODE_SIV:
         case ALC_AES_MODE_CCM:
+        case ALC_CHACHA20_POLY1305:
             return true;
         default:
             return false;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,171 +36,98 @@ IPPCipherBase::PrintErrors(IppStatus status)
     std::cout << "IPP Error: " << status << std::endl;
 }
 
-IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cipher_type,
-                             const alc_cipher_mode_t mode,
-                             const Uint8*            iv)
-    : m_mode{ mode }
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t cMode, const Uint8* iv)
+    : m_mode{ cMode }
     , m_iv{ iv }
-{}
-
-IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cipher_type,
-                             const alc_cipher_mode_t mode,
-                             const Uint8*            iv,
-                             const Uint32            iv_len,
-                             const Uint8*            key,
-                             const Uint32            key_len,
-                             const Uint8*            tkey,
-                             const Uint64            block_size)
-    : m_mode{ mode }
-    , m_iv{ iv }
-    , m_tkey{ tkey }
-    , m_block_size{ block_size }
 {
-    init(key, key_len);
 }
 
-IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cipher_type,
-                             const alc_cipher_mode_t mode,
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t cMode,
                              const Uint8*            iv,
+                             const Uint32            cIvLen,
                              const Uint8*            key,
-                             const Uint32            key_len)
-    : m_mode{ mode }
+                             const Uint32            cKeyLen,
+                             const Uint8*            tkey,
+                             const Uint64            cBlockSize)
+    : m_mode{ cMode }
     , m_iv{ iv }
-    , m_key{ key }
-    , m_key_len{ key_len }
+    , m_tkey{ tkey }
+    , m_block_size{ cBlockSize }
 {
-    IppStatus status = ippStsNoErr;
-    switch (m_mode) {
-        case ALC_AES_MODE_XTS:
-            status = ippsAES_XTSGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
-            status    = ippsAES_XTSInit(
-                key, key_len, m_block_size * 8, m_ctx_xts, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            break;
-        default:
-            status = ippsAESGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-            status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            break;
-    }
+    init(key, cKeyLen);
 }
 
 IPPCipherBase::~IPPCipherBase()
 {
     if (m_ctx != nullptr) {
-        delete[](Ipp8u*) m_ctx;
+        delete[] (Ipp8u*)m_ctx;
     }
     if (m_ctx_gcm != nullptr) {
-        delete[](Ipp8u*) m_ctx_gcm;
+        delete[] (Ipp8u*)m_ctx_gcm;
     }
     if (m_ctx_ccm != nullptr) {
-        delete[](Ipp8u*) m_ctx_ccm;
+        delete[] (Ipp8u*)m_ctx_ccm;
     }
     if (m_ctx_xts != nullptr) {
-        delete[](Ipp8u*) m_ctx_xts;
+        delete[] (Ipp8u*)m_ctx_xts;
     }
 }
 
 bool
 IPPCipherBase::init(const Uint8* iv,
-                    const Uint32 iv_len,
+                    const Uint32 cIvLen,
                     const Uint8* key,
-                    const Uint32 key_len)
-{
-    m_iv = iv;
-    return init(key, key_len);
-}
-
-bool
-IPPCipherBase::init(const Uint8* iv,
-                    const Uint32 iv_len,
-                    const Uint8* key,
-                    const Uint32 key_len,
+                    const Uint32 cKeyLen,
                     const Uint8* tkey,
-                    const Uint64 block_size)
+                    const Uint64 cBlockSize)
 {
     m_iv         = iv;
     m_tkey       = tkey;
     m_key        = key;
-    m_block_size = block_size;
-    return init(key, key_len);
+    m_block_size = cBlockSize;
+    return init(key, cKeyLen);
 }
 
 bool
-IPPCipherBase::init(const Uint8* iv, const Uint8* key, const Uint32 key_len)
-{
-    m_iv = iv;
-    return init(key, key_len);
-}
-
-bool
-IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
+IPPCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
     IppStatus status = ippStsNoErr;
     m_key            = key;
-    m_key_len        = key_len;
+    m_key_len        = cKeyLen;
     switch (m_mode) {
         case ALC_AES_MODE_XTS:
             /* add key with tkey for */
-            memcpy(m_key_final, m_key, key_len / 8);
-            memcpy(m_key_final + key_len / 8, m_tkey, key_len / 8);
+            memcpy(m_key_final, m_key, cKeyLen / 8);
+            memcpy(m_key_final + cKeyLen / 8, m_tkey, cKeyLen / 8);
             m_key  = m_key_final;
             status = ippsAES_XTSGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             if (m_ctx_xts != nullptr) {
-                delete[](Ipp8u*) m_ctx_xts;
+                delete[] (Ipp8u*)m_ctx_xts;
             }
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
 
             /* for xts, pass the key concatenated with tkey */
             status = ippsAES_XTSInit(m_key,
-                                     (key_len / 8) * 16,
+                                     (cKeyLen / 8) * 16,
                                      m_block_size * 8,
                                      m_ctx_xts,
                                      m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             break;
         default:
             status = ippsAESGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             if (m_ctx != nullptr) {
-                delete[](Ipp8u*) m_ctx;
+                delete[] (Ipp8u*)m_ctx;
             }
             m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-            status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
+            status = ippsAESInit(key, cKeyLen / 8, m_ctx, m_ctxSize);
             break;
     }
 
     if (status != ippStsNoErr) {
         std::cout << "Error code: " << status << " from IPP Init" << std::endl;
         return false;
-    } else
-        return true;
+    }
+    return true;
 }
 
 bool
@@ -249,14 +176,14 @@ IPPCipherBase::alcpModeToFuncCall(const Uint8* in,
             }
             break;
         default:
-            return false;
+            break;
     }
     if (status != ippStsNoErr) {
         std::cout << "Error code: " << status << " from IPP enc/dec"
                   << std::endl;
         return false;
-    } else
-        return true;
+    }
+    return true;
 }
 
 bool

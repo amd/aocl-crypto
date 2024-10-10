@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@ class IRandomize
   public:
     virtual void getRandomBytes(std::vector<Uint8>& out) = 0;
     virtual void getRandomBytes(Uint8* out, Uint64 size) = 0;
-    virtual ~IRandomize(){};
+    virtual ~IRandomize() {};
 };
 
 class Randomize : public IRandomize

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -34,10 +34,24 @@
 # Global Variables to be modifed depending on repo location
 AOCL_CRYPTO_REPO="git@er.github.amd.com:AOCL/aocl-crypto"
 AOCL_UTILS_REPO="git@github.amd.com:AOCL/aocl-utils"
-AOCL_BRANCH="aocl-4.2"
+AOCL_BRANCH="aocl-5.0"
 
 # Function to check if lsb_release is installed
 ensure_lsb_release(){
+    if ! type "lsb_release" > /dev/null; then
+        if type "apt" > /dev/null; then
+            if type "sudo" > /dev/null; then
+                sudo apt update
+                sudo apt install lsb-release
+            else
+                echo "lsb-release not found, cannot install! missing \"sudo\" binary"
+                exit -1; # We cannot do anything anymore
+            fi
+        else
+            echo "lsb-release not found, cannot install! missing \"apt\" binary"
+        fi
+    fi
+
     type lsb_release > /dev/null
     if [ $? -ne 0 ]; then
         echo "lsb_release not found!"
@@ -49,6 +63,7 @@ ensure_lsb_release(){
 
 # Function to check if OS is ubuntu with a specific version
 detect_ubuntu(){
+
     lsb_release --id | grep "Ubuntu" > /dev/null
     if [ $? -eq 0 ]; then
         # Detected Ubuntu
@@ -72,27 +87,31 @@ quit_if_status_not_zero(){
 
 # Function to install all packages, OS indipendant (eventually)
 ensure_packages(){
-    detect_ubuntu 22.04
+    detect_ubuntu 24.04
     if [ $? -eq 0 ]; then
         echo "Running \"sudo apt update\""
         sudo apt update                      # Sync repository information
+        echo "Running \"apt install build-essential\""
+        sudo apt install build-essential     # Basic packages to support compilation
+        echo "Running \"apt install lsb-release\""
+        sudo apt install lsb-release         # LSB release to identify OS
         quit_if_status_not_zero $?
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories
         quit_if_status_not_zero $?
-        echo "Running \"sudo install libssl-dev\""
+        echo "Running \"sudo apt install libssl-dev\""
         sudo apt install libssl-dev          # For openssl
         quit_if_status_not_zero $?
-        echo "Running \"sudo install make\""
+        echo "Running \"sudo apt install make\""
         sudo apt install make                # Build system
         quit_if_status_not_zero $?
-        echo "Running \"sudo install cmake\""
+        echo "Running \"sudo apt install cmake\""
         sudo apt install cmake               # Build system generator
         quit_if_status_not_zero $?
-        echo "Running \"sudo install p7zip-full\""
+        echo "Running \"sudo apt install p7zip-full\""
         sudo apt install p7zip-full          # Re-archive static libs
         quit_if_status_not_zero $?
-        echo "Running \"sudo install gcc-12 g++-12\""
+        echo "Running \"sudo apt install gcc-12 g++-12\""
         sudo apt install gcc-12 g++-12       # Compiler
         quit_if_status_not_zero $?
         return 0
@@ -149,8 +168,8 @@ compile_aocl_utils(){
     mkdir build
     echo "cd into build directory"
     cd build
-    echo "Setting GCC-12 as the compiler"
-    export CC=gcc-12; export CXX=g++-12
+    echo "Setting GCC-13 as the compiler"
+    export CC=gcc-13; export CXX=g++-13
     echo "Running \"cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF\""
     cmake ../ -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DALCI_DOCS=OFF
     echo "Running \"make -j $(nproc --all)\""
@@ -172,18 +191,18 @@ compile_aocl_crypto(){
     mkdir build
     echo "cd into build directory"
     cd build
-    echo "Setting GCC-12 as the compiler"
-    export CC=gcc-12; export CXX=g++-12
+    echo "Setting GCC-13 as the compiler"
+    export CC=gcc-13; export CXX=g++-13
     echo "Running \"cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
 -DOPENSSL_INSTALL_DIR=/usr \
 -DCMAKE_INSTALL_PREFIX=$PWD/install \
 -DENABLE_AOCL_UTILS=ON \
--DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install\""
+-DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)\""
     cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
               -DOPENSSL_INSTALL_DIR=/usr \
               -DCMAKE_INSTALL_PREFIX=$PWD/install \
               -DENABLE_AOCL_UTILS=ON \
-              -DAOCL_UTILS_INSTALL_DIR=$PWD/../../aocl-utils/build/install
+              -DAOCL_UTILS_INSTALL_DIR=$(realpath $PWD/../../aocl-utils/build/install)
     echo "Running \"make -j $(nproc --all)\""
     make -j $(nproc --all)
     quit_if_status_not_zero $?
@@ -226,6 +245,3 @@ compile_aocl_utils
 compile_aocl_crypto
 # Run an example to show that, its indeed working.
 run_example_cfb
-
-
-

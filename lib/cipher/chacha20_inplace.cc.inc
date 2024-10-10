@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,10 +29,11 @@
 #include "alcp/base.hh"
 #include "alcp/error.h"
 #include "alcp/utils/bits.hh"
+#include "alcp/utils/copy.hh"
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 using alcp::utils::RotateLeft;
 inline void
 DisplayState(Uint32 state[16])
@@ -99,7 +100,7 @@ AddState(Uint32 state1[16], Uint32 state2[16])
 inline alc_error_t
 ValidateKey(const Uint8* key, Uint64 keylen)
 {
-    if (key == NULL || (keylen != (256 / 8))) {
+    if (key == NULL || (keylen != 256)) {
         return ALC_ERROR_INVALID_ARG;
     }
     return ALC_ERROR_NONE;
@@ -111,8 +112,9 @@ SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(state + 4, key, keylen);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(
+        state + 4, (16 - 4) * sizeof(Uint64), key, keylen / 8);
+    return err;
 }
 inline alc_error_t
 ValidateIv(const Uint8 iv[], Uint64 iVlen)
@@ -129,8 +131,9 @@ SetIv(Uint32 state[16], const Uint8 iv[], Uint64 ivlen)
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(state + 12, iv, ivlen);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(
+        state + 12, sizeof(Uint32) * (16 - 12), iv, ivlen);
+    return err;
 }
 inline alc_error_t
 CreateInitialState(Uint32      state[16],
@@ -145,7 +148,7 @@ CreateInitialState(Uint32      state[16],
     state[2] = 0x79622d32;
     state[3] = 0x6b206574;
     //  state = constants | key | counter | nonce
-    alc_error_t err = SetKey(state, key, keylen);
+    alc_error_t err = SetKey(state, key, keylen * 8);
     if (alcp_is_error(err)) {
         return err;
     };
@@ -163,19 +166,18 @@ ProcessInput(const Uint8 key[],
              const Uint8 iv[],
              Uint64      ivlen,
              const Uint8 plaintext[],
-             Uint64      plaintextLength,
-             Uint8       ciphertext[])
+             Uint8       ciphertext[],
+             Uint64      blocks,
+             int         remBytes)
 {
-    Uint64 n_blocks = plaintextLength / 64;
-    if (plaintextLength - n_blocks * 64 > 0) {
-        n_blocks++;
-    }
+    Uint64       plaintextLength = (blocks * 64) + remBytes;
     const Uint32 cInitialCounter = *(reinterpret_cast<const Uint32*>(iv));
     Uint32       state[16];
     for (Uint64 blocks = 0; blocks < plaintextLength; blocks += 64) {
         CreateInitialState(
             state, key, keylen, iv, ivlen, cInitialCounter + blocks / 64);
         Uint32 working_state[16];
+        // FIXME: Check if we need SecureCopy here
         memcpy(working_state, state, sizeof(working_state));
         for (int i = 0; i < 10; i++) {
             InnerBlock(working_state);
@@ -195,4 +197,4 @@ ProcessInput(const Uint8 key[],
     }
     return ALC_ERROR_NONE;
 }
-} // namespace alcp::cipher::chacha20
+} // namespace alcp::cipher

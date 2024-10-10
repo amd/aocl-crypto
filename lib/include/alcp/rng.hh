@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,8 +34,6 @@
 #include "alcp/base.hh"
 #include "alcp/interface/Irng.hh"
 #include "config.h"
-#include "rng/rngerror.hh"
-
 namespace alcp::rng {
 
 class Rng : public IRng

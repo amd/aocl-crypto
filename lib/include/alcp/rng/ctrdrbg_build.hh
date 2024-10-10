@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,24 +34,25 @@ namespace alcp::drbg {
 class CtrDrbgBuilder
 {
   public:
-    static Status build(const alc_drbg_info_t& drbgInfo, Context& ctx);
+    static alc_error_t build(const alc_drbg_info_t& drbgInfo, Context& ctx);
 
     static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
 
-    static Status isSupported(const alc_drbg_info_t& drbgInfo);
+    static alc_error_t isSupported(const alc_drbg_info_t& drbgInfo);
 };
 
-Status
+alc_error_t
 CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
     auto addr    = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto ctrdrbg = new (addr) alcp::rng::drbg::CtrDrbg();
+    // FIXME: KeySize has to be validated
     ctrdrbg->setKeySize(drbgInfo.di_algoinfo.ctr_drbg.di_keysize / 8);
     ctrdrbg->setUseDerivationFunction(
         drbgInfo.di_algoinfo.ctr_drbg.use_derivation_function);
 
     ctx.m_drbg = static_cast<void*>(ctrdrbg);
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 Uint64
 CtrDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
@@ -59,16 +60,21 @@ CtrDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
     return sizeof(alcp::rng::drbg::CtrDrbg);
 }
 
-Status
+alc_error_t
 CtrDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
+    static bool avx2_available = utils::CpuId::cpuHasAvx2();
+    if (!avx2_available) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
     if ((drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 128)
         | (drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 192)
         | (drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 256)) {
-        return StatusOk();
+        return ALC_ERROR_NONE;
     } else {
-        return InvalidArgument("CTR-DRBG: Unsupported CTR Key Size");
+        // CTR-DRBG: Unsupported CTR Key Size
+        return ALC_ERROR_INVALID_ARG;
     }
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 } // namespace alcp::drbg

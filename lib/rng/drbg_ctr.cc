@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -210,8 +210,9 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     // V = 0^blocklen
     std::fill(m_v, m_v + m_vsize, 0);
 
-    std::vector<Uint8> provided_data(m_seedlength + cPersonalizationStringLen);
     if (!m_use_derivation_function) {
+        std::vector<Uint8> provided_data(m_seedlength
+                                         + cPersonalizationStringLen);
         if (m_seedlength < cPersonalizationStringLen) {
             // FIXME: Should be moved to status
             printf("Seed Length Should be same size as Personalization String "
@@ -232,17 +233,20 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
         // FIXME: Currently no reseed counter is there
         // reseed_counter = 1
     } else {
+        // seed_material = entropy_input || nonce || personalization_string.
+        std::vector<Uint8> seed_material(cEntropyInputLen + cNonceLen
+                                         + cPersonalizationStringLen);
         // Copy can't be avoided
-        utils::CopyBytes(&provided_data[0], cEntropyInput, cEntropyInputLen);
+        utils::CopyBytes(&seed_material[0], cEntropyInput, cEntropyInputLen);
         utils::CopyBytes(
-            &provided_data[0] + cEntropyInputLen, cNonce, cNonceLen);
-        utils::CopyBytes(&provided_data[0] + cEntropyInputLen + cNonceLen,
+            &seed_material[0] + cEntropyInputLen, cNonce, cNonceLen);
+        utils::CopyBytes(&seed_material[0] + cEntropyInputLen + cNonceLen,
                          cPersonalizationString,
                          cPersonalizationStringLen);
 
         std::vector<Uint8> df_output(m_seedlength);
         alcp::rng::drbg::avx2::BlockCipherDf(
-            &provided_data[0],
+            &seed_material[0],
             (cEntropyInputLen + cNonceLen + cPersonalizationStringLen) * 8,
             &df_output[0],
             df_output.size() * 8,

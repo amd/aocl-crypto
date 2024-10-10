@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,58 +35,36 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
 {
     alc_test_gcm_init_data_p data_gcm =
         reinterpret_cast<alc_test_gcm_init_data_p>(data);
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err = ALC_ERROR_NONE;
 
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = (data_gcm->m_key_len)*8,
-            .key     = data_gcm->m_key,
-        },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_GCM,
-           .ai_iv   = data_gcm->m_iv,
-        },
-    };
-
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-
-    m_handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    m_handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!m_handle.ch_context)
         return false;
 
-    err = alcp_cipher_aead_request(&cinfo, &m_handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_GCM, (data_gcm->m_key_len) * 8, &m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
     // GCM init
-    err =
-        alcp_cipher_aead_set_iv(&m_handle, data_gcm->m_iv_len, data_gcm->m_iv);
+    err = alcp_cipher_aead_init(&m_handle,
+                                data_gcm->m_key,
+                                data_gcm->m_key_len * 8,
+                                data_gcm->m_iv,
+                                data_gcm->m_iv_len);
     if (alcp_is_error(err)) {
-        printf("Error: unable to set iv\n");
-        alcp_error_str(err, err_buf, err_size);
+        printf("Error: GCM encrypt init failure!\n");
         return false;
     }
 
-    if (data_gcm->m_aad) {
+    if (data_gcm->m_aad_len > 0) {
         // Additional Data
         err = alcp_cipher_aead_set_aad(
             &m_handle, data_gcm->m_aad, data_gcm->m_aad_len);
         if (alcp_is_error(err)) {
             printf("Error: unable gcm add data processing \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     }
@@ -101,28 +79,22 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
     alc_test_gcm_update_data_p p_gcm_update_data =
         reinterpret_cast<alc_test_gcm_update_data_p>(data);
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
     if constexpr (encryptor == true) {
-        err = alcp_cipher_aead_encrypt_update(&m_handle,
-                                              p_gcm_update_data->m_input,
-                                              p_gcm_update_data->m_output,
-                                              p_gcm_update_data->m_input_len,
-                                              p_gcm_update_data->m_iv);
+        err = alcp_cipher_aead_encrypt(&m_handle,
+                                       p_gcm_update_data->m_input,
+                                       p_gcm_update_data->m_output,
+                                       p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     } else {
-        err = alcp_cipher_aead_decrypt_update(&m_handle,
-                                              p_gcm_update_data->m_input,
-                                              p_gcm_update_data->m_output,
-                                              p_gcm_update_data->m_input_len,
-                                              p_gcm_update_data->m_iv);
+        err = alcp_cipher_aead_decrypt(&m_handle,
+                                       p_gcm_update_data->m_input,
+                                       p_gcm_update_data->m_output,
+                                       p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable decrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     }
@@ -135,13 +107,11 @@ AlcpGcmCipher<encryptor>::finalize(alc_test_finalize_data_p data)
     alc_test_gcm_finalize_data_p p_gcm_finalize_data =
         reinterpret_cast<alc_test_gcm_finalize_data_p>(data);
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
     err = alcp_cipher_aead_get_tag(
         &m_handle, p_gcm_finalize_data->m_tag, p_gcm_finalize_data->m_tag_len);
     if (alcp_is_error(err)) {
-        printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
+        printf(
+            "Error: unable getting tag, possible tag mismatch if decrypt \n");
         return false;
     }
     alcp_cipher_aead_finish(&m_handle);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,79 +27,78 @@
  */
 
 #include "cipher/alcp_cipher_aes.h"
+#include "alcp_cipher_prov_common.h"
 
-CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
-CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
-CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
-CIPHER_CONTEXT(ecb, ALC_AES_MODE_ECB);
-CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
-CIPHER_CONTEXT(xts, ALC_AES_MODE_XTS);
-CIPHER_AEAD_CONTEXT(gcm, ALC_AES_MODE_GCM);
-CIPHER_AEAD_CONTEXT(ccm, ALC_AES_MODE_CCM);
-CIPHER_AEAD_CONTEXT(siv, ALC_AES_MODE_SIV);
+static OSSL_FUNC_cipher_freectx_fn aes_freectx;
+static OSSL_FUNC_cipher_dupctx_fn  aes_dupctx;
 
-int
-ALCP_prov_aes_get_ctx_params(void* vctx, OSSL_PARAM params[])
+static void
+aes_freectx(void* vctx)
 {
-    EXIT();
-    return ALCP_prov_cipher_get_ctx_params(vctx, params);
+    ALCP_PROV_CIPHER_CTX* ctx = (ALCP_PROV_CIPHER_CTX*)vctx;
+
+    // free alcp
+    if (ctx->handle.ch_context != NULL) {
+        alcp_cipher_finish(&(ctx->handle));
+        OPENSSL_free(ctx->handle.ch_context);
+        ctx->handle.ch_context = NULL;
+    }
+
+    ALCP_prov_cipher_generic_reset_ctx((ALCP_PROV_CIPHER_CTX*)vctx);
+    OPENSSL_clear_free(ctx, sizeof(*ctx));
 }
 
-int
-ALCP_prov_aes_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+// FIXME: to be implemented
+static void*
+aes_dupctx(void* ctx)
 {
-    EXIT();
-    return ALCP_prov_cipher_set_ctx_params(vctx, params);
+    // ALCP_PROV_AES_CTX* in = (ALCP_PROV_AES_CTX*)ctx;
+    ALCP_PROV_CIPHER_CTX* ret;
+
+    // if (!ossl_prov_is_running())
+    //  return NULL;
+
+    ret = OPENSSL_malloc(sizeof(*ret));
+    if (ret == NULL) {
+        ERR_raise(ERR_LIB_PROV, ERR_R_MALLOC_FAILURE);
+        return NULL;
+    }
+    // in->base->copyctx(&ret->base, &in->base);
+
+    return ret;
 }
 
-void
-ALCP_prov_aes_ctxfree(alc_prov_cipher_ctx_p ciph_ctx)
+// dummy function
+bool
+alcp_prov_is_running(void)
 {
-    ALCP_prov_cipher_freectx(ciph_ctx);
+    return true;
 }
 
-void*
-ALCP_prov_aes_newctx(void* vprovctx, const void* cinfo, bool is_aead)
-{
-    alc_prov_cipher_ctx_p ciph_ctx;
+/* ossl_aes256cbc_functions */
+IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 256, 128, 128, block)
+    /* ossl_aes192cbc_functions */
+    IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 192, 128, 128, block)
+    /* ossl_aes128cbc_functions */
+    IMPLEMENT_generic_cipher(aes, AES, cbc, CBC, 0, 128, 128, 128, block)
 
-    ENTER();
-    ciph_ctx = ALCP_prov_cipher_newctx(vprovctx, (const void*)cinfo, is_aead);
-    if (!ciph_ctx)
-        goto out;
+    /* ossl_aes256ofb_functions */
+    IMPLEMENT_generic_cipher(aes, AES, ofb, OFB, 0, 256, 8, 128, stream)
+    /* ossl_aes192ofb_functions */
+    IMPLEMENT_generic_cipher(aes, AES, ofb, OFB, 0, 192, 8, 128, stream)
+    /* ossl_aes128ofb_functions */
+    IMPLEMENT_generic_cipher(aes, AES, ofb, OFB, 0, 128, 8, 128, stream)
 
-    EXIT();
-    return ciph_ctx;
+    /* ossl_aes256ctr_functions */
+    IMPLEMENT_generic_cipher(aes, AES, ctr, CTR, 0, 256, 8, 128, stream)
+    /* ossl_aes192ctr_functions */
+    IMPLEMENT_generic_cipher(aes, AES, ctr, CTR, 0, 192, 8, 128, stream)
+    /* ossl_aes128ctr_functions */
+    IMPLEMENT_generic_cipher(aes, AES, ctr, CTR, 0, 128, 8, 128, stream)
 
-out:
-    ALCP_prov_cipher_freectx(ciph_ctx);
-
-    return NULL;
-}
-
-CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE, 192, false);
-CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(cbc, aes, EVP_CIPH_CBC_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(cbc, aes, EVP_CIPH_CBC_MODE, 192, false);
-CREATE_CIPHER_DISPATCHERS(cbc, aes, EVP_CIPH_CBC_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE, 192, false);
-CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE, 192, false);
-CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 192, false);
-CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 128, true);
-CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 192, true);
-CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 256, true);
-CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 128, true);
-CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 192, true);
-CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 256, true);
-CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 128, true);
-CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 192, true);
-CREATE_CIPHER_DISPATCHERS(siv, aes, EVP_CIPH_SIV_MODE, 256, true);
+    /* ossl_aes256cfb_functions */
+    IMPLEMENT_generic_cipher(aes, AES, cfb, CFB, 0, 256, 8, 128, stream)
+    /* ossl_aes192cfb_functions */
+    IMPLEMENT_generic_cipher(aes, AES, cfb, CFB, 0, 192, 8, 128, stream)
+    /* ossl_aes128cfb_functions */
+    IMPLEMENT_generic_cipher(aes, AES, cfb, CFB, 0, 128, 8, 128, stream)

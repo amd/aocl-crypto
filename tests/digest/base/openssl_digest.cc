@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,9 +30,10 @@
 
 namespace alcp::testing {
 
-OpenSSLDigestBase::OpenSSLDigestBase(const alc_digest_info_t& info)
+OpenSSLDigestBase::OpenSSLDigestBase(alc_digest_mode_t mode)
 {
-    init(info, m_digest_len);
+    m_mode = mode;
+    init();
 }
 
 OpenSSLDigestBase::~OpenSSLDigestBase()
@@ -40,21 +41,14 @@ OpenSSLDigestBase::~OpenSSLDigestBase()
     if (m_handle != nullptr) {
         EVP_MD_CTX_free(m_handle);
     }
-}
-
-bool
-OpenSSLDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
-{
-    m_info       = info;
-    m_digest_len = digest_len;
-    return init();
+    if (m_handle_dup != nullptr) {
+        EVP_MD_CTX_free(m_handle_dup);
+    }
 }
 
 bool
 OpenSSLDigestBase::init()
 {
-    int retval = 0;
-
     if (m_handle != nullptr) {
         EVP_MD_CTX_free(m_handle);
         m_handle = nullptr;
@@ -62,150 +56,141 @@ OpenSSLDigestBase::init()
 
     m_handle = EVP_MD_CTX_new();
 
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
-                    retval = EVP_DigestInit(m_handle, EVP_sha512_224());
-                } else
-                    retval = EVP_DigestInit(m_handle, EVP_sha224());
-                break;
-            case ALC_DIGEST_LEN_256:
-                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
-                    retval = EVP_DigestInit(m_handle, EVP_sha512_256());
-                } else
-                    retval = EVP_DigestInit(m_handle, EVP_sha256());
-                break;
-            case ALC_DIGEST_LEN_384:
-                retval = EVP_DigestInit(m_handle, EVP_sha384());
-                break;
-            case ALC_DIGEST_LEN_512:
-                retval = EVP_DigestInit(m_handle, EVP_sha512());
-                break;
-            default:
-                return false;
-        }
-    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                retval = EVP_DigestInit(m_handle, EVP_sha3_224());
-                break;
-            case ALC_DIGEST_LEN_256:
-                retval = EVP_DigestInit(m_handle, EVP_sha3_256());
-                break;
-            case ALC_DIGEST_LEN_384:
-                retval = EVP_DigestInit(m_handle, EVP_sha3_384());
-                break;
-            case ALC_DIGEST_LEN_512:
-                retval = EVP_DigestInit(m_handle, EVP_sha3_512());
-                break;
-            /*SHAKE*/
-            case ALC_DIGEST_LEN_CUSTOM:
-                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
-                    retval = EVP_DigestInit(m_handle, EVP_shake128());
-                }
-                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
-                    retval = EVP_DigestInit(m_handle, EVP_shake256());
-                }
-                break;
-            default:
-                return false;
-        }
+    switch (m_mode) {
+        case ALC_SHA1:
+            m_md_type = EVP_sha1();
+            break;
+        case ALC_SHA2_224:
+            m_md_type = EVP_sha224();
+            break;
+        case ALC_SHA2_256:
+            m_md_type = EVP_sha256();
+            break;
+        case ALC_SHA2_384:
+            m_md_type = EVP_sha384();
+            break;
+        case ALC_SHA2_512:
+            m_md_type = EVP_sha512();
+            break;
+        case ALC_SHA2_512_256:
+            m_md_type = EVP_sha512_256();
+            break;
+        case ALC_SHA2_512_224:
+            m_md_type = EVP_sha512_224();
+            break;
+        case ALC_SHA3_224:
+            m_md_type = EVP_sha3_224();
+            break;
+        case ALC_SHA3_256:
+            m_md_type = EVP_sha3_256();
+            break;
+        case ALC_SHA3_384:
+            m_md_type = EVP_sha3_384();
+            break;
+        case ALC_SHA3_512:
+            m_md_type = EVP_sha3_512();
+            break;
+        case ALC_SHAKE_128:
+            m_md_type = EVP_shake128();
+            break;
+        case ALC_SHAKE_256:
+            m_md_type = EVP_shake256();
+            break;
+        default:
+            return false;
     }
-    if (retval != 1) {
-        std::cout << "Error code in EVP_DigestInit: " << retval << std::endl;
+    if (EVP_DigestInit(m_handle, m_md_type) != 1) {
+        std::cout << "Error code in EVP_DigestInit: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
 }
 
 bool
-OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
+OpenSSLDigestBase::context_copy()
 {
-    unsigned int outsize = 0;
-    int          retval  = 0;
-
-    retval = EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len);
-    if (retval != 1) {
-        std::cout << "Error code in EVP_DigestUpdate: " << retval << std::endl;
+    /* skip ctx copy if handle is null, and there is no ctx to copy */
+    if (m_handle == nullptr) {
+        std::cout << "Context is null, skipping context copy" << std::endl;
+        return true;
+    }
+    /* create dup ctx and copy context */
+    if (m_handle_dup != nullptr) {
+        EVP_MD_CTX_free(m_handle_dup);
+        m_handle_dup = nullptr;
+    }
+    m_handle_dup = EVP_MD_CTX_new();
+    if (EVP_MD_CTX_copy_ex(m_handle_dup, m_handle) != 1) {
+        std::cout << "Error code in EVP_MD_CTX_copy_ex: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
+    return true;
+}
+
+bool
+OpenSSLDigestBase::digest_update(const alcp_digest_data_t& data)
+{
+    if (EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len) != 1) {
+        std::cout << "Error code in EVP_DigestUpdate: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+OpenSSLDigestBase::digest_finalize(const alcp_digest_data_t& data)
+{
+    unsigned int outsize = 0;
 
     /* for extendable output functions */
-    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        retval = EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len);
-        if (retval != 1) {
-            std::cout << "Error code in EVP_DigestFinalXOF: " << retval
-                      << std::endl;
+    if (m_mode == ALC_SHAKE_128 || m_mode == ALC_SHAKE_256) {
+        if (EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len)
+            != 1) {
+            std::cout << "Error code in EVP_DigestFinalXOF: "
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
             return false;
         }
 
     } else {
-        retval = EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize);
-        if (retval != 1) {
-            std::cout << "Error code in EVP_DigestFinal_ex: " << retval
-                      << std::endl;
+        if (EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize) != 1) {
+            std::cout << "Error code in EVP_DigestFinal_ex: "
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
             return false;
         }
     }
-    outsize = outsize;
+    return true;
+}
+
+bool
+OpenSSLDigestBase::digest_squeeze(const alcp_digest_data_t& data)
+{
+    /* This API is supported only from Openssl 3.3.0 onwards */
+#if OPENSSL_API_LEVEL >= 30300
+    if (EVP_DigestSqueeze(m_handle_dup, data.m_digest_dup, data.m_digest_len)
+        != 1) {
+        std::cout << "Error code in EVP_DigestFinal_ex: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
+#endif
     return true;
 }
 
 void
 OpenSSLDigestBase::reset()
 {
-    EVP_MD_CTX_reset(m_handle);
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
-                    EVP_DigestInit(m_handle, EVP_sha512_224());
-                } else
-                    EVP_DigestInit(m_handle, EVP_sha224());
-                break;
-            case ALC_DIGEST_LEN_256:
-                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
-                    EVP_DigestInit(m_handle, EVP_sha512_256());
-                } else
-                    EVP_DigestInit(m_handle, EVP_sha256());
-                break;
-            case ALC_DIGEST_LEN_384:
-                EVP_DigestInit(m_handle, EVP_sha384());
-                break;
-            case ALC_DIGEST_LEN_512:
-                EVP_DigestInit(m_handle, EVP_sha512());
-                break;
-            default:
-                std::cout << "Error: " << __FILE__ << ":" << __LINE__
-                          << std::endl;
-        }
-    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                EVP_DigestInit(m_handle, EVP_sha3_224());
-                break;
-            case ALC_DIGEST_LEN_256:
-                EVP_DigestInit(m_handle, EVP_sha3_256());
-                break;
-            case ALC_DIGEST_LEN_384:
-                EVP_DigestInit(m_handle, EVP_sha3_384());
-                break;
-            case ALC_DIGEST_LEN_512:
-                EVP_DigestInit(m_handle, EVP_sha3_512());
-                break;
-            case ALC_DIGEST_LEN_CUSTOM:
-                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
-                    EVP_DigestInit(m_handle, EVP_shake128());
-                } else if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
-                    EVP_DigestInit(m_handle, EVP_shake256());
-                }
-                break;
-            default:
-                std::cout << "Error: " << __FILE__ << ":" << __LINE__
-                          << std::endl;
-                break;
-        }
+    if (EVP_MD_CTX_reset(m_handle) != 1) {
+        std::cout << "Error code in EVP_MD_CTX_reset"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return;
+    }
+    if (EVP_DigestInit(m_handle, m_md_type) != 1) {
+        std::cout << "Error code in EVP_DigestInit after reset: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return;
     }
 }
 

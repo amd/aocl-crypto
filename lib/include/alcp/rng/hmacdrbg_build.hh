@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,86 +30,76 @@
 #include "alcp/base.hh"
 #include "alcp/capi/mac/builder.hh"
 #include "alcp/digest/sha2.hh"
-#include "alcp/digest/sha2_384.hh"
-#include "alcp/digest/sha2_512.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha512.hh"
 #include "drbg_hmac.hh"
 namespace alcp::drbg {
 class HmacDrbgBuilder
 {
   public:
-    static Status build(const alc_drbg_info_t& drbgInfo, Context& ctx);
+    static alc_error_t build(const alc_drbg_info_t& drbgInfo, Context& ctx);
 
     static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
-
-    static Status isSupported(const alc_drbg_info_t& drbgInfo);
 };
 
-Status
+alc_error_t
 HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
-    auto  status   = StatusOk();
-    auto  addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-    auto* hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
-    std::shared_ptr<alcp::digest::Digest> p_digest;
-    switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (
-                drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    p_digest = std::make_shared<alcp::digest::Sha256>();
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    p_digest = std::make_shared<alcp::digest::Sha224>();
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    p_digest = std::make_shared<alcp::digest::Sha384>();
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    p_digest = std::make_shared<alcp::digest::Sha512>();
-                    break;
-                }
-                default: {
-                    status.update(
-                        InternalError("Unsupported HMAC Sha2 Algorithm"));
-                }
-            }
+    alc_error_t err      = ALC_ERROR_NONE;
+    auto        addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    auto*       hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
+    std::shared_ptr<alcp::digest::IDigest> p_digest;
+    switch (drbgInfo.di_algoinfo.hmac_drbg.digest_mode) {
+        case ALC_SHA2_256: {
+            p_digest = std::make_shared<alcp::digest::Sha256>();
             break;
         }
-        case ALC_DIGEST_TYPE_SHA3: {
-            p_digest = std::make_shared<digest::Sha3>(
-                drbgInfo.di_algoinfo.hmac_drbg.digest_info);
+        case ALC_SHA2_224: {
+            p_digest = std::make_shared<alcp::digest::Sha224>();
+            break;
+        }
+        case ALC_SHA2_384: {
+            p_digest = std::make_shared<alcp::digest::Sha384>();
+            break;
+        }
+        case ALC_SHA2_512: {
+            p_digest = std::make_shared<alcp::digest::Sha512>();
+            break;
+        }
+        case ALC_SHA3_224: {
+            p_digest = std::make_shared<alcp::digest::Sha3_224>();
+            break;
+        }
+        case ALC_SHA3_256: {
+            p_digest = std::make_shared<alcp::digest::Sha3_256>();
+            break;
+        }
+        case ALC_SHA3_384: {
+            p_digest = std::make_shared<alcp::digest::Sha3_384>();
+            break;
+        }
+        case ALC_SHA3_512: {
+            p_digest = std::make_shared<alcp::digest::Sha3_512>();
             break;
         }
         default: {
-            status.update(InternalError("Digest algorithm Unknown"));
+            // Digest algorithm Unknown
+            err = ALC_ERROR_INVALID_ARG;
             break;
         }
     }
-    if (!status.ok()) {
-        return status;
+    if (alcp_is_error(err)) {
+        return err;
     }
     ctx.m_drbg = static_cast<void*>(hmacdrbg);
 
-    status = hmacdrbg->setDigest(p_digest);
-    if (!status.ok()) {
-        return status;
-    }
+    hmacdrbg->setDigest(p_digest);
 
-    return status;
+    return err;
 }
 Uint64
 HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 {
     return sizeof(alcp::rng::drbg::HmacDrbg);
-}
-
-Status
-HmacDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
-{
-    return mac::isDigestSupported(drbgInfo.di_algoinfo.hmac_drbg.digest_info);
 }
 } // namespace alcp::drbg

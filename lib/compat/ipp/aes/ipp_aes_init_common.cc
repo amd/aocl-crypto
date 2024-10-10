@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,12 +46,9 @@ ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
     printMsg(ss.str());
     ipp_wrp_aes_ctx* context = reinterpret_cast<ipp_wrp_aes_ctx*>(pCtx);
     if (pKey != nullptr) {
-        context->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
-        context->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-        context->cinfo.ci_key_info.key  = (Uint8*)pKey;
-        context->cinfo.ci_key_info.len  = keyLen * 8;
-        context->handle.ch_context      = nullptr;
+        context->key               = (Uint8*)pKey;
+        context->keyLen            = keyLen * 8;
+        context->handle.ch_context = nullptr;
     }
     printMsg("Init End");
     return ippStsNoErr;

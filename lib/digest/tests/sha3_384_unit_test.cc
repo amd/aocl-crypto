@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,6 +26,8 @@
  *
  */
 
+#include <memory>
+
 #include "alcp/digest/sha3.hh"
 #include "gtest/gtest.h"
 
@@ -35,14 +37,6 @@ using namespace alcp::digest;
 
 typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
-
-static const alc_digest_info_t DigestInfo = []() {
-    alc_digest_info_t DigestInfo;
-    DigestInfo.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    DigestInfo.dt_len          = ALC_DIGEST_LEN_384;
-    DigestInfo.dt_mode.dm_sha3 = ALC_SHA3_384;
-    return DigestInfo;
-}();
 
 // Digest size in bytes
 static const Uint8 DigestSize = 48;
@@ -75,22 +69,22 @@ static const KnownAnswerMap message_digest = {
 };
 
 // clang-format on
-class Sha3_384
+class Sha3_384_Test
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
 
-TEST_P(Sha3_384, digest_generation_test)
+TEST_P(Sha3_384_Test, digest_generation_test)
 {
-    const auto [plaintext, digest] = GetParam().second;
-    Sha3              sha3_384(DigestInfo);
-    Uint8             hash[DigestSize];
-    std::stringstream ss;
+    const auto [plaintext, digest]     = GetParam().second;
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    Uint8                     hash[DigestSize];
+    std::stringstream         ss;
 
+    sha3_384->init();
     ASSERT_EQ(
-        sha3_384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        sha3_384->update((const Uint8*)plaintext.c_str(), plaintext.size()),
         ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_384.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha3_384.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_384->finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -102,68 +96,83 @@ TEST_P(Sha3_384, digest_generation_test)
 
 INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
-    Sha3_384,
+    Sha3_384_Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha3_384::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha3_384_Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
-TEST(Sha3_384, invalid_input_update_test)
+TEST(Sha3_384_Test, invalid_input_update_test)
 {
-    Sha3 sha3_384(DigestInfo);
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384.update(nullptr, 0));
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384->update(nullptr, 0));
 }
 
-TEST(Sha3_384, zero_size_update_test)
+TEST(Sha3_384_Test, zero_size_update_test)
 {
-    Sha3        sha3_384(DigestInfo);
-    const Uint8 src[DigestSize] = { 0 };
-    EXPECT_EQ(ALC_ERROR_NONE, sha3_384.update(src, 0));
+    std::unique_ptr<Sha3_384> sha3_384        = std::make_unique<Sha3_384>();
+    const Uint8               src[DigestSize] = { 0 };
+    EXPECT_EQ(ALC_ERROR_NONE, sha3_384->update(src, 0));
 }
 
-TEST(Sha3_384, invalid_output_copy_hash_test)
+TEST(Sha3_384_Test, invalid_output_copy_hash_test)
 {
-    Sha3 sha3_384(DigestInfo);
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384.copyHash(nullptr, DigestSize));
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384->finalize(nullptr, DigestSize));
 }
 
-TEST(Sha3_384, zero_size_hash_copy_test)
+TEST(Sha3_384_Test, zero_size_hash_copy_test)
 {
-    Sha3  sha3_384(DigestInfo);
-    Uint8 hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_384.copyHash(hash, 0));
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    Uint8                     hash[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384->finalize(hash, 0));
 }
 
-TEST(Sha3_384, over_size_hash_copy_test)
+TEST(Sha3_384_Test, over_size_hash_copy_test)
 {
-    Sha3  sha3_384(DigestInfo);
-    Uint8 hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_384.copyHash(hash, DigestSize + 1));
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    Uint8                     hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha3_384->finalize(hash, DigestSize + 1));
 }
 
-TEST(Sha3_384, getInputBlockSizeTest)
+TEST(Sha3_384_Test, getInputBlockSizeTest)
 {
-    Sha3 sha3_384(DigestInfo);
-    EXPECT_EQ(sha3_384.getInputBlockSize(), InputBlockSize);
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    EXPECT_EQ(sha3_384->getInputBlockSize(), InputBlockSize);
 }
 
-TEST(Sha3_384, getHashSizeTest)
+TEST(Sha3_384_Test, getHashSizeTest)
 {
-    Sha3 sha3_384(DigestInfo);
-    EXPECT_EQ(sha3_384.getHashSize(), DigestSize);
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    EXPECT_EQ(sha3_384->getHashSize(), DigestSize);
 }
 
-TEST(Sha3_384, setShakeLengthTest)
+TEST(Sha3_384_Test, object_copy_test)
 {
-    Sha3        sha3_384(DigestInfo);
-    alc_error_t err                       = ALC_ERROR_NONE;
-    err                                   = sha3_384.setShakeLength(384);
-    constexpr unsigned short cShakeLength = 100;
+    string                    plaintext("1111");
+    std::unique_ptr<Sha3_384> sha3_384 = std::make_unique<Sha3_384>();
+    Uint8                     hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream         ss, ss_dup;
 
-    err = sha3_384.setShakeLength(cShakeLength);
-    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
-    EXPECT_EQ(sha3_384.getHashSize(), DigestSize);
-    EXPECT_NE(sha3_384.getHashSize(), cShakeLength);
+    sha3_384->init();
+    ASSERT_EQ(
+        sha3_384->update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        ALC_ERROR_NONE);
+
+    std::unique_ptr<Sha3_384> sha3_384_dup =
+        std::make_unique<Sha3_384>(*sha3_384);
+
+    ASSERT_EQ(sha3_384->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha3_384_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+
+    ss << std::hex << std::setfill('0');
+    ss_dup << std::hex << std::setfill('0');
+
+    for (Uint16 i = 0; i < DigestSize; ++i) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
+    }
+    std::string hash_string = ss.str(), hash_string_dup = ss_dup.str();
+    EXPECT_TRUE(hash_string == hash_string_dup);
 }
 
 } // namespace

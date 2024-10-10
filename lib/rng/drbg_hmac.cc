@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 
 namespace alcp::rng::drbg {
 
-using alcp::digest::Digest;
+using alcp::digest::IDigest;
 using alcp::digest::Sha256;
 using alcp::mac::Hmac;
 
@@ -63,16 +63,15 @@ DebugPrint(const std::vector<Uint8>& in,
            std::string               message,
            std::string               file,
            int                       line)
-{
-}
+{}
 #endif
 
 class HmacDrbg::Impl
 {
   private:
-    std::shared_ptr<alcp::digest::Digest> m_digest;
-    std::vector<Uint8>                    m_v = {}, m_key = {};
-    Hmac                                  m_hmac_obj;
+    std::shared_ptr<alcp::digest::IDigest> m_digest;
+    std::vector<Uint8>                     m_v = {}, m_key = {};
+    Hmac                                   m_hmac_obj;
 
   public:
     /**
@@ -255,14 +254,12 @@ class HmacDrbg::Impl
     void internalReseed(const std::vector<Uint8>& cEntropyInput,
                         const std::vector<Uint8>& cAdditionalInput);
 
-    // FIXME: Change alcp::digest::Digest to alcp::digest::IDigest
     /**
-     * @brief Set the Digest object
+     * @brief Set the IDigest object
      *
-     * @param digestObject - Object of Digest class.
-     * @return Status
+     * @param digestObject - Object of IDigest class.
      */
-    Status setDigest(std::shared_ptr<alcp::digest::Digest> digestObject);
+    void setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
 
     /**
      * @brief Get a copy of internal Key
@@ -305,19 +302,17 @@ HmacDrbg::Impl::HMAC_Wrapper(const Uint8  cIn1[],
                              const Uint64 cOutLen)
 {
 
-    m_hmac_obj.setDigest(*m_digest);
-    m_hmac_obj.setKey(&m_key[0], m_key.size());
+    m_hmac_obj.init(&m_key[0], m_key.size(), m_digest.get());
     m_hmac_obj.update(cIn1, cIn1Len);
     if (cIn2 != nullptr && cIn2Len != 0)
         m_hmac_obj.update(cIn2, cIn2Len);
     if (cIn3 != nullptr && cIn3Len != 0)
         m_hmac_obj.update(cIn3, cIn3Len);
-    m_hmac_obj.finalize(nullptr, 0);
 
     // Assert that we have enough memory to write the output into
     assert(cOutLen >= m_digest->getHashSize());
 
-    m_hmac_obj.copyHash(out, m_digest->getHashSize());
+    m_hmac_obj.finalize(out, m_digest->getHashSize());
 }
 
 void
@@ -434,9 +429,10 @@ HmacDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     utils::CopyBytes(p_seed_material_buff, cEntropyInput, cEntropyInputLen);
     utils::CopyBytes(
         p_seed_material_buff + cEntropyInputLen, cNonce, cNonceLen);
-    utils::CopyBytes(p_seed_material_buff + cEntropyInputLen + cNonceLen,
-                     cPersonalizationString,
-                     cPersonalizationStringLen);
+    if (cPersonalizationStringLen != 0)
+        utils::CopyBytes(p_seed_material_buff + cEntropyInputLen + cNonceLen,
+                         cPersonalizationString,
+                         cPersonalizationStringLen);
     // concat(concatVect, seed_material);
 
     // Initialize key with 0x00
@@ -554,16 +550,13 @@ HmacDrbg::Impl::internalReseed(const std::vector<Uint8>& cEntropyInput,
                    &cAdditionalInput[0],
                    cAdditionalInput.size());
 }
-
-Status
-HmacDrbg::Impl::setDigest(std::shared_ptr<Digest> digest_obj)
+void
+HmacDrbg::Impl::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    Status s = StatusOk();
     m_digest = digest_obj;
     // Initialize Internal States (Will serve also as reset)
     m_v   = std::vector<Uint8>(m_digest->getHashSize());
     m_key = std::vector<Uint8>(m_digest->getHashSize());
-    return s;
 }
 
 void
@@ -638,10 +631,10 @@ HmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
     p_impl->internalReseed(cEntropyInput, cAdditionalInput);
 }
 
-Status
-HmacDrbg::setDigest(std::shared_ptr<Digest> digest_obj)
+void
+HmacDrbg::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    return p_impl->setDigest(digest_obj);
+    p_impl->setDigest(digest_obj);
 }
 
 std::string
@@ -664,8 +657,7 @@ HmacDrbg::getVCopy()
 
 HmacDrbg::HmacDrbg()
     : p_impl{ std::make_unique<Impl>() }
-{
-}
+{}
 
 HmacDrbg::~HmacDrbg() = default;
 } // namespace alcp::rng::drbg

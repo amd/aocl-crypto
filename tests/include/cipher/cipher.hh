@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,7 +39,15 @@ using alcp::testing::utils::parseHexStrToBin;
 
 /* to check cipher type is AES */
 bool
-isNonAESCipherType(_alc_cipher_type cipher_type);
+isNonAESCipherType(alc_cipher_mode_t mode);
+
+/* to check if cipher mode is AEAD */
+bool
+CheckCipherIsAEAD(alc_cipher_mode_t mode);
+
+/* to get cipher mode as a string */
+std::string
+GetModeSTR(alc_cipher_mode_t mode);
 
 // alcp_data_cipher_ex_t
 struct alcp_dc_ex_t
@@ -103,18 +111,18 @@ class ExecRecPlay
   private:
     File*              m_blackbox_bin = nullptr;
     File*              m_log          = nullptr;
-    time_t             m_start_time;
-    time_t             m_end_time;
+    time_t             m_start_time{};
+    time_t             m_end_time{};
     std::size_t        m_blackbox_start_pos = 0;
     std::size_t        m_blackbox_end_pos   = 0;
-    record_t           m_rec_type;
-    std::vector<Uint8> m_key;
-    std::vector<Uint8> m_iv;
-    std::vector<Uint8> m_data;
+    record_t           m_rec_type{};
+    std::vector<Uint8> m_key{};
+    std::vector<Uint8> m_iv{};
+    std::vector<Uint8> m_data{};
     std::string        m_str_mode = "";
     long m_byte_start = 0, m_byte_end = 0, m_rec_t = 0, m_key_size = 0,
-         m_data_size = 0;
-    long m_prev_log_point;
+         m_data_size      = 0;
+    long m_prev_log_point = 0;
 
   public:
     // Create new files for writing
@@ -186,17 +194,10 @@ class CipherBase
     virtual bool init(const Uint8* iv,
                       const Uint32 iv_len,
                       const Uint8* key,
-                      const Uint32 key_len)                   = 0;
-    virtual bool init(const Uint8* iv,
-                      const Uint8* key,
-                      const Uint32 key_len)                   = 0;
-    virtual bool init(const Uint8* key, const Uint32 key_len) = 0;
-    virtual bool init(const Uint8* iv,
-                      const Uint32 iv_len,
-                      const Uint8* key,
                       const Uint32 key_len,
                       const Uint8* tkey,
                       const Uint64 block_size)                = 0;
+    virtual bool init(const Uint8* key, const Uint32 key_len) = 0;
     virtual bool encrypt(alcp_dc_ex_t& data)                  = 0;
     virtual bool decrypt(alcp_dc_ex_t& data)                  = 0;
     virtual bool reset()                                      = 0;

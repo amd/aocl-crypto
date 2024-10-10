@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -24,53 +24,14 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 include(ExternalProject)
-
-
-# Enable UTILS if enabled and available
-IF(ENABLE_AOCL_UTILS)
-	MESSAGE(STATUS "Enabling AOCL UTILS Support")
-	IF(AOCL_UTILS_INSTALL_DIR)
-		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR set, overriding fetch path")
-	ELSE(AOCL_UTILS_INSTALL_DIR)
-		# FIXME: Move this to lib parent scope in future
-		set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
-		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION} PARENT_SCOPE)
-		set(AOCL_UTILS_INSTALL_DIR ${EXTERNAL_INSTALL_LOCATION})
-		# Add project repo dir
-		ExternalProject_Add(aoclutils
-			GIT_REPOSITORY https://github.com/amd/aocl-utils.git
-			GIT_TAG aocl-4.2
-			CMAKE_ARGS  -DALCI_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-		)
-		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/external)
-		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR not set, defaulting to external")
-		add_dependencies(alcp aoclutils)
-		add_dependencies(alcp_static aoclutils)
-	ENDIF(AOCL_UTILS_INSTALL_DIR)
-	IF(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
-		TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/include)
-		TARGET_INCLUDE_DIRECTORIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/include)
-		IF(MSVC)
-			TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.lib)
-			TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/bin)
-			TARGET_COMPILE_OPTIONS(alcp PRIVATE "-Wno-microsoft-enum-value")
-
-			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.lib)
-		ELSE()
-			TARGET_LINK_LIBRARIES(alcp PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.so)
-			TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${AOCL_UTILS_INSTALL_DIR}/lib/libaoclutils.a)
-		ENDIF()
-	ELSE(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
-		MESSAGE(FATAL_ERROR "AOCL UTILS fallback error, external directory not found!")
-	ENDIF(EXISTS ${AOCL_UTILS_INSTALL_DIR} AND IS_DIRECTORY ${AOCL_UTILS_INSTALL_DIR})
-ENDIF(ENABLE_AOCL_UTILS)
+include(FetchContent)
+include(modules/AoclUtils)
 
 SET(UTILS_SRCS
   bignum.cc
-  logger.cc
   #mempool.cc
-  console_logger.cc
   cpuid.cc
+  memory.cc
   )
 
 IF (ALCP_ENABLE_TESTS)

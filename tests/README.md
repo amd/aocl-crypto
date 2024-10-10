@@ -78,3 +78,21 @@ For using OpenSSL just specify `-o` command line argument.
 ### Testing Datasets
 
 Datasets (eg: cipher) are located in directory `alcp-crypto/tests/cipher/test_data/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid from deleting that line.
+
+### Fuzz Tests
+To enable fuzz tests set the compiler to clang 
+
+```sh
+$ export CXX=clang++
+```
+```sh
+$ export CC=clang
+```
+
+Then build crypto library by appending the flag ALCP_ENABLE_FUZZ_TESTS=ON
+
+In order to run the whole fuzz tests you can use run_fuzz_tests.py under the scripts directory.
+```sh
+$ python3 ./scripts/python/run_fuzz_tests.py ./build
+```
+The individual tests will be under build/tests/Fuzz directory. For example in order to run the digest sha256 fuzz test the following command could be used  `./tests/Fuzz/Digest/test_fuzz_digest_sha2_256`

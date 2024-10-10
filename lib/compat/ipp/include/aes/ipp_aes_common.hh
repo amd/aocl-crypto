@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,26 +64,16 @@ alcp_encdecAES(const Ipp8u*       pSrc,
     // Should replace below with something better as it does discard const
     ipp_wrp_aes_ctx* context = (ipp_wrp_aes_ctx*)(pCtx);
     alc_error_t      err;
-    const int        err_size = 256;
-    Uint8            err_buf[err_size];
 
     /* Continue initialization as we didnt have iv in initialization function
        if we already have context then it's already good, we can take it as
        already initialized. */
 
     if (context->handle.ch_context == nullptr) {
-        context->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_algo_info.ai_mode = mode;
-        context->cinfo.ci_algo_info.ai_iv   = (Uint8*)pCtrValue;
+        context->mode = mode;
+        context->iv   = (Uint8*)pCtrValue;
 
-        // context->cinfo = cinfo;
-        err = alcp_cipher_supported(&(context->cinfo));
-        if (alcp_is_error(err)) {
-            printErr("not supported");
-            alcp_error_str(err, err_buf, err_size);
-            return ippStsNotSupportedModeErr;
-        }
-        auto size = alcp_cipher_context_size(&(context->cinfo));
+        auto size                  = alcp_cipher_context_size();
         context->handle.ch_context = (alc_cipher_context_p)(malloc(size));
 
 // TODO: Debug statements, remove once done.
@@ -92,23 +82,16 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         if (mode == ALC_AES_MODE_XTS) {
             std::cout << "MODE:XTS" << std::endl;
             std::cout << "KEY:"
-                      << parseBytesToHexStr(context->cinfo.ci_key_info.key,
-                                            (context->cinfo.ci_key_info.len)
-                                                / 8)
+                      << parseBytesToHexStr(context->key, (context->keyLen) / 8)
                       << std::endl;
-            std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
-                      << std::endl;
+            std::cout << "KEYLen:" << context->keyLen / 8 << std::endl;
             std::cout << "TKEY:"
-                      << parseBytesToHexStr(
-                             context->cinfo.ci_key_info.key
-                                 + ((context->cinfo.ci_key_info.len) / 8),
-                             ((context->cinfo.ci_key_info.len) / 8))
+                      << parseBytesToHexStr(context->key
+                                                + ((context->keyLen) / 8),
+                                            ((context->keyLen) / 8))
                       << std::endl;
-            std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
-                      << std::endl;
-            std::cout << "IV:"
-                      << parseBytesToHexStr(context->cinfo.ci_algo_info.ai_iv,
-                                            16)
+            std::cout << "KEYLen:" << context->keyLen / 8 << std::endl;
+            std::cout << "IV:" << parseBytesToHexStr(context->iv, 16)
                       << std::endl;
             std::cout << "INLEN:" << len << std::endl;
             std::cout << "IN:"
@@ -117,22 +100,23 @@ alcp_encdecAES(const Ipp8u*       pSrc,
                       << std::endl;
         }
 #endif
-        err = alcp_cipher_request(&(context->cinfo), &(context->handle));
+        err = alcp_cipher_request(mode, context->keyLen, &(context->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
-            alcp_error_str(err, err_buf, err_size);
             free(context->handle.ch_context);
             context->handle.ch_context = nullptr;
             return ippStsErr;
         }
     }
 
-    if (mode == ALC_AES_MODE_XTS) {
-        err = alcp_cipher_set_iv(
-            &(context->handle), 16, context->cinfo.ci_algo_info.ai_iv);
-        if (alcp_is_error(err)) {
-            printErr("Error in Setting the IV\n");
-        }
+    // init
+    err = alcp_cipher_init(&(context->handle),
+                           context->key,
+                           context->keyLen,
+                           context->iv,
+                           16); // FIXME: 16 should be variable
+    if (alcp_is_error(err)) {
+        printErr("Error in init\n");
     }
 
     // Do the actual decryption
@@ -141,14 +125,12 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         err = alcp_cipher_encrypt(&(context->handle),
                                   reinterpret_cast<const Uint8*>(pSrc),
                                   reinterpret_cast<Uint8*>(pDst),
-                                  len,
-                                  reinterpret_cast<const Uint8*>(pCtrValue));
+                                  len);
     } else {
         err = alcp_cipher_decrypt(&(context->handle),
                                   reinterpret_cast<const Uint8*>(pSrc),
                                   reinterpret_cast<Uint8*>(pDst),
-                                  len,
-                                  reinterpret_cast<const Uint8*>(pCtrValue));
+                                  len);
     }
 #ifdef DEBUG
     if (mode == ALC_AES_MODE_XTS) {
@@ -163,7 +145,6 @@ alcp_encdecAES(const Ipp8u*       pSrc,
 
     if (alcp_is_error(err)) {
         printErr("Unable decrypt");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsUnderRunErr;
     }
     printMsg("Decrypt succeeded");

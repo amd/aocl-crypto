@@ -1,4 +1,4 @@
-# Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,14 +23,42 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-FUNCTION(ADD_EXAMPLE EXAMPLE_TARGET EXAMPLE_SOURCE)
-
+FUNCTION(ADD_C_EXAMPLE EXAMPLE_TARGET EXAMPLE_SOURCE)
     # Dynamic Example
+    # FIXME: to suppress false warnings from gcc (known issue)
+    if(CMAKE_COMPILER_IS_GCC)
+        set (ALCP_WARNINGS ${ALCP_WARNINGS} -Wno-format-overflow)
+    endif()
     add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE})
-    target_link_libraries(${EXAMPLE_TARGET} alcp)
+    target_compile_options(${EXAMPLE_TARGET} PUBLIC ${ALCP_WARNINGS})
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
 
     # Static Example
     add_executable(${EXAMPLE_TARGET}-static ${EXAMPLE_SOURCE})
-    target_link_libraries(${EXAMPLE_TARGET}-static alcp_static)
+    target_link_libraries(${EXAMPLE_TARGET}-static PRIVATE alcp_static)
+
+ENDFUNCTION()
+
+FUNCTION(ADD_CXX_EXAMPLE EXAMPLE_TARGET EXAMPLE_SOURCE)
+    # Dynamic Example
+    # FIXME: to suppress false warnings from gcc (known issue)
+    if(CMAKE_COMPILER_IS_GCC)
+        set (ALCP_WARNINGS ${ALCP_WARNINGS} -Wno-format-overflow)
+    endif()
+    add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE})
+    target_compile_options(${EXAMPLE_TARGET} PUBLIC ${ALCP_WARNINGS})
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
+
+    # Static Example
+    add_executable(${EXAMPLE_TARGET}-static ${EXAMPLE_SOURCE})
+    target_link_libraries(${EXAMPLE_TARGET}-static PRIVATE alcp_static)
+
+    TARGET_INCLUDE_DIRECTORIES ( ${EXAMPLE_TARGET} PRIVATE 
+        ${CMAKE_SOURCE_DIR}/lib/include
+        ${CMAKE_SOURCE_DIR}/tests/common/include )
+
+    TARGET_INCLUDE_DIRECTORIES ( ${EXAMPLE_TARGET}-static PRIVATE 
+        ${CMAKE_SOURCE_DIR}/lib/include
+        ${CMAKE_SOURCE_DIR}/tests/common/include )
 
 ENDFUNCTION()

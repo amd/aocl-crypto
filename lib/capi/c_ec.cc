@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -163,20 +163,4 @@ alcp_ec_reset(const alc_ec_handle_p pEcHandle)
     // FIXME: Return error code if status is not ok
 }
 
-alc_error_t
-alcp_ec_error(alc_ec_handle_p pEcHandle, Uint8* pBuff, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pEcHandle->context, err);
-
-    auto p_ctx = static_cast<ec::Context*>(pEcHandle->context);
-
-    String message = String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
-
-    return err;
-}
 EXTERN_C_END

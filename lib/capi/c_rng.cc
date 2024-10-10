@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -60,8 +60,6 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
     bool rd_rand_available = CpuId::cpuHasRdRand();
     bool rd_seed_available = CpuId::cpuHasRdSeed();
 
-    // FiXME: Status variable in context should be set with proper error message
-
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DISCRETE:
             switch (pRngInfo->ri_distrib) {
@@ -94,8 +92,6 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
 {
-    // FiXME: Status variable in context should be set with Status returned from
-    // Build
     alc_error_t error = ALC_ERROR_NOT_SUPPORTED;
     auto        ctx   = static_cast<alcp::rng::Context*>(pHandle->rh_context);
 
@@ -146,8 +142,8 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
     ALCP_BAD_PTR_ERR_RET(buf, err);
 
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
-
-    // FiXME: Status variable in context should be set with Status returned
+    ALCP_BAD_PTR_ERR_RET(ctx->m_rng, error);
+    ALCP_BAD_PTR_ERR_RET(ctx->read_random, error);
     return ctx->read_random(ctx->m_rng, buf, size);
 }
 
@@ -157,8 +153,8 @@ alcp_rng_reseed(alc_rng_handle_p pRngHandle)
     ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
     ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
-
-    // FiXME: Status variable in context should be set with Status returned
+    ALCP_BAD_PTR_ERR_RET(ctx->m_rng, error);
+    ALCP_BAD_PTR_ERR_RET(ctx->reseed, error);
     return ctx->reseed(ctx->m_rng);
 }
 
@@ -168,30 +164,13 @@ alcp_rng_finish(alc_rng_handle_p pRngHandle)
     ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
     ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
-
-    // FiXME: Status variable in context should be set with Status returned.
+    ALCP_BAD_PTR_ERR_RET(ctx->m_rng, error);
+    ALCP_BAD_PTR_ERR_RET(ctx->finish, error);
     ctx->finish(ctx->m_rng);
 
     ctx->~Context();
 
     return ALC_ERROR_NONE;
-}
-
-alc_error_t
-alcp_rng_error(alc_rng_handle_p pRngHandle, Uint8* pBuff, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pRngHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, err);
-
-    auto p_ctx = static_cast<alcp::rng::Context*>(pRngHandle->rh_context);
-
-    alcp::String message = alcp::String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
-
-    return err;
 }
 
 EXTERN_C_END

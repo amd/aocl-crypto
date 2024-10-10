@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,26 +40,24 @@
 namespace alcp::testing {
 class OpenSSLPoly1305Base : public Poly1305Base
 {
-    EVP_MAC_CTX*   m_handle = nullptr;
-    alc_mac_info_t m_info;
-    Uint8*         m_message;
-    Uint8*         m_key;
-    Uint8*         m_poly1305;
-    EVP_MAC*       m_mac = nullptr;
-    Uint32         m_key_len;
+    EVP_MAC_CTX* m_handle  = nullptr;
+    Uint8*       m_key     = nullptr;
+    EVP_MAC*     m_mac     = nullptr;
+    Uint32       m_key_len = 0;
 
   public:
-    OpenSSLPoly1305Base(const alc_mac_info_t& info);
+    OpenSSLPoly1305Base() = default;
 
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
+    bool Init(std::vector<Uint8>& Key);
 
     ~OpenSSLPoly1305Base();
 
-    bool mac(const alcp_poly1305_data_t& data);
+    bool MacUpdate(const alcp_poly1305_data_t& data);
+
+    bool MacFinalize(const alcp_poly1305_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
-    bool reset();
+    bool MacReset();
 };
 
 } // namespace alcp::testing

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,14 +50,40 @@ static constexpr Uint8 cRotationConstants[cDim][cDim] = {
     { 41, 45, 15, 21, 8 },
     { 18, 2, 61, 56, 14 }
 };
+// maximum size of message block in bits is used for shake128 digest
+static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
-class ALCP_API_EXPORT Sha3 : public Digest
+enum ShakeState
 {
-  public:
-    Sha3(const alc_digest_info_t& rDigestInfo);
-    ~Sha3();
+    STATE_INT,
+    STATE_SQUEEZE,
+};
+
+template<alc_digest_len_t digest_len>
+class ALCP_API_EXPORT Sha3 : public IDigest
+{
+    static_assert(ALC_DIGEST_LEN_224 == digest_len
+                  || ALC_DIGEST_LEN_256 == digest_len
+                  || ALC_DIGEST_LEN_384 == digest_len
+                  || ALC_DIGEST_LEN_512 == digest_len
+                  || ALC_DIGEST_LEN_CUSTOM_SHAKE_128 == digest_len
+                  || ALC_DIGEST_LEN_CUSTOM_SHAKE_256 == digest_len);
 
   public:
+    Sha3();
+    Sha3(const Sha3& src);
+    ~Sha3() = default;
+
+  public:
+    /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    void init(void) override;
     /**
      * @brief   Updates hash for given buffer
      *
@@ -70,81 +96,50 @@ class ALCP_API_EXPORT Sha3 : public Digest
      * @param    size    should be valid size > 0
      *
      */
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size);
+    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
-     * @brief   Cleans up any resource that was allocated
+     * \brief    Call for fetching final digest
      *
-     * @note    finish() to be called as a means to cleanup, no operation
-     *          permitted after this call.
      *
-     * @return  nothing
+     * \param    pBuf     Destination buffer to which digest will be copied
+     *
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
      */
-    void finish();
+    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
     /**
-     * @brief    Resets the internal state.
-     *
-     * @note     reset() to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
-     *
-     * @return   nothing
-     */
-    void reset();
-
-    /**
-     * @brief    Call for the final chunk
-     *
-     * @note     finish() to be called as a means to cleanup, necessary
-     *           actions. Application can also call finalize() with
-     *           empty/null args application must call copyHash before
-     *           calling finish()
-     *
-     * @param    pMsgBuf     Either valid pointer to last chunk or nullptr,
-     *                       once finalize() is called, only operation that
-     *                       can be performed is copyHash()
-     *
-     * @param    size    Either valid size or 0, if @buf is nullptr, size
-     *                   is assumed to be zero
-     */
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size);
-
-    /**
-     * @brief  Copies the has from object to supplied buffer
-     *
-     * @note   finalize() to be called before with last chunks that should
-     *           perform all the necessary actions, can be called with
-     *           NULL argument.
-     *
-     * @param    pHash   pointer to the final hash generated
-     *
-     * @param    size    hash size to be copied from the object
-     */
-    alc_error_t copyHash(Uint8* pHash, Uint64 size) const;
-
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize();
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize();
-
-    /**
-     * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set
+     * @brief To squeeze digest out of SHAKE128 or SHAKE256
      * before finalizing.
-     * @param shakeLength Custom Output Size
+     * @param pBuff   pointer to the final hash generated
+     * @param len     digest len
      * @return
      */
-    alc_error_t setShakeLength(Uint64 shakeLength);
+    alc_error_t shakeSqueeze(Uint8* pBuff, Uint64 len);
 
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pimpl;
-    bool                  m_finished = false;
+    alc_error_t        processChunk(const Uint8* pSrc, Uint64 len);
+    inline void        squeezeChunk(Uint8* pBuf, Uint64 size);
+    inline alc_error_t processAndSqueeze(Uint8* pBuf, Uint64 size);
+
+    // buffer size to hold the chunk size to be processed
+    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8]{};
+    // state matrix to represent the keccak 1600 bits representation of
+    // intermediate hash
+    alignas(64) Uint64 m_state[cDim][cDim]{};
+    // flat representation of the state, used in absorbing the user message.
+    Uint64*    m_state_flat  = &m_state[0][0];
+    Uint64     m_shake_index = 0;
+    ShakeState m_processing_state{ STATE_INT };
 };
+
+typedef Sha3<ALC_DIGEST_LEN_224>              Sha3_224;
+typedef Sha3<ALC_DIGEST_LEN_256>              Sha3_256;
+typedef Sha3<ALC_DIGEST_LEN_384>              Sha3_384;
+typedef Sha3<ALC_DIGEST_LEN_512>              Sha3_512;
+typedef Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_128> Shake128;
+typedef Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_256> Shake256;
 
 namespace zen3 {
 
@@ -153,9 +148,10 @@ namespace zen3 {
                            Uint64  msg_size,
                            Uint64  m_src_size_u64);
 
-    void Sha3Finalize(Uint8* state,
-                      Uint8* hash,
-                      Uint64 hash_size,
-                      Uint64 chunk_size);
+    void Sha3Finalize(Uint8*  state,
+                      Uint8*  hash,
+                      Uint64  hash_size,
+                      Uint64  chunk_size,
+                      Uint64& index);
 } // namespace zen3
 } // namespace alcp::digest

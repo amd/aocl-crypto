@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -88,31 +88,6 @@ gettimeofday(struct timeval* tv, struct timeval* tv1)
 #endif
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
-
-static inline void
-alcp_get_time(int x, char* y)
-{
-    gettimeofday(&end, 0);
-    seconds      = end.tv_sec - begin.tv_sec;
-    microseconds = end.tv_usec - begin.tv_usec;
-    elapsed      = seconds + microseconds * 1e-6;
-    totalTimeElapsed += elapsed;
-    if (x) {
-        printf("%s\t", y);
-        printf(" %2.2f ms ", elapsed * 1000);
-    }
-}
-
-void
-getinput(Uint8* output, int inputLen, int seed)
-{
-    // generate same random input based on seed value.
-    srand(seed);
-    for (int i = 0; i < inputLen; i++) {
-        *output = (Uint8)rand();
-        output++;
-    }
-}
 
 // clang-format off
 
@@ -325,59 +300,22 @@ static Uint8 test_ad[TEST_VECTOR_COUNT][48] = {{0xe7, 0xe5, 0xe6, 0xf8, 0xda, 0x
 int
 create_aes_session(Uint8*                  key,
                    Uint8*                  iv,
-                   const Uint32            key_len,
+                   const Uint32            keyLen,
                    const alc_cipher_mode_t mode)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-    Uint8       tweakKey[16] = {
-        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-        0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
-    };
-
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_algo_info   = {
-            .ai_mode = mode,
-            .ai_iv   = iv,
-        },
-       /* No padding, Not Implemented yet*/
-        //.pad     = ALC_CIPHER_PADDING_NONE,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key,
-            .len     = key_len,
-        },
-    };
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_aead_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
-    }
-
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!handle.ch_context)
         return -1;
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    /* Request a context with cipher mode and keyLen */
+    err = alcp_cipher_aead_request(ALC_AES_MODE_GCM, keyLen, &handle);
     if (alcp_is_error(err)) {
+        free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
     return 0;
@@ -392,36 +330,32 @@ alcp_aes_gcm_encrypt_demo(
     Uint8*       iv,
     const Uint32 ivLen,
     Uint8*       ad,
-    const Uint32 adLen,
+    const Uint32 aadLen,
     Uint8*       tag,
-    const Uint32 tagLen)
+    const Uint32 tagLen,
+    const Uint8* pKey,
+    const Uint32 keyLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
-    // GCM init
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    // gcm init key
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
     // GCM encrypt
-    err =
-        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
@@ -429,7 +363,6 @@ alcp_aes_gcm_encrypt_demo(
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
     return 0;
@@ -443,64 +376,49 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
                           Uint8*       iv,
                           const Uint32 ivLen,
                           Uint8*       ad,
-                          const Uint32 adLen,
+                          const Uint32 aadLen,
                           Uint8*       tag,
-                          const Uint32 tagLen)
+                          const Uint32 tagLen,
+                          const Uint8* pKey,
+                          const Uint32 keyLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-    Uint8       tagDecrypt[16];
-
     // GCM init
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
     // GCM decrypt
-    err =
-        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return -1;
     }
 
     // get tag
-    err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
+    err = alcp_cipher_aead_get_tag(
+        &handle, tag, tagLen); // feed input encrypt tag to be matched.
     if (alcp_is_error(err)) {
-        printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
-    }
-
-    bool isTagMatched = true;
-
-    for (int i = 0; i < tagLen; i++) {
-        if (tagDecrypt[i] != tag[i]) {
-            isTagMatched = isTagMatched & false;
-        }
-    }
-
-    if (isTagMatched == false) {
-        // printf("\n tag mismatched, input encrypted data is not trusthworthy
-        // ");
         memset(plaintxt, 0, len);
+        printf("Error: unable getting tag, Decrypt tag mismatch \n");
         return -1;
     }
+
     return 0;
 }
+
+#define IVLEN_MAX  128
+#define ADLEN_MAX  64
+#define TAGLEN_MAX 16
 
 /* Function takes input data from standard test vector for specific test number
  * & validates tag generated.*/
@@ -515,7 +433,6 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     int          retval = 0;
     unsigned int keybits;
     Uint8        key[32];
-    int          ret = 0;
 #if DEBUG_PRINT
     bool verboseprint = true;
 #else
@@ -526,52 +443,58 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     Uint8* outputText;
     outputText = malloc(inputLen);
 
-    Uint8* iv;
-    iv = malloc(128 * 4);
-    memset(iv, 10, 128 * 4);
-
-    Uint8* ref;
-    ref = malloc(inputLen);
-    memset(ref, 0, inputLen);
-
-    Uint32 ivLen = 16;
+    Uint32 ivLen = 12; // default
 
     /* additional data, tag used in GCM */
-    Uint32 adLen  = test_ad_len[testNumber];
+    Uint32 aadLen = test_ad_len[testNumber];
     Uint32 tagLen = test_tag_len[testNumber];
 
-    Uint8* ad = malloc(adLen);
-    Uint8  tag[16];
-    if (adLen) {
-        memset(ad, 33, adLen);
-    }
-    memset(tag, 0, tagLen);
+    Uint8 iv[IVLEN_MAX];
+    Uint8 ad[ADLEN_MAX];
+    Uint8 tag[TAGLEN_MAX];
+
+    memset(iv, 10, IVLEN_MAX);
+    memset(ad, 0, ADLEN_MAX);
+    memset(tag, 0, TAGLEN_MAX);
 
     printf("\n \t Test number %d", testNumber);
 
     int u   = i;
     keybits = 128 + u * 64;
-    memset(key, ((i * 10) + m), 32);
 
     ivLen = test_iv_len[testNumber];
     memcpy(inputText, test_pt[testNumber], inputLen);
     memcpy(key, test_key[testNumber], 16);
     memcpy(iv, test_iv[testNumber], ivLen);
-    memcpy(ad, test_ad[testNumber], adLen);
+    memcpy(ad, test_ad[testNumber], aadLen);
 
     memset(cipherText, 0, inputLen);
-
     memset(outputText, 0, inputLen);
     printText(key, 16, "key      ", verboseprint);
     printText(inputText, inputLen, "inputText", verboseprint);
     printText(iv, ivLen, "iv       ", verboseprint);
-    printText(ad, adLen, "ad       ", verboseprint);
+    printText(ad, aadLen, "ad       ", verboseprint);
 
-    create_aes_session(key, iv, keybits, m);
+    retval = create_aes_session(key, iv, keybits, m);
+    if (retval != 0) {
+        if (outputText) {
+            free(outputText);
+        }
+        return retval;
+    }
 
     // Encrypt
-    retval = alcp_aes_gcm_encrypt_demo(
-        inputText, inputLen, cipherText, iv, ivLen, ad, adLen, tag, tagLen);
+    retval = alcp_aes_gcm_encrypt_demo(inputText,
+                                       inputLen,
+                                       cipherText,
+                                       iv,
+                                       ivLen,
+                                       ad,
+                                       aadLen,
+                                       tag,
+                                       tagLen,
+                                       key,
+                                       keybits);
     if (retval != 0)
         goto out;
 
@@ -585,8 +508,17 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     }
 
     // Decrypt
-    retval = alcp_aes_gcm_decrypt_demo(
-        cipherText, inputLen, outputText, iv, ivLen, ad, adLen, tag, tagLen);
+    retval = alcp_aes_gcm_decrypt_demo(cipherText,
+                                       inputLen,
+                                       outputText,
+                                       iv,
+                                       ivLen,
+                                       ad,
+                                       aadLen,
+                                       tag,
+                                       tagLen,
+                                       key,
+                                       keybits);
     if (retval != 0)
         goto out;
 
@@ -604,28 +536,14 @@ gcm_selftest(Uint8*            inputText,  // plaintext
         printf("\t test PASSED ");
     }
 
-    /*
-     * Complete the transaction
-     */
+out:
     alcp_cipher_aead_finish(&handle);
     free(handle.ch_context);
-
     if (outputText) {
         free(outputText);
     }
-    if (iv) {
-        free(iv);
-    }
-    if (ref) {
-        free(ref);
-    }
-    if (ad) {
-        free(ad);
-    }
-    return 0;
 
-out:
-    return -1;
+    return retval;
 }
 
 // Demo of GCM with std testor vectors
@@ -670,10 +588,7 @@ runGCMAutoTest()
                          ALC_AES_MODE_GCM,
                          keySizeItr,
                          testNumber);
-        if (retval != 0)
-            return retval;
 
-        // its time to free!
         if (inputText) {
             free(inputText);
         }
@@ -681,7 +596,7 @@ runGCMAutoTest()
             free(cipherText);
         }
     }
-    return 0;
+    return retval;
 }
 
 int

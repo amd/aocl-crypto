@@ -39,7 +39,7 @@ colorlinks: true
 ## About OpenSSL
 
 OpenSSL is an opensource SSL library which supports various encryption decryption standards as well as cipher suites. OpenSSL is used in well known programs such as Nginx, SSH etc. Most of the OpenSSL kernels have a hardware optimized version inside it. 
-Sometimes users of OpenSSL might reqire more optimized versions of the kernels, for this particular purpose OpenSSL has a plugin infrastructure which will allow anyone to write plugins called as providers. This is the interface which is used by ALCP to communicate with the OpenSSL infrastructure. 
+Sometimes users of OpenSSL might require more optimized versions of the kernels, for this particular purpose OpenSSL has a plugin infrastructure which will allow anyone to write plugins called as providers. This is the interface which is used by ALCP to communicate with the OpenSSL infrastructure. 
 
 ### Using OpenSSL-Compat Lib
 

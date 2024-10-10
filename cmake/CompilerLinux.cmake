@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,11 +23,39 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
+
+# get build environment
+function(alcp_get_build_environment)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set (ALCP_BUILD_COMPILER "GCC_v${CMAKE_CXX_COMPILER_VERSION}")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set (ALCP_BUILD_COMPILER "Clang_v${CMAKE_CXX_COMPILER_VERSION}")
+    endif()
+
+    # uses lsb_release utility on linux, as cmake doesnt have a variable which has the Linux flavor information
+    find_program(LSB_RELEASE_EXEC lsb_release)
+    if(NOT LSB_RELEASE_EXEC)
+        MESSAGE(FATAL_ERROR "LSB Release is missing from the machine, please install lsb_release!")
+    endif()
+    execute_process(COMMAND ${LSB_RELEASE_EXEC} -r -s
+        OUTPUT_VARIABLE OS_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(COMMAND ${LSB_RELEASE_EXEC} -i -s
+        OUTPUT_VARIABLE OS_VENDOR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    
+    # final build env string will contain compiler and system environment details where the binary was created
+    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VENDOR}_${OS_VERSION} PARENT_SCOPE)
+endfunction(alcp_get_build_environment)
+
+
 # check compiler version
 function(alcp_check_compiler_version)
     include(CheckCXXCompilerFlag)
-    set(GCC_MIN_REQ "10.3.0")
-    set (CLANG_MIN_REQ "12.0.0")
+    set(GCC_MIN_REQ "11.3.0")
+    set (CLANG_MIN_REQ "14.0.0")
     # if gcc
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
@@ -55,8 +83,9 @@ endfunction(alcp_check_compiler_version)
 
 
 # Generic Warnings
+SET (ALCP_WARNINGS -Wall)
 function(alcp_get_cflags_warnings)
-    set(ALCP_CFLAGS_WARNINGS "-Wall" CACHE INTERNAL "")
+    set(ALCP_CFLAGS_WARNINGS ${ALCP_WARNINGS} CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)
 endfunction(alcp_get_cflags_warnings)
 
@@ -88,6 +117,15 @@ function(alcp_get_cflags_arch)
         )
     set(ALCP_CFLAGS_ARCH ${ALCP_CFLAGS_ARCH} PARENT_SCOPE)
 endfunction(alcp_get_cflags_arch)
+
+# Reference Architecture Compile Flags
+function(alcp_get_arch_cflags_reference)
+    set(ARCH_COMPILE_FLAGS
+        -fPIC -O3 -msse2
+        CACHE INTERNAL ""
+        )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_reference)
 
 # lib/arch/avx2 Compile Flags
 function(alcp_get_arch_cflags_avx2)
@@ -133,13 +171,27 @@ function(alcp_get_arch_cflags_zen4)
     endif()
 endfunction(alcp_get_arch_cflags_zen4)
 
+
+# lib/arch/zen4 Compile Flags
+function(alcp_get_arch_cflags_zen4_clang)
+    set(ARCH_COMPILE_FLAGS
+        -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma
+        -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg
+        -mavx512vpopcntdq -mvpclmulqdq -DUSE_AVX512
+        CACHE INTERNAL ""
+        )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_zen4_clang)
+
 # misc options
 # sanitizer options
 function(alcp_add_sanitize_flags)
     # memory sanitizer supported only by clang
+    # FIXME: since memsan is not supported by all the dependency libraries,
+    # compilation is disabled with memsan.
     set (ALCP_SANITIZE_OPTIONS_CLANG
-            -fsanitize=memory
-            -fsanitize-memory-track-origins
+            #-fsanitize=memory
+            #-fsanitize-memory-track-origins
             -fPIC
             -fno-omit-frame-pointer
             CACHE INTERNAL ""
@@ -166,15 +218,48 @@ function(alcp_add_sanitize_flags)
     endif()
 endfunction(alcp_add_sanitize_flags)
 
-# coverage
+# coverage flags
 function(alcp_add_coverage_flags)
-    set(ALCP_CFLAGS_COV
+    # coverage flags supported by gcc
+    set(ALCP_CFLAGS_COV_GCC
             -O0
             -fprofile-arcs
             -ftest-coverage
-            --coverage
             CACHE INTERNAL ""
-        )
-	    LINK_LIBRARIES(gcov)
-	    ADD_COMPILE_OPTIONS(${ALCP_CFLAGS_COV})
+    )
+    #link flags
+    set(ALCP_LFLAGS_COV_GCC
+            --coverage
+            -lgcov
+            CACHE INTERNAL ""
+    )
+    # coverage flags supported by clang compiler
+    set(ALCP_CFLAGS_COV_CLANG
+            -g
+            -O0
+            -fprofile-instr-generate
+            -fcoverage-mapping
+            CACHE INTERNAL ""
+    )
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # check if lcov is installed
+        find_program(LCOV lcov)
+        if (NOT LCOV)
+            message(FATAL_ERROR "lcov installation not found, coverage build with gcc will not work!")
+        endif()
+	    target_compile_options(alcp PUBLIC ${ALCP_CFLAGS_COV_GCC})
+	    target_compile_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_GCC})
+        target_link_options(alcp PUBLIC ${ALCP_LFLAGS_COV_GCC})
+        target_link_options(alcp_static PUBLIC ${ALCP_LFLAGS_COV_GCC})
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # check if lcov is installed
+        find_program(LLVM_COV llvm-cov-14)
+        if (NOT LLVM_COV)
+            message(FATAL_ERROR "llvm-cov installation not found, coverage build with AOCC/Clang will not work!")
+        endif()
+        target_compile_options(alcp PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+	    target_compile_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+        target_link_options(alcp PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+        target_link_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
+    endif()
 endfunction(alcp_add_coverage_flags)

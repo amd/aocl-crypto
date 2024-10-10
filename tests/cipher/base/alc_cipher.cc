@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,53 +30,24 @@
 
 namespace alcp::testing {
 
-// AlcpCipherBase class functions
-/* for chacha20 */
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type cipher_type,
-                               const Uint8*           iv,
-                               const Uint8*           key,
-                               const Uint32           key_len,
-                               const Uint32           iv_len)
-{
-    if (iv_len != 0)
-        this->m_iv = iv;
-    if (key_len != 0)
-        init(key, key_len);
-}
-
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                               const alc_cipher_mode_t mode,
-                               const Uint8*            iv)
-    : m_mode{ mode }
-    , m_cipher_type{ cipher_type }
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t cMode, const Uint8* iv)
+    : m_mode{ cMode }
     , m_iv{ iv }
 {}
 
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                               const alc_cipher_mode_t mode,
-                               const Uint8*            iv,
-                               const Uint8*            key,
-                               const Uint32            key_len)
-    : m_mode{ mode }
-    , m_iv{ iv }
-{
-    init(iv, key, key_len);
-}
-
 /* xts */
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                               const alc_cipher_mode_t mode,
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t cMode,
                                const Uint8*            iv,
-                               const Uint32            iv_len,
+                               const Uint32            cIvLen,
                                const Uint8*            key,
-                               const Uint32            key_len,
+                               const Uint32            cKeyLen,
                                const Uint8*            tkey,
-                               const Uint64            block_size)
-    : m_mode{ mode }
-    , m_cipher_type{ cipher_type }
+                               const Uint64            cBlockSize)
+    : m_mode{ cMode }
     , m_iv{ iv }
+    , m_tkey{ tkey }
 {
-    init(iv, iv_len, key, key_len, tkey, block_size);
+    init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
 }
 
 AlcpCipherBase::~AlcpCipherBase()
@@ -90,44 +61,24 @@ AlcpCipherBase::~AlcpCipherBase()
     }
 }
 
-bool
-AlcpCipherBase::init(const Uint8* iv,
-                     const Uint32 iv_len,
-                     const Uint8* key,
-                     const Uint32 key_len)
-{
-    if (iv_len != 0)
-        this->m_iv = iv;
-    return init(key, key_len);
-}
-
 /* for XTS */
 bool
 AlcpCipherBase::init(const Uint8* iv,
-                     const Uint32 iv_len,
+                     const Uint32 cIvLen,
                      const Uint8* key,
-                     const Uint32 key_len,
+                     const Uint32 cKeyLen,
                      const Uint8* tkey,
-                     const Uint64 block_size)
+                     const Uint64 cBlockSize) // Usefull
 {
     this->m_iv   = iv;
     this->m_tkey = tkey;
-    return init(key, key_len);
+    return init(key, cKeyLen);
 }
 
 bool
-AlcpCipherBase::init(const Uint8* iv, const Uint8* key, const Uint32 key_len)
-{
-    this->m_iv = iv;
-    return init(key, key_len);
-}
-
-bool
-AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
+AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
     if (m_handle != nullptr) {
         alcp_cipher_finish(m_handle);
@@ -141,44 +92,20 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         goto out;
     }
     // TODO: Check support before allocating
-    m_handle->ch_context = malloc(alcp_cipher_context_size(&m_cinfo));
+    m_handle->ch_context = malloc(alcp_cipher_context_size());
     if (m_handle->ch_context == NULL) {
         std::cout << "alcp_base.c: Memory allocation for context failure!"
                   << std::endl;
         goto out;
     }
 
-    m_cinfo.ci_type = m_cipher_type;
-    if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
-        m_cinfo.ci_key_info.type   = ALC_KEY_TYPE_SYMMETRIC;
-        m_cinfo.ci_key_info.fmt    = ALC_KEY_FMT_RAW;
-        m_cinfo.ci_key_info.key    = key;
-        m_cinfo.ci_key_info.len    = key_len;
-        m_cinfo.ci_algo_info.ai_iv = m_iv;
-        m_cinfo.ci_algo_info.iv_length =
-            16 * 8; /* FIXME is it always 16 bytes ?*/
-        m_cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
-    } else {
-        /* FOR AES */
-        /* Initialize keyinfo */
-        m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
-        m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-        m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
-        m_keyinfo.len  = key_len;
-        m_keyinfo.key  = key;
-
-        /* Initialize cinfo */
-        m_cinfo.ci_algo_info.ai_mode = m_mode;
-        m_cinfo.ci_algo_info.ai_iv   = m_iv;
-
-        /* set these only for XTS */
-        if (m_mode == ALC_AES_MODE_XTS) {
-            memcpy(m_key, key, key_len / 8);
-            memcpy(m_key + (key_len / 8), m_tkey, key_len / 8);
-            m_keyinfo.key = m_key;
-        }
-        m_cinfo.ci_key_info = m_keyinfo;
+    /* set these only for XTS */
+    if (m_mode == ALC_AES_MODE_XTS) {
+        memcpy(m_key, key, cKeyLen / 8);
+        memcpy(m_key + (cKeyLen / 8), m_tkey, cKeyLen / 8);
+        key = m_key;
     }
+
 #if 0
     else if (m_mode == ALC_AES_MODE_SIV) {
         alc_key_info_t* p_kinfo =
@@ -191,30 +118,24 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
     }
 #endif
 
-    /* Check support */
-    err = alcp_cipher_supported(&m_cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        goto out;
-    }
-
     /* Request Handle */
-    err = alcp_cipher_request(&m_cinfo, m_handle);
+    err = alcp_cipher_request(m_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         goto out;
     }
 
-    if (m_mode == ALC_AES_MODE_XTS) {
-        err = alcp_cipher_set_iv(m_handle, 16, m_iv);
-        if (alcp_is_error(err)) {
-            printf("Error: unable to set iv \n");
-            alcp_error_str(err, err_buf, err_size);
-            goto out;
-        }
+    // encrypt init:
+    err = alcp_cipher_init(m_handle,
+                           key,
+                           cKeyLen,
+                           m_iv,
+                           16); // FIXME: set iv length
+    if (alcp_is_error(err)) {
+        printf("Error in cipher init\n");
+        return 0;
     }
+
     return true;
 
 out:
@@ -232,19 +153,15 @@ bool
 AlcpCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buff[err_size];
 
-    err =
-        alcp_cipher_encrypt(m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+    err = alcp_cipher_encrypt(m_handle, data.m_in, data.m_out, data.m_inl);
     if (alcp_is_error(err)) {
         goto enc_out;
     }
 
     return true;
 enc_out:
-    alcp_error_str(err, err_buff, err_size);
-    std::cout << "Error:" << err_buff << std::endl;
+    std::cout << "Error occurred in encrypt" << std::endl;
     return false;
 }
 
@@ -252,19 +169,15 @@ bool
 AlcpCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buff[err_size];
 
-    err =
-        alcp_cipher_decrypt(m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+    err = alcp_cipher_decrypt(m_handle, data.m_in, data.m_out, data.m_inl);
     if (alcp_is_error(err)) {
         goto dec_out;
     }
 
     return true;
 dec_out:
-    alcp_error_str(err, err_buff, err_size);
-    std::cout << "Error:" << err_buff << std::endl;
+    std::cout << "Error occurred in decrypt" << std::endl;
     return false;
 }
 

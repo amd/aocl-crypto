@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,42 +31,31 @@
 
 namespace alcp::testing {
 
-AlcpPoly1305Base::AlcpPoly1305Base(const alc_mac_info_t& info) {}
-
 bool
-AlcpPoly1305Base::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+AlcpPoly1305Base::Init(std::vector<Uint8>& Key)
 {
-    m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
+    alc_error_t err;
 
-bool
-AlcpPoly1305Base::init()
-{
-    alc_error_t    err;
-    alc_mac_info_t dinfo = m_info;
-
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
-                                   .len  = m_key_len * 8,
-                                   .key  = m_key };
-
-    dinfo.mi_keyinfo = kinfo;
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else if (m_handle->ch_context == nullptr) {
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else {
         alcp_mac_finish(m_handle);
     }
 
-    err = alcp_mac_request(m_handle, &dinfo);
+    err = alcp_mac_request(m_handle, ALC_MAC_POLY1305);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_mac_request:" << err << std::endl;
+        return false;
+    }
+
+    err = alcp_mac_init(m_handle, m_key, m_key_len, NULL);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_mac_init:" << err << std::endl;
         return false;
     }
     return true;
@@ -86,35 +75,31 @@ AlcpPoly1305Base::~AlcpPoly1305Base()
 }
 
 bool
-AlcpPoly1305Base::mac(const alcp_poly1305_data_t& data)
+AlcpPoly1305Base::MacUpdate(const alcp_poly1305_data_t& data)
 {
     alc_error_t err;
-
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
         return false;
     }
-
-    err = alcp_mac_finalize(m_handle, NULL, 0);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
-        return false;
-    }
-
-    err = alcp_mac_copy(m_handle, data.m_mac, data.m_mac_len);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
-        return false;
-    }
-
-    // Without reseting it is not possible to reuse m_handle after finalizing
-    reset();
     return true;
 }
 
 bool
-AlcpPoly1305Base::reset()
+AlcpPoly1305Base::MacFinalize(const alcp_poly1305_data_t& data)
+{
+    alc_error_t err;
+    err = alcp_mac_finalize(m_handle, data.m_mac, data.m_mac_len);
+    if (alcp_is_error(err)) {
+        std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+AlcpPoly1305Base::MacReset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

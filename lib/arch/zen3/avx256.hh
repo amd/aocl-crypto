@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,10 +37,12 @@ namespace alcp::cipher { namespace vaes {
     {
         return _mm256_loadu_si256(ad);
     }
+
     static inline __m256i alcp_loadu(const __m256i* ad)
     {
         return _mm256_loadu_si256(ad);
     }
+
     static inline __m256i alcp_loadu_128(__m256i* ad)
     {
         // Mask for loading and storing half register
@@ -50,6 +52,7 @@ namespace alcp::cipher { namespace vaes {
                                             static_cast<long long>(1UL) << 63);
         return _mm256_maskload_epi64((long long*)ad, mask_lo);
     }
+
     static inline __m256i alcp_loadu_128(const __m256i* ad)
     {
         // Mask for loading and storing half register
@@ -60,10 +63,63 @@ namespace alcp::cipher { namespace vaes {
         return _mm256_maskload_epi64((long long*)ad, mask_lo);
     }
 
+    static inline void alcp_loadu_4values(
+        const __m256i* ad, __m256i& a1, __m256i& a2, __m256i& a3, __m256i& a4)
+    {
+        a1 = _mm256_loadu_si256(ad);
+        a2 = _mm256_loadu_si256(ad + 1);
+        a3 = _mm256_loadu_si256(ad + 2);
+        a4 = _mm256_loadu_si256(ad + 3);
+    }
+
+    static inline void alcp_loadu_4values(
+        __m256i* ad, __m256i& a1, __m256i& a2, __m256i& a3, __m256i& a4)
+    {
+        a1 = _mm256_loadu_si256(ad);
+        a2 = _mm256_loadu_si256(ad + 1);
+        a3 = _mm256_loadu_si256(ad + 2);
+        a4 = _mm256_loadu_si256(ad + 3);
+    }
+
     // xor functions.
     static inline __m256i alcp_xor(__m256i a, __m256i b)
     {
         return _mm256_xor_si256(a, b);
+    }
+
+    static inline void alcp_xor_4values(__m256i  a1, // inputs A
+                                        __m256i  a2,
+                                        __m256i  a3,
+                                        __m256i  a4,
+                                        __m256i  b1, // inputs B
+                                        __m256i  b2,
+                                        __m256i  b3,
+                                        __m256i  b4,
+                                        __m256i& c1, // outputs C = A xor B
+                                        __m256i& c2,
+                                        __m256i& c3,
+                                        __m256i& c4)
+    {
+        c1 = _mm256_xor_si256(a1, b1);
+        c2 = _mm256_xor_si256(a2, b2);
+        c3 = _mm256_xor_si256(a3, b3);
+        c4 = _mm256_xor_si256(a4, b4);
+    }
+
+    static inline void alcp_xor_4values(
+        __m256i  a1, // inputs A
+        __m256i  a2,
+        __m256i  a3,
+        __m256i  a4,
+        __m256i& b1, // inputs B and output A xor B
+        __m256i& b2,
+        __m256i& b3,
+        __m256i& b4)
+    {
+        b1 = _mm256_xor_si256(a1, b1);
+        b2 = _mm256_xor_si256(a2, b2);
+        b3 = _mm256_xor_si256(a3, b3);
+        b4 = _mm256_xor_si256(a4, b4);
     }
 
     // add functions.
@@ -73,10 +129,20 @@ namespace alcp::cipher { namespace vaes {
         return _mm256_set_epi32(a0, a1, a2, a3, a4, a5, a6, a7);
     }
 
+    static inline void alcp_setzero(__m256i& a)
+    {
+        a = _mm256_setzero_si256();
+    }
+
     // add functions.
     static inline __m256i alcp_add_epi32(__m256i a, __m256i b)
     {
         return _mm256_add_epi32(a, b);
+    }
+
+    static inline __m256i alcp_add_epi64(__m256i a, __m256i b)
+    {
+        return _mm256_add_epi64(a, b);
     }
 
     // shuffle functions.
@@ -85,10 +151,36 @@ namespace alcp::cipher { namespace vaes {
         return _mm256_shuffle_epi8(a, b);
     }
 
+    static inline void alcp_shuffle_epi8(
+        const __m256i& in1, // inputs
+        const __m256i& in2,
+        const __m256i& in3,
+        const __m256i& in4,
+        const __m256i& swap_ctr, // swap control
+        __m256i&       out1,     // outputs
+        __m256i&       out2,
+        __m256i&       out3,
+        __m256i&       out4)
+    {
+        out1 = _mm256_shuffle_epi8(in1, swap_ctr);
+        out2 = _mm256_shuffle_epi8(in2, swap_ctr);
+        out3 = _mm256_shuffle_epi8(in3, swap_ctr);
+        out4 = _mm256_shuffle_epi8(in4, swap_ctr);
+    }
+
     // store functions
     static inline void alcp_storeu(__m256i* ad, __m256i x)
     {
         _mm256_storeu_si256(ad, x);
+    }
+
+    static inline void alcp_storeu_4values(
+        __m256i* ad, __m256i a1, __m256i a2, __m256i a3, __m256i a4)
+    {
+        _mm256_storeu_si256(ad, a1);
+        _mm256_storeu_si256(ad + 1, a2);
+        _mm256_storeu_si256(ad + 2, a3);
+        _mm256_storeu_si256(ad + 3, a4);
     }
 
     static inline void alcp_storeu_128(__m256i* ad, __m256i x)

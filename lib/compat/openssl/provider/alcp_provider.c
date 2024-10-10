@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,104 +26,164 @@
  *
  */
 
+#include <openssl/bio.h>
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
+#include <openssl/params.h>
+#include <openssl/provider.h>
 
+#include "provider/alcp_prov_bio.h"
 #include "provider/alcp_provider.h"
 
 static void
-ALCP_prov_freectx(alc_prov_ctx_t* ctx)
+ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 {
-    if (ctx != NULL) {
-        // ENGINE_free(ctx->e);
-        // proverr_free_handle(ctx->proverr_handle);
-        /* Below line commented because of segmentation fault*/
-        // OSSL_LIB_CTX_free(ctx->ap_libctx);
+    if (alcpctx != NULL) {
+        if (alcpctx->libctx != NULL) {
+            OSSL_LIB_CTX_free(alcpctx->libctx);
+        }
+        OPENSSL_free(alcpctx);
     }
-
-    // OPENSSL_free(ctx);
 }
 
-static alc_prov_ctx_t*
-ALCP_prov_newctx(const OSSL_CORE_HANDLE* core, const OSSL_DISPATCH* in)
-{
-    alc_prov_ctx_t* ctx;
+#define LOAD_DEFAULT_PROV 0 // to be explored.
 
-    ctx = OPENSSL_zalloc(sizeof(*ctx));
+#if LOAD_DEFAULT_PROV
+OSSL_PROVIDER* prov_openssl_default;
+#endif
 
-    if (ctx) {
-        // ctx->proverr_handle = proverr_new_handle(core, in));
-
-        ctx->ap_libctx = OSSL_LIB_CTX_new_child(core, in);
-
-        ctx->ap_core_handle = core;
-    } else {
-        ctx = NULL;
-        goto out;
-    }
-
-out:
-    ALCP_prov_freectx(ctx);
-    return ctx;
-}
+#define ALCP_OPENSSL_VERSION OPENSSL_VERSION_STR
 
 static const OSSL_ALGORITHM*
-ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
+ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 {
     ENTER();
+    *no_cache = 0;
+
+#if LOAD_DEFAULT_PROV
+    static bool is_alcp_prov_init_done = false;
+    prov_openssl_default               = OSSL_PROVIDER_load(NULL, "default");
+
+    if (is_alcp_prov_init_done == false) {
+        EVP_set_default_properties(NULL, "provider=alcp,fips=no");
+        is_alcp_prov_init_done = true;
+    }
+#endif
+
+#if OPENSSL_API_LEVEL >= 30100
+    const char* openssl_version = OpenSSL_version(OPENSSL_VERSION_STRING);
     switch (operation_id) {
+/*FIXME: When Cipher Provider is enabled and MAC provider is
+ * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
+ * internally tries to use CBC from alcp and multi update is not
+ * supported in ALCP as of now.  */
+
+// FIXME: OpenSSL Test test_quic_multistream fails on OpenSSL 3.3.
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
         case OSSL_OP_CIPHER:
-            EXIT();
-            return ALC_prov_ciphers;
+            // Check if openssl is same as compiled "with" version
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
+                return ALC_prov_ciphers;
+            }
             break;
-        case OSSL_OP_MAC:
-            EXIT();
-            return ALC_prov_macs;
-            break;
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
+
+// Digest providers are disabled as of now due to provider overhead
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST
         case OSSL_OP_DIGEST:
             EXIT();
             return ALC_prov_digests;
             break;
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
+        case OSSL_OP_ASYM_CIPHER:
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
+                return alc_prov_asym_ciphers;
+            }
+            break;
+        case OSSL_OP_SIGNATURE:
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
+                return alc_prov_signature;
+            }
+            break;
+        case OSSL_OP_KEYMGMT:
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+                EXIT();
+                return alc_prov_keymgmt;
+            }
+            break;
+            // Todo : Enabling this causes memory leaks in asan
+            // case OSSL_OP_ENCODER:
+            // case OSSL_OP_DECODER:
+            //     if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+            //         return OSSL_PROVIDER_query_operation(
+            //             prov_openssl_default, operation_id, no_cache);
+            //     }
+            //     break;
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
+        case OSSL_OP_MAC:
+            EXIT();
+            return ALC_prov_macs;
+            break;
+#endif // ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
+
+#if 0
+/*  FIXME: Disabled  RNG Providers as of now to shift
+                focus to Cipher and Digest Provider Apps Integration*/
+
         case OSSL_OP_RAND:
             EXIT();
             return ALC_prov_rng;
             break;
+#endif // if 0
         default:
             break;
     }
 
+#endif // if OPENSSL_API_LEVEL >= 30100
+#if LOAD_DEFAULT_PROV
+    return OSSL_PROVIDER_query_operation(
+        prov_openssl_default, operation_id, no_cache);
+#else
+    EXIT();
     return NULL;
+#endif // if LOAD_DEFAULT_PROV
 }
 
 /* The error reasons used here */
-#define ALCP_ERROR_NO_KEYLEN_SET     1
-#define ALCP_ERROR_ONGOING_OPERATION 2
-#define ALCP_ERROR_INCORRECT_KEYLEN  3
-static const OSSL_ITEM reason_strings[] = {
-    { ALCP_ERROR_NO_KEYLEN_SET, "no key length has been set" },
-    { ALCP_ERROR_ONGOING_OPERATION, "an operation is underway" },
-    { ALCP_ERROR_INCORRECT_KEYLEN, "incorrect key length" },
-    { 0, NULL }
-};
+// #define ALCP_ERROR_NO_KEYLEN_SET     1
+// #define ALCP_ERROR_ONGOING_OPERATION 2
+// #define ALCP_ERROR_INCORRECT_KEYLEN  3
+// static const OSSL_ITEM reason_strings[] = {
+//     { ALCP_ERROR_NO_KEYLEN_SET, "no key length has been set" },
+//     { ALCP_ERROR_ONGOING_OPERATION, "an operation is underway" },
+//     { ALCP_ERROR_INCORRECT_KEYLEN, "incorrect key length" },
+//     { 0, NULL }
+// };
 
-static const OSSL_ITEM*
-ALCP_get_reason_strings(void* vctx)
-{
-    ENTER();
-    return reason_strings;
-}
+// static const OSSL_ITEM*
+// ALCP_get_reason_strings(void* vctx)
+// {
+//     ENTER();
+//     return reason_strings;
+// }
 
 static int
 ALCP_get_params(void* provctx, OSSL_PARAM* params)
 {
-    OSSL_PARAM*        p;
-    const static char* VERSION = "1.0";
+    OSSL_PARAM* p;
     char static BUILDTYPE[100];
 
     ENTER();
 
     if ((p = OSSL_PARAM_locate(params, "version")) != NULL
-        && !OSSL_PARAM_set_utf8_ptr(p, VERSION))
+        && !OSSL_PARAM_set_utf8_ptr(p, alcp_get_version()))
         return 0;
 
     if ((p = OSSL_PARAM_locate(params, "buildinfo")) != NULL
@@ -138,14 +198,16 @@ static void
 ALCP_teardown(void* vctx)
 {
     ENTER();
+    BIO_meth_free(alcp_prov_ctx_get0_core_bio_method(vctx));
     ALCP_prov_freectx(vctx);
+    EXIT();
 }
-
-typedef void (*fptr_t)(void);
 
 static const OSSL_DISPATCH ALC_dispatch_table[] = {
     { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (fptr_t)ALCP_query_operation },
-    { OSSL_FUNC_PROVIDER_GET_REASON_STRINGS, (fptr_t)ALCP_get_reason_strings },
+    // This is causing crash in provider test on 3.3.0
+    //{ OSSL_FUNC_PROVIDER_GET_REASON_STRINGS, (fptr_t)ALCP_get_reason_strings
+    //},
     { OSSL_FUNC_PROVIDER_GET_PARAMS, (fptr_t)ALCP_get_params },
     { OSSL_FUNC_PROVIDER_TEARDOWN, (fptr_t)ALCP_teardown },
     { 0, NULL }
@@ -164,20 +226,43 @@ static const OSSL_DISPATCH ALC_dispatch_table[] = {
 
 OPENSSL_EXPORT
 int
-OSSL_provider_init(const OSSL_CORE_HANDLE* core,
+OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
                    const OSSL_DISPATCH*    in,
                    const OSSL_DISPATCH**   out,
                    void**                  vprovctx)
 {
-    alc_prov_ctx_p ctx;
-    ENTER();
-    ctx = ALCP_prov_newctx(core, in);
+    alc_prov_ctx_t* alcpctx = NULL;
+    *vprovctx               = NULL;
 
-    if (!ctx)
+    ENTER();
+    if (!alcp_prov_bio_from_dispatch(in))
         return 0;
 
+    alcpctx = OPENSSL_zalloc(sizeof(alc_prov_ctx_t));
+
+    if (alcpctx == NULL) {
+        printf("\n alcp provider init failed");
+        return 0;
+    } else {
+#if 1
+        alcpctx->libctx = OSSL_LIB_CTX_new_from_dispatch(handle, in);
+#else
+        alcpctx->libctx = OSSL_LIB_CTX_new();
+#endif
+        if (alcpctx->libctx == NULL) {
+            ALCP_teardown((void*)alcpctx);
+            return 0;
+        }
+        alcpctx->ap_core_handle = handle;
+    }
+    alcpctx->corebiometh = alcp_bio_prov_init_bio_method();
+    if (alcpctx->corebiometh == NULL) {
+        ALCP_teardown((void*)alcpctx);
+        return 0;
+    }
+
     *out      = ALC_dispatch_table;
-    *vprovctx = ctx;
+    *vprovctx = (void*)alcpctx;
 
     return 1;
 }

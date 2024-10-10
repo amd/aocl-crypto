@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,105 +37,84 @@ using namespace alcp::base::status;
 class CmacBuilder
 {
   public:
-    static Status build(const alc_mac_info_t& macInfo,
-                        const alc_key_info_t& keyInfo,
-                        Context&              ctx);
-    static Uint64 getSize(const alc_mac_info_t& macInfo);
-    static Status isSupported(const alc_mac_info_t& macInfo);
+    static alc_error_t build(Context* ctx);
 };
 
-static Status
+static alc_error_t
+__cmac_wrapperInit(Context*        ctx,
+                   const Uint8*    key,
+                   Uint64          size,
+                   alc_mac_info_t* info)
+{
+    alc_error_t err    = ALC_ERROR_NONE;
+    auto        p_cmac = static_cast<Cmac*>(ctx->m_mac);
+    p_cmac->init(key, size); // p_cmac->init(key, size, NULL, 0);
+    return err;
+}
+
+static alc_error_t
 __cmac_wrapperUpdate(void* cmac, const Uint8* buff, Uint64 size)
 {
-
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->update(buff, size);
 }
 
-static Status
-__cmac_wrapperFinalize(void* cmac, const Uint8* buff, Uint64 size)
+static alc_error_t
+__cmac_wrapperFinalize(void* cmac, Uint8* buff, Uint64 size)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->finalize(buff, size);
-}
-
-static Status
-__cmac_wrapperCopy(void* cmac, Uint8* buff, Uint64 size)
-{
-    auto p_cmac = static_cast<Cmac*>(cmac);
-    return p_cmac->copy(buff, size);
 }
 
 static void
 __cmac_wrapperFinish(void* cmac, void* digest)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
-    p_cmac->finish();
-    p_cmac->~Cmac();
-
+    delete p_cmac;
     // Not deleting the memory because it is allocated by application
 }
 
-static Status
-__cmac_wrapperReset(void* cmac, void* digest)
+static alc_error_t
+__cmac_wrapperReset(void* cmac)
 {
     auto p_cmac = static_cast<Cmac*>(cmac);
     return p_cmac->reset();
 }
 
-static Status
-__build_cmac(const alc_cipher_info_t& cipherInfo,
-             const alc_key_info_t&    cKinfo,
-             Context&                 ctx)
+static alc_error_t
+__cmac_build_with_copy(Context* srcCtx, Context* destCtx)
 {
-    using namespace status;
-    Status status = StatusOk();
-    auto   addr   = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-    auto   p_algo = new (addr) Cmac();
+    auto cmac = new Cmac(*reinterpret_cast<Cmac*>(srcCtx->m_mac));
 
-    auto p_key = cKinfo.key;
-    auto len   = cKinfo.len;
-    p_algo->setKey(p_key, len);
+    destCtx->m_mac = static_cast<void*>(cmac);
+
+    destCtx->init      = srcCtx->init;
+    destCtx->update    = srcCtx->update;
+    destCtx->finalize  = srcCtx->finalize;
+    destCtx->finish    = srcCtx->finish;
+    destCtx->reset     = srcCtx->reset;
+    destCtx->duplicate = srcCtx->duplicate;
+    return ALC_ERROR_NONE;
+}
+
+alc_error_t
+CmacBuilder::build(Context* ctx)
+{
+    alc_error_t err{ ALC_ERROR_NONE };
+    auto        p_algo = new Cmac();
+
     if (p_algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for CMAC Object");
+        // Unable to Allocate Memory for CMAC Object
+        return ALC_ERROR_NO_MEMORY;
     }
-    ctx.m_mac = static_cast<void*>(p_algo);
-
-    ctx.update   = __cmac_wrapperUpdate;
-    ctx.finalize = __cmac_wrapperFinalize;
-    ctx.copy     = __cmac_wrapperCopy;
-    ctx.finish   = __cmac_wrapperFinish;
-    ctx.reset    = __cmac_wrapperReset;
-
-    return status;
-}
-Status
-CmacBuilder::build(const alc_mac_info_t& macInfo,
-                   const alc_key_info_t& keyInfo,
-                   Context&              ctx)
-{
-    return __build_cmac(macInfo.mi_algoinfo.cmac.cmac_cipher, keyInfo, ctx);
+    ctx->m_mac     = static_cast<void*>(p_algo);
+    ctx->init      = __cmac_wrapperInit;
+    ctx->update    = __cmac_wrapperUpdate;
+    ctx->finalize  = __cmac_wrapperFinalize;
+    ctx->finish    = __cmac_wrapperFinish;
+    ctx->reset     = __cmac_wrapperReset;
+    ctx->duplicate = __cmac_build_with_copy;
+    return err;
 }
 
-Uint64
-CmacBuilder::getSize(const alc_mac_info_t& macInfo)
-{
-    return sizeof(Cmac);
-}
-
-Status
-CmacBuilder::isSupported(const alc_mac_info_t& macInfo)
-{
-    Status status{ StatusOk() };
-    if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_type == ALC_CIPHER_TYPE_AES) {
-        if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode
-            != ALC_AES_MODE_NONE) {
-            return InvalidArgument("CMAC: Unsupported AES Cipher Mode");
-        }
-    } else {
-        return InvalidArgument(
-            "CMAC: Unsupported Cipher. Only AES is supported.");
-    }
-    return status;
-}
 } // namespace alcp::mac

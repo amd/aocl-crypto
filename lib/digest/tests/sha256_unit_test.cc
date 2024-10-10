@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,8 +41,6 @@ static const Uint8 DigestSize = 32;
 // Input Block size in bytes
 static constexpr Uint8 InputBlockSize = 64;
 // IV array size where every element is 4 bytes
-static const Uint8 IvArraySize   = 8;
-static const Uint8 IvElementSize = 4;
 
 // clang-format off
 static const KnownAnswerMap message_digest = {
@@ -72,14 +70,14 @@ class Sha256Test
 TEST_P(Sha256Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha256            sha256;
-    Uint8             hash[DigestSize];
-    std::stringstream ss;
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    Uint8                   hash[DigestSize];
+    std::stringstream       ss;
 
-    ASSERT_EQ(sha256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+    sha256->init();
+    ASSERT_EQ(sha256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
               ALC_ERROR_NONE);
-    ASSERT_EQ(sha256.finalize(nullptr, 0), ALC_ERROR_NONE);
-    ASSERT_EQ(sha256.copyHash(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha256->finalize(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
     for (Uint16 i = 0; i < DigestSize; ++i)
@@ -93,81 +91,87 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha256Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha256Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<Sha256Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST(Sha256Test, invalid_input_update_test)
 {
-    Sha256 sha256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.update(nullptr, 0));
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256->update(nullptr, 0));
 }
 
 TEST(Sha256Test, zero_size_update_test)
 {
-    Sha256      sha256;
-    const Uint8 src[DigestSize] = { 0 };
-    EXPECT_EQ(ALC_ERROR_NONE, sha256.update(src, 0));
+    std::unique_ptr<Sha256> sha256          = std::make_unique<Sha256>();
+    const Uint8             src[DigestSize] = { 0 };
+    EXPECT_EQ(ALC_ERROR_NONE, sha256->update(src, 0));
 }
 
 TEST(Sha256Test, invalid_output_copy_hash_test)
 {
-    Sha256 sha256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.copyHash(nullptr, DigestSize));
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256->finalize(nullptr, DigestSize));
 }
 
 TEST(Sha256Test, zero_size_hash_copy_test)
 {
-    Sha256 sha256;
-    Uint8  hash[DigestSize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, 0));
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    Uint8                   hash[DigestSize];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256->finalize(hash, 0));
 }
 
 TEST(Sha256Test, over_size_hash_copy_test)
 {
-    Sha256 sha256;
-    Uint8  hash[DigestSize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, DigestSize + 1));
-}
-
-TEST(Sha256Test, invalid_iv_test)
-{
-    Sha256 sha256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG,
-              sha256.setIv(nullptr, IvArraySize * IvElementSize));
-}
-
-TEST(Sha256Test, zero_size_iv_test)
-{
-    Sha256 sha256;
-    Uint32 iv[IvArraySize];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.setIv(iv, 0));
-}
-
-TEST(Sha256Test, over_size_iv_test)
-{
-    Sha256 sha256;
-    Uint32 iv[IvArraySize + 1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.setIv(iv, sizeof(iv)));
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    Uint8                   hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256->finalize(hash, DigestSize + 1));
 }
 
 TEST(Sha256Test, call_finalize_twice_test)
 {
-    Sha256 sha256;
-    // calling finalize multiple times shoud not result in error
-    EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(nullptr, 0));
-    EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(nullptr, 0));
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    Uint8                   hash[DigestSize];
+    // calling finalize multiple times should not result in error
+    EXPECT_EQ(ALC_ERROR_NONE, sha256->finalize(hash, DigestSize));
+    EXPECT_EQ(ALC_ERROR_NONE, sha256->finalize(hash, DigestSize));
 }
 
 TEST(Sha256Test, getInputBlockSizeTest)
 {
-    Sha256 sha256;
-    EXPECT_EQ(sha256.getInputBlockSize(), InputBlockSize);
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    EXPECT_EQ(sha256->getInputBlockSize(), InputBlockSize);
 }
 TEST(Sha256Test, getHashSizeTest)
 {
-    Sha256 sha256;
-    EXPECT_EQ(sha256.getHashSize(), DigestSize);
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    EXPECT_EQ(sha256->getHashSize(), DigestSize);
+}
+
+TEST(Sha256Test, object_copy_test)
+{
+    string                  plaintext("1111");
+    std::unique_ptr<Sha256> sha256 = std::make_unique<Sha256>();
+    Uint8                   hash[DigestSize], hash_dup[DigestSize];
+    std::stringstream       ss, ss_dup;
+
+    sha256->init();
+    ASSERT_EQ(sha256->update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
+
+    std::unique_ptr<Sha256> sha256_dup = std::make_unique<Sha256>(*sha256);
+
+    ASSERT_EQ(sha256->finalize(hash, DigestSize), ALC_ERROR_NONE);
+    ASSERT_EQ(sha256_dup->finalize(hash_dup, DigestSize), ALC_ERROR_NONE);
+
+    ss << std::hex << std::setfill('0');
+    ss_dup << std::hex << std::setfill('0');
+
+    for (Uint16 i = 0; i < DigestSize; ++i) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
+        ss_dup << std::setw(2) << static_cast<unsigned>(hash_dup[i]);
+    }
+    std::string hash_string = ss.str(), hash_string_dup = ss_dup.str();
+    EXPECT_TRUE(hash_string == hash_string_dup);
 }
 
 } // namespace

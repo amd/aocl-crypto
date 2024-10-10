@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,45 +26,54 @@
  *
  */
 
-#include <openssl/bn.h>
-
+#pragma once
 #include "alcp/base.hh"
 #include "alcp/mac/mac.hh"
+#include "alcp/mac/poly1305-ref.hh"
+#include "alcp/mac/poly1305_state.hh"
+#include "alcp/utils/cpuid.hh"
+
+#define POLY1305_RADIX_26 false
 
 namespace alcp::mac::poly1305 {
-class ALCP_API_EXPORT Poly1305 : public Mac
+using utils::CpuArchFeature;
+template<utils::CpuArchFeature feature = CpuArchFeature::eDynamic>
+class ALCP_API_EXPORT Poly1305 : public IMac
 {
   private:
-    Uint8   m_accumulator[18] = {};
-    Uint8   m_key[32];
-    BIGNUM *m_key_bn = nullptr, *m_a_bn = nullptr, *m_r_bn = nullptr,
-           *m_s_bn = nullptr, *m_p_bn = nullptr;
-    Uint8   m_msg_buffer[16];
-    Uint64  m_msg_buffer_len = {};
-    BN_CTX* m_bn_temp_ctx    = nullptr;
-    bool    m_finalized      = false;
-
-    Uint8 m_p[17] = { 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb };
-    void  clamp(Uint8 in[16]);
+    std::unique_ptr<reference::Poly1305Ref> poly1305_impl;
+    Poly1305State44                         state;
 
   public:
-    Status blk(const Uint8 pMsg[], Uint64 msgLen);
-    Status update(const Uint8 pMsg[], Uint64 msgLen) override;
+    /**
+     * @brief Given message, updates internal state processing the message
+     * @param pMsg  Byte addressible message
+     * @param msgLen  Length of message in bytes
+     * @return  alc_error_t/Result of the operation
+     */
+    alc_error_t update(const Uint8 pMsg[], Uint64 msgLen) override;
     /**
      * @brief Sets the Key and Initializes the state of Poly1305
      * @param key - Key to use for Poly1305
-     * @param len - Key Length 32 Byte, anything else wont work
-     * @return Status
+     * @param keyLen - Key Length 32 Byte, anything else wont work
+     * @return alc_error_t/Result of the operation
      */
-    Status setKey(const Uint8 key[], Uint64 len);
-    Status reset() override;
-    Status finalize(const Uint8 pMsg[], Uint64 msgLen) override;
-    Status copy(Uint8 digest[], Uint64 length);
-    void   finish() override;
-    // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
-    // msgLen);
-    Poly1305() = default;
-    virtual ~Poly1305();
+    alc_error_t init(const Uint8 key[], Uint64 keyLen);
+    /**
+     * @brief Resets the temporary buffers without clearing key
+     * @return alc_error_t/Result of the operation
+     */
+    alc_error_t reset() override;
+    /**
+     * @brief
+     * @param digest mac buffer
+     * @param digestLen Length of mac in bytes
+     * @return alc_error_t/Result of the operation
+     */
+    alc_error_t finalize(Uint8 digest[], Uint64 digestLen) override;
+
+    Poly1305();
+    virtual ~Poly1305() = default;
+    Poly1305(const Poly1305& src);
 };
 } // namespace alcp::mac::poly1305

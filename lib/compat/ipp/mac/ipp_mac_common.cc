@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,22 +29,27 @@
 #include "mac/ipp_mac_common.hh"
 
 IppStatus
-alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
+alcp_MacInit(alc_mac_type_t   macType,
+             ipp_wrp_mac_ctx* p_mac_ctx,
+             const Ipp8u*     pKey,
+             int              keyLen,
+             alc_mac_info_t   info)
 {
-    auto err = alcp_mac_supported(pcMacInfo);
+    p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size());
 
-    if (err == ALC_ERROR_NONE) {
-        p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size(pcMacInfo));
-        p_mac_ctx->mac_info          = *pcMacInfo;
-    } else {
-        p_mac_ctx->handle.ch_context = nullptr;
-        printErr("ALCP MAC Provider:  Information provided is unsupported\n");
-        return ippStsNotSupportedModeErr;
+    if (p_mac_ctx->handle.ch_context == NULL) {
+        return ippStsErr;
     }
 
-    err = alcp_mac_request(&p_mac_ctx->handle, pcMacInfo);
+    auto err = alcp_mac_request(&p_mac_ctx->handle, macType);
     if (err != ALC_ERROR_NONE) {
         printErr("ALCP MAC Provider:  Request failed\n");
+        return ippStsErr;
+    }
+
+    err = alcp_mac_init(&p_mac_ctx->handle, pKey, keyLen, &info);
+    if (err != ALC_ERROR_NONE) {
+        printErr("ALCP MAC Provider:  Init failed\n");
         return ippStsErr;
     }
 
@@ -55,9 +60,6 @@ IppStatus
 alcp_MacUpdate(const Ipp8u* pSrc, int len, ipp_wrp_mac_ctx* p_mac_ctx)
 {
 
-    if (p_mac_ctx->handle.ch_context == nullptr) {
-        alcp_MacInit(&p_mac_ctx->mac_info, p_mac_ctx);
-    }
     auto err = alcp_mac_update(&p_mac_ctx->handle,
                                static_cast<const Uint8*>(pSrc),
                                static_cast<Uint64>(len));
@@ -72,19 +74,14 @@ IppStatus
 alcp_MacFinalize(Ipp8u* pMD, int len, ipp_wrp_mac_ctx* p_mac_ctx)
 {
 
-    auto err = alcp_mac_finalize(&p_mac_ctx->handle, nullptr, 0);
+    auto err = alcp_mac_finalize(
+        &p_mac_ctx->handle, static_cast<Uint8*>(pMD), static_cast<Uint64>(len));
 
     if (alcp_is_error(err)) {
         printErr("ALCP Provider: Error in Finalizing");
         return ippStsErr;
     }
 
-    err = alcp_mac_copy(
-        &p_mac_ctx->handle, static_cast<Uint8*>(pMD), static_cast<Uint64>(len));
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Copying MAC");
-        return ippStsErr;
-    }
     err = alcp_mac_finish(&p_mac_ctx->handle);
     if (alcp_is_error(err)) {
         printErr("ALCP Provider: Error in Finish");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,8 +30,6 @@
 
 namespace alcp::testing {
 
-IPPCmacBase::IPPCmacBase(const alc_mac_info_t& info) {}
-
 IPPCmacBase::~IPPCmacBase()
 {
     if (m_handle != nullptr) {
@@ -41,17 +39,11 @@ IPPCmacBase::~IPPCmacBase()
 }
 
 bool
-IPPCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+IPPCmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
-    m_info    = info;
-    m_key     = &Key[0];
-    m_key_len = Key.size();
-    return init();
-}
-
-bool
-IPPCmacBase::init()
-{
+    m_info           = info;
+    m_key            = &Key[0];
+    m_key_len        = Key.size();
     IppStatus status = ippStsNoErr;
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
@@ -77,7 +69,7 @@ IPPCmacBase::init()
 }
 
 bool
-IPPCmacBase::cmacFunction(const alcp_cmac_data_t& data)
+IPPCmacBase::MacUpdate(const alcp_cmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
     status           = ippsAES_CMACUpdate(data.m_msg, data.m_msg_len, m_handle);
@@ -86,6 +78,13 @@ IPPCmacBase::cmacFunction(const alcp_cmac_data_t& data)
                   << std::endl;
         return false;
     }
+    return true;
+}
+
+bool
+IPPCmacBase::MacFinalize(const alcp_cmac_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
     status = ippsAES_CMACFinal(data.m_cmac, data.m_cmac_len, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "ippsAES_CMACFinal failed with err code" << status
@@ -96,7 +95,7 @@ IPPCmacBase::cmacFunction(const alcp_cmac_data_t& data)
 }
 
 bool
-IPPCmacBase::reset()
+IPPCmacBase::MacReset()
 {
     /* IPPCP doesnt have an explicit reset call for cmac */
     return true;

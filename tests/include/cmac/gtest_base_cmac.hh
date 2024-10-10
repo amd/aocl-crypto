@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -57,8 +57,7 @@ using namespace alcp::testing;
 /* print params verbosely */
 inline void
 PrintCmacTestData(std::vector<Uint8> key,
-                  alcp_cmac_data_t   data,
-                  std::string        mode)
+                  alcp_cmac_data_t   data)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
@@ -75,16 +74,13 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
     alcp_cmac_data_t data     = {};
     const int        CmacSize = 16;
 
-    info.mi_type                                         = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
-
-    AlcpCmacBase acb(info);
+    AlcpCmacBase acb;
     CmacBase*    cb;
     cb = &acb;
 
     std::string TestDataFile = std::string("dataset_CMAC_" + CmacType + "_"
                                            + std::to_string(KeySize) + ".csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -92,12 +88,12 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
     }
 
 #ifdef USE_OSSL
-    OpenSSLCmacBase ocb(info);
+    OpenSSLCmacBase ocb;
     if (useossl == true)
         cb = &ocb;
 #endif
 #ifdef USE_IPP
-    IPPCmacBase icb(info);
+    IPPCmacBase icb;
     if (useipp == true)
         cb = &icb;
 #endif
@@ -109,25 +105,30 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
         auto msg = csv.getVect("MESSAGE");
         auto key = csv.getVect("KEY");
 
-        data.m_msg  = &(msg[0]);
-        data.m_key  = &(key[0]);
-        data.m_cmac = &(cmac[0]);
+        data.m_key  = getPtr(key);
+        data.m_cmac = getPtr(cmac);
+        data.m_msg  = getPtr(msg);
 
         data.m_msg_len  = msg.size();
         data.m_cmac_len = cmac.size();
         data.m_key_len  = key.size();
 
-        if (!cb->init(info, key)) {
+        if (!cb->Init(info, key)) {
             std::cout << "Error in cmac init function" << std::endl;
             FAIL();
         }
 
-        if (!cb->cmacFunction(data)) {
-            std::cout << "Error in cmac function" << std::endl;
+        if (!cb->MacUpdate(data)) {
+            std::cout << "Error in cmac mac_update" << std::endl;
             FAIL();
         }
 
-        if (!cb->reset()) {
+        if (!cb->MacFinalize(data)) {
+            std::cout << "Error in cmac mac_finalize" << std::endl;
+            FAIL();
+        }
+
+        if (!cb->MacReset()) {
             std::cout << "Error in cmac reset function" << std::endl;
             FAIL();
         }
@@ -138,14 +139,13 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             std::begin(cmac), std::begin(cmac) + csv.getVect("CMAC").size());
 
         EXPECT_TRUE(ArraysMatch(
-            cmac_vector,         // Actual output
-            csv.getVect("CMAC"), // expected output, from the csv test data
+            std::move(cmac_vector), // Actual output
+            csv.getVect("CMAC"),    // expected output, from the csv test data
             csv,
             std::string("CMAC_" + CmacType + "_" + std::to_string(KeySize)
                         + "_KAT")));
     }
 }
-
 
 /* Cmac Cross tests */
 void
@@ -157,23 +157,19 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
     std::vector<Uint8> CmacAlcp(CmacSize / 8, 0);
     std::vector<Uint8> CmacExt(CmacSize / 8, 0);
 
-    /* Initialize info params based on test type */
-    info.mi_type                                         = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
-
-    AlcpCmacBase acb(info);
+    AlcpCmacBase acb;
     RngBase      rb;
     CmacBase*    cb;
     CmacBase*    extCb = nullptr;
     cb                 = &acb;
 
 #ifdef USE_OSSL
-    OpenSSLCmacBase ocb(info);
+    OpenSSLCmacBase ocb;
     if ((useossl == true) || (extCb == nullptr))
         extCb = &ocb;
 #endif
 #ifdef USE_IPP
-    IPPCmacBase icb(info);
+    IPPCmacBase icb;
     if (useipp == true)
         extCb = &icb;
 #endif
@@ -204,7 +200,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /* generate msg data from msg_full */
         msg_full = ShuffleVector(msg_full, rng);
-        pos1     = msg_full.end() - i;
+        pos1     = msg_full.end() - i - 1;
         pos2     = msg_full.end();
         std::vector<Uint8> msg(pos1, pos2);
 
@@ -214,45 +210,74 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         pos2     = key_full.begin() + (KeySize / 8);
         std::vector<Uint8> key(pos1, pos2);
 
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(msg[0]))) {
+            data_alc.m_msg = &(msg[1]);
+            data_ext.m_msg = &(msg[1]);
+        } else {
+            data_alc.m_msg = &(msg[0]);
+            data_ext.m_msg = &(msg[0]);
+        }
+        if (is_aligned(&(key[0]))) {
+            data_alc.m_key = &(key[1]);
+            data_ext.m_key = &(key[1]);
+        } else {
+            data_alc.m_key = &(key[0]);
+            data_ext.m_key = &(key[0]);
+        }
+        data_alc.m_msg_len = data_ext.m_msg_len = msg.size() - 1;
+        data_alc.m_key_len = data_ext.m_key_len = key.size();
+
         /* load test data */
-        data_alc.m_msg      = &(msg[0]);
-        data_alc.m_msg_len  = msg.size();
         data_alc.m_cmac     = &(CmacAlcp[0]);
         data_alc.m_cmac_len = CmacAlcp.size();
         data_alc.m_key      = &(key[0]);
-        data_alc.m_key_len  = key.size();
 
         /* load ext test data */
-        data_ext.m_msg      = &(msg[0]);
-        data_ext.m_msg_len  = msg.size();
         data_ext.m_cmac     = &(CmacExt[0]);
         data_ext.m_cmac_len = CmacExt.size();
         data_ext.m_key      = &(key[0]);
-        data_ext.m_key_len  = key.size();
 
         /* run test with main lib */
         if (verbose > 1)
-            PrintCmacTestData(key, data_alc, CmacType);
-        if (!cb->init(info, key)) {
+            PrintCmacTestData(key, data_alc);
+        if (!cb->Init(info, key)) {
             std::cout << "Error in cmac init function" << std::endl;
             FAIL();
         }
-        if (!cb->cmacFunction(data_alc)) {
-            std::cout << "Error in cmac function" << std::endl;
+        if (!cb->MacUpdate(data_alc)) {
+            std::cout << "Error in cmac mac_update" << std::endl;
+            FAIL();
+        }
+        if (!cb->MacFinalize(data_alc)) {
+            std::cout << "Error in cmac mac_finalize" << std::endl;
+            FAIL();
+        }
+        if (!cb->MacReset()) {
+            std::cout << "Error in cmac reset function" << std::endl;
             FAIL();
         }
 
         /* run test with ext lib */
         if (verbose > 1)
-            PrintCmacTestData(key, data_ext, CmacType);
-        if (!extCb->init(info, key)) {
+            PrintCmacTestData(key, data_ext);
+        if (!extCb->Init(info, key)) {
             printf("Error in cmac ext init function\n");
             FAIL();
         }
-        if (!extCb->cmacFunction(data_ext)) {
-            std::cout << "Error in cmac function" << std::endl;
+        if (!extCb->MacUpdate(data_ext)) {
+            std::cout << "Error in cmac mac_update" << std::endl;
+            FAIL();
+        }
+        if (!extCb->MacFinalize(data_ext)) {
+            std::cout << "Error in cmac mac_finalize" << std::endl;
+            FAIL();
+        }
+        if (!extCb->MacReset()) {
+            std::cout << "Error in cmac mac_reset" << std::endl;
             FAIL();
         }
         EXPECT_TRUE(ArraysMatch(CmacAlcp, CmacExt, i));
     }
+    UNREF(CmacType);
 }

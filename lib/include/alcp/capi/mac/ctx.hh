@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,15 +32,29 @@ namespace alcp::mac {
 
 struct Context
 {
-    void* m_mac;
-    void* m_digest;
-    Status (*update)(void* mac, const Uint8* buff, Uint64 size);
-    Status (*finalize)(void* mac, const Uint8* buff, Uint64 size);
-    Status (*copy)(void* mac, Uint8* buff, Uint64 size);
+    void* m_mac    = nullptr;
+    void* m_digest = nullptr;
+    alc_error_t (*init)(Context*        ctx,
+                        const Uint8*    key,
+                        Uint64          size,
+                        alc_mac_info_t* info);
+    alc_error_t (*update)(void* mac, const Uint8* buff, Uint64 size);
+    alc_error_t (*finalize)(void* mac, Uint8* buff, Uint64 size);
+    alc_error_t (*duplicate)(Context* srcCtx, Context* destCtx);
     void (*finish)(void* mac, void* digest);
-    Status (*reset)(void* mac, void* digest);
+    alc_error_t (*reset)(void* mac);
 
-    alcp::base::Status status{ StatusOk() };
+    ~Context()
+    {
+        m_mac     = nullptr;
+        m_digest  = nullptr;
+        init      = nullptr;
+        update    = nullptr;
+        finalize  = nullptr;
+        duplicate = nullptr;
+        finish    = nullptr;
+        reset     = nullptr;
+    }
 };
 
 } // namespace alcp::mac

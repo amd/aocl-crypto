@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,15 +31,16 @@
 #include <immintrin.h>
 
 /*
- * AMS1024 is bases on Fast modular squaring with AVX512IFMA
- * reference as mentioned on below link
+ * AMS1024 is based on Fast modular squaring with AVX512IFMA
+ * referenced as mentioned on below link
  * https://eprint.iacr.org/2018/335
+ * Authors - Nir Drucker & Shay Gueron
  *
  * AMM1024  and RSA2048MontgomeryExpConstantTimeParallel is based on Fast
  * modular multplication and exponentiation with AVX512IFMA referenced as
  * mentioned on below link
  * https://link.springer.com/chapter/10.1007/978-3-642-31662-3_9
- *
+ * Authors - Shay Gueron & Vlad Krasnov
  */
 
 namespace alcp::rsa { namespace zen4 {
@@ -67,6 +68,7 @@ namespace alcp::rsa { namespace zen4 {
                | static_cast<Uint64>(val[1]) << 8 | val[0];
 #else
         Uint64 val64 = 0;
+        // FIXME: Check if utils::SecureCopy is needed here
         memcpy(&val64, val, 8);
         return val64;
 #endif
@@ -1597,17 +1599,12 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_2048>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new Uint64[size]{};
-        Uint64* r2               = new Uint64[size]{};
-        Uint64* r3               = new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new Uint64[40]{};
-        Uint64* mod_radix_52_bit = new Uint64[40]{};
+        Uint64* r1               = context.m_r1;
+        Uint64* r2               = context.m_r2;
+        Uint64* r3               = context.m_r3;
+        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
+        Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
-        context.m_r1.reset(r1);
-        context.m_r2.reset(r2);
-        context.m_r3.reset(r3);
-        context.m_r2_radix_52_bit.reset(r2_radix_52_bit);
-        context.m_mod_radix_52_bit.reset(mod_radix_52_bit);
         context.m_size = size;
         context.m_k0   = computeMontFactor(mod[0]);
 
@@ -1673,17 +1670,12 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new Uint64[size]{};
-        Uint64* r2               = new Uint64[size]{};
-        Uint64* r3               = new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new Uint64[20]{};
-        Uint64* mod_radix_52_bit = new Uint64[20]{};
+        Uint64* r1               = context.m_r1;
+        Uint64* r2               = context.m_r2;
+        Uint64* r3               = context.m_r3;
+        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
+        Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
-        context.m_r1.reset(r1);
-        context.m_r2.reset(r2);
-        context.m_r3.reset(r3);
-        context.m_r2_radix_52_bit.reset(r2_radix_52_bit);
-        context.m_mod_radix_52_bit.reset(mod_radix_52_bit);
         context.m_size = size;
         context.m_k0   = computeMontFactor(mod[0]);
 
@@ -1725,7 +1717,7 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_2048>::MontgomeryExp(
         Uint64*       res,
         const Uint64* input,
-        Uint64*       exp,
+        const Uint64* exp,
         Uint64        expSize,
         Uint64*       mod_radix_52_bit,
         Uint64*       r2_radix_52_bit,
@@ -1784,7 +1776,7 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::MontgomeryExp(
         Uint64*       res,
         const Uint64* input,
-        Uint64*       exp,
+        const Uint64* exp,
         Uint64        expSize,
         Uint64*       mod_radix_52_bit,
         Uint64*       r2_radix_52_bit,
@@ -1845,10 +1837,10 @@ namespace alcp::rsa { namespace zen4 {
                                           RsaPublicKeyBignum& pubKey,
                                           MontContextBignum&  context)
     {
-        auto mod = context.m_mod_radix_52_bit.get(); //.m_mod.get();
-        auto r2  = context.m_r2_radix_52_bit.get();  // context.m_r2.get();
+        auto mod = context.m_mod_radix_52_bit;
+        auto r2  = context.m_r2_radix_52_bit;
         auto k0  = context.m_k0;
-        auto exp = &pubKey.m_public_exponent;
+        auto exp = pubKey.m_public_exponent;
 
         alignas(64) Uint64 res_buffer_bignum[1024 / 64 * 3]{};
         mont::MontCompute<KEY_SIZE_1024>::MontgomeryExp(
@@ -1866,10 +1858,10 @@ namespace alcp::rsa { namespace zen4 {
                                           RsaPublicKeyBignum& pubKey,
                                           MontContextBignum&  context)
     {
-        auto mod = context.m_mod_radix_52_bit.get(); //.m_mod.get();
-        auto r2  = context.m_r2_radix_52_bit.get();  // context.m_r2.get();
+        auto mod = context.m_mod_radix_52_bit;
+        auto r2  = context.m_r2_radix_52_bit;
         auto k0  = context.m_k0;
-        auto exp = &pubKey.m_public_exponent;
+        auto exp = pubKey.m_public_exponent;
 
         alignas(64) Uint64 res_buffer_bignum[2048 / 64 * 3]{};
         mont::MontCompute<KEY_SIZE_2048>::MontgomeryExp(
@@ -2112,17 +2104,17 @@ namespace alcp::rsa { namespace zen4 {
         Uint64 buff_0_p[16 + 1];
         Uint64 buff_1_p[16 + 1];
 
-        auto p_mod_radix_52_bit = contextP.m_mod_radix_52_bit.get();
-        auto p_mod              = privKey.m_p.get();
-        auto q_mod              = privKey.m_q.get();
-        auto p_exp              = privKey.m_dp.get();
-        auto q_mod_radix_52_bit = contextQ.m_mod_radix_52_bit.get();
-        auto q_exp              = privKey.m_dq.get();
-        auto r2_p               = contextP.m_r2.get();
-        auto r2_q               = contextQ.m_r2.get();
-        auto r2_radix_52_bit_p  = contextP.m_r2_radix_52_bit.get();
-        auto r2_radix_52_bit_q  = contextQ.m_r2_radix_52_bit.get();
-        auto qinv               = privKey.m_qinv.get();
+        auto p_mod_radix_52_bit = contextP.m_mod_radix_52_bit;
+        auto p_mod              = privKey.m_p;
+        auto q_mod              = privKey.m_q;
+        auto p_exp              = privKey.m_dp;
+        auto q_mod_radix_52_bit = contextQ.m_mod_radix_52_bit;
+        auto q_exp              = privKey.m_dq;
+        auto r2_p               = contextP.m_r2;
+        auto r2_q               = contextQ.m_r2;
+        auto r2_radix_52_bit_p  = contextP.m_r2_radix_52_bit;
+        auto r2_radix_52_bit_q  = contextQ.m_r2_radix_52_bit;
+        auto qinv               = privKey.m_qinv;
         auto p_k0               = contextP.m_k0;
         auto q_k0               = contextQ.m_k0;
 

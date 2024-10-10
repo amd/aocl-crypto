@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -63,22 +63,19 @@ void inline Hmac_Bench(benchmark::State& state,
     std::vector<Uint8> Key(KeySize, 0);
 
     /* Initialize info params based on hmac type */
-    info.mi_type = ALC_MAC_HMAC;
-    info.mi_algoinfo.hmac.hmac_digest.dt_len =
-        static_cast<enum _alc_digest_len>(HmacSize);
 
-    AlcpHmacBase     ahb(info);
+    AlcpHmacBase     ahb;
     HmacBase*        hb = &ahb;
     alcp_hmac_data_t data;
 #ifdef USE_IPP
-    IPPHmacBase ihb(info);
+    IPPHmacBase ihb;
     if (useipp) {
         hb = &ihb;
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLHmacBase ohb(info);
+    OpenSSLHmacBase ohb;
     if (useossl) {
         hb = &ohb;
     }
@@ -91,16 +88,18 @@ void inline Hmac_Bench(benchmark::State& state,
     data.in.m_key       = &(Key[0]);
     data.in.m_key_len   = Key.size();
 
-    if (!hb->init(info, Key)) {
+    if (!hb->Init(info, Key)) {
         state.SkipWithError("Error in hmac init function");
     }
     for (auto _ : state) {
-        if (!hb->Hmac_function(data)) {
-            state.SkipWithError("Error in hmac benchmark function");
+        if (!hb->MacUpdate(data)) {
+            state.SkipWithError("Error in hmac mac_update");
         }
-        if (!hb->reset()) {
-            std::cout << "Error in hmac Reset function" << std::endl;
-            return;
+        if (!hb->MacFinalize(data)) {
+            state.SkipWithError("Error in hmac mac_finalize");
+        }
+        if (!hb->MacReset()) {
+            state.SkipWithError("Error in hmac mac_reset");
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
@@ -114,33 +113,25 @@ void inline Hmac_Bench(benchmark::State& state,
 static void
 BENCH_HMAC_SHA2_224(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_224;
+    alc_mac_info_t info{ { ALC_SHA2_224 } };
     Hmac_Bench(state, info, state.range(0), 224);
 }
 static void
 BENCH_HMAC_SHA2_256(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_256;
+    alc_mac_info_t info{ { ALC_SHA2_256 } };
     Hmac_Bench(state, info, state.range(0), 256);
 }
 static void
 BENCH_HMAC_SHA2_384(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_384;
+    alc_mac_info_t info{ { ALC_SHA2_384 } };
     Hmac_Bench(state, info, state.range(0), 384);
 }
 static void
 BENCH_HMAC_SHA2_512(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_512;
+    alc_mac_info_t info{ { ALC_SHA2_512 } };
     Hmac_Bench(state, info, state.range(0), 512);
 }
 
@@ -148,33 +139,25 @@ BENCH_HMAC_SHA2_512(benchmark::State& state)
 static void
 BENCH_HMAC_SHA3_224(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_224;
+    alc_mac_info_t info{ { ALC_SHA3_224 } };
     Hmac_Bench(state, info, state.range(0), 224);
 }
 static void
 BENCH_HMAC_SHA3_256(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_256;
+    alc_mac_info_t info{ { ALC_SHA3_256 } };
     Hmac_Bench(state, info, state.range(0), 256);
 }
 static void
 BENCH_HMAC_SHA3_384(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_384;
+    alc_mac_info_t info{ { ALC_SHA3_384 } };
     Hmac_Bench(state, info, state.range(0), 384);
 }
 static void
 BENCH_HMAC_SHA3_512(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_512;
+    alc_mac_info_t info{ { ALC_SHA3_512 } };
     Hmac_Bench(state, info, state.range(0), 512);
 }
 

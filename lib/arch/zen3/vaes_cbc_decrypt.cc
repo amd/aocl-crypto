@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/types.hh"
+#include "avx256.hh"
 
 #include <immintrin.h>
 
@@ -50,11 +51,12 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
            int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+           Uint8*       pIv          // ptr to Initialization Vector
 )
 {
-    Uint64      blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
+    Uint64      blocks = len / Rijndael::cBlockSize;
+    Uint64      res    = len % Rijndael::cBlockSize;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);
     auto p_out_128 = reinterpret_cast<__m128i*>(pPlainText);
@@ -185,42 +187,58 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         p_out_128++;
     }
 
+    if (res) {
+        a1 = _mm256_setzero_si256();
+        std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+        AesDec_1x128(&a1, pkey128, nRounds);
+
+        a1 = _mm256_xor_si256(a1, b1);
+
+        std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_128);
+    }
+
+#ifdef AES_MULTI_UPDATE
+    // IV is no longer needed hence we can write the old ciphertext back to IV
+    alcp_storeu_128(reinterpret_cast<__m256i*>(pIv), b1);
+#endif
+
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes
               const Uint8* pKey,    // ptr to Key
               int          nRounds, // No. of rounds
-              const Uint8* pIv      // ptr to Initialization Vector
+              Uint8*       pIv      // ptr to Initialization Vector
 )
 {
     return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes
               const Uint8* pKey,    // ptr to Key
               int          nRounds, // No. of rounds
-              const Uint8* pIv      // ptr to Initialization Vector
+              Uint8*       pIv      // ptr to Initialization Vector
 )
 {
     return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes
               const Uint8* pKey,    // ptr to Key
               int          nRounds, // No. of rounds
-              const Uint8* pIv      // ptr to Initialization Vector
+              Uint8*       pIv      // ptr to Initialization Vector
 )
 {
     return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(

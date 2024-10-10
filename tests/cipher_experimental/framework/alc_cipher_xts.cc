@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,46 +36,27 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
     alc_test_xts_init_data_p data_xts =
         reinterpret_cast<alc_test_xts_init_data_p>(data);
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
-    alc_cipher_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = (data_xts->m_key_len)*8,
-            .key     = data_xts->m_key,
-        },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_XTS,
-           .ai_iv   = data_xts->m_iv,
-        },
-    };
-
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-
-    m_handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    m_handle.ch_context = malloc(alcp_cipher_context_size());
     if (!m_handle.ch_context)
         return false;
 
-    err = alcp_cipher_request(&cinfo, &m_handle);
+    err = alcp_cipher_segment_request(
+        ALC_AES_MODE_XTS, data_xts->m_key_len * 8, &m_handle);
     if (alcp_is_error(err)) {
+        free(m_handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    // xts init
-    err = alcp_cipher_set_iv(&m_handle, data_xts->m_iv_len, data_xts->m_iv);
+    // encrypt init:
+    err = alcp_cipher_segment_init(&m_handle,
+                                   data_xts->m_key,
+                                   data_xts->m_key_len * 8,
+                                   data_xts->m_iv,
+                                   data_xts->m_iv_len);
     if (alcp_is_error(err)) {
-        printf("Error: unable to set iv\n");
-        alcp_error_str(err, err_buf, err_size);
+        printf("Error: unable to init\n");
         return false;
     }
     return true;
@@ -88,28 +69,26 @@ AlcpXtsCipher<encryptor>::update(alc_test_update_data_p data)
     alc_test_xts_update_data_p p_xts_update_data =
         reinterpret_cast<alc_test_xts_update_data_p>(data);
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
     if constexpr (encryptor == true) {
-        err = alcp_cipher_blocks_encrypt(&m_handle,
-                                         p_xts_update_data->m_input,
-                                         p_xts_update_data->m_output,
-                                         p_xts_update_data->m_input_len,
-                                         p_xts_update_data->m_aes_block_id);
+        err =
+            alcp_cipher_segment_encrypt_xts(&m_handle,
+                                            p_xts_update_data->m_input,
+                                            p_xts_update_data->m_output,
+                                            p_xts_update_data->m_input_len,
+                                            p_xts_update_data->m_aes_block_id);
         if (alcp_is_error(err)) {
             printf("Error: unable encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     } else {
-        err = alcp_cipher_blocks_decrypt(&m_handle,
-                                         p_xts_update_data->m_input,
-                                         p_xts_update_data->m_output,
-                                         p_xts_update_data->m_input_len,
-                                         p_xts_update_data->m_aes_block_id);
+        err =
+            alcp_cipher_segment_decrypt_xts(&m_handle,
+                                            p_xts_update_data->m_input,
+                                            p_xts_update_data->m_output,
+                                            p_xts_update_data->m_input_len,
+                                            p_xts_update_data->m_aes_block_id);
         if (alcp_is_error(err)) {
             printf("Error: unable decrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return false;
         }
     }
@@ -119,17 +98,13 @@ template<bool encryptor>
 bool
 AlcpXtsCipher<encryptor>::finalize(alc_test_finalize_data_p data)
 {
-    alc_test_xts_finalize_data_p p_xts_finalize_data =
-        reinterpret_cast<alc_test_xts_finalize_data_p>(data);
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-    alcp_cipher_finish(&m_handle);
+    alcp_cipher_segment_finish(&m_handle);
     if (m_handle.ch_context != nullptr) {
         free(m_handle.ch_context);
         m_handle.ch_context = nullptr;
     }
     return true;
+    UNREF(data);
 };
 
 template class AlcpXtsCipher<true>;

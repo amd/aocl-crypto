@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,9 +33,11 @@
 #pragma once
 typedef struct _ipp_wrp_aes_ctx
 {
-    alc_cipher_handle_t    handle;
-    alc_cipher_info_t      cinfo;
-    alc_cipher_aead_info_t c_aeadinfo;
+    alc_cipher_handle_t handle = {};
+    alc_cipher_mode_t   mode   = {};
+    const Uint8*        iv     = {};
+    const Uint8*        key    = {};
+    Uint64              keyLen = {};
 
 } ipp_wrp_aes_ctx;
 typedef struct _ipp_wrp_aes_aead_ctx
@@ -55,7 +57,8 @@ typedef struct _ipp_wrp_aes_xts_ctx
 typedef struct _ipp_wrp_sha2_ctx
 {
     alc_digest_handle_t handle;
-    alc_digest_info_t   dinfo;
+    alc_digest_len_t    dlen;
+    alc_digest_mode_t   dmode;
 } ipp_wrp_sha2_ctx;
 
 typedef struct _ipp_sha2_rmf_algo_ctx
@@ -69,6 +72,7 @@ typedef struct _ipp_sha2_rmf_algo_ctx
 
 typedef struct _ipp_wrp_mac_ctx
 {
-    alc_mac_handle handle   = {};
-    alc_mac_info_t mac_info = {};
+    alc_mac_handle handle  = {};
+    alc_mac_type_t macType = {};
+    alc_mac_info_t macInfo;
 } ipp_wrp_mac_ctx;

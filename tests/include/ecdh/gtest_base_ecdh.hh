@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -101,7 +101,7 @@ ecdh_KAT(alc_ec_info_t info)
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
-        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+        if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
             std::cout
                 << "IPP Ecdh multi-buffer implementations arent supported "
                    "on non-avx512 supported arch,"
@@ -115,7 +115,7 @@ ecdh_KAT(alc_ec_info_t info)
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -178,8 +178,10 @@ ecdh_KAT(alc_ec_info_t info)
             FAIL();
         }
         /* now check both Peers' secret keys match or not */
-        EXPECT_TRUE(ArraysMatch(
-            Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
+        EXPECT_TRUE(ArraysMatch(std::move(Peer1_SecretKey),
+                                std::move(Peer2_SecretKey),
+                                csv,
+                                std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
         EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen)
@@ -202,28 +204,29 @@ ecdh_KAT_p256(alc_ec_info_t info)
     AlcpEcdhBase aeb_peer1(info);
     AlcpEcdhBase aeb_peer2(info);
 
-    EcdhBase *eb_peer1, *eb_peer2;
+    EcdhBase* eb_peer1;
+    // *eb_peer2; /*FIXME: use this when p256 tests are up eb_peer2;*/
 
     eb_peer1 = &aeb_peer1;
-    eb_peer2 = &aeb_peer2;
+    // eb_peer2 = &aeb_peer2;
 
     int KeySize = ECDH_KEYSIZE;
 
 #ifdef USE_OSSL
     OpenSSLEcdhBase oeb_peer1(info);
-    OpenSSLEcdhBase oeb_peer2(info);
+    // OpenSSLEcdhBase oeb_peer2(info);
     if (useossl == true) {
         eb_peer1 = &oeb_peer1;
-        eb_peer2 = &oeb_peer2;
+        // eb_peer2 = &oeb_peer2;
     }
 #endif
 
 #ifdef USE_IPP
     IPPEcdhBase ieb_peer1(info);
-    IPPEcdhBase ieb_peer2(info);
+    // IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
-        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+        if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
             std::cout
                 << "IPP Ecdh multi-buffer implementations arent supported "
                    "on non-avx512 supported arch,"
@@ -232,12 +235,12 @@ ecdh_KAT_p256(alc_ec_info_t info)
             GTEST_SKIP();
         }
         eb_peer1 = &ieb_peer1;
-        eb_peer2 = &ieb_peer2;
+        // eb_peer2 = &ieb_peer2;
     }
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH_p256.csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -287,7 +290,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
         }
 
         /* now check both Peers' secret keys match or not */
-        EXPECT_TRUE(ArraysMatch(Peer1_SecretKey,
+        EXPECT_TRUE(ArraysMatch(std::move(Peer1_SecretKey),
                                 csv.getVect("SECRET_KEY"),
                                 csv,
                                 std::string("ECDH_P256")));
@@ -339,7 +342,7 @@ ecdh_Cross(alc_ec_info_t info)
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
-        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+        if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
             std::cout
                 << "IPP Ecdh multi-buffer implementations arent supported "
                    "on non-avx512 supported arch,"
@@ -359,7 +362,7 @@ ecdh_Cross(alc_ec_info_t info)
 
     /* Select by default openssl for cross testing if nothing provided*/
     if ((useossl == true)
-        || (ExtEb_peer1 == nullptr || ExtEb_peer1 == nullptr)) {
+        || (ExtEb_peer1 == nullptr || ExtEb_peer2 == nullptr)) {
         ExtEb_peer1 = &oeb_peer1;
         ExtEb_peer2 = &oeb_peer2;
         LibStrExt   = "OpenSSL";
@@ -386,8 +389,8 @@ ecdh_Cross(alc_ec_info_t info)
     }
 
     /* generate random bytes, use it in the loop */
-    std::vector<Uint8> peer1_pvtkey_full = rb.genRandomBytes(KeySize);
-    std::vector<Uint8> peer2_pvtkey_full = rb.genRandomBytes(KeySize);
+    std::vector<Uint8> peer1_pvtkey_full = rb.genRandomBytes(KeySize + 1);
+    std::vector<Uint8> peer2_pvtkey_full = rb.genRandomBytes(KeySize + 1);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
@@ -397,39 +400,48 @@ ecdh_Cross(alc_ec_info_t info)
         peer1_pvtkey_full = ShuffleVector(peer1_pvtkey_full, rng);
         pos1              = peer1_pvtkey_full.begin();
         pos2              = peer1_pvtkey_full.begin() + KeySize;
-        std::vector<Uint8> Peer1PvtKey(pos1, pos2);
+        std::vector<Uint8> Peer1PvtKey(pos1, pos2 + 1);
 
         peer2_pvtkey_full = ShuffleVector(peer2_pvtkey_full, rng);
         pos1              = peer2_pvtkey_full.begin();
         pos2              = peer2_pvtkey_full.begin() + KeySize;
-        std::vector<Uint8> Peer2PvtKey(pos1, pos2);
+        std::vector<Uint8> Peer2PvtKey(pos1, pos2 + 1);
+
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(Peer1PvtKey[0]))) {
+            data_alc_peer1.m_Peer_PvtKey = &(Peer1PvtKey[1]);
+            data_alc_peer2.m_Peer_PvtKey = &(Peer2PvtKey[1]);
+            data_ext_peer1.m_Peer_PvtKey = &(Peer1PvtKey[1]);
+            data_ext_peer2.m_Peer_PvtKey = &(Peer2PvtKey[1]);
+        } else {
+            data_alc_peer1.m_Peer_PvtKey = &(Peer1PvtKey[0]);
+            data_alc_peer2.m_Peer_PvtKey = &(Peer2PvtKey[0]);
+            data_ext_peer1.m_Peer_PvtKey = &(Peer1PvtKey[0]);
+            data_ext_peer2.m_Peer_PvtKey = &(Peer2PvtKey[0]);
+        }
 
         /* now load this pvtkey pair into both alc, ext data */
-        data_alc_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
-        data_alc_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
-        data_alc_peer1.m_Peer_PvtKeyLen    = KeySize;
-        data_alc_peer2.m_Peer_PvtKeyLen    = KeySize;
-        data_alc_peer1.m_Peer_PubKey       = &(AlcpPeer1PubKey[0]);
-        data_alc_peer2.m_Peer_PubKey       = &(AlcpPeer2PubKey[0]);
-        data_alc_peer1.m_Peer_PubKeyLen    = KeySize;
-        data_alc_peer2.m_Peer_PubKeyLen    = KeySize;
-        data_alc_peer1.m_Peer_SecretKey    = &(AlcpPeer1SharedSecretKey[0]);
-        data_alc_peer2.m_Peer_SecretKey    = &(AlcpPeer2SharedSecretKey[0]);
-        data_alc_peer1.m_Peer_SecretKeyLen = KeySize;
-        data_alc_peer2.m_Peer_SecretKeyLen = KeySize;
+        data_alc_peer1.m_Peer_PvtKeyLen = data_alc_peer2.m_Peer_PvtKeyLen =
+            KeySize;
+        data_alc_peer1.m_Peer_PubKey    = &(AlcpPeer1PubKey[0]);
+        data_alc_peer2.m_Peer_PubKey    = &(AlcpPeer2PubKey[0]);
+        data_alc_peer1.m_Peer_PubKeyLen = data_alc_peer2.m_Peer_PubKeyLen =
+            KeySize;
+        data_alc_peer1.m_Peer_SecretKey = &(AlcpPeer1SharedSecretKey[0]);
+        data_alc_peer2.m_Peer_SecretKey = &(AlcpPeer2SharedSecretKey[0]);
+        data_alc_peer1.m_Peer_SecretKeyLen =
+            data_alc_peer2.m_Peer_SecretKeyLen = KeySize;
 
-        data_ext_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
-        data_ext_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
-        data_ext_peer1.m_Peer_PvtKeyLen    = KeySize;
-        data_ext_peer2.m_Peer_PvtKeyLen    = KeySize;
-        data_ext_peer1.m_Peer_PubKey       = &(ExtPeer1PubKey[0]);
-        data_ext_peer2.m_Peer_PubKey       = &(ExtPeer2PubKey[0]);
-        data_ext_peer1.m_Peer_PubKeyLen    = KeySize;
-        data_ext_peer2.m_Peer_PubKeyLen    = KeySize;
-        data_ext_peer1.m_Peer_SecretKey    = &(ExtPeer1SharedSecretKey[0]);
-        data_ext_peer2.m_Peer_SecretKey    = &(ExtPeer2SharedSecretKey[0]);
-        data_ext_peer1.m_Peer_SecretKeyLen = KeySize;
-        data_ext_peer2.m_Peer_SecretKeyLen = KeySize;
+        data_ext_peer1.m_Peer_PvtKeyLen = data_ext_peer2.m_Peer_PvtKeyLen =
+            KeySize;
+        data_ext_peer1.m_Peer_PubKey    = &(ExtPeer1PubKey[0]);
+        data_ext_peer2.m_Peer_PubKey    = &(ExtPeer2PubKey[0]);
+        data_ext_peer1.m_Peer_PubKeyLen = data_ext_peer2.m_Peer_PubKeyLen =
+            KeySize;
+        data_ext_peer1.m_Peer_SecretKey = &(ExtPeer1SharedSecretKey[0]);
+        data_ext_peer2.m_Peer_SecretKey = &(ExtPeer2SharedSecretKey[0]);
+        data_ext_peer1.m_Peer_SecretKeyLen =
+            data_ext_peer2.m_Peer_SecretKeyLen = KeySize;
 
         /* for main lib */
         if (!Eb_peer1->init(info)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,92 +34,88 @@
 
 #pragma once
 namespace alcp::testing {
+typedef struct _alc_cipher_info
+{
+    // request params
+    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_CTR etc */
+    Uint64            ci_keyLen; /*! Key length in bits */
+
+    // init params
+    const Uint8* ci_key;   /*! key data */
+    const Uint8* ci_iv;    /*! Initialization Vector */
+    Uint64       ci_ivLen; /*! Initialization Vector length */
+
+} alc_cipher_info_t;
 class AlcpCipherBase : public CipherBase
 {
   private:
     alc_cipher_handle_p m_handle = nullptr;
-    alc_cipher_info_t   m_cinfo;
-    alc_key_info_t      m_keyinfo;
-    alc_cipher_mode_t   m_mode;
-    _alc_cipher_type    m_cipher_type;
-    const Uint8*        m_iv;
-    Uint8               m_key[64];
+    alc_cipher_mode_t   m_mode{};
+    const Uint8*        m_iv{};
+    Uint8               m_key[64]{};
     const Uint8*        m_tkey = nullptr;
 
   public:
     AlcpCipherBase() {}
 
-    /* for chacha20 */
-    AlcpCipherBase(const _alc_cipher_type cipher_type,
-                   const Uint8*           iv,
-                   const Uint8*           key,
-                   const Uint32           key_len,
-                   const Uint32           iv_len);
+    /**
+     * @brief Construct a new Cipher Base object
+     *
+     * @param cipher_type  Type of Cipher AES, CHACHA etc..
+     * @param mode         Mode of Cipher XTS, CTR, GCM etc..
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     */
+    AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
-     * @brief Construct a new Alcp Cipher Base object
+     * @brief Construct a new Cipher Base object
      *
-     * @param mode
-     * @param iv
-     * @param key
-     * @param key_len
-     * @param tkey
+     * @param cipher_type  Type of Cipher AES, CHACHA etc..
+     * @param mode         Mode of Cipher XTS, CTR, GCM etc..
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     * @param iv_len       Length of initialization vector
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @param tkey         Tweak key for XTS
+     * @param block_size   Size of the block division in bytes
      */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
+    AlcpCipherBase(const alc_cipher_mode_t mode,
                    const Uint8*            iv,
                    const Uint32            iv_len,
                    const Uint8*            key,
                    const Uint32            key_len,
                    const Uint8*            tkey,
                    const Uint64            block_size);
-    /**
-     * @brief Construct a new Alcp Base object - Manual initilization needed,
-     * run alcpInit
-     *
-     * @param mode
-     * @param iv
-     */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
-                   const Uint8*            iv);
+
+    ~AlcpCipherBase();
 
     /**
-     * @brief Construct a new Alcp Base object - Initlized and ready to go
+     * @brief Initialize or Reinitialize Cipher Base
      *
-     * @param mode
-     * @param iv
-     * @param key
-     * @param key_len
-     */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
-                   const Uint8*            iv,
-                   const Uint8*            key,
-                   const Uint32            key_len);
-
-    /**
-     * @brief         Initialization/Reinitialization function, created handle
-     *
-     * @param iv      Intilization vector or start of counter (CTR mode)
-     * @param key     Binary(RAW) Key 128/192/256 bits
-     * @param key_len Length of the Key
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     * @param iv_len       Length of initialization vector
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @param tkey         Tweak key for XTS
+     * @param block_size   Size of the block division in bytes
      * @return true -  if no failure
      * @return false - if there is some failure
      */
-    ~AlcpCipherBase();
-
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,
               const Uint32 key_len,
               const Uint8* tkey,
               const Uint64 block_size);
-    bool init(const Uint8* iv,
-              Uint32       iv_len,
-              const Uint8* key,
-              const Uint32 key_len);
-    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
+
+    /**
+     * @brief Initialize or Reinitialize Cipher Base
+     *
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
     bool init(const Uint8* key, const Uint32 key_len);
     bool encrypt(alcp_dc_ex_t& data);
     bool decrypt(alcp_dc_ex_t& data);

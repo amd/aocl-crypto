@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,39 +37,40 @@ using namespace alcp;
 EXTERN_C_BEGIN
 
 Uint64
-alcp_digest_context_size(const alc_digest_info_p pDigestInfo)
+alcp_digest_context_size()
 {
-    Uint64 size =
-        sizeof(digest::Context) + digest::DigestBuilder::getSize(*pDigestInfo);
+    Uint64 size = sizeof(digest::Context);
     return size;
 }
 
 alc_error_t
-alcp_digest_supported(const alc_digest_info_p pDigestInfo)
-{
-    // FIXME: Implement Digest Support check
-    alc_error_t err = ALC_ERROR_NONE;
-
-    return err;
-}
-
-alc_error_t
-alcp_digest_request(const alc_digest_info_p pDigestInfo,
-                    alc_digest_handle_p     pDigestHandle)
+alcp_digest_request(alc_digest_mode_t mode, alc_digest_handle_p pDigestHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestInfo, err);
     ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
     new (ctx) digest::Context;
 
-    // FIMXE: Change Build to return Status and assign it to ctx->status
-    err = digest::DigestBuilder::Build(*pDigestInfo, *ctx);
+    err = digest::DigestBuilder::Build(mode, *ctx);
 
+    return err;
+}
+
+alc_error_t
+alcp_digest_init(alc_digest_handle_p pDigestHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
+
+    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx, err);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
+
+    err = ctx->init(ctx->m_digest);
     return err;
 }
 
@@ -80,12 +81,12 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
-    ALCP_BAD_PTR_ERR_RET(pMsgBuf, err);
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx, err);
+    ALCP_BAD_PTR_ERR_RET(pMsgBuf, err);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
 
-    // FIMXE: Change update to return Status and assign it to ctx->status
     err = ctx->update(ctx->m_digest, pMsgBuf, size);
 
     return err;
@@ -93,18 +94,17 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 
 alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
-                     const Uint8*              pMsgBuf,
+                     Uint8*                    buf,
                      Uint64                    size)
 {
     alc_error_t err;
-
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
-
-    // FIMXE: Modify finalize to return Status and assign it to ctx->status
-    err = ctx->finalize(ctx->m_digest, pMsgBuf, size);
+    ALCP_BAD_PTR_ERR_RET(ctx, err);
+    ALCP_BAD_PTR_ERR_RET(buf, err);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
+    err = ctx->finalize(ctx->m_digest, buf, size);
 
     return err;
 }
@@ -112,67 +112,57 @@ alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
 void
 alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
 {
-    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
-    /* TODO: fix the argument */
-    ctx->finish(ctx->m_digest);
-
-    ctx->~Context();
-}
-
-void
-alcp_digest_reset(const alc_digest_handle_p pDigestHandle)
-{
-    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
-
-    /* TODO: fix the argument */
-    ctx->reset(ctx->m_digest);
+    if (pDigestHandle && pDigestHandle->context) {
+        auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+        if (ctx->m_digest) {
+            /* TODO: fix the argument */
+            ctx->finish(ctx->m_digest);
+        }
+        ctx->~Context();
+    }
 }
 
 alc_error_t
-alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
-                 Uint8*                    pBuf,
-                 Uint64                    size)
-{
-    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
-    // FIMXE: Modify copy to return Status and assign it to ctx->status
-    return ctx->copy(ctx->m_digest, pBuf, size);
-}
+alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
+                          Uint8*                    pBuff,
+                          Uint64                    size)
 
-alc_error_t
-alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size)
 {
-    alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
-
-    auto p_ctx = static_cast<digest::Context*>(pDigestHandle->context);
-
-    String message = String(p_ctx->status.message());
-
-    int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
-
-    return err;
-}
-
-alc_error_t
-alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
-                             Uint64                    digestSize)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx, err);
+    ALCP_BAD_PTR_ERR_RET(pBuff, err);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_digest, err);
 
-    if (ctx->setShakeLength == nullptr) {
+    if (size == 0) {
+        return ALC_ERROR_NONE;
+    }
+
+    if (ctx->shakeSqueeze == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }
 
-    ctx->setShakeLength(ctx->m_digest, digestSize);
+    return ctx->shakeSqueeze(ctx->m_digest, pBuff, size);
+}
+alc_error_t
+alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
+                         const alc_digest_handle_p pDestHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pSrcHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDestHandle, err);
+
+    auto src_ctx  = static_cast<digest::Context*>(pSrcHandle->context);
+    auto dest_ctx = static_cast<digest::Context*>(pDestHandle->context);
+    ALCP_BAD_PTR_ERR_RET(src_ctx, err);
+    ALCP_BAD_PTR_ERR_RET(dest_ctx, err);
+    ALCP_BAD_PTR_ERR_RET(src_ctx->m_digest, err);
+
+    new (dest_ctx) digest::Context;
+
+    err = digest::DigestBuilder::BuildWithCopy(*src_ctx, *dest_ctx);
 
     return err;
 }

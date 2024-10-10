@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,15 +36,14 @@ IPPCipherAeadBase::PrintErrors(IppStatus status)
     std::cout << "IPP Error: " << status << std::endl;
 }
 
-IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{}
+{
+}
 
-IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
                                      const Uint32            iv_len,
                                      const Uint8*            key,
@@ -59,8 +58,7 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
     init(key, key_len);
 }
 
-IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
                                      const Uint8*            key,
                                      const Uint32            key_len)
@@ -103,16 +101,16 @@ IPPCipherAeadBase::IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
 IPPCipherAeadBase::~IPPCipherAeadBase()
 {
     if (m_ctx != nullptr) {
-        delete[](Ipp8u*) m_ctx;
+        delete[] (Ipp8u*)m_ctx;
     }
     if (m_ctx_gcm != nullptr) {
-        delete[](Ipp8u*) m_ctx_gcm;
+        delete[] (Ipp8u*)m_ctx_gcm;
     }
     if (m_ctx_ccm != nullptr) {
-        delete[](Ipp8u*) m_ctx_ccm;
+        delete[] (Ipp8u*)m_ctx_ccm;
     }
     if (m_ctx_xts != nullptr) {
-        delete[](Ipp8u*) m_ctx_xts;
+        delete[] (Ipp8u*)m_ctx_xts;
     }
 }
 
@@ -157,50 +155,34 @@ IPPCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             status = ippsAES_GCMGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             if (m_ctx_gcm != nullptr) {
-                delete[](Ipp8u*) m_ctx_gcm;
+                delete[] (Ipp8u*)m_ctx_gcm;
             }
             m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             break;
 
         case ALC_AES_MODE_CCM:
             status = ippsAES_CCMGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             if (m_ctx_ccm != nullptr) {
-                delete[](Ipp8u*) m_ctx_ccm;
+                delete[] (Ipp8u*)m_ctx_ccm;
             }
             m_ctx_ccm = (IppsAES_CCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_CCMInit(key, key_len / 8, m_ctx_ccm, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-                return false;
-            }
             break;
 
         case ALC_AES_MODE_SIV:
             break;
 
         default: // Should not come here
-            return false;
+            break;
     }
 
     if (status != ippStsNoErr) {
         std::cout << "Error code: " << status << " from IPP Init" << std::endl;
         return false;
-    } else
-        return true;
+    }
+    return true;
 }
 
 bool
@@ -370,8 +352,6 @@ IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc)
     } else {
         int    authRes           = 0;
         Ipp8u* ad_ptr_list_dec[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
-        Ipp8u* ad_ptr_list_s2v[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_out };
-        int    ad_size_list[]    = { (int)data.m_adl, (int)data.m_inl };
         int    ret               = ippsAES_SIVDecrypt(data.m_in,
                                      data.m_out,
                                      data.m_inl,
@@ -402,7 +382,7 @@ IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc)
 }
 
 bool
-IPPCipherAeadBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
+IPPCipherAeadBase::encrypt()
 {
     return false;
 }
@@ -429,7 +409,7 @@ IPPCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 }
 
 bool
-IPPCipherAeadBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
+IPPCipherAeadBase::decrypt()
 {
     return false;
 }

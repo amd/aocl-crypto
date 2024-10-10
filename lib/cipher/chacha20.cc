@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,100 +27,94 @@
  */
 
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/chacha20_zen4.hh"
 #include "chacha20_inplace.cc.inc"
 
-namespace alcp::cipher::chacha20 {
+namespace alcp::cipher {
 
-template<CpuCipherFeatures cpu_cipher_feature>
+#define CHACHA_CRYPT_WRAPPER_FUNC(CLASS_NAME, WRAPPER_FUNC, FUNC_NAME)         \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(                                      \
+        const Uint8* pInput, Uint8* pOutput, Uint64 len)                       \
+    {                                                                          \
+        alc_error_t err      = ALC_ERROR_NONE;                                 \
+        Uint64      blocks   = len / cMBlockSize;                              \
+        int         remBytes = len - (blocks * cMBlockSize);                   \
+        err                  = FUNC_NAME(m_key,                                \
+                        cMKeylen,                             \
+                        m_iv,                                 \
+                        cMIvlen,                              \
+                        pInput,                               \
+                        pOutput,                              \
+                        blocks,                               \
+                        remBytes);                            \
+        /*err                  = FUNC_NAME(pInput, len, pOutput);*/            \
+        return err;                                                            \
+    }
+
 alc_error_t
-ChaCha20<cpu_cipher_feature>::validateKey(const Uint8* key, Uint64 keylen)
+ChaCha20::init(const Uint8* pKey,
+               const Uint64 keyLen,
+               const Uint8* pIv,
+               const Uint64 ivLen)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pKey != NULL && keyLen != 0) {
+        err = setKey(pKey, keyLen);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+    }
+
+    if (pIv != NULL && ivLen != 0) {
+        err = setIv(pIv, ivLen);
+    }
+
+    return err;
+}
+
+alc_error_t
+ChaCha20::validateKey(const Uint8* key, Uint64 keylen)
 {
     return ValidateKey(key, keylen);
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-ChaCha20<cpu_cipher_feature>::validateIv(const Uint8 iv[], Uint64 iVlen)
+ChaCha20::validateIv(const Uint8 iv[], Uint64 iVlen)
 {
     return ValidateIv(iv, iVlen);
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-ChaCha20<cpu_cipher_feature>::setKey(const Uint8 key[], Uint64 keylen)
+ChaCha20::setKey(const Uint8 key[], Uint64 keylen)
 {
     alc_error_t err = this->validateKey(key, keylen);
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_key, key, keylen);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(m_key, cMKeylen, key, keylen / 8);
+    return err;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-ChaCha20<cpu_cipher_feature>::setIv(const Uint8 iv[], Uint64 ivlen)
+ChaCha20::setIv(const Uint8 iv[], Uint64 ivlen)
 {
     alc_error_t err = this->validateIv(iv, ivlen);
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_iv, iv, ivlen);
-    return ALC_ERROR_NONE;
+    err = utils::SecureCopy<Uint8>(m_iv, cMIvlen, iv, ivlen);
+    return err;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
-alc_error_t
-ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
-                                           Uint64      plaintextLength,
-                                           Uint8       ciphertext[]) const
-{
-    if constexpr (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
+namespace vaes512 {
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, encrypt, zen4::ProcessInput);
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, zen4::ProcessInput);
+} // namespace vaes512
 
-        return zen4::ProcessInput(m_key,
-                                  cMKeylen,
-                                  m_iv,
-                                  cMIvlen,
-                                  plaintext,
-                                  plaintextLength,
-                                  ciphertext);
-    } else if constexpr (cpu_cipher_feature == CpuCipherFeatures::eReference) {
+namespace ref {
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, encrypt, ProcessInput);
+    CHACHA_CRYPT_WRAPPER_FUNC(ChaCha256, decrypt, ProcessInput);
+} // namespace ref
 
-        return ProcessInput(m_key,
-                            cMKeylen,
-                            m_iv,
-                            cMIvlen,
-                            plaintext,
-                            plaintextLength,
-                            ciphertext);
-    } else if constexpr (cpu_cipher_feature == CpuCipherFeatures::eDynamic) {
-        bool is_avx512 = CpuId::cpuHasAvx512(utils::AVX512_F)
-                         && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-                         && CpuId::cpuHasAvx512(utils::AVX512_BW);
-
-        if (is_avx512) {
-            return zen4::ProcessInput(m_key,
-                                      cMKeylen,
-                                      m_iv,
-                                      cMIvlen,
-                                      plaintext,
-                                      plaintextLength,
-                                      ciphertext);
-        } else {
-
-            return ProcessInput(m_key,
-                                cMKeylen,
-                                m_iv,
-                                cMIvlen,
-                                plaintext,
-                                plaintextLength,
-                                ciphertext);
-        }
-    }
-}
-
-template class ChaCha20<CpuCipherFeatures::eVaes512>;
-template class ChaCha20<CpuCipherFeatures::eReference>;
-template class ChaCha20<CpuCipherFeatures::eDynamic>;
-
-} // namespace alcp::cipher::chacha20
+} // namespace alcp::cipher

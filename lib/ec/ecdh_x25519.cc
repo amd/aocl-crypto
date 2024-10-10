@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #include "alcp/ec/ecdh_avx2.hh"
 #include "alcp/ec/ecdh_zen.hh"
 #include "alcp/ec/ecdh_zen3.hh"
+#include "alcp/utils/compare.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
 #include "config.h"
@@ -112,7 +113,8 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
     priv_key_radix32[51] = carry;
 
     static bool zen2_available = CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
+                                 || CpuId::cpuIsZen5();
 
     if (zen3_available) {
         zen3::AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
@@ -147,7 +149,8 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
     }
 
     static bool zen2_available = CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
+                                 || CpuId::cpuIsZen5();
 
     if (zen3_available) {
         zen3::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
@@ -171,7 +174,7 @@ X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 
     static const Uint8 all_zero[KeySize] = { 0 };
 
-    return memcmp(all_zero, pPublicKey, KeySize)
+    return !utils::CompareConstTime(all_zero, pPublicKey, KeySize)
                ? StatusOk()
                : Status(GenericError(ErrorCode::eInvalidArgument),
                         "Key validation failed");

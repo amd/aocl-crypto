@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,28 +32,27 @@
 
 using namespace alcp::testing;
 
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_AES
-#define ALC_MODE        ALC_AES_MODE_XTS
-#define STR_MODE        "AES_XTS"
+#define ALC_MODE ALC_AES_MODE_XTS
+#define STR_MODE "AES_XTS"
 
 TEST(AES_ENC_128, KAT_128)
 {
-    AesKatTest(128, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(128, ENCRYPT, ALC_MODE);
 }
 
 TEST(AES_ENC_256, KAT_256)
 {
-    AesKatTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(256, ENCRYPT, ALC_MODE);
 }
 
 TEST(AES_DEC_128, KAT_128)
 {
-    AesKatTest(128, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(128, DECRYPT, ALC_MODE);
 }
 
 TEST(AES_DEC_256, KAT_256)
 {
-    AesKatTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherKatTest(256, DECRYPT, ALC_MODE);
 }
 
 int

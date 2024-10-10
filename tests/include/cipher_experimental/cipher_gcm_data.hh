@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,7 +44,8 @@ struct alc_test_gcm_init_data_t : public alc_test_init_data_t
         , m_iv_len{ 0 }
         , m_aad{ nullptr }
         , m_aad_len{ 0 }
-    {}
+    {
+    }
 };
 using alc_test_gcm_init_data_p = alc_test_gcm_init_data_t*;
 
@@ -56,7 +57,8 @@ struct alc_test_gcm_update_data_t : public alc_test_update_data_t
         : alc_test_update_data_t()
         , m_iv{ nullptr }
         , m_iv_len{ 0 }
-    {}
+    {
+    }
 };
 using alc_test_gcm_update_data_p = alc_test_gcm_update_data_t*;
 
@@ -74,7 +76,8 @@ struct alc_test_gcm_finalize_data_t : public alc_test_finalize_data_t
         , m_tag_expected{ nullptr }
         , m_out{ nullptr }
         , m_pt_len{ 0 }
-    {}
+    {
+    }
 };
 using alc_test_gcm_finalize_data_p = alc_test_gcm_finalize_data_t*;
 

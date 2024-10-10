@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 #include "file.hh"
 #include "utils.hh"
 #include <alcp/rsa.h>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <stdio.h>
@@ -38,8 +39,24 @@
 
 namespace alcp::testing {
 
-#define ALCP_TEST_RSA_PADDING    1
-#define ALCP_TEST_RSA_NO_PADDING 0
+#define ALCP_TEST_RSA_PADDING_OAEP 1
+#define ALCP_TEST_RSA_PADDING_PKCS 2
+#define ALCP_TEST_RSA_PADDING_PSS  3
+#define ALCP_TEST_RSA_NO_PADDING   0
+
+#define ALCP_TEST_RSA_ALGO_SIGN_VERIFY 4
+#define ALCP_TEST_RSA_ALGO_ENC_DEC     5
+
+// FIXME: digest_info should be removed from RSA testing
+
+typedef struct _alc_digest_info
+{
+    alc_digest_len_t dt_len;
+    /* valid when dgst_len == ALC_DIGEST_LEN_CUSTOM */
+    /* length is bits */
+    Uint32            dt_custom_len;
+    alc_digest_mode_t dt_mode;
+} alc_digest_info_t, *alc_digest_info_p;
 
 typedef struct _alcp_rsa_data
 {
@@ -55,6 +72,22 @@ typedef struct _alcp_rsa_data
     Uint8* m_pseed      = nullptr;
     Uint8* m_label      = nullptr;
     Uint64 m_label_size = 0;
+
+    /* for signing and verification*/
+    Uint8* m_digest        = nullptr;
+    Uint64 m_digest_len    = 0;
+    Uint8* m_signature     = nullptr;
+    Uint64 m_signature_len = 0;
+    Uint8* m_salt          = nullptr;
+    Uint64 m_salt_len      = 0;
+    bool   m_check         = false;
+
+    /* for pkcs encrypt decrypt */
+    Uint8* m_random_pad     = nullptr;
+    Uint64 m_random_pad_len = 0;
+
+    /* for pkcs hash sign */
+    // Uint8* m_hash_with_info = nullptr;
 } alcp_rsa_data_t;
 
 class RsaBase
@@ -62,15 +95,32 @@ class RsaBase
   public:
     alc_digest_info_t m_digest_info{};
     alc_digest_info_t m_mgf_info{};
-    int               m_padding_mode                             = 0;
-    Uint64            m_key_len                                  = 0;
-    Uint64            m_hash_len                                 = 0;
-    virtual bool      init()                                     = 0;
-    virtual bool      reset()                                    = 0;
-    virtual bool      SetPublicKey(const alcp_rsa_data_t& data)  = 0;
-    virtual bool      SetPrivateKey(const alcp_rsa_data_t& data) = 0;
-    virtual int       EncryptPubKey(const alcp_rsa_data_t& data) = 0;
-    virtual int       DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
-    virtual bool      ValidateKeys()                             = 0;
+    int               m_padding_mode      = 0;
+    std::string       m_rsa_algo          = "";
+    Uint64            m_key_len           = 0;
+    Uint64            m_hash_len          = 0;
+    int               m_digest_info_index = 0;
+    int               m_digest_info_size  = 0;
+
+    virtual bool init() = 0;
+
+    virtual bool reset() = 0;
+
+    virtual bool SetPublicKeyBigNum(const alcp_rsa_data_t& data)  = 0;
+    virtual bool SetPrivateKeyBigNum(const alcp_rsa_data_t& data) = 0;
+
+    virtual bool SetPublicKey(const alcp_rsa_data_t& data)  = 0;
+    virtual bool SetPrivateKey(const alcp_rsa_data_t& data) = 0;
+
+    virtual int EncryptPubKey(const alcp_rsa_data_t& data) = 0;
+    virtual int DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+
+    virtual bool ValidateKeys() = 0;
+
+    virtual bool DigestSign(const alcp_rsa_data_t& data)   = 0;
+    virtual bool DigestVerify(const alcp_rsa_data_t& data) = 0;
+
+    virtual bool Sign(const alcp_rsa_data_t& data)   = 0;
+    virtual bool Verify(const alcp_rsa_data_t& data) = 0;
 };
 } // namespace alcp::testing

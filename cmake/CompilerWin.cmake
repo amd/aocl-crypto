@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,9 +23,22 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
+
+ # get build environment
+function(alcp_get_build_environment)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set (ALCP_BUILD_COMPILER "GCC_v${CMAKE_CXX_COMPILER_VERSION}")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set (ALCP_BUILD_COMPILER "Clang_v${CMAKE_CXX_COMPILER_VERSION}")
+    endif()
+    set(OS_VERSION ${CMAKE_HOST_SYSTEM})
+    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VERSION} PARENT_SCOPE)
+endfunction(alcp_get_build_environment)
+
+
 # check compiler version
 function(alcp_check_compiler_version)
-    set(CLANG_MIN_REQ "12.0.0")
+    set(CLANG_MIN_REQ "14.0.0")
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         if(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
             message(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
@@ -37,6 +50,7 @@ function(alcp_check_compiler_version)
 endfunction(alcp_check_compiler_version)
 
 # Generic Warnings
+SET (ALCP_WARNINGS /WX)
 function(alcp_get_cflags_warnings)
     set(ALCP_CFLAGS_WARNINGS /W4 -Wpedantic -Wno-unused-parameter CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)
@@ -70,13 +84,22 @@ function(alcp_get_cflags_arch)
     set(ALCP_CFLAGS_ARCH ${ALCP_CFLAGS_ARCH} PARENT_SCOPE)
 endfunction(alcp_get_cflags_arch)
 
+# Reference Architecture Compile Flags
+function(alcp_get_arch_cflags_reference)
+    set(ARCH_COMPILE_FLAGS
+        /Ox -msse2
+        CACHE INTERNAL ""
+        )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_reference)
+
 # lib/arch/avx2 Compile Flags
 function(alcp_get_arch_cflags_avx2)
-set(ARCH_COMPILE_FLAGS
--msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -madx
-CACHE INTERNAL ""
-)
-set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+    set(ARCH_COMPILE_FLAGS
+        -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -madx
+        CACHE INTERNAL ""
+    )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
 endfunction(alcp_get_arch_cflags_avx2)
 
 # lib/arch/zen Compile Flags
@@ -105,6 +128,17 @@ function(alcp_get_arch_cflags_zen4)
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
 endfunction(alcp_get_arch_cflags_zen4)
+
+# lib/arch/zen4 Compile Flags
+function(alcp_get_arch_cflags_zen4_clang)
+    set(ARCH_COMPILE_FLAGS
+        /Ox -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -mavx512ifma -DUSE_AVX512 /arch:AVX512
+        CACHE INTERNAL ""
+        )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_zen4_clang)
+
+
 
 # if address sanitizer used
 function(alcp_add_sanitize_flags)

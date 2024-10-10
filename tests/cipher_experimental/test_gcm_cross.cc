@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -89,17 +89,20 @@ GcmCross_KAT(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     data_update.m_output     = &output[0];
     data_update.m_output_len = output.size();
 
+    alc_test_gcm_finalize_data_t data_finalize;
+
     if constexpr (encryptor) { // Encrypt
         data_update.m_input = &datasetPlainText[0];
+        data_finalize.m_tag = &tagbuff[0];
     } else { // Decrypt
         data_update.m_input = &datasetCipherText[0];
+        data_finalize.m_tag = &datasetTag[0]; // encrypt Tag is input for
+                                              // decrypt
     }
     data_update.m_input_len = data.chunkSize;
 
-    alc_test_gcm_finalize_data_t data_finalize;
     data_finalize.m_tag_expected = &datasetTag[0];
     data_finalize.m_tag_len      = datasetTag.size();
-    data_finalize.m_tag          = &tagbuff[0];
     data_finalize.m_out    = data_update.m_output; // If needed for padding
     data_finalize.m_pt_len = datasetPlainText.size();
     data_finalize.verified = false;
@@ -115,7 +118,7 @@ GcmCross_KAT(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     }
 
     ASSERT_TRUE(iTestCipher->init(&data_init));
-    for (int i = 0; i < chunks; i++) {
+    for (Uint64 i = 0; i < chunks; i++) {
         ASSERT_TRUE(iTestCipher->update(&data_update));
         data_update.m_input += data.chunkSize;
         data_update.m_output += data.chunkSize;
@@ -128,11 +131,11 @@ GcmCross_KAT(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
 
     if constexpr (encryptor) { // Encrypt
         ASSERT_EQ(output, datasetCipherText);
+        ASSERT_EQ(tagbuff, datasetTag);
     } else { // Decrypt
         ASSERT_EQ(output, datasetPlainText);
+        // decrypt tag matching is done with getTag api
     }
-
-    ASSERT_EQ(tagbuff, datasetTag);
 }
 
 /**
@@ -179,7 +182,7 @@ GcmCross_REF(gcm_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     Uint64 extra_bytes = (data.plainText.size() - (chunks * data.chunkSize));
 
     ASSERT_TRUE(iTestCipher->init(&data_init));
-    for (int i = 0; i < chunks; i++) {
+    for (Uint64 i = 0; i < chunks; i++) {
         ASSERT_TRUE(iTestCipher->update(&data_update));
         data_update.m_input += data.chunkSize;
         data_update.m_output += data.chunkSize;
@@ -201,11 +204,11 @@ CrossTestGCM(std::shared_ptr<RngBase> rng,
     }; // bits
     const std::vector<Uint64> cAdditionalTextSizes = {
         20000, 128, 120, 112, 104, 96, 64, 32
-    };                                                       // bits
+    }; // bits
     const std::vector<Uint64> cKeySizes = { 128, 192, 256 }; // bits
     const std::vector<Uint64> cTagSizes = {
         128, 120, 112, 104, 96, 64, 32
-    };                                                          // bits
+    }; // bits
     const std::vector<Uint64> cChunkSizes = { 16, 32 };         // bits
     const std::vector<Uint64> cPtSizes    = { 16, 1000, 2563 }; // bytes
 
@@ -269,7 +272,7 @@ CrossTestGCM(std::shared_ptr<RngBase> rng,
     test_data.tag            = std::vector<Uint8>(cTagSize / 8);
     test_data.plainText      = std::vector<Uint8>(pt_max_size);
     test_data.chunkSize      = cChunkSize;
-    for (int pt_size = pt_max_size; pt_size >= pt_min_size;
+    for (Uint64 pt_size = pt_max_size; pt_size >= pt_min_size;
          pt_size -= pt_dec_size) {
 
         // Change size without reallocation
@@ -317,7 +320,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = rng;
+        _rng = std::move(rng);
     }
     void TestBody() override { CrossTestGCM(_rng, _select1, _select2); }
 
@@ -343,7 +346,7 @@ RegisterMyTests(std::string              testSuiteName,
         __LINE__,
         // Important to use the fixture type as the return type here.
         [=]() -> CrossTestFixture* {
-            return new CrossTest(rng, select1, select2);
+            return new CrossTest(std::move(rng), select1, select2);
         });
 }
 } // namespace alcp::testing::cipher::gcm
@@ -364,32 +367,47 @@ main(int argc, char** argv)
         std::make_shared<alcp::testing::RngBase>();
 
     ArgsMap argsMap = parseArgs(argc, argv);
-    assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
-    // ::testing::RegisterTest("KnownAnswerTest",
-    // "GCM_Encrypt_experimental", )
+
+    try {
+        assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
+
+        /* if no ext lib provided, openssl selected by default */
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && (std::get<bool>(argsMap["USE_IPP"].value) == false)) {
+            argsMap["USE_OSSL"].value = true;
+        }
+
+        // Use openssl for cross test by default
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+            argsMap["USE_OSSL"].value = true;
+        }
 
 #ifdef USE_OSSL
-    if (std::get<bool>(argsMap["USE_OSSL"].value)) {
-        RegisterMyTests("KnownAnswerTest",
-                        "GCM_CROSS_EXPERIMENTAL_OPENSSL",
-                        rng,
-                        LibrarySelect::OPENSSL,
-                        LibrarySelect::ALCP);
-    }
+        if (std::get<bool>(argsMap["USE_OSSL"].value)) {
+            RegisterMyTests("KnownAnswerTest",
+                            "GCM_CROSS_EXPERIMENTAL_OPENSSL",
+                            std::move(rng),
+                            LibrarySelect::OPENSSL,
+                            LibrarySelect::ALCP);
+        }
 #endif
 
 #ifdef USE_IPP
-    if (std::get<bool>(argsMap["USE_IPP"].value)) {
-        RegisterMyTests("KnownAnswerTest",
-                        "GCM_CROSS_EXPERIMENTAL_IPP",
-                        rng,
-                        LibrarySelect::IPP,
-                        LibrarySelect::ALCP);
-    }
+        if (std::get<bool>(argsMap["USE_IPP"].value)) {
+            RegisterMyTests("KnownAnswerTest",
+                            "GCM_CROSS_EXPERIMENTAL_IPP",
+                            std::move(rng),
+                            LibrarySelect::IPP,
+                            LibrarySelect::ALCP);
+        }
 #endif
 
-    return RUN_ALL_TESTS();
+        return RUN_ALL_TESTS();
+    } catch (const std::bad_variant_access& e) {
+        std::cout << e.what() << '\n';
+    }
 }
 #endif

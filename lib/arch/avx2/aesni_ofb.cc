@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aesni.hh"
 #include "alcp/cipher/aesni_core.hh"
+#include "avx2.hh"
 
 #include <immintrin.h>
 
@@ -44,11 +45,12 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
             Uint64       len,         // message length in bytes
             const Uint8* pKey,        // ptr to Key
             int          nRounds,     // No. of rounds
-            const Uint8* pIv          // ptr to Initialization Vector
+            Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err    = ALC_ERROR_NONE;
     Uint64      blocks = len / Rijndael::cBlockSize;
+    Uint64      res    = len % Rijndael::cBlockSize;
     __m128i     a1; // plaintext data
 
     Uint64 i         = 0;
@@ -102,6 +104,26 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
             p_in_128++;
             p_out_128++;
         }
+        if (res) {
+            a1 = _mm_setzero_si128();
+
+            std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+            aesni::AesEncryptNoLoad(key_128_0,
+                                    key_128_1,
+                                    key_128_2,
+                                    key_128_3,
+                                    key_128_4,
+                                    key_128_5,
+                                    key_128_6,
+                                    key_128_7,
+                                    key_128_8,
+                                    key_128_9,
+                                    key_128_10,
+                                    b1);
+
+            std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_128);
+        }
     } else if (nRounds == 12) {
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(p_in_128);
@@ -123,6 +145,28 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
             _mm_storeu_si128(p_out_128, a1);
             p_in_128++;
             p_out_128++;
+        }
+        if (res) {
+            a1 = _mm_setzero_si128();
+
+            std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+            aesni::AesEncryptNoLoad(key_128_0,
+                                    key_128_1,
+                                    key_128_2,
+                                    key_128_3,
+                                    key_128_4,
+                                    key_128_5,
+                                    key_128_6,
+                                    key_128_7,
+                                    key_128_8,
+                                    key_128_9,
+                                    key_128_10,
+                                    key_128_11,
+                                    key_128_12,
+                                    b1);
+
+            std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_128);
         }
     } else {
         for (i = 0; i < blocks; i++) {
@@ -148,7 +192,35 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
             p_in_128++;
             p_out_128++;
         }
+        if (res) {
+            a1 = _mm_setzero_si128();
+
+            std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+            aesni::AesEncryptNoLoad(key_128_0,
+                                    key_128_1,
+                                    key_128_2,
+                                    key_128_3,
+                                    key_128_4,
+                                    key_128_5,
+                                    key_128_6,
+                                    key_128_7,
+                                    key_128_8,
+                                    key_128_9,
+                                    key_128_10,
+                                    key_128_11,
+                                    key_128_12,
+                                    key_128_13,
+                                    key_128_14,
+                                    b1);
+
+            std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_128);
+        }
     }
+
+#ifdef OFB_MULTI_UPDATE
+    alcp_storeu_128(reinterpret_cast<__m128i*>(pIv), b1);
+#endif
 
     return err;
 }
@@ -177,6 +249,7 @@ namespace experimental {
          */
 
         Uint64 blocks = len / Rijndael::cBlockSize;
+        Uint64 res    = len % Rijndael::cBlockSize;
         for (Uint64 i = 0; i < blocks; i++) {
             __m128i a1 = _mm_loadu_si128(p_in_128); // plaintext
 
@@ -187,6 +260,18 @@ namespace experimental {
             _mm_storeu_si128(p_out_128, a1);
             p_in_128++;
             p_out_128++;
+        }
+
+        if (res) {
+            __m128i a1 = _mm_setzero_si128();
+
+            std::copy((Uint8*)p_in_128, ((Uint8*)p_in_128) + res, (Uint8*)&a1);
+
+            aesni::AesEncrypt(&b1, pkey128, nRounds);
+
+            a1 = _mm_xor_si128(a1, b1); // cipher = plaintext xor AESENCoutput
+
+            std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_128);
         }
 
         return err;
@@ -207,7 +292,7 @@ EncryptOfb(const Uint8* pPlainText,  // ptr to plaintext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
            int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+           Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -235,7 +320,7 @@ DecryptOfb(const Uint8* pCipherText, // ptr to ciphertext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
            int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+           Uint8*       pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;

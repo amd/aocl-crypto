@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -22,7 +22,40 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
+
+ SET(LIBS ${LIBS} benchmark alcp)
+ SET(EXTRA_INCLUDES "")
+
+ IF(ENABLE_TESTS_IPP_API)
+     ADD_COMPILE_OPTIONS("-DUSE_IPP")
+     IF(IPP_INSTALL_DIR)
+         MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
+     ELSE(IPP_INSTALL_DIR)
+         SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
+         MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
+     ENDIF(IPP_INSTALL_DIR)
+
+     IF(UNIX)
+         IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
+             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
+         ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
+             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
+         ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
+     ENDIF(UNIX)
+     IF(WIN32)
+         IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
+             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
+         ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
+             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
+         ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
+             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
+         ENDIF()
+     ENDIF(WIN32)
+     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
+ ENDIF(ENABLE_TESTS_IPP_API)
+
+ add_openssl()
+
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_USE_BUNDLED_GTEST OFF)

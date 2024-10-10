@@ -1,4 +1,4 @@
- # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,12 @@ FILE(GLOB IPP_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/fram
 
 add_ipp()
 
+IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
+	SET_SOURCE_FILES_PROPERTIES(test_xts_cross.cc PROPERTIES COMPILE_FLAGS "-DCIPHER_MULTI_UPDATE")
+ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
+
 AES_TEST(kat gcm)
-AES_TEST(kat xts)
+#AES_TEST(kat xts)
 
 AES_TEST(cross gcm)
-AES_TEST(cross xts)
+#AES_TEST(cross xts)

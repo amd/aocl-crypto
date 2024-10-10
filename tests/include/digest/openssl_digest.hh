@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 #pragma once
 
 /* C/C++ Headers */
+#include <cstring>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -43,11 +44,10 @@
 namespace alcp::testing {
 class OpenSSLDigestBase : public DigestBase
 {
-    EVP_MD_CTX*       m_handle = nullptr;
-    alc_digest_info_t m_info;
-    Uint8*            m_message;
-    Uint8*            m_digest;
-    Int64             m_digest_len;
+    EVP_MD_CTX*       m_handle     = nullptr;
+    EVP_MD_CTX*       m_handle_dup = nullptr;
+    alc_digest_mode_t m_mode{};
+    const EVP_MD*     m_md_type = nullptr;
 
   public:
     // Class contructor and destructor
@@ -57,14 +57,15 @@ class OpenSSLDigestBase : public DigestBase
      *
      * @param info Information of which digest to use and what length.
      */
-    OpenSSLDigestBase(const alc_digest_info_t& info);
+    OpenSSLDigestBase(alc_digest_mode_t mode);
     ~OpenSSLDigestBase();
 
-    // All inits
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
-    bool digest_function(const alcp_digest_data_t& data);
+    bool context_copy();
+    bool digest_update(const alcp_digest_data_t& data);
+    bool digest_finalize(const alcp_digest_data_t& data);
+    bool digest_squeeze(const alcp_digest_data_t& data);
     void reset();
 };
 

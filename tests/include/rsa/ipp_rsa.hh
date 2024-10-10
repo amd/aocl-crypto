@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
 #include "rsa/rsa.hh"
+#include "rsa/rsa_keys.hh"
 #include <crypto_mb/x25519.h>
 #include <iostream>
 #include <ippcp.h>
@@ -43,10 +44,11 @@ class IPPRsaBase : public RsaBase
     IppsRSAPrivateKeyState* m_pPrv              = nullptr;
     int                     m_buffSizePublic    = 0;
     int                     m_buffSizePrivate   = 0;
-    Ipp8u*                  m_scratchBuffer_Pub = NULL;
-    Ipp8u*                  m_scratchBuffer_Pvt = NULL;
+    Ipp8u*                  m_scratchBuffer_Pub = nullptr;
+    Ipp8u*                  m_scratchBuffer_Pvt = nullptr;
     int                     m_buffSize          = 0;
     int                     m_modulus_size      = 0;
+    const IppsHashMethod*   m_md_type           = nullptr;
 
   public:
     IPPRsaBase();
@@ -55,6 +57,9 @@ class IPPRsaBase : public RsaBase
     bool init();
     bool reset();
 
+    bool SetPublicKeyBigNum(const alcp_rsa_data_t& data);
+    bool SetPrivateKeyBigNum(const alcp_rsa_data_t& data);
+
     bool SetPublicKey(const alcp_rsa_data_t& data);
     bool SetPrivateKey(const alcp_rsa_data_t& data);
 
@@ -62,6 +67,12 @@ class IPPRsaBase : public RsaBase
 
     int EncryptPubKey(const alcp_rsa_data_t& data);
     int DecryptPvtKey(const alcp_rsa_data_t& data);
+
+    bool DigestSign(const alcp_rsa_data_t& data);
+    bool DigestVerify(const alcp_rsa_data_t& data);
+
+    bool Sign(const alcp_rsa_data_t& data);
+    bool Verify(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing

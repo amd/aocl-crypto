@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,10 +28,12 @@
 #pragma once
 
 #include "aes.hh"
-#include "alcp/base.hh"
+
 #include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_common.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
+
 #include <cstdint>
 #include <immintrin.h>
 
@@ -39,8 +41,6 @@ namespace alcp::cipher {
 
 /**
  * @brief CCM mode (Copy of GCM class)
- * Uses encryptUpdate and decryptUpdate instead of
- * encrypt and decrypt.
  * @struct ccm_data_t
  */
 
@@ -48,9 +48,10 @@ struct ccm_data_t
 {
     alignas(16) Uint8 nonce[16];
     alignas(16) Uint8 cmac[16];
-    const Uint8* key    = nullptr;
-    Uint64       blocks = 0;
-    Uint32       rounds = 0;
+    const Uint8*  key    = nullptr;
+    Uint64        blocks = 0;
+    Uint32        rounds = 0;
+    unsigned char flags0;
 };
 
 enum class CCM_ERROR
@@ -61,108 +62,84 @@ enum class CCM_ERROR
 };
 
 namespace aesni::ccm {
-    void SetAad(ccm_data_t* ctx, const Uint8 aad[], size_t alen);
+    // Defined in arch/zen3
+    CCM_ERROR SetAad(ccm_data_t* ctx,
+                     const Uint8 aad[],
+                     Uint64      alen,
+                     Uint64      plen);
+    CCM_ERROR Finalize(ccm_data_t* ctx);
 
     CCM_ERROR Encrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
                       Uint8       out[],
-                      size_t      len);
+                      Uint64      dataLen);
 
     CCM_ERROR Decrypt(ccm_data_t* ctx,
                       const Uint8 inp[],
                       Uint8       out[],
-                      size_t      len);
+                      Uint64      len);
 } // namespace aesni::ccm
 
-class ALCP_API_EXPORT Ccm final
+class ALCP_API_EXPORT Ccm
     : public Aes
-    , cipher::IDecryptUpdater
-    , cipher::IEncryptUpdater
+    , public virtual iCipher
 {
+    // Needs to be protected as class CcmHash should use it
+  protected:
+    Uint64       m_tagLen            = 12; // default taglen
+    Uint64       m_additionalDataLen = 0;
+    const Uint8* m_additionalData;
+    Uint64       m_plainTextLength      = 0;
+    bool         m_is_plaintext_len_set = false;
+    Uint64       m_updatedLength        = 0;
+    ccm_data_t   m_ccm_data;
+
+  protected:
+    alc_error_t setIv(ccm_data_t* ccm_data,
+                      const Uint8 pIv[],
+                      Uint64      ivLen,
+                      Uint64      dataLen);
 
   public:
-    explicit Ccm(const Uint8* pKey, const Uint32 keyLen);
+    Ccm(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
+    {}
 
-    Ccm();
-    ~Ccm();
+    ~Ccm() = default;
 
-    static bool isSupported(const Uint32 keyLen)
-    {
-        // FIXME: To be implemented
-        switch (keyLen) {
-            case 128:
-            case 192:
-            case 256:
-                return true;
-            default:
-                return false;
-        }
-    }
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override;
 
-    virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
-
-    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
-
-    virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
-
-    virtual alc_error_t setTagLength(Uint64 len);
-
-    void setAad(ccm_data_t* pccm_data, const Uint8* paad, size_t alen);
-
-    int CcmEncrypt(ccm_data_t*  ccm_data,
-                   const Uint8* pinp,
-                   Uint8*       pout,
-                   size_t       len);
-
-    int CcmDecrypt(ccm_data_t*  ccm_data,
-                   const Uint8* pinp,
-                   Uint8*       pout,
-                   size_t       len);
-
-    /**
-     * @brief   CCM Encrypt Operation
-     * @note
-     * @param   pInput      Pointer to input buffer
-     *                          (plainText or Additional data)
-     * @param   pOuput          Pointer to encrypted buffer
-     *                          when pointer NULL, input is additional data
-     * @param   len             Len of input buffer
-     *                          (plainText or Additional data)
-     * @param   pIv             Pointer to Initialization Vector @return
-     * alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pInput,
-                                Uint8*       pOutput,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                      Uint8*       pOutput,
-                                      Uint64       len,
-                                      const Uint8* pIv) override;
-
-    /**
-     * @brief   CCM Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                      Uint8*       pPlainText,
-                                      Uint64       len,
-                                      const Uint8* pIv) override;
-
-  private:
-    class Impl;
-    std::unique_ptr<Impl> pImpl;
+    alc_error_t cryptUpdate(const Uint8 pInput[],
+                            Uint8       pOutput[],
+                            Uint64      dataLen,
+                            bool        isEncrypt);
 };
+
+// AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual iCipherAuth);
+class ALCP_API_EXPORT CcmHash
+    : public Ccm
+    , public virtual iCipherAuth
+{
+  public:
+    CcmHash(Uint32 keyLen_in_bytes)
+        : Ccm(keyLen_in_bytes)
+    {}
+    ~CcmHash() {}
+
+    alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
+    alc_error_t getTag(Uint8* pOutput, Uint64 tagLen) override;
+    alc_error_t setTagLength(Uint64 tagLength) override;
+
+    alc_error_t setPlainTextLength(
+        Uint64 len) override; // used in multiupdate case only
+};
+
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
+CIPHER_CLASS_GEN_N(aesni, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
+CIPHER_CLASS_GEN_N(aesni, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
 
 } // namespace alcp::cipher

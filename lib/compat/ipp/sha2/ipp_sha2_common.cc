@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,17 +54,14 @@ alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
     ipp_wrp_sha2_ctx* context = pState;
     alc_error_t       err;
 
-    alcp_digest_finalize(&(context->handle), nullptr, 0);
-
-    err = alcp_digest_copy(
-        &(context->handle), (Uint8*)pMD, context->dinfo.dt_len / 8);
+    err = alcp_digest_finalize(
+        &(context->handle), (Uint8*)pMD, context->dlen / 8);
     if (alcp_is_error(err)) {
         printErr("Unable to copy digest\n");
         return ippStsUnderRunErr;
     }
 
-    alcp_digest_reset(&(context->handle));
-    // Messup digest to test wrapper
-    // *(reinterpret_cast<Uint8*>(pMD)) = 0x00;
+    alcp_digest_finish(&(context->handle));
+
     return ippStsNoErr;
 }

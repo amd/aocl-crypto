@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,17 +26,14 @@
  *
  */
 
+#pragma once
+
 #include "alcp/base.hh"
 #include "alcp/cipher.h"
-#include "alcp/cipher.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
-#include "alcp/cipher/rijndael.hh"
-#include "alcp/utils/bits.hh"
-#include "alcp/utils/cpuid.hh"
 
-#include <immintrin.h>
-#include <wmmintrin.h>
+#include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
 
@@ -45,157 +42,40 @@ namespace alcp::cipher {
 /*
  * @brief        AES Encryption in CBC(Cipher block chaining)
  */
-template<alc_error_t FEnc(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv),
-         alc_error_t FDec(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv)>
-class ALCP_API_EXPORT Cbc final
-    : public ICipher
-    , public Aes
+class ALCP_API_EXPORT Cbc
+    : public Aes
+    , public virtual iCipher
 {
   public:
-    explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {}
-
-    explicit Cbc(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
-    {}
-
-    Cbc() {}
-
+    Cbc(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
+    {
+        setMode(ALC_AES_MODE_CBC);
+        m_ivLen_max = 16;
+        m_ivLen_min = 16;
+    };
     ~Cbc() {}
-
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override
     {
-        return true;
+        return Aes::init(pKey, keyLen, pIv, ivLen);
     }
-
-    static bool isSupported(const Uint32 keyLen)
-    {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
-            || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @brief   CBC Encrypt Operation
-     * @note
-     * @param   pPlainText      Pointer to output buffer
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   CBC Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
 };
 
-template<alc_error_t FEnc(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv),
-         alc_error_t FDec(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv)>
-alc_error_t
-Cbc<FEnc, FDec>::decrypt(const Uint8* pCipherText,
-                         Uint8*       pPlainText,
-                         Uint64       len,
-                         const Uint8* pIv) const
-{
-#if 0
-    alc_error_t err = ALC_ERROR_NONE;
-    if (CpuId::cpuHasAvx512(utils::AVX512_F)
-        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-        err = vaes512::DecryptCbcAvx512(
-            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Cbc128, Cbc, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc192, Cbc, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Cbc256, Cbc, virtual iCipher, 256 / 8)
 
-        return err;
-    }
-    if (CpuId::cpuHasVaes()) {
-        err = vaes::DecryptCbc(
-            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Cbc128, Cbc, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc192, Cbc, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Cbc256, Cbc, virtual iCipher, 256 / 8)
 
-        return err;
-    }
-    if (CpuId::cpuHasAesni()) {
-        err = aesni::DecryptCbc(
-            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
-        return err;
-    }
-    return err;
-#endif
-    return FDec(
-        pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
-    // dispatch to REF
-}
-
-template<alc_error_t FEnc(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv),
-         alc_error_t FDec(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv)>
-alc_error_t
-Cbc<FEnc, FDec>::encrypt(const Uint8* pPlainText,
-                         Uint8*       pCipherText,
-                         Uint64       len,
-                         const Uint8* pIv) const
-{
-#if 0
-    alc_error_t err = ALC_ERROR_NONE;
-// Only AESNI possible as CBC Encrypt is a strictly serial algorithm
-    if (CpuId::cpuHasAesni()) {
-        err = aesni::EncryptCbc(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-    // dispatch to REF
-    return err;
-#endif
-    return FEnc(
-        pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-}
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Cbc128, Cbc, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc192, Cbc, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Cbc256, Cbc, virtual iCipher, 256 / 8)
 } // namespace alcp::cipher

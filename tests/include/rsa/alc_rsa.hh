@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
 #include "rsa/rsa.hh"
+#include "rsa/rsa_keys.hh"
 #include <iostream>
 #include <malloc.h>
 #include <vector>
@@ -37,9 +38,10 @@ namespace alcp::testing {
 class AlcpRsaBase : public RsaBase
 {
     alc_rsa_handle_t* m_rsa_handle{};
-    int               m_keysize     = 0;
     Uint64            m_pub_key_exp = {};
-    Uint64            m_hash_len    = 0;
+
+    alc_digest_handle_t* m_rsa_digest_handle   = {};
+    Uint8*               m_pkcs_hash_with_info = nullptr;
 
   public:
     AlcpRsaBase();
@@ -48,11 +50,20 @@ class AlcpRsaBase : public RsaBase
     bool init();
     bool reset();
 
+    bool SetPublicKeyBigNum(const alcp_rsa_data_t& data);
+    bool SetPrivateKeyBigNum(const alcp_rsa_data_t& data);
+
     bool SetPublicKey(const alcp_rsa_data_t& data);
     bool SetPrivateKey(const alcp_rsa_data_t& data);
+
     bool ValidateKeys();
     int  EncryptPubKey(const alcp_rsa_data_t& data);
     int  DecryptPvtKey(const alcp_rsa_data_t& data);
+
+    bool DigestSign(const alcp_rsa_data_t& data);
+    bool DigestVerify(const alcp_rsa_data_t& data);
+    bool Sign(const alcp_rsa_data_t& data);
+    bool Verify(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing

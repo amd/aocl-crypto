@@ -1,4 +1,4 @@
- # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -22,82 +22,20 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
-INCLUDE(FetchContent)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
-FetchContent_Declare(benchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.6.1)
-FetchContent_MakeAvailable(benchmark)
+
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/cmac/base/alc_cmac.cc ../../tests/cmac/base/cmac.cc)
-SET(LIBS ${LIBS} benchmark alcp)
-SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_IPP_API)
-    ADD_COMPILE_OPTIONS("-DUSE_IPP")
-
-    IF(IPP_INSTALL_DIR)
-        MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
-    ELSE(IPP_INSTALL_DIR)
-        SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
-    ENDIF(IPP_INSTALL_DIR)
-
     # If there is IPP, add IPP source and add IPP library
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cmac/base/ipp_cmac.cc)
-	IF(UNIX)
-		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-		ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-		ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-	ENDIF(UNIX)
-	IF(WIN32)
-	 IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-	 ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-	 ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-		set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-	 ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
 IF(ENABLE_TESTS_OPENSSL_API)
-    ADD_COMPILE_OPTIONS("-DUSE_OSSL")
-
-    IF(OPENSSL_INSTALL_DIR)
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
-    ELSE(OPENSSL_INSTALL_DIR)
-        SET(OPENSSL_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
-    ENDIF(OPENSSL_INSTALL_DIR)
-
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cmac/base/openssl_cmac.cc)
-	IF(UNIX)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-		ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-		ELSE()
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-		ENDIF()
-	ENDIF(UNIX)
-	IF(WIN32)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/bin)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-		ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 ADD_EXECUTABLE(bench_cmac bench_cmac.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,10 +44,10 @@ class IPPEcdhBase : public EcdhBase
 {
     alc_ec_info_t m_info;
 
-    int8u*                   m_pPublicKeyData_mb[8];
-    const int8u*             m_pPrivKey_mb[8];
+    int8u*                   m_pPublicKeyData_mb[8]{};
+    const int8u*             m_pPrivKey_mb[8]{};
     std::unique_ptr<int8u[]> m_pPrivKey;
-    int8u*                   m_pSecretKey_mb[8];
+    int8u*                   m_pSecretKey_mb[8]{};
 
   public:
     IPPEcdhBase(const alc_ec_info_t& info);

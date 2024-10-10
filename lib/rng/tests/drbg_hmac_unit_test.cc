@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,10 +38,8 @@
 
 using namespace alcp::rng::drbg;
 using namespace alcp::digest;
-using alcp::base::Status;
 
 typedef std::tuple<int,                // Number of generate Calls
-                   alc_digest_type_t,  // Digest Class
                    std::vector<Uint8>, // Entropy Input
                    std::vector<Uint8>, // Reseed Entropy
                    std::vector<Uint8>, // nonce
@@ -146,9 +144,9 @@ class TestingHmacDrbg : public HmacDrbg
         generate(cAdditionalInput, cOutput);
     }
 
-    Status testingSetDigest(std::shared_ptr<Digest> digestObj)
+    void testingSetDigest(std::shared_ptr<IDigest> digestObj)
     {
-        return setDigest(digestObj);
+        setDigest(digestObj);
     }
 
     std::vector<Uint8> testingGetKCopy() { return getKCopy(); }
@@ -162,7 +160,6 @@ known_answer_map_t KATDatasetSha256{
          "I1_E50B_R0B_N8B_P0B_A0B_A0B_A0B_G64B",
          {
             1,
-            ALC_DIGEST_TYPE_SHA2,
             {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1A,0x1B,0x1C,0x1D,0x1E,0x1F,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x29,0x2A,0x2B,0x2C,0x2D,0x2E,0x2F,0x30,0x31,0x32,0x33,0x34,0x35,0x36},
             {},
             {0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27},
@@ -177,7 +174,6 @@ known_answer_map_t KATDatasetSha256{
          "I2_E55B_R0B_N16B_P0B_A0B_A0B_A0B_G128B",
          {
             2,
-            ALC_DIGEST_TYPE_SHA2,
             {0xca,0x85,0x19,0x11,0x34,0x93,0x84,0xbf,0xfe,0x89,0xde,0x1c,0xbd,0xc4,0x6e,0x68,0x31,0xe4,0x4d,0x34,0xa4,0xfb,0x93,0x5e,0xe2,0x85,0xdd,0x14,0xb7,0x1a,0x74,0x88},
             {},
             {0x65,0x9b,0xa9,0x6c,0x60,0x1d,0xc6,0x9f,0xc9,0x02,0x94,0x08,0x05,0xec,0x0c,0xa8},
@@ -192,7 +188,6 @@ known_answer_map_t KATDatasetSha256{
          "I2_E32B_R0B_N16B_P0B_A0B_A0B_A0B_G128B",
          {
             2,
-            ALC_DIGEST_TYPE_SHA2,
             {0x79,0x73,0x74,0x79,0xba,0x4e,0x76,0x42,0xa2,0x21,0xfc,0xfd,0x1b,0x82,0x0b,0x13,0x4e,0x9e,0x35,0x40,0xa3,0x5b,0xb4,0x8f,0xfa,0xe2,0x9c,0x20,0xf5,0x41,0x8e,0xa3},
             {},
             {0x35,0x93,0x25,0x9c,0x09,0x2b,0xef,0x41,0x29,0xbc,0x2c,0x6c,0x9e,0x19,0xf3,0x43},
@@ -207,7 +202,6 @@ known_answer_map_t KATDatasetSha256{
          "I2_E32B_R32B_N16B_P0B_A0B_A0B_A0B_G128B",
          {
             2,
-            ALC_DIGEST_TYPE_SHA2,
             {0x06,0x03,0x2c,0xd5,0xee,0xd3,0x3f,0x39,0x26,0x5f,0x49,0xec,0xb1,0x42,0xc5,0x11,0xda,0x9a,0xff,0x2a,0xf7,0x12,0x03,0xbf,0xfa,0xf3,0x4a,0x9c,0xa5,0xbd,0x9c,0x0d},
             {0x01,0x92,0x0a,0x4e,0x66,0x9e,0xd3,0xa8,0x5a,0xe8,0xa3,0x3b,0x35,0xa7,0x4a,0xd7,0xfb,0x2a,0x6b,0xb4,0xcf,0x39,0x5c,0xe0,0x03,0x34,0xa9,0xc9,0xa5,0xa5,0xd5,0x52},
             {0x0e,0x66,0xf7,0x1e,0xdc,0x43,0xe4,0x2a,0x45,0xad,0x3c,0x6f,0xc6,0xcd,0xc4,0xdf},
@@ -225,7 +219,6 @@ known_answer_map_t KATDatasetSha224{
          "I2_E24B_R0B_N12B_P24B_A0B_A24B_A24B_G112B",
          {
             2,
-            ALC_DIGEST_TYPE_SHA2,
             {0xe3,0x50,0xff,0x0d,0x2d,0xfc,0x72,0x87,0xbc,0xee,0xb3,0x58,0x90,0xa8,0xc1,0x5d,0x38,0xdd,0xe5,0x2b,0x61,0x9a,0xd8,0x74},
             {},
             {0x27,0x6d,0x55,0x1d,0x78,0xfb,0x5f,0xd9,0xca,0x97,0x57,0x33},
@@ -240,7 +233,6 @@ known_answer_map_t KATDatasetSha224{
         "I2_E24B_R24B_N12B_P24B_A24B_A24B_A24B_G112B",
         {
             2,
-            ALC_DIGEST_TYPE_SHA2,
             {0x12,0x32,0x72,0x85,0x53,0x5b,0x38,0x66,0xcd,0x62,0x4a,0x17,0xfb,0x67,0x23,0xed,0xff,0x25,0x8d,0x16,0x59,0x91,0x77,0x30},
             {0x5b,0xef,0xfe,0xf6,0xdd,0x09,0x8c,0x43,0x2a,0xf5,0x37,0x23,0x30,0xc9,0x6c,0x03,0x4c,0xa0,0xb0,0xc0,0x92,0x80,0xc6,0xa2},
             {0x89,0x7c,0x8e,0x7f,0x57,0x67,0xdd,0x7b,0x2a,0x94,0xc2,0xf2},
@@ -260,7 +252,6 @@ class HmacDrbgKat
 {
   public:
     std::unique_ptr<TestingHmacDrbg> m_hmacDrbg;
-    alc_digest_type_t                m_digestClass;
     int                              m_genCount = {};
     std::vector<Uint8> m_entropy = {}, m_reseedEntropy = {}, m_nonce = {},
                        m_pstr = {}, m_add_reseed = {}, m_add1 = {}, m_add2 = {},
@@ -278,7 +269,6 @@ class HmacDrbgKat
         const auto testName = params.first;
 
         std::tie(m_genCount,
-                 m_digestClass,
                  m_entropy,
                  m_reseedEntropy,
                  m_nonce,
@@ -289,10 +279,23 @@ class HmacDrbgKat
                  m_generatedBits) = params.second;
     }
 
-    void SetUp() override { getParams(); }
+    void SetUp() override
+    {
+        getParams();
+        SetReserve(m_add1);
+        SetReserve(m_add2);
+        SetReserve(m_add_reseed);
+        SetReserve(m_pstr);
+    }
+
+    inline void SetReserve(std::vector<Uint8>& var)
+    {
+        if (var.size() == 0)
+            var.reserve(1);
+    }
 };
 
-template<typename SHA_CLASS, alc_digest_len_t len>
+template<typename SHA_CLASS>
 class HmacDrbgKatTemplate : public HmacDrbgKat
 {
     std::shared_ptr<SHA_CLASS> p_shaObj;
@@ -301,42 +304,16 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
     void SetUp() override
     {
         HmacDrbgKat::SetUp();
-        alc_digest_mode_t digest_mode = {};
-        switch (len) {
-            case ALC_DIGEST_LEN_224:
-                digest_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            case ALC_DIGEST_LEN_256:
-                digest_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            default:
-                break;
-        }
-        alc_digest_info_t digest_info = {
-            ALC_DIGEST_TYPE_SHA3, len, {}, digest_mode, {}
-        };
-        switch (m_digestClass) {
-            case ALC_DIGEST_TYPE_SHA2:
-                p_shaObj = std::make_shared<SHA_CLASS>();
-            case ALC_DIGEST_TYPE_SHA3:
-                p_shaObj = std::make_shared<SHA_CLASS>(digest_info);
-                break;
-            default:
-                // TODO: Raise an exeception
-                ASSERT_TRUE(false);
-                break;
-        }
+        p_shaObj   = std::make_shared<SHA_CLASS>();
         m_hmacDrbg = std::make_unique<TestingHmacDrbg>();
         m_hmacDrbg->testingSetDigest(p_shaObj);
     }
 };
 
-class HmacDrbgKatSHA2_256
-    : public HmacDrbgKatTemplate<Sha256, ALC_DIGEST_LEN_256>
+class HmacDrbgKatSHA2_256 : public HmacDrbgKatTemplate<Sha256>
 {};
 
-class HmacDrbgKatSHA2_224
-    : public HmacDrbgKatTemplate<Sha224, ALC_DIGEST_LEN_224>
+class HmacDrbgKatSHA2_224 : public HmacDrbgKatTemplate<Sha224>
 {};
 
 TEST_P(HmacDrbgKatSHA2_256, SHA2)
@@ -396,11 +373,12 @@ TEST(Instantiate, SHA256)
     const std::vector<Uint8> nonce = { 0x20, 0x21, 0x22, 0x23,
                                        0x24, 0x25, 0x26, 0x27 };
 
-    const std::vector<Uint8> PersonalizationString(0);
+    std::vector<Uint8> PersonalizationString(0);
+    PersonalizationString.reserve(1);
 
     const std::vector<Uint8> AdditionalInput(0);
 
-    std::shared_ptr<alcp::digest::Digest> sha_obj =
+    std::shared_ptr<alcp::digest::IDigest> sha_obj =
         std::make_shared<alcp::digest::Sha256>();
 
     TestingHmacDrbg hmacDrbg;

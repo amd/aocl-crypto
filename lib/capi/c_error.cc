@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,6 @@
 #include "alcp/error.h"
 
 #include "alcp/base/error.hh"
-#include "alcp/modulemanager.hh"
 #include "alcp/types.hh"
 
 #include <cstring>
@@ -38,40 +37,11 @@ EXTERN_C_BEGIN
 
 using namespace alcp;
 using namespace alcp::base;
-using namespace alcp::module;
 
-void
-alc_error_str_internal(
-    alc_error_t err, Uint8* buf, Uint64 size, const char* file, Uint64 line)
-{}
-
-void
-alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
-{
-    auto  _code = static_cast<Uint64>(err);
-    auto& m     = ModuleManager::getModule(_code);
-    auto& e     = m.getModuleError(_code);
-
-    auto str = e->message();
-    size     = std::min(str.size(), size);
-
-    snprintf((char*)buf, size, "%s", str.c_str());
-}
-
-bool
+Uint8
 alcp_is_error(alc_error_t err)
 {
-    /*FIXME: Temporary fix for coverage mode error*/
-    alc_error_t err_temp = err;
-    if (err_temp == 0)
-        return false;
-    else {
-        /*FIXME fix for memory error with ASAN*/
-#ifdef ALCP_COMPILE_OPTIONS_SANITIZE
-        printf("Error code: %ld\n", (long)err_temp);
-#endif
-        return true;
-    }
+    return err != 0;
 }
 
 EXTERN_C_END

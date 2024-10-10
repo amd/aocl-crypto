@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,134 +49,185 @@ namespace alcp::cipher { namespace vaes512 {
                                   Uint64       len,
                                   const Uint8* pKey,
                                   int          nRounds,
-                                  const Uint8* pIv)
+                                  Uint8*       pIv)
     {
-        alc_error_t err       = ALC_ERROR_NONE;
-        auto        pkey128   = reinterpret_cast<const __m128i*>(pKey);
-        auto        p_in_128  = reinterpret_cast<const __m128i*>(pSrc);
-        auto        p_out_128 = reinterpret_cast<__m128i*>(pDest);
+        alc_error_t err    = ALC_ERROR_NONE;
+        Uint64      blocks = len / Rijndael::cBlockSize;
+        Uint64      res    = len % Rijndael::cBlockSize;
+
+        auto pkey128  = reinterpret_cast<const __m128i*>(pKey);
+        auto pa_128   = reinterpret_cast<const __m128i*>(pSrc);
+        auto pb_128   = pa_128;
+        auto pOut_512 = reinterpret_cast<__m512i*>(pDest);
 
         __m512i a1, a2, a3, a4;
         __m512i b1, b2, b3, b4;
-        __m512i _a1;
+        //__m512i _a1;
 
-        sKeys keys{};
-
-        Uint64 blocks = len / Rijndael::cBlockSize;
-
-        // Loading 4 more keys or 2 more keys won't really hurt :-)
+        sKeys keys;
         alcp_load_key_zmm(pkey128, keys);
 
-        // Force rounds to actual size
-        // keys.numRounds = nRounds;
+        Int32 isIvUsed = 0;
 
-        // IV load 128 into lower 128 bits of 512 bit register.
-        b1 = alcp_loadu_128((const __m512i*)pIv);
+        if (blocks >= 4) {
+            // Load IV into b1 to process 1st block.
+            b1          = alcp_loadu_128((const __m512i*)pIv);
+            b2          = _mm512_loadu_si512(pb_128);
+            __m512i idx = _mm512_set_epi64(5, 4, 3, 2, 1, 0, 0, 0);
+            b2          = _mm512_permutexvar_epi64(idx, b2);
+            b1 = _mm512_mask_blend_epi64(252, b1, b2); // pack iv and b2
 
-        if (blocks >= 1) {
-            a1 = alcp_loadu_128((const __m512i*)p_in_128);
+            for (; blocks >= 16; blocks -= 16) {
+                if (isIvUsed) {
+                    b1 = _mm512_loadu_si512(pb_128);
+                    pb_128 += 4;
+                } else {
+                    pb_128 += 3;
+                }
+                isIvUsed = 1;
+
+                a1 = _mm512_loadu_si512(pa_128);
+                a2 = _mm512_loadu_si512(pa_128 + 4);
+                a3 = _mm512_loadu_si512(pa_128 + 8);
+                a4 = _mm512_loadu_si512(pa_128 + 12);
+
+                b2 = _mm512_loadu_si512(pb_128);
+                b3 = _mm512_loadu_si512(pb_128 + 4);
+                b4 = _mm512_loadu_si512(pb_128 + 8);
+                pb_128 += 12;
+
+                AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
+                a1 = alcp_xor(a1, b1);
+                a2 = alcp_xor(a2, b2);
+                a3 = alcp_xor(a3, b3);
+                a4 = alcp_xor(a4, b4);
+
+                // Store decrypted blocks.
+                alcp_storeu(pOut_512, a1);
+                alcp_storeu(pOut_512 + 1, a2);
+                alcp_storeu(pOut_512 + 2, a3);
+                alcp_storeu(pOut_512 + 3, a4);
+
+                pa_128 += 16;
+                pOut_512 += 4;
+            }
+
+            if (blocks) {
+
+                if (blocks >= 8) {
+                    if (isIvUsed) {
+                        b1 = _mm512_loadu_si512(pb_128);
+                        pb_128 += 4;
+                    } else {
+                        pb_128 += 3;
+                    }
+                    isIvUsed = 1;
+
+                    a1 = _mm512_loadu_si512(pa_128);
+                    a2 = _mm512_loadu_si512(pa_128 + 4);
+                    b2 = _mm512_loadu_si512(pb_128);
+                    pb_128 += 4;
+                    AesEncNoLoad_2x512(b1, b2, keys);
+                    a1 = alcp_xor(a1, b1);
+                    a2 = alcp_xor(a2, b2);
+                    alcp_storeu(pOut_512, a1);
+                    alcp_storeu(pOut_512 + 1, a2);
+
+                    pa_128 += 8;
+                    pOut_512 += 2;
+                    blocks -= 8;
+                }
+
+                if (blocks >= 4) {
+                    if (isIvUsed) {
+                        b1 = _mm512_loadu_si512(pb_128);
+                        pb_128 += 4;
+                    } else {
+                        pb_128 += 3;
+                    }
+                    isIvUsed = 1;
+                    a1       = _mm512_loadu_si512(pa_128);
+                    AesEncNoLoad_1x512(b1, keys);
+                    a1 = alcp_xor(a1, b1);
+                    alcp_storeu(pOut_512, a1);
+
+                    pa_128 += 4;
+                    pOut_512 += 1;
+                    blocks -= 4;
+                }
+
+                auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
+                for (; blocks != 0; blocks--) {
+                    a1 = alcp_loadu_128((const __m512i*)pa_128);
+                    if (isIvUsed) {
+                        b1 = alcp_loadu_128((__m512i*)(pb_128));
+                    }
+                    pb_128 += 1;
+                    isIvUsed = 1;
+
+                    AesEncNoLoad_1x512(b1, keys);
+
+                    a1 = alcp_xor(a1, b1);
+                    alcp_storeu_128((__m512i*)p_out_128, a1);
+
+                    pa_128++;
+                    p_out_128++;
+                }
+                // Update back the initial pointer
+                pOut_512 = reinterpret_cast<__m512i*>(p_out_128);
+            }
+        } else {
+            b1             = alcp_loadu_128((const __m512i*)pIv);
+            auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
+            for (; blocks != 0; blocks--) {
+                if (isIvUsed) {
+                    b1 = alcp_loadu_128((__m512i*)pb_128);
+                    pb_128++;
+                }
+                isIvUsed = 1;
+
+                a1 = alcp_loadu_128((const __m512i*)pa_128);
+                AesEncNoLoad_1x512(b1, keys);
+                a1 = alcp_xor(a1, b1);
+                alcp_storeu_128((__m512i*)p_out_128, a1);
+                pa_128++;
+                p_out_128++;
+            }
+            // Update back the initial pointer
+            pOut_512 = reinterpret_cast<__m512i*>(p_out_128);
+        }
+
+        if (res) {
+            // FIXME: To be merged into
+            b1             = alcp_loadu_128((const __m512i*)pIv);
+            auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
+
+            if (isIvUsed) {
+                b1 = alcp_loadu_128((__m512i*)pb_128);
+                pb_128++;
+            }
+            isIvUsed = 1;
+
+            a1 = _mm512_setzero_si512();
+            // Create mask to load bytes
+            Uint64 mask = 0xFFFF >> (16 - res);
+            // Mask load bytes
+            a1 = _mm512_mask_loadu_epi8(a1, mask, (const __m512i*)pa_128);
 
             AesEncNoLoad_1x512(b1, keys);
 
             a1 = alcp_xor(a1, b1);
 
-            alcp_storeu_128((__m512i*)p_out_128, a1);
-            p_in_128++;
-            p_out_128++;
-            blocks--;
+            _mm512_mask_storeu_epi8((__m512i*)p_out_128, mask, a1);
+            // p_in_128++;
+            // p_out_128++;
         }
 
-        for (; blocks >= 16; blocks -= 16) {
-
-            // Load a(cipher text) to xor
-            a1 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 0);
-            a2 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 1);
-            a3 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 2);
-            a4 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 3);
-
-            // Load b(cipher text offset -1) to reencrypt and xor
-            b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
-            b2 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 1);
-            b3 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 2);
-            b4 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 3);
-
-            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
-
-            // Xor reencrypted previous cipher text with current cipher text
-            a1 = alcp_xor(a1, b1);
-            a2 = alcp_xor(a2, b2);
-            a3 = alcp_xor(a3, b3);
-            a4 = alcp_xor(a4, b4);
-
-            // Store the decrypted cipher text back
-            alcp_storeu((__m512i*)p_out_128, a1);
-            alcp_storeu(((__m512i*)p_out_128) + 1, a2);
-            alcp_storeu(((__m512i*)p_out_128) + 2, a3);
-            alcp_storeu(((__m512i*)p_out_128) + 3, a4);
-            p_in_128 += 16;
-            p_out_128 += 16;
-        }
-
-        for (; blocks >= 8; blocks -= 8) {
-
-            // Load a(cipher text) to xor
-            a1 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 0);
-            a2 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 1);
-
-            // Load b(cipher text offset -1) to reencrypt and xor
-            b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
-            b2 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 1);
-
-            AesEncNoLoad_2x512(b1, b2, keys);
-
-            // Xor reencrypted previous cipher text with current cipher text
-            a1 = alcp_xor(a1, b1);
-            a2 = alcp_xor(a2, b2);
-
-            // Store the decrypted cipher text back
-            alcp_storeu((__m512i*)p_out_128, a1);
-            alcp_storeu(((__m512i*)p_out_128) + 1, a2);
-            p_in_128 += 8;
-            p_out_128 += 8;
-        }
-
-        for (; blocks >= 4; blocks -= 4) {
-
-            // Load a(cipher text) to xor
-            a1 = alcp_loadu(((const __m512i*)(p_in_128 - 0)) + 0);
-
-            // Load b(cipher text offset -1) to reencrypt and xor
-            b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
-
-            AesEncNoLoad_1x512(b1, keys);
-
-            // Xor reencrypted previous cipher text with current cipher text
-            a1 = alcp_xor(a1, b1);
-
-            // Store the decrypted cipher text back
-            alcp_storeu((__m512i*)p_out_128, a1);
-            p_in_128 += 4;
-            p_out_128 += 4;
-        }
-
-        // Load previous CT to b1 to chain block 1 by 1
-        if (blocks >= 1) {
-            b1 = alcp_loadu_128((const __m512i*)(p_in_128 - 1));
-        }
-
-        // Chain block individually and decrypt
-        for (; blocks >= 1; blocks--) {
-            a1 = _a1 = alcp_loadu_128((const __m512i*)p_in_128);
-
-            AesEncNoLoad_1x512(b1, keys);
-
-            a1 = alcp_xor(a1, b1);
-
-            b1 = _a1;
-            alcp_storeu_128((__m512i*)p_out_128, a1);
-            p_in_128++;
-            p_out_128++;
-        }
+#ifdef AES_MULTI_UPDATE
+        // Store nth ciphertext to iv
+        alcp_storeu_128(reinterpret_cast<__m512i*>(pIv),
+                        alcp_loadu_128(((const __m512i*)(pa_128 - 1))));
+#endif
 
         // clear all keys in registers.
         alcp_clear_keys_zmm(keys);
@@ -186,13 +237,12 @@ namespace alcp::cipher { namespace vaes512 {
         return err;
     }
 
-    ALCP_API_EXPORT
     alc_error_t DecryptCfb128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<AesEncryptNoLoad_1x512Rounds10,
                           AesEncryptNoLoad_2x512Rounds10,
@@ -202,13 +252,12 @@ namespace alcp::cipher { namespace vaes512 {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
-    ALCP_API_EXPORT
     alc_error_t DecryptCfb192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<AesEncryptNoLoad_1x512Rounds12,
                           AesEncryptNoLoad_2x512Rounds12,
@@ -218,13 +267,12 @@ namespace alcp::cipher { namespace vaes512 {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
-    ALCP_API_EXPORT
     alc_error_t DecryptCfb256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptCfb<AesEncryptNoLoad_1x512Rounds14,
                           AesEncryptNoLoad_2x512Rounds14,

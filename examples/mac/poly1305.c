@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
  */
 
 #include "alcp/alcp.h"
+#include <inttypes.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,31 +35,38 @@
 static alc_mac_handle_t handle;
 
 alc_error_t
-poly1305_demo(const alc_mac_info_p macInfo,
-              Uint8*               data,
-              Uint32               dataLen,
-              Uint8*               mac,
-              Uint32               mac_size)
+poly1305_demo(Uint8*       data,
+              Uint32       dataLen,
+              Uint8*       mac,
+              Uint32       mac_size,
+              const Uint8* key,
+              Uint64       key_size)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = alcp_mac_supported(macInfo);
+    handle.ch_context = malloc(alcp_mac_context_size());
 
-    if (err == ALC_ERROR_NONE) {
-        handle.ch_context = malloc(alcp_mac_context_size(macInfo));
-    } else {
-        printf("Information provided is unsupported\n");
-        return err;
+    if (handle.ch_context == NULL) {
+        return ALC_ERROR_GENERIC;
     }
-    printf("Support Success!\n");
 
-    err = alcp_mac_request(&handle, macInfo);
+    err = alcp_mac_request(&handle, ALC_MAC_POLY1305);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %lu\n", err);
+        printf("Error Occurred on MAC Request - %10" PRId64 "\n", err);
         return err;
     }
+
     printf("Request Success!\n");
+
+    err = alcp_mac_init(&handle, key, key_size, NULL);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Init - %10" PRId64 "\n", err);
+        return err;
+    }
+
+    printf("Init Success!\n");
+
     // Update can be called multiple times with smaller chunks of the data
     err = alcp_mac_update(&handle, data, dataLen);
     if (alcp_is_error(err)) {
@@ -66,19 +74,13 @@ poly1305_demo(const alc_mac_info_p macInfo,
         return err;
     }
     printf("Mac Generation Success!\n");
-    // In Finalize code, last remaining buffer can be provided if any exists
-    // with its size
-    err = alcp_mac_finalize(&handle, NULL, 0);
+
+    err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Finalize\n");
         return err;
     }
-    printf("Finalized!\n");
-    err = alcp_mac_copy(&handle, mac, mac_size);
-    if (alcp_is_error(err)) {
-        printf("Error Occurred while Copying MAC\n");
-        return err;
-    }
+
     printf("Mac Copy Success!\n");
     alcp_mac_finish(&handle);
     free(handle.ch_context);
@@ -101,19 +103,10 @@ main(int argc, char const* argv[])
     Uint8 expectedMac[] = { 0xfd, 0x86, 0x1c, 0x71, 0x84, 0xf9, 0x8f, 0x45,
                             0xdc, 0x6d, 0x5b, 0x4d, 0xc6, 0xc0, 0x81, 0xe4 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = { .mi_type    = ALC_MAC_POLY1305,
-                               .mi_keyinfo = kinfo };
-
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
-    err = poly1305_demo(&macinfo, data, sizeof(data), mac, mac_size);
-    if (err != ALC_ERROR_NONE) {
+    err = poly1305_demo(data, sizeof(data), mac, mac_size, key, sizeof(key));
+    if (alcp_is_error(err)) {
         printf("Error in CMAC\n");
         return -1;
     } else {

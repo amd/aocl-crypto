@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,29 +32,27 @@
 
 #include "alcp/digest.h"
 
-static alc_digest_handle_t s_dg_handle;
+static alc_digest_handle_t s_dg_handle, s_dg_handle_dup;
 
 static alc_error_t
 create_demo_session(Uint32 digest_size)
 {
     alc_error_t err;
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA3,
-        .dt_len = ALC_DIGEST_LEN_CUSTOM,
-        .dt_mode = {.dm_sha3 = ALC_SHAKE_256,},
-        .dt_custom_len = digest_size
-    };
-
-    Uint64 size         = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
-    err = alcp_digest_request(&dinfo, &s_dg_handle);
+    if (!s_dg_handle.context) {
+        return ALC_ERROR_NO_MEMORY;
+    }
+
+    err = alcp_digest_request(ALC_SHAKE_256, &s_dg_handle);
 
     if (alcp_is_error(err)) {
         return err;
     }
 
+    err = alcp_digest_init(&s_dg_handle);
     return err;
 }
 
@@ -71,6 +69,8 @@ hash_demo(const Uint8* src,
     const Uint64 last_buf_size = src_size % num_chunks;
     const Uint8* p             = src;
 
+    Uint8* output_dup = NULL;
+
     while (num_chunks-- > 0) {
         err = alcp_digest_update(&s_dg_handle, p, buf_size);
         if (alcp_is_error(err)) {
@@ -80,20 +80,59 @@ hash_demo(const Uint8* src,
         p += buf_size;
     }
 
-    if (last_buf_size == 0) {
-        p = NULL;
+    if (last_buf_size) {
+        err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
+        if (alcp_is_error(err)) {
+            printf("Unable to compute SHA3 hash\n");
+            goto out;
+        }
     }
 
-    alcp_digest_finalize(&s_dg_handle, p, last_buf_size);
+    // copying context to demonstrate the squeeze functionality
+    // Shake digest supports alcp_digest_shake_squeeze in addition to
+    // alcp_digest_finalize. It allows multiple calls to be made to squeeze
+    // variable length digest output. alcp_digest_finalize() should not be
+    // called after this.
+    Uint64 size             = alcp_digest_context_size();
+    s_dg_handle_dup.context = malloc(size);
 
-    err = alcp_digest_copy(&s_dg_handle, output, out_size);
+    if (!s_dg_handle_dup.context) {
+        printf("Unable to allocate context\n");
+        err = ALC_ERROR_GENERIC;
+        goto out;
+    }
+    err = alcp_digest_context_copy(&s_dg_handle, &s_dg_handle_dup);
+    if (alcp_is_error(err)) {
+        printf("Unable to copy context\n");
+        goto out;
+    }
+
+    output_dup = malloc(out_size);
+    for (Uint16 i = 0; i < out_size; i++) {
+        err = alcp_digest_shake_squeeze(&s_dg_handle_dup, output_dup + i, 1);
+        if (alcp_is_error(err)) {
+            printf("Unable to squeeze\n");
+            goto out;
+        }
+    }
+
+    err = alcp_digest_finalize(&s_dg_handle, output, out_size);
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
+        goto out;
+    }
+
+    if (memcmp(output_dup, output, out_size)) {
+        printf("squeeze operation failed\n");
+        err = ALC_ERROR_GENERIC;
     }
 
 out:
     alcp_digest_finish(&s_dg_handle);
+    alcp_digest_finish(&s_dg_handle_dup);
     free(s_dg_handle.context);
+    free(s_dg_handle_dup.context);
+    free(output_dup);
     return err;
 }
 
@@ -284,10 +323,10 @@ main(void)
             return -1;
         }
         err = hash_demo(sample_input,
-                            strlen((const char*)sample_input),
-                            sample_output,
-                            hash_size,
-                            num_chunks);
+                        strlen((const char*)sample_input),
+                        sample_output,
+                        hash_size,
+                        num_chunks);
         if (alcp_is_error(err)) {
             return -1;
         }

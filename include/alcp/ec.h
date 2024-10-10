@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -147,8 +147,8 @@ alcp_ec_context_size(const alc_ec_info_p p_ec_info);
  * @param [in]      pEcInfo Description of the requested ec session
  *
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * is not ALC_ERROR_NONE, an error has occurred and handle will be invalid for
+ * future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo);
@@ -158,8 +158,8 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo);
  *              as pointed by p_ec_info_p
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_supported is called and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_supported is called and before
+ * @ref alcp_ec_finish</b>
  * @endparblock
  *
  * @note        alcp_ec_supported() should be called first to
@@ -171,27 +171,11 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo);
  * EC operations.
  *
  * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
+ * is not ALC_ERROR_NONE, an error has occurred and handle will be invalid for
+ * future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
-
-/**
- * @brief              Get the error string for errors occurring in EC
- *                     operations
- * @parblock <br> &nbsp;
- * <b> This API is called to get the error string. It should be called after
- * @ref alcp_ec_request and before @ref alcp_ec_finish </b>
- * @endparblock
- * @param [in] pEcHandle Session handle for EC operation
- * @param [out] pBuff  Destination Buffer to which Error String will be copied
- * @param [in] size    Length of the Buffer.
- *
- * @return alc_error_t Error code to validate the Handle
- */
-ALCP_API_EXPORT alc_error_t
-alcp_ec_error(alc_ec_handle_p pEcHandle, Uint8* pBuff, Uint64 size);
 
 EXTERN_C_END
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -130,6 +130,11 @@ typedef enum _alc_error_generic
      */
     ALC_ERROR_DUPLICATE_KEY,
 
+    /*
+     * Mismatch is tag observed in Decrypt
+     */
+    ALC_ERROR_TAG_MISMATCH,
+
 } alc_error_generic_t;
 
 /**
@@ -137,25 +142,6 @@ typedef enum _alc_error_generic
  * @typedef Uint64 alc_error_t
  */
 typedef Uint64 alc_error_t;
-
-/**
- *
- * @brief        Converts AOCL Crypto errors to human readable form
- * @parblock <br> &nbsp;
- * <b>This API should be called only if any error occurred while executing other
- * API</b>
- * @endparblock
- *
- * @note         API mentions Filename and line number on which error occurred
- * along with error info
- *
- * @param [in] err    Actual Error
- * @param [out] buf    Buffer to write the Error message to
- * @param [in] size   Size of the buffer buf. Size of buf should be at
- * least 1024
- */
-ALCP_API_EXPORT void
-alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
 
 /**
  * @brief        Returns true if an error has occurred
@@ -167,22 +153,8 @@ alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
  *
  * @param [in] err    Actual Error
  */
-ALCP_API_EXPORT bool
+ALCP_API_EXPORT Uint8
 alcp_is_error(alc_error_t err);
-
-/**
- * @brief        Clears the error and releases any resources
- * @parblock <br> &nbsp;
- * <b>This API should be called to Clears the error and releases any resources
- * </b>
- * @endparblock
- * @note        At the end of using the error variable, alcp_error_clear()
- * must be called, memory leak would occur otherwise.
- *
- * @param [in] err    Actual Error
- */
-ALCP_API_EXPORT void
-alcp_error_clear(alc_error_t err);
 
 EXTERN_C_END
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 #include "alc_cipher.hh"
 #include "alc_cipher_aead.hh"
 #include "cipher.hh"
+#include "cipher/cipher.hh"
 #include "csv.hh"
 #include "gtest_common.hh"
 #include <vector>
@@ -61,35 +62,6 @@ typedef enum
     SMALL = 0,
     BIG
 } big_small_t;
-/**
- * returns respective string based on AES modes
- */
-std::string
-GetModeSTR(alc_cipher_mode_t mode)
-{
-    switch (mode) {
-        case ALC_AES_MODE_ECB:
-            return "ECB";
-        case ALC_AES_MODE_CBC:
-            return "CBC";
-        case ALC_AES_MODE_OFB:
-            return "OFB";
-        case ALC_AES_MODE_CTR:
-            return "CTR";
-        case ALC_AES_MODE_CFB:
-            return "CFB";
-        case ALC_AES_MODE_XTS:
-            return "XTS";
-        case ALC_AES_MODE_GCM:
-            return "GCM";
-        case ALC_AES_MODE_CCM:
-            return "CCM";
-        case ALC_AES_MODE_SIV:
-            return "SIV";
-        default:
-            return "NULL";
-    }
-}
 
 // Just a class to reduce duplication of line
 class CipherTestingCore
@@ -100,9 +72,8 @@ class CipherTestingCore
     // FIXME: Change these to unique_ptr
     CipherTesting*    m_cipherHandler = {};
     AlcpCipherBase*   m_acb           = {};
-    lib_t             m_lib;
-    alc_cipher_mode_t m_alcpMode;
-    _alc_cipher_type  m_cipher_type;
+    LIB_TYPE          m_lib{};
+    alc_cipher_mode_t m_alcpMode{};
 #ifdef USE_IPP
     IPPCipherBase* icb = nullptr;
 #endif
@@ -110,46 +81,41 @@ class CipherTestingCore
     OpenSSLCipherBase* ocb = nullptr;
 #endif
   public:
-    CipherTestingCore(lib_t             lib,
-                      _alc_cipher_type  cipher_type,
-                      alc_cipher_mode_t alcpMode)
+    CipherTestingCore(LIB_TYPE lib, alc_cipher_mode_t alcpMode)
     {
         m_lib           = lib;
         m_alcpMode      = alcpMode;
-        m_cipher_type   = cipher_type;
         m_cipherHandler = new CipherTesting();
         switch (lib) {
-            case OPENSSL:
+            case LIB_TYPE::OPENSSL:
 #ifndef USE_OSSL
                 delete m_cipherHandler;
-                throw "OpenSSL not avaiable!";
+                throw "OpenSSL not available!";
 #else
-                ocb = new OpenSSLCipherBase(cipher_type, alcpMode, NULL);
+                ocb = new OpenSSLCipherBase(alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
-            case IPP:
+            case LIB_TYPE::IPP:
 #ifndef USE_IPP
                 delete m_cipherHandler;
-                throw "IPP not avaiable!";
+                throw "IPP not available!";
 #else
                 if (!useipp) {
                     delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
-                icb = new IPPCipherBase(cipher_type, alcpMode, NULL);
+                icb = new IPPCipherBase(alcpMode, NULL);
                 m_cipherHandler->setcb(icb);
 #endif
                 break;
-            case ALCP:
-                m_acb = new AlcpCipherBase(cipher_type, alcpMode, NULL);
+            case LIB_TYPE::ALCP:
+                m_acb = new AlcpCipherBase(alcpMode, NULL);
                 m_cipherHandler->setcb(m_acb);
                 break;
         }
     }
-    CipherTestingCore(std::string       modeStr,
-                      _alc_cipher_type  cipher_type,
-                      alc_cipher_mode_t alcpMode)
+    CipherTestingCore(std::string modeStr, alc_cipher_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
@@ -158,10 +124,10 @@ class CipherTestingCore
         // Initialize cipher testing classes
         /* alcpMode is valid only for AES schemes */
         m_cipherHandler = new CipherTesting();
-        m_acb           = new AlcpCipherBase(cipher_type, alcpMode, NULL);
+        m_acb           = new AlcpCipherBase(alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
-        icb = new IPPCipherBase(cipher_type, alcpMode, NULL);
+        icb = new IPPCipherBase(alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
             m_cipherHandler->setcb(icb);
@@ -172,7 +138,7 @@ class CipherTestingCore
         }
 #endif
 #ifdef USE_OSSL
-        ocb = new OpenSSLCipherBase(cipher_type, alcpMode, NULL);
+        ocb = new OpenSSLCipherBase(alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
             m_cipherHandler->setcb(ocb);
@@ -210,9 +176,8 @@ class CipherAeadTestingCore
     // FIXME: Change these to unique_ptr
     CipherTesting*      m_cipherHandler = {};
     AlcpCipherAeadBase* m_acb           = {};
-    lib_t               m_lib;
-    alc_cipher_mode_t   m_alcpMode;
-    _alc_cipher_type    m_cipher_type;
+    LIB_TYPE            m_lib{};
+    alc_cipher_mode_t   m_alcpMode{};
 #ifdef USE_IPP
     IPPCipherAeadBase* icb = nullptr;
 #endif
@@ -220,47 +185,42 @@ class CipherAeadTestingCore
     OpenSSLCipherAeadBase* ocb = nullptr;
 #endif
   public:
-    CipherAeadTestingCore(lib_t             lib,
-                          _alc_cipher_type  cipher_type,
-                          alc_cipher_mode_t alcpMode)
+    CipherAeadTestingCore(LIB_TYPE lib, alc_cipher_mode_t alcpMode)
     {
         m_lib           = lib;
-        m_cipher_type   = cipher_type;
         m_alcpMode      = alcpMode;
         m_cipherHandler = new CipherTesting();
         switch (lib) {
                 // FIXME: OpenSSL and IPP AEAD Bringup needed
-            case OPENSSL:
+            case LIB_TYPE::OPENSSL:
 #ifndef USE_OSSL
                 delete m_cipherHandler;
-                throw "OpenSSL not avaiable!";
+                throw "OpenSSL not available!";
 #else
-                ocb = new OpenSSLCipherAeadBase(cipher_type, alcpMode, NULL);
+                ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
-            case IPP:
+            case LIB_TYPE::IPP:
 #ifndef USE_IPP
                 delete m_cipherHandler;
-                throw "IPP not avaiable!";
+                throw "IPP not available!";
 #else
                 if (!useipp) {
                     delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
-                icb = new IPPCipherAeadBase(cipher_type, alcpMode, NULL);
+                icb = new IPPCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(icb);
 #endif
                 break;
-            case ALCP:
-                m_acb = new AlcpCipherAeadBase(cipher_type, alcpMode, NULL);
+            case LIB_TYPE::ALCP:
+                m_acb = new AlcpCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(m_acb);
                 break;
         }
     }
-    CipherAeadTestingCore(std::string       modeStr,
-                          _alc_cipher_type  cipher_type,
-                          alc_cipher_mode_t alcpMode)
+    CipherAeadTestingCore(std::string modeStr, alc_cipher_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
@@ -269,10 +229,10 @@ class CipherAeadTestingCore
 
         // Initialize cipher testing classes
         m_cipherHandler = new CipherTesting();
-        m_acb           = new AlcpCipherAeadBase(cipher_type, alcpMode, NULL);
+        m_acb           = new AlcpCipherAeadBase(alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
-        icb = new IPPCipherAeadBase(cipher_type, alcpMode, NULL);
+        icb = new IPPCipherAeadBase(alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
             m_cipherHandler->setcb(icb);
@@ -283,7 +243,7 @@ class CipherAeadTestingCore
         }
 #endif
 #ifdef USE_OSSL
-        ocb = new OpenSSLCipherAeadBase(cipher_type, alcpMode, NULL);
+        ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
             m_cipherHandler->setcb(ocb);
@@ -357,7 +317,9 @@ EncDecType(encDec_t e_d, big_small_t b_s)
 // Non AEAD Version
 /* print params verbosely */
 inline void
-PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
+PrintTestData(std::vector<Uint8>& key,
+              alcp_dc_ex_t&       data,
+              alc_cipher_mode_t&  mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " Len: " << key.size() << std::endl;
@@ -367,7 +329,7 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
               << " Len: " << data.m_ivl << std::endl;
     std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
               << " Len: " << data.m_outl << std::endl;
-    if (mode.compare("XTS") == 0) {
+    if (GetModeSTR(mode).compare("XTS") == 0) {
         std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
                   << " Len: " << data.m_tkeyl << std::endl;
     }
@@ -377,7 +339,9 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
 // FIXME: Reduce the dupication
 // AEAD Version
 inline void
-PrintTestData(std::vector<Uint8> key, alcp_dca_ex_t data, std::string mode)
+PrintTestDataAead(std::vector<Uint8>& key,
+                  alcp_dca_ex_t&      data,
+                  alc_cipher_mode_t&  mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " Len: " << key.size() << std::endl;
@@ -388,180 +352,17 @@ PrintTestData(std::vector<Uint8> key, alcp_dca_ex_t data, std::string mode)
     std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
               << " Len: " << data.m_outl << std::endl;
     /* gcm / ccm / xts specific */
-    if (mode.compare("GCM") == 0 || mode.compare("CCM") == 0) {
+    if (CheckCipherIsAEAD(mode)) {
         std::cout << "ADL: " << parseBytesToHexStr(data.m_ad, data.m_adl)
                   << " Len: " << data.m_adl << std::endl;
         std::cout << "TAG: " << parseBytesToHexStr(data.m_tag, data.m_tagl)
                   << " Len: " << data.m_tagl << std::endl;
     }
-    if (mode.compare("XTS") == 0) {
+    if (GetModeSTR(mode).compare("XTS") == 0) {
         std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
                   << " Len: " << data.m_tkeyl << std::endl;
     }
     return;
-}
-
-/**
- * @brief Cross test for non-AES (CHacha20)
- *
- * @param keySize keysize in bits(128,192 or 256)
- * @param encDec (encryption or Decryption)
- * @param big_small Type (Big or Small) of test
- */
-void
-Chacha20CrossTest(int              keySize,
-                  encDec_t         encDec,
-                  _alc_cipher_type cipher_type,
-                  big_small_t      big_small)
-{
-    int               key_size = keySize;
-    int               LOOP_START, MAX_LOOP, INC_LOOP;
-    size_t            size = 1;
-    std::string       encDecStr, big_small_str;
-    const std::string cModeStr  = "Chacha20";
-    Int32             ivl       = 16;
-    bool              ret       = false;
-    Int32             IVL_START = 0, IVL_MAX = 0;
-
-    IVL_START = 16;
-    IVL_MAX   = 16;
-
-    if (encDec == ENCRYPT)
-        encDecStr.assign("ENC");
-    else
-        encDecStr.assign("DEC");
-    if (big_small == BIG)
-        big_small_str.assign("BIG");
-    else
-        big_small_str.assign("SMALL");
-    /* Request from others to validate openssl with ipp */
-    CipherTestingCore* alcpTC = nullptr;
-    if (oa_override) {
-        alcpTC = new CipherTestingCore(OPENSSL, cipher_type, ALC_AES_MODE_NONE);
-        printErrors("ALCP is overriden!... OpenSSL is now main lib");
-        printErrors("ALCP is overriden!... Forcing IPP as extlib");
-        useipp  = true;
-        useossl = false;
-    } else {
-        alcpTC = new CipherTestingCore(ALCP, cipher_type, ALC_AES_MODE_NONE);
-    }
-    CipherTestingCore* extTC = nullptr;
-    ExecRecPlay*       fr    = nullptr;
-    RngBase            rb;
-    /* Set extTC based on which external testing core user asks*/
-    try {
-        if (useossl)
-            extTC =
-                new CipherTestingCore(OPENSSL, cipher_type, ALC_AES_MODE_NONE);
-        else if (useipp)
-            extTC = new CipherTestingCore(IPP, cipher_type, ALC_AES_MODE_NONE);
-        else {
-            printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC =
-                new CipherTestingCore(OPENSSL, cipher_type, ALC_AES_MODE_NONE);
-        }
-    } catch (const char* exc) {
-        std::cerr << exc << std::endl;
-    }
-    if (big_small == SMALL) {
-        LOOP_START = SMALL_START_LOOP;
-        MAX_LOOP   = SMALL_MAX_LOOP;
-        INC_LOOP   = SMALL_INC_LOOP;
-        size       = 1;
-    } else {
-        LOOP_START = BIG_START_LOOP;
-        MAX_LOOP   = BIG_MAX_LOOP;
-        INC_LOOP   = BIG_INC_LOOP;
-        size       = 16 * 10000000;
-    }
-
-    /* generate these only once and use it in the loop below, chunk by chunk */
-    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP * size);
-    std::vector<Uint8> key_full = rb.genRandomBytes(key_size);
-    std::vector<Uint8> iv_full  = rb.genRandomBytes(IVL_MAX);
-
-    std::vector<Uint8>::const_iterator pos1, pos2;
-
-    auto rng = std::default_random_engine{};
-
-    if (extTC != nullptr) {
-        for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
-            /* generate multiple iv and adl */
-            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
-
-            alcp_dc_ex_t data_alc, data_ext;
-
-            std::vector<Uint8> ct(i * size, 0), out_ct_alc(i * size, 0),
-                out_ct_ext(i * size, 0), out_pt(i * size, 0);
-
-            pos1 = msg_full.end() - i * size;
-            pos2 = msg_full.end();
-            std::vector<Uint8> pt(pos1, pos2);
-
-            key_full = ShuffleVector(key_full, rng);
-            pos1     = key_full.begin();
-            pos2     = key_full.begin() + (key_size / 8);
-            std::vector<Uint8> key(pos1, pos2);
-
-            pos1 = iv_full.begin();
-            pos2 = iv_full.begin() + (ivl);
-            std::vector<Uint8> iv(pos1, pos2);
-
-            // ALC/Main Lib Data
-            data_alc.m_in   = &(pt[0]);
-            data_alc.m_inl  = pt.size();
-            data_alc.m_iv   = &(iv[0]);
-            data_alc.m_ivl  = iv.size();
-            data_alc.m_out  = &(out_ct_alc[0]);
-            data_alc.m_outl = data_alc.m_inl;
-
-            // External Lib Data
-            data_ext.m_in   = &(pt[0]);
-            data_ext.m_inl  = pt.size();
-            data_ext.m_iv   = &(iv[0]);
-            data_ext.m_ivl  = iv.size();
-            data_ext.m_out  = &(out_ct_ext[0]);
-            data_ext.m_outl = data_alc.m_inl;
-
-            if (encDec == ENCRYPT) {
-                ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
-                if (!ret) {
-                    std::cout << "ERROR: Enc: Main lib" << std::endl;
-                    FAIL();
-                }
-                ret = extTC->getCipherHandler()->testingEncrypt(data_ext, key);
-                if (!ret) {
-                    std::cout << "ERROR: Enc: ext lib" << std::endl;
-                    FAIL();
-                }
-                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
-                if (verbose > 1) {
-                    PrintTestData(key, data_alc, cModeStr);
-                    PrintTestData(key, data_ext, cModeStr);
-                }
-            } else {
-                ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
-                if (!ret) {
-                    std::cout << "ERROR: Dec: main lib" << std::endl;
-                    FAIL();
-                }
-                ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
-                if (!ret) {
-                    std::cout << "ERROR: Dec: ext lib" << std::endl;
-                    FAIL();
-                }
-                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
-
-                if (verbose > 1) {
-                    PrintTestData(key, data_alc, cModeStr);
-                    PrintTestData(key, data_ext, cModeStr);
-                }
-            }
-        }
-        delete extTC;
-        delete alcpTC;
-    }
-    delete fr;
 }
 
 /**
@@ -574,11 +375,10 @@ Chacha20CrossTest(int              keySize,
  * @param big_small Type (Big or Small) of test
  */
 void
-AesCrosstest(int               keySize,
-             encDec_t          encDec,
-             _alc_cipher_type  cipher_type,
-             alc_cipher_mode_t mode,
-             big_small_t       big_small)
+CipherCrossTest(int               keySize,
+                encDec_t          encDec,
+                alc_cipher_mode_t mode,
+                big_small_t       big_small)
 {
     int         key_size = keySize;
     int         LOOP_START, MAX_LOOP, INC_LOOP;
@@ -604,28 +404,30 @@ AesCrosstest(int               keySize,
     else
         big_small_str.assign("SMALL");
     /* Request from others to validate openssl with ipp */
-    CipherTestingCore* alcpTC = nullptr;
+    std::unique_ptr<CipherTestingCore> alcpTC;
     if (oa_override) {
-        alcpTC = new CipherTestingCore(OPENSSL, cipher_type, mode);
+        alcpTC = std::make_unique<CipherTestingCore>(LIB_TYPE::OPENSSL, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = new CipherTestingCore(ALCP, cipher_type, mode);
+        alcpTC = std::make_unique<CipherTestingCore>(LIB_TYPE::ALCP, mode);
     }
-    CipherTestingCore* extTC = nullptr;
-    RngBase            rb;
+    std::unique_ptr<CipherTestingCore> extTC = nullptr;
+    RngBase                            rb;
 
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = new CipherTestingCore(OPENSSL, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherTestingCore>(LIB_TYPE::OPENSSL, mode);
         else if (useipp)
-            extTC = new CipherTestingCore(IPP, cipher_type, mode);
+            extTC = std::make_unique<CipherTestingCore>(LIB_TYPE::IPP, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = new CipherTestingCore(OPENSSL, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherTestingCore>(LIB_TYPE::OPENSSL, mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -664,7 +466,7 @@ AesCrosstest(int               keySize,
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
             /* generate multiple iv and adl */
-            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
+            ivl = IVL_START + ((i + 20 + (i * 3)) % (IVL_START - IVL_MAX + 1));
 
             alcp_dc_ex_t data_alc, data_ext;
 
@@ -674,7 +476,7 @@ AesCrosstest(int               keySize,
 
             auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
-            pos1 = msg_full.end() - i * size;
+            pos1 = msg_full.end() - (i * size) - 1;
             pos2 = msg_full.end();
             std::vector<Uint8> pt(pos1, pos2);
 
@@ -692,9 +494,17 @@ AesCrosstest(int               keySize,
             pos2      = tkey_full.begin() + (key_size / 8);
             std::vector<Uint8> tkey(pos1, pos2);
 
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(pt[0]))) {
+                data_alc.m_in = &(pt[1]);
+                data_ext.m_in = &(pt[1]);
+            } else {
+                data_alc.m_in = &(pt[0]);
+                data_ext.m_in = &(pt[0]);
+            }
+            data_alc.m_inl = data_ext.m_inl = pt.size() - 1;
+
             // ALC/Main Lib Data
-            data_alc.m_in   = &(pt[0]);
-            data_alc.m_inl  = pt.size();
             data_alc.m_iv   = &(iv[0]);
             data_alc.m_ivl  = iv.size();
             data_alc.m_out  = &(out_ct_alc[0]);
@@ -705,8 +515,6 @@ AesCrosstest(int               keySize,
             }
 
             // External Lib Data
-            data_ext.m_in   = &(pt[0]);
-            data_ext.m_inl  = pt.size();
             data_ext.m_iv   = &(iv[0]);
             data_ext.m_ivl  = iv.size();
             data_ext.m_out  = &(out_ct_ext[0]);
@@ -728,10 +536,11 @@ AesCrosstest(int               keySize,
                     std::cout << "ERROR: Enc: ext lib" << std::endl;
                     FAIL();
                 }
-                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                ASSERT_TRUE(
+                    ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestData(key, data_alc, mode);
+                    PrintTestData(key, data_ext, mode);
                 }
             } else {
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
@@ -746,16 +555,15 @@ AesCrosstest(int               keySize,
                     FAIL();
                 }
 
-                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                ASSERT_TRUE(
+                    ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
 
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestData(key, data_alc, mode);
+                    PrintTestData(key, data_ext, mode);
                 }
             }
         }
-        delete extTC;
-        delete alcpTC;
     }
 }
 
@@ -770,28 +578,35 @@ AesCrosstest(int               keySize,
  * @param big_small Type (Big or Small) of test
  */
 void
-AesAeadCrosstest(int               keySize,
-                 encDec_t          encDec,
-                 _alc_cipher_type  cipher_type,
-                 alc_cipher_mode_t mode,
-                 big_small_t       big_small)
+CipherAeadCrossTest(int               keySize,
+                    encDec_t          encDec,
+                    alc_cipher_mode_t mode,
+                    big_small_t       big_small)
 {
     int         key_size = keySize;
     int         LOOP_START, MAX_LOOP, INC_LOOP;
     size_t      size = 1;
-    std::string encDecStr, big_small_str;
-    std::string modeStr = GetModeSTR(mode);
-    Int32       ivl, adl, tkeyl = 16;
+    std::string encDecStr, big_small_str, modeStr = "";
+    Int32       ivl, adl, tkeyl                   = 16;
     bool        ret       = false;
     Int32       IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
-    bool isxts = (modeStr.compare("XTS") == 0);
-    bool isgcm = (modeStr.compare("GCM") == 0);
-    bool isccm = (modeStr.compare("CCM") == 0);
-    bool issiv = (modeStr.compare("SIV") == 0);
+    modeStr = GetModeSTR(mode);
 
+    bool isxts        = (modeStr.compare("XTS") == 0);
+    bool isgcm        = (modeStr.compare("GCM") == 0);
+    bool isccm        = (modeStr.compare("CCM") == 0);
+    bool issiv        = (modeStr.compare("SIV") == 0);
+    bool ischachapoly = (modeStr.compare("chacha20-poly1305") == 0);
+
+    /*ensure that non-aead modes are not passed into this function*/
+    if (!CheckCipherIsAEAD(mode)) {
+        std::cout << "Error! Mode " << modeStr
+                  << " is not an AEAD Cipher! exiting this test!";
+        GTEST_FAIL();
+    }
     /* IV, AD Length limits for different cases */
     if (isccm) {
         IVL_START = 7;
@@ -802,6 +617,11 @@ AesAeadCrosstest(int               keySize,
         IVL_START = 16;
         IVL_MAX   = 16;
         ADL_START = 16;
+        ADL_MAX   = 16;
+    } else if (ischachapoly) {
+        IVL_START = 12;
+        IVL_MAX   = 12;
+        ADL_START = 12;
         ADL_MAX   = 16;
     } else if (isgcm) {
         IVL_START = 12;
@@ -822,28 +642,32 @@ AesAeadCrosstest(int               keySize,
     else
         big_small_str.assign("SMALL");
     /* Request from others to validate openssl with ipp */
-    CipherAeadTestingCore* alcpTC = nullptr;
+    std::unique_ptr<CipherAeadTestingCore> alcpTC;
     if (oa_override) {
-        alcpTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
+        alcpTC =
+            std::make_unique<CipherAeadTestingCore>(LIB_TYPE::OPENSSL, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = new CipherAeadTestingCore(ALCP, cipher_type, mode);
+        alcpTC = std::make_unique<CipherAeadTestingCore>(LIB_TYPE::ALCP, mode);
     }
-    CipherAeadTestingCore* extTC = nullptr;
-    RngBase                rb;
+    std::unique_ptr<CipherAeadTestingCore> extTC = nullptr;
+    RngBase                                rb;
 
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherAeadTestingCore>(LIB_TYPE::OPENSSL,
+                                                            mode);
         else if (useipp)
-            extTC = new CipherAeadTestingCore(IPP, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherAeadTestingCore>(LIB_TYPE::IPP, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherAeadTestingCore>(LIB_TYPE::OPENSSL,
+                                                            mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -883,18 +707,19 @@ AesAeadCrosstest(int               keySize,
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
             /* generate multiple iv and adl */
-            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
-            adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
+            ivl = IVL_START + ((i + 20 + (i * 3)) % (IVL_START - IVL_MAX + 1));
+            adl = ADL_START + ((i + 20 + (i * 3)) % (ADL_MAX - ADL_START + 1));
 
             alcp_dca_ex_t data_alc, data_ext;
 
             std::vector<Uint8> ct(i * size, 0), tag_alc(tagLength, 0),
                 tag_ext(tagLength, 0), out_ct_alc(i * size, 0),
-                out_ct_ext(i * size, 0), out_pt(i * size, 0);
+                out_ct_ext(i * size, 0), out_pt_alc(i * size, 0),
+                out_pt_ext(i * size, 0);
 
             auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
-            pos1 = msg_full.end() - i * size;
+            pos1 = msg_full.end() - (i * size) - 1;
             pos2 = msg_full.end();
             std::vector<Uint8> pt(pos1, pos2);
 
@@ -916,14 +741,22 @@ AesAeadCrosstest(int               keySize,
             pos2      = tkey_full.begin() + (key_size / 8);
             std::vector<Uint8> tkey(pos1, pos2);
 
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(pt[0]))) {
+                data_alc.m_in = &(pt[1]);
+                data_ext.m_in = &(pt[1]);
+            } else {
+                data_alc.m_in = &(pt[0]);
+                data_ext.m_in = &(pt[0]);
+            }
+            data_alc.m_inl = data_ext.m_inl = pt.size() - 1;
+
             // ALC/Main Lib Data
-            data_alc.m_in   = &(pt[0]);
-            data_alc.m_inl  = pt.size();
             data_alc.m_iv   = &(iv[0]);
             data_alc.m_ivl  = iv.size();
             data_alc.m_out  = &(out_ct_alc[0]);
             data_alc.m_outl = data_alc.m_inl;
-            if (isgcm || isccm || issiv) {
+            if (isgcm || isccm || issiv || ischachapoly) {
                 data_alc.m_ad      = &(add[0]);
                 data_alc.m_adl     = add.size();
                 data_alc.m_tag     = &(tag_alc[0]);
@@ -936,13 +769,11 @@ AesAeadCrosstest(int               keySize,
             }
 
             // External Lib Data
-            data_ext.m_in   = &(pt[0]);
-            data_ext.m_inl  = pt.size();
             data_ext.m_iv   = &(iv[0]);
             data_ext.m_ivl  = iv.size();
             data_ext.m_out  = &(out_ct_ext[0]);
             data_ext.m_outl = data_alc.m_inl;
-            if (isgcm || isccm || issiv) {
+            if (isgcm || isccm || issiv || ischachapoly) {
                 data_ext.m_ad      = &(add[0]);
                 data_ext.m_adl     = add.size();
                 data_ext.m_tag     = &(tag_ext[0]);
@@ -966,17 +797,19 @@ AesAeadCrosstest(int               keySize,
                     std::cout << "ERROR: Enc: ext lib" << std::endl;
                     FAIL();
                 }
-                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                ASSERT_TRUE(
+                    ArraysMatch(std::move(out_ct_alc), std::move(out_ct_ext)));
                 /* for gcm*/
-                if (isgcm || isccm) {
-                    EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                if (isgcm || isccm || ischachapoly) {
+                    EXPECT_TRUE(
+                        ArraysMatch(std::move(tag_alc), std::move(tag_ext)));
                 }
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestDataAead(key, data_alc, mode);
+                    PrintTestDataAead(key, data_ext, mode);
                 }
             } else {
-                if (isgcm || isccm || issiv) {
+                if (isgcm || isccm || issiv || ischachapoly) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc,
                                                                      key);
                     // TAG is IV for decrypt in SIV mode.
@@ -987,8 +820,9 @@ AesAeadCrosstest(int               keySize,
                         std::cout << "ERROR: enc: main lib" << std::endl;
                         FAIL();
                     }
-                    data_alc.m_in  = &(out_ct_alc[0]);
-                    data_alc.m_out = &(pt[0]);
+                    /* To accomodate the misaligned pointer checks */
+                    data_alc.m_in  = data_alc.m_out;
+                    data_alc.m_out = &out_pt_alc[0];
                 }
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 if (!ret) {
@@ -997,19 +831,19 @@ AesAeadCrosstest(int               keySize,
                 }
 
                 /*ext lib decrypt */
-                if (isgcm || isccm || issiv) {
+                if (isgcm || isccm || issiv || ischachapoly) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_ext,
                                                                      key);
                     // TAG is IV for decrypt in SIV mode.
                     if (mode == ALC_AES_MODE_SIV) {
-                        memcpy(&iv[0], &tag_ext[0], data_alc.m_tagl);
+                        memcpy(&iv[0], &tag_ext[0], data_ext.m_tagl);
                     }
                     if (!ret) {
                         std::cout << "ERROR: enc: ext lib" << std::endl;
                         FAIL();
                     }
-                    data_ext.m_in  = &(out_ct_ext[0]);
-                    data_ext.m_out = &(pt[0]);
+                    data_ext.m_in  = data_ext.m_out;
+                    data_ext.m_out = &out_pt_ext[0];
                 }
                 ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
                 if (!ret) {
@@ -1026,20 +860,26 @@ AesAeadCrosstest(int               keySize,
                 if (isgcm || isccm) {
                     /* Verify only if tag contains valid data */
                     if (!data_alc.m_isTagValid || !data_ext.m_isTagValid) {
-                        ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
-                        EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                        ASSERT_TRUE(ArraysMatch(std::move(out_pt_alc),
+                                                std::move(out_pt_ext)));
+                        if (!(isgcm
+                              && (encDec == DECRYPT))) { // gcm decrypt tag is
+                                                         // validated in getTag
+                                                         // c-api itself
+                            EXPECT_TRUE(ArraysMatch(std::move(tag_alc),
+                                                    std::move(tag_ext)));
+                        }
                     }
-                } else if (!(isgcm || isccm)) {
-                    ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                } else if (!(isgcm || isccm || ischachapoly)) {
+                    ASSERT_TRUE(ArraysMatch(std::move(out_ct_alc),
+                                            std::move(out_ct_ext)));
                 }
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, modeStr);
-                    PrintTestData(key, data_ext, modeStr);
+                    PrintTestDataAead(key, data_alc, mode);
+                    PrintTestDataAead(key, data_ext, mode);
                 }
             }
         }
-        delete extTC;
-        delete alcpTC;
     }
 }
 
@@ -1061,34 +901,50 @@ bool
 RunCipherKatTest(CipherTestingCore& testingCore,
                  encDec_t           encDec,
                  std::string        encDecStr,
-                 std::string        modeStr,
+                 alc_cipher_mode_t  mode,
                  int                keySize)
 {
     // FIXME: isxts and isgcm unused
     bool                 ret = false;
     alcp_dc_ex_t         data;
-    std::shared_ptr<Csv> csv = testingCore.getCsv();
-    std::vector<Uint8>   pt  = csv->getVect("PLAINTEXT");
-    std::vector<Uint8>   ct  = csv->getVect("CIPHERTEXT");
-    std::vector<Uint8>   outpt(pt.size(), 0);
-    std::vector<Uint8>   outct(ct.size(), 0);
-    std::vector<Uint8>   iv   = csv->getVect("INITVECT");
-    std::vector<Uint8>   tkey = csv->getVect("TWEAK_KEY");
+    std::shared_ptr<Csv> csv             = testingCore.getCsv();
+    std::vector<Uint8>   pt              = csv->getVect("PLAINTEXT");
+    std::vector<Uint8>   ct              = csv->getVect("CIPHERTEXT");
+    std::vector<Uint8>   iv              = csv->getVect("INITVECT");
+    std::vector<Uint8>   tkey            = csv->getVect("TWEAK_KEY");
+    std::vector<Uint8>   actual_output   = {};
+    std::vector<Uint8>   expected_output = {};
+
+    std::string modeStr = GetModeSTR(mode);
+
+    /* check if unsupported (NULL) test vectors */
+    if (pt.empty() || ct.empty()) {
+        std::cout << "UnSupported test vector! Null PT/CT" << std::endl;
+        return false;
+    }
+
+    data.m_iv  = &(iv[0]);
+    data.m_ivl = iv.size();
+
+    // XTS Specific
+    if (tkey.size()) {
+        data.m_tkey  = &(tkey[0]);
+        data.m_tkeyl = tkey.size();
+    }
 
     if (encDec == ENCRYPT) {
         if (pt.size()) {
             data.m_in  = &(pt[0]);
             data.m_inl = pt.size();
         }
-        data.m_iv  = &(iv[0]);
-        data.m_ivl = iv.size();
-        // XTS Specific
-        data.m_tkey       = &(tkey[0]);
-        data.m_tkeyl      = tkey.size();
-        data.m_block_size = pt.size();
-        if (outct.size())
-            data.m_out = &(outct[0]);
-        data.m_outl = data.m_inl;
+
+        expected_output   = std::move(ct);
+        actual_output     = std::vector<Uint8>(expected_output.size());
+        data.m_block_size = actual_output.size();
+
+        if (actual_output.size())
+            data.m_out = &(actual_output[0]);
+        data.m_outl = expected_output.size();
 
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, csv->getVect("KEY"));
@@ -1096,25 +952,22 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             std::cout << "ERROR: Enc" << std::endl;
             EXPECT_TRUE(ret);
         }
-        EXPECT_TRUE(
-            ArraysMatch(outct,
-                        csv->getVect("CIPHERTEXT"),
-                        *(csv.get()),
-                        std::string("AES_" + modeStr + "_"
-                                    + std::to_string(keySize) + encDecStr)));
+        if (verbose > 1) {
+            auto key = csv->getVect("KEY");
+            PrintTestData(key, data, mode);
+        }
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
             data.m_inl = ct.size();
         }
-        data.m_iv  = &(iv[0]);
-        data.m_ivl = iv.size();
-        // XTS Specific
-        data.m_tkey       = &(tkey[0]);
-        data.m_tkeyl      = tkey.size();
-        data.m_block_size = pt.size();
-        if (outpt.size())
-            data.m_out = &(outpt[0]);
+
+        expected_output   = std::move(pt);
+        actual_output     = std::vector<Uint8>(expected_output.size());
+        data.m_block_size = actual_output.size();
+
+        if (actual_output.size())
+            data.m_out = &(actual_output[0]);
         data.m_outl = data.m_inl;
 
         ret = testingCore.getCipherHandler()->testingDecrypt(
@@ -1123,12 +976,17 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             std::cout << "ERROR: Dec" << std::endl;
             EXPECT_TRUE(ret);
         }
-        EXPECT_TRUE(
-            ArraysMatch(outpt,
-                        csv->getVect("PLAINTEXT"),
-                        *(testingCore.getCsv()),
-                        std::string("AES_" + modeStr + "_"
-                                    + std::to_string(keySize) + encDecStr)));
+    }
+
+    EXPECT_TRUE(
+        ArraysMatch(std::move(actual_output),
+                    std::move(expected_output),
+                    *(testingCore.getCsv()),
+                    std::string("AES_" + modeStr + "_" + std::to_string(keySize)
+                                + encDecStr)));
+    if (verbose > 1) {
+        auto key = csv->getVect("KEY");
+        PrintTestData(key, data, mode);
     }
     return ret;
 }
@@ -1137,9 +995,9 @@ bool
 RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
                      encDec_t               encDec,
                      std::string            encDecStr,
-                     std::string            modeStr,
+                     alc_cipher_mode_t      mode,
                      int                    keySize,
-                     bool                   isCcm,
+                     bool                   isSiv,
                      bool                   isGcm)
 {
     bool                 ret = false;
@@ -1155,6 +1013,13 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
     std::vector<Uint8>   ad      = csv->getVect("ADDITIONAL_DATA");
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
     std::vector<Uint8>   ctrkey  = csv->getVect("CTR_KEY");
+
+    std::string modeStr = GetModeSTR(mode);
+    /* check if unsupported (NULL) test vectors for gcm */
+    if (modeStr.compare("GCM") == 0 && (pt.empty() || ct.empty())) {
+        std::cout << "UnSupported test vector! Null PT/CT" << std::endl;
+        return false;
+    }
 
     // Common Initialization
     data.m_tkeyl = 0;
@@ -1174,7 +1039,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_adl = ad.size();
         }
     }
-    if (isCcm && isGcm) {
+    if (isSiv && isGcm) {
         iv = csv->getVect("TAG"); // Let tag be IV (which is techically true
                                   // but not good idea)
     }
@@ -1188,10 +1053,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         if (outct.size())
             data.m_out = &(outct[0]);
         data.m_outl = data.m_inl;
-        if (isCcm && isGcm) {
+        if (isSiv && isGcm) {
             data.m_tkey  = &(ctrkey[0]);
             data.m_tkeyl = tkey.size();
-        } else if (isCcm) {
+        } else if (isSiv) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = pt.size();
@@ -1203,14 +1068,14 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             EXPECT_TRUE(ret);
         }
         EXPECT_TRUE(
-            ArraysMatch(outct,
+            ArraysMatch(std::move(outct),
                         csv->getVect("CIPHERTEXT"),
                         *(csv.get()),
                         std::string("AES_" + modeStr + "_"
                                     + std::to_string(keySize) + encDecStr)));
 
-        if (isGcm || (isGcm && isCcm)) {
-            EXPECT_TRUE(ArraysMatch(outtag,
+        if ((isGcm || isSiv)) {
+            EXPECT_TRUE(ArraysMatch(std::move(outtag),
                                     csv->getVect("TAG"),
                                     *(csv.get()),
                                     std::string("AES_" + modeStr + "_"
@@ -1219,6 +1084,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         }
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
+        if (verbose > 1) {
+            auto key = csv->getVect("KEY");
+            PrintTestDataAead(key, data, mode);
+        }
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
@@ -1230,10 +1099,10 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_out = &(outpt[0]);
         data.m_outl = data.m_inl;
         // FIXME: Ugly solution, this is SIV
-        if (isCcm && isGcm) {
+        if (isSiv && isGcm) {
             data.m_tkey  = &(ctrkey[0]);
             data.m_tkeyl = tkey.size();
-        } else if (isCcm) {
+        } else if (isSiv) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = ct.size();
@@ -1248,13 +1117,17 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             EXPECT_TRUE(ret);
         }
         EXPECT_TRUE(
-            ArraysMatch(outpt,
+            ArraysMatch(std::move(outpt),
                         csv->getVect("PLAINTEXT"),
                         *(testingCore.getCsv()),
                         std::string("AES_" + modeStr + "_"
                                     + std::to_string(keySize) + encDecStr)));
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
+        if (verbose > 1) {
+            auto key = csv->getVect("KEY");
+            PrintTestDataAead(key, data, mode);
+        }
     }
     return ret;
 }
@@ -1267,10 +1140,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
  * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
  */
 void
-AesKatTest(int               keySize,
-           encDec_t          encDec,
-           _alc_cipher_type  cipher_type,
-           alc_cipher_mode_t mode)
+CipherKatTest(int keySize, encDec_t encDec, alc_cipher_mode_t mode)
 {
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
@@ -1281,8 +1151,7 @@ AesKatTest(int               keySize,
     else
         encDecStr = "_DEC";
 
-    CipherTestingCore testing_core =
-        CipherTestingCore(cModeStr, cipher_type, mode);
+    CipherTestingCore testing_core = CipherTestingCore(cModeStr, mode);
 
     bool retval = false;
 
@@ -1296,83 +1165,45 @@ AesKatTest(int               keySize,
             continue;
         }
 
-        retval = RunCipherKatTest(
-            testing_core, encDec, encDecStr, cModeStr, keySize);
+        retval =
+            RunCipherKatTest(testing_core, encDec, encDecStr, mode, keySize);
 
         EXPECT_TRUE(retval);
     }
 }
 
 /**
- * @brief Function to run KAT for chacha20
+ * @brief Function to run KAT for AES (GCM,CCM,SIV), and non AES
+ * (Chacha20-Poly1305) AEAD schemes
  *
  * @param keySize keysize in bits(128,192,256)
  * @param encDec enum for encryption or decryption
- * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
+ * @param mode Aode of encryption/Decryption (GCM,CCM,SIV,Chacha20-Poly1305)
  */
 void
-ChachaKatTest(int keySize, encDec_t encDec, _alc_cipher_type cipher_type)
-{
-    size_t            key_size = keySize;
-    const std::string cModeStr = "Chacha20";
-    std::string       encDecStr;
-
-    if (encDec == ENCRYPT)
-        encDecStr = "_ENC";
-    else
-        encDecStr = "_DEC";
-
-    /* for chacha20, AES mode is not used */
-    CipherTestingCore testing_core =
-        CipherTestingCore(cModeStr, cipher_type, ALC_AES_MODE_NONE);
-
-    bool retval = false;
-
-    /* check if file is valid */
-    if (!testing_core.getCsv()->m_file_exists) {
-        EXPECT_TRUE(retval);
-    }
-
-    while (testing_core.getCsv()->readNext()) {
-        if ((testing_core.getCsv()->getVect("KEY").size() * 8) != key_size) {
-            continue;
-        }
-
-        retval = RunCipherKatTest(
-            testing_core, encDec, encDecStr, cModeStr, keySize);
-
-        EXPECT_TRUE(retval);
-    }
-}
-
-/**
- * @brief Function to run KAT for AES Schemes CTR,CFB,OFB,CBC,XTS
- *
- * @param keySize keysize in bits(128,192,256)
- * @param encDec enum for encryption or decryption
- * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
- */
-void
-AesAeadKatTest(int               keySize,
-               encDec_t          encDec,
-               _alc_cipher_type  cipher_type,
-               alc_cipher_mode_t mode)
+CipherAeadKatTest(int keySize, encDec_t encDec, alc_cipher_mode_t mode)
 {
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
     std::string       encDecStr;
-    bool              isxts = (cModeStr.compare("XTS") == 0);
     bool              isgcm = (cModeStr.compare("GCM") == 0);
     bool              isccm = (cModeStr.compare("CCM") == 0);
     bool              issiv = (cModeStr.compare("SIV") == 0);
+    bool ischachapoly       = (cModeStr.compare("chacha20-poly1305") == 0);
+
+    /*ensure that non-aead modes are not passed into this function*/
+    if (!CheckCipherIsAEAD(mode)) {
+        std::cout << "Error! Mode " << cModeStr
+                  << " is not an AEAD Cipher! exiting this test!";
+        GTEST_FAIL();
+    }
 
     if (encDec == ENCRYPT)
         encDecStr = "_ENC";
     else
         encDecStr = "_DEC";
 
-    CipherAeadTestingCore testing_core =
-        CipherAeadTestingCore(cModeStr, cipher_type, mode);
+    CipherAeadTestingCore testing_core = CipherAeadTestingCore(cModeStr, mode);
 
     bool retval = false;
 
@@ -1388,10 +1219,10 @@ AesAeadKatTest(int               keySize,
         retval = RunCipherAeadKATTest(testing_core,
                                       encDec,
                                       encDecStr,
-                                      cModeStr,
+                                      mode,
                                       keySize,
-                                      isxts || issiv, // FIXME: Not good design
-                                      isgcm || isccm || issiv);
+                                      issiv, // FIXME: Not good design
+                                      isgcm || isccm || issiv || ischachapoly);
         EXPECT_TRUE(retval);
     }
 }

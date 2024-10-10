@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,18 +42,15 @@ namespace alcp::testing {
 class IPPCipherBase : public CipherBase
 {
   private:
-    alc_cipher_mode_t m_mode;
-    _alc_cipher_type  m_cipher_type;
-    IppsAESSpec*      m_ctx       = NULL;
-    IppsAES_XTSSpec*  m_ctx_xts   = NULL;
-    IppsAES_GCMState* m_ctx_gcm   = NULL;
-    IppsAES_GCMState* m_pStateGCM = NULL;
-    IppsAES_CCMState* m_ctx_ccm   = NULL;
-    IppsAES_CCMState* m_pStateCCM = NULL;
+    alc_cipher_mode_t m_mode{};
+    IppsAESSpec*      m_ctx     = NULL;
+    IppsAES_XTSSpec*  m_ctx_xts = NULL;
+    IppsAES_GCMState* m_ctx_gcm = NULL;
+    IppsAES_CCMState* m_ctx_ccm = NULL;
 
-    const Uint8* m_iv;
-    const Uint8* m_key;
-    Uint32       m_key_len;
+    const Uint8* m_iv{};
+    const Uint8* m_key{};
+    Uint32       m_key_len    = 0;
     const Uint8* m_tkey       = NULL;
     int          m_ctxSize    = 0;
     Uint64       m_block_size = 0;
@@ -68,40 +65,27 @@ class IPPCipherBase : public CipherBase
 
   public:
     /**
-     * @brief Construct a new Alcp Base object - Manual initilization
-     * needed, run alcpInit
+     * @brief Construct a new Cipher Base object
      *
-     * @param mode
-     * @param iv
+     * @param cipher_type  Type of Cipher AES, CHACHA etc..
+     * @param mode         Mode of Cipher XTS, CTR, GCM etc..
+     * @param iv           Initialization vector or start of counter (CTR mode)
      */
-    IPPCipherBase(const _alc_cipher_type  cipher_type,
-                  const alc_cipher_mode_t mode,
-                  const Uint8*            iv);
-    /**
-     * @brief Construct a new Alcp Base object - Initlized and ready to go
-     *
-     * @param mode
-     * @param iv
-     * @param key
-     * @param key_len
-     */
-    IPPCipherBase(const _alc_cipher_type  cipher_type,
-                  const alc_cipher_mode_t mode,
-                  const Uint8*            iv,
-                  const Uint8*            key,
-                  const Uint32            key_len);
-    /**
-     * @brief         Initialization/Reinitialization function, created handle
-     *
-     * @param iv      Intilization vector or start of counter (CTR mode)
-     * @param key     Binary(RAW) Key 128/192/256 bits
-     * @param key_len Length of the Key
-     * @return true -  if no failure
-     * @return false - if there is some failure
-     */
+    IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
-    IPPCipherBase(const _alc_cipher_type  cipher_type,
-                  const alc_cipher_mode_t mode,
+    /**
+     * @brief Construct a new Cipher Base object
+     *
+     * @param cipher_type  Type of Cipher AES, CHACHA etc..
+     * @param mode         Mode of Cipher XTS, CTR, GCM etc..
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     * @param iv_len       Length of initialization vector
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @param tkey         Tweak key for XTS
+     * @param block_size   Size of the block division in bytes
+     */
+    IPPCipherBase(const alc_cipher_mode_t mode,
                   const Uint8*            iv,
                   const Uint32            iv_len,
                   const Uint8*            key,
@@ -110,18 +94,34 @@ class IPPCipherBase : public CipherBase
                   const Uint64            block_size);
 
     ~IPPCipherBase();
-    bool init(const Uint8* iv,
-              const Uint32 iv_len,
-              const Uint8* key,
-              const Uint32 key_len);
-    /* xts */
+
+    /**
+     * @brief Initialize or Reinitialize Cipher Base
+     *
+     * @param iv           Initialization vector or start of counter (CTR mode)
+     * @param iv_len       Length of initialization vector
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @param tkey         Tweak key for XTS
+     * @param block_size   Size of the block division in bytes
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,
               const Uint32 key_len,
               const Uint8* tkey,
               const Uint64 block_size);
-    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
+
+    /**
+     * @brief Initialize or Reinitialize Cipher Base
+     *
+     * @param key          Binary(RAW) Key 128/192/256 bits
+     * @param key_len      Length of the Key
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
     bool init(const Uint8* key, const Uint32 key_len);
     // FIXME: Legacy functions needs to be removed like the one below
     bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,42 +31,29 @@
 
 namespace alcp::testing {
 
-AlcpCmacBase::AlcpCmacBase(const alc_mac_info_t& info) {}
-
 bool
-AlcpCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+AlcpCmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
     m_info    = info;
     m_key     = &Key[0];
     m_key_len = Key.size();
-    return init();
-}
-
-bool
-AlcpCmacBase::init()
-{
-    alc_error_t    err;
-    alc_mac_info_t dinfo = m_info;
-
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
-                                   .len  = m_key_len * 8,
-                                   .key  = m_key };
-
-    dinfo.mi_keyinfo                               = kinfo;
-    dinfo.mi_algoinfo.cmac.cmac_cipher.ci_key_info = kinfo;
 
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else if (m_handle->ch_context == nullptr) {
-        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+        m_handle->ch_context = malloc(alcp_mac_context_size());
     } else {
         alcp_mac_finish(m_handle);
     }
 
-    err = alcp_mac_request(m_handle, &dinfo);
+    alc_error_t err = alcp_mac_request(m_handle, ALC_MAC_CMAC);
+    if (alcp_is_error(err)) {
+        std::cout << "Error code in alcp_mac_request:" << err << std::endl;
+        return false;
+    }
+
+    err = alcp_mac_init(m_handle, m_key, m_key_len, &m_info);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_mac_request:" << err << std::endl;
         return false;
@@ -88,34 +75,31 @@ AlcpCmacBase::~AlcpCmacBase()
 }
 
 bool
-AlcpCmacBase::cmacFunction(const alcp_cmac_data_t& data)
+AlcpCmacBase::MacUpdate(const alcp_cmac_data_t& data)
 {
     alc_error_t err;
-
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
         return false;
     }
-
-    err = alcp_mac_finalize(m_handle, NULL, 0);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
-        return false;
-    }
-
-    err = alcp_mac_copy(m_handle, data.m_cmac, data.m_cmac_len);
-    if (alcp_is_error(err)) {
-        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
-        return false;
-    }
-    // Without reseting it is not possible to reuse m_handle after finalizing
-    reset();
     return true;
 }
 
 bool
-AlcpCmacBase::reset()
+AlcpCmacBase::MacFinalize(const alcp_cmac_data_t& data)
+{
+    alc_error_t err;
+    err = alcp_mac_finalize(m_handle, data.m_cmac, data.m_cmac_len);
+    if (alcp_is_error(err)) {
+        std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+AlcpCmacBase::MacReset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);

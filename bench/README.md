@@ -48,6 +48,7 @@ Always you can use `--help` to know all the command line arguments which can be 
 7. AES_CCM             (128,192,256)
 8. AES_SIV             (128,192,256)
 9. CHACHA20            (256)
+10. CHACHA20_POLY1305  (256)
 
 ##### Cipher_experimental
 
@@ -93,6 +94,14 @@ Always you can use `--help` to know all the command line arguments which can be 
 
 1. RSA_EncryptPubKey
 2. RSA_DecryptPvtKey
+3. RSA_Sign_PSS
+4. RSA_Sign_PKCS
+5. RSA_Verify_PSS
+6. RSA_Verify_PKCS
+7. RSA_EncryptPubKey_NoPadding
+8. RSA_DecryptPvtKey_NoPadding
+9. RSA_EncryptPubKey_OAEP
+10. RSA_DecryptPvtKey_OAEP
 
 #### Using IPP
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,18 +39,18 @@ namespace alcp::rng {
 class IDrbg : public IRng
 {
   public:
-    virtual Status initialize(int                 securityStrength,
-                              std::vector<Uint8>& p_cPersonalizationString) = 0;
-    virtual Status randomize(Uint8               p_Output[],
-                             size_t              length,
-                             int                 securityStrength,
-                             std::vector<Uint8>& p_cAdditionalInput)        = 0;
+    virtual alc_error_t initialize(
+        int securityStrength, std::vector<Uint8>& p_cPersonalizationString) = 0;
+    virtual alc_error_t randomize(Uint8               p_Output[],
+                                  size_t              length,
+                                  int                 securityStrength,
+                                  std::vector<Uint8>& p_cAdditionalInput)   = 0;
 
-    virtual Status randomize(Uint8 p_Output[], size_t length) = 0;
+    virtual alc_error_t randomize(Uint8 p_Output[], size_t length) = 0;
 
-    virtual Status setRng(std::shared_ptr<IRng> entropyIn) = 0;
-    virtual void   setNonceLen(Uint64 nonceLen)            = 0;
-    virtual void   setEntropyLen(Uint64 entropyLen)        = 0;
+    virtual alc_error_t setRng(std::shared_ptr<IRng> entropyIn) = 0;
+    virtual void        setNonceLen(Uint64 nonceLen)            = 0;
+    virtual void        setEntropyLen(Uint64 entropyLen)        = 0;
 };
 
 class ALCP_API_EXPORT Drbg : public IDrbg
@@ -66,32 +66,32 @@ class ALCP_API_EXPORT Drbg : public IDrbg
     void setNonceLen(Uint64 nonceLen) { m_nonce_len = nonceLen; }
     Drbg() {}
 
-    Status setRng(std::shared_ptr<IRng> entropyIn);
+    alc_error_t setRng(std::shared_ptr<IRng> entropyIn);
 
-    Status randomize(Uint8 p_Output[], size_t length);
+    alc_error_t randomize(Uint8 p_Output[], size_t length);
 
     // FIXME: Predicition resistance is to be added
-    Status randomize(Uint8        p_Output[],
-                     const size_t cOutputLength,
-                     int          securityStrength,
-                     const Uint8  cAdditionalInput[],
-                     const size_t cAdditionalInputLength);
+    alc_error_t randomize(Uint8        p_Output[],
+                          const size_t cOutputLength,
+                          int          securityStrength,
+                          const Uint8  cAdditionalInput[],
+                          const size_t cAdditionalInputLength);
 
-    Status randomize(Uint8               p_Output[],
-                     const size_t        cOutputLength,
-                     const int           cSecurityStrength,
-                     std::vector<Uint8>& additional_input);
+    alc_error_t randomize(Uint8               p_Output[],
+                          const size_t        cOutputLength,
+                          const int           cSecurityStrength,
+                          std::vector<Uint8>& additional_input);
 
-    Status readRandom(Uint8* pBuf, Uint64 size);
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size);
 
     bool isSeeded() const { return true; }
 
     size_t reseed() { return 0; }
 
-    Status setPredictionResistance(bool value);
+    alc_error_t setPredictionResistance(bool value);
 
-    Status initialize(int                 securityStrength,
-                      std::vector<Uint8>& p_cPersonalizationString);
+    alc_error_t initialize(int                 securityStrength,
+                           std::vector<Uint8>& p_cPersonalizationString);
 
     virtual std::string name() const = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,12 +35,19 @@ namespace alcp::rng {
 
 struct Context
 {
-    void* m_rng;
+    void* m_rng = nullptr;
 
-    alc_error_t (*read_random)(void* pRng, Uint8* buffer, int size);
-    alc_error_t (*reseed)(void* pRng);
-    alc_error_t (*finish)(void* pRng);
-    Status status{ StatusOk() };
+    alc_error_t (*read_random)(void* pRng, Uint8* buffer, int size) = nullptr;
+    alc_error_t (*reseed)(void* pRng)                               = nullptr;
+    alc_error_t (*finish)(void* pRng)                               = nullptr;
+
+    ~Context()
+    {
+        m_rng       = nullptr;
+        read_random = nullptr;
+        reseed      = nullptr;
+        finish      = nullptr;
+    }
 };
 
 } // namespace alcp::rng

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,12 +43,30 @@ enum class CpuCipherFeatures
     eVaes512   = 3,
     eDynamic   = 4
 };
-typedef enum
+
+enum class CpuArchFeature
+{
+    eReference = 0,
+    eAvx2      = 2,
+    eAvx512    = 3,
+    eDynamic   = 4
+};
+
+enum class Avx512Flags
 {
     AVX512_DQ = 1,
     AVX512_F,
     AVX512_BW,
-} avx512_flags_t;
+};
+
+enum class CpuZenVer
+{
+    ZEN  = 0,
+    ZEN2 = 1,
+    ZEN3 = 2,
+    ZEN4 = 3,
+    ZEN5 = 4,
+};
 
 // using alci::Cpu;
 // using alci::Uarch;
@@ -87,7 +105,7 @@ class ALCP_API_EXPORT CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasAvx512(avx512_flags_t flag);
+    static bool cpuHasAvx512(Avx512Flags flag);
 
     // Milan functions
     /**
@@ -181,6 +199,13 @@ class ALCP_API_EXPORT CpuId
      * @return false
      */
     static bool cpuIsZen4();
+    /**
+     * @brief Returns true if currently executing cpu is Zen5
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuIsZen5();
 
   private:
     class Impl;

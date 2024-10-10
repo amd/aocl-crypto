@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -63,28 +63,26 @@ printText(Uint8* I, Uint64 len, char* s)
 #endif
 }
 
-// clang-format off
-
-
 struct timeval begin, end;
-long   seconds;
-long   microseconds;
-double elapsed;
-double totalTimeElapsed;
+long           seconds;
+long           microseconds;
+double         elapsed;
+double         totalTimeElapsed;
 
 #if WIN32
-int gettimeofday(struct timeval* tv, struct timeval* tv1)
+int
+gettimeofday(struct timeval* tv, struct timeval* tv1)
 {
-    FILETIME    f_time;
-    Uint64    time;
-    SYSTEMTIME  s_time;
-    //define UNIX EPOCH time for windows
+    FILETIME   f_time;
+    Uint64     time;
+    SYSTEMTIME s_time;
+    // define UNIX EPOCH time for windows
     static const Uint64 EPOCH = ((Uint64)116444736000000000ULL);
     GetSystemTimeAsFileTime(&f_time);
     FileTimeToSystemTime(&f_time, &s_time);
     time = ((Uint64)f_time.dwLowDateTime);
     time += ((Uint64)f_time.dwHighDateTime) << 32;
-    tv->tv_sec = (long)((time - EPOCH) / 10000000L);
+    tv->tv_sec  = (long)((time - EPOCH) / 10000000L);
     tv->tv_usec = (long)(s_time.wMilliseconds * 1000);
     return 0;
 }
@@ -92,12 +90,13 @@ int gettimeofday(struct timeval* tv, struct timeval* tv1)
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
-static inline void  alcp_get_time(int x, char *s)
+static inline void
+alcp_get_time(int x, char* s)
 {
     gettimeofday(&end, 0);
-    seconds = end.tv_sec - begin.tv_sec;
+    seconds      = end.tv_sec - begin.tv_sec;
     microseconds = end.tv_usec - begin.tv_usec;
-    elapsed = seconds + microseconds * 1e-6;
+    elapsed      = seconds + microseconds * 1e-6;
     totalTimeElapsed += elapsed;
     if (x) {
         printf("%s\t", s);
@@ -106,75 +105,61 @@ static inline void  alcp_get_time(int x, char *s)
 }
 
 void
-getinput(Uint8* output, int inputLen, int seed)
+getinput(Uint8* output, int inputLen)
 {
-    // generate same random input based on seed value.
-    srand(seed);
     for (int i = 0; i < inputLen; i++) {
-        *output = (Uint8)rand();
+        Uint64 x = i + 20 + (i * 3); // simple equation to get generate input
+        *output  = (Uint8)x;
         output++;
     }
 }
 
-void
-create_aes_session(Uint8*             key,
-                   Uint8*             iv,
-                   const Uint32       key_len,
+int
+create_aes_session(Uint8*                  key,
+                   Uint8*                  iv,
+                   const Uint32            key_len,
                    const alc_cipher_mode_t mode)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8     err_buf[err_size];
-    Uint8 tweakKey[16] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
-    };
-
-
-    alc_cipher_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_algo_info   = {
-            .ai_mode = mode,
-            .ai_iv   = iv,
-        },
-       /* No padding, Not Implemented yet*/
-        //.pad     = ALC_CIPHER_PADDING_NONE,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key,
-            .len     = key_len,
-        },
-    };
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
-    }
+    alc_error_t err = ALC_ERROR_NONE;
 
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
-
-    /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, &handle);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
+    handle.ch_context = malloc(alcp_cipher_context_size());
+    if (!handle.ch_context) {
+        printf("Error: context allocation failed \n");
+        goto out;
     }
+
+    /* Request a context with mode and key length */
+    err = alcp_cipher_request(mode, key_len, &handle);
+    if (alcp_is_error(err)) {
+        free(handle.ch_context);
+        printf("Error: unable to request \n");
+        goto out;
+    }
+
+    err = alcp_cipher_init(&handle, key, key_len, iv, 16);
+    if (alcp_is_error(err)) {
+        free(handle.ch_context);
+        printf("Error: Unable to init \n");
+        goto out;
+    }
+    return 0;
+
+    // Incase of error, program execution will come here
+out:
+    return -1;
+}
+
+void
+end_aes_session()
+{
+    /*
+     * Complete the transaction
+     */
+    alcp_cipher_finish(&handle);
+    free(handle.ch_context);
 }
 
 /* AES modes: Encryption Demo */
@@ -182,41 +167,31 @@ void
 aclp_aes_encrypt_demo(
     const Uint8* plaintxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    Uint8*       ciphertxt,
-    Uint8*       iv)
+    Uint8*       ciphertxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8     err_buf[err_size];
 
-    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return;
     }
 }
-
 
 void
 aclp_aes_decrypt_demo(
     const Uint8* ciphertxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    Uint8*       plaintxt,
-    Uint8*       iv)
+    Uint8*       plaintxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8     err_buf[err_size];
 
-    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return;
     }
 }
-
 
 /*
     Demo application for complete path:
@@ -224,15 +199,15 @@ aclp_aes_decrypt_demo(
     input and output is matched for comparison.
 */
 void
-encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
-                     Uint32       inputLen,   // input length
-                     Uint8*       cipherText, // ciphertext output
+encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
+                     Uint32            inputLen,   // input length
+                     Uint8*            cipherText, // ciphertext output
                      alc_cipher_mode_t m,
-                     int i)
+                     int               i)
 {
+    int          retval = 0;
     unsigned int keybits;
-    Uint8      key[32];
-    int          ret = 0;
+    Uint8        key[32];
 
     memset(key, 0, 32);
 
@@ -245,9 +220,6 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
 
     Uint8* ref;
     ref = malloc(inputLen);
-    Uint32 ivLen  = 16;
-
-
 
     {
         keybits = 128 + i * 64;
@@ -256,12 +228,7 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
 
         memset(inputText, i, inputLen);
 
-        /*  Generate random input text based on seed.
-            seed is kept constant(1) for simplicity, it can be
-            modified for testing. */
-        int seed = 1;
-        getinput(inputText, inputLen, seed);
-
+        getinput(inputText, inputLen);
 
         memset(cipherText, 0, inputLen);
         memset(ref, 0, inputLen);
@@ -269,15 +236,17 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
         printText(key, 16, "key      ");
         printText(inputText, inputLen, "inputText");
 
-
-        create_aes_session(key, iv, keybits, m);
-
-        //Encrypt speed test
+        // Encrypt speed test
         totalTimeElapsed = 0.0;
+        retval           = create_aes_session(key, iv, keybits, m);
         for (int k = 0; k < 100000000; k++) {
+            // FIXME: We need a reset API to remove this
+            // Create the session
+            if (retval != 0)
+                goto out;
 
             ALCP_CRYPT_TIMER_START
-            aclp_aes_encrypt_demo(inputText, inputLen, cipherText, iv);
+            aclp_aes_encrypt_demo(inputText, inputLen, cipherText);
 
             alcp_get_time(0, "Encrypt time");
             printText(cipherText, inputLen, "cipherTxt");
@@ -291,18 +260,21 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
                 break;
             }
         }
+        end_aes_session();
 
-
-        //Decrypt speed test
+        // Decrypt speed test
         totalTimeElapsed = 0.0;
+        retval           = create_aes_session(key, iv, keybits, m);
         for (int k = 0; k < 100000000; k++) {
+            // FIXME: We need a reset API to remove this
+            if (retval != 0)
+                goto out;
 
             ALCP_CRYPT_TIMER_START
             aclp_aes_decrypt_demo(
-                cipherText, // pointer to the PLAINTEXT
-                inputLen,   // text length in bytes
-                outputText, // pointer to the CIPHERTEXT buffer
-                iv);
+                cipherText,  // pointer to the PLAINTEXT
+                inputLen,    // text length in bytes
+                outputText); // pointer to the CIPHERTEXT buffer
 
             alcp_get_time(0, "Decrypt time");
             printText(outputText, inputLen, "outputTxt");
@@ -316,19 +288,10 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
                 break;
             }
         }
-
-
-        if (memcmp(inputText, outputText, (long unsigned int)inputLen) != 0) {
-            printf("\n\t\t\t\t input->enc->dec->input FAILED \n");
-        }
-
-        /*
-         * Complete the transaction
-         */
-        alcp_cipher_finish(&handle);
-        free(handle.ch_context);
+        end_aes_session();
     }
 
+out:
     if (outputText) {
         free(outputText);
     }
@@ -354,10 +317,7 @@ main(void)
 
     for (alc_cipher_mode_t m = ALC_AES_MODE_CBC; m < ALC_AES_MODE_XTS; m++) {
 
-        if (m == ALC_AES_MODE_ECB) {
-            printf("\n\nAES-ECB not implemented");
-            continue;
-        } else if (m == ALC_AES_MODE_CBC) {
+        if (m == ALC_AES_MODE_CBC) {
             printf("\n\nAES-CBC");
         } else if (m == ALC_AES_MODE_OFB) {
             printf("\n\nAES-OFB");
@@ -372,15 +332,16 @@ main(void)
             continue;
         }
 
-        // keep length multiple of 128bit (16x8)
-        #define MAX_TEST_CASE 7
-        int testblkSizes[MAX_TEST_CASE] = {16, 64, 256, 1024, 8192, 16384, 32768};
+// keep length multiple of 128bit (16x8)
+#define MAX_TEST_CASE 7
+        int testblkSizes[MAX_TEST_CASE] = { 16,   64,    256,  1024,
+                                            8192, 16384, 32768 };
 
-        for(int keySizeItr = 0; keySizeItr < 3; keySizeItr++) {
-            if((m == ALC_AES_MODE_XTS) &&(keySizeItr>0)) {
+        for (int keySizeItr = 0; keySizeItr < 3; keySizeItr++) {
+            if ((m == ALC_AES_MODE_XTS) && (keySizeItr > 0)) {
                 continue;
             }
-            for (int i =0; i < MAX_TEST_CASE; i++) {
+            for (int i = 0; i < MAX_TEST_CASE; i++) {
                 int inputLen = testblkSizes[i];
                 printf(" \n");
 

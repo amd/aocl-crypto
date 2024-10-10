@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,13 @@
 #include "alcp/types.hh"
 
 #pragma once
+// ToDO : Enable without regressing on RSA OAEP
+// encryption
+#ifdef COMPILER_IS_GCC
+#define NO_OPTIMIZE //_Pragma("GCC optimize \"O0\"")
+#else
+#define NO_OPTIMIZE __attribute__((optnone))
+#endif
 Uint64
 MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 {
@@ -37,6 +44,9 @@ MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 }
 #define _mulx_u64(x, y, z) MUL64(x, y, z);
 
+// This function is getting optimized incorrectly in static builds on reference
+// algorithm path for RSA
+NO_OPTIMIZE
 Uint8
 ADD64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
 {

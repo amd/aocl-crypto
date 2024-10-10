@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,13 +26,17 @@
  *
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "digest/ipp_digest.hh"
 
 namespace alcp::testing {
 
-IPPDigestBase::IPPDigestBase(const alc_digest_info_t& info)
+IPPDigestBase::IPPDigestBase(alc_digest_mode_t mode)
 {
-    init(info, m_digest_len);
+    m_mode = mode;
+    init();
 }
 
 IPPDigestBase::~IPPDigestBase()
@@ -40,13 +44,9 @@ IPPDigestBase::~IPPDigestBase()
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
     }
-}
-
-bool
-IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
-{
-    m_info = info;
-    return init();
+    if (m_handle_dup != nullptr) {
+        delete[] reinterpret_cast<Uint8*>(m_handle_dup);
+    }
 }
 
 bool
@@ -60,37 +60,37 @@ IPPDigestBase::init()
     int ctx_size;
     ippsHashGetSize_rmf(&ctx_size);
     m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_mode.dm_sha2) {
-            case ALC_SHA2_224:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
-                break;
-            case ALC_SHA2_256:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256_TT());
-                break;
-            case ALC_SHA2_384:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
-                break;
-            case ALC_SHA2_512:
-                /* for truncated variants of sha512*/
-                if (m_info.dt_len == ALC_DIGEST_LEN_224) {
-                    status =
-                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
-                } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
-                    status =
-                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
-                } else {
-                    /* if len is 512*/
-                    status =
-                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
-                }
-                break;
-            default:
-                return false;
-        }
-    } else {
-        return false;
+    switch (m_mode) {
+        case ALC_SHA1:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA1_TT());
+            break;
+        case ALC_MD5:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_MD5());
+            break;
+        case ALC_SHA2_224:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
+            break;
+        case ALC_SHA2_256:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256_TT());
+            break;
+        case ALC_SHA2_384:
+            status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
+            break;
+        case ALC_SHA2_512_224:
+            /* for truncated variants of sha512*/
+            ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
+            break;
+        case ALC_SHA2_512_256:
+            /* for truncated variants of sha512*/
+            ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
+            break;
+        case ALC_SHA2_512:
+            ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
+            break;
+        default:
+            return false;
     }
+
     /* check error code */
     if (status != ippStsNoErr) {
         std::cout << "Error code in ippsHashInit_rmf: " << status << std::endl;
@@ -100,7 +100,25 @@ IPPDigestBase::init()
 }
 
 bool
-IPPDigestBase::digest_function(const alcp_digest_data_t& data)
+IPPDigestBase::context_copy()
+{
+    IppStatus status = ippStsNoErr;
+    /* skip ctx copy if handle is null, and there is no ctx to copy */
+    if (m_handle == nullptr) {
+        std::cout << "Context is null, skipping context copy" << std::endl;
+        return true;
+    }
+    status = ippsHashDuplicate_rmf(m_handle, m_handle_dup);
+    if (status != ippStsNoErr) {
+        std::cout << "Error code in ippsHashUpdate_rmf: " << status
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+IPPDigestBase::digest_update(const alcp_digest_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 
@@ -110,7 +128,14 @@ IPPDigestBase::digest_function(const alcp_digest_data_t& data)
                   << std::endl;
         return false;
     }
-    status = ippsHashFinal_rmf(data.m_digest, m_handle);
+    return true;
+}
+
+bool
+IPPDigestBase::digest_finalize(const alcp_digest_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+    status           = ippsHashFinal_rmf(data.m_digest, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "Error code in ippsHashFinal_rmf: " << status << std::endl;
         return false;
@@ -118,8 +143,17 @@ IPPDigestBase::digest_function(const alcp_digest_data_t& data)
     return true;
 }
 
+bool
+IPPDigestBase::digest_squeeze(const alcp_digest_data_t& data)
+{
+    return true;
+}
+
 void
 IPPDigestBase::reset()
-{}
+{
+}
 
 } // namespace alcp::testing
+
+#pragma GCC diagnostic pop

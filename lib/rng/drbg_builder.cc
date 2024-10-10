@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,9 +32,9 @@
 #include "alcp/interface/Irng.hh"
 #include "alcp/rng/ctrdrbg_build.hh"
 #include "alcp/rng/hmacdrbg_build.hh"
+#include "alcp/utils/cpuid.hh"
 #include "hardware_rng.hh"
 #include "system_rng.hh"
-
 namespace alcp::drbg {
 class CustomRng : public IRng
 {
@@ -43,16 +43,19 @@ class CustomRng : public IRng
     std::vector<Uint8> m_entropy;
     std::vector<Uint8> m_nonce;
 
-    Uint64 m_call_count;
+    Uint64 m_call_count = {};
 
   public:
     CustomRng() = default;
 
-    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
-
-    Status randomize(Uint8 output[], size_t length) override
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) override
     {
-        Status s = StatusOk();
+        return ALC_ERROR_NONE;
+    }
+
+    alc_error_t randomize(Uint8 output[], size_t length) override
+    {
+        alc_error_t err = ALC_ERROR_NONE;
         if (m_call_count == 0) {
             utils::CopyBytes(output, &m_entropy[0], length);
             m_call_count++;
@@ -63,7 +66,7 @@ class CustomRng : public IRng
             printf("Not Allowed\n");
         }
 
-        return s;
+        return err;
     }
 
     std::string name() const override { return "Dummy DRBG"; }
@@ -72,13 +75,15 @@ class CustomRng : public IRng
 
     size_t reseed() override { return 0; }
 
-    Status setPredictionResistance(bool value) override
+    alc_error_t setPredictionResistance(bool value) override
     {
-        Status s = StatusOk();
-        return s;
+        return ALC_ERROR_NONE;
     }
 
-    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
+    void setEntropy(std::vector<Uint8> entropy)
+    {
+        m_entropy = std::move(entropy);
+    }
     void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
 
     void reset()
@@ -89,13 +94,14 @@ class CustomRng : public IRng
     }
 };
 
-static Status
+static alc_error_t
 __drbg_wrapperinitialize(void*        m_drbg,
                          int          cSecurityStrength,
                          const Uint8* buff,
                          Uint64       size)
 {
     std::vector<Uint8> temp_personalization_string;
+    temp_personalization_string.reserve(1);
     if (buff != nullptr && size != 0) {
         temp_personalization_string = std::vector<Uint8>(buff, buff + size);
     }
@@ -103,7 +109,7 @@ __drbg_wrapperinitialize(void*        m_drbg,
     return p_drbg->initialize(cSecurityStrength, temp_personalization_string);
 }
 
-static Status
+static alc_error_t
 __drbg_wrapperrandomize(void*        m_drbg,
                         Uint8        p_Output[],
                         const size_t cOutputLength,
@@ -119,61 +125,49 @@ __drbg_wrapperrandomize(void*        m_drbg,
                              cAdditionalInputLength);
 }
 
-static Status
+static void
 __drbg_wrapperFinish(void* m_drbg)
 {
-    Status status = StatusOk();
 
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::IDrbg*>(m_drbg);
     p_drbg->~IDrbg();
-
-    return status;
 }
 
-Status
+alc_error_t
 DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
-    using namespace status;
-    Status status = StatusOk();
-    switch (drbgInfo.di_type) {
-        case ALC_DRBG_HMAC:
-            status = HmacDrbgBuilder::build(drbgInfo, ctx);
-            break;
-        case ALC_DRBG_CTR:
-            status = CtrDrbgBuilder::build(drbgInfo, ctx);
-            if (!status.ok()) {
-                return status;
-            }
-            break;
-        default:
-            status.update(InvalidArgument("Unknown MAC Type"));
-            break;
-    }
-    const alc_rng_source_info_t* rng_source_info = &(drbgInfo.di_rng_sourceinfo);
-    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+    alc_error_t err = ALC_ERROR_NONE;
+
+    const alc_rng_source_info_t* rng_source_info =
+        &(drbgInfo.di_rng_sourceinfo);
+    std::shared_ptr<IRng> irng;
     if (rng_source_info->custom_rng == false) {
-        std::shared_ptr<IRng> irng;
         switch (rng_source_info->di_sourceinfo.rng_info.ri_source) {
             case ALC_RNG_SOURCE_OS: {
                 irng = std::make_shared<alcp::rng::SystemRng>();
                 break;
             }
             case ALC_RNG_SOURCE_ARCH: {
-                irng = std::make_shared<alcp::rng::HardwareRng>();
+                if (alcp::utils::CpuId::cpuHasRdRand()) {
+                    irng = std::make_shared<alcp::rng::HardwareRng>();
+                } else {
+                    return ALC_ERROR_NOT_SUPPORTED;
+                }
                 break;
             }
             default:
-                status.update(alcp::rng::status::NotPermitted(
-                    "RNG type specified is unknown"));
+                // RNG type specified is unknown
+                return ALC_ERROR_NOT_PERMITTED;
                 break;
         }
-        status = p_drbg->setRng(irng);
-        if (!status.ok()) {
-            return status;
-        }
+
     } else {
         auto* entropy = rng_source_info->di_sourceinfo.custom_rng_info.entropy;
-        auto  entropylen =
+        if (entropy == nullptr) {
+            // Entropy cant be null
+            return ALC_ERROR_INVALID_ARG;
+        }
+        auto entropylen =
             rng_source_info->di_sourceinfo.custom_rng_info.entropylen;
 
         auto nonce    = rng_source_info->di_sourceinfo.custom_rng_info.nonce;
@@ -184,19 +178,38 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 
         if (noncelen != drbgInfo.max_nonce_len
             && entropylen != drbgInfo.max_entropy_len) {
-            return InternalError(
-                "For Testing Purposes Max Entropy,Nonce Length should match "
-                "given Entropy,Nonce Lengths");
+            // For Testing Purposes Max Entropy,Nonce Length should match given
+            // Entropy,Nonce Lengths
+            return ALC_ERROR_INVALID_ARG;
         }
 
-        auto custom_rng = std::make_shared<alcp::drbg::CustomRng>();
-        custom_rng->setEntropy(entropy_vect);
-        custom_rng->setNonce(nonce_vect);
+        auto customRng = std::make_shared<alcp::drbg::CustomRng>();
+        customRng->setEntropy(entropy_vect);
+        customRng->setNonce(nonce_vect);
+        irng = customRng;
+    }
 
-        status = p_drbg->setRng(custom_rng);
-        if (!status.ok()) {
-            return status;
-        }
+    switch (drbgInfo.di_type) {
+        case ALC_DRBG_HMAC:
+            err = HmacDrbgBuilder::build(drbgInfo, ctx);
+            break;
+        case ALC_DRBG_CTR:
+            err = CtrDrbgBuilder::build(drbgInfo, ctx);
+            if (alcp_is_error(err)) {
+                return err;
+            }
+            break;
+        default:
+            // Unknown MAC Type
+            err = ALC_ERROR_INVALID_ARG;
+            break;
+    }
+
+    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+
+    err = p_drbg->setRng(irng);
+    if (alcp_is_error(err)) {
+        return err;
     }
 
     p_drbg->setEntropyLen(drbgInfo.max_entropy_len);
@@ -206,7 +219,7 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     ctx.randomize  = __drbg_wrapperrandomize;
     ctx.finish     = __drbg_wrapperFinish;
 
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
 Uint64
@@ -226,24 +239,27 @@ DrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
     return size;
 }
 
-Status
+// ToDO: Check if the isSupported is required
+alc_error_t
 DrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
-    Status s{ StatusOk() };
-    s = alcp::rng::RngBuilder::isSupported(
-        drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info);
-    if (!s.ok()) {
-        return s;
+    alc_error_t err{ ALC_ERROR_NONE };
+    if (drbgInfo.di_rng_sourceinfo.custom_rng == false) {
+        err = alcp::rng::RngBuilder::isSupported(
+            drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info);
+        if (alcp_is_error(err)) {
+            return err;
+        }
     }
     switch (drbgInfo.di_type) {
         case ALC_DRBG_CTR:
             return CtrDrbgBuilder::isSupported(drbgInfo);
             break;
         case ALC_DRBG_HMAC:
-            return HmacDrbgBuilder::isSupported(drbgInfo);
+            return err;
             break;
     }
-    return s;
+    return err;
 }
 
 } // namespace alcp::drbg

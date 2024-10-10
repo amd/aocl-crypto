@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,72 +38,57 @@ TEST(DIGEST_SHA3, CROSS_SHAKE128)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha3 = ALC_SHAKE_128;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
-    Digest_Cross(128, info);
+
+    Digest_Cross(128, ALC_SHAKE_128, false);
 }
+TEST(DIGEST_SHA3, CROSS_SHAKE128_CTX_COPY)
+{
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
+
+    Digest_Cross(128, ALC_SHAKE_128, true);
+}
+
 TEST(DIGEST_SHA3, CROSS_SHAKE256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha3 = ALC_SHAKE_256;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
-    Digest_Cross(256, info);
+
+    Digest_Cross(256, ALC_SHAKE_256, false);
 }
 
 /* SHA2 cross tests */
 TEST(DIGEST_SHA2, CROSS_224)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_224;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info);
+    Digest_Cross(224, ALC_SHA2_224, false);
 }
+TEST(DIGEST_SHA2, CROSS_224_CTX_COPY)
+{
+    if (useipp || oa_override)
+        GTEST_SKIP() << "Ctx copy tests are not yet enabled for ipp";
+    Digest_Cross(224, ALC_SHA2_224, true);
+}
+
 TEST(DIGEST_SHA2, CROSS_256)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_256;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info);
+    Digest_Cross(256, ALC_SHA2_256, false);
 }
 TEST(DIGEST_SHA2, CROSS_384)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_384;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_384;
-    Digest_Cross(384, info);
+    Digest_Cross(384, ALC_SHA2_384, false);
 }
 TEST(DIGEST_SHA2, CROSS_512)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_512;
-    Digest_Cross(512, info);
+    Digest_Cross(512, ALC_SHA2_512, false);
 }
 /* truncated sha512 variants */
 TEST(DIGEST_SHA2, CROSS_512_224)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info);
+    Digest_Cross(224, ALC_SHA2_512_224, false);
 }
 TEST(DIGEST_SHA2, CROSS_512_256)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.dt_len          = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info);
+    Digest_Cross(256, ALC_SHA2_512_256, false);
 }
 
 /* SHA3 cross tests */
@@ -113,43 +98,43 @@ TEST(DIGEST_SHA3, CROSS_224)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_224;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info);
+
+    Digest_Cross(224, ALC_SHA3_224, false);
 }
+TEST(DIGEST_SHA3, CROSS_224_CTX_COPY)
+{
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
+
+    Digest_Cross(224, ALC_SHA3_224, true);
+}
+
 TEST(DIGEST_SHA3, CROSS_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_256;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info);
+
+    Digest_Cross(256, ALC_SHA3_256, false);
 }
 TEST(DIGEST_SHA3, CROSS_384)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
 
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_384;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_384;
-    Digest_Cross(384, info);
+    Digest_Cross(384, ALC_SHA3_384, false);
 }
 TEST(DIGEST_SHA3, CROSS_512)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
+    Digest_Cross(512, ALC_SHA3_512, false);
+}
 
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_512;
-    Digest_Cross(512, info);
+TEST(DIGEST_SHA1, CROSS_160)
+{
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have SHA1 implemented yet";
+    Digest_Cross(160, ALC_SHA1, false);
 }
 
 int
@@ -159,11 +144,11 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        printErrors("IPP is not avaiable");
+        printErrors("IPP is not available");
 #endif
 #ifndef USE_OSSL
     if (useossl)
-        printErrors("OpenSSL is not avaiable");
+        printErrors("OpenSSL is not available");
 #endif
     return RUN_ALL_TESTS();
 }

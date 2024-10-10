@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,63 +29,63 @@
 
 #include "alcp/cipher.h"
 
-#include "alcp/cipher.hh"
-
 #include <functional>
 
 namespace alcp::cipher {
 
-struct Context
+typedef struct Context
 {
-    void* m_cipher;
+    void* m_cipher         = nullptr;
+    void* m_cipher_factory = nullptr;
 
-    alc_error_t (*decrypt)(const void*  rCipher,
-                           const Uint8* pSrc,
-                           Uint8*       pDst,
-                           Uint64       len,
-                           const Uint8* pIv);
+    alc_cipher_data_t m_alcp_cipher_data;
+    Uint8             destructed;
 
-    alc_error_t (*encrypt)(const void*  rCipher,
-                           const Uint8* pSrt,
-                           Uint8*       pDrc,
-                           Uint64       len,
-                           const Uint8* pIv);
+    // sw methods
+    alc_error_t (*decrypt)(const Uint8* pSrc, Uint8* pDst, Uint64 len);
 
-    alc_error_t (*encryptBlocks)(const void*  rCipher,
-                                 const Uint8* pSrt,
-                                 Uint8*       pDrc,
-                                 Uint64       currPlainTextLen,
-                                 Uint64       startBlockNum);
+    alc_error_t (*encrypt)(const Uint8* pSrt, Uint8* pDrc, Uint64 len);
 
-    alc_error_t (*decryptBlocks)(const void*  rCipher,
-                                 const Uint8* pSrt,
-                                 Uint8*       pDrc,
-                                 Uint64       currCipherTextLen,
-                                 Uint64       startBlockNum);
+    alc_error_t (*encryptBlocksXts)(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       currPlainTextLen,
+                                    Uint64       startBlockNum);
 
-    alc_error_t (*decryptUpdate)(void*        rCipher,
-                                 const Uint8* pSrc,
-                                 Uint8*       pDst,
-                                 Uint64       len,
-                                 const Uint8* pIv);
+    alc_error_t (*decryptBlocksXts)(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       currCipherTextLen,
+                                    Uint64       startBlockNum);
 
-    alc_error_t (*encryptUpdate)(void*        rCipher,
-                                 const Uint8* pSrc,
-                                 Uint8*       pDst,
-                                 Uint64       len,
-                                 const Uint8* pIv);
+    alc_error_t (*init)(const Uint8* pKey,
+                        Uint64       keyLen,
+                        const Uint8* pIv,
+                        Uint64       ivLen);
 
-    alc_error_t (*setIv)(void* rCipher, Uint64 len, const Uint8* pIv);
+    alc_error_t (*setAad)(const Uint8* pAad, Uint64 aadLen);
 
-    alc_error_t (*setAad)(void* rCipher, const Uint8* pAad, Uint64 len);
+    alc_error_t (*getTag)(Uint8* pTag, Uint64 tagLen);
 
-    alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 len);
+    alc_error_t (*setTagLength)(Uint64 tagLen);
 
-    alc_error_t (*setTagLength)(void* rCipher, Uint64 len);
+    alc_error_t (*setPlainTextLength)(Uint64 plainTextLength);
 
     alc_error_t (*finish)(const void*);
 
-    Status status{ StatusOk() };
-};
+    Context()
+        : m_alcp_cipher_data{}
+        , destructed{ 0 }
+        , decrypt{ nullptr }
+        , encrypt{ nullptr }
+        , encryptBlocksXts{ nullptr }
+        , decryptBlocksXts{ nullptr }
+        , init{ nullptr }
+        , setAad{ nullptr }
+        , getTag{ nullptr }
+        , setTagLength{ nullptr }
+        , setPlainTextLength{ nullptr }
+        , finish{ nullptr } {};
+
+    ~Context() { destructed = 1; }
+} alcp_cipher_ctx_t;
 
 } // namespace alcp::cipher

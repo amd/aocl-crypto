@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,16 +41,20 @@ create_demo_session(void)
 {
     alc_error_t err;
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA3,
-        .dt_len = ALC_DIGEST_LEN_384,
-        .dt_mode = {.dm_sha3 = ALC_SHA3_384,},
-    };
-
-    Uint64 size         = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
-    err = alcp_digest_request(&dinfo, &s_dg_handle);
+    if (!s_dg_handle.context) {
+        return ALC_ERROR_NO_MEMORY;
+    }
+
+    err = alcp_digest_request(ALC_SHA3_384, &s_dg_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+
+    err = alcp_digest_init(&s_dg_handle);
 
     if (alcp_is_error(err)) {
         return err;
@@ -81,12 +85,16 @@ hash_demo(const Uint8* src,
         p += buf_size;
     }
 
-    if (last_buf_size == 0) {
-        p = NULL;
+    if (last_buf_size) {
+        err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
+        if (alcp_is_error(err)) {
+            printf("Unable to compute SHA3 hash\n");
+            goto out;
+        }
     }
-    alcp_digest_finalize(&s_dg_handle, p, last_buf_size);
 
-    err = alcp_digest_copy(&s_dg_handle, output, out_size);
+    err = alcp_digest_finalize(&s_dg_handle, output, out_size);
+
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
     }
@@ -260,10 +268,10 @@ main(void)
             return -1;
         }
         err = hash_demo(sample_input,
-                            strlen((const char*)sample_input),
-                            sample_output,
-                            sizeof(sample_output),
-                            num_chunks);
+                        strlen((const char*)sample_input),
+                        sample_output,
+                        sizeof(sample_output),
+                        num_chunks);
         if (alcp_is_error(err)) {
             return -1;
         }

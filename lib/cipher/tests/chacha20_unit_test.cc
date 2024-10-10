@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,31 +32,9 @@
 #include "gtest/gtest.h"
 #include <openssl/bio.h>
 
-#ifdef WIN32
-#include "alcp/utils/time.hh"
-#else
-#include <sys/time.h>
-#endif
-#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
-long   seconds;
-long   microseconds;
-double elapsed;
-double totalTimeElapsed;
-
-#define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
-
-#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
-    gettimeofday(&end, 0);                                                     \
-    seconds      = end.tv_sec - begin.tv_sec;                                  \
-    microseconds = end.tv_usec - begin.tv_usec;                                \
-    elapsed      = seconds + microseconds * 1e-6;                              \
-    totalTimeElapsed += elapsed;                                               \
-    if (X) {                                                                   \
-        printf("\t" Y);                                                        \
-        printf(" %2.2f ms ", elapsed * 1000);                                  \
-    }
-
-using namespace alcp::cipher::chacha20;
+#include "alcp/utils/benchmark.hh"
+#if 1
+using namespace alcp::cipher;
 TEST(Chacha20, QuarterRoundTest)
 {
     Uint32 a = 0x11111111;
@@ -86,13 +64,43 @@ TEST(Chacha20, IntialState)
         0LLU);
 }
 
-TEST(Chacha20, Encrypt)
+TEST(Chacha20, KeyStream)
 {
-    ChaCha20 chacha20_obj_enc, chacha20_obj_dec;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+
+    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
                     0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    Uint8 iv[]  = { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
+
+    std::vector<Uint8> expected_key_stream = {
+        0x22, 0x4f, 0x51, 0xf3, 0x40, 0x1b, 0xd9, 0xe1, 0x2f, 0xde, 0x27, 0x6f,
+        0xb8, 0x63, 0x1d, 0xed, 0x8c, 0x13, 0x1f, 0x82, 0x3d, 0x2c, 0x06, 0xe2,
+        0x7e, 0x4f, 0xca, 0xec, 0x9e, 0xf3, 0xcf, 0x78, 0x8a, 0x3b, 0x0a, 0xa3,
+        0x72, 0x60, 0x0a, 0x92, 0xb5, 0x79, 0x74, 0xcd, 0xed, 0x2b, 0x93, 0x34,
+        0x79, 0x4c, 0xba, 0x40, 0xc6, 0x3e, 0x34, 0xcd, 0xea, 0x21, 0x2c, 0x4c,
+        0xf0, 0x7d, 0x41, 0xb7, 0x69, 0xa6, 0x74, 0x9f, 0x3f, 0x63, 0x0f, 0x41,
+        0x22, 0xca, 0xfe, 0x28, 0xec, 0x4d, 0xc4, 0x7e, 0x26, 0xd4, 0x34, 0x6d,
+        0x70, 0xb9, 0x8c, 0x73, 0xf3, 0xe9, 0xc5, 0x3a, 0xc4, 0x0c, 0x59, 0x45,
+        0x39, 0x8b, 0x6e, 0xda, 0x1a, 0x83, 0x2c, 0x89, 0xc1, 0x67, 0xea, 0xcd,
+        0x90, 0x1d, 0x7e, 0x2b, 0xf3, 0x63
+    };
+    std::vector<Uint8> key_stream(expected_key_stream.size(), 0);
+
+    ref::ChaCha256 chacha20_obj;
+    chacha20_obj.setKey(key, sizeof(key) * 8);
+    chacha20_obj.setIv(iv, sizeof(iv));
+    chacha20_obj.encrypt(&key_stream[0], &key_stream[0], key_stream.size());
+
+    EXPECT_EQ(key_stream, expected_key_stream);
+}
+TEST(Chacha20, Encrypt)
+{
+    ref::ChaCha256 chacha20_obj_enc, chacha20_obj_dec;
+    Uint8          key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                             0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                             0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                             0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8 iv[] = { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
     std::vector<Uint8> plaintext = {
@@ -123,24 +131,24 @@ TEST(Chacha20, Encrypt)
         0xf2, 0x78, 0x5e, 0x42, 0x87, 0x4d
     };
 
-    chacha20_obj_enc.setKey(key, sizeof(key));
+    chacha20_obj_enc.setKey(key, sizeof(key) * 8);
     chacha20_obj_enc.setIv(iv, sizeof(iv));
-    chacha20_obj_enc.processInput(&plaintext[0], plaintext.size(), &output[0]);
+    chacha20_obj_enc.encrypt(&plaintext[0], &output[0], plaintext.size());
     ASSERT_EQ(output, expected_output);
-    chacha20_obj_dec.setKey(key, sizeof(key));
+    chacha20_obj_dec.setKey(key, sizeof(key) * 8);
     chacha20_obj_dec.setIv(iv, sizeof(iv));
-    chacha20_obj_dec.processInput(
-        &output[0], plaintext.size(), &decrypted_plaintext[0]);
+    chacha20_obj_dec.decrypt(
+        &output[0], &decrypted_plaintext[0], plaintext.size());
     EXPECT_EQ(decrypted_plaintext, plaintext);
 }
 
 TEST(Chacha20, Encrypt_MultipleBytes)
 {
-    ChaCha20 chacha20_obj_enc, chacha20_obj_dec;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    ref::ChaCha256 chacha20_obj_enc, chacha20_obj_dec;
+    Uint8          key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                             0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                             0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                             0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8 iv[] = { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
     std::vector<Uint8> plaintext = {
@@ -226,17 +234,17 @@ TEST(Chacha20, Encrypt_MultipleBytes)
         0x22, 0x2a, 0xf3, 0x47, 0xa9, 0x63, 0xbe, 0xb4, 0x54, 0x9f, 0xfb, 0x69,
         0xa8, 0xc2, 0x34, 0x5a, 0xdc, 0xac, 0xf8, 0xf1, 0x01, 0x8a, 0xd3, 0x92
     };
-    chacha20_obj_enc.setKey(key, sizeof(key));
+    chacha20_obj_enc.setKey(key, sizeof(key) * 8);
     chacha20_obj_enc.setIv(iv, sizeof(iv));
     chacha20_obj_dec.setKey(key, sizeof(key));
     chacha20_obj_dec.setIv(iv, sizeof(iv));
     for (Uint64 i = 0; i < plaintext.size(); i++) {
-        chacha20_obj_enc.processInput(&plaintext[0], i, &output[0]);
+        chacha20_obj_enc.encrypt(&plaintext[0], &output[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
             << "Failed to Encrypt block size " << i;
-        chacha20_obj_dec.processInput(&output[0], i, &decrypted_plaintext[0]);
+        chacha20_obj_dec.decrypt(&output[0], &decrypted_plaintext[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
@@ -246,25 +254,24 @@ TEST(Chacha20, Encrypt_MultipleBytes)
 
 TEST(Chacha20, PerformanceTest)
 {
-    ChaCha20 chacha20_obj;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    ref::ChaCha256 chacha20_obj;
+    Uint8          key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                             0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                             0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                             0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8 iv[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
 
     std::vector<Uint8> plaintext(256);
     std::vector<Uint8> ciphertext(plaintext.size());
-    chacha20_obj.setKey(key, sizeof(key));
+    chacha20_obj.setKey(key, sizeof(key) * 8);
     chacha20_obj.setIv(iv, sizeof(iv));
     ALCP_CRYPT_TIMER_INIT
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha20_obj.processInput(
-            &plaintext[0], plaintext.size(), &ciphertext[0]);
+        chacha20_obj.encrypt(&plaintext[0], &ciphertext[0], plaintext.size());
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"
@@ -274,3 +281,5 @@ TEST(Chacha20, PerformanceTest)
         }
     }
 }
+
+#endif

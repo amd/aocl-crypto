@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,34 +35,9 @@
 #include "alcp/types.hh"
 
 #include "alcp/error.h"
-
-#ifdef WIN32
-#include "alcp/utils/time.hh"
-#else
-#include <sys/time.h>
-#endif
+#include "alcp/utils/benchmark.hh"
 
 #define MAX_SIZE_KEY_DATA 32U
-
-// to do: these macro is better to be moved to common header.
-#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
-long   seconds;
-long   microseconds;
-double elapsed;
-double totalTimeElapsed;
-
-#define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
-
-#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
-    gettimeofday(&end, 0);                                                     \
-    seconds      = end.tv_sec - begin.tv_sec;                                  \
-    microseconds = end.tv_usec - begin.tv_usec;                                \
-    elapsed      = seconds + microseconds * 1e-6;                              \
-    totalTimeElapsed += elapsed;                                               \
-    if (X) {                                                                   \
-        printf("\t" Y);                                                        \
-        printf(" %2.2f ms ", elapsed * 1000);                                  \
-    }
 
 namespace {
 
@@ -115,10 +90,11 @@ class x25519Test
     {
         // Tuple order
         // {peer1_private_key, peer2_private_key,expected_shared_key}
-        const auto params = GetParam();
-        const auto [peer1_private_key, peer2_private_key, expected_shared_key] =
-            params.second;
-        const auto test_name = params.first;
+        const auto& params                = GetParam();
+        const auto& [peer1_private_key,
+                     peer2_private_key,
+                     expected_shared_key] = params.second;
+        const auto& test_name             = params.first;
 
         // Copy Values to class variables
         m_peer1_private_key   = peer1_private_key;
@@ -142,9 +118,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswerTest,
     x25519Test,
     testing::ValuesIn(KATDataset),
-    [](const testing::TestParamInfo<x25519Test::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<x25519Test::ParamType>& info)
+        -> const std::string { return info.param.first; });
 
 TEST_P(x25519Test, PublicAndSharedKeyTest)
 {

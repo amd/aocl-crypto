@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,13 +37,13 @@ TEST(CHACHA20_ENC_256, KAT_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
-    ChachaKatTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20);
+    CipherKatTest(256, ENCRYPT, ALC_CHACHA20);
 }
 TEST(CHACHA20_DEC_256, KAT_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
-    ChachaKatTest(256, DECRYPT, ALC_CIPHER_TYPE_CHACHA20);
+    CipherKatTest(256, DECRYPT, ALC_CHACHA20);
 }
 
 int

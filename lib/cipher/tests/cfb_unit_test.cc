@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,160 +38,74 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
-constexpr CpuCipherFeatures c_CpuFeatureSelect = CpuCipherFeatures::eDynamic;
+#undef DEBUG
 
-using alcp::cipher::Cfb;
-using alcp::cipher::ICipher;
+using alcp::cipher::CipherFactory;
+using alcp::cipher::iCipher;
 namespace alcp::cipher::unittest::cfb {
-std::vector<Uint8> key       = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-std::vector<Uint8> iv        = { 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+std::vector<Uint8> key = { 0x4b, 0x59, 0x9b, 0x08, 0x42, 0x1c, 0x8e, 0xe5,
+                           0x15, 0x23, 0xd4, 0xdf, 0x99, 0x51, 0x3d, 0x08 };
+const string cCipher   = "aes-cfb-128"; // Needs to be modified base on the key
+std::vector<Uint8> iv  = { 0x59, 0x97, 0x56, 0xcd, 0x45, 0x6b, 0xbf, 0x6f,
+                           0x8a, 0x79, 0x0e, 0x99, 0xcb, 0x9c, 0x0f, 0x83 };
 std::vector<Uint8> plainText = {
-    0x02, 0x01, 0x00, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    0xa9, 0xd6, 0x49, 0x1d, 0xbc, 0x25, 0x45, 0xc5, 0xdf, 0x7b, 0xb3, 0xe6,
+    0x42, 0xf2, 0x2c, 0x89, 0x69, 0x6a, 0x1b, 0x6c, 0x0a, 0x1c, 0x39, 0x58,
+    0xc0, 0xde, 0xe5, 0xa7, 0x36, 0x13, 0x5b, 0xb8, 0x92, 0x92, 0xd5, 0x79,
+    0x7c, 0xb0, 0xc8, 0x89, 0x70, 0x91, 0x98, 0x24, 0xe6, 0x4d, 0x0c, 0x47,
+    0x9c, 0x98, 0x1a, 0x15, 0xec, 0x5b, 0x94, 0xf3, 0xc5, 0xe4, 0xbe, 0x33,
+    0xc6, 0x0b, 0x07, 0xad, 0x39, 0x37, 0xa7, 0x0e, 0x78, 0xc0, 0xf8, 0x7c,
+    0x76, 0x5e, 0xe6, 0xda, 0x4a, 0x91, 0x84, 0xc9, 0x4f, 0x2f, 0x2b, 0x6a,
+    0xad, 0x8d, 0xf8, 0x9c, 0x50, 0xd3, 0x89, 0x45, 0xba, 0x85, 0xa7, 0xba,
+    0x7a, 0x7b, 0xc6, 0x6f, 0x3a, 0x91, 0xfd, 0x1a, 0x6a, 0x19, 0x13, 0xa5,
+    0x3e, 0x42, 0xa0, 0x94, 0x1d, 0x93, 0x91, 0x99, 0x27, 0x20, 0xb3, 0x91,
+    0x8c, 0x35, 0x21, 0xe5, 0x3c, 0xf1, 0x9a, 0xf4, 0xc0, 0x8f, 0x5b, 0xb6,
+    0xb9, 0xf2, 0x1d, 0x0e, 0x40, 0x5a, 0x2b, 0xa5, 0x8f, 0x3d, 0xdb, 0xe7,
+    0xdd, 0x6a, 0x86, 0x99, 0xc1, 0x82, 0x8b, 0xc0, 0x6b, 0xc1, 0xff, 0xab,
+    0xaf, 0x40, 0x67, 0xae, 0x59, 0xc6, 0x96, 0xea, 0x51, 0x2d, 0xa3, 0x2e,
+    0xcb, 0x24, 0xc7, 0xf9, 0x84, 0x8b, 0x81, 0xec, 0xdc, 0x17, 0x4e, 0x4a,
+    0x23, 0x0b, 0xb9, 0xf7, 0xf9, 0xf9, 0x5a, 0x97, 0xd0, 0x53, 0x7f, 0xae,
+    0x9b, 0x76, 0xb6, 0x38, 0x53, 0x78, 0xa3, 0xf2, 0xa4, 0x0a, 0xa8, 0xde,
+    0x65, 0x86, 0x86, 0x38, 0x93, 0x12, 0x18, 0x5b, 0x33, 0x63, 0x4b, 0xa9,
+    0x0f, 0x08, 0xda, 0x79, 0xa5, 0xfd, 0x72, 0x17, 0x43, 0xdf, 0x84, 0x68,
+    0x32, 0xd3, 0x70, 0xc3, 0x62, 0xda, 0x61, 0x7f, 0xd4, 0x21, 0x20, 0xd9,
+    0xdd, 0x5b, 0x57, 0x34, 0x21, 0xbb, 0x6e, 0x02, 0x50, 0x43, 0xb5, 0x41,
+    0xde, 0x1f, 0x07, 0x49, 0x5e, 0x35, 0xc4, 0x6e, 0x7a, 0x64, 0x4d, 0x86,
+    0x05, 0x70, 0xb4, 0x68, 0x7f, 0x2b, 0xb6, 0x87, 0x02, 0x7d, 0x22, 0xe6,
+    0xb8, 0xe7, 0xc8, 0xbc, 0x1c, 0x6e, 0x96, 0x58, 0x6a, 0x54, 0x3a, 0x29,
+    0x62, 0xc2, 0x07, 0x89, 0xfa, 0x00, 0x93, 0x33, 0xe7, 0x14, 0x1e, 0x92,
+    0xf2, 0x64, 0xc1, 0xaf, 0xe9, 0xfd, 0x80, 0x74, 0x37, 0xdd, 0xf9, 0x6a,
+    0xb9, 0x42, 0xf2, 0x3c, 0x3c, 0x8f, 0xf2, 0x56
 };
-std::vector<Uint8> cipherText = { 0x5a, 0xa2, 0xf9, 0xdb, 0xe4, 0x4a,
-                                  0xc9, 0x81, 0x8e, 0x03, 0x30, 0x98,
-                                  0x77, 0x6d, 0xba, 0x37 };
-
-/**
- * @brief Factory based Dynamic Dispatch with minimal branches
- * @return Instance of Cfb depending on provided architecure
- * @note Only use this with compile time resolvable expression
- */
-template<utils::CpuCipherFeatures features, Uint32 keylen>
-std::unique_ptr<ICipher>
-CfbFactory(const Uint8 key[])
-{
-    std::unique_ptr<ICipher> cfb;
-    using namespace aesni;
-    if constexpr (features == utils::CpuCipherFeatures::eAesni) {
-        if constexpr (keylen == 128)
-            cfb = std::make_unique<Cfb<EncryptCfb128, DecryptCfb128>>(
-                key,
-                keylen); // Create
-        else if constexpr (keylen == 192)
-            cfb = std::make_unique<Cfb<EncryptCfb192, DecryptCfb192>>(
-                key,
-                keylen); // Create
-        else if constexpr (keylen == 256)
-            cfb = std::make_unique<Cfb<EncryptCfb256, DecryptCfb256>>(
-                key,
-                keylen); // Create
-        else {
-            std::cout << "Error Keysize is not supported!" << std::endl;
-            // Dispatch to something else
-            cfb = std::make_unique<Cfb<EncryptCfb128, DecryptCfb128>>(
-                key,
-                keylen); // Create
-        }
-    } else if constexpr (features == utils::CpuCipherFeatures::eVaes256) {
-        if constexpr (keylen == 128)
-            cfb = std::make_unique<Cfb<EncryptCfb128, vaes::DecryptCfb128>>(
-                key,
-                keylen); // Create
-        else if constexpr (keylen == 192)
-            cfb = std::make_unique<Cfb<EncryptCfb192, vaes::DecryptCfb192>>(
-                key,
-                keylen); // Create
-        else if constexpr (keylen == 256)
-            cfb = std::make_unique<Cfb<EncryptCfb256, vaes::DecryptCfb256>>(
-                key,
-                keylen); // Create
-        else {
-            std::cout << "Error Keysize is not supported!" << std::endl;
-            // Dispatch to something else
-            cfb = std::make_unique<Cfb<EncryptCfb128, DecryptCfb128>>(
-                key,
-                keylen); // Create
-        }
-    } else if constexpr (features == utils::CpuCipherFeatures::eVaes512) {
-        if constexpr (keylen == 128)
-            cfb = std::make_unique<Cfb<EncryptCfb128, vaes512::DecryptCfb128>>(
-                key,
-                keylen); // Create
-        else if constexpr (keylen == 192)
-            cfb = std::make_unique<Cfb<EncryptCfb192, vaes512::DecryptCfb192>>(
-                key,
-                keylen); // Create
-        else if constexpr (keylen == 256)
-            cfb = std::make_unique<Cfb<EncryptCfb256, vaes512::DecryptCfb256>>(
-                key,
-                keylen); // Create
-        else {
-            std::cout << "Error Keysize is not supported!" << std::endl;
-            // Dispatch to something else
-            cfb = std::make_unique<Cfb<EncryptCfb128, DecryptCfb128>>(
-                key,
-                keylen); // Create
-        }
-    } else if constexpr (features == utils::CpuCipherFeatures::eDynamic) {
-        CpuId                           cpu;
-        static utils::CpuCipherFeatures maxFeature = getMaxFeature();
-        if (maxFeature == utils::CpuCipherFeatures::eVaes512) {
-            cfb = CfbFactory<utils::CpuCipherFeatures::eVaes512, keylen>(key);
-        } else if (maxFeature == utils::CpuCipherFeatures::eVaes256) {
-            cfb = CfbFactory<utils::CpuCipherFeatures::eVaes256, keylen>(key);
-        } else if (maxFeature == utils::CpuCipherFeatures::eAesni) {
-            cfb = CfbFactory<utils::CpuCipherFeatures::eAesni, keylen>(key);
-        }
-    }
-    assert(cfb.get() != nullptr);
-    return cfb;
-}
-
-/**
- * @brief CfbFactory but with branches
- * @return Instance of Cfb depending on provided architecure
- * @note Use this when you are going to give a runtime variable
- */
-std::unique_ptr<ICipher>
-CfbFactoryIndirect(utils::CpuCipherFeatures features,
-                   const Uint8              key[],
-                   Uint32                   keylen)
-{
-    switch (keylen) {
-        default:
-            std::cout << "Unknown Key Length" << std::endl;
-        case 128:
-            if (features == CpuCipherFeatures::eVaes512) {
-                return CfbFactory<CpuCipherFeatures::eVaes512, 128>(key);
-            } else if (features == CpuCipherFeatures::eVaes256) {
-                return CfbFactory<CpuCipherFeatures::eVaes256, 128>(key);
-            } else if (features == CpuCipherFeatures::eAesni) {
-                return CfbFactory<CpuCipherFeatures::eAesni, 128>(key);
-            } else {
-                return CfbFactory<CpuCipherFeatures::eReference, 128>(key);
-            }
-            break;
-
-        case 192:
-            if (features == CpuCipherFeatures::eVaes512) {
-                return CfbFactory<CpuCipherFeatures::eVaes512, 192>(key);
-            } else if (features == CpuCipherFeatures::eVaes256) {
-                return CfbFactory<CpuCipherFeatures::eVaes256, 192>(key);
-            } else if (features == CpuCipherFeatures::eAesni) {
-                return CfbFactory<CpuCipherFeatures::eAesni, 192>(key);
-            } else {
-                return CfbFactory<CpuCipherFeatures::eReference, 192>(key);
-            }
-            break;
-
-        case 256:
-            if (features == CpuCipherFeatures::eVaes512) {
-                return CfbFactory<CpuCipherFeatures::eVaes512, 256>(key);
-            } else if (features == CpuCipherFeatures::eVaes256) {
-                return CfbFactory<CpuCipherFeatures::eVaes256, 256>(key);
-            } else if (features == CpuCipherFeatures::eAesni) {
-                return CfbFactory<CpuCipherFeatures::eAesni, 256>(key);
-            } else {
-                return CfbFactory<CpuCipherFeatures::eReference, 256>(key);
-            }
-            break;
-    }
-}
-
+std::vector<Uint8> cipherText = {
+    0xb1, 0x80, 0x78, 0x51, 0x30, 0xf1, 0x76, 0xab, 0xee, 0x58, 0xa6, 0x71,
+    0x52, 0xa0, 0x7d, 0x6e, 0x1a, 0x05, 0xea, 0xf7, 0x00, 0x3d, 0x50, 0x52,
+    0xfe, 0x35, 0xef, 0xdf, 0x70, 0xc1, 0xbf, 0xd2, 0xd6, 0xab, 0x5f, 0x0d,
+    0x37, 0x3a, 0x44, 0x40, 0x61, 0x12, 0xb5, 0x66, 0x6c, 0x06, 0xc6, 0xea,
+    0xdc, 0x49, 0xde, 0x9e, 0x5b, 0xc2, 0x95, 0x80, 0x12, 0xe7, 0x58, 0xf3,
+    0x14, 0xd6, 0x74, 0x4f, 0x39, 0xbd, 0xb4, 0x08, 0x63, 0xf5, 0x28, 0x22,
+    0x10, 0x20, 0xc8, 0xc1, 0xf9, 0xd4, 0x2b, 0x1c, 0x60, 0xd2, 0x7f, 0x00,
+    0x2b, 0x8b, 0x85, 0xeb, 0x6f, 0x57, 0x61, 0x78, 0x9e, 0xd8, 0x13, 0x6c,
+    0x67, 0x1b, 0x7f, 0xba, 0xda, 0x9c, 0x97, 0x9f, 0x48, 0xcc, 0x44, 0x68,
+    0x8d, 0xa6, 0x7a, 0x25, 0xbb, 0xc5, 0xfc, 0xb1, 0x3f, 0x24, 0xc2, 0x5c,
+    0x09, 0x87, 0x50, 0x44, 0x93, 0xed, 0xba, 0x28, 0x66, 0x83, 0xcb, 0xd1,
+    0x66, 0x7a, 0x96, 0xe9, 0xb5, 0xfe, 0x0f, 0xd5, 0x6f, 0xc5, 0x9c, 0xef,
+    0xf7, 0x44, 0x9b, 0x6c, 0x75, 0x67, 0xc9, 0x22, 0xc9, 0x4d, 0xb4, 0xbd,
+    0xf2, 0x8a, 0xf9, 0xff, 0x3b, 0x7c, 0xa7, 0xa3, 0x50, 0x6f, 0x7b, 0xce,
+    0x24, 0xb3, 0x0b, 0xe7, 0xba, 0x75, 0xd6, 0x1b, 0x72, 0x9c, 0x0e, 0x3c,
+    0x48, 0x08, 0x9c, 0x8d, 0xa4, 0x66, 0x84, 0xa6, 0x5b, 0x6d, 0x8d, 0xbf,
+    0x20, 0x17, 0x2a, 0x18, 0x75, 0xb5, 0xf2, 0xc2, 0x16, 0x1b, 0x6b, 0xd1,
+    0x21, 0x01, 0xcf, 0xd1, 0xaa, 0x7d, 0xe7, 0x73, 0xeb, 0x22, 0x8b, 0x98,
+    0x02, 0xb0, 0x2f, 0x44, 0x55, 0xc2, 0x18, 0x93, 0x0a, 0x67, 0x98, 0x49,
+    0xd7, 0xf5, 0x95, 0x95, 0x97, 0x56, 0xfa, 0x3b, 0x04, 0x85, 0x66, 0x52,
+    0x26, 0x7b, 0xb1, 0xd8, 0x7b, 0x3b, 0x7c, 0x15, 0x85, 0xf6, 0x99, 0x26,
+    0x13, 0xb8, 0x71, 0xe8, 0xf2, 0xb6, 0xec, 0x47, 0xdc, 0x1a, 0x49, 0x62,
+    0xdb, 0x31, 0xf5, 0x80, 0xe0, 0x99, 0xea, 0x95, 0x5b, 0x09, 0xe9, 0x53,
+    0x15, 0xb7, 0xdc, 0x5f, 0xf3, 0xf1, 0x95, 0x10, 0x3d, 0x11, 0xff, 0x11,
+    0x05, 0xca, 0x90, 0xda, 0x3e, 0x8e, 0xcc, 0x75, 0x1c, 0x37, 0x78, 0x12,
+    0x6a, 0x79, 0x01, 0xe2, 0x66, 0x5b, 0x36, 0x6a, 0xca, 0x60, 0xc5, 0x47,
+    0xd2, 0x36, 0x7d, 0xe8, 0x7e, 0xcc, 0x7c, 0x8f
+};
 } // namespace alcp::cipher::unittest::cfb
 
 using namespace alcp::cipher::unittest;
@@ -208,59 +122,146 @@ TEST(CFB, creation)
                    feature)
             << std::endl;
 #endif
-        std::unique_ptr<ICipher> cfb;
-        cfb = CfbFactoryIndirect(feature, &key[0], key.size() * 8);
-        EXPECT_TRUE(cfb.get() != nullptr);
+        auto alcpCipher = new CipherFactory<iCipher>;
+        auto cfb        = alcpCipher->create("aes-cfb-128", feature);
+        if (cfb == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+        delete alcpCipher;
     }
 }
 
 TEST(CFB, BasicEncryption)
 {
-    std::unique_ptr<ICipher> cfb = CfbFactory<c_CpuFeatureSelect, 128>(&key[0]);
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    EXPECT_TRUE(cfb.get() != nullptr);
+    if (cfb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
 
     std::vector<Uint8> output(cipherText.size());
 
-    cfb->encrypt(&plainText[0], &output[0], plainText.size(), &iv[0]);
+    cfb->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
+    cfb->encrypt(&plainText[0], &output[0], plainText.size());
+
+    delete alcpCipher;
     EXPECT_EQ(cipherText, output);
 }
 
 TEST(CFB, BasicDecryption)
 {
-    std::unique_ptr<ICipher> cfb = CfbFactory<c_CpuFeatureSelect, 128>(&key[0]);
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto cfb        = alcpCipher->create("aes-cfb-128");
 
-    EXPECT_TRUE(cfb.get() != nullptr);
+    if (cfb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
 
     std::vector<Uint8> output(plainText.size());
 
-    cfb->decrypt(&cipherText[0], &output[0], cipherText.size(), &iv[0]);
+    cfb->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
+    cfb->decrypt(&cipherText[0], &output[0], cipherText.size());
+
+    delete alcpCipher;
     EXPECT_EQ(plainText, output);
+}
+
+TEST(CFB, MultiUpdateEncryption)
+{
+#ifndef AES_MULTI_UPDATE
+    GTEST_SKIP() << "Multi Update functionality unavailable!";
+#endif
+    auto alcpCipher = new CipherFactory<iCipher>;
+    auto cfb        = alcpCipher->create("aes-cfb-128");
+
+    if (cfb == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    std::vector<Uint8> output(plainText.size());
+
+    alc_error_t err = cfb->init(&key[0], key.size() * 8, &iv[0], iv.size());
+
+    for (Uint64 i = 0; i < plainText.size() / 16; i++) {
+        err = cfb->encrypt(
+            &plainText[0] + i * 16, &output[0] + i * 16, 16); // 16 byte chunks
+        if (alcp_is_error(err)) {
+            std::cout << "Encrypt failed!" << std::endl;
+        }
+        EXPECT_FALSE(alcp_is_error(err));
+    }
+    delete alcpCipher;
+
+    EXPECT_EQ(cipherText, output);
+}
+
+TEST(CFB, MultiUpdateDecryption)
+{
+#ifndef AES_MULTI_UPDATE
+    GTEST_SKIP() << "Multi Update functionality unavailable!";
+#endif
+    std::vector<CpuCipherFeatures> cpu_features = getSupportedFeatures();
+
+    // Test for all arch
+    for (CpuCipherFeatures feature : cpu_features) {
+        auto alcpCipher = new CipherFactory<iCipher>;
+        auto cfb        = alcpCipher->create("aes-cfb-128", feature);
+
+        if (cfb == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+        std::vector<Uint8> output(plainText.size());
+
+        alc_error_t err = cfb->init(&key[0], key.size() * 8, &iv[0], iv.size());
+
+        if (alcp_is_error(err)) {
+            std::cout << "Init failed!" << std::endl;
+        }
+
+        for (Uint64 i = 0; i < plainText.size() / 16; i++) {
+            err =
+                cfb->decrypt(&cipherText[0] + i * 16, &output[0] + i * 16, 16);
+            if (alcp_is_error(err)) {
+                std::cout << "Decrypt failed!" << std::endl;
+            }
+            EXPECT_FALSE(alcp_is_error(err));
+        }
+        delete alcpCipher;
+        EXPECT_EQ(plainText, output)
+            << "FAIL CPU_FEATURE:"
+            << std::underlying_type<CpuCipherFeatures>::type(feature);
+    }
 }
 
 TEST(CFB, RandomEncryptDecryptTest)
 {
-    Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
-    std::vector<Uint8> plainText_vect(100000);
-    std::vector<Uint8> cipherText_vect(100000);
+    Uint8        key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
+    const Uint64 cTextSize   = 100000;
+    std::vector<Uint8> plain_text_vect(cTextSize);
+    std::vector<Uint8> cipher_text_vect(cTextSize);
     Uint8              iv[16] = {};
 
     // Fill buffer with random data
     std::unique_ptr<IRandomize> random = std::make_unique<Randomize>(12);
-    random->getRandomBytes(plainText_vect);
-    random->getRandomBytes(cipherText_vect);
+    random->getRandomBytes(plain_text_vect);
+    random->getRandomBytes(cipher_text_vect);
     random->getRandomBytes(key_256, 32);
     random->getRandomBytes(iv, 16);
 
-    std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
+    std::vector<CpuCipherFeatures> cpu_features = getSupportedFeatures();
 
-    for (int i = 100000; i > 16; i -= 16)
-        for (CpuCipherFeatures feature : cpuFeatures) {
+    for (int i = (cTextSize - 16); i > 16; i -= 16)
+        for (CpuCipherFeatures feature : cpu_features) {
 #ifdef DEBUG
             std::cout
                 << "Cpu Feature:"
@@ -269,25 +270,29 @@ TEST(CFB, RandomEncryptDecryptTest)
                        feature)
                 << std::endl;
 #endif
-            const std::vector<Uint8> plainTextVect(plainText_vect.begin() + i,
-                                                   plainText_vect.end());
+            const std::vector<Uint8> plainTextVect(plain_text_vect.begin() + i,
+                                                   plain_text_vect.end());
             std::vector<Uint8>       plainTextOut(plainTextVect.size());
-            std::unique_ptr<ICipher> cfb =
-                CfbFactoryIndirect(feature, key_256, sizeof(key_256) * 8);
+            auto                     alcpCipher = new CipherFactory<iCipher>;
+            auto cfb = alcpCipher->create("aes-cfb-256", feature);
 
-            EXPECT_TRUE(cfb.get() != nullptr);
+            if (cfb == nullptr) {
+                delete alcpCipher;
+                FAIL();
+            }
+            cfb->init(key_256, 256, &iv[0], sizeof(iv));
 
-            cfb->encrypt(&plainTextVect[0],
-                         &cipherText_vect[0],
-                         plainTextVect.size(),
-                         iv);
+            cfb->encrypt(
+                &plainTextVect[0], &cipher_text_vect[0], plainTextVect.size());
 
-            cfb->decrypt(&cipherText_vect[0],
-                         &plainTextOut[0],
-                         plainTextVect.size(),
-                         iv);
+            cfb->init(key_256, 256, &iv[0], sizeof(iv));
+
+            cfb->decrypt(
+                &cipher_text_vect[0], &plainTextOut[0], plainTextVect.size());
 
             EXPECT_EQ(plainTextVect, plainTextOut);
+
+            delete alcpCipher;
 #ifdef DEBUG
             auto ret = std::mismatch(plainTextVect.begin(),
                                      plainTextVect.end(),

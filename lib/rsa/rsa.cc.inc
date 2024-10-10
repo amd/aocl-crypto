@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -57,7 +57,7 @@ namespace mont {
  *
  * https://ieeexplore.ieee.org/document/6209072
  * "Speeding Up Big-Numbers Squaring"
- *
+ * Authors - Shay Gueron & Vlad Krasnov
  */
 
 /*
@@ -65,7 +65,7 @@ namespace mont {
  *
  * https://ieeexplore.ieee.org/document/502403
  * Analyzing and comparing Montgomery multiplication algorithms
- *
+ * Authors - C. Kaya Koc, T. Acar, B.S. Kaliski
  */
 
 constexpr Uint64 one_msb = 0x8000000000000000LLU;
@@ -672,12 +672,9 @@ struct MontCompute
                                      Uint64*            mod,
                                      Uint64             size)
     {
-        Uint64* r1 = new Uint64[size]{};
-        Uint64* r2 = new Uint64[size]{};
-        Uint64* r3 = new Uint64[size]{};
-        context.m_r1.reset(r1);
-        context.m_r2.reset(r2);
-        context.m_r3.reset(r3);
+        Uint64* r1 = context.m_r1;
+        Uint64* r2 = context.m_r2;
+        Uint64* r3 = context.m_r3;
 
         context.m_size = size;
         context.m_k0   = computeMontFactor(mod[0]);
@@ -1018,7 +1015,7 @@ struct MontCompute
 
     static inline void MontgomeryExp(Uint64*       res,
                                      const Uint64* input,
-                                     Uint64*       exp,
+                                     const Uint64* exp,
                                      Uint64        expSize,
                                      Uint64*       mod,
                                      Uint64*       r2,
@@ -1076,16 +1073,16 @@ struct MontCompute
         Uint64* buff_p   = temp_buff;
         Uint64* buff_0_p = temp_buff + T / 64;
         Uint64* buff_1_p = buff_0_p + T / 128;
-        auto    p_mod    = privKey.m_p.get();
-        auto    p_exp    = privKey.m_dp.get();
-        auto    q_mod    = privKey.m_q.get();
-        auto    q_exp    = privKey.m_dq.get();
-        auto    r1_p     = contextP.m_r1.get();
-        auto    r2_p     = contextP.m_r2.get();
-        auto    r3_p     = contextP.m_r3.get();
-        auto    r1_q     = contextQ.m_r1.get();
-        auto    r3_q     = contextQ.m_r3.get();
-        auto    qinv     = privKey.m_qinv.get();
+        auto    p_mod    = privKey.m_p;
+        auto    p_exp    = privKey.m_dp;
+        auto    q_mod    = privKey.m_q;
+        auto    q_exp    = privKey.m_dq;
+        auto    r1_p     = contextP.m_r1;
+        auto    r2_p     = contextP.m_r2;
+        auto    r3_p     = contextP.m_r3;
+        auto    r1_q     = contextQ.m_r1;
+        auto    r3_q     = contextQ.m_r3;
+        auto    qinv     = privKey.m_qinv;
         auto    p_k0     = contextP.m_k0;
         auto    q_k0     = contextQ.m_k0;
 
@@ -1274,10 +1271,10 @@ archEncryptPublic(Uint8*              pEncText,
                   MontContextBignum&  context)
 {
 
-    auto mod = pubKey.m_mod.get();
-    auto r2  = context.m_r2.get();
+    auto mod = pubKey.m_mod;
+    auto r2  = context.m_r2;
     auto k0  = context.m_k0;
-    auto exp = &pubKey.m_public_exponent;
+    auto exp = pubKey.m_public_exponent;
 
     alignas(64) Uint64 res_buffer_bignum[T / 64 * 3]{};
     mont::MontCompute<T>::MontgomeryExp(

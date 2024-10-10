@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,21 +40,20 @@
 namespace alcp::testing {
 class IPPDigestBase : public DigestBase
 {
-    IppsHashState_rmf* m_handle = nullptr;
-    alc_digest_info_t  m_info;
-    Uint8*             m_message;
-    Uint8*             m_digest;
-    Int64              m_digest_len;
+    IppsHashState_rmf* m_handle     = nullptr;
+    IppsHashState_rmf* m_handle_dup = nullptr;
+    alc_digest_mode_t  m_mode{};
 
   public:
-    IPPDigestBase(const alc_digest_info_t& info);
+    IPPDigestBase(alc_digest_mode_t mode);
     ~IPPDigestBase();
 
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
-    bool digest_function(const alcp_digest_data_t& data);
-
+    bool context_copy();
+    bool digest_update(const alcp_digest_data_t& data);
+    bool digest_finalize(const alcp_digest_data_t& data);
+    bool digest_squeeze(const alcp_digest_data_t& data);
     void reset();
 };
 

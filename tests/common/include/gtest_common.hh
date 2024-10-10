@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #pragma once
 #include "colors.hh"
 #include "csv.hh"
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <memory>
 #include <random>
@@ -56,10 +57,10 @@ static bool oa_override = false;
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8>  actual,
-            std::vector<Uint8>  expected,
-            alcp::testing::Csv& csv,
-            std::string         testName)
+ArraysMatch(const std::vector<Uint8>& actual,
+            const std::vector<Uint8>& expected,
+            alcp::testing::Csv&       csv,
+            std::string               testName)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";
@@ -93,7 +94,9 @@ ArraysMatch(std::vector<Uint8>  actual,
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
+ArraysMatch(const std::vector<Uint8>& actual,
+            const std::vector<Uint8>& expected,
+            size_t                    len)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";
@@ -120,7 +123,8 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
+ArraysMatch(const std::vector<Uint8>& actual,
+            const std::vector<Uint8>& expected)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";
@@ -142,12 +146,12 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
     return ::testing::AssertionSuccess();
 }
 
-typedef enum
+enum class LIB_TYPE
 {
     OPENSSL = 0,
     IPP,
     ALCP,
-} lib_t;
+};
 
 /* shuffle vector */
 inline std::vector<Uint8>
@@ -155,6 +159,13 @@ ShuffleVector(std::vector<Uint8> InputVec, std::default_random_engine rng)
 {
     std::shuffle(std::begin(InputVec), std::end(InputVec), rng);
     return InputVec;
+}
+
+/* check if pointer is aligned */
+static inline bool
+is_aligned(const Uint8* ptr)
+{
+    return reinterpret_cast<uintptr_t>(ptr) % 2 == 0;
 }
 
 void
@@ -225,5 +236,16 @@ parseArgs(int argc, char** argv)
                 oa_override = true;
             }
         }
+    }
+}
+
+template<typename T>
+T*
+getPtr(std::vector<T>& vect)
+{
+    if (vect.size() == 0) {
+        return nullptr;
+    } else {
+        return &vect[0];
     }
 }

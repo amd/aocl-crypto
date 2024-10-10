@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,14 +36,12 @@ namespace alcp::testing {
 
 AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{
-}
+{}
 
 bool
 AlcpEcdhBase::init(const alc_ec_info_t& info)
 {
-    Uint8       err_buff[256];
-    alc_error_t err;
+    alc_error_t err     = ALC_ERROR_NONE;
     m_info              = info;
     alc_ec_info_t dinfo = m_info;
     Uint64        size  = alcp_ec_context_size(&dinfo);
@@ -57,9 +55,8 @@ AlcpEcdhBase::init(const alc_ec_info_t& info)
 
     err = alcp_ec_request(&dinfo, m_ec_handle);
     if (alcp_is_error(err)) {
-        alcp_ec_error(m_ec_handle, err_buff, 256);
         /*FIXME: get a peerID to indicate which peer*/
-        std::cout << "Error in alcp_ec_request:Peer1 " << err_buff << std::endl;
+        std::cout << "Error in alcp_ec_request:Peer1 " << std::endl;
         return false;
     }
     return true;
@@ -80,15 +77,12 @@ AlcpEcdhBase::~AlcpEcdhBase()
 bool
 AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
-    alc_error_t err;
-    Uint8       err_buff[256];
+    alc_error_t err = ALC_ERROR_NONE;
 
     err = alcp_ec_get_publickey(
         m_ec_handle, data.m_Peer_PubKey, data.m_Peer_PvtKey);
     if (alcp_is_error(err)) {
-        alcp_ec_error(m_ec_handle, err_buff, 256);
-        std::cout << "Error in alcp_ec_get_publickey peer: " << err_buff
-                  << std::endl;
+        std::cout << "Error in alcp_ec_get_publickey peer " << std::endl;
         return false;
     }
     return true;
@@ -97,30 +91,28 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 bool
 AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
 {
+    alc_error_t err = ALC_ERROR_NONE;
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
         // FIXME: Implement
         // FIXME: SetPrivKey method missing of X25519 ECC Curve
+        std::cout << "Method Not implemented" << std::endl;
     } else {
-        alc_error_t err;
-        Uint8       err_buff[256];
         err = alcp_ec_set_privatekey(m_ec_handle, private_key);
-        if (err != ALC_ERROR_NONE) {
-            alcp_ec_error(m_ec_handle, err_buff, 256);
-            std::cout << "Error in alcp_ec_set_privatekey : " << err_buff
-                      << std::endl;
+        if (alcp_is_error(err)) {
+            std::cout << "Error in alcp_ec_set_privatekey " << std::endl;
             return err;
         }
     }
     return true;
+    UNREF(len);
 }
 
 bool
 AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                const alcp_ecdh_data_t& data_peer2)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
     Uint64      keyLength;
-    Uint8       err_buff[256];
 
     err = alcp_ec_get_secretkey(m_ec_handle,
                                 data_peer1.m_Peer_SecretKey,
@@ -128,17 +120,14 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                 &keyLength);
 
     if (alcp_is_error(err)) {
-        alcp_ec_error(m_ec_handle, err_buff, 256);
-        std::cout << "Error in alcp_ec_get_secretkey : " << err_buff
-                  << std::endl;
+        std::cout << "Error in alcp_ec_get_secretkey " << std::endl;
         return false;
     }
 
     if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
         alcp_ec_finish(m_ec_handle);
         if (alcp_is_error(err)) {
-            alcp_ec_error(m_ec_handle, err_buff, 256);
-            std::cout << "Error in alcp_ec_finish : " << err_buff << std::endl;
+            std::cout << "Error in alcp_ec_finish " << std::endl;
             return false;
         }
         free(m_ec_handle->context);

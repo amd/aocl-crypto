@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,11 +34,11 @@
 
 namespace alcp::rng {
 
-Status
+alc_error_t
 Drbg::initialize(int                 cSecurityStrength,
                  std::vector<Uint8>& personalization_string)
 {
-    Status s = StatusOk();
+    alc_error_t err{ ALC_ERROR_NONE };
 #if 0
         /*
             FIXME: Implement Security Strength
@@ -56,29 +56,35 @@ Drbg::initialize(int                 cSecurityStrength,
 #endif
     std::vector<Uint8> entropy_input(m_entropy_len);
     std::vector<Uint8> nonce(m_nonce_len);
+    entropy_input.reserve(1);
+    nonce.reserve(1);
 
-    s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
-    if (!s.ok()) {
-        return s;
+    if (entropy_input.size()) {
+        err = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
+        if (alcp_is_error(err)) {
+            return err;
+        }
     }
 
-    s = m_entropy_in->randomize(&nonce[0], nonce.size());
-    if (!s.ok()) {
-        return s;
+    if (nonce.size()) {
+        err = m_entropy_in->randomize(&nonce[0], nonce.size());
+        if (alcp_is_error(err)) {
+            return err;
+        }
     }
 
     instantiate(entropy_input, nonce, personalization_string);
-    return s;
+    return err;
 }
 
-Status
+alc_error_t
 Drbg::randomize(Uint8        p_Output[],
                 const size_t cOutputLength,
                 int          cSecurityStrength,
                 const Uint8  cAdditionalInput[],
                 const size_t cAdditionalInputLength)
 {
-    Status s = StatusOk();
+    alc_error_t err{ ALC_ERROR_NONE };
 #if 0
             // TODO: Enable after implementing
             /*
@@ -121,9 +127,9 @@ Drbg::randomize(Uint8        p_Output[],
         // If prediction resistance then reseed before generating the random
         // bits.
         std::vector<Uint8> entropy_input(128);
-        s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
-        if (!s.ok()) {
-            return s;
+        err = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
+        if (alcp_is_error(err)) {
+            return err;
         }
         internalReseed(&entropy_input[0],
                        entropy_input.size(),
@@ -131,9 +137,9 @@ Drbg::randomize(Uint8        p_Output[],
                        cAdditionalInputLength);
     }
     generate(cAdditionalInput, cAdditionalInputLength, p_Output, cOutputLength);
-    return s;
+    return err;
 }
-Status
+alc_error_t
 Drbg::randomize(Uint8               p_Output[],
                 const size_t        cOutputLength,
                 const int           cSecurityStrength,
@@ -146,38 +152,43 @@ Drbg::randomize(Uint8               p_Output[],
                      additional_input.size());
 }
 
-Status
+alc_error_t
 Drbg::randomize(Uint8 output[], size_t length)
 {
     std::vector<Uint8> add = std::vector<Uint8>(0);
+    add.reserve(1);
     return randomize(output, length, 512, add);
 }
 
-Status
+alc_error_t
 Drbg::readRandom(Uint8 buf[], Uint64 size)
 {
     return randomize(buf, size);
 }
 
-Status
+alc_error_t
 Drbg::setRng(std::shared_ptr<IRng> entropyIn)
 {
-    Status s     = StatusOk();
+    if (entropyIn == nullptr) {
+        // No Entropy Source
+        return ALC_ERROR_INVALID_ARG;
+    }
     m_entropy_in = entropyIn;
-    return s;
+    return ALC_ERROR_NONE;
 }
 
-Status
+alc_error_t
 Drbg::setPredictionResistance(bool value)
 {
-    Status s                = StatusOk();
+    alc_error_t err{ ALC_ERROR_NONE };
     m_prediction_resistance = value;
     if (m_entropy_in) {
         m_entropy_in->setPredictionResistance(value);
     } else {
-        s = Status(RngError{ rng::ErrorCode::eNoEntropySource });
+        // No Entropy Source
+        err = ALC_ERROR_NO_ENTROPY;
     }
-    return s;
+    return err;
 }
 
 } // namespace alcp::rng

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,15 +26,79 @@
  *
  */
 
-#include "alcp/error.h"
-
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aesni.hh"
 
 namespace alcp::cipher {
 
-using namespace alcp::base;
+alc_error_t
+Aes::setKey(const Uint8* pKey, const Uint64 keyLen)
+{
+    alc_error_t e = ALC_ERROR_NONE;
 
+    // keyLen should be checked if its same as keyLen used during create call
+    if (keyLen != m_keyLen_in_bytes_aes * 8) {
+        printf("\n setKey failed, keySize invalid");
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    Rijndael::initRijndael(pKey, keyLen);
+    getKey();
+    m_isKeySet_aes = 1; // FIXME: use enum instead
+    return e;
+}
+
+alc_error_t
+Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+    m_ivLen_aes   = ivLen;
+    if ((ivLen == 0) || (ivLen > m_ivLen_max) || (ivLen < m_ivLen_min)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    if (pIv == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+
+    // copy IV and set IvLen
+    e = utils::SecureCopy<Uint8>(
+        m_iv_aes, MAX_CIPHER_IV_SIZE, pIv, ivLen); // copy iv to aes
+    if (e != ALC_ERROR_NONE) {
+        return e;
+    }
+    m_pIv_aes = m_iv_aes;
+
+    m_ivLen_aes   = ivLen;
+    m_ivState_aes = 1;
+
+    return e;
+}
+
+alc_error_t
+Aes::init(const Uint8* pKey,
+          const Uint64 keyLen,
+          const Uint8* pIv,
+          const Uint64 ivLen)
+{
+
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pKey != NULL && keyLen != 0) {
+        err = setKey(pKey, keyLen);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+    }
+
+    if (pIv != NULL && ivLen != 0) {
+        err = setIv(pIv, ivLen);
+    }
+
+    return err;
+}
+
+#if 0
 Status
 Aes::setKey(const Uint8* pUserKey, Uint64 len)
 {
@@ -43,11 +107,17 @@ Aes::setKey(const Uint8* pUserKey, Uint64 len)
 
     return StatusOk();
 }
-Status
+#endif
+
+alc_error_t
 Aes::setMode(alc_cipher_mode_t mode)
 {
+    if ((mode <= ALC_AES_MODE_CBC) || (mode >= ALC_AES_MODE_MAX)) {
+        // InvalidMode("aes mode not supported")
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
     m_mode = mode;
-    return StatusOk();
+    return ALC_ERROR_NONE;
 }
 
 } // namespace alcp::cipher

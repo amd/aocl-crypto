@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -90,7 +90,7 @@ p256_demo(alc_ec_handle_t* ps_ec_handle_peer)
     // Set the private key
     printf("Setting Private Key for Peer 1\n");
     err = alcp_ec_set_privatekey(ps_ec_handle_peer, cPeer1PrivkData);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer1 private key set failed");
         return err;
     }
@@ -99,7 +99,7 @@ p256_demo(alc_ec_handle_t* ps_ec_handle_peer)
     printf("Setting Public Key for Peer 2 and generating secret key\n");
     err = alcp_ec_get_secretkey(
         ps_ec_handle_peer, p_secret_key1, cPeer2PublicData, &key_length);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer1 secretkey computation failed");
         return err;
     }

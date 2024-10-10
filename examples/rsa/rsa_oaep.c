@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,20 +49,6 @@ static const Uint8 Modulus[] = {
     0x0c, 0x28, 0x25, 0x17, 0xb1, 0xb8, 0x3f, 0xa5, 0x9c, 0x61, 0xbd, 0x2c,
     0x10, 0x7a, 0x5c, 0x47, 0xe0, 0xa2, 0xf1, 0xf3, 0x24, 0xca, 0x37, 0xc2,
     0x06, 0x78, 0xa4, 0xad, 0x0e, 0xbd, 0x72, 0xeb
-};
-
-static const Uint8 PrivateKeyExponent[] = {
-    0xc3, 0x33, 0x51, 0x17, 0x29, 0x05, 0x33, 0x91, 0x74, 0x81, 0x76, 0x0c,
-    0x8a, 0xfb, 0x61, 0x80, 0x8e, 0xfe, 0xbb, 0x0f, 0x04, 0xbe, 0xd8, 0xf9,
-    0x53, 0xce, 0x9b, 0x40, 0xc2, 0x6a, 0xc5, 0x86, 0x7a, 0x39, 0x65, 0xea,
-    0x9d, 0xd4, 0x40, 0x89, 0x99, 0x52, 0xf3, 0xe2, 0x85, 0x87, 0x7c, 0x7a,
-    0x32, 0xa6, 0x2c, 0x3f, 0x2e, 0x4d, 0x6b, 0xcb, 0x8c, 0xba, 0x6e, 0xd2,
-    0x38, 0x51, 0xf9, 0xc4, 0xda, 0x1d, 0xdf, 0xa9, 0xa8, 0x41, 0x78, 0xb8,
-    0x84, 0x52, 0x46, 0x67, 0x0e, 0x19, 0x4b, 0x2f, 0x71, 0x69, 0x23, 0x7d,
-    0x92, 0x46, 0xe2, 0x4c, 0xf8, 0x50, 0xce, 0xe7, 0xd3, 0xb0, 0x8a, 0x35,
-    0xe9, 0x82, 0x60, 0xc1, 0xee, 0x0d, 0xe6, 0x52, 0x11, 0x04, 0x10, 0xf1,
-    0xf0, 0x0d, 0xe1, 0x5b, 0x76, 0xcf, 0x58, 0x18, 0xcb, 0x8a, 0x06, 0x7d,
-    0xec, 0x36, 0x51, 0x13, 0x95, 0x39, 0xd2, 0x91
 };
 
 // RSA private key in CRT(Chinese remainder form)
@@ -127,10 +113,10 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 {
     alc_error_t err;
 
-    Uint64 size           = alcp_rsa_context_size(KEY_SIZE_1024);
+    Uint64 size           = alcp_rsa_context_size();
     s_rsa_handle->context = malloc(size);
 
-    err = alcp_rsa_request(KEY_SIZE_1024, s_rsa_handle);
+    err = alcp_rsa_request(s_rsa_handle);
 
     return err;
 }
@@ -149,33 +135,22 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     // Adding the public key for applying encryption
     err =
         alcp_rsa_set_publickey(ps_rsa_handle, PublicKeyExponent, Modulus, size);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         return err;
     }
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-
     // Adding the digest function for generating the hash in oaep padding
-    err = alcp_rsa_add_digest_oaep(ps_rsa_handle, &dinfo);
-    if (err != ALC_ERROR_NONE) {
+    err = alcp_rsa_add_digest(ps_rsa_handle, ALC_SHA2_256);
+    if (alcp_is_error(err)) {
         printf("\n setting of digest for oaep failed");
         return err;
     }
 
-    alc_digest_info_t mgf_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
     // Adding the mask generation function for generating the seed and data
     // block mask
-    err = alcp_rsa_add_mgf_oaep(ps_rsa_handle, &mgf_info);
-    if (err != ALC_ERROR_NONE) {
+    err = alcp_rsa_add_mgf(ps_rsa_handle, ALC_SHA2_256);
+    if (alcp_is_error(err)) {
         printf("\n setting of mgf for oaep failed");
         return err;
     }
@@ -203,7 +178,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_publickey_encrypt_oaep(
         ps_rsa_handle, text, text_size, Label, sizeof(Label), p_seed, enc_text);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n publc key encrypt failed");
         goto free_buff;
     }
@@ -219,7 +194,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of publc key failed");
         goto free_buff;
     }
@@ -233,7 +208,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
                                            dec_text,
                                            &text_size);
 
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n private key decryption failed");
         goto free_buff;
     }

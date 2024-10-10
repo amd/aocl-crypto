@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,69 +34,63 @@
 #include <string.h>
 
 /* Add tests here */
+TEST(HMAC_SHA2, CROSS_512_224)
+{
+    Hmac_Cross(ALC_SHA2_512_224);
+}
 TEST(HMAC_SHA2, CROSS_224)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_224;
-    Hmac_Cross(224, "SHA2", info);
+    Hmac_Cross(ALC_SHA2_512_224);
+}
+TEST(HMAC_SHA2, CROSS_512_256)
+{
+    Hmac_Cross(ALC_SHA2_512_256);
 }
 TEST(HMAC_SHA2, CROSS_256)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_256;
-    Hmac_Cross(256, "SHA2", info);
+    Hmac_Cross(ALC_SHA2_256);
 }
 TEST(HMAC_SHA2, CROSS_384)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_384;
-    Hmac_Cross(384, "SHA2", info);
+    Hmac_Cross(ALC_SHA2_384);
 }
 TEST(HMAC_SHA2, CROSS_512)
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_512;
-    Hmac_Cross(512, "SHA2", info);
+    Hmac_Cross(ALC_SHA2_512);
 }
 TEST(HMAC_SHA3, CROSS_224)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_224;
-    Hmac_Cross(224, "SHA3", info);
+    Hmac_Cross(ALC_SHA3_224);
 }
 TEST(HMAC_SHA3, CROSS_256)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_256;
-    Hmac_Cross(256, "SHA3", info);
+    Hmac_Cross(ALC_SHA3_256);
 }
 TEST(HMAC_SHA3, CROSS_384)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_384;
-    Hmac_Cross(384, "SHA3", info);
+    Hmac_Cross(ALC_SHA3_384);
 }
 TEST(HMAC_SHA3, CROSS_512)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-    alc_mac_info_t info;
-    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_512;
-    Hmac_Cross(512, "SHA3", info);
+    Hmac_Cross(ALC_SHA3_512);
+}
+
+TEST(HMAC_SHA1, CROSS_160)
+{
+    Hmac_Cross(ALC_SHA1);
+}
+
+TEST(HMAC_MD5, CROSS_128)
+{
+    Hmac_Cross(ALC_MD5);
 }
 
 int
@@ -106,11 +100,11 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        printErrors("IPP is not avaiable");
+        printErrors("IPP is not available");
 #endif
 #ifndef USE_OSSL
     if (useossl)
-        printErrors("OpenSSL is not avaiable");
+        printErrors("OpenSSL is not available");
 #endif
 
     return RUN_ALL_TESTS();

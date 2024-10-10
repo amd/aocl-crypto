@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,15 +34,65 @@
 
 #pragma once
 namespace alcp::testing {
+
+// FIXME: alc_key_info_t, alc_cipher_aead_mode_siv_info_t,
+// alc_cipher_aead_algo_info_t,alc_cipher_aead_info_t should all be completely
+// removed from testing code
+typedef struct _alc_key_info
+{
+    Uint64       len; /* Key length in bits */
+    const Uint8* key; /* Key follows the rest of the structure */
+
+} alc_key_info_t, *alc_key_info_p;
+
+typedef struct _alc_cipher_aead_mode_siv_info
+{
+    const alc_key_info_t* xi_ctr_key;
+} alc_cipher_aead_mode_siv_info_t, alc_cipher_aead_mode_siv_info_p;
+
+typedef struct _alc_cipher_aead_mode_gcm_info
+{
+    // FIXME: C do not support empty structures, populate with actual ones
+    char dummy;
+} alc_cipher_aead_mode_gcm_info_t, *alc_cipher_aead_mode_gcm_info_p;
+
+typedef struct _alc_cipher_aead_algo_info
+{
+
+    union
+    {
+        alc_cipher_aead_mode_gcm_info_t ai_gcm;
+        alc_cipher_aead_mode_siv_info_t ai_siv;
+    };
+} alc_cipher_aead_algo_info_t, *alc_cpher_aead_algo_info_p;
+
+typedef struct _alc_cipher_aead_info
+{
+    // request params
+    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_GCM etc */
+    Uint64            ci_keyLen; /*! Key length in bits */
+
+    // init params
+    const Uint8* ci_key;   /*! key data */
+    const Uint8* ci_iv;    /*! Initialization Vector */
+    Uint64       ci_ivLen; /*! Initialization Vector length */
+
+    // algo params
+    alc_cipher_aead_algo_info_t ci_algo_info; /*! mode specific data */
+
+} alc_cipher_aead_info_t, *alc_cipher_aead_info_p;
 class AlcpCipherAeadBase : public CipherAeadBase
 {
   private:
-    alc_cipher_handle_p    m_handle = nullptr;
-    alc_cipher_aead_info_t m_cinfo;
-    alc_key_info_t         m_keyinfo;
-    alc_cipher_mode_t      m_mode;
-    const Uint8*           m_iv;
-    const Uint8*           m_tkey = nullptr;
+    alc_cipher_handle_p m_handle = nullptr;
+    alc_cipher_mode_t   m_mode{};
+    Uint64              m_keyLen{};
+
+    const Uint8* m_key = nullptr;
+    const Uint8* m_iv  = nullptr;
+    Uint8        m_combined_key[64]{};
+
+    const Uint8* m_tkey = nullptr;
 
   public:
     AlcpCipherAeadBase() {}
@@ -55,8 +105,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param key_len
      * @param tkey
      */
-    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
-                       const alc_cipher_mode_t mode,
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
                        const Uint8*            iv,
                        const Uint32            iv_len,
                        const Uint8*            key,
@@ -70,9 +119,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param mode
      * @param iv
      */
-    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
-                       const alc_cipher_mode_t mode,
-                       const Uint8*            iv);
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -82,8 +129,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param key
      * @param key_len
      */
-    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
-                       const alc_cipher_mode_t mode,
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
                        const Uint8*            iv,
                        const Uint8*            key,
                        const Uint32            key_len);
@@ -124,6 +170,9 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return true -  if no failure
      * @return false - if there is some failure
      */
+
+    template<bool enc>
+    inline bool alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data);
     ~AlcpCipherAeadBase();
 
     bool init(const Uint8* iv,

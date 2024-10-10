@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,13 +53,11 @@ parseHexStrToBin(const std::string in);
 std::string
 parseBytesToHexStr(const Uint8* bytes, const int length);
 Uint8
-parseHexToNum(const unsigned char c);
-Uint64
-parseStrToUint64(std::string);
+       parseHexToNum(const unsigned char c);
+Uint64 parseStrToUint64(std::string);
 bool
 isPathExist(const std::string dir);
-void
-Hash_to_string(char* output_string, const Uint8* hash, int sha_len);
+
 std::string
 bytes_to_hex(const std::string& bytes);
 

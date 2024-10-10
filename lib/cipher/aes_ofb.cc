@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,45 +27,58 @@
  */
 
 #include "alcp/cipher/aes.hh"
+
+#include "alcp/cipher/aes_ofb.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
 
 namespace alcp::cipher {
-alc_error_t
-Ofb::decrypt(const Uint8* pCipherText,
-             Uint8*       pPlainText,
-             Uint64       len,
-             const Uint8* pIv) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
+// aesni member functions
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb128,
+                   encrypt,
+                   aesni::EncryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   10,
+                   ALCP_ENC)
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb128,
+                   decrypt,
+                   aesni::DecryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   10,
+                   ALCP_DEC)
 
-    if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
-        err = aesni::DecryptOfb(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb192,
+                   encrypt,
+                   aesni::EncryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   12,
+                   ALCP_ENC)
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb192,
+                   decrypt,
+                   aesni::DecryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   12,
+                   ALCP_DEC)
 
-        return err;
-    }
-    return err;
-}
-
-alc_error_t
-Ofb::encrypt(const Uint8* pPlainText,
-             Uint8*       pCipherText,
-             Uint64       len,
-             const Uint8* pIv) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
-        err = aesni::EncryptOfb(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-
-    return err;
-}
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb256,
+                   encrypt,
+                   aesni::EncryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   14,
+                   ALCP_ENC)
+CRYPT_WRAPPER_FUNC(aesni,
+                   Ofb256,
+                   decrypt,
+                   aesni::DecryptOfb,
+                   m_cipher_key_data.m_enc_key,
+                   14,
+                   ALCP_DEC)
 
 } // namespace alcp::cipher

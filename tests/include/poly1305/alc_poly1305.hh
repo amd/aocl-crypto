@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,23 +41,22 @@ namespace alcp::testing {
 class AlcpPoly1305Base : public Poly1305Base
 {
     alc_mac_handle_t* m_handle{};
-    alc_mac_info_t    m_info;
-    Uint8*            m_message = {};
     Uint8*            m_key     = {};
-    Uint32            m_key_len;
+    Uint32            m_key_len = 0;
 
   public:
-    AlcpPoly1305Base(const alc_mac_info_t& info);
+    AlcpPoly1305Base() = default;
 
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
+    bool Init(std::vector<Uint8>& Key);
 
     ~AlcpPoly1305Base();
 
-    bool mac(const alcp_poly1305_data_t& data);
+    bool MacUpdate(const alcp_poly1305_data_t& data);
+
+    bool MacFinalize(const alcp_poly1305_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
-    bool reset();
+    bool MacReset();
 };
 
 } // namespace alcp::testing

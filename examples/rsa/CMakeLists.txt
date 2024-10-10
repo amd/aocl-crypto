@@ -1,4 +1,4 @@
- # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,10 +23,12 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
- ADD_EXAMPLE(rsa_peer rsa_peer.c)
- ADD_EXAMPLE(rsa_encrypt rsa_encrypt.c)
- ADD_EXAMPLE(rsa_decrypt rsa_decrypt.c)
- ADD_EXAMPLE(rsa_oaep rsa_oaep.c)
- ADD_EXAMPLE(rsa_2048 rsa_2048.c)
- ADD_EXAMPLE(rsa_oaep_2048 rsa_oaep_2048.c)
-
+ ADD_C_EXAMPLE(rsa_peer rsa_peer.c)
+ ADD_C_EXAMPLE(rsa_encrypt rsa_encrypt.c)
+ ADD_C_EXAMPLE(rsa_decrypt rsa_decrypt.c)
+ ADD_C_EXAMPLE(rsa_oaep rsa_oaep.c)
+ ADD_C_EXAMPLE(rsa_2048 rsa_2048.c)
+ ADD_C_EXAMPLE(rsa_oaep_2048 rsa_oaep_2048.c)
+ ADD_C_EXAMPLE(rsa_pss_sign_verify rsa_pss_sign_verify.c)
+ ADD_C_EXAMPLE(rsa_pkcs1-v1_5_sign_verify rsa_pkcs1-v1_5_sign_verify.c)
+ ADD_C_EXAMPLE(rsa_padding_big_num_keys rsa_padding_big_num_keys.c)

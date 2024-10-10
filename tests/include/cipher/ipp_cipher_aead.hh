@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,22 +42,18 @@ namespace alcp::testing {
 class IPPCipherAeadBase : public CipherAeadBase
 {
   private:
-    alc_cipher_mode_t m_mode;
-    _alc_cipher_type  m_cipher_type;
-    IppsAESSpec*      m_ctx       = NULL;
-    IppsAES_XTSSpec*  m_ctx_xts   = NULL;
-    IppsAES_GCMState* m_ctx_gcm   = NULL;
-    IppsAES_GCMState* m_pStateGCM = NULL;
-    IppsAES_CCMState* m_ctx_ccm   = NULL;
-    IppsAES_CCMState* m_pStateCCM = NULL;
+    alc_cipher_mode_t m_mode{};
+    IppsAESSpec*      m_ctx     = NULL;
+    IppsAES_XTSSpec*  m_ctx_xts = NULL;
+    IppsAES_GCMState* m_ctx_gcm = NULL;
+    IppsAES_CCMState* m_ctx_ccm = NULL;
 
-    const Uint8* m_iv;
-    const Uint8* m_key;
-    Uint32       m_key_len;
+    const Uint8* m_iv{};
+    const Uint8* m_key{};
+    Uint32       m_key_len{};
     const Uint8* m_tkey       = NULL;
     int          m_ctxSize    = 0;
     Uint64       m_block_size = 0;
-    Uint8        m_key_final[64];
     void         PrintErrors(IppStatus status);
     bool         alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
     bool         alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
@@ -71,9 +67,7 @@ class IPPCipherAeadBase : public CipherAeadBase
      * @param mode
      * @param iv
      */
-    IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
-                      const Uint8*            iv);
+    IPPCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -82,8 +76,7 @@ class IPPCipherAeadBase : public CipherAeadBase
      * @param key
      * @param key_len
      */
-    IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
+    IPPCipherAeadBase(const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint8*            key,
                       const Uint32            key_len);
@@ -97,8 +90,7 @@ class IPPCipherAeadBase : public CipherAeadBase
      * @return false - if there is some failure
      */
 
-    IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
+    IPPCipherAeadBase(const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint32            iv_len,
                       const Uint8*            key,
@@ -121,9 +113,9 @@ class IPPCipherAeadBase : public CipherAeadBase
     bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
     // FIXME: Legacy functions needs to be removed like the one below
-    bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);
+    bool encrypt(/*/const Uint8* plaintxt, size_t len, Uint8* ciphertxt*/);
     bool encrypt(alcp_dc_ex_t& data);
-    bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
+    bool decrypt(/*const Uint8* ciphertxt, size_t len, Uint8* plaintxt*/);
     bool decrypt(alcp_dc_ex_t& data);
     bool reset();
 };

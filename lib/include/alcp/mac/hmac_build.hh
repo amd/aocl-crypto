@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,332 +30,216 @@
 #include "alcp/base.hh"
 #include "alcp/capi/digest/builder.hh"
 #include "alcp/capi/mac/ctx.hh"
-#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/md5.hh"
+#include "alcp/digest/md5_sha1.hh"
+#include "alcp/digest/sha1.hh"
+#include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha512.hh"
 #include "hmac.hh"
 
 namespace alcp::mac {
 using namespace status;
 
-Status
-validate_keys(const alc_key_info_t& rKeyInfo)
-{
-
-    Status status = StatusOk();
-
-    // For RAW assignments
-    switch (rKeyInfo.fmt) {
-        case ALC_KEY_FMT_RAW:
-            if (rKeyInfo.len == 0) {
-                return InvalidArgument("HMAC: Key Size Cannot be Zero");
-            }
-            if (rKeyInfo.key == nullptr) {
-                return InvalidArgument("HMAC: Key cannot be NULL");
-            }
-            break;
-        case ALC_KEY_FMT_BASE64:
-            // TODO: For base64 conversions
-            return InvalidArgument("HMAC: Base64 Key Format not supported yet");
-            break;
-        // TODO: Subsequest switch cases for other formats
-        default:
-            return InvalidArgument("HMAC: Key Format not supported ");
-            break;
-    }
-    return status;
-}
 class HmacBuilder
 {
   public:
-    static Status build(const alc_mac_info_t& macInfo,
-                        const alc_key_info_t& keyInfo,
-                        Context&              ctx);
-
-    static Uint64 getSize(const alc_mac_info_t& macInfo);
-
-    static Status isSupported(const alc_mac_info_t& macInfo);
+    static alc_error_t build(Context* ctx);
 };
 
-template<typename MACALGORITHM>
-static Status
+static alc_error_t
 __hmac_wrapperUpdate(void* hmac, const Uint8* buff, Uint64 size)
 {
-
-    auto ap = static_cast<MACALGORITHM*>(hmac);
+    auto ap = static_cast<Hmac*>(hmac);
     return ap->update(buff, size);
 }
 
-template<typename MACALGORITHM>
-static Status
-__hmac_wrapperFinalize(void* hmac, const Uint8* buff, Uint64 size)
+static alc_error_t
+__hmac_wrapperFinalize(void* hmac, Uint8* buff, Uint64 size)
 {
-    auto ap = static_cast<MACALGORITHM*>(hmac);
+    auto ap = static_cast<Hmac*>(hmac);
     return ap->finalize(buff, size);
 }
 
-template<typename MACALGORITHM>
-static Status
-__hmac_wrapperCopy(void* hmac, Uint8* buff, Uint64 size)
-{
-    auto ap = static_cast<MACALGORITHM*>(hmac);
-    return ap->copyHash(buff, size);
-}
-
-template<typename MACALGORITHM, typename DIGESTALGORITHM>
 static void
 __hmac_wrapperFinish(void* hmac, void* digest)
 {
-    auto ap       = static_cast<MACALGORITHM*>(hmac);
-    auto digest_p = static_cast<DIGESTALGORITHM*>(digest);
-    ap->finish();
-    digest_p->finish();
-    ap->~MACALGORITHM();
-    digest_p->~DIGESTALGORITHM();
-
-    // Not Deleting the memory as it is allocated by application
+    auto ap = static_cast<Hmac*>(hmac);
+    // ToDo : check if the objects are destructed properly
+    delete static_cast<digest::IDigest*>(digest);
+    delete ap;
 }
 
-template<typename MACALGORITHM, typename DIGESTALGORITHM>
-static Status
-__hmac_wrapperReset(void* hmac, void* digest)
+static alc_error_t
+__hmac_wrapperReset(void* hmac)
 {
-    auto ap = static_cast<MACALGORITHM*>(hmac);
+    auto ap = static_cast<Hmac*>(hmac);
 
     return ap->reset();
 }
-template<typename DIGESTALGORITHM, typename MACALGORITHM>
-static Status
-__build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
+
+static alc_error_t
+__hmac_wrapperInit(Context*        ctx,
+                   const Uint8*    key,
+                   Uint64          size,
+                   alc_mac_info_t* info)
 {
-    Status status = StatusOk();
+    auto hmac_algo = static_cast<Hmac*>(ctx->m_mac);
 
-    status = validate_keys(macInfo.mi_keyinfo);
-    if (!status.ok()) {
-        return status;
+    if (ctx->m_digest) {
+        delete static_cast<digest::IDigest*>(ctx->m_digest);
     }
 
-    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-
-    auto digest = new (addr) DIGESTALGORITHM();
-    if (digest == nullptr) {
-        status.update(InternalError("Out of Memory"));
-        return status;
+    alc_digest_mode_t mode   = info->hmac.digest_mode;
+    void*             digest = nullptr;
+    switch (mode) {
+        case ALC_MD5: {
+            digest = new digest::Md5;
+            break;
+        }
+        case ALC_SHA1: {
+            digest = new digest::Sha1;
+            break;
+        }
+        case ALC_MD5_SHA1: {
+            digest = new digest::Md5_Sha1;
+            break;
+        }
+        case ALC_SHA2_256: {
+            digest = new digest::Sha256;
+            break;
+        }
+        case ALC_SHA2_224: {
+            digest = new digest::Sha224;
+            break;
+        }
+        case ALC_SHA2_384: {
+            digest = new digest::Sha384;
+            break;
+        }
+        case ALC_SHA2_512: {
+            digest = new digest::Sha512;
+            break;
+        }
+        case ALC_SHA3_224:
+            digest = new digest::Sha3_224;
+            break;
+        case ALC_SHA3_256:
+            digest = new digest::Sha3_256;
+            break;
+        case ALC_SHA3_384:
+            digest = new digest::Sha3_384;
+            break;
+        case ALC_SHA3_512: {
+            digest = new digest::Sha3_512;
+            break;
+        }
+        case ALC_SHA2_512_224: {
+            digest = new digest::Sha512_224;
+            break;
+        }
+        case ALC_SHA2_512_256: {
+            digest = new digest::Sha512_256;
+            break;
+        }
+        case ALC_SHAKE_128:
+        case ALC_SHAKE_256: {
+            alc_error_t err = ALC_ERROR_NONE;
+            digest          = nullptr;
+            err             = ALC_ERROR_NOT_SUPPORTED;
+            return err;
+        }
     }
-    ctx.m_digest = static_cast<void*>(digest);
 
-    auto hmac_algo = new (addr + sizeof(*digest)) MACALGORITHM();
+    ctx->m_digest = digest;
+    return hmac_algo->init(key, size, static_cast<digest::IDigest*>(digest));
+}
+
+static alc_error_t
+__build_with_copy_hmac(Context* srcCtx, Context* destCtx)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    using namespace digest;
+    if (!srcCtx->m_digest) {
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+    auto hmac_algo = new Hmac(*reinterpret_cast<Hmac*>(srcCtx->m_mac));
+
+    IDigest* src_digest  = static_cast<digest::IDigest*>(srcCtx->m_digest);
+    IDigest* dest_digest = nullptr;
+
+    if (dest_digest = dynamic_cast<Sha256*>(src_digest);
+        dest_digest != nullptr) {
+        dest_digest = new Sha256(*static_cast<Sha256*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<Sha224*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha224(*static_cast<Sha224*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha384*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha384(*static_cast<Sha384*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha512*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha512(*static_cast<Sha512*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha512_224*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha512_224(*static_cast<Sha512_224*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha512_256*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha512_256(*static_cast<Sha512_256*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_224*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_224(*static_cast<Sha3_224*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_256*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_256(*static_cast<Sha3_256*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_384*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_384(*static_cast<Sha3_384*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha3_512*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha3_512(*static_cast<Sha3_512*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Sha1*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Sha1(*static_cast<digest::Sha1*>(dest_digest));
+    } else if (dest_digest = dynamic_cast<digest::Md5*>(src_digest);
+               dest_digest != nullptr) {
+        dest_digest = new Md5(*static_cast<digest::Md5*>(dest_digest));
+    }
+
+    hmac_algo->setDigest(dest_digest);
+    destCtx->m_mac    = static_cast<void*>(hmac_algo);
+    destCtx->m_digest = dest_digest;
+
+    destCtx->update    = srcCtx->update;
+    destCtx->finalize  = srcCtx->finalize;
+    destCtx->finish    = srcCtx->finish;
+    destCtx->duplicate = srcCtx->duplicate;
+    destCtx->reset     = srcCtx->reset;
+
+    return ALC_ERROR_NONE;
+}
+
+alc_error_t
+HmacBuilder::build(Context* ctx)
+{
+    alc_error_t err{ ALC_ERROR_NONE };
+
+    auto hmac_algo = new Hmac();
     if (hmac_algo == nullptr) {
-        status.update(InternalError("Out of Memory"));
-        return status;
+        // Out of Memory
+        return ALC_ERROR_NO_MEMORY;
     }
-    ctx.m_mac = static_cast<void*>(hmac_algo);
+    ctx->m_mac = static_cast<void*>(hmac_algo);
 
-    ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
-    ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
-    ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
-    ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, DIGESTALGORITHM>;
-    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, DIGESTALGORITHM>;
+    ctx->update    = __hmac_wrapperUpdate;
+    ctx->finalize  = __hmac_wrapperFinalize;
+    ctx->finish    = __hmac_wrapperFinish;
+    ctx->reset     = __hmac_wrapperReset;
+    ctx->init      = __hmac_wrapperInit;
+    ctx->duplicate = __build_with_copy_hmac;
 
-    if (macInfo.mi_keyinfo.len % 8 != 0) {
-        return InternalError("HMAC: HMAC Key should be multiple of 8");
-    }
-
-    status = hmac_algo->setDigest(*digest);
-    if (!status.ok()) {
-        return status;
-    }
-    auto p_key  = macInfo.mi_keyinfo.key;
-    auto keylen = macInfo.mi_keyinfo.len / 8;
-    status      = hmac_algo->setKey(p_key, keylen);
-    if (!status.ok()) {
-        return status;
-    }
-
-    return status;
-}
-template<typename MACALGORITHM>
-static Status
-__build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
-{
-    Status status = StatusOk();
-
-    status = validate_keys(macInfo.mi_keyinfo);
-    if (!status.ok()) {
-        return status;
-    }
-
-    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
-
-    auto p_sha3 = new (addr) digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
-    if (p_sha3 == nullptr) {
-        return InternalError("Unable To Allocate Memory for Digest Object");
-    }
-    ctx.m_digest = static_cast<void*>(p_sha3);
-
-    auto hmac_algo = new (addr + sizeof(*p_sha3)) MACALGORITHM();
-    if (hmac_algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for HMAC Object");
-    }
-    ctx.m_mac    = static_cast<void*>(hmac_algo);
-    ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
-    ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
-    ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
-    ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, digest::Sha3>;
-    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, digest::Sha3>;
-
-    if (macInfo.mi_keyinfo.len % 8 != 0) {
-        return InternalError("HMAC: HMAC Key should be multiple of 8");
-    }
-
-    status = hmac_algo->setDigest(*p_sha3);
-    if (!status.ok()) {
-        return status;
-    }
-
-    auto p_key  = macInfo.mi_keyinfo.key;
-    auto keylen = macInfo.mi_keyinfo.len / 8;
-    status      = hmac_algo->setKey(p_key, keylen);
-    if (!status.ok()) {
-        return status;
-    }
-
-    return status;
-}
-Status
-HmacBuilder::build(const alc_mac_info_t& macInfo,
-                   const alc_key_info_t& keyInfo,
-                   Context&              ctx)
-{
-    Status status = StatusOk();
-
-    switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    status = __build_hmac<digest::Sha256, Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    status = __build_hmac<digest::Sha224, Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    status = __build_hmac<digest::Sha384, Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    status = __build_hmac<digest::Sha512, Hmac>(macInfo, ctx);
-                    break;
-                }
-                default: {
-                    status.update(
-                        InternalError("Unsupported HMAC Sha2 Algorithm"));
-                }
-            }
-            break;
-        }
-        case ALC_DIGEST_TYPE_SHA3: {
-            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
-                case ALC_SHA3_224: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA3_256: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA3_384: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                case ALC_SHA3_512: {
-                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
-                    break;
-                }
-                default: {
-                    status.update(
-                        InternalError("Unsupported HMAC SHA3 Algorithm"));
-                    break;
-                }
-            }
-            break;
-        }
-        default: {
-            status.update(InternalError("Digest algorithm Unknown"));
-            break;
-        }
-    }
-    return status;
-}
-
-Uint64
-HmacBuilder::getSize(const alc_mac_info_t& macInfo)
-{
-    return sizeof(Hmac)
-           + alcp::digest::DigestBuilder::getSize(
-               macInfo.mi_algoinfo.hmac.hmac_digest);
-}
-
-Status
-isDigestSupported(const alc_digest_info_t& digestInfo)
-{
-    Status status{ StatusOk() };
-    switch (digestInfo.dt_type) {
-        case ALC_DIGEST_TYPE_SHA2: {
-            switch (digestInfo.dt_mode.dm_sha2) {
-                case ALC_SHA2_256: {
-                    break;
-                }
-                case ALC_SHA2_224: {
-                    break;
-                }
-                case ALC_SHA2_384: {
-                    break;
-                }
-                case ALC_SHA2_512: {
-                    break;
-                }
-                default: {
-                    status.update(
-                        InvalidArgument("Unsupported HMAC Sha2 Algorithm"));
-                }
-            }
-            break;
-        }
-        case ALC_DIGEST_TYPE_SHA3: {
-            switch (digestInfo.dt_mode.dm_sha3) {
-                case ALC_SHA3_224: {
-                    break;
-                }
-                case ALC_SHA3_256: {
-                    break;
-                }
-                case ALC_SHA3_384: {
-                    break;
-                }
-                case ALC_SHA3_512: {
-                    break;
-                }
-                default: {
-                    status.update(
-                        InvalidArgument("Unsupported HMAC SHA3 Algorithm"));
-                    break;
-                }
-            }
-            break;
-        }
-        default: {
-            status.update(InvalidArgument("Digest algorithm Unknown"));
-            break;
-        }
-    }
-    return status;
-}
-
-Status
-HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
-{
-    return isDigestSupported(macInfo.mi_algoinfo.hmac.hmac_digest);
+    return err;
 }
 
 } // namespace alcp::mac

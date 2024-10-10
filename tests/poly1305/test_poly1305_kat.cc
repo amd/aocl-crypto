@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,8 +38,7 @@ TEST(POLY1305, KAT)
 {
     if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have Poly1305 Mac implemented yet";
-    alc_mac_info_t info;
-    Poly_Kat(info);
+    Poly_Kat();
 }
 
 int

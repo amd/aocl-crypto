@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -61,7 +61,10 @@ namespace avx2 {
 class EncryptAes : public cipher::Aes
 {
   public:
-    bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
+    EncryptAes(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
+    {
+    }
 };
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {

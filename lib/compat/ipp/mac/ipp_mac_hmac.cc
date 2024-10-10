@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,74 +41,59 @@ ippsHMACGetSize_rmf(int* pSize)
 }
 
 // Utility Function to seperate out formation of alc_mac_info
-IppStatus
-createHmacInfo(alc_mac_info_p        pMacInfo,
-               const Ipp8u*          pKey,
-               int                   keyLen,
-               const IppsHashMethod* pMethod)
+alc_digest_mode_t
+createHmacInfo(const IppsHashMethod* pMethod)
 {
-
-    const alc_key_info_t cKinfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                    ALC_KEY_FMT_RAW,
-                                    ALC_KEY_ALG_MAC,
-                                    ALC_KEY_LEN_CUSTOM,
-                                    static_cast<Uint32>(keyLen * 8),
-                                    static_cast<const Uint8*>(pKey) };
-
-    alc_sha2_mode_t  sha2_mode;
-    alc_digest_len_t sha_length;
+    alc_digest_mode_t sha2_mode;
 
     ipp_sha2_rmf_algo_ctx* p_method_ctx = (ipp_sha2_rmf_algo_ctx*)pMethod;
     IppHashAlgId           hashAlg      = p_method_ctx->algId;
     switch (hashAlg) {
         case ippHashAlg_SHA224: {
             printMsg("SHA2-224");
-            sha_length = ALC_DIGEST_LEN_224;
-            sha2_mode  = ALC_SHA2_224;
+            sha2_mode = ALC_SHA2_224;
             break;
         }
         case ippHashAlg_SHA256: {
             printMsg("SHA2-256");
-            sha_length = ALC_DIGEST_LEN_256;
-            sha2_mode  = ALC_SHA2_256;
+            sha2_mode = ALC_SHA2_256;
             break;
         }
         case ippHashAlg_SHA384: {
             printMsg("SHA2-384");
-            sha_length = ALC_DIGEST_LEN_384;
-            sha2_mode  = ALC_SHA2_384;
+            sha2_mode = ALC_SHA2_384;
             break;
         }
         case ippHashAlg_SHA512: {
             printMsg("SHA2-512");
-            sha_length = ALC_DIGEST_LEN_512;
-            sha2_mode  = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512;
             break;
         }
         case ippHashAlg_SHA512_224: {
             printMsg("SHA2-512_224");
-            sha_length = ALC_DIGEST_LEN_224;
-            sha2_mode  = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512_224;
             break;
         }
         case ippHashAlg_SHA512_256: {
             printMsg("SHA2-512_256");
-            sha_length = ALC_DIGEST_LEN_256;
-            sha2_mode  = ALC_SHA2_512;
+            sha2_mode = ALC_SHA2_512_256;
+            break;
+        }
+        case ippHashAlg_SHA1: {
+            printMsg("SHA1");
+            sha2_mode = ALC_SHA1;
+            break;
+        }
+        case ippHashAlg_MD5: {
+            printMsg("MD5");
+            sha2_mode = ALC_MD5;
             break;
         }
         default:
-            return ippStsNotSupportedModeErr;
+            sha2_mode = ALC_SHA2_256;
+            printMsg("Error : Defaulting to SHA2-256");
     }
-
-    pMacInfo->mi_type                              = ALC_MAC_HMAC;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_len  = sha_length;
-    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = sha2_mode;
-
-    pMacInfo->mi_keyinfo = cKinfo;
-
-    return ippStsNoErr;
+    return sha2_mode;
 }
 
 IppStatus
@@ -120,12 +105,11 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
     printMsg("ippsHMACInit_rmf_rmf: ENTRY");
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
-    alc_mac_info_t mac_info;
-    auto           status = createHmacInfo(&mac_info, pKey, keyLen, pMethod);
-    if (status != ippStsNoErr) {
-        return status;
-    }
-    status = alcp_MacInit(&mac_info, p_mac_ctx);
+    alc_digest_mode_t mode = createHmacInfo(pMethod);
+    alc_mac_info_t    info;
+    info.hmac = { mode };
+    IppStatus status =
+        alcp_MacInit(ALC_MAC_HMAC, p_mac_ctx, pKey, keyLen, info);
     printMsg("ippsHMACInit_rmf_rmf: EXIT");
     return status;
 }
@@ -183,6 +167,9 @@ ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
     printMsg("ippsHMACGetTag_rmf: EXIT");
     return ippStsNoErr;
 }
+// This function is not getting called
+
+#if 0
 IppStatus
 ippsHMACMessage_rmf(const Ipp8u*          pMsg,
                     int                   msgLen,
@@ -212,3 +199,4 @@ ippsHMACMessage_rmf(const Ipp8u*          pMsg,
     printMsg("ippsHMACMessage_rmf: EXIT");
     return ippStsNoErr;
 }
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
  */
 
 #include "alcp/alcp.h"
+#include <inttypes.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,63 +52,67 @@ compareArray(Uint8* a1, Uint64 a1_len, Uint8* a2, Uint64 a2_len)
 static alc_mac_handle_t handle;
 
 alc_error_t
-run_cmac(const alc_mac_info_p macInfo,
-         Uint8*               cipherText,
-         Uint32               cipherTextLen,
-         Uint8*               mac,
-         Uint32               mac_size)
+run_cmac(Uint8*         cipherText,
+         Uint32         cipherTextLen,
+         Uint8*         mac,
+         Uint32         mac_size,
+         const Uint8*   key,
+         Uint32         key_size,
+         alc_mac_info_t macinfo)
 {
 
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = alcp_mac_supported(macInfo);
+    handle.ch_context = malloc(alcp_mac_context_size());
 
-    if (err == ALC_ERROR_NONE) {
-        handle.ch_context = malloc(alcp_mac_context_size(macInfo));
-    } else {
-        printf("CMAC Information provided is unsupported\n");
-        return err;
+    if (handle.ch_context == NULL) {
+        return ALC_ERROR_GENERIC;
     }
 
-    err = alcp_mac_request(&handle, macInfo);
+    err = alcp_mac_request(&handle, ALC_MAC_CMAC);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %lu\n", err);
+        printf("Error Occurred on MAC Request - %10" PRId64 "\n", err);
         return err;
     }
-    // Update can be called multiple times with smaller chunks of the cipherText
+
+    err = alcp_mac_init(&handle, key, key_size, &macinfo);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC init - %10" PRId64 "\n", err);
+        return err;
+    }
+
+    // Update can be called multiple times with smaller chunks of the
+    // cipherText
     err = alcp_mac_update(&handle, cipherText, cipherTextLen);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Update\n");
         return err;
     }
-    // In Finalize code, last remaining buffer can be provided if any exists
-    // with its size
-    err = alcp_mac_finalize(&handle, NULL, 0);
+
+    err = alcp_mac_finalize(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Finalize\n");
         return err;
     }
-    err = alcp_mac_copy(&handle, mac, mac_size);
-    if (alcp_is_error(err)) {
-        printf("Error Occurred while Copying MAC\n");
-        return err;
-    }
+
     alcp_mac_finish(&handle);
     free(handle.ch_context);
     return err;
 }
 
-void
-displayResults(char*  hmac_string,
-               Uint8* key,
-               Uint32 keylen,
-               Uint8* cipherText,
-               Uint32 cipherTextLen,
-               Uint8* mac,
-               Uint32 macLen,
-               Uint8* expectedMac,
-               Uint32 expectedMacLength)
+bool
+validateMAC(char*  hmac_string,
+            Uint8* key,
+            Uint32 keylen,
+            Uint8* cipherText,
+            Uint32 cipherTextLen,
+            Uint8* mac,
+            Uint32 macLen,
+            Uint8* expectedMac,
+            Uint32 expectedMacLength)
 {
+
+    bool isvalidated = false;
     printf("%s", hmac_string);
     printf(" : ");
     printf("\n\t");
@@ -125,12 +130,15 @@ displayResults(char*  hmac_string,
     printf("\n\t");
     if (!compareArray(mac, macLen, expectedMac, expectedMacLength)) {
         printf("MAC IS VERIFIED");
+        isvalidated = true;
     } else {
         printf("INVALID MAC");
     }
     printf("\n");
     printf("=======================");
     printf("\n");
+
+    return isvalidated;
 }
 
 int
@@ -149,38 +157,34 @@ demo_cmac()
     Uint8 expectedMac[] = { 0x07, 0x0A, 0x16, 0xB4, 0x6B, 0x4D, 0x41, 0x44,
                             0xF7, 0x9B, 0xDD, 0x9D, 0xD0, 0x4A, 0x28, 0x7C };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = key };
-
-    alc_mac_info_t macinfo = {
-        .mi_type     = ALC_MAC_CMAC,
-        .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
-                                                        ALC_CIPHER_TYPE_AES,
-                                                    .ci_algo_info = { .ai_mode =
-                                                                          ALC_AES_MODE_NONE, } } } },
-        .mi_keyinfo  = kinfo
-    };
+    alc_mac_info_t macinfo = { .cmac.ci_mode = ALC_AES_MODE_NONE };
 
     Uint64 mac_size = 16;
     Uint8  mac[mac_size];
-    err = run_cmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    if (err != ALC_ERROR_NONE) {
+    err = run_cmac(cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   mac_size,
+                   key,
+                   sizeof(key),
+                   macinfo);
+    if (alcp_is_error(err)) {
         printf("Error in CMAC\n");
         return -1;
     } else {
 
-        displayResults("CMAC",
-                       key,
-                       sizeof(key),
-                       cipherText,
-                       sizeof(cipherText),
-                       mac,
-                       sizeof(mac),
-                       expectedMac,
-                       sizeof(expectedMac));
+        bool isvalidated = validateMAC("CMAC",
+                                       key,
+                                       sizeof(key),
+                                       cipherText,
+                                       sizeof(cipherText),
+                                       mac,
+                                       sizeof(mac),
+                                       expectedMac,
+                                       sizeof(expectedMac));
+        if (!isvalidated) {
+            return -1;
+        }
     }
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,40 +37,53 @@
 #include <memory>
 
 namespace alcp::mac {
-class ALCP_API_EXPORT Hmac final : public Mac
+class ALCP_API_EXPORT Hmac final : public IMac
 {
-
-  public:
-    digest::Digest* m_pDigest;
-
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pImpl;
-    const Impl*           pImpl() const { return m_pImpl.get(); }
-    Impl*                 pImpl() { return m_pImpl.get(); }
+    // Input Block Length or B of the digest used by HMAC
+    Uint32 m_input_block_length{};
+    // Size of the message digest
+    Uint32 m_output_hash_size{};
+    // Optimization: Maximum output size of 64 bytes and Maximum Internal Block
+    // Length of 144 bytes
+    static constexpr int cMaxHashSize            = 64;
+    static constexpr int cMaxInternalBlockLength = 144;
+
+    // Variable to track whether finalize has been called
+    bool m_finalized = false;
+
+    // Variable to track whether initialize has been called
+    bool m_isInit = false;
+
+    // TODO: Consider Shared pointer for this implementation
+    /**
+     * Pointer to the Base class Digest, holds the address of the derived class
+     * object of Digest which supports HMAC
+     *
+     */
+    digest::IDigest* m_pDigest{};
+
+    alignas(16) Uint8 m_pK0_xor_opad[cMaxInternalBlockLength]{};
+    alignas(16) Uint8 m_pK0_xor_ipad[cMaxInternalBlockLength]{};
 
   public:
-    Hmac();
+    Hmac()  = default;
+    ~Hmac() = default;
+    Hmac(const Hmac& hmac);
+
     /**
      * @brief Can be called continously to update message on small chunks
      * @param buff: message array block to update HMAC
      * @param size: Size of the message array
-     * @returns Status
+     * @returns alc_error_t
      */
-    Status update(const Uint8* buff, Uint64 size) override;
+    alc_error_t update(const Uint8* buff, Uint64 size) override;
     /**
-     * @brief Can be called only once to update the final message chunk
-     * @param size: Size of the final message chunk
-     * @returns Status
+     * @brief Can be called only once to get the final mac
+     * @param size: Size of the final mac
+     * @returns alc_error_t
      */
-    Status finalize(const Uint8* buff, Uint64 size) override;
-    /**
-     * @brief Can be called only once to update the final message chunk
-     * @param buff: Pointer to the array to copy the message hash to
-     * @param size: Message digest Size
-     * @returns Status
-     */
-    Status copyHash(Uint8* buff, Uint64 size) const;
+    alc_error_t finalize(Uint8* buff, Uint64 size) override;
     /**
      * @brief get the output hash size to allocate the output array on
      * @returns the output hash size of HMAC
@@ -78,34 +91,22 @@ class ALCP_API_EXPORT Hmac final : public Mac
     Uint64 getHashSize();
 
     /**
-     * @brief set the Digest to be used by HMAC
-     * @param digest: Digest class to be used by HMAC. Should be called before
-     * setting the Key
-     * @returns Status
-     */
-    Status setDigest(digest::Digest& digest);
-
-    /**
-     * @brief set the Key to be used by HMAC. Should be called only after
-     * setting the digest
+     * @brief set the digest and the key to be used by HMAC.
      * @param key: Pointer to the key to be used by HMAC
      * @param keylen: Length of the key to be used by HMAC
-     * @returns Status
+     * @param digest: Digest class to be used by HMAC.
+     * @returns alc_error_t
      */
-    Status setKey(const Uint8 key[], Uint32 keylen);
+    alc_error_t init(const Uint8 key[], Uint32 keylen, digest::IDigest* digest);
 
-    /**
-     * @brief finish HMAC.
-     */
-    void finish() override;
     /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with
      * the same digest and same key.
-     * @returns Status
+     * @returns alc_error_t
      */
-    Status reset() override;
+    alc_error_t reset() override;
 
-    ~Hmac();
+    void setDigest(digest::IDigest* digest);
 };
 
 namespace avx2 {
@@ -113,8 +114,5 @@ namespace avx2 {
                                          Uint8* m_pK0,
                                          Uint8* m_pK0_xor_ipad,
                                          Uint8* m_pK0_xor_opad);
-    ALCP_API_EXPORT void copyData(Uint8*       destination,
-                                  const Uint8* source,
-                                  int          len);
 } // namespace avx2
 } // namespace alcp::mac

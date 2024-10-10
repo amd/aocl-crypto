@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,21 +32,26 @@ namespace alcp::drbg {
 
 struct Context
 {
-    void* m_drbg;
-    // TODO: Add the remaining functions
-    alcp::base::Status status{ StatusOk() };
+    void* m_drbg                                                  = nullptr;
+    alc_error_t (*initialize)(void*        m_drbg,
+                              int          cSecurityStrength,
+                              const Uint8* buff,
+                              Uint64       size)                        = nullptr;
+    alc_error_t (*randomize)(void*        m_drbg,
+                             Uint8        p_Output[],
+                             const size_t cOutputLength,
+                             int          cSecurityStrength,
+                             const Uint8  cAdditionalInput[],
+                             const size_t cAdditionalInputLength) = nullptr;
+    void (*finish)(void* m_drbg)                                  = nullptr;
 
-    Status (*initialize)(void*        m_drbg,
-                         int          cSecurityStrength,
-                         const Uint8* buff,
-                         Uint64       size);
-    Status (*randomize)(void*        m_drbg,
-                        Uint8        p_Output[],
-                        const size_t cOutputLength,
-                        int          cSecurityStrength,
-                        const Uint8  cAdditionalInput[],
-                        const size_t cAdditionalInputLength);
-    Status (*finish)(void* m_drbg);
+    ~Context()
+    {
+        m_drbg     = nullptr;
+        initialize = nullptr;
+        randomize  = nullptr;
+        finish     = nullptr;
+    }
 };
 
 } // namespace alcp::drbg

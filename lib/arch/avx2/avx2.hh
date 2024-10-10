@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,10 +66,20 @@ namespace alcp::cipher { namespace aesni {
         return _mm_set_epi32(a0, a1, a2, a3);
     }
 
+    static inline void alcp_setzero(__m128i& a)
+    {
+        a = _mm_setzero_si128();
+    }
+
     // add functions.
     static inline __m128i alcp_add_epi32(__m128i a, __m128i b)
     {
         return _mm_add_epi32(a, b);
+    }
+
+    static inline __m128i alcp_add_epi64(__m128i a, __m128i b)
+    {
+        return _mm_add_epi64(a, b);
     }
 
     // shuffle functions.

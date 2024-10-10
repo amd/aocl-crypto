@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,9 +23,8 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-ADD_EXAMPLE(rng-demo rng-demo.c)
-ADD_EXAMPLE(ctr_drbg-demo ctr_drbg-demo.c)
-ADD_EXAMPLE(hmac_drbg-demo hmac_drbg-demo.c)
-ADD_EXAMPLE(drbg-test drbg-test.c)
-
+ADD_C_EXAMPLE(rng-demo rng-demo.c)
+ADD_C_EXAMPLE(hmac_drbg-demo hmac_drbg-demo.c)
+ADD_C_EXAMPLE(drbg-test drbg-test.c)
+ADD_C_EXAMPLE(ctr_drbg-demo ctr_drbg-demo.c)
 

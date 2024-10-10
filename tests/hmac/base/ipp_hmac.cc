@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,11 +26,31 @@
  *
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "hmac/ipp_hmac.hh"
+
+/* get digest from SHA type*/
+std::map<alc_digest_mode_t, const IppsHashMethod*> IPPDigestMap = {
+    { ALC_MD5, ippsHashMethod_MD5() },
+    { ALC_SHA1, ippsHashMethod_SHA1_TT() },
+    { ALC_SHA2_224, ippsHashMethod_SHA224_TT() },
+    { ALC_SHA2_256, ippsHashMethod_SHA256_TT() },
+    { ALC_SHA2_384, ippsHashMethod_SHA384() },
+    { ALC_SHA2_512, ippsHashMethod_SHA512() },
+    { ALC_SHA2_512_224, ippsHashMethod_SHA512_224() },
+    { ALC_SHA2_512_256, ippsHashMethod_SHA512_256() }
+};
 
 namespace alcp::testing {
 
-IPPHmacBase::IPPHmacBase(const alc_mac_info_t& info) {}
+// A helper function to convert ALCP alc_digest_mode_t to IPPHashMethod
+const IppsHashMethod*
+getIppHashMethod(alc_digest_mode_t pDigestMode)
+{
+    return IPPDigestMap[pDigestMode];
+}
 
 IPPHmacBase::~IPPHmacBase()
 {
@@ -40,43 +60,11 @@ IPPHmacBase::~IPPHmacBase()
 }
 
 bool
-IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
+IPPHmacBase::Init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
-    m_info    = info;
-    m_key     = &Key[0];
-    m_key_len = Key.size();
-    return init();
-}
-
-// A helper function to convert ALCP digestinfo to IPPHashMethod
-const IppsHashMethod*
-getIppHashMethod(alc_digest_info_p pDigestInfo)
-{
-    if (pDigestInfo->dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (pDigestInfo->dt_len) {
-            case ALC_DIGEST_LEN_224:
-                return ippsHashMethod_SHA224_TT();
-                break;
-            case ALC_DIGEST_LEN_256:
-                return ippsHashMethod_SHA256_TT();
-                break;
-            case ALC_DIGEST_LEN_384:
-                return ippsHashMethod_SHA384();
-                break;
-            case ALC_DIGEST_LEN_512:
-                return ippsHashMethod_SHA512();
-                break;
-            default:
-                return nullptr;
-        }
-    }
-
-    return nullptr;
-}
-
-bool
-IPPHmacBase::init()
-{
+    m_info           = info;
+    m_key            = &Key[0];
+    m_key_len        = Key.size();
     IppStatus status = ippStsNoErr;
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
@@ -88,13 +76,20 @@ IPPHmacBase::init()
     m_handle = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
 
     /* IPPCP Doesnt have HMAC SHA3 supported */
-    if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        std::cout << "IPPCP doesnt have HMAC-SHA3 support yet,skipping the test"
-                  << std::endl;
-        return true;
+    switch (m_info.hmac.digest_mode) {
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512:
+            std::cout
+                << "IPPCP doesnt have HMAC-SHA3 support yet,skipping the test"
+                << std::endl;
+            return true;
+        default:
+            break;
     }
     const IppsHashMethod* p_hash_method =
-        getIppHashMethod(&m_info.mi_algoinfo.hmac.hmac_digest);
+        getIppHashMethod(m_info.hmac.digest_mode);
     if (p_hash_method == nullptr) {
         std::cout << "IPPCP: Provided Digest Not Supported" << std::endl;
         return false;
@@ -109,16 +104,23 @@ IPPHmacBase::init()
 }
 
 bool
-IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
+IPPHmacBase::MacUpdate(const alcp_hmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
-
     status = ippsHMACUpdate_rmf(data.in.m_msg, data.in.m_msg_len, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "ippsHMACUpdate_rmf failed, err code: " << status
                   << std::endl;
         return false;
     }
+    return true;
+}
+
+bool
+IPPHmacBase::MacFinalize(const alcp_hmac_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+
     status = ippsHMACFinal_rmf(data.out.m_hmac, data.out.m_hmac_len, m_handle);
     if (status != ippStsNoErr) {
         std::cout << "ippsHMACFinal_rmf failed, err code: " << status
@@ -137,14 +139,16 @@ IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
                                     data.in.m_key_len,
                                     data.out.m_hmac,
                                     data.out.m_hmac_len,
-                                    getIppHashMethod(&m_info.mi_algoinfo.hmac.hmac_digest)); */
+                                    getIppHashMethod(&m_info.mi_algoinfo.hmac.digest_mode)); */
     // clang-format on
 }
 
 bool
-IPPHmacBase::reset()
+IPPHmacBase::MacReset()
 {
     return true;
 }
 
 } // namespace alcp::testing
+
+#pragma GCC diagnostic pop

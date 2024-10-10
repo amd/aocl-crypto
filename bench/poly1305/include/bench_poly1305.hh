@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,10 +30,6 @@
 #include "poly1305/alc_poly1305.hh"
 #include "poly1305/poly1305.hh"
 
-#ifdef USE_IPP
-#include "poly1305/ipp_poly1305.hh"
-#endif
-
 #ifdef USE_OSSL
 #include "poly1305/openssl_poly1305.hh"
 #endif
@@ -52,7 +48,6 @@ std::vector<Int64> poly1305_blocksizes = {
 };
 
 void inline Poly1305_Bench(benchmark::State& state,
-                           alc_mac_info_t    info,
                            Uint64            block_size,
                            Uint64            KeySize)
 {
@@ -63,15 +58,12 @@ void inline Poly1305_Bench(benchmark::State& state,
     std::vector<Uint8> msg(block_size);
     std::vector<Uint8> Key(KeySize);
 
-    /* Initialize info params based on poly1305 type */
-    info.mi_type = ALC_MAC_POLY1305;
-
-    AlcpPoly1305Base     apb(info);
+    AlcpPoly1305Base     apb;
     Poly1305Base*        pb = &apb;
     alcp_poly1305_data_t data{};
 
 #ifdef USE_OSSL
-    OpenSSLPoly1305Base opb(info);
+    OpenSSLPoly1305Base opb;
     if (useossl) {
         pb = &opb;
     }
@@ -84,12 +76,20 @@ void inline Poly1305_Bench(benchmark::State& state,
     data.m_key     = &(Key[0]);
     data.m_key_len = Key.size();
 
-    if (!pb->init(info, Key)) {
-        state.SkipWithError("Error in poly1305 init function");
+    if (!pb->Init(Key)) {
+        state.SkipWithError("Error in poly1305 init");
     }
     for (auto _ : state) {
-        if (!pb->mac(data)) {
-            state.SkipWithError("Error in poly1305 bench function");
+        if (!pb->MacUpdate(data)) {
+            state.SkipWithError("Error in poly1305 mac_update");
+        }
+        if (!pb->MacFinalize(data)) {
+            state.SkipWithError("Error in poly1305 mac_finalize");
+        }
+        /* without a reset call, mac will fail to reuse the same handle after
+         * finalize call without a reset */
+        if (!pb->MacReset()) {
+            state.SkipWithError("Error in poly1305 mac_reset");
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
@@ -103,8 +103,7 @@ void inline Poly1305_Bench(benchmark::State& state,
 static void
 BENCH_POLY1305(benchmark::State& state)
 {
-    alc_mac_info_t info;
-    Poly1305_Bench(state, info, state.range(0), 32);
+    Poly1305_Bench(state, state.range(0), 32);
 }
 
 /* add benchmarks */

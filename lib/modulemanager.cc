@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,11 +32,8 @@
 #include <vector>
 
 #include "alcp/base/error.hh"
-#include "alcp/cipher/cipher_module.hh"
 #include "alcp/module.hh"
 #include "alcp/modulemanager.hh"
-#include "mac/include/mac_module.hh"
-#include "rng/include/rng_module.hh"
 
 namespace alcp {
 using namespace alcp::module;
@@ -155,10 +152,7 @@ registerModule(Uint16 moduleType)
 static void
 registerModules()
 {
-    registerModule<alcp::cipher::CipherModule>(alcp::module::eModuleCipher);
-    registerModule<alcp::rng::RngModule>(alcp::module::eModuleRng);
     registerModule<GenericModule>(alcp::module::eModuleGeneric);
-    registerModule<alcp::mac::MacModule>(alcp::module::eModuleMac);
 }
 ModuleManager::ModuleManager()
 {

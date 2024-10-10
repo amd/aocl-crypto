@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,47 +53,14 @@ create_demo_session(alc_cipher_handle_p handle,
                     const Uint8*        key,
                     const Uint8*        iv,
                     Uint64              ivlength,
-                    const alc_key_len_t cKeyLen)
+                    const alc_key_len_t keyLen)
 {
-    alc_error_t err;
-    const int   cErrSize = 256;
-    Uint8       err_buf[cErrSize];
-
-    alc_cipher_info_t cinfo = {
-      .ci_type = ALC_CIPHER_TYPE_CHACHA20, // Using Chacha20 Stream Cipher
-      .ci_key_info =
-          {
-              .type = ALC_KEY_TYPE_SYMMETRIC,
-              .fmt = ALC_KEY_FMT_RAW,
-              .key = key,
-              .len = cKeyLen,
-          },
-      .ci_algo_info = {
-          .ai_iv = iv, // For Chacha20, IV has to be a combination of counter 32
-                       // bits in little endian) followed by nonce(96 bits).
-                       // Counter will get incremented internally for each 64
-                       // bytes of input message
-          .iv_length = ivlength // For Chacha20, IV length must be 128 bits
-      }};
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERROR_NOT_SUPPORTED error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: Not Supported \n");
-        goto out;
-    }
-    printf("Support succeeded\n");
+    alc_error_t err = ALC_ERROR_NONE;
 
     /*
      * Application is expected to allocate for context
      */
-    handle->ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle->ch_context = malloc(alcp_cipher_context_size());
 
     // Memory allocation failure checking
     if (handle->ch_context == NULL) {
@@ -101,38 +68,44 @@ create_demo_session(alc_cipher_handle_p handle,
         goto out;
     }
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, handle);
+    /* Request a context with mode and key length */
+    err = alcp_cipher_request(ALC_CHACHA20, keyLen, handle);
     if (alcp_is_error(err)) {
+        free(handle->ch_context);
         printf("Error: Unable to Request \n");
         goto out;
     }
     printf("Request Succeeded\n");
+
+    err = alcp_cipher_init(handle, key, keyLen, iv, ivlength);
+
+    if (alcp_is_error(err)) {
+        free(handle->ch_context);
+        printf("Error: Unable to Initalize \n");
+        goto out;
+    }
+    // FIXME: alcp_cipher_aead_int() to be added here
+
     return 0;
 
 // Incase of error, program execution will come here
 out:
-    alcp_error_str(err, err_buf, cErrSize);
-    printf("%s\n", err_buf);
+
     return -1;
 }
 
 int
 encrypt_demo(alc_cipher_handle_p handle,
-             const Uint8*        iv,
              const Uint8*        plaintxt,
              const Uint32        len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*              ciphertxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
-    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        printf("%s\n", err_buf);
+
         return -1;
     }
 
@@ -142,20 +115,16 @@ encrypt_demo(alc_cipher_handle_p handle,
 
 int
 decrypt_demo(alc_cipher_handle_p handle,
-             const Uint8*        iv,
              const Uint8*        ciphertxt,
              const Uint32        len, /* for both 'plaintxt' and 'ciphertxt' */
              Uint8*              plaintxt)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
-    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        printf("%s\n", err_buf);
+
         return -1;
     }
 
@@ -193,7 +162,7 @@ main(void)
     Uint8        sample_output[512] = { 0 };
     const int    cPlaintextSize     = strlen((const char*)sample_plaintxt);
     const int    cCiphertextSize    = cPlaintextSize; // No padding
-    const Uint64 ivlen              = sizeof(iv) * 8;
+    const Uint64 ivlen              = sizeof(iv);
     const Uint64 keylen             = sizeof(sample_key) * 8;
 
     printf("Input Text: %s\n", sample_plaintxt);
@@ -208,7 +177,6 @@ main(void)
     // Encrypt the plaintext into the ciphertext
     retval =
         encrypt_demo(&handle,
-                     iv,
                      sample_plaintxt,
                      cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
                      sample_ciphertxt);
@@ -218,8 +186,8 @@ main(void)
     dump_hex(sample_ciphertxt, cCiphertextSize);
 
     // Decrypt the ciphertext into the plaintext.
-    retval = decrypt_demo(
-        &handle, iv, sample_ciphertxt, cCiphertextSize, sample_output);
+    retval =
+        decrypt_demo(&handle, sample_ciphertxt, cCiphertextSize, sample_output);
     if (retval != 0)
         goto out;
     printf("Decrypted Text: %s\n", sample_output);

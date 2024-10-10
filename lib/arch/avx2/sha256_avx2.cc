@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -259,9 +259,9 @@ namespace alcp::digest { namespace avx2 {
             src_len -= 64;
         }
         while (src_len >= 128) {
-            __m256i chunk_vect[SHA256_CHUNK_NUM_VECT_AVX2 * 2];
-            Uint32  msg_sch_array_1[64];
-            Uint32  msg_sch_array_2[64];
+            __m256i chunk_vect[SHA256_CHUNK_NUM_VECT_AVX2 * 2]{};
+            Uint32  msg_sch_array_1[64]{};
+            Uint32  msg_sch_array_2[64]{};
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array_1, msg_sch_array_2);
             CompressMsg(msg_sch_array_1, pHash, pHashConstants);

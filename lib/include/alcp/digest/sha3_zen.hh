@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,9 @@ namespace alcp::digest { namespace zen {
                            Uint64  msg_size,
                            Uint64  m_src_size_u64);
 
-    void Sha3Finalize(Uint8* state,
-                      Uint8* hash,
-                      Uint64 hash_size,
-                      Uint64 chunk_size);
+    void Sha3Finalize(Uint8*  state,
+                      Uint8*  hash,
+                      Uint64  hash_size,
+                      Uint64  chunk_size,
+                      Uint64& index);
 }} // namespace alcp::digest::zen

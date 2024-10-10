@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -57,9 +57,7 @@ using namespace alcp::testing;
 
 /* print params verbosely */
 inline void
-PrintHmacTestData(std::vector<Uint8> key,
-                  alcp_hmac_data_t   data,
-                  std::string        mode)
+PrintHmacTestData(std::vector<Uint8> key, alcp_hmac_data_t data)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
@@ -71,36 +69,67 @@ PrintHmacTestData(std::vector<Uint8> key,
     return;
 }
 
-void
-Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
+/* get Mac digest len from SHA type*/
+std::map<alc_digest_mode_t, int> DigestTypeToLenMap = {
+    { ALC_MD5, 128 },      { ALC_SHA1, 160 },         { ALC_SHA2_224, 224 },
+    { ALC_SHA2_256, 256 }, { ALC_SHA2_384, 384 },     { ALC_SHA2_512, 512 },
+    { ALC_SHA3_224, 224 }, { ALC_SHA3_256, 256 },     { ALC_SHA3_384, 384 },
+    { ALC_SHA3_512, 512 }, { ALC_SHA2_512_224, 224 }, { ALC_SHA2_512_256, 256 }
+};
+/* get SHA2 type string to pass into the KAT test function */
+std::string
+DigestTypeToStr(alc_digest_mode_t DigestType)
 {
-    alcp_hmac_data_t   data;
+    switch (DigestType) {
+        case ALC_SHA2_224:
+        case ALC_SHA2_256:
+        case ALC_SHA2_384:
+        case ALC_SHA2_512:
+            return "SHA2";
+            break;
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512:
+            return "SHA3";
+            break;
+        default:
+            return "";
+            break;
+    }
+}
+
+void
+Hmac_KAT(alc_digest_mode_t HmacDigestMode)
+{
+    alcp_hmac_data_t data{};
+
+    std::string        HmacType = DigestTypeToStr(HmacDigestMode);
+    int                HmacSize = DigestTypeToLenMap[HmacDigestMode];
     std::vector<Uint8> hmac(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    info.mi_type = ALC_MAC_HMAC;
-    info.mi_algoinfo.hmac.hmac_digest.dt_len =
-        static_cast<enum _alc_digest_len>(HmacSize);
+    alc_mac_info_t info{ { HmacDigestMode } };
 
-    AlcpHmacBase ahb(info);
+    AlcpHmacBase ahb;
     HmacBase*    hb;
     hb = &ahb;
 
     std::string TestDataFile = std::string("dataset_HMAC_" + HmacType + "_"
                                            + std::to_string(HmacSize) + ".csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
         FAIL();
     }
 #ifdef USE_OSSL
-    OpenSSLHmacBase ohb(info);
+    OpenSSLHmacBase ohb;
     if (useossl == true)
         hb = &ohb;
 #endif
 #ifdef USE_IPP
-    IPPHmacBase ihb(info);
+    IPPHmacBase ihb;
     if (useipp == true)
         hb = &ihb;
 #endif
@@ -117,16 +146,20 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         data.out.m_hmac_len = hmac.size();
         data.in.m_key_len   = key.size();
 
-        if (!hb->init(info, key)) {
+        if (!hb->Init(info, key)) {
             std::cout << "Error in hmac init function" << std::endl;
             FAIL();
         }
-        if (!hb->Hmac_function(data)) {
-            std::cout << "Error in Hmac function" << std::endl;
+        if (!hb->MacUpdate(data)) {
+            std::cout << "Error in Hmac mac_update" << std::endl;
             FAIL();
         }
-        if (!hb->reset()) {
-            std::cout << "Error in Hmac reset function" << std::endl;
+        if (!hb->MacFinalize(data)) {
+            std::cout << "Error in Hmac mac_finalize" << std::endl;
+            FAIL();
+        }
+        if (!hb->MacReset()) {
+            std::cout << "Error in Hmac mac_reset" << std::endl;
             FAIL();
         }
 
@@ -134,8 +167,8 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         std::vector<Uint8> hmac_vector(std::begin(hmac), std::end(hmac));
 
         EXPECT_TRUE(ArraysMatch(
-            hmac_vector,         // Actual output
-            csv.getVect("HMAC"), // expected output, from the csv test data
+            std::move(hmac_vector), // Actual output
+            csv.getVect("HMAC"),    // expected output, from the csv test data
             csv,
             std::string("HMAC_" + HmacType + "_" + std::to_string(HmacSize)
                         + "_KAT")));
@@ -144,30 +177,30 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
 /* Hmac Cross tests */
 void
-Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
+Hmac_Cross(alc_digest_mode_t HmacDigestMode)
 {
     std::vector<Uint8> data;
+    int                HmacSize = DigestTypeToLenMap[HmacDigestMode];
+
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    info.mi_type = ALC_MAC_HMAC;
-    info.mi_algoinfo.hmac.hmac_digest.dt_len =
-        static_cast<enum _alc_digest_len>(HmacSize);
+    alc_mac_info_t info{ { HmacDigestMode } };
 
-    AlcpHmacBase ahb(info);
+    AlcpHmacBase ahb;
     RngBase      rb;
     HmacBase*    hb;
     HmacBase*    extHb = nullptr;
     hb                 = &ahb;
 
 #ifdef USE_OSSL
-    OpenSSLHmacBase ohb(info);
+    OpenSSLHmacBase ohb;
     if ((useossl == true) || (extHb == nullptr))
         extHb = &ohb;
 #endif
 #ifdef USE_IPP
-    IPPHmacBase ihb(info);
+    IPPHmacBase ihb;
     if (useipp == true)
         extHb = &ihb;
 #endif
@@ -195,27 +228,43 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
     for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
-            alcp_hmac_data_t data_alc, data_ext;
+            alcp_hmac_data_t data_alc{}, data_ext{};
 
             /* generate msg data from msg_full */
             msg_full = ShuffleVector(msg_full, rng);
-            pos1     = msg_full.end() - i;
+            pos1     = msg_full.end() - i - 1;
             pos2     = msg_full.end();
             std::vector<Uint8> msg(pos1, pos2);
 
             /* generate random key value*/
             key_full = ShuffleVector(key_full, rng);
-            pos1     = key_full.end() - j;
+            pos1     = key_full.end() - j - 1;
             pos2     = key_full.end();
             std::vector<Uint8> key(pos1, pos2);
 
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(msg[0]))) {
+                data_alc.in.m_msg = &(msg[1]);
+                data_ext.in.m_msg = &(msg[1]);
+            } else {
+                data_alc.in.m_msg = &(msg[0]);
+                data_ext.in.m_msg = &(msg[0]);
+            }
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(key[0]))) {
+                data_alc.in.m_key = &(key[1]);
+                data_ext.in.m_key = &(key[1]);
+            } else {
+                data_alc.in.m_key = &(key[0]);
+                data_ext.in.m_key = &(key[0]);
+            }
+
+            data_alc.in.m_msg_len = data_ext.in.m_msg_len = msg.size() - 1;
+            data_alc.in.m_key_len = data_ext.in.m_key_len = key.size() - 1;
+
             /* load test data */
-            data_alc.in.m_msg       = &(msg[0]);
-            data_alc.in.m_msg_len   = msg.size();
             data_alc.out.m_hmac     = &(HmacAlcp[0]);
             data_alc.out.m_hmac_len = HmacAlcp.size();
-            data_alc.in.m_key       = &(key[0]);
-            data_alc.in.m_key_len   = key.size();
 
             /* load ext test data */
             data_ext.out.m_hmac     = &(HmacExt[0]);
@@ -224,25 +273,33 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
             /* run test with main lib */
             if (verbose > 1)
-                PrintHmacTestData(key, data_alc, HmacType);
-            if (!hb->init(info, key)) {
+                PrintHmacTestData(key, data_alc);
+            if (!hb->Init(info, key)) {
                 printf("Error in hmac init\n");
                 FAIL();
             }
-            if (!hb->Hmac_function(data_alc)) {
-                std::cout << "Error in hmac function" << std::endl;
+            if (!hb->MacUpdate(data_alc)) {
+                std::cout << "Error in hmac mac_update" << std::endl;
                 FAIL();
             }
-
+            if (!hb->MacFinalize(data_alc)) {
+                std::cout << "Error in hmac mac_finalize" << std::endl;
+                FAIL();
+            }
             /* run test with ext lib */
             if (verbose > 1)
-                PrintHmacTestData(key, data_ext, HmacType);
-            if (!extHb->init(info, key)) {
+                PrintHmacTestData(key, data_ext);
+            if (!extHb->Init(info, key)) {
                 printf("Error in hmac ext init function\n");
                 FAIL();
             }
-            if (!extHb->Hmac_function(data_ext)) {
-                std::cout << "Error in hmac (ext lib) function" << std::endl;
+            if (!extHb->MacUpdate(data_ext)) {
+                std::cout << "Error in hmac (ext lib) mac_update" << std::endl;
+                FAIL();
+            }
+            if (!extHb->MacFinalize(data_ext)) {
+                std::cout << "Error in hmac (ext lib) mac_finalize"
+                          << std::endl;
                 FAIL();
             }
             EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));

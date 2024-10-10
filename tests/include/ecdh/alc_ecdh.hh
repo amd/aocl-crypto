@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,9 +39,6 @@ class AlcpEcdhBase : public EcdhBase
 {
     alc_ec_handle_t* m_ec_handle{};
     alc_ec_info_t    m_info;
-
-    Uint8* m_pvt_key = {};
-    Uint8* m_pub_key = {};
 
   public:
     AlcpEcdhBase(const alc_ec_info_t& info);

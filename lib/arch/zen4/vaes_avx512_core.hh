@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -359,53 +359,6 @@ namespace alcp::cipher { namespace vaes512 {
         d = _mm512_aesenclast_epi128(d, keys.data.keys10.key_512_10);
     }
 
-    static inline void AesEncryptNoLoad_2x512Rounds10(__m512i&     a,
-                                                      __m512i&     b,
-                                                      const sKeys& keys)
-
-    {
-        a = _mm512_xor_si512(a, keys.data.keys10.key_512_0);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_1);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_2);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_3);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_4);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_5);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_6);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_7);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_8);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_9);
-        a = _mm512_aesenclast_epi128(a, keys.data.keys10.key_512_10);
-
-        b = _mm512_xor_si512(b, keys.data.keys10.key_512_0);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_1);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_2);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_3);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_4);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_5);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_6);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_7);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_8);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_9);
-        b = _mm512_aesenclast_epi128(b, keys.data.keys10.key_512_10);
-    }
-
-    static inline void AesEncryptNoLoad_1x512Rounds10(__m512i&     a,
-                                                      const sKeys& keys)
-    {
-        a = _mm512_xor_si512(a, keys.data.keys10.key_512_0);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_1);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_2);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_3);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_4);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_5);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_6);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_7);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_8);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_9);
-        a = _mm512_aesenclast_epi128(a, keys.data.keys10.key_512_10);
-    }
-    //} // namespace rounds10
-
     static inline void AesEncryptNoLoad_4x512Rounds12(
         __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys& keys)
 
@@ -537,6 +490,36 @@ namespace alcp::cipher { namespace vaes512 {
     }
 
     /* 2 x 512bit aesEnc */
+    static inline void AesEncryptNoLoad_2x512Rounds10(__m512i&     a,
+                                                      __m512i&     b,
+                                                      const sKeys& keys)
+
+    {
+        a = _mm512_xor_si512(a, keys.data.keys10.key_512_0);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_1);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_2);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_3);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_4);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_5);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_6);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_7);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_8);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_9);
+        a = _mm512_aesenclast_epi128(a, keys.data.keys10.key_512_10);
+
+        b = _mm512_xor_si512(b, keys.data.keys10.key_512_0);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_1);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_2);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_3);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_4);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_5);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_6);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_7);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_8);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_9);
+        b = _mm512_aesenclast_epi128(b, keys.data.keys10.key_512_10);
+    }
+
     static inline void AesEncryptNoLoad_2x512Rounds12(__m512i&     a,
                                                       __m512i&     b,
                                                       const sKeys& keys)
@@ -609,6 +592,23 @@ namespace alcp::cipher { namespace vaes512 {
         b = _mm512_aesenclast_epi128(b, keys.data.keys14.key_512_14);
     }
 
+    /* 1 x 512bit aesEnc */
+    static inline void AesEncryptNoLoad_1x512Rounds10(__m512i&     a,
+                                                      const sKeys& keys)
+    {
+        a = _mm512_xor_si512(a, keys.data.keys10.key_512_0);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_1);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_2);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_3);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_4);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_5);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_6);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_7);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_8);
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_9);
+        a = _mm512_aesenclast_epi128(a, keys.data.keys10.key_512_10);
+    }
+
     static inline void AesEncryptNoLoad_1x512Rounds12(__m512i&     a,
                                                       const sKeys& keys)
     {
@@ -648,6 +648,9 @@ namespace alcp::cipher { namespace vaes512 {
         a = _mm512_aesenclast_epi128(a, keys.data.keys14.key_512_14);
     }
 
+    /*
+     * AesDecrypt
+     */
     static inline void AesDecryptNoLoad_4x512Rounds10(
         __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys& keys)
     {

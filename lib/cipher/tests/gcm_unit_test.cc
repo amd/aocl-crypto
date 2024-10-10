@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,14 +26,9 @@
  *
  */
 
-#include "alcp/capi/cipher/builder.hh"
-#include "alcp/cipher.hh"
-#include "alcp/cipher/aes_build.hh"
-
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_gcm.hh"
-// FIXME: Remove all the includes from gtest_base related to capi
-#include "cipher/gtest_base_cipher.hh"
+
 #include "gtest/gtest.h"
 #include <math.h>
 // Linux Specific Header Files
@@ -45,16 +40,6 @@
 #endif
 
 using namespace alcp::cipher;
-
-#define CPU_FEATURE 3
-
-#if CPU_FEATURE == 1
-using namespace vaes512;
-#elif CPU_FEATURE == 2
-using namespace vaes;
-#elif CPU_FEATURE == 3
-using namespace aesni;
-#endif
 
 // KAT Data
 // clang-format off
@@ -184,12 +169,64 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
+/**
+ * @brief Key Size to Mode string
+ *
+ * @param keySize Key size in Bytes
+ * @return std::string, mode
+ */
+std::string
+keyToModStr(Uint64 keySize)
+{
+    std::string mode_str = "";
+    switch (keySize) {
+        case 16:
+            mode_str = "aes-gcm-128";
+            break;
+        case 24:
+            mode_str = "aes-gcm-192";
+            break;
+        case 32:
+            mode_str = "aes-gcm-256";
+            break;
+        default:
+            mode_str = "aes-gcm-128";
+            std::cout
+                << "Mode string defaulting to 'aes-gcm-128', invalid keysize"
+                << std::endl;
+    }
+    return mode_str;
+}
+
+template<typename T>
+T*
+getPtr(std::vector<T>& vect)
+{
+    if (vect.size() == 0) {
+        return nullptr;
+    } else {
+        return &vect[0];
+    }
+}
+
+template<typename T>
+const T*
+getPtr(const std::vector<T>& vect)
+{
+    if (vect.size() == 0) {
+        return nullptr;
+    } else {
+        return &vect[0];
+    }
+}
+
 class GCM_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
     // GCM_KAT() {}
-    GcmAEAD128*        pGcmObj = nullptr;
+    CipherFactory<iCipherAead>* alcpCipher = nullptr;
+    iCipherAead*                pGcmObj    = nullptr;
     std::vector<Uint8> m_key, m_nonce, m_aad, m_plaintext, m_ciphertext, m_tag;
     std::string        m_test_name;
     alc_error_t        m_err;
@@ -216,31 +253,29 @@ class GCM_KAT
 
         /* Initialization */
 
-        // clang-format off
-        const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                         ALC_KEY_FMT_RAW,
-                                         {},
-                                         {},
-                                         static_cast<Uint32>(key.size() * 8),
-                                         &(key.at(0)) };
-        // clang-format on
-
         // Setup GCM Object
-        pGcmObj = new GcmAEAD128(keyInfo.key, keyInfo.len);
+        alcpCipher = new CipherFactory<iCipherAead>;
+        pGcmObj    = alcpCipher->create(keyToModStr(key.size()));
+
+        ASSERT_TRUE(pGcmObj != nullptr);
+
+        // Key
+        m_err = pGcmObj->init(getPtr(key), key.size() * 8, nullptr, 0);
+        EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
         // Nonce
-        m_err = pGcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        m_err = pGcmObj->init(nullptr, 0, getPtr(m_nonce), m_nonce.size());
         EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
         // Additional Data
         if (!m_aad.empty()) {
-            m_err = pGcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            m_err = pGcmObj->setAad(getPtr(m_aad), m_aad.size());
             EXPECT_EQ(m_err, ALC_ERROR_NONE);
         }
     }
 
     // Teardown Encrypt/Decrypt by verifying the Tag.
-    void TearDown() override { delete pGcmObj; }
+    void TearDown() override { delete alcpCipher; }
 };
 
 TEST(GCM, Instantiation)
@@ -251,27 +286,52 @@ TEST(GCM, Instantiation)
                     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 
-    alc_key_info_t keyInfo = {
-        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
-    };
+    {
+        auto        alcpCipher = new CipherFactory<iCipherAead>;
+        auto        aead       = alcpCipher->create("aes-gcm-128");
+        alc_error_t err        = ALC_ERROR_NONE;
 
-    keyInfo.len = 128;
-    {
-        GcmAEAD128 pGcmObj = GcmAEAD128(keyInfo.key, keyInfo.len);
-        EXPECT_EQ(pGcmObj.getRounds(), 10U);
-        EXPECT_EQ(pGcmObj.getNr(), 10U);
+        if (aead == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+        aead->init(key, 128, nullptr, 0);
+
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        delete alcpCipher;
     }
-    keyInfo.len = 192;
+
     {
-        GcmAEAD192 pGcmObj = GcmAEAD192(keyInfo.key, keyInfo.len);
-        EXPECT_EQ(pGcmObj.getRounds(), 12U);
-        EXPECT_EQ(pGcmObj.getNr(), 12U);
+        auto        alcpCipher = new CipherFactory<iCipherAead>;
+        auto        aead       = alcpCipher->create("aes-gcm-192");
+        alc_error_t err        = ALC_ERROR_NONE;
+
+        if (aead == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+        aead->init(key, 192, nullptr, 0);
+
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        delete alcpCipher;
     }
-    keyInfo.len = 256;
+
     {
-        GcmAEAD256 pGcmObj = GcmAEAD256(keyInfo.key, keyInfo.len);
-        EXPECT_EQ(pGcmObj.getRounds(), 14U);
-        EXPECT_EQ(pGcmObj.getNr(), 14U);
+        auto        alcpCipher = new CipherFactory<iCipherAead>;
+        auto        aead       = alcpCipher->create("aes-gcm-256");
+        alc_error_t err        = ALC_ERROR_NONE;
+
+        if (aead == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+        err = aead->init(key, 256, nullptr, 0);
+
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        delete alcpCipher;
     }
 }
 
@@ -287,10 +347,8 @@ TEST(GCM, InputOverload)
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     const alc_cipher_algo_info_t aesInfo  = { .ai_mode = ALC_AES_MODE_GCM,
                                              .ai_iv   = iv };
-    alc_key_info_t               keyInfo  = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                               .fmt  = ALC_KEY_FMT_RAW,
-                               .len  = 256,
-                               .key  = key };
+    alc_key_info_t               keyInfo  = { .len  = 256,
+                                              .key  = key };
     Gcm                          pGcmObj  = Gcm(aesInfo, keyInfo);
     auto                         zero1_fd = open("/dev/zero", O_RDWR);
     auto                         zero2_fd = open("/dev/zero", O_RDWR);
@@ -299,10 +357,10 @@ TEST(GCM, InputOverload)
     auto pwrite =
         mmap(0, pow(2, 39), PROT_WRITE, MAP_FILE | MAP_SHARED, zero2_fd, 0);
     alc_error_t err = ALC_ERROR_NONE;
-    err             = pGcmObj.setIv(sizeof(iv), iv);
+    err             = pGcmObj.setIv(iv, sizeof(iv));
     EXPECT_EQ(err, ALC_ERROR_NONE);
     printf("%p %p\n", pwrite, pread);
-    err = pGcmObj.encryptUpdate(
+    err = pGcmObj.encrypt(
         (const Uint8*)pread, (Uint8*)pwrite, pow(2, 39) - 256 + 1, iv);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
@@ -316,15 +374,13 @@ TEST_P(GCM_KAT, Encrypt)
 
     // Encrypt the plaintext into ciphertext.
     if (!m_plaintext.empty()) {
-        m_err = pGcmObj->encryptUpdate(&(m_plaintext.at(0)),
-                                       &(out_ciphertext.at(0)),
-                                       m_plaintext.size(),
-                                       &(m_nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
+        m_err = pGcmObj->encrypt(
+            &(m_plaintext.at(0)), &(out_ciphertext.at(0)), m_plaintext.size());
+        EXPECT_EQ(out_ciphertext, m_ciphertext);
     } else {
         // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
-        m_err = pGcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        m_err = pGcmObj->encrypt(&a, &a, 0);
     }
     EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
@@ -333,9 +389,9 @@ TEST_P(GCM_KAT, Encrypt)
     if (!m_tag.empty()) {
         m_err = pGcmObj->getTag(&(out_tag.at(0)), m_tag.size());
         if (m_test_name.at(0) == 'P') {
-            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(out_tag, m_tag);
         } else {
-            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_NE(out_tag, m_tag);
         }
         EXPECT_EQ(m_err, ALC_ERROR_NONE);
     }
@@ -348,15 +404,13 @@ TEST_P(GCM_KAT, Decrypt)
 
     // Decrypt the ciphertext into plaintext
     if (!m_ciphertext.empty()) {
-        m_err = pGcmObj->decryptUpdate(&(m_ciphertext.at(0)),
-                                       &(out_plaintext.at(0)),
-                                       m_ciphertext.size(),
-                                       &(m_nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
+        m_err = pGcmObj->decrypt(
+            &(m_ciphertext.at(0)), &(out_plaintext.at(0)), m_ciphertext.size());
+        EXPECT_EQ(out_plaintext, m_plaintext);
     } else {
         // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
-        m_err = pGcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        m_err = pGcmObj->decrypt(&a, &a, 0);
     }
     EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
@@ -365,9 +419,9 @@ TEST_P(GCM_KAT, Decrypt)
     if (!m_tag.empty()) {
         m_err = pGcmObj->getTag(&(out_tag.at(0)), m_tag.size());
         if (m_test_name.at(0) == 'P') {
-            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(out_tag, m_tag);
         } else {
-            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_NE(out_tag, m_tag);
         }
         EXPECT_EQ(m_err, ALC_ERROR_NONE);
     }
@@ -383,29 +437,39 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(GCM, InvalidTagLen)
 {
-    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
-    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    Uint8 pt[]  = "Hello World!";
-    Uint8 tag[17];
-    Uint8 cipherText[sizeof(pt)];
+    alc_error_t err   = ALC_ERROR_NONE;
+    Uint8       iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8       key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    Uint8       pt[]  = "Hello World!";
+    Uint8       tag[17];
+    Uint8       cipherText[sizeof(pt)];
 
-    GcmAEAD128  pGcmObj = GcmAEAD128(key, 128);
-    alc_error_t err;
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
 
-    pGcmObj.setIv(7, iv);
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(key, 128, iv, 7);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Skipping Aad as its not mandatory
 
-    pGcmObj.encrypt(pt, cipherText, sizeof(pt), iv);
+    err = aead->encrypt(pt, cipherText, sizeof(pt));
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // TODO: Create a parametrized test
-    err = pGcmObj.getTag(tag, 17);
+    err = aead->getTag(tag, 17);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+
+    delete alcpCipher;
 }
 
 TEST(GCM, EncryptUpdateSingle)
 {
+    alc_error_t        err   = ALC_ERROR_NONE;
     std::vector<Uint8> key   = { 0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33,
                                  0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 };
     std::vector<Uint8> nonce = { 0x39, 0x8c, 0x22, 0x07, 0x78, 0xa3, 0x13,
@@ -433,23 +497,34 @@ TEST(GCM, EncryptUpdateSingle)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128(&key[0], 128);
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
 
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.setAad(&aad[0], aad.size());
+    err = aead->setAad(getPtr(aad), aad.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.encryptUpdate(&ptext[0], &out[0], ptext.size(), &nonce[0]);
+    err = aead->encrypt(getPtr(ptext), getPtr(out), ptext.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    ASSERT_EQ(out, ctext);
+    EXPECT_EQ(out, ctext);
 
-    pGcmObj.getTag(&tag_out[0], 16);
+    err = aead->getTag(getPtr(tag_out), 16);
 
-    ASSERT_EQ(tag_out, tag);
+    EXPECT_EQ(tag_out, tag);
+
+    delete alcpCipher;
 }
 
 TEST(GCM, EncryptUpdateMultiple)
 {
+    alc_error_t        err   = ALC_ERROR_NONE;
     std::vector<Uint8> key   = { 0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33,
                                  0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 };
     std::vector<Uint8> nonce = { 0x39, 0x8c, 0x22, 0x07, 0x78, 0xa3, 0x13,
@@ -477,28 +552,37 @@ TEST(GCM, EncryptUpdateMultiple)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128(&key[0], 128);
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
 
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.setAad(&aad[0], aad.size());
+    err = aead->setAad(getPtr(aad), aad.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.encryptUpdate(&ptext[0], &out[0], ptext.size() - 16, &nonce[0]);
+    err = aead->encrypt(getPtr(ptext), getPtr(out), ptext.size() - 16);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.encryptUpdate(&ptext[0] + ptext.size() - 16,
-                          &out[0] + ptext.size() - 16,
-                          16,
-                          &nonce[0]);
+    err = aead->encrypt(
+        getPtr(ptext) + ptext.size() - 16, getPtr(out) + ptext.size() - 16, 16);
 
-    ASSERT_EQ(out, ctext);
+    EXPECT_EQ(out, ctext);
 
-    pGcmObj.getTag(&tag_out[0], 16);
+    err = aead->getTag(getPtr(tag_out), 16);
 
-    ASSERT_EQ(tag_out, tag);
+    EXPECT_EQ(tag_out, tag);
+
+    delete alcpCipher;
 }
 
 TEST(GCM, DecryptUpdateSingle)
 {
+    alc_error_t        err   = ALC_ERROR_NONE;
     std::vector<Uint8> key   = { 0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33,
                                  0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 };
     std::vector<Uint8> nonce = { 0x39, 0x8c, 0x22, 0x07, 0x78, 0xa3, 0x13,
@@ -526,23 +610,33 @@ TEST(GCM, DecryptUpdateSingle)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128(&key[0], 128);
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
 
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.setAad(&aad[0], aad.size());
+    err = aead->setAad(getPtr(aad), aad.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.decryptUpdate(&ctext[0], &out[0], ptext.size(), &nonce[0]);
+    err = aead->decrypt(&ctext[0], getPtr(out), ptext.size());
 
-    ASSERT_EQ(out, ptext);
+    EXPECT_EQ(out, ptext);
 
-    pGcmObj.getTag(&tag_out[0], 16);
+    err = aead->getTag(getPtr(tag_out), 16);
 
-    ASSERT_EQ(tag_out, tag);
+    EXPECT_EQ(tag_out, tag);
+
+    delete alcpCipher;
 }
 
 TEST(GCM, DecryptUpdateMultiple)
 {
+    alc_error_t        err   = ALC_ERROR_NONE;
     std::vector<Uint8> key   = { 0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33,
                                  0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 };
     std::vector<Uint8> nonce = { 0x39, 0x8c, 0x22, 0x07, 0x78, 0xa3, 0x13,
@@ -570,45 +664,148 @@ TEST(GCM, DecryptUpdateMultiple)
     std::vector<Uint8> out(48);
     std::vector<Uint8> tag_out(16);
 
-    GcmAEAD128 pGcmObj = GcmAEAD128(&key[0], 128);
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
 
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.setAad(&aad[0], aad.size());
+    err = aead->setAad(getPtr(aad), aad.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    pGcmObj.decryptUpdate(&ctext[0], &out[0], ctext.size() - 16, &nonce[0]);
+    err = aead->decrypt(&ctext[0], getPtr(out), ctext.size() - 16);
 
-    pGcmObj.decryptUpdate(&ctext[0] + ctext.size() - 16,
-                          &out[0] + ctext.size() - 16,
-                          16,
-                          &nonce[0]);
+    err = aead->decrypt(
+        &ctext[0] + ctext.size() - 16, getPtr(out) + ctext.size() - 16, 16);
 
-    ASSERT_EQ(out, ptext);
+    EXPECT_EQ(out, ptext);
 
-    pGcmObj.getTag(&tag_out[0], 16);
+    err = aead->getTag(getPtr(tag_out), 16);
 
-    ASSERT_EQ(tag_out, tag);
+    EXPECT_EQ(tag_out, tag);
+
+    delete alcpCipher;
 }
 
+// Unit Test to mimic test_quic_multistream openssl tests
 #if 0
-int
-main(int argc, char** argv)
+TEST(GCM, EncryptUpdateMultipleStream)
 {
-    ::testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners =
-        testing::UnitTest::GetInstance()->listeners();
-    auto default_printer =
-        listeners.Release(listeners.default_result_printer());
+    alc_error_t        err   = ALC_ERROR_NONE;
+    std::vector<Uint8> key   = { 0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33,
+                                 0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 };
+    std::vector<Uint8> nonce = { 0x39, 0x8c, 0x22, 0x07, 0x78, 0xa3, 0x13,
+                                 0xa0, 0x0c, 0x35, 0x6e, 0x65, 0x31, 0x99,
+                                 0x74, 0x82, 0x2c, 0x7e, 0x17 };
+    std::vector<Uint8> aad   = { 0x23, 0xfb, 0x6b, 0xe4, 0x66, 0x0f, 0x61, 0x18,
+                                 0xce, 0xd9, 0xa2, 0xae, 0xfd, 0x11, 0x73, 0xe7,
+                                 0x59, 0x19, 0x3e, 0x4d, 0x50, 0x3d, 0x98, 0xa2,
+                                 0x16, 0x6d, 0xd0, 0xf3, 0xeb, 0x69, 0x51, 0x1f };
+    std::vector<Uint8> ptext = {
+        0xee, 0xd2, 0xfe, 0xe8, 0xf9, 0xbe, 0x1d, 0x5a, 0x55, 0xee, 0x4c, 0x28,
+        0x61, 0xb9, 0x31, 0x42, 0x58, 0x2a, 0x67, 0xdd, 0xef, 0x39, 0x7b, 0xff,
+        0xa6, 0xfa, 0x38, 0x1c, 0xa3, 0x4c, 0x93, 0xd5, 0xb4, 0xa1, 0xbd, 0x07,
+        0xb5, 0xee, 0xbf, 0x30, 0xc0, 0x0f, 0xb0, 0xa3, 0xb5, 0x87, 0x9d, 0x85
+    };
+    std::vector<Uint8> ctext = {
+        0xb6, 0xdd, 0x7e, 0xbb, 0xeb, 0x56, 0x83, 0x43, 0x17, 0xf2, 0xac, 0x1c,
+        0xf0, 0xdc, 0x69, 0xb3, 0xb0, 0x2a, 0xb8, 0x7e, 0x7e, 0x52, 0x41, 0x11,
+        0x36, 0x46, 0x34, 0x25, 0xf4, 0x00, 0x1c, 0xcd, 0xe3, 0x2a, 0x36, 0xf3,
+        0x70, 0xcf, 0xe0, 0xfc, 0xe6, 0xa0, 0xac, 0x37, 0x6a, 0xe1, 0x3a, 0xe2
+    };
+    std::vector<Uint8> tag = { 0x77, 0xf6, 0xc4, 0x7b, 0x05, 0x40, 0xf0, 0xb9,
+                               0xff, 0x3c, 0x3b, 0x07, 0xa2, 0x4c, 0x62, 0xfe };
 
-    ConfigurableEventListener* listener =
-        new ConfigurableEventListener(default_printer);
+    std::vector<Uint8> out(48);
+    std::vector<Uint8> tag_out(16);
 
-    listener->showEnvironment    = true;
-    listener->showTestCases      = true;
-    listener->showTestNames      = true;
-    listener->showSuccesses      = true;
-    listener->showInlineFailures = true;
-    listeners.Append(listener);
-    return RUN_ALL_TESTS();
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
+
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    err = aead->setAad(getPtr(aad), aad.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    err = aead->encrypt(getPtr(ptext), getPtr(out), 4);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    err = aead->encrypt(getPtr(ptext) + 4, getPtr(out) + 4, ptext.size() - 4);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    EXPECT_EQ(out, ctext);
+
+    err = aead->getTag(getPtr(tag_out), 16);
+
+    EXPECT_EQ(tag_out, tag);
+
+    delete alcpCipher;
+}
+
+TEST(GCM, DecryptUpdateMultipleStream)
+{
+    alc_error_t        err   = ALC_ERROR_NONE;
+    std::vector<Uint8> key   = { 0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33,
+                                 0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 };
+    std::vector<Uint8> nonce = { 0x39, 0x8c, 0x22, 0x07, 0x78, 0xa3, 0x13,
+                                 0xa0, 0x0c, 0x35, 0x6e, 0x65, 0x31, 0x99,
+                                 0x74, 0x82, 0x2c, 0x7e, 0x17 };
+    std::vector<Uint8> aad   = { 0x23, 0xfb, 0x6b, 0xe4, 0x66, 0x0f, 0x61, 0x18,
+                                 0xce, 0xd9, 0xa2, 0xae, 0xfd, 0x11, 0x73, 0xe7,
+                                 0x59, 0x19, 0x3e, 0x4d, 0x50, 0x3d, 0x98, 0xa2,
+                                 0x16, 0x6d, 0xd0, 0xf3, 0xeb, 0x69, 0x51, 0x1f };
+    std::vector<Uint8> ptext = {
+        0xee, 0xd2, 0xfe, 0xe8, 0xf9, 0xbe, 0x1d, 0x5a, 0x55, 0xee, 0x4c, 0x28,
+        0x61, 0xb9, 0x31, 0x42, 0x58, 0x2a, 0x67, 0xdd, 0xef, 0x39, 0x7b, 0xff,
+        0xa6, 0xfa, 0x38, 0x1c, 0xa3, 0x4c, 0x93, 0xd5, 0xb4, 0xa1, 0xbd, 0x07,
+        0xb5, 0xee, 0xbf, 0x30, 0xc0, 0x0f, 0xb0, 0xa3, 0xb5, 0x87, 0x9d, 0x85
+    };
+    std::vector<Uint8> ctext = {
+        0xb6, 0xdd, 0x7e, 0xbb, 0xeb, 0x56, 0x83, 0x43, 0x17, 0xf2, 0xac, 0x1c,
+        0xf0, 0xdc, 0x69, 0xb3, 0xb0, 0x2a, 0xb8, 0x7e, 0x7e, 0x52, 0x41, 0x11,
+        0x36, 0x46, 0x34, 0x25, 0xf4, 0x00, 0x1c, 0xcd, 0xe3, 0x2a, 0x36, 0xf3,
+        0x70, 0xcf, 0xe0, 0xfc, 0xe6, 0xa0, 0xac, 0x37, 0x6a, 0xe1, 0x3a, 0xe2
+    };
+    std::vector<Uint8> tag = { 0x77, 0xf6, 0xc4, 0x7b, 0x05, 0x40, 0xf0, 0xb9,
+                               0xff, 0x3c, 0x3b, 0x07, 0xa2, 0x4c, 0x62, 0xfe };
+
+    std::vector<Uint8> out(48);
+    std::vector<Uint8> tag_out(16);
+
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto aead       = alcpCipher->create("aes-gcm-128");
+
+    if (aead == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    err = aead->init(getPtr(key), 128, getPtr(nonce), nonce.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    err = aead->setAad(getPtr(aad), aad.size());
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    err = aead->decrypt(&ctext[0], getPtr(out), 4);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    err = aead->decrypt(&ctext[0] + 4, getPtr(out) + 4, ctext.size() - 4);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    EXPECT_EQ(out, ptext);
+
+    err = aead->getTag(getPtr(tag_out), 16);
+
+    EXPECT_EQ(tag_out, tag);
+
+    delete alcpCipher;
 }
 #endif

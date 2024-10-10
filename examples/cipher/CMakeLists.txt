@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,21 +23,24 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-ADD_EXAMPLE(aes-cfb aes-cfb.c)
+ADD_C_EXAMPLE(aes-cfb aes-cfb.c)
 
-ADD_EXAMPLE(aes-gcm aes-gcm.c)
+ADD_C_EXAMPLE(aes-gcm aes-gcm.c)
 
-ADD_EXAMPLE(aes-xts aes-xts.c)
+ADD_C_EXAMPLE(aes-gcmcpp aes-gcm.cc)
 
-ADD_EXAMPLE(aes-ccm aes-ccm.c)
+ADD_C_EXAMPLE(aes-cfbcpp aes-cfb.cc)
 
-ADD_EXAMPLE(aes-siv aes-siv.c)
+ADD_C_EXAMPLE(aes-xts aes-xts.c)
 
-ADD_EXAMPLE(chacha20 chacha20.c)
+ADD_C_EXAMPLE(aes-ccm aes-ccm.c)
 
-ADD_EXAMPLE(aes-speed-cipher aes-speed-cipher.c)
+ADD_C_EXAMPLE(aes-siv aes-siv.c)
 
-ADD_EXAMPLE(aes-speed-gcm aes-speed-gcm.c)
+ADD_C_EXAMPLE(chacha20 chacha20.c)
 
+ADD_C_EXAMPLE(aes-speed-cipher aes-speed-cipher.c)
 
+ADD_C_EXAMPLE(aes-speed-gcm aes-speed-gcm.c)
 
+ADD_C_EXAMPLE(chacha20-poly1305 chacha20-poly1305.c)

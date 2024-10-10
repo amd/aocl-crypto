@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,17 @@
 #include "dl_load/dl_load.hh"
 #include <cstddef>
 
+void
+deallocate_handle(void*& handle)
+{
+#if defined(_WIN64) || defined(_WIN32)
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
+    handle = nullptr;
+}
+
 TEST(ALCP, DL_LOAD)
 {
     void* handle;
@@ -40,7 +51,7 @@ TEST(ALCP, DL_LOAD)
 #if defined(_WIN64) || defined(_WIN32)
     handle = LoadLibrary(alcp_lib_path);
 #else
-    handle    = dlopen(alcp_lib_path, RTLD_LAZY);
+    handle = dlopen(alcp_lib_path, RTLD_LAZY);
 #endif
 
     if (!handle) {
@@ -58,12 +69,14 @@ TEST(ALCP, DL_LOAD)
 #endif
     if (f_version == nullptr) {
         std::cout << "Error, null func ptr" << std::endl;
+        deallocate_handle(handle);
         FAIL();
     }
 
     /* now call these */
     std::cout << "ALCP_VERSION_IS: " << (*f_version)() << std::endl;
-    dlclose(handle);
+
+    deallocate_handle(handle);
 
     EXPECT_TRUE(true);
 }

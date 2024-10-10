@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,7 @@
 // FIXME: This code is duplicated from zen3. Similar duplication exists in zen2
 // as well. Find a unified architecture
 #include "alcp/digest.hh"
-#include "alcp/digest/sha2_512.hh"
+#include "alcp/digest/sha512.hh"
 #include "alcp/digest/sha_avx256.hh"
 #include "config.h"
 
@@ -186,43 +186,75 @@ namespace alcp::digest { namespace zen4 {
         x[7] = tmp;
     }
 
+    static inline __m256i ROTR(const __m256i reg, int bits)
+    {
+        __m256i temp1 = _mm256_srli_epi64(reg, bits);
+        __m256i temp2 = _mm256_slli_epi64(reg, 64 - bits);
+        return temp1 |= temp2;
+    }
+
+    inline __m256i sigma0(const __m256i temp)
+    {
+        return ROTR(temp, 1) ^ ROTR(temp, 8) ^ _mm256_srli_epi64(temp, 7);
+    }
+    inline __m256i sigma_0_512(const __m256i x0,
+                               const __m256i x1,
+                               const __m256i x4,
+                               const __m256i x5)
+    {
+        /* x0=[w0,w1], x1 = [w2,w3], x2 = [w4,w5], x4 = [w8,w9],x5 =[w10,w11].
+         * These are intial values and reusing them and rotate_x will change
+         * their values. But the below code could be understood easily with
+         * comments in form of initial values*/
+
+        // Calculation of  sigma_0_512(x) = ROTR(x,1)^ROTR(x,8)^SHR(x,7)
+
+        // temp = [ w1 || w2 ](b0)__[ w1 || w2 ](b1)
+        __m256i temp = _mm256_alignr_epi8(x1, x0, 8);
+
+        /* s0 = [ sigma_0_512(w1) || sigma_0_512(w2) ](b0)__
+                [ sigma_0_512(w1) || sigma_0_512(w2) ](b1) */
+        __m256i s0 = sigma0(temp);
+
+        // From here addition to w9 and w10 also is included in this fcuntion as
+        // moving it outside the function cause performance drop with gcc.
+        // temp = [ w9 || w10 ](b0)__[ w9 || w10 ](b1)
+        temp = _mm256_alignr_epi8(x5, x4, 8);
+
+        // temp =  [ w0+w9|| w1+w10 ]
+        temp = _mm256_add_epi64(x0, temp);
+
+        /* temp = [ sigma_0_512(w1)+w0+w9 || sigma_0_512(w2)+w1+10 ](b0)__
+           [ sigma_0_512(w1)+w0+w9 || sigma_0_512(w2)+w1+10 ](b1)  */
+        temp = _mm256_add_epi64(s0, temp);
+
+        return temp;
+    }
+
+    inline __m256i sigma_1_512(const __m256i x7)
+    {
+        /*  x7 = [w14,w15]
+         * These are intial values and reusing them and rotate_x will change
+         * their values. But the below code could be understood easily with
+         * comments in form of initial values*/
+        /*
+           [(ROTR(w14,19) ^ ROTR(w14,61) ^ SHR(w14,6)) ||
+           [(ROTR(w15,19) ^ ROTR(w15,61) ^ SHR(w15,6))](b0)__
+           [(ROTR(w14,19) ^ ROTR(w14,61) ^ SHR(w14,6)) ||
+           [(ROTR(w15,19) ^ ROTR(w15,61) ^ SHR(w15,6))](b1) =>
+            [sigma_1_512(w14) || sigma_1_512(w15)](b0)__
+            [sigma_1_512(w14) || sigma_1_512(w15)](b1) */
+        return ROTR(x7, 19) ^ ROTR(x7, 61) ^ _mm256_srli_epi64(x7, 6);
+    }
     static inline void sha512_update_x_avx2(__m256i x[8])
     {
-        __m256i temp[4];
-        // Calculation of s0
-        temp[0] = _mm256_alignr_epi8(x[1], x[0], 8);
-
-        temp[1] = _mm256_srli_epi64(temp[0], 1);
-        temp[2] = _mm256_slli_epi64(temp[0], 64 - 1);
-        temp[1] |= temp[2];
-
-        temp[2] = _mm256_srli_epi64(temp[0], 8);
-        temp[3] = _mm256_slli_epi64(temp[0], 64 - 8);
-        temp[2] |= temp[3];
-
-        temp[3] = _mm256_srli_epi64(temp[0], 7);
-
-        temp[0] = temp[1] ^ temp[2] ^ temp[3];
-
-        temp[3] = _mm256_alignr_epi8(x[5], x[4], 8);
-        temp[3] = _mm256_add_epi64(x[0], temp[3]);
-
-        temp[0] = _mm256_add_epi64(temp[0], temp[3]);
-
-        // Calculation of s1
-        temp[1] = _mm256_srli_epi64(x[7], 19);
-        temp[2] = _mm256_slli_epi64(x[7], 64 - 19);
-        temp[1] |= temp[2];
-
-        temp[2] = _mm256_srli_epi64(x[7], 61);
-        temp[3] = _mm256_slli_epi64(x[7], 64 - 61);
-        temp[2] |= temp[3];
-
-        temp[3] = _mm256_srli_epi64(x[7], 6);
-        temp[3] = temp[1] ^ temp[2] ^ temp[3];
-
-        x[0] = _mm256_add_epi64(temp[0], temp[3]);
-
+        __m256i s0, s1;
+        // Calculation of  sigma_0_512(x)+w0+w9 =
+        // ROTR(x,1)^ROTR(x,8)^SHR(x,7)+w0+w9
+        s0 = sigma_0_512(x[0], x[1], x[4], x[5]);
+        // Calculation of sigma_1_512(x) = ROTR(x,19) ^ROTR(x,61)^SHR(x,6)
+        s1   = sigma_1_512(x[7]);
+        x[0] = _mm256_add_epi64(s0, s1);
         rotate_x(x);
     }
 
@@ -469,17 +501,27 @@ namespace alcp::digest { namespace zen4 {
         state[6] += g;
         state[7] += h;
     }
-
-    static inline void process_buffer_avx2(Uint64       state[8],
-                                           const Uint8* data,
-                                           Uint32       num_chunks,
-                                           __m256i      hash_256_0,
-                                           __m256i      hash_256_1)
+    static inline void
+#if defined(COMPILER_IS_GCC)
+        /* -fsched-stalled-insns=0 => This gcc compiler option optimizes the
+         * pipeline as instructions are reordered considering the data stalls.
+         * Zero argument means there is no limit on the number of instructions
+         * which may be moved. Here the optimization is only applied
+         * specifically for process_buffer_avx2 function as the same option for
+         * process_buffer_avx reduces performance for the smaller block sizes
+         * <=256
+         */
+        __attribute__((optimize("-fsched-stalled-insns=0")))
+#endif
+        process_buffer_avx2(Uint64       state[8],
+                            const Uint8* data,
+                            Uint32       num_chunks,
+                            __m256i      hash_256_0,
+                            __m256i      hash_256_1)
     {
-
-        __attribute__((aligned(64)))
-        Uint64  message_sch_1[Sha512::cNumRounds + 16];
-        __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2] = {};
+        __attribute__((
+            aligned(64))) Uint64 message_sch_1[Sha512::cNumRounds + 16];
+        __m256i                  msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2]{};
         for (Uint32 i = 0; i < num_chunks; i = i + 2) {
 
             load_data(msg_vect,

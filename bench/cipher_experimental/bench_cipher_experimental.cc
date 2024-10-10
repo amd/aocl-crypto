@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 #include "cipher_experimental/factory.hh"
 #include "common/experimental/gtest_essentials.hh"
 #include "utils.hh"
+#include <variant>
 
 namespace alcp::benchmarking::cipher {
 
@@ -126,8 +127,7 @@ BenchGcmCipherExperimental(benchmark::State&            state,
 
     if constexpr (encryptor == false) { // Decrypt
         // Create a vaid data for decryption (mainly tag and ct)
-        std::unique_ptr<ITestCipher> iTestCipher =
-            std::make_unique<AlcpGcmCipher<true>>();
+        iTestCipher = std::make_unique<AlcpGcmCipher<true>>();
         bool no_err = true;
         no_err &= iTestCipher->init(&dataInit);
         if (no_err == false) {
@@ -174,11 +174,9 @@ BenchXtsCipherExperimental(benchmark::State&            state,
     alignas(64) Uint8 output_text[cBlockSize];
     alignas(32) Uint8 key[keylen / 8 * 2];
     alignas(16) Uint8 iv[16];
-    alignas(16) Uint8 ad[16];
-    alignas(16) Uint8 tag[16];
     int               blocks = cBlockSize / 16;
 
-    for (int i = 0; i < keylen / 8 * 2; i++) {
+    for (Uint32 i = 0; i < keylen / 8 * 2; i++) {
         key[i] = i;
     }
 
@@ -251,8 +249,7 @@ BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -262,8 +259,7 @@ BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         192));
 }
 
@@ -273,8 +269,7 @@ BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -284,8 +279,7 @@ BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -295,8 +289,7 @@ BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         192));
 }
 
@@ -306,8 +299,7 @@ BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -320,8 +312,7 @@ BENCH_AES_ENCRYPT_XTS_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -331,8 +322,7 @@ BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<true>(
         state,
         state.range(0),
-        std::move(
-            XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -342,8 +332,7 @@ BENCH_AES_DECRYPT_XTS_128(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(XtsCipherFactory<false>(
-            static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<false>(static_cast<LibrarySelect>(state.range(1))),
         128));
 }
 
@@ -353,8 +342,7 @@ BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
     benchmark::DoNotOptimize(BenchXtsCipherExperimental<false>(
         state,
         state.range(0),
-        std::move(XtsCipherFactory<false>(
-            static_cast<LibrarySelect>(state.range(1)))),
+        XtsCipherFactory<false>(static_cast<LibrarySelect>(state.range(1))),
         256));
 }
 
@@ -373,46 +361,50 @@ main(int argc, char** argv)
 
     ArgsMap argsMap = parseArgs(argc, argv);
 
-    assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_ALCP"].paramType == ParamType::TYPE_BOOL);
+    try {
+        assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_ALCP"].paramType == ParamType::TYPE_BOOL);
 
-    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && std::get<bool>(argsMap["USE_IPP"].value) == false
-        && std::get<bool>(argsMap["USE_ALCP"].value) == false) {
-#ifdef USE_IPP
-        testlibs.insert(testlibs.begin(),
-                        static_cast<Int64>(LibrarySelect::IPP));
-#endif
-#ifdef USE_OSSL
-        testlibs.insert(testlibs.begin(),
-                        static_cast<Int64>(LibrarySelect::OPENSSL));
-#endif
-        testlibs.insert(testlibs.begin(),
-                        static_cast<Int64>(LibrarySelect::ALCP));
-    } else {
-        if (std::get<bool>(argsMap["USE_ALCP"].value) == true) {
-            testlibs.insert(testlibs.begin(),
-                            static_cast<Int64>(LibrarySelect::ALCP));
-        }
-        if (std::get<bool>(argsMap["USE_OSSL"].value) == true) {
-#ifdef USE_OSSL
-            testlibs.insert(testlibs.begin(),
-                            static_cast<Int64>(LibrarySelect::OPENSSL));
-#else
-            printErrors("OpenSSL unavailable at compile time!");
-            return -1;
-#endif
-        }
-        if (std::get<bool>(argsMap["USE_IPP"].value) == true) {
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && std::get<bool>(argsMap["USE_IPP"].value) == false
+            && std::get<bool>(argsMap["USE_ALCP"].value) == false) {
 #ifdef USE_IPP
             testlibs.insert(testlibs.begin(),
                             static_cast<Int64>(LibrarySelect::IPP));
-#else
-            printErrors("IPP unavailable at compile time!");
-            return -1;
 #endif
+#ifdef USE_OSSL
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::OPENSSL));
+#endif
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::ALCP));
+        } else {
+            if (std::get<bool>(argsMap["USE_ALCP"].value) == true) {
+                testlibs.insert(testlibs.begin(),
+                                static_cast<Int64>(LibrarySelect::ALCP));
+            }
+            if (std::get<bool>(argsMap["USE_OSSL"].value) == true) {
+#ifdef USE_OSSL
+                testlibs.insert(testlibs.begin(),
+                                static_cast<Int64>(LibrarySelect::OPENSSL));
+#else
+                printErrors("OpenSSL unavailable at compile time!");
+                return -1;
+#endif
+            }
+            if (std::get<bool>(argsMap["USE_IPP"].value) == true) {
+#ifdef USE_IPP
+                testlibs.insert(testlibs.begin(),
+                                static_cast<Int64>(LibrarySelect::IPP));
+#else
+                printErrors("IPP unavailable at compile time!");
+                return -1;
+#endif
+            }
         }
+    } catch (const std::bad_variant_access& e) {
+        std::cout << e.what() << '\n';
     }
 
     // GCM
@@ -445,7 +437,8 @@ main(int argc, char** argv)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+        ->ArgsProduct(
+            { alcp::benchmarking::cipher::blocksizes, std::move(testlibs) });
 
     // if (::benchmark::ReportUnrecognizedArguments(argc, argv))
     //     return 1;

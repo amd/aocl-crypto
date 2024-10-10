@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -65,22 +65,23 @@ xtsKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
             combinedKey.end(), datasetTweakKey.begin(), datasetTweakKey.end());
 
         alc_test_xts_init_data_t dataInit;
-        dataInit.m_iv      = &datasetInitvector[0];
-        dataInit.m_iv_len  = datasetInitvector.size();
-        dataInit.m_key     = &combinedKey[0]; // Combined Enc and Tweak Key
+        dataInit.m_iv     = utils::getPtr(datasetInitvector);
+        dataInit.m_iv_len = datasetInitvector.size();
+        dataInit.m_key =
+            utils::getPtr(combinedKey); // Combined Enc and Tweak Key
         dataInit.m_key_len = datasetKey.size();
 
         alc_test_xts_update_data_t dataUpdate;
-        dataUpdate.m_iv           = &datasetInitvector[0];
+        dataUpdate.m_iv           = utils::getPtr(datasetInitvector);
         dataUpdate.m_iv_len       = datasetInitvector.size();
-        dataUpdate.m_output       = &output[0];
+        dataUpdate.m_output       = utils::getPtr(output);
         dataUpdate.m_output_len   = output.size();
         dataUpdate.m_aes_block_id = 0;
         if constexpr (encryptor) { // Encrypt
-            dataUpdate.m_input     = &datasetPlainText[0];
+            dataUpdate.m_input     = utils::getPtr(datasetPlainText);
             dataUpdate.m_input_len = datasetPlainText.size();
         } else { // Decrypt
-            dataUpdate.m_input     = &datasetCipherText[0];
+            dataUpdate.m_input     = utils::getPtr(datasetCipherText);
             dataUpdate.m_input_len = datasetCipherText.size();
         }
         dataUpdate.m_total_input_len = dataUpdate.m_input_len;

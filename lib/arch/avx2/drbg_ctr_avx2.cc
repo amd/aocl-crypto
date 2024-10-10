@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,6 +33,7 @@
 #include "alcp/cipher/aesni.hh"
 #include "alcp/rng/drbg_ctr.hh"
 #include "alcp/utils/copy.hh"
+#include <cassert>
 #include <immintrin.h>
 
 namespace alcp::rng::drbg::avx2 {
@@ -89,11 +90,12 @@ CtrDrbgUpdate(const Uint8  pProvidedData[],
     Uint8  temp[cMaxSeedLength];
     Uint64 temp_size = 0;
 
-    EncryptAes aes;
-    aes.setKey(&pKey[0], cKeyLen * 8);
-    const Uint32   cAesRounds = aes.getRounds();
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLen);
+
+    aes->setKey(&pKey[0], cKeyLen * 8);
+    const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =
-        reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+        reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
     __m128i reg_value = _mm_loadu_si128(reinterpret_cast<__m128i*>(pValue));
     const __m128i cShuffleMask =
         _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
@@ -182,10 +184,11 @@ DrbgCtrGenerate(const Uint8  pcAdditionalInput[],
         _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     const __m128i cOneReg128 =
         _mm_setr_epi8(0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    EncryptAes aes;
-    aes.setKey(&pKey[0], cKeyLen * 8);
-    const Uint32 cAesRounds = aes.getRounds();
-    auto         p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLen);
+    aes->setKey(&pKey[0], cKeyLen * 8);
+    const Uint32 cAesRounds = aes->getRounds();
+    auto p_key = reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
     for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
         // V = (V+1) mod 2^blocklen
         IncrementValue(reg_value, cShuffleMask, cOneReg128);
@@ -230,12 +233,13 @@ BCC(const Uint8* pcKey,
     // Starting with the leftmost bits of data, split data into n blocks
     // ofencrypt_block outlen bits each, forming block1 to blockn. For i = 1 to
     // n do
-    __m128i    data_reg;
-    EncryptAes aes;
-    aes.setKey(&pcKey[0], cKeyLength * 8);
-    const Uint32   cAesRounds = aes.getRounds();
+    __m128i data_reg;
+
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLength);
+    aes->setKey(&pcKey[0], cKeyLength * 8);
+    const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =
-        reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+        reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
     for (Uint64 i = 0; i < cNBlocks; i++) {
         // input_block = chaining_value ⊕ blocki.
         data_reg = _mm_loadu_si128(
@@ -284,7 +288,8 @@ BlockCipherDf(const Uint8* pcInputString,
         p_s_8[sizeof(Int32) - i - 1] = t;
     }
     Uint8* p_s_input_str = (&S[0]) + sizeof(cL) + sizeof(cN);
-    memcpy(p_s_input_str, pcInputString, cL);
+    utils::SecureCopy<Uint8>(
+        p_s_input_str, s_size - (sizeof(cL) + sizeof(cN)), pcInputString, cL);
     memset(p_s_input_str + cL, 0x80, 1);
 
     // temp = the Null string.
@@ -314,8 +319,11 @@ BlockCipherDf(const Uint8* pcInputString,
 
         // temp = temp || BCC (K, (IV || S)).
         std::vector<Uint8> iv_concat_s(IV.size() + S.size());
-        memcpy(&iv_concat_s[0], &IV[0], IV.size());
-        memcpy(&iv_concat_s[0] + IV.size(), &S[0], S.size());
+        utils::SecureCopy<Uint8>(
+            &iv_concat_s[0], IV.size() + S.size(), &IV[0], IV.size());
+
+        utils::SecureCopy<Uint8>(
+            &iv_concat_s[0] + IV.size(), S.size(), &S[0], S.size());
 
         BCC(big_key,
             cKeyLen,
@@ -326,12 +334,12 @@ BlockCipherDf(const Uint8* pcInputString,
         i++;
     }
 
-    EncryptAes aes;
+    std::unique_ptr<EncryptAes> aes = std::make_unique<EncryptAes>(cKeyLen);
+    aes->setKey(&temp[0], cKeyLen * 8);
     // K = leftmost (temp, keylen).
-    aes.setKey(&temp[0], cKeyLen * 8);
-    const Uint32   cAesRounds = aes.getRounds();
+    const Uint32   cAesRounds = aes->getRounds();
     const __m128i* p_key =
-        reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+        reinterpret_cast<const __m128i*>(aes->getEncryptKeys());
     // X = select (temp, keylen+1, keylen+outlen).
     __m128i x_reg =
         _mm_loadu_si128(reinterpret_cast<__m128i*>(&temp[0] + cKeyLen));

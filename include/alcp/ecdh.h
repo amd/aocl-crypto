@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,13 +42,13 @@ EXTERN_C_BEGIN
 /**
  * @brief Function sets input privateKey
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_request and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_request and before @ref
+ * alcp_ec_finish</b>
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [in] pPrivKey - pointer to Input privateKey
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
@@ -57,15 +57,15 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
  * @brief Function generates public key using input privateKey generated
  * public key is shared with the peer.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_request and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_request and before @ref
+ * alcp_ec_finish</b>
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [out] pPublicKey - pointer to Output Publickey generated
  * @param [in] pPrivKey - pointer to Input privateKey used for generating
  * publicKey
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
@@ -76,16 +76,16 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
  * @brief Function compute secret key with publicKey from remotePeer and
  * local privatekey.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_ec_request and at the
- * end of session call @ref alcp_ec_finish</b>
+ * <b>This API can be called after @ref alcp_ec_request and before @ref
+ * alcp_ec_finish</b>
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [out] pSecretKey - pointer to output secretKey
  * @param [in] pPublicKey - pointer to Input privateKey used for generating
  * publicKey
  * @param [out] pKeyLength - pointer to keyLength
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
+ * @return Error Code for the API called . if alc_error_t is not zero then an
+ * error has occurred and handle will be invalid for future operations
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,

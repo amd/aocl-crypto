@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,26 +41,25 @@ namespace alcp::testing {
 class OpenSSLHmacBase : public HmacBase
 {
     EVP_MAC_CTX*   m_handle = nullptr;
-    alc_mac_info_t m_info;
-    Uint8*         m_message;
-    Uint8*         m_key;
-    Uint8*         m_hmac;
-    EVP_MAC*       m_mac = nullptr;
-    Uint32         m_key_len;
+    alc_mac_info_t m_info{};
+    Uint8*         m_key{};
+    EVP_MAC*       m_mac            = nullptr;
+    Uint32         m_key_len        = 0;
     OSSL_PARAM     m_ossl_params[3] = {};
 
   public:
-    OpenSSLHmacBase(const alc_mac_info_t& info);
+    OpenSSLHmacBase() = default;
 
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
-
-    bool init();
+    bool Init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
 
     ~OpenSSLHmacBase();
 
-    bool Hmac_function(const alcp_hmac_data_t& data);
+    bool MacUpdate(const alcp_hmac_data_t& data);
+
+    bool MacFinalize(const alcp_hmac_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
-    bool reset();
+    bool MacReset();
 };
 
 } // namespace alcp::testing

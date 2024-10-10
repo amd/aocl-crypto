@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,43 +35,12 @@
 using alcp::utils::RotateRight;
 namespace alcp::digest {
 
-class Sha2 : public Digest
+template<alc_digest_len_t digest_len>
+class Sha2 final : public IDigest
 {
-  public:
-    Sha2(const std::string& name)
-        : m_name{ name }
-        , m_msg_len{ 0 }
-    {}
+    static_assert(ALC_DIGEST_LEN_224 == digest_len
+                  || ALC_DIGEST_LEN_256 == digest_len);
 
-    Sha2(const char* name)
-        : Sha2(std::string(name))
-    {}
-
-    // TODO : Removing Return here causes an error
-    /**
-     * @return  0 when function is not implemented
-     */
-
-    Uint64 getInputBlockSize() { return 0; };
-
-    /**
-     * @return 0 when the function is not implemented
-     */
-    Uint64 getHashSize() { return 0; };
-
-  protected:
-    Sha2() {}
-    virtual ~Sha2();
-
-  protected:
-    alc_sha2_mode_t m_mode;
-    std::string     m_name;
-    Uint64          m_msg_len;
-    // alc_sha2_param_t m_param;
-};
-
-class Sha256 final : public Sha2
-{
   public:
     static constexpr Uint64 /* define word size */
         cWordSizeBits   = 32,
@@ -80,27 +49,25 @@ class Sha256 final : public Sha2
         cChunkSize      = cChunkSizeBits / 8, /* chunks to proces */
         cChunkSizeMask  = cChunkSize - 1,
         cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
-        cHashSizeBits   = 256,                            /* same in bits */
+        cHashSizeBits   = ALC_DIGEST_LEN_256,             /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
-        cHashSizeWords  = cHashSizeBits / cWordSizeBits,
-        cIvSizeBytes    = 32; /* IV size in bytes */
+        cHashSizeWords  = cHashSizeBits / cWordSizeBits;
 
   public:
-    ALCP_API_EXPORT Sha256();
-    ALCP_API_EXPORT Sha256(const alc_digest_info_t& rDigestInfo);
-    virtual ALCP_API_EXPORT ~Sha256();
-
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    ALCP_API_EXPORT Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    ALCP_API_EXPORT Uint64 getHashSize() override;
+    ALCP_API_EXPORT Sha2();
+    ALCP_API_EXPORT Sha2(const Sha2& src);
+    virtual ALCP_API_EXPORT ~Sha2() = default;
 
   public:
+    /**
+     * \brief    inits the internal state.
+     *
+     * \notes   `init()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    ALCP_API_EXPORT void init(void) override;
     /**
      * \brief   Updates hash for given buffer
      *
@@ -116,97 +83,25 @@ class Sha256 final : public Sha2
                                        Uint64       size) override;
 
     /**
-     * \brief   Cleans up any resource that was allocated
+     * \brief    Call for fetching final digest
      *
-     * \notes   `finish()` to be called as a means to cleanup, no operation
-     *           permitted after this call. The context will be unusable.
      *
-     * \return nothing
+     * \param    pBuf     Destination buffer to which digest will be copied
+     *
+     * \param    size    Destination buffer size in bytes, should be big
+     *                   enough to hold the digest
      */
-    void finish() override;
-
-    /**
-     * \brief    Resets the internal state.
-     *
-     * \notes   `reset()` to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
-     *
-     * \return nothing
-     */
-    void reset() override;
-
-    /**
-     * \brief    Call for the final chunk
-     *
-     * \notes   `finish()` to be called as a means to cleanup, necessary
-     *           actions. Application can also call finalize() with
-     *           empty/null args application must call copyHash before
-     *           calling finish()
-     *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can be performed
-     *                   is copyHash()
-     *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size
-     *                   is assumed to be zero
-     */
-    ALCP_API_EXPORT alc_error_t finalize(const Uint8* pMsgBuf,
-                                         Uint64       size) override;
-
-    /**
-     * \brief  Copies the has from context to supplied buffer
-     *
-     * \notes `finalize()` to be called with last chunks that should
-     *           perform all the necessary actions, can be called with
-     *           NULL argument.
-     *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can  be performed
-     *                   is copyHash()
-     *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size is
-     *                   assumed to be zero
-     */
-    ALCP_API_EXPORT alc_error_t copyHash(Uint8* pHashBuf,
-                                         Uint64 size) const override;
-
-  public:
-    ALCP_API_EXPORT alc_error_t setIv(const void* pIv, Uint64 size);
+    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
   private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    /* Any unprocessed bytes from last call to update() */
+    alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
+    alignas(64) Uint32 m_hash[cHashSizeWords]{};
 };
 
-class ALCP_API_EXPORT Sha224 final : public Sha2
-{
-  public:
-    Sha224();
-    Sha224(const alc_digest_info_t& rDInfo);
-    ~Sha224();
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
-    void        finish() override;
-    void        reset() override;
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
-    alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
-
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize() override;
-
-  private:
-    std::shared_ptr<Sha256> m_psha256;
-};
+typedef Sha2<ALC_DIGEST_LEN_224> Sha224;
+typedef Sha2<ALC_DIGEST_LEN_256> Sha256;
 
 static inline void
 CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)
@@ -246,6 +141,18 @@ CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)
     pHash[5] += f;
     pHash[6] += g;
     pHash[7] += h;
+}
+
+static inline void
+extendMsg(Uint32 w[], Uint32 start, Uint32 end)
+{
+    for (Uint32 i = start; i < end; i++) {
+        const Uint32 s0 = RotateRight(w[i - 15], 7) ^ RotateRight(w[i - 15], 18)
+                          ^ (w[i - 15] >> 3);
+        const Uint32 s1 = RotateRight(w[i - 2], 17) ^ RotateRight(w[i - 2], 19)
+                          ^ (w[i - 2] >> 10);
+        w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+    }
 }
 
 } // namespace alcp::digest

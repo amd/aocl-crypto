@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -28,23 +28,19 @@ Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 # Bump up C++ standard
 SET(CMAKE_CXX_STANDARD 17)
 
+alcp_module("MAC")
 
 function(UnitTest TEST_NAME)
-    # file(GLOB TEST_FILES "*.cc")
     set(TEST_FILE ${TEST_FILES} ${TEST_NAME}_unit_test.cc)
 
     message(STATUS "MAC Unit Tests Imported ${TEST_FILES}")
-    message(STATUS "TEST FILE: ${TEST_FILE}")
     
     get_filename_component(currentTestName ${TEST_FILE} NAME_WLE)
     get_filename_component(currentTestFile ${TEST_FILE} NAME)
-    #get_filename_component(currentTestDir ${TEST_FILE} BASE_DIR)
-    message("Test-> " ${currentTestName} "file " ${currentTestFile} )
-    set(ALCP_MODULE "MAC::${TEST_NAME}")
-    alcp_cc_test(${currentTestName}
-            DIRECTORY tests/
-            SOURCES   "${currentTestFile}"
-            DEPENDS   ${_module_lib}
+    alcp_cc_test(${currentTestName} ${CMAKE_BINARY_DIR}/lib/mac/tests
+             DIRECTORY tests/
+             SOURCES   "${currentTestFile}"
+             DEPENDS   ${_module_lib}
     )
 endfunction()
 

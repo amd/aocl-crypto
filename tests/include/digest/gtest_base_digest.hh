@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,14 +66,23 @@ PrintDigestTestData(alcp_digest_data_t data, std::string mode)
 }
 
 /* to read csv file */
-std::string
-GetDigestStr(_alc_digest_type digest_type)
+static inline std::string
+GetDigestStr(alc_digest_mode_t mode)
 {
-    std::string sDigestType;
-    switch (digest_type) {
-        case ALC_DIGEST_TYPE_SHA2:
+    switch (mode) {
+        case ALC_SHA2_224:
+        case ALC_SHA2_256:
+        case ALC_SHA2_384:
+        case ALC_SHA2_512:
+        case ALC_SHA2_512_224:
+        case ALC_SHA2_512_256:
             return "SHA";
-        case ALC_DIGEST_TYPE_SHA3:
+        case ALC_SHA3_224:
+        case ALC_SHA3_256:
+        case ALC_SHA3_384:
+        case ALC_SHA3_512:
+        case ALC_SHAKE_128:
+        case ALC_SHAKE_256:
             return "SHA3";
         default:
             return "";
@@ -81,72 +90,69 @@ GetDigestStr(_alc_digest_type digest_type)
 }
 
 void
-Digest_KAT(alc_digest_info_t info)
+Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
 {
     Uint8              Temp = 0;
     alcp_digest_data_t data;
-    std::vector<Uint8> digest(info.dt_len / 8, 0);
-    AlcpDigestBase     adb(info);
+    std::vector<Uint8> digest(GetDigestLen(mode) / 8);
+    /* for storing the squeezed digest from duplicate handle */
+    std::vector<Uint8> digest_dup(GetDigestLen(mode) / 8);
+    AlcpDigestBase     adb(mode);
     DigestBase*        db;
     db = &adb;
 
     std::string TestDataFile       = "";
     std::string SHA3_SHAKE_Len_Str = "";
     /* for truncated sha512 (224,256)*/
-    if (info.dt_type == ALC_DIGEST_TYPE_SHA2
-        && info.dt_mode.dm_sha2 == ALC_SHA2_512
-        && info.dt_len != ALC_DIGEST_LEN_512) {
-        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
-                       + std::to_string(info.dt_len) + ".csv";
+    if (mode == ALC_SHA2_512_224 || mode == ALC_SHA2_512_256) {
+        TestDataFile = "dataset_" + GetDigestStr(mode) + "_512_"
+                       + std::to_string(GetDigestLen(mode)) + ".csv";
     }
     /* for SHA3 shake tests (128,256)*/
-    else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        if (info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
-            SHA3_SHAKE_Len_Str = "128";
-        } else if (info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
-            SHA3_SHAKE_Len_Str = "256";
-        }
-        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_SHAKE_"
+    else if (mode == ALC_SHAKE_128 || mode == ALC_SHAKE_256) {
+        SHA3_SHAKE_Len_Str = (mode == ALC_SHAKE_128) ? "128" : "256";
+        TestDataFile       = "dataset_" + GetDigestStr(mode) + "_SHAKE_"
                        + SHA3_SHAKE_Len_Str + ".csv";
     }
     /* for normal SHA2, SHA3 (224,256,384,512 bit) */
     else {
-        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
-                       + std::to_string(info.dt_len) + ".csv";
+        TestDataFile = "dataset_" + GetDigestStr(mode) + "_"
+                       + std::to_string(GetDigestLen(mode)) + ".csv";
     }
-    Csv csv = Csv(TestDataFile);
+    Csv csv = Csv(std::move(TestDataFile));
     // check if file is valid
     if (!csv.m_file_exists) {
         FAIL();
     }
 
-    if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
+    if (useipp && (GetDigestStr(mode).compare("SHA3") == 0)) {
         std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
                   << std::endl;
         return;
     }
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(info);
+    OpenSSLDigestBase odb(mode);
     if (useossl == true)
         db = &odb;
 #endif
 #ifdef USE_IPP
-    IPPDigestBase idb(info);
+    IPPDigestBase idb(mode);
     if (useipp == true)
         db = &idb;
 #endif
 
     /* for SHAKE variant */
-    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+    if (mode == ALC_SHAKE_128 || mode == ALC_SHAKE_256) {
         while (csv.readNext()) {
             auto msg          = csv.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
             data.m_msg_len    = csv.getVect("MESSAGE").size();
             data.m_digest_len = csv.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
-            data.m_digest = &(digest_[0]);
-
+            std::vector<Uint8> digest_dup_(data.m_digest_len, 0);
+            data.m_digest     = &(digest_[0]);
+            data.m_digest_dup = &(digest_dup_[0]);
             /* FIXME: Hack when msg is NULL, this case is not currently handled
              * in some of the digest apis */
             bool isMsgEmpty = std::all_of(
@@ -158,20 +164,49 @@ Digest_KAT(alc_digest_info_t info)
                 data.m_msg_len = 0;
             }
 
-            if (!db->init(info, data.m_digest_len)) {
+            if (!db->init()) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
-            if (!db->digest_function(data)) {
+            if (!db->digest_update(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
+            }
+            if (ctx_copy) {
+                if (!db->context_copy()) {
+                    std::cout << "Error: Digest base context_copy failed"
+                              << std::endl;
+                    FAIL();
+                }
+            }
+            /* Squeeze option only for SHAKE variants */
+            if (test_squeeze) {
+                if (!db->digest_squeeze(data)) {
+                    std::cout << "Error: digest_squeeze failed" << std::endl;
+                    FAIL();
+                }
+            }
+            if (!db->digest_finalize(data)) {
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
             EXPECT_TRUE(ArraysMatch(
-                digest_,               // output
+                std::move(digest_),    // output
                 csv.getVect("DIGEST"), // expected, from the KAT test data
                 csv,
-                std::string(GetDigestStr(info.dt_type) + "_"
-                            + SHA3_SHAKE_Len_Str + "_KAT")));
+                std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
+                            + "_KAT")));
+
+            /* for squeeze test, check digest outputs from both handles */
+            if (test_squeeze) {
+                EXPECT_TRUE(ArraysMatch(
+                    std::move(
+                        digest_dup_), // output squeezed out of m_handle_dup
+                    csv.getVect("DIGEST"), // expected, from the KAT test data
+                    csv,
+                    std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
+                                + "_KAT" + " for duplicate digest")));
+            }
         }
     } else {
         while (csv.readNext()) {
@@ -180,7 +215,7 @@ Digest_KAT(alc_digest_info_t info)
             data.m_msg_len    = csv.getVect("MESSAGE").size();
             data.m_digest_len = csv.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
-
+            data.m_digest_dup = &(digest_dup[0]);
             /* FIXME: Hack when msg is NULL, this case is not currently handled
              * in some of the digest apis */
             bool isMsgEmpty = std::all_of(
@@ -192,48 +227,58 @@ Digest_KAT(alc_digest_info_t info)
                 data.m_msg_len = 0;
             }
 
-            if (!db->init(info, data.m_digest_len)) {
+            if (!db->init()) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
-            if (!db->digest_function(data)) {
+            if (!db->digest_update(data)) {
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
-
+            if (ctx_copy) {
+                if (!db->context_copy()) {
+                    std::cout << "Error: Digest base context_copy failed"
+                              << std::endl;
+                    FAIL();
+                }
+            }
+            if (!db->digest_finalize(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
+            }
             /*conv m_digest into a vector */
             std::vector<Uint8> digest_vector(std::begin(digest),
                                              std::end(digest));
 
             EXPECT_TRUE(ArraysMatch(
-                digest_vector,         // output
-                csv.getVect("DIGEST"), // expected, from the KAT test data
+                std::move(digest_vector), // output
+                csv.getVect("DIGEST"),    // expected, from the KAT test data
                 csv,
-                std::string(GetDigestStr(info.dt_type) + "_"
-                            + std::to_string(info.dt_len) + "_KAT")));
+                std::string(GetDigestStr(mode) + "_"
+                            + std::to_string(GetDigestLen(mode)) + "_KAT")));
         }
     }
 }
 
 /* Digest Cross tests */
 void
-Digest_Cross(int HashSize, alc_digest_info_t info)
+Digest_Cross(int HashSize, alc_digest_mode_t mode, bool ctx_copy)
 {
     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
     std::vector<Uint8> digestExt(HashSize / 8, 0);
-    AlcpDigestBase     adb(info);
+    AlcpDigestBase     adb(mode);
     RngBase            rb;
     DigestBase*        db;
     DigestBase*        extDb = nullptr;
     db                       = &adb;
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(info);
+    OpenSSLDigestBase odb(mode);
     if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
 #endif
 #ifdef USE_IPP
-    IPPDigestBase idb(info);
+    IPPDigestBase idb(mode);
     if (useipp == true)
         extDb = &idb;
 #endif
@@ -261,39 +306,70 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         alcp_digest_data_t data_alc, data_ext;
 
         msg_full = ShuffleVector(msg_full, rng);
-        pos1     = msg_full.end() - i;
+        pos1     = msg_full.end() - i - 1;
         pos2     = msg_full.end();
         std::vector<Uint8> msg(pos1, pos2);
 
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(msg[0]))) {
+            data_alc.m_msg = &(msg[1]);
+            data_ext.m_msg = &(msg[1]);
+        } else {
+            data_alc.m_msg = &(msg[0]);
+            data_ext.m_msg = &(msg[0]);
+        }
+
+        data_alc.m_msg_len = data_ext.m_msg_len = msg.size() - 1;
+
         /* load test data */
-        data_alc.m_msg        = &(msg[0]);
-        data_alc.m_msg_len    = msg.size();
         data_alc.m_digest     = &(digestAlcp[0]);
         data_alc.m_digest_len = digestAlcp.size();
-
-        data_ext.m_msg        = &(msg[0]);
-        data_ext.m_msg_len    = msg.size();
         data_ext.m_digest     = &(digestExt[0]);
         data_ext.m_digest_len = digestExt.size();
 
-        if (!db->init(info, digestAlcp.size())) {
+        /* Initialize */
+        if (!db->init()) {
             std::cout << "Error: Digest base init failed" << std::endl;
             FAIL();
         }
         if (verbose > 1)
-            PrintDigestTestData(data_alc, GetDigestStr(info.dt_type));
-        if (!db->digest_function(data_alc)) {
+            PrintDigestTestData(data_alc, GetDigestStr(mode));
+
+        if (ctx_copy) {
+            if (!db->context_copy()) {
+                std::cout << "Error: Digest base context_copy failed"
+                          << std::endl;
+                FAIL();
+            }
+        }
+
+        if (!db->digest_update(data_alc)) {
             std::cout << "Error: Digest function failed" << std::endl;
             FAIL();
         }
-
-        if (!extDb->init(info, digestExt.size())) {
+        if (!db->digest_finalize(data_alc)) {
+            std::cout << "Error: Digest function failed" << std::endl;
+            FAIL();
+        }
+        if (!extDb->init()) {
             std::cout << "Error: Ext Digest base init failed" << std::endl;
             FAIL();
         }
         if (verbose > 1)
-            PrintDigestTestData(data_ext, GetDigestStr(info.dt_type));
-        if (!extDb->digest_function(data_ext)) {
+            PrintDigestTestData(data_ext, GetDigestStr(mode));
+
+        if (ctx_copy) {
+            if (!extDb->context_copy()) {
+                std::cout << "Error: Digest base context_copy failed"
+                          << std::endl;
+                FAIL();
+            }
+        }
+        if (!extDb->digest_update(data_ext)) {
+            std::cout << "Error: Ext Digest function failed" << std::endl;
+            FAIL();
+        }
+        if (!extDb->digest_finalize(data_ext)) {
             std::cout << "Error: Ext Digest function failed" << std::endl;
             FAIL();
         }

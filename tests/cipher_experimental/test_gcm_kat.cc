@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -63,30 +63,35 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
         std::vector<Uint8> tagbuff(datasetTag.size());
 
         alc_test_gcm_init_data_t dataInit;
-        dataInit.m_iv      = &datasetInitvector[0];
+        dataInit.m_iv      = utils::getPtr(datasetInitvector);
         dataInit.m_iv_len  = datasetInitvector.size();
-        dataInit.m_aad     = &datasetAddData[0];
+        dataInit.m_aad     = utils::getPtr(datasetAddData);
         dataInit.m_aad_len = datasetAddData.size();
-        dataInit.m_key     = &datasetKey[0];
+        dataInit.m_key     = utils::getPtr(datasetKey);
         dataInit.m_key_len = datasetKey.size();
 
-        alc_test_gcm_update_data_t dataUpdate;
-        dataUpdate.m_iv         = &datasetInitvector[0];
+        alc_test_gcm_update_data_t   dataUpdate;
+        alc_test_gcm_finalize_data_t dataFinalize;
+
+        dataUpdate.m_iv         = utils::getPtr(datasetInitvector);
         dataUpdate.m_iv_len     = datasetInitvector.size();
-        dataUpdate.m_output     = &output[0];
+        dataUpdate.m_output     = utils::getPtr(output);
         dataUpdate.m_output_len = output.size();
+
         if constexpr (encryptor) { // Encrypt
-            dataUpdate.m_input     = &datasetPlainText[0];
+            dataUpdate.m_input     = utils::getPtr(datasetPlainText);
             dataUpdate.m_input_len = datasetPlainText.size();
+            dataFinalize.m_tag     = utils::getPtr(tagbuff);
         } else { // Decrypt
-            dataUpdate.m_input     = &datasetCipherText[0];
+            dataUpdate.m_input     = utils::getPtr(datasetCipherText);
             dataUpdate.m_input_len = datasetCipherText.size();
+            dataFinalize.m_tag = &datasetTag[0]; // encrypt Tag or expectedTag
+                                                 // is input for decrypt
         }
 
-        alc_test_gcm_finalize_data_t dataFinalize;
-        dataFinalize.m_tag_expected = &datasetTag[0];
+        dataFinalize.m_tag_expected = utils::getPtr(datasetTag);
         dataFinalize.m_tag_len      = datasetTag.size();
-        dataFinalize.m_tag          = &tagbuff[0];
+
         dataFinalize.m_out    = dataUpdate.m_output; // If needed for padding
         dataFinalize.m_pt_len = datasetPlainText.size();
         dataFinalize.verified = false;
@@ -97,11 +102,11 @@ GcmKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
 
         if constexpr (encryptor) { // Encrypt
             ASSERT_EQ(output, datasetCipherText);
+            ASSERT_EQ(tagbuff, datasetTag);
         } else { // Decrypt
             ASSERT_EQ(output, datasetPlainText);
+            // decrypt tag matching is done with getTag api
         }
-
-        ASSERT_EQ(tagbuff, datasetTag);
     }
 }
 
@@ -169,42 +174,47 @@ main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
     ArgsMap argsMap = parseArgs(argc, argv);
-    assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
-    assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
-    // ::testing::RegisterTest("KnownAnswerTest",
-    // "GCM_Encrypt_experimental", )
-    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && std::get<bool>(argsMap["USE_IPP"].value) == false) {
-        RegisterMyTests<true>("KnownAnswerTest",
-                              "GCM_Encrypt_experimental_ALCP",
-                              LibrarySelect::ALCP);
-        RegisterMyTests<false>("KnownAnswerTest",
-                               "GCM_Decrypt_experimental_ALCP",
-                               LibrarySelect::ALCP);
-    }
+
+    try {
+        assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
+        assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
+        // ::testing::RegisterTest("KnownAnswerTest",
+        // "GCM_Encrypt_experimental", )
+        if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+            && std::get<bool>(argsMap["USE_IPP"].value) == false) {
+            RegisterMyTests<true>("KnownAnswerTest",
+                                  "GCM_Encrypt_experimental_ALCP",
+                                  LibrarySelect::ALCP);
+            RegisterMyTests<false>("KnownAnswerTest",
+                                   "GCM_Decrypt_experimental_ALCP",
+                                   LibrarySelect::ALCP);
+        }
 #ifdef USE_OSSL
-    if (std::get<bool>(argsMap["USE_OSSL"].value)) {
-        RegisterMyTests<true>("KnownAnswerTest",
-                              "GCM_Encrypt_experimental_OPENSSL",
-                              LibrarySelect::OPENSSL);
-        RegisterMyTests<false>("KnownAnswerTest",
-                               "GCM_Decrypt_experimental_OPENSSL",
-                               LibrarySelect::OPENSSL);
-    }
+        if (std::get<bool>(argsMap["USE_OSSL"].value)) {
+            RegisterMyTests<true>("KnownAnswerTest",
+                                  "GCM_Encrypt_experimental_OPENSSL",
+                                  LibrarySelect::OPENSSL);
+            RegisterMyTests<false>("KnownAnswerTest",
+                                   "GCM_Decrypt_experimental_OPENSSL",
+                                   LibrarySelect::OPENSSL);
+        }
 #endif
 
 #ifdef USE_IPP
-    if (std::get<bool>(argsMap["USE_IPP"].value)) {
-        RegisterMyTests<true>("KnownAnswerTest",
-                              "GCM_Encrypt_experimental_IPP",
-                              LibrarySelect::IPP);
-        RegisterMyTests<false>("KnownAnswerTest",
-                               "GCM_Decrypt_experimental_IPP",
-                               LibrarySelect::IPP);
-    }
+        if (std::get<bool>(argsMap["USE_IPP"].value)) {
+            RegisterMyTests<true>("KnownAnswerTest",
+                                  "GCM_Encrypt_experimental_IPP",
+                                  LibrarySelect::IPP);
+            RegisterMyTests<false>("KnownAnswerTest",
+                                   "GCM_Decrypt_experimental_IPP",
+                                   LibrarySelect::IPP);
+        }
 #endif
 
-    return RUN_ALL_TESTS();
+        return RUN_ALL_TESTS();
+    } catch (const std::bad_variant_access& e) {
+        std::cout << e.what() << '\n';
+    }
 }
 #endif

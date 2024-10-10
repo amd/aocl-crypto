@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,8 @@ IppStatus
 ippsAES_GCMGetSize(int* pSize)
 {
     printMsg("GCM GetSize");
-    *pSize = sizeof(ipp_wrp_aes_aead_ctx);
+    // Size of the context is the wrapper context size with alcp context size
+    *pSize = sizeof(ipp_wrp_aes_aead_ctx) + alcp_cipher_aead_context_size();
     printMsg("GCM GetSize End");
     return ippStsNoErr;
 }
@@ -44,20 +45,39 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
                 int               ctxSize)
 {
     printMsg("GCM Init");
+
     std::stringstream ss;
     ss << "KeyLength:" << keyLen;
     printMsg(ss.str());
+
+    // Cast the context into the correct data type
     ipp_wrp_aes_ctx* context_aead =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
-    if (pKey != nullptr) {
-        context_aead->c_aeadinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context_aead->c_aeadinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-        context_aead->c_aeadinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_aead->c_aeadinfo.ci_key_info.key      = (Uint8*)pKey;
-        context_aead->c_aeadinfo.ci_key_info.len      = keyLen * 8;
-        context_aead->c_aeadinfo.ci_algo_info.ai_mode = ALC_AES_MODE_GCM;
-        context_aead->handle.ch_context               = nullptr;
+    alc_error_t err = ALC_ERROR_NONE;
+
+    // Calculate the pointer of the alcp cipher context
+    Uint8* alcp_ctx =
+        reinterpret_cast<Uint8*>(pState) + sizeof(ipp_wrp_aes_aead_ctx);
+    context_aead->handle.ch_context = alcp_ctx;
+
+    // Wipe the alcp context
+    std::fill(alcp_ctx, alcp_ctx + alcp_cipher_aead_context_size(), 0);
+
+    // Request for the GCM Cipher
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_GCM, keyLen * 8, &(context_aead->handle));
+    if (alcp_is_error(err)) {
+        printErr("Unable to request");
+        return ippStsErr;
     }
+
+    // Initialize the context with the key
+    err = alcp_cipher_aead_init(
+        &(context_aead->handle), pKey, keyLen * 8, nullptr, 0);
+    if (alcp_is_error(err)) {
+        printMsg("GCM: Error Initializing with Key!");
+    }
+
     printMsg("GCM Init End");
     return ippStsNoErr;
 }

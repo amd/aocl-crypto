@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,16 +41,19 @@ create_demo_session(void)
 {
     alc_error_t err;
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_512,},
-    };
-
-    Uint64 size         = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size();
     s_dg_handle.context = malloc(size);
 
-    err = alcp_digest_request(&dinfo, &s_dg_handle);
+    if (!s_dg_handle.context) {
+        return ALC_ERROR_NO_MEMORY;
+    }
+
+    err = alcp_digest_request(ALC_SHA2_512_256, &s_dg_handle);
+
+    if (alcp_is_error(err)) {
+        return err;
+    }
+    err = alcp_digest_init(&s_dg_handle);
 
     if (alcp_is_error(err)) {
         return err;
@@ -82,13 +85,16 @@ hash_demo(const Uint8* src,
         p += buf_size;
     }
 
-    if (last_buf_size == 0) {
-        p = NULL;
+    if (last_buf_size) {
+        err = alcp_digest_update(&s_dg_handle, p, last_buf_size);
+        if (alcp_is_error(err)) {
+            printf("Unable to compute SHA3 hash\n");
+            goto out;
+        }
     }
 
-    alcp_digest_finalize(&s_dg_handle, p, last_buf_size);
+    err = alcp_digest_finalize(&s_dg_handle, output, out_size);
 
-    err = alcp_digest_copy(&s_dg_handle, output, out_size);
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
     }
@@ -184,15 +190,18 @@ main(void)
         num_chunks = STRING_VECTORS[i].num_chunks;
 
         alc_error_t err = create_demo_session();
-
-        if (!alcp_is_error(err)) {
-            err = hash_demo(sample_input,
-                            strlen((const char*)sample_input),
-                            sample_output,
-                            sizeof(sample_output),
-                            num_chunks);
+        if (alcp_is_error(err)) {
+            return -1;
         }
 
+        err = hash_demo(sample_input,
+                        strlen((const char*)sample_input),
+                        sample_output,
+                        sizeof(sample_output),
+                        num_chunks);
+        if (alcp_is_error(err)) {
+            return -1;
+        }
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
         printf("Input : %s\n", sample_input);
@@ -201,6 +210,7 @@ main(void)
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);
+            return -1;
         } else {
             printf("=== Passed ===\n");
         }

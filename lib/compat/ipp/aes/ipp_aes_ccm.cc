@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,31 +44,20 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
 
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
     /* Continue initialization as we didnt have iv in initialization function
        if we already have context then it's already good, we can take it as
        already initialized. */
     // Continue Enc
     if (context_aead->handle.ch_context == nullptr) {
-        context_aead->c_aeadinfo.ci_type            = ALC_CIPHER_TYPE_AES;
-        context_aead->c_aeadinfo.ci_algo_info.ai_iv = (Uint8*)pIV;
+        context_aead->iv = (Uint8*)pIV;
 
-        // context->cinfo = cinfo;
-        err = alcp_cipher_aead_supported(&(context_aead->c_aeadinfo));
-        if (alcp_is_error(err)) {
-            printErr("not supported");
-            alcp_error_str(err, err_buf, err_size);
-            return ippStsNotSupportedModeErr;
-        }
         context_aead->handle.ch_context =
-            malloc(alcp_cipher_aead_context_size(&(context_aead->c_aeadinfo)));
-        err = alcp_cipher_aead_request(&(context_aead->c_aeadinfo),
-                                       &(context_aead->handle));
+            malloc(alcp_cipher_aead_context_size());
+
+        err = alcp_cipher_aead_request(
+            context_aead->mode, context_aead->keyLen, &(context_aead->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
-            alcp_error_str(err, err_buf, err_size);
             free(context_aead->handle.ch_context);
             context_aead->handle.ch_context = nullptr;
             return ippStsErr;
@@ -82,15 +71,18 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         alcp_cipher_aead_set_tag_length(&(context_aead->handle), ctx->tag_len);
     if (alcp_is_error(err)) {
         printErr("CCM decrypt init failure! code:11\n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
-    err = alcp_cipher_aead_set_iv(&(context_aead->handle), ivLen, (Uint8*)pIV);
+    // ccm init
+    err = alcp_cipher_aead_init(&(context_aead->handle),
+                                context_aead->key,
+                                context_aead->keyLen,
+                                (Uint8*)pIV,
+                                ivLen);
     if (alcp_is_error(err)) {
         printf("Error: CCM encrypt init failure! code:11\n");
-        alcp_error_str(err, err_buf, err_size);
-        return ippStsErr;
+        return -1;
     }
 
     // Additional Datas
@@ -113,20 +105,14 @@ ippsAES_CCMEncrypt(const Ipp8u*      pSrc,
 {
     printMsg("CCMEncrypt Start");
     alc_error_t err;
-    // const int   err_size = 256;
-    // Uint8     err_buf[err_size];
 
     ipp_wrp_aes_ctx* context_aead =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = true;
 
     // CCM Encrypt
-    err = alcp_cipher_aead_encrypt_update(
-        &(context_aead->handle),
-        (Uint8*)pSrc,
-        (Uint8*)pDst,
-        len,
-        context_aead->c_aeadinfo.ci_algo_info.ai_iv);
+    err = alcp_cipher_aead_encrypt(
+        &(context_aead->handle), (Uint8*)pSrc, (Uint8*)pDst, len);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }
@@ -142,19 +128,13 @@ ippsAES_CCMDecrypt(const Ipp8u*      pSrc,
 {
     printMsg("CCMDecrypt Start");
     alc_error_t err;
-    // const int   err_size = 256;
-    // Uint8     err_buf[err_size];
 
     ipp_wrp_aes_ctx* context_aead =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = false;
     // CCM Encrypt
-    err = alcp_cipher_aead_decrypt_update(
-        &(context_aead->handle),
-        (Uint8*)pSrc,
-        (Uint8*)pDst,
-        len,
-        context_aead->c_aeadinfo.ci_algo_info.ai_iv);
+    err = alcp_cipher_aead_decrypt(
+        &(context_aead->handle), (Uint8*)pSrc, (Uint8*)pDst, len);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }
@@ -167,8 +147,6 @@ ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
 {
     printMsg("CCMGetTag Start");
     alc_error_t      err;
-    const int        err_size = 256;
-    Uint8            err_buf[err_size];
     ipp_wrp_aes_ctx* context_aead =
         &(((ipp_wrp_aes_aead_ctx*)(pState))->aead_ctx);
     if (((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt == true) {
@@ -191,7 +169,6 @@ ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
 
     if (alcp_is_error(err)) {
         printf("CCM tag fetch failure! code:4\n");
-        alcp_error_str(err, err_buf, err_size);
         return false;
     }
     printMsg("CCMGetTag End");

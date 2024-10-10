@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,7 +40,7 @@ IppStatus
 ippsSHA224GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -49,7 +49,7 @@ IppStatus
 ippsSHA256GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -58,7 +58,7 @@ IppStatus
 ippsSHA384GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -67,7 +67,7 @@ IppStatus
 ippsSHA512GetSize(int* pSize)
 {
     printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("GetSize End");
     return ippStsNoErr;
 }
@@ -76,7 +76,7 @@ IppStatus
 ippsHashGetSize(int* pSize)
 {
     printMsg("HashGetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("HashGetSize End");
     return ippStsNoErr;
 }
@@ -85,7 +85,7 @@ IppStatus
 ippsHashGetSize_rmf(int* pSize)
 {
     printMsg("HashGetSize");
-    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
     printMsg("HashGetSize End");
     return ippStsNoErr;
 }
@@ -93,25 +93,28 @@ ippsHashGetSize_rmf(int* pSize)
 IppStatus
 alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
               alc_digest_len_t  len,
-              alc_sha2_mode_t   mode)
+              alc_digest_mode_t mode)
 {
     printMsg("Init");
     ipp_wrp_sha2_ctx* context = pState;
-    alc_error_t       err;
+    Uint8*            alcp_ctx =
+        reinterpret_cast<Uint8*>(pState) + sizeof(ipp_wrp_sha2_ctx);
+    alc_error_t err;
 
-    alc_digest_info_t dinfo;
-    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    dinfo.dt_len          = len;
-    dinfo.dt_mode.dm_sha2 = mode;
+    context->handle.context = alcp_ctx;
+    context->dmode          = mode;
+    context->dlen           = len;
 
-    Uint64 size             = alcp_digest_context_size(&dinfo);
-    context->handle.context = malloc(size);
-    context->dinfo          = dinfo;
-
-    err = alcp_digest_request(&dinfo, &(context->handle));
+    err = alcp_digest_request(mode, &(context->handle));
 
     if (alcp_is_error(err)) {
         return ippStsBadArgErr;
+    }
+
+    err = alcp_digest_init(&(context->handle));
+
+    if (alcp_is_error(err)) {
+        return err;
     }
     printMsg("Init End");
     return ippStsNoErr;
@@ -196,10 +199,10 @@ ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
             return alcp_SHA2Init(context, ALC_DIGEST_LEN_512, ALC_SHA2_512);
         case ippHashAlg_SHA512_224:
             printMsg("SHA2-512_224");
-            return alcp_SHA2Init(context, ALC_DIGEST_LEN_224, ALC_SHA2_512);
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_224, ALC_SHA2_512_224);
         case ippHashAlg_SHA512_256:
             printMsg("SHA2-512_256");
-            return alcp_SHA2Init(context, ALC_DIGEST_LEN_256, ALC_SHA2_512);
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_256, ALC_SHA2_512_256);
         default:
             return ippStsNotSupportedModeErr;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,10 +28,11 @@
 
 #include "alcp/alcp.h"
 #include "alcp/base.hh"
-#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/sha1.hh"
+#include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/digest/sha512.hh"
 #include "alcp/mac/hmac.hh"
-#include "alcp/mac/macerror.hh"
 #include "alcp/types.h"
 #include "gtest/gtest.h"
 
@@ -39,7 +40,6 @@
 using alcp::mac::Hmac;
 using namespace alcp::digest;
 using namespace alcp::base;
-using namespace alcp::mac::status;
 
 // #define DEBUG 1
 
@@ -309,6 +309,29 @@ known_answer_map_t KAT_ShaDataset {
             "53616d706c65206d65737361676520666f72206b65796c656e3e626c6f636b6c656e",
             "5f464f5e5b7848e3885e49b2c385f0694985d0e38966242dc4a5fe3fea4b37d46b65ceced5dcf59438dd840bab22269f0ba7febdb9fcf74602a35666b2a32915"
         }
+    },{
+        "SHA1_KEYLEN_EQ_B",
+        {
+            "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+            "53616d706c65206d65737361676520666f72206b65796c656e3d626c6f636b6c656e",
+            "5fd596ee78d5553c8ff4e72d266dfd192366da29"
+        }
+    },
+    {
+        "SHA1_KEYLEN_LT_B",
+        {
+            "000102030405060708090a0b0c0d0e0f10111213",
+            "53616d706c65206d65737361676520666f72206b65796c656e3c626c6f636b6c656e",
+            "4c99ff0cb1b31bd33f8431dbaf4d17fcd356a807"
+        }
+    },
+    {
+        "SHA1_KEYLEN_GT_B",
+        {"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F30"
+            "3132333435363738393A3B3C3D3E3F404142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F60616263",
+            "53616d706c65206d65737361676520666f72206b65796c656e3d626c6f636b6c656e",
+            "2d51b2f7750e410584662e38f133435f4c4fd42a"
+        }
     }
     
 };
@@ -319,17 +342,12 @@ class HmacTestFixture
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    alc_digest_info_t     m_digest_info;
     std::vector<Uint8>    m_cipher_text;
     std::vector<Uint8>    m_expected_mac;
     std::vector<Uint8>    m_key;
     std::unique_ptr<Hmac> m_p_hmac = std::make_unique<Hmac>();
 
-    std::unique_ptr<Sha256> m_p_sha256;
-    std::unique_ptr<Sha224> m_p_sha224;
-    std::unique_ptr<Sha384> m_p_sha384;
-    std::unique_ptr<Sha512> m_p_sha512;
-    std::unique_ptr<Sha3>   m_p_sha3;
+    std::unique_ptr<IDigest> m_p_sha;
 
   public:
     void setUp(const ParamType& params)
@@ -353,44 +371,28 @@ class HmacTestFixture
 
         if (sha_type == "SHA2") {
             if (hash_name == "256") {
-                m_p_sha256 = std::make_unique<Sha256>();
-                m_p_hmac->setDigest(*m_p_sha256);
+                m_p_sha = std::make_unique<Sha256>();
             } else if (hash_name == "224") {
-                m_p_sha224 = std::make_unique<Sha224>();
-                m_p_hmac->setDigest(*m_p_sha224);
+                m_p_sha = std::make_unique<Sha224>();
             } else if (hash_name == "384") {
-                m_p_sha384 = std::make_unique<Sha384>();
-                m_p_hmac->setDigest(*m_p_sha384);
+                m_p_sha = std::make_unique<Sha384>();
             } else if (hash_name == "512") {
-                m_p_sha512 = std::make_unique<Sha512>();
-                m_p_hmac->setDigest(*m_p_sha512);
+                m_p_sha = std::make_unique<Sha512>();
             }
-
         } else if (sha_type == "SHA3") {
-            m_digest_info.dt_type = ALC_DIGEST_TYPE_SHA3;
             if (hash_name == "224") {
-                m_digest_info.dt_len          = ALC_DIGEST_LEN_224;
-                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_224;
+                m_p_sha = std::make_unique<Sha3_224>();
             } else if (hash_name == "256") {
-                m_digest_info.dt_len          = ALC_DIGEST_LEN_256;
-                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_256;
+                m_p_sha = std::make_unique<Sha3_256>();
             } else if (hash_name == "384") {
-                m_digest_info.dt_len          = ALC_DIGEST_LEN_384;
-                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_384;
+                m_p_sha = std::make_unique<Sha3_384>();
             } else if (hash_name == "512") {
-                m_digest_info.dt_len          = ALC_DIGEST_LEN_512;
-                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_512;
+                m_p_sha = std::make_unique<Sha3_512>();
             }
-            m_p_sha3 = std::make_unique<Sha3>(m_digest_info);
-            m_p_hmac->setDigest(*m_p_sha3);
+        } else if (sha_type == "SHA1") {
+            m_p_sha = std::make_unique<Sha1>();
         }
-        m_p_hmac->setKey(&m_key[0], m_key.size());
-    }
-    void TearDown() override
-    {
-        if (m_p_hmac) {
-            m_p_hmac->finish();
-        }
+        m_p_hmac->init(&m_key[0], m_key.size(), m_p_sha.get());
     }
 };
 
@@ -403,26 +405,21 @@ TEST(HmacReliabilityTest, NullUpdate)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    Sha256 sha256;
-    Hmac   hmac;
-    Status status = StatusOk();
-    hmac.setDigest(sha256);
-    status = hmac.setKey(&key[0], key.size());
-    ASSERT_EQ(status, StatusOk());
-    ASSERT_EQ(status, StatusOk());
+    Sha256      sha256;
+    Hmac        hmac;
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = hmac.init(&key[0], key.size(), &sha256);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    status = hmac.update(nullptr, 0);
-    ASSERT_EQ(status, StatusOk());
+    err = hmac.update(nullptr, 0);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    status = hmac.update(&cipher_text[0], cipher_text.size());
-    ASSERT_EQ(status, StatusOk());
-    status = hmac.finalize(nullptr, 0);
-    ASSERT_EQ(status, StatusOk());
+    err = hmac.update(&cipher_text[0], cipher_text.size());
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST_P(HmacTestFixture, HMAC_UPDATE)
@@ -433,10 +430,8 @@ TEST_P(HmacTestFixture, HMAC_UPDATE)
 
     m_p_hmac->update(&m_cipher_text[0], m_cipher_text.size());
 
-    m_p_hmac->finalize(nullptr, 0);
-
     std::vector<Uint8> mac = std::vector<Uint8>(m_p_hmac->getHashSize(), 0);
-    m_p_hmac->copyHash(&mac.at(0), mac.size());
+    m_p_hmac->finalize(&mac.at(0), mac.size());
 
     EXPECT_EQ(mac, m_expected_mac);
 }
@@ -464,10 +459,9 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
 
     m_p_hmac->update(&block1[0], block1.size());
     m_p_hmac->update(&block2[0], block2.size());
-    m_p_hmac->finalize(nullptr, 0);
 
     std::vector<Uint8> mac = std::vector<Uint8>(m_p_hmac->getHashSize(), 0);
-    m_p_hmac->copyHash(&mac.at(0), mac.size());
+    m_p_hmac->finalize(&mac.at(0), mac.size());
 
     EXPECT_EQ(mac, m_expected_mac);
 }
@@ -483,18 +477,16 @@ TEST(HmacTest, UpdateReset)
 
     Sha256 sha256;
     Hmac   hmac;
-    hmac.setDigest(sha256);
-    hmac.setKey(&key[0], key.size());
+    hmac.init(&key[0], key.size(), &sha256);
     hmac.update(&cipher_text[0], cipher_text.size());
 
     hmac.reset();
 
     hmac.update(&cipher_text[0], cipher_text.size());
-    hmac.finalize(nullptr, 0);
+
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacTest, FinalizeReset)
@@ -508,18 +500,16 @@ TEST(HmacTest, FinalizeReset)
 
     Sha256 sha256;
     Hmac   hmac;
-    hmac.setDigest(sha256);
-    hmac.setKey(&key[0], key.size());
-    hmac.finalize(&cipher_text[0], cipher_text.size());
+    hmac.init(&key[0], key.size(), &sha256);
+    hmac.update(&cipher_text[0], cipher_text.size());
 
     hmac.reset();
 
     hmac.update(&cipher_text[0], cipher_text.size());
-    hmac.finalize(nullptr, 0);
+
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacTest, UpdateFinalizeReset)
@@ -540,19 +530,17 @@ TEST(HmacTest, UpdateFinalizeReset)
     Sha256 sha256;
     Hmac   hmac;
 
-    hmac.setDigest(sha256);
-    hmac.setKey(&key[0], key.size());
+    hmac.init(&key[0], key.size(), &sha256);
 
     hmac.update(&cipher_text.at(0), cipher_text.size());
     hmac.finalize(nullptr, 0);
     hmac.reset();
 
     hmac.update(&block1[0], block1.size());
-    hmac.finalize(&block2[0], block2.size());
+    hmac.update(&block2[0], block2.size());
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacTest, setKeyAfterFinalize)
@@ -573,13 +561,11 @@ TEST(HmacTest, setKeyAfterFinalize)
     Sha256 sha256;
     Hmac   hmac;
 
-    hmac.setDigest(sha256);
-    hmac.setKey(&key[0], key.size());
+    hmac.init(&key[0], key.size(), &sha256);
 
     hmac.update(&cipher_text.at(0), cipher_text.size());
-    hmac.finalize(nullptr, 0);
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
 
     pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_LT_B");
@@ -596,21 +582,20 @@ TEST(HmacTest, setKeyAfterFinalize)
                                 cipher_text.end());
 
     // Reset with different Key
-    hmac.setKey(&key[0], key.size());
+    hmac.init(&key[0], key.size(), &sha256);
 
     hmac.update(&block1[0], block1.size());
-    hmac.finalize(&block2[0], block2.size());
-    hmac.copyHash(&mac.at(0), mac.size());
+    hmac.update(&block2[0], block2.size());
+    hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
-    hmac.finish();
 }
 
 TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
 {
 
-    Hmac   hmac;
-    Status s = hmac.update(nullptr, 0);
-    EXPECT_EQ(s, EmptyHMACDigestError(""));
+    Hmac        hmac;
+    alc_error_t err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callUpdateWithNullKey)
@@ -619,27 +604,25 @@ TEST(HmacRobustnessTest, callUpdateWithNullKey)
     Hmac   hmac;
     Sha256 sha256;
 
-    hmac.setDigest(sha256);
-    Status s = hmac.update(nullptr, 0);
-    EXPECT_EQ(s, EmptyKeyError(""));
+    hmac.init(nullptr, 0, &sha256);
+    alc_error_t err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
-TEST(HmacRobustnessTest, callUpdateWithNullDigest)
+TEST(HmacRobustnessTest, callUpdateWithoutInit)
 {
 
-    Hmac  hmac;
-    Uint8 key[16]{};
-    hmac.setKey(key, sizeof(key));
-    Status s = hmac.update(nullptr, 0);
-    EXPECT_EQ(s, EmptyHMACDigestError(""));
+    Hmac        hmac;
+    alc_error_t err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
-TEST(HmacRobustnessTest, callFinalizeWithNullKeyNullDigest)
+TEST(HmacRobustnessTest, callFinalizeWithoutInit)
 {
 
-    Hmac   hmac;
-    Status s = hmac.finalize(nullptr, 0);
-    EXPECT_EQ(s, EmptyHMACDigestError(""));
+    Hmac        hmac;
+    alc_error_t err = hmac.finalize(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callFinalizeWithNullKey)
@@ -648,79 +631,42 @@ TEST(HmacRobustnessTest, callFinalizeWithNullKey)
     Hmac   hmac;
     Sha256 sha256;
 
-    hmac.setDigest(sha256);
-    Status s = hmac.finalize(nullptr, 0);
-    EXPECT_EQ(s, EmptyKeyError(""));
-}
-
-TEST(HmacRobustnessTest, callFinalizeWithNullDigest)
-{
-
-    Hmac  hmac;
-    Uint8 key[16]{};
-    hmac.setKey(key, sizeof(key));
-    Status s = hmac.finalize(nullptr, 0);
-    EXPECT_EQ(s, EmptyHMACDigestError(""));
+    hmac.init(nullptr, 0, &sha256);
+    alc_error_t err = hmac.finalize(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callUpdateAfterFinalize)
 {
 
-    Hmac   hmac;
-    Uint8  key[16]{};
-    Uint8  data[32]{};
-    Sha256 sha256;
-    Status s{ StatusOk() };
-    s = hmac.setDigest(sha256);
-    ASSERT_TRUE(s.ok());
-    s = hmac.setKey(key, sizeof(key));
-    ASSERT_TRUE(s.ok());
-    s = hmac.finalize(data, sizeof(data));
-    ASSERT_TRUE(s.ok());
-    s = hmac.update(data, sizeof(data));
-    EXPECT_EQ(s, UpdateAfterFinalzeError(""));
+    Hmac        hmac;
+    Uint8       key[16]{};
+    Uint8       data[32]{};
+    Sha256      sha256;
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = hmac.init(key, sizeof(key), &sha256);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = hmac.finalize(data, sizeof(data));
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = hmac.update(data, sizeof(data));
+    EXPECT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 TEST(HmacRobustnessTest, callFinalizeTwice)
 {
 
-    Hmac   hmac;
-    Uint8  key[16]{};
-    Uint8  data[32]{};
-    Sha256 sha256;
-    Status s{ StatusOk() };
-    s = hmac.setDigest(sha256);
-    ASSERT_TRUE(s.ok());
-    s = hmac.setKey(key, sizeof(key));
-    ASSERT_TRUE(s.ok());
-    s = hmac.finalize(data, sizeof(data));
-    ASSERT_TRUE(s.ok());
-    s = hmac.finalize(data, sizeof(data));
-    ASSERT_EQ(s, AlreadyFinalizedError(""));
-}
+    Hmac        hmac;
+    Uint8       key[16]{};
+    Uint8       data[32]{};
+    Sha256      sha256;
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = hmac.init(key, sizeof(key), &sha256);
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
-{
-
-    Hmac   hmac;
-    Sha256 sha256;
-
-    Uint8  key[16]{};
-    Status s = hmac.setKey(key, sizeof(key));
-    ASSERT_EQ(s, EmptyHMACDigestError(""));
-}
-
-TEST(HmacRobustnessTest, callCopyWithoutFinalize)
-{
-
-    Hmac   hmac;
-    Sha256 sha256;
-
-    Uint8 key[16]{};
-    hmac.setDigest(sha256);
-    hmac.setKey(key, sizeof(key));
-    Status s = hmac.copyHash(nullptr, 0);
-    EXPECT_EQ(s, CopyWithoutFinalizeError(""));
+    err = hmac.finalize(data, sizeof(data));
+    ASSERT_TRUE(err == ALC_ERROR_NONE);
+    err = hmac.finalize(data, sizeof(data));
+    ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
 INSTANTIATE_TEST_SUITE_P(

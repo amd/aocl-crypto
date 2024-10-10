@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,12 +32,7 @@ ippsAES_CMACGetSize(int* pSize)
 {
     printMsg("ippsAES_CMACGetSize:  ENTRY");
 
-    alc_mac_info_t macinfo;
-    macinfo.mi_type                              = ALC_MAC_CMAC;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode =
-        ALC_AES_MODE_NONE;
-    Uint64 context_size = alcp_mac_context_size(&macinfo);
+    Uint64 context_size = alcp_mac_context_size();
     *pSize = sizeof(ipp_wrp_mac_ctx) + static_cast<int>(context_size);
     printMsg("ippsAES_CMACGetSize:  EXIT");
     return ippStsNoErr;
@@ -54,20 +49,9 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
 
-    const alc_key_info_t cKinfo = { ALC_KEY_TYPE_SYMMETRIC,
-                                    ALC_KEY_FMT_RAW,
-                                    ALC_KEY_ALG_MAC,
-                                    ALC_KEY_LEN_CUSTOM,
-                                    static_cast<Uint32>(keyLen * 8),
-                                    static_cast<const Uint8*>(pKey) };
-    alc_mac_info_t       macinfo;
-    macinfo.mi_type                              = ALC_MAC_CMAC;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode =
-        ALC_AES_MODE_NONE;
-    macinfo.mi_keyinfo = cKinfo;
-
-    auto status = alcp_MacInit(&macinfo, p_mac_ctx);
+    alc_mac_info_t info;
+    info.cmac   = { ALC_AES_MODE_NONE };
+    auto status = alcp_MacInit(ALC_MAC_CMAC, p_mac_ctx, pKey, keyLen, info);
     printMsg("ippsAES_CMACInit: EXIT ");
     return status;
 }

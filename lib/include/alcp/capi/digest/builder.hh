@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,10 +37,10 @@ namespace alcp::digest {
 class DigestBuilder
 {
   public:
-    static Uint32 getSize(const alc_digest_info_t& digestInfo);
+    static alc_error_t Build(alc_digest_mode_t mode, digest::Context& ctx);
 
-    static alc_error_t Build(const alc_digest_info_t& digestInfo,
-                             digest::Context&         ctx);
+    static alc_error_t BuildWithCopy(digest::Context& srcCtx,
+                                     digest::Context& destCtx);
 };
 
 } // namespace alcp::digest

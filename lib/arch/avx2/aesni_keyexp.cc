@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -76,7 +76,7 @@ namespace alcp::cipher { namespace aesni {
                                          __m128i* tmp1,
                                          __m128i* tmp2)
     {
-        __m128i tmp4;
+        __m128i tmp4{};
         *tmp1 = _mm_shuffle_epi32(*tmp1, 0x55);
 
         tmp4  = _mm_slli_si128(*tmp0, 0x4);
@@ -131,9 +131,11 @@ namespace alcp::cipher { namespace aesni {
     }
 
     /* keys256 is equivalent to 2x128 */
-    Status ExpandKeys256(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
+    alc_error_t ExpandKeys256(const Uint8* pUserKey,
+                              Uint8*       pEncKey,
+                              Uint8*       pDecKey)
     {
-        __m128i  tmp[3];
+        __m128i  tmp[3]{};
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
         tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
@@ -186,7 +188,7 @@ namespace alcp::cipher { namespace aesni {
 
         // aesni::ExpandDecryptKeys(pDecKey, pEncKey, 14);
 
-        return StatusOk();
+        return ALC_ERROR_NONE;
     }
 
     /*
@@ -198,12 +200,14 @@ namespace alcp::cipher { namespace aesni {
      * @param    pEncKey         Pointer to Round-key for encryption
      * @param    pDecKey         Pointer to Round-key for decryption
      *
-     * @return   Status
+     * @return   alc_error_t
      */
-    Status ExpandKeys192(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
+    alc_error_t ExpandKeys192(const Uint8* pUserKey,
+                              Uint8*       pEncKey,
+                              Uint8*       pDecKey)
     {
 
-        __m128i  tmp[3];
+        __m128i  tmp[3]{};
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
         tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
@@ -263,7 +267,7 @@ namespace alcp::cipher { namespace aesni {
         p_round_key[12] = tmp[0];
         // p_round_key[13] = tmp[2];
 
-        return StatusOk();
+        return ALC_ERROR_NONE;
     }
 
     /*
@@ -275,9 +279,11 @@ namespace alcp::cipher { namespace aesni {
      * @param    pEncKey         Pointer to Round-key for encryption
      * @param    pDecKey         Pointer to Round-key for decryption
      *
-     * @return   Status
+     * @return   alc_error_t
      */
-    Status ExpandKeys128(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
+    alc_error_t ExpandKeys128(const Uint8* pUserKey,
+                              Uint8*       pEncKey,
+                              Uint8*       pDecKey)
     {
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
         p_round_key[0] =
@@ -314,7 +320,7 @@ namespace alcp::cipher { namespace aesni {
         p_round_key[10] = __aes128keyassist(
             p_round_key[9], _mm_aeskeygenassist_si128(p_round_key[9], 0x36));
 
-        return StatusOk();
+        return ALC_ERROR_NONE;
     }
 
     alc_error_t ExpandKeys(const Uint8* pUserKey,
@@ -322,24 +328,24 @@ namespace alcp::cipher { namespace aesni {
                            Uint8*       pDecKey,
                            int          nRounds)
     {
-        Status sts = StatusOk();
+        alc_error_t err = ALC_ERROR_NONE;
 
         switch (nRounds) {
             case 14:
-                sts = ExpandKeys256(pUserKey, pEncKey, pDecKey);
+                err = ExpandKeys256(pUserKey, pEncKey, pDecKey);
                 break;
             case 12:
-                sts = ExpandKeys192(pUserKey, pEncKey, pDecKey);
+                err = ExpandKeys192(pUserKey, pEncKey, pDecKey);
                 break;
             default:
-                sts = ExpandKeys128(pUserKey, pEncKey, pDecKey);
+                err = ExpandKeys128(pUserKey, pEncKey, pDecKey);
                 break;
         }
 
-        if (sts.ok())
+        if (!alcp_is_error(err))
             aesni::ExpandDecryptKeys(pDecKey, pEncKey, nRounds);
 
-        return (alc_error_t)sts.code();
+        return err;
     }
 
     ALCP_API_EXPORT
@@ -347,19 +353,19 @@ namespace alcp::cipher { namespace aesni {
                                 Uint8*       pTweakKey,
                                 int          nRounds)
     {
-        Status sts = StatusOk();
+        alc_error_t err = ALC_ERROR_NONE;
 
         switch (nRounds) {
             case 14:
-                sts = ExpandKeys256(pUserKey, pTweakKey, nullptr);
+                err = ExpandKeys256(pUserKey, pTweakKey, nullptr);
                 break;
             case 12:
-                sts = ExpandKeys192(pUserKey, pTweakKey, nullptr);
+                err = ExpandKeys192(pUserKey, pTweakKey, nullptr);
                 break;
             default:
-                sts = ExpandKeys128(pUserKey, pTweakKey, nullptr);
+                err = ExpandKeys128(pUserKey, pTweakKey, nullptr);
         }
 
-        return (alc_error_t)sts.code();
+        return err;
     }
 }} // namespace alcp::cipher::aesni

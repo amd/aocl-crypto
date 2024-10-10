@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,20 +46,6 @@ static const Uint8 Modulus[] = {
     0x0c, 0x28, 0x25, 0x17, 0xb1, 0xb8, 0x3f, 0xa5, 0x9c, 0x61, 0xbd, 0x2c,
     0x10, 0x7a, 0x5c, 0x47, 0xe0, 0xa2, 0xf1, 0xf3, 0x24, 0xca, 0x37, 0xc2,
     0x06, 0x78, 0xa4, 0xad, 0x0e, 0xbd, 0x72, 0xeb
-};
-
-static const Uint8 PrivateKeyExponent[] = {
-    0xc3, 0x33, 0x51, 0x17, 0x29, 0x05, 0x33, 0x91, 0x74, 0x81, 0x76, 0x0c,
-    0x8a, 0xfb, 0x61, 0x80, 0x8e, 0xfe, 0xbb, 0x0f, 0x04, 0xbe, 0xd8, 0xf9,
-    0x53, 0xce, 0x9b, 0x40, 0xc2, 0x6a, 0xc5, 0x86, 0x7a, 0x39, 0x65, 0xea,
-    0x9d, 0xd4, 0x40, 0x89, 0x99, 0x52, 0xf3, 0xe2, 0x85, 0x87, 0x7c, 0x7a,
-    0x32, 0xa6, 0x2c, 0x3f, 0x2e, 0x4d, 0x6b, 0xcb, 0x8c, 0xba, 0x6e, 0xd2,
-    0x38, 0x51, 0xf9, 0xc4, 0xda, 0x1d, 0xdf, 0xa9, 0xa8, 0x41, 0x78, 0xb8,
-    0x84, 0x52, 0x46, 0x67, 0x0e, 0x19, 0x4b, 0x2f, 0x71, 0x69, 0x23, 0x7d,
-    0x92, 0x46, 0xe2, 0x4c, 0xf8, 0x50, 0xce, 0xe7, 0xd3, 0xb0, 0x8a, 0x35,
-    0xe9, 0x82, 0x60, 0xc1, 0xee, 0x0d, 0xe6, 0x52, 0x11, 0x04, 0x10, 0xf1,
-    0xf0, 0x0d, 0xe1, 0x5b, 0x76, 0xcf, 0x58, 0x18, 0xcb, 0x8a, 0x06, 0x7d,
-    0xec, 0x36, 0x51, 0x13, 0x95, 0x39, 0xd2, 0x91
 };
 
 static const Uint8 P_Modulus[] = {
@@ -121,10 +107,10 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 {
     alc_error_t err;
 
-    Uint64 size           = alcp_rsa_context_size(KEY_SIZE_1024);
+    Uint64 size           = alcp_rsa_context_size();
     s_rsa_handle->context = malloc(size);
 
-    err = alcp_rsa_request(KEY_SIZE_1024, s_rsa_handle);
+    err = alcp_rsa_request(s_rsa_handle);
 
     return err;
 }
@@ -144,7 +130,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     /* Peer 1 set keys*/
     err = alcp_rsa_set_publickey(
         ps_rsa_handle_peer1, PublicKeyExponent, Modulus, sizeof(Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of public key on peer1 failed");
         return err;
     }
@@ -157,14 +143,14 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of private key on peer1 failed");
         return err;
     }
     /* Peer 2 set keys*/
     err = alcp_rsa_set_publickey(
         ps_rsa_handle_peer2, PublicKeyExponent, Modulus, sizeof(Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of public key on peer 2 failed");
         return err;
     }
@@ -177,7 +163,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                   Q_ModulusINV,
                                   Modulus,
                                   sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n setting of private key on peer2 failed");
         return err;
     }
@@ -186,7 +172,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
 
     if (size_key_peer_1 == 0) {
         printf("\n peer1 key size fetch failed");
-        return ALC_ERROR_INVALID_SIZE;
+        err = ALC_ERROR_INVALID_SIZE;
+        goto free_pub_mod_peer_1;
     }
 
     text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
@@ -202,7 +189,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     if (size_key_peer_2 == 0) {
         printf("\n peer2 key size fetch failed");
         err = ALC_ERROR_INVALID_SIZE;
-        goto free_pub_mod_peer_1;
+        goto free_pub_mod_peer_2;
     }
 
     text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
@@ -212,12 +199,9 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     enc_text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(enc_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
 
-    err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer1,
-                                     ALCP_RSA_PADDING_NONE,
-                                     text_peer_1,
-                                     size_key_peer_1,
-                                     enc_text_peer_1);
-    if (err != ALC_ERROR_NONE) {
+    err = alcp_rsa_publickey_encrypt(
+        ps_rsa_handle_peer1, text_peer_1, size_key_peer_1, enc_text_peer_1);
+    if (alcp_is_error(err)) {
         printf("\n peer1 publc key encrypt failed");
         goto free_enc_text_peer_1;
     }
@@ -234,7 +218,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                       enc_text_peer_1,
                                       size_key_peer_2,
                                       dec_text_peer_2);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer2 private key decryption failed");
         goto free_dec_text_peer_2;
     }
@@ -243,6 +227,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         err = ALC_ERROR_NONE;
     } else {
         printf("\n decrypted text not matching the original text");
+        err = ALC_ERROR_GENERIC;
         goto free_dec_text_peer_2;
     }
 
@@ -259,12 +244,9 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     enc_text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_1);
     memset(enc_text_peer_2, 0, sizeof(Uint8) * size_key_peer_1);
 
-    err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer2,
-                                     ALCP_RSA_PADDING_NONE,
-                                     text_peer_2,
-                                     size_key_peer_2,
-                                     enc_text_peer_2);
-    if (err != ALC_ERROR_NONE) {
+    err = alcp_rsa_publickey_encrypt(
+        ps_rsa_handle_peer2, text_peer_2, size_key_peer_2, enc_text_peer_2);
+    if (alcp_is_error(err)) {
         printf("\n peer2 publc key encrypt failed");
         goto free_enc_text_peer_2;
     }
@@ -279,7 +261,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                       enc_text_peer_2,
                                       size_key_peer_1,
                                       dec_text_peer_1);
-    if (err != ALC_ERROR_NONE) {
+    if (alcp_is_error(err)) {
         printf("\n peer1 private key decryption failed");
         goto free_dec_text_peer_1;
     }
@@ -290,6 +272,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         err = ALC_ERROR_NONE;
     } else {
         printf("\n decrypted text not matching the original text");
+        err = ALC_ERROR_GENERIC;
     }
 
 free_dec_text_peer_1:

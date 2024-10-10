@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -116,7 +116,7 @@ XtsCross_KAT(xts_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     }
 
     ASSERT_TRUE(iTestCipher->init(&data_init));
-    for (int i = 0; i < chunks; i++) {
+    for (Uint64 i = 0; i < chunks; i++) {
         ASSERT_TRUE(iTestCipher->update(&data_update));
         data_update.m_input += data.chunkSize;
         data_update.m_output += data.chunkSize;
@@ -161,9 +161,11 @@ XtsCross_KAT(xts_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
                       << std::endl;
         }
 #endif
-        ASSERT_EQ(output, datasetCipherText);
+        ASSERT_EQ(output, datasetCipherText)
+            << "XTS encryption validation failure!";
     } else { // Decrypt
-        // ASSERT_EQ(output, datasetPlainText);
+        ASSERT_EQ(output, datasetPlainText)
+            << "XTS decryption validation failure!";
     }
 }
 
@@ -211,6 +213,9 @@ CrossTestXTS(std::shared_ptr<RngBase> rng,
              LibrarySelect            select1,
              LibrarySelect            select2)
 {
+#ifndef CIPHER_MULTI_UPDATE
+    GTEST_SKIP() << "MultiUpdate not available at compile time!";
+#endif
     const std::vector<Uint64> cKeySizes   = { 128, 256 }; // bits // bits
     const std::vector<Uint64> cChunkSizes = { 32, 64 };   // bits
     const std::vector<Uint64> cPtSizes    = { 16, 1000, 8192, 65536 }; // bytes
@@ -259,7 +264,7 @@ CrossTestXTS(std::shared_ptr<RngBase> rng,
     test_data.initVector = std::vector<Uint8>(16);
     test_data.plainText  = std::vector<Uint8>(pt_max_size);
     test_data.chunkSize  = cChunkSize;
-    for (int pt_size = pt_max_size; pt_size >= pt_min_size;
+    for (Uint64 pt_size = pt_max_size; pt_size >= pt_min_size;
          pt_size -= pt_dec_size) {
 
         // Change size without reallocation
@@ -306,7 +311,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = rng;
+        _rng = std::move(rng);
     }
     void TestBody() override { CrossTestXTS(_rng, _select1, _select2); }
 
@@ -332,7 +337,7 @@ RegisterMyTests(std::string              testSuiteName,
         __LINE__,
         // Important to use the fixture type as the return type here.
         [=]() -> CrossTestFixture* {
-            return new CrossTest(rng, select1, select2);
+            return new CrossTest(std::move(rng), select1, select2);
         });
 }
 } // namespace alcp::testing::cipher::xts
@@ -360,8 +365,17 @@ main(int argc, char** argv)
     assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
     assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
     assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
-    // ::testing::RegisterTest("KnownAnswerTest",
-    // "XTS_Encrypt_experimental", )
+
+    /* if no ext lib provided, openssl selected by default */
+    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+        && (std::get<bool>(argsMap["USE_IPP"].value) == false)) {
+        argsMap["USE_OSSL"].value = true;
+    }
+
+    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+        && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+        argsMap["USE_OSSL"].value = true;
+    }
 
     if (std::get<bool>(argsMap["OVERRIDE_ALCP"].value)) {
 #ifdef USE_OSSL

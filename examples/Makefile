@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -44,16 +44,36 @@ ifeq ($(LIB_TYPE), static)
 endif
 
 # Add more targets as they come.
-TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/aes-siv cipher/aes-xts cipher/aes-ccm \
+TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/aes-siv cipher/aes-xts cipher/aes-ccm cipher/aes-gcm \
+			cipher/chacha20 cipher/chacha20-poly1305 \
 			digest/sha2_224_example digest/sha2_256_example digest/sha2_384_example digest/sha2_512_example \
 			digest/sha2_512_224_example digest/sha2_512_256_example \
 			digest/sha3_224_example digest/sha3_256_example digest/sha3_384_example digest/sha3_512_example \
 			digest/shake_128_example digest/shake_256_example \
 			rng/rng-demo \
-			mac/hmac mac/cmac \
-			ecdh/x25519_example \
-			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt rsa/rsa_2048 rsa/rsa_oaep rsa/rsa_oaep_2048 \
+			rng/hmac_drbg-demo \
+			rng/ctr_drbg-demo \
+			rng/drbg-test \
+			mac/hmac mac/cmac mac/poly1305 \
+			ecdh/x25519_example ecdh/p256_example \
+			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt rsa/rsa_2048 rsa/rsa_oaep_2048 rsa/rsa_oaep \
+			rsa/rsa_pkcs1-v1_5_sign_verify rsa/rsa_pss_sign_verify rsa/rsa_padding_big_num_keys \
 			version/version-demo
+
+define MULTILINE_PYTHON_SCRIPT
+from packaging.version import Version
+import os
+import re
+output = os.popen("openssl version").read()
+print ("Checking openssl version")
+ossl_version = re.findall('[0-9]+\.[0-9]+\.?[0-9]*', output)[0]
+if Version(ossl_version) < Version('3.0.8'):
+	print("Warning!, Using openssl version " + ossl_version)
+	print("Use openssl version > 3.0.8")
+endef
+
+export MULTILINE_PYTHON_SCRIPT
+EMBEDDED_PY := python3 -c "$$MULTILINE_PYTHON_SCRIPT"
 
 .PHONY: all
 
@@ -61,6 +81,7 @@ all: banner create build
 
 banner:
 	@echo "Building examples for AOCL Cryptography"
+	$(EMBEDDED_PY)
 
 create:
 	@mkdir -p  $(OBJ)/cipher

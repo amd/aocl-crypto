@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -503,8 +503,8 @@ fFunction(Uint64 state[cDim][cDim])
 inline void
 absorbChunk(Uint64* pSrc, Uint64 chunk_size_u64, Uint64* pState)
 {
-    auto src = reinterpret_cast<Uint8*>(pSrc);
-    auto state = reinterpret_cast<Uint8*>(pState);
+    auto src           = reinterpret_cast<Uint8*>(pSrc);
+    auto state         = reinterpret_cast<Uint8*>(pState);
     auto chunk_size_u8 = chunk_size_u64 * 8;
     // check if we do gcc unroll here
     for (Uint64 i = 0; i < chunk_size_u8; ++i) {
@@ -514,27 +514,39 @@ absorbChunk(Uint64* pSrc, Uint64 chunk_size_u64, Uint64* pState)
 }
 
 void
-Sha3Finalize(Uint8* state, Uint8* hash, Uint64 hash_size, Uint64 chunk_size)
+Sha3Finalize(Uint8*  state,
+             Uint8*  hash,
+             Uint64  hash_size,
+             Uint64  chunk_size,
+             Uint64& index)
 {
-    Uint64 hash_copied = 0;
-    while (chunk_size <= hash_size - hash_copied) {
-        Uint64 data_chunk_copied = std::min(hash_size, chunk_size);
+    // Uint64 hash_copied = 0;
+    Uint64 rem = chunk_size - index;
 
-        utils::CopyBlock(&hash[hash_copied], state, data_chunk_copied);
-        hash_copied += data_chunk_copied;
-
-        if (hash_copied < hash_size) {
-            fFunction((Uint64(*)[cDim])state);
-        }
+    if (hash_size <= rem) {
+        utils::CopyBlock(hash, state + index, hash_size);
+        index = (index + hash_size);
+        return;
     }
+    utils::CopyBlock(hash, state + index, rem);
+    hash_size -= rem;
+    hash += rem;
+    index = 0;
 
-    if (hash_size > hash_copied) {
-        utils::CopyBlock(
-            &hash[hash_copied], (Uint8*)state, hash_size - hash_copied);
+    while (hash_size) {
+        fFunction((Uint64(*)[cDim])state);
+        if (hash_size <= chunk_size) {
+            utils::CopyBlock(hash, state + index, hash_size);
+            index = (index + hash_size);
+            return;
+        }
+        utils::CopyBlock(hash, state, chunk_size);
+        hash_size -= chunk_size;
+        hash += chunk_size;
     }
 }
 
-alc_error_t
+__attribute__((aligned(64))) alc_error_t
 Sha3Update(Uint64* state, Uint64* pSrc, Uint64 msg_size, Uint64 chunk_size)
 {
 

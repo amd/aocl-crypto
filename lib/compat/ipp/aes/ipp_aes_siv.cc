@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,64 +40,35 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
                    const int    ADlen[],
                    int          numAD)
 {
+    printMsg("Cipher: SIV Encrypt");
     static alc_cipher_handle_t handle;
-    alc_key_info_t             kinfo = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-    };
 
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
-    kinfo.key = pConfKey;
-    kinfo.len = ((Uint32)keyLen) * 8;
+    Uint8 combined_key[64] = {};
+    std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
+    std::copy(pConfKey, pConfKey + keyLen, combined_key + keyLen);
 
-    alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
-
-    alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES,
-        {
-            ALC_KEY_TYPE_SYMMETRIC,
-            ALC_KEY_FMT_RAW,
-            {},
-            {},
-            ((Uint32)keyLen) * 8,
-            pAuthKey,
-        },
-        {
-            ALC_AES_MODE_SIV,
-            NULL,
-        },
-    };
-
-    cinfo.ci_algo_info.ai_siv = siv_info;
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
+        free(handle.ch_context);
+        return ippStsErr;
+    }
+
+    err = alcp_cipher_aead_init(
+        &handle, combined_key, ((Uint32)keyLen) * 8, pSIV, 16);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -106,23 +77,20 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt(&handle, pSrc, pDst, len, pSIV);
+    err = alcp_cipher_aead_encrypt(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
     err = alcp_cipher_aead_get_tag(&handle, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
@@ -146,64 +114,34 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
                    int          numAD,
                    const Ipp8u* pSIV)
 {
+    printMsg("Cipher: SIV Decrypt");
     static alc_cipher_handle_t handle;
-    alc_key_info_t             kinfo = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-    };
 
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err              = ALC_ERROR_NONE;
+    Uint8       combined_key[64] = {};
+    std::copy(pAuthKey, pAuthKey + keyLen, combined_key);
+    std::copy(pConfKey, pConfKey + keyLen, combined_key + keyLen);
 
-    kinfo.key = pConfKey;
-    kinfo.len = ((Uint32)keyLen) * 8;
-
-    alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
-
-    alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES,
-        {
-            ALC_KEY_TYPE_SYMMETRIC,
-            ALC_KEY_FMT_RAW,
-            {},
-            {},
-            ((Uint32)keyLen) * 8,
-            pAuthKey,
-        },
-        {
-            ALC_AES_MODE_SIV,
-            NULL,
-        },
-    };
-
-    cinfo.ci_algo_info.ai_siv = siv_info;
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
+        free(handle.ch_context);
+        return ippStsErr;
+    }
+
+    err = alcp_cipher_aead_init(
+        &handle, combined_key, ((Uint32)keyLen) * 8, pSIV, 16);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -212,13 +150,12 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_decrypt(&handle, pSrc, pDst, len, pSIV);
+    err = alcp_cipher_aead_decrypt(&handle, pSrc, pDst, len);
     if (alcp_is_error(err)) {
         printf("Error: Tag Verification Failed \n");
         *pAuthPassed = false;
@@ -243,64 +180,21 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
                  Ipp8u*       pSIV)
 {
     static alc_cipher_handle_t handle;
-    alc_key_info_t             kinfo = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-    };
 
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
 
-    std::unique_ptr<Uint8> pConfKey = std::make_unique<Uint8>(keyLen);
-
-    kinfo.key = pConfKey.get();
-    kinfo.len = ((Uint32)keyLen) * 8;
-
-    alc_cipher_aead_mode_siv_info_t siv_info = { &kinfo };
-
-    alc_cipher_aead_info_t cinfo = {
-        ALC_CIPHER_TYPE_AES,
-        {
-            ALC_KEY_TYPE_SYMMETRIC,
-            ALC_KEY_FMT_RAW,
-            {},
-            {},
-            ((Uint32)keyLen) * 8,
-            pKey,
-        },
-        {
-            ALC_AES_MODE_SIV,
-            NULL,
-        },
-    };
-    cinfo.ci_algo_info.ai_siv = siv_info;
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(
+        ALC_AES_MODE_SIV, ((Uint32)keyLen) * 8, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         free(handle.ch_context);
         return ippStsErr;
     }
@@ -309,7 +203,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
         err = alcp_cipher_aead_set_aad(&handle, AD[i], ADlen[i]);
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
@@ -318,10 +211,9 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     {
         std::vector<Uint8> fakeDest = std::vector<Uint8>(ADlen[numAD - 1]);
         err                         = alcp_cipher_aead_encrypt(
-            &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size(), pSIV);
+            &handle, AD[numAD - 1], &fakeDest[0], fakeDest.size());
         if (alcp_is_error(err)) {
             printf("Error: unable to encrypt \n");
-            alcp_error_str(err, err_buf, err_size);
             return ippStsErr;
         }
     }
@@ -329,7 +221,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     err = alcp_cipher_aead_get_tag(&handle, pSIV, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 

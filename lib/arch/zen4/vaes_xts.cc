@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,17 +54,17 @@ EncryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
                  const Uint8* pKey,
-                 const Uint8* pTweakKey,
                  int          nRounds,
                  Uint8*       pIv)
 {
 
-    auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
-    // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
-    auto p_src512   = reinterpret_cast<const __m512i*>(pSrc);
-    auto p_dest512  = reinterpret_cast<__m512i*>(pDest);
+    auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
+    auto p_src512  = reinterpret_cast<const __m512i*>(pSrc);
+    auto p_dest512 = reinterpret_cast<__m512i*>(pDest);
+#ifdef AES_MULTI_UPDATE
     auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
-    auto p_iv64     = reinterpret_cast<const Uint64*>(pIv);
+#endif
+    auto p_iv64 = reinterpret_cast<const Uint64*>(pIv);
 
     Uint64 blocks                       = len / Rijndael::cBlockSize;
     Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
@@ -77,7 +77,9 @@ EncryptXtsAvx512(const Uint8* pSrc,
     // AesEnc_1x512(&extendedIV, p_tweak_key128, nRounds);
 
     __m512i tweakx8[8]; // 8*4 Tweak values stored inside this
+#ifdef AES_MULTI_UPDATE
     __m512i nextTweakBlock;
+#endif
 
     auto* p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
     auto* p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
@@ -211,8 +213,10 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 4 * 3;
+#endif
+    chunk = 4 * 3;
 
     // Encrypting 4*3 source text blocks at a time
     if (blocks >= chunk) {
@@ -252,8 +256,10 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 4 * 2;
+#endif
+    chunk = 4 * 2;
 
     // Encrypting 4*2 source text blocks at a time
     if (blocks >= chunk) {
@@ -285,8 +291,10 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 4;
+#endif
+    chunk = 4;
 
     // Encrypting 4*1 source text blocks at a time
     if (blocks >= chunk) {
@@ -312,7 +320,9 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    nextTweakBlock    = tweakx8[tweak_idx];
+#ifdef AES_MULTI_UPDATE
+    nextTweakBlock = tweakx8[tweak_idx];
+#endif
     __m512i lastTweak = tweakx8[tweak_idx];
 
     while (blocks) {
@@ -328,11 +338,15 @@ EncryptXtsAvx512(const Uint8* pSrc,
         _mm512_mask_storeu_epi64(p_dest512, k, src_text_1);
 
 #if 1
-        // Use Exisint TweakBlock Method
-        // Rotate to get next tweak block
+// Use Exisint TweakBlock Method
+// Rotate to get next tweak block
+#ifdef AES_MULTI_UPDATE
         nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
         lastTweak      = nextTweakBlock;
-        p_dest512      = reinterpret_cast<__m512i*>(
+#else
+        lastTweak = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
+#endif
+        p_dest512 = reinterpret_cast<__m512i*>(
             reinterpret_cast<Uint8*>(p_dest512) + 16);
         p_src512 = reinterpret_cast<const __m512i*>(
             reinterpret_cast<const Uint8*>(p_src512) + 16);
@@ -349,7 +363,9 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks--;
 #endif
     }
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = lastTweak;
+#endif
 
     Uint8* p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
     Uint8* p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
@@ -382,12 +398,17 @@ EncryptXtsAvx512(const Uint8* pSrc,
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
 
-        // Rotate to get next tweak block
+// Rotate to get next tweak block
+#ifdef AES_MULTI_UPDATE
         nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
+#endif
     }
 #endif
 
+#ifdef AES_MULTI_UPDATE
     _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
+#endif
+
     return ALC_ERROR_NONE;
 }
 
@@ -408,16 +429,16 @@ DecryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
                  const Uint8* pKey,
-                 const Uint8* pTweakKey,
                  int          nRounds,
                  Uint8*       pIv)
 {
-    auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
-    // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
-    auto p_src512   = reinterpret_cast<const __m512i*>(pSrc);
-    auto p_dest512  = reinterpret_cast<__m512i*>(pDest);
+    auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
+    auto p_src512  = reinterpret_cast<const __m512i*>(pSrc);
+    auto p_dest512 = reinterpret_cast<__m512i*>(pDest);
+#ifdef AES_MULTI_UPDATE
     auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
-    auto p_iv64     = reinterpret_cast<const Uint64*>(pIv);
+#endif
+    auto p_iv64 = reinterpret_cast<const Uint64*>(pIv);
 
     Uint64 blocks                       = len / Rijndael::cBlockSize;
     Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
@@ -430,7 +451,9 @@ DecryptXtsAvx512(const Uint8* pSrc,
     // AesEnc_1x512(&extendedIV, p_tweak_key128, nRounds);
 
     __m512i tweakx8[8]; // 8*4 Tweak values stored inside this
+#ifdef AES_MULTI_UPDATE
     __m512i nextTweakBlock;
+#endif
 
     auto p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
     auto p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
@@ -575,8 +598,10 @@ DecryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 4 * 3;
+#endif
+    chunk = 4 * 3;
 
     // Encrypting 4*3 source text blocks at a time
     if (blocks >= chunk) {
@@ -621,8 +646,10 @@ DecryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 4 * 2;
+#endif
+    chunk = 4 * 2;
 
     // Encrypting 4*2 source text blocks at a time
     if (blocks >= chunk) {
@@ -659,10 +686,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+#ifdef AES_MULTI_UPDATE
     nextTweakBlock = tweakx8[tweak_idx];
-    chunk          = 4;
+#endif
+    chunk = 4;
 
-    // Encrypting 4*1 source text blocks at a time
+    // Decrypting 4*1 source text blocks at a time
     if (blocks >= chunk) {
 
         __m512i src_text_1 = _mm512_loadu_si512(p_src512);
@@ -691,7 +720,9 @@ DecryptXtsAvx512(const Uint8* pSrc,
         p_src512 += 1;
     }
 
-    nextTweakBlock        = tweakx8[tweak_idx];
+#ifdef AES_MULTI_UPDATE
+    nextTweakBlock = tweakx8[tweak_idx];
+#endif
     __m512i  lastTweak    = tweakx8[tweak_idx];
     __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
     Uint8*   p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
@@ -699,7 +730,7 @@ DecryptXtsAvx512(const Uint8* pSrc,
     auto     p_src8       = reinterpret_cast<const Uint8*>(p_src512);
 
     if (blocks) {
-        Uint8   k           = (Uint8)((1 << (blocks + blocks)) - 1);
+        Uint8   k           = (Uint8)((1 << (blocks * 2)) - 1);
         __m512i src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
         Uint8*  p_src_text8 = reinterpret_cast<Uint8*>(&src_text_1);
 
@@ -717,10 +748,17 @@ DecryptXtsAvx512(const Uint8* pSrc,
 
         utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
 
+#ifdef AES_MULTI_UPDATE
         // Rotate to get next tweak block
-        nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
+        nextTweakBlock = lastTweak;
+        for (Uint64 i = 0; i < blocks; i++) {
+            nextTweakBlock =
+                _mm512_alignr_epi64(nextTweakBlock, nextTweakBlock, 0x2);
+        }
+#endif
     }
 
+    // CipherText Stealing
     if (extra_bytes_in_message_block) {
 
         utils::CopyBytes(p_dest8 + (16 * blocks),
@@ -748,11 +786,16 @@ DecryptXtsAvx512(const Uint8* pSrc,
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
 
+#ifdef AES_MULTI_UPDATE
         // Rotate to get next tweak block
         nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
+#endif
     }
 
+#ifdef AES_MULTI_UPDATE
     _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
+#endif
+
     return ALC_ERROR_NONE;
 }
 
@@ -761,13 +804,12 @@ EncryptXts128(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
     // AesEncrypt 1Block, 2Block, 3Block, 4Block
     return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
@@ -775,13 +817,12 @@ EncryptXts256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
     // AesEncrypt 1Block, 2Block, 3Block, 4Block
     return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
@@ -789,7 +830,6 @@ DecryptXts128(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
@@ -797,8 +837,7 @@ DecryptXts128(const Uint8* pSrc,
                             AesDecrypt,
                             AesDecrypt,
                             AesDecrypt,
-                            AesDecrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+                            AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
@@ -806,7 +845,6 @@ DecryptXts256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
@@ -814,8 +852,7 @@ DecryptXts256(const Uint8* pSrc,
                             AesDecrypt,
                             AesDecrypt,
                             AesDecrypt,
-                            AesDecrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+                            AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes512

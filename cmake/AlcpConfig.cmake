@@ -1,4 +1,4 @@
-# Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -85,6 +85,11 @@ FUNCTION(GEN_CONF)
         ELSEIF(${ALCP_CPUID_FORCE} STREQUAL "ZEN4")
             SET(ALCP_CPUID_DISABLE_ZEN ON)
             SET(ALCP_CPUID_FORCE_ZEN4 ON)
+        ELSEIF(${ALCP_CPUID_FORCE} STREQUAL "ZEN5")
+            SET(ALCP_CPUID_DISABLE_ZEN ON)
+            SET(ALCP_CPUID_FORCE_ZEN5 ON)
+        ELSE()
+            MESSAGE(FATAL_ERROR "Invalid option passed to ALCP_CPUID_FORCE, supported values are ZEN/ZEN2/ZEN3/ZEN4/ZEN5")
         ENDIF()
     ENDIF(ALCP_CPUID_FORCE)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,15 +25,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #pragma once
 
-#include "alcp/error.h"
+#include <cstdint>
 
 #include "alcp/cipher/aes.hh"
-
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "alcp/error.h"
 
-#include <cstdint>
 #include <immintrin.h>
 namespace alcp::cipher {
 
@@ -41,451 +41,42 @@ namespace alcp::cipher {
  * @brief        AES Encryption in Ctr(Counter mode)
  * @note        TODO: Move this to a aes_Ctr.hh or other
  */
-class ALCP_API_EXPORT Ctr : public Aes
+class ALCP_API_EXPORT Ctr
+    : public Aes
+    , public virtual iCipher
 {
   public:
-    const Uint8* m_enc_key = {};
-    const Uint8* m_dec_key = {};
-    Uint32       m_nrounds = 0;
-
-    Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
-
-    explicit Ctr(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
+    Ctr(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
-        m_enc_key = getEncryptKeys();
-        m_dec_key = getDecryptKeys();
-        m_nrounds = getRounds();
-    }
-
+        setMode(ALC_AES_MODE_CTR);
+        m_ivLen_max = 16;
+        m_ivLen_min = 16;
+    };
     ~Ctr() {}
-
-  public:
-    static bool isSupported(const Uint32 keyLen)
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override
     {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
-            || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
+        return Aes::init(pKey, keyLen, pIv, ivLen);
     }
 };
 
-namespace vaes512 {
-    class ALCP_API_EXPORT Ctr128
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr128(){};
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Ctr128, Ctr, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Ctr192, Ctr, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Ctr256, Ctr, virtual iCipher, 256 / 8)
 
-        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Ctr128, Ctr, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Ctr192, Ctr, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Ctr256, Ctr, virtual iCipher, 256 / 8)
 
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr128(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-    class ALCP_API_EXPORT Ctr192
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr192(){};
-
-        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr192(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-    class ALCP_API_EXPORT Ctr256
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr256(){};
-
-        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr256(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-} // namespace vaes512
-
-// duplicate of vaes512 namespace, to be removed
-namespace vaes {
-    class ALCP_API_EXPORT Ctr128
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr128(){};
-
-        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr128(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-    class ALCP_API_EXPORT Ctr192
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr192(){};
-
-        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr192(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-    class ALCP_API_EXPORT Ctr256
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr256(){};
-
-        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr256(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-} // namespace vaes
-
-// duplicate of vaes512 namespace, to be removed
-namespace aesni {
-    class ALCP_API_EXPORT Ctr128
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr128(){};
-
-        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr128(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-    class ALCP_API_EXPORT Ctr192
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr192(){};
-
-        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr192(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-    class ALCP_API_EXPORT Ctr256
-        : public Ctr
-        , public ICipher
-    {
-      public:
-        Ctr256(){};
-
-        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {}
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
-        ~Ctr256(){};
-
-      public:
-        /**
-         * @brief   CTR Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-
-        /**
-         * @brief   CTR Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const final;
-    };
-
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Ctr128, Ctr, virtual iCipher, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ctr192, Ctr, virtual iCipher, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Ctr256, Ctr, virtual iCipher, 256 / 8)
 
 namespace aes {
 
@@ -496,8 +87,9 @@ namespace aes {
     Uint64 ctrBlk(const T*       p_in_x,
                   T*             p_out_x,
                   Uint64         blocks,
+                  Uint64         res,
                   const __m128i* pkey128,
-                  const Uint8*   pIv,
+                  Uint8*         pIv,
                   int            nRounds,
                   Uint8          factor)
     {
@@ -515,9 +107,9 @@ namespace aes {
 
         for (; blocks >= blockCount4; blocks -= blockCount4) {
 
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
+            c2 = alcp_add_epi64(c1, one_x);
+            c3 = alcp_add_epi64(c1, two_x);
+            c4 = alcp_add_epi64(c1, three_x);
 
             a1 = alcp_loadu(p_in_x);
             a2 = alcp_loadu(p_in_x + 1);
@@ -538,7 +130,7 @@ namespace aes {
             a4 = alcp_xor(b4, a4);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
+            c1 = alcp_add_epi64(c1, four_x);
 
             alcp_storeu(p_out_x, a1);
             alcp_storeu(p_out_x + 1, a2);
@@ -550,7 +142,7 @@ namespace aes {
         }
 
         for (; blocks >= blockCount2; blocks -= blockCount2) {
-            c2 = alcp_add_epi32(c1, one_x);
+            c2 = alcp_add_epi64(c1, one_x);
 
             a1 = alcp_loadu(p_in_x);
             a2 = alcp_loadu(p_in_x + 1);
@@ -565,7 +157,7 @@ namespace aes {
             a2 = alcp_xor(b2, a2);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, two_x);
+            c1 = alcp_add_epi64(c1, two_x);
             alcp_storeu(p_out_x, a1);
             alcp_storeu(p_out_x + 1, a2);
 
@@ -582,7 +174,7 @@ namespace aes {
             a1 = alcp_xor(b1, a1);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, one_x);
+            c1 = alcp_add_epi64(c1, one_x);
 
             alcp_storeu(p_out_x, a1);
 
@@ -601,12 +193,34 @@ namespace aes {
             a1 = alcp_xor(b1, a1);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, one_lo);
+            c1 = alcp_add_epi64(c1, one_lo);
 
             alcp_storeu_128(p_out_x, a1);
             p_in_x  = (T*)(((__uint128_t*)p_in_x) + 1);
             p_out_x = (T*)(((__uint128_t*)p_out_x) + 1);
         }
+
+        if (res) {
+            alcp_setzero(a1);
+            std::copy((Uint8*)p_in_x, ((Uint8*)p_in_x) + res, (Uint8*)&a1);
+
+            // re-arrange as per spec
+            b1 = alcp_shuffle_epi8(c1, swap_ctr);
+            AesEncrypt(&b1, pkey128, nRounds);
+            a1 = alcp_xor(b1, a1);
+
+            // increment counter
+            c1 = alcp_add_epi64(c1, one_lo);
+
+            std::copy((Uint8*)&a1, ((Uint8*)&a1) + res, (Uint8*)p_out_x);
+        }
+
+#ifdef AES_MULTI_UPDATE
+        // Store back IV
+        c1 = alcp_shuffle_epi8(c1, swap_ctr);
+        alcp_storeu_128(reinterpret_cast<T*>(pIv), c1);
+#endif
+
         return blocks;
     }
 

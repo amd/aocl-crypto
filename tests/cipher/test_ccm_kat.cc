@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,33 +32,32 @@
 
 using namespace alcp::testing;
 
-#define ALC_MODE        ALC_AES_MODE_CCM
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_AES
+#define ALC_MODE ALC_AES_MODE_CCM
 
 TEST(AES_ENC_128, KAT_128)
 {
-    AesAeadKatTest(128, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(128, ENCRYPT, ALC_MODE);
 }
 TEST(AES_DEC_128, KAT_128)
 {
-    AesAeadKatTest(128, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(128, DECRYPT, ALC_MODE);
 }
 #if 1
 TEST(AES_ENC_256, KAT_256)
 {
-    AesAeadKatTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(256, ENCRYPT, ALC_MODE);
 }
 TEST(AES_DEC_256, KAT_256)
 {
-    AesAeadKatTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(256, DECRYPT, ALC_MODE);
 }
 TEST(AES_ENC_192, KAT_192)
 {
-    AesAeadKatTest(192, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(192, ENCRYPT, ALC_MODE);
 }
 TEST(AES_DEC_192, KAT_192)
 {
-    AesAeadKatTest(192, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
+    CipherAeadKatTest(192, DECRYPT, ALC_MODE);
 }
 #endif
 

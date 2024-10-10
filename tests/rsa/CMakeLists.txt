@@ -1,4 +1,4 @@
- # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -22,99 +22,24 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
-INCLUDE(FetchContent)
-INCLUDE(GoogleTest)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
 
-# Basic sources and libs needed for ALCP
+
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+
+ # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_rsa.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
-SET(EXTRA_INCLUDES "")
-# sources for tests
-SET(ALCP_INCLUDES
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
-    ${EXTRA_INCLUDES}
-)
-
 IF(ENABLE_TESTS_IPP_API)
-    ADD_COMPILE_OPTIONS("-DUSE_IPP")
-    IF(IPP_INSTALL_DIR)
-        MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
-    ELSE(IPP_INSTALL_DIR)
-        SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
-    ENDIF(IPP_INSTALL_DIR)
-
     # If there is IPP, add IPP source and add IPP liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_rsa.cc)
-	IF(UNIX)
-		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-		ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-		ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-        # for ECC functions
-        IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libcrypto_mb.so)
-            SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libcrypto_mb.so)
-        ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libcrypto_mb.so)
-            SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libcrypto_mb.so)
-        ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libcrypto_mb.so)
-	ENDIF(UNIX)
-	IF(WIN32)
-        IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-            SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-        ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-            SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-        ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-            SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-        ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-    ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
 IF(ENABLE_TESTS_OPENSSL_API)
-    ADD_COMPILE_OPTIONS("-DUSE_OSSL")
-
-    IF(OPENSSL_INSTALL_DIR)
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
-    ELSE(OPENSSL_INSTALL_DIR)
-        SET(OPENSSL_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
-    ENDIF(OPENSSL_INSTALL_DIR)
-
     # If there is OpenSSL, add OpenSSL source and add OpenSSL library
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_rsa.cc)
-	IF(UNIX)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-		ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-		ELSE()
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-		ENDIF()
-	ENDIF(UNIX)
-	IF(WIN32)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/bin)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-		ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
-
-IF(UNIX)
-    SET(LIBS ${LIBS} pthread)
-ENDIF()
 
 ADD_EXECUTABLE(test_rsa_kat test_rsa_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
@@ -134,25 +59,30 @@ TARGET_INCLUDE_DIRECTORIES(test_rsa_cross PRIVATE
 TARGET_COMPILE_OPTIONS(test_rsa_cross PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(test_rsa_cross ${LIBS})
 
-FUNCTION(TEST_DATA_LINK RSA_ALG)
+FUNCTION(TEST_DATA_LINK RSA_ALG KEY_SIZE PADDING_MODE)
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
-
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv ${CMAKE_BINARY_DIR}/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv SYMBOLIC)
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
-
-    # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
-
-    # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
+    LINK_IF_EXISTS(${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_RSA_${RSA_ALG}_${KEY_SIZE}_${PADDING_MODE}.csv SYMBOLIC)
 ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 
-TEST_DATA_LINK(RSA_1024)
-TEST_DATA_LINK(RSA_2048)
+TEST_DATA_LINK(EncryptDecrypt 1024 no_padding)
+TEST_DATA_LINK(EncryptDecrypt 2048 no_padding)
+TEST_DATA_LINK(EncryptDecrypt 1024 OAEP)
+TEST_DATA_LINK(EncryptDecrypt 2048 OAEP)
+TEST_DATA_LINK(EncryptDecrypt 2048 PKCS)
 
-gtest_add_tests(TARGET test_rsa_kat)
+TEST_DATA_LINK(SignVerify 2048 PSS)
+TEST_DATA_LINK(SignVerify 2048 PKCS)
+TEST_DATA_LINK(DigestSignVerify 2048 PSS)
+TEST_DATA_LINK(DigestSignVerify 2048 PKCS)
 
-IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_rsa_cross)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
+alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
+alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)
+
+# FIXME: due to a known failure from valgrind, disabling this unit tests with valgrind
+IF(ALCP_MEMCHECK_VALGRIND)
+    message(WARNING "Due to known issues, skipping Rsa tests with valgrind")
+    #alcp_add_valgrind_check_test("test_rsa_kat" ${CMAKE_BINARY_DIR}/tests/rsa/test_rsa_kat)
+    #alcp_add_valgrind_check_test("test_rsa_cross" ${CMAKE_BINARY_DIR}/tests/rsa/test_rsa_cross)
+ENDIF(ALCP_MEMCHECK_VALGRIND)

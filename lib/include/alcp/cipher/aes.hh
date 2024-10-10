@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,21 +30,28 @@
 #define _CIPHER_AES_HH_ 2
 
 #include "alcp/cipher.h"
-
-// #include "algorithm.hh"
-#include "alcp/base.hh"
 #include "alcp/cipher.hh"
+
+#include "alcp/base.hh"
 #include "alcp/cipher/rijndael.hh"
 #include "alcp/utils/bits.hh"
+#include "alcp/utils/memory.hh"
 
 #include <immintrin.h>
 #include <wmmintrin.h>
 
-#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
-
 namespace alcp::cipher {
 
-using Status = alcp::base::Status;
+#define ALCP_ENC           1
+#define ALCP_DEC           0
+#define MAX_CIPHER_IV_SIZE (1024 / 8)
+
+typedef struct alc_cipher_key_data
+{
+    // key expanded
+    const Uint8* m_enc_key;
+    const Uint8* m_dec_key;
+} alc_cipher_key_data_t;
 
 /*
  * @brief       AES (Advanced Encryption Standard)
@@ -59,98 +66,77 @@ using Status = alcp::base::Status;
 class Aes : public Rijndael
 {
   public:
-    explicit Aes(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Rijndael{ keyInfo }
-        , m_mode{ aesInfo.ai_mode }
-    {}
+    Uint32                m_nrounds = 0;
+    alc_cipher_key_data_t m_cipher_key_data{};
 
-    explicit Aes(const Uint8* pKey, const Uint32 keyLen)
-        : Rijndael(pKey, keyLen)
-    {}
+    Uint32                             m_keyLen_in_bytes_aes;
+    __attribute__((aligned(16))) Uint8 m_iv_aes[MAX_CIPHER_IV_SIZE] = {};
+    Uint8*                             m_pIv_aes                    = m_iv_aes;
+    Uint64                             m_ivLen_aes                  = 0;
+    Uint32                             m_isKeySet_aes               = 0;
+    Uint32                             m_ivState_aes                = 0;
+    Uint32                             m_isEnc_aes                  = ALCP_ENC;
+    Uint64                             m_dataLen                    = 0;
+
+    // Data Size Limits
+    Uint32 m_ivLen_max = MAX_CIPHER_IV_SIZE;
+    Uint32 m_ivLen_min = 1;
+
+    Aes(Uint32 keyLen_in_bytes)
+        : Rijndael()
+    {
+        m_keyLen_in_bytes_aes = keyLen_in_bytes;
+        utils::memlock(m_iv_aes, MAX_CIPHER_IV_SIZE);
+    }
+
+    // this constructor to be removed.
+    Aes()
+        : Rijndael()
+    {
+        utils::memlock(m_iv_aes, MAX_CIPHER_IV_SIZE);
+    }
 
   protected:
-    virtual ~Aes() {}
+    virtual ~Aes()
+    {
+        utils::memunlock(m_iv_aes, MAX_CIPHER_IV_SIZE);
+        std::fill(m_iv_aes, m_iv_aes + MAX_CIPHER_IV_SIZE, 0);
+    }
 
     // FIXME:
     // Without CMAC-SIV extending AES, we cannot access it with protected,
     // Please change to protected if needed in future
   public:
-    Aes() { m_this = this; }
+    ALCP_API_EXPORT alc_error_t init(const Uint8* pKey,
+                                     const Uint64 keyLen,
+                                     const Uint8* pIv,
+                                     const Uint64 ivLen);
 
-    ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey,
-                                          Uint64       len) override;
+    static bool isSupported(const Uint32 keyLen)
+    {
+        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
+            || (keyLen == ALC_KEY_LEN_256)) {
+            return true;
+        }
+        return false;
+    }
+
+    alc_error_t setKey(const Uint8* pKey, const Uint64 keyLen);
+    alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
+
+    void getKey()
+    {
+        m_cipher_key_data.m_enc_key = getEncryptKeys();
+        m_cipher_key_data.m_dec_key = getDecryptKeys();
+        m_nrounds                   = getRounds();
+    }
 
   protected:
-    ALCP_API_EXPORT virtual Status setMode(alc_cipher_mode_t mode);
+    ALCP_API_EXPORT virtual alc_error_t setMode(alc_cipher_mode_t mode);
 
   protected:
     alc_cipher_mode_t m_mode;
     void*             m_this;
-};
-
-/*
- * @brief        AES Encryption in OFB(Output Feedback)
- * @note        TODO: Move this to a aes_ofb.hh or other
- */
-class ALCP_API_EXPORT Ofb final
-    : public Aes
-    , public ICipher
-{
-  public:
-    explicit Ofb(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
-    {}
-
-    ~Ofb() {}
-
-  public:
-    static bool isSupported(const Uint32 keyLen)
-    {
-        // FIXME: To be implemented
-        switch (keyLen) {
-            case 128:
-            case 192:
-            case 256:
-                return true;
-                break;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * @brief   OFB Encrypt Operation
-     * @note
-     * @param   pPlainText      Pointer to output buffer
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   OFB Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-  private:
-    Ofb(){};
-
-  private:
 };
 
 } // namespace alcp::cipher

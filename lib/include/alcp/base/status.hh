@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,33 +55,39 @@ class Status final
     explicit Status(IError&& ie)
         : m_code{ ie.code() }
         , m_message{ ie.message() }
-    {}
+    {
+    }
 
     explicit Status(IError& ie)
         : m_code{ ie.code() }
         , m_message{ ie.message() }
-    {}
+    {
+    }
 
     Status(IError& ie, const String& msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {}
+    {
+    }
 
     Status(IError& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {}
+    {
+    }
 
     Status(IError&& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {}
+    {
+    }
 
     // Move contructor
     Status(const Status&& s)
         : m_code{ s.m_code }
         , m_message{ std::move(s.m_message) }
-    {}
+    {
+    }
 
     /*
        Begin Optimization

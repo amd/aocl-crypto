@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,215 +32,286 @@
 #include <stdlib.h> /* for malloc */
 #include <string.h>
 
-#include "alcp/alcp.h"
+#include <alcp/alcp.h>
 
-static alc_cipher_handle_t handle;
-alc_key_info_t             kinfo = {
-                .type = ALC_KEY_TYPE_SYMMETRIC,
-                .fmt  = ALC_KEY_FMT_RAW,
-};
+#define BITS_PER_BYTE 8
 
-char*
-bytesToHexString(unsigned char* bytes, int length);
+static alc_cipher_handle_t handle = { NULL };
 
-bool
-create_demo_session(const Uint8* key_cmac,
-                    const Uint8* key_ctr,
-                    const Uint32 key_len)
+// Session Helpers
+/**
+ * @brief Deallocate handle and set to nullpointer
+ */
+void
+deallocate_handle()
+{
+    if (handle.ch_context != NULL) {
+        free(handle.ch_context);
+        handle.ch_context = NULL;
+    }
+}
+
+/**
+ * @brief Finish and Deallocate the handle
+ */
+void
+close_demo_session()
+{
+    alcp_cipher_aead_finish(&handle);
+    deallocate_handle();
+}
+
+/**
+ * @brief In case of an error, return -1 after deallocating handle.
+ * @return -1
+ */
+int
+close_demo_session_exit()
+{
+    // Finish and deallocate the handle
+    close_demo_session();
+    return -1;
+}
+
+/**
+ * @brief Creates demosession given keylen
+ * @param key_len  Length of key in bytes
+ * @return 0 if success
+ */
+int
+create_demo_session(Uint32 key_len)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-    kinfo.key = key_ctr;
-    kinfo.len = key_len;
 
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_SIV,
-           .ai_iv   = NULL,
-           .ai_siv.xi_ctr_key = &kinfo,
-        },
-        /* No padding, Not Implemented yet*/
-        //.pad     = ALC_CIPHER_PADDING_NONE, 
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key_cmac,
-            .len     = key_len,
-        },
-    };
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_aead_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-    printf("supported succeeded\n");
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    // Memory allocation failure checking
+    if (!handle.ch_context) {
+        printf("Error: Memory Allocation Failed!\n");
+        return close_demo_session_exit();
+    }
+
+    // Request a cipher session with AES mode and key
+    err = alcp_cipher_aead_request(ALC_AES_MODE_SIV, key_len, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
-        free(handle.ch_context);
-        return false;
+        return close_demo_session_exit();
     }
-    printf("request succeeded\n");
-    return true;
+
+    printf("Request Succeeded\n");
+    return 0;
 }
 
-bool
+// Print Helpers
+
+void
+printHexString(const char* info, const unsigned char* bytes, int length);
+
+int
 encrypt_demo(const Uint8* plaintxt,
-             const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
+             Uint32       len, /* Describes both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt,
-             Uint8*       iv,
-             const Uint8* aad,
-             Uint64       aad_len)
+             const Uint8* iv,
+             Uint32       iv_len,
+             const Uint8* ad,
+             Uint32       aadLen,
+             Uint8*       tag,
+             Uint32       tag_len,
+             const Uint8* pKey,
+             Uint32       key_len)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err    = ALC_ERROR_NONE;
+    int         retval = 0;
 
-    err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
+    retval = create_demo_session(key_len);
+    if (retval != 0) {
+        return close_demo_session_exit(); // Error condtion
     }
 
-    // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    // FIXME: Try making IV nullptr
+    err = alcp_cipher_aead_init(&handle, pKey, key_len, iv, iv_len);
     if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
+        printf("Error: Unable to init \n");
+        return close_demo_session_exit();
     }
 
-    err = alcp_cipher_aead_get_tag(&handle, iv, 16);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
+        printf("Error: Unable to Encrypt \n");
+        return close_demo_session_exit();
     }
 
-    alcp_cipher_aead_finish(&handle);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
+    if (alcp_is_error(err)) {
+        printf("Error: Unable to Encrypt \n");
+        return close_demo_session_exit();
+    }
 
-    free(handle.ch_context);
+    err = alcp_cipher_aead_get_tag(&handle, tag, 16);
+    if (alcp_is_error(err)) {
+        printf("Error: Unable to get Tag \n");
+        return close_demo_session_exit();
+    }
 
-    printf("encrypt succeeded\n");
+    printf("Encrypt succeeded\n");
 
-    return true;
+    // Close the encrypt session
+    close_demo_session();
+
+    return 0;
 }
 
 bool
 decrypt_demo(const Uint8* ciphertxt,
-             const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
+             Uint32       len,
              Uint8*       plaintxt,
              const Uint8* iv,
-             const Uint8* aad,
-             Uint64       aad_len)
+             Uint32       iv_len,
+             const Uint8* ad,
+             Uint32       aadLen,
+             Uint8*       tag,
+             Uint32       tag_len,
+             const Uint8* pKey,
+             Uint32       key_len)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t err    = ALC_ERROR_NONE;
+    int         retval = 0;
 
-    err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
+    // Request a demo session with cipher mode as ALC_AES_MODE_SIV, and
+    // initialize it
+    retval = create_demo_session(key_len);
+    if (retval != 0) {
+        return close_demo_session_exit();
+    }
+
+    // Initialize the session handle with proper key and iv.
+    // Iv passed here is the tag generated from encrypt call.
+    err = alcp_cipher_aead_init(&handle, pKey, key_len, iv, iv_len);
+    if (alcp_is_error(err)) {
+        printf("Error: Unable to init \n");
+        return close_demo_session_exit();
+    }
+
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
+        return close_demo_session_exit();
     }
 
-    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    // Decrypt the ciphertext with the initialized key and iv
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
+        return close_demo_session_exit();
     }
 
-    alcp_cipher_aead_finish(&handle);
+    printf("Decrypt Succeeded\n");
 
-    free(handle.ch_context);
-
-    printf("decrypt succeeded\n");
-
-    return true;
+    // Close the decrypt session
+    close_demo_session();
+    return 0;
 }
 
-// static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static Uint8* sample_plaintxt = (Uint8*)"Happy Holi from AOCL Crypto :-)!";
+static Uint8 sample_plaintxt[] = "Happy Holi from AOCL Crypto :-)!";
 
-static const Uint8 sample_key_cmac[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+// clang-format off
+static Uint8 sample_key[] = {
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,// CMAC KEY
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
-};
-static const Uint8 sample_key2_ctr[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,// CTR KEY
     0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0,
 };
-static const Uint8 aad[] = {
+// clang-format on
+
+static Uint8 aad[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
 };
 
-Uint8        iv_buff[16];
-static Uint8 sample_ciphertxt[512] = {
-    0,
-};
-
-#define BITS_PER_BYTE 8
-
 int
 main(void)
 {
-    int   size               = strlen((const char*)sample_plaintxt);
-    Uint8 sample_output[512] = { 0 };
+    int          retval                = 0;
+    int          pt_size               = 0;
+    Uint8        sample_output[512]    = { 0 };
+    Uint8        iv_buff[16]           = { 0 };
+    Uint8        tag[16]               = { 0 };
+    const Uint64 cKeySize              = (sizeof(sample_key) * 8) / 2;
+    static Uint8 sample_ciphertxt[512] = { 0 };
 
-    assert(sizeof(sample_plaintxt) < sizeof(sample_output));
+    assert(sizeof(sample_plaintxt) <= sizeof(sample_output));
 
-    if (!create_demo_session(
-            sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
+    pt_size = strlen((const char*)sample_plaintxt);
+
+    // Encrypt the plaintext into ciphertext, get synthetic iv as tag and
+    // end the demo session
+    retval = encrypt_demo(sample_plaintxt,
+                          pt_size,
+                          sample_ciphertxt,
+                          iv_buff,
+                          sizeof(iv_buff),
+                          aad,
+                          sizeof(aad),
+                          tag,
+                          sizeof(tag),
+                          sample_key,
+                          cKeySize);
+
+    // Make sure the encryption process was successfull
+    if (retval != 0) {
         return -1; // Error condtion
     }
 
-    if (!encrypt_demo(sample_plaintxt,
-                      size,
-                      sample_ciphertxt,
-                      iv_buff,
-                      aad,
-                      sizeof(aad))) {
-        return -1;
-    }
+    // Print plaintext, ciphertext and tag
+    printHexString("    PlainText", sample_plaintxt, pt_size);
+    printHexString("CipherTextOut", sample_ciphertxt, pt_size);
+    printHexString("          TAG", tag, 16);
 
-    if (!create_demo_session(
-            sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
-        return -1;
-    }
+    // Tag from encryption is the synthetic iv for decryption
+    memcpy(iv_buff, tag, sizeof(iv_buff)); // Copy Tag to IV as its Sythetic IV.
 
-    if (!decrypt_demo(
-            sample_ciphertxt, size, sample_output, iv_buff, aad, sizeof(aad))) {
+    retval = decrypt_demo(sample_ciphertxt,
+                          pt_size,
+                          sample_output,
+                          iv_buff,
+                          sizeof(iv_buff),
+                          aad,
+                          sizeof(aad),
+                          tag,
+                          sizeof(tag),
+                          sample_key,
+                          cKeySize);
+
+    // In case of an error no point in printing decrypted message
+    if (retval != 0) {
         return -1;
     }
 
     printf("sample_output: %s\n", sample_output);
-    /*
-     * Complete the transaction
-     */
-
     return 0;
+}
+
+void
+printHexString(const char* info, const unsigned char* bytes, int length)
+{
+    char* p_hex_string = malloc(sizeof(char) * ((length * 2) + 1));
+    for (int i = 0; i < length; i++) {
+        char chararray[2];
+        chararray[0] = (bytes[i] & 0xf0) >> 4;
+        chararray[1] = bytes[i] & 0x0f;
+        for (int j = 0; j < 2; j++) {
+            if (chararray[j] >= 0xa) {
+                chararray[j] = 'a' + chararray[j] - 0xa;
+            } else {
+                chararray[j] = '0' + chararray[j] - 0x0;
+            }
+            p_hex_string[i * 2 + j] = chararray[j];
+        }
+    }
+    p_hex_string[length * 2] = 0x0;
+    printf("%s:%s\n", info, p_hex_string);
+    free(p_hex_string);
 }

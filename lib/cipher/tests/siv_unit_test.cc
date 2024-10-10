@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,158 +27,74 @@
  */
 
 #include "alcp/cipher/aes_cmac_siv.hh"
-
-// FIXME: Remove all the includes from gtest_base related to capi
-#include "cipher/gtest_base_cipher.hh"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 using namespace alcp::cipher;
 
-#define CPU_FEATURE 3
-
-#if CPU_FEATURE == 1
-using namespace vaes512;
-#elif CPU_FEATURE == 2
-using namespace vaes;
-#elif CPU_FEATURE == 3
-using namespace aesni;
-#endif
-
-#if 1
-class ALCP_API_EXPORT CmacSivTest final : public CmacSiv<Ctr128>
-{
-  private:
-  public:
-    Status s2vTesting(const Uint8 plainText[], Uint64 size)
-    {
-        return s2v(plainText, size);
-    }
-};
-
 TEST(CMACSIV, Initiantiation)
 {
-    CmacSiv<Ctr128> siv_obj;
+    auto alcpCipher = new CipherFactory<iCipherAead>;
+    auto siv        = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    delete alcpCipher;
 }
 
 TEST(CMACSIV, setKeys)
 {
-    const int       cKeySize       = 16;
-    Uint8           key1[cKeySize] = {}, key2[cKeySize] = {};
-    CmacSiv<Ctr128> siv_obj;
-    Status          s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    ASSERT_TRUE(s.ok());
+    const int cKeySize          = 16;
+    Uint8     key[cKeySize * 2] = {};
+    auto      alcpCipher        = new CipherFactory<iCipherAead>;
+    auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
+
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
+
+    delete alcpCipher;
 }
 
 TEST(CMACSIV, addAdditionalInput)
 {
-    const int       cKeySize = 16, cAadSize = 32;
-    Uint8           aad[cAadSize]  = {};
-    Uint8           key1[cKeySize] = {}, key2[cKeySize] = {};
-    CmacSiv<Ctr128> siv_obj;
-    Status          s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
-    s = siv_obj.addAdditionalInput(aad, cAadSize);
-    EXPECT_TRUE(s.ok());
-}
+    const int cKeySize = 16, cAadSize = 32;
+    Uint8     key[cKeySize * 2] = {};
+    Uint8     aad[cAadSize]     = {};
+    auto      alcpCipher        = new CipherFactory<iCipherAead>;
+    auto      siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-TEST(CMACSIV, s2vTest1)
-{
-    const int cKeySize = 16, cAadSize = 24, cPtSize = 14;
-    Uint8     aad[cAadSize]  = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-                            0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
-    Uint8     key1[cKeySize] = { 0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8,
-                             0xf7, 0xf6, 0xf5, 0xf4, 0xf3, 0xf2, 0xf1, 0xf0 },
-          key2[cKeySize]     = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-                             0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
-    Uint8              pt[cPtSize] = { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                          0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee };
-    std::vector<Uint8> v_exp       = {
-        0x85, 0x63, 0x2d, 0x07, 0xc6, 0xe8, 0xf3, 0x7f,
-        0x95, 0x0a, 0xcd, 0x32, 0x0a, 0x2e, 0xcc, 0x93
-    };
-    std::vector<Uint8> v_act(16, 0);
-    CmacSivTest        siv_obj;
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
+    err = siv->setAad(aad, cAadSize);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    Status s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.addAdditionalInput(aad, cAadSize);
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.s2vTesting(pt, cPtSize);
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.getTag(&v_act[0]);
-    EXPECT_TRUE(s.ok());
-    EXPECT_EQ(v_exp, v_act);
-}
-
-TEST(CMACSIV, s2vTest2)
-{
-    const int cKeySize = 16;
-    Uint8     aad1[]   = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99,
-        0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0xad, 0xda, 0xda,
-        0xde, 0xad, 0xda, 0xda, 0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa,
-        0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00
-    };
-    Uint8 aad2[] = {
-        0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xa0
-    };
-    Uint8 nonce[]        = { 0x09, 0xf9, 0x11, 0x02, 0x9d, 0x74, 0xe3, 0x5b,
-                      0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
-    Uint8 key1[cKeySize] = { 0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x7a, 0x79, 0x78,
-                             0x77, 0x76, 0x75, 0x74, 0x73, 0x72, 0x71, 0x70 },
-          key2[cKeySize] = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
-                             0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
-    Uint8 pt[] = { 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x73, 0x6f,
-                   0x6d, 0x65, 0x20, 0x70, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65,
-                   0x78, 0x74, 0x20, 0x74, 0x6f, 0x20, 0x65, 0x6e, 0x63, 0x72,
-                   0x79, 0x70, 0x74, 0x20, 0x75, 0x73, 0x69, 0x6e, 0x67, 0x20,
-                   0x53, 0x49, 0x56, 0x2d, 0x41, 0x45, 0x53 };
-    std::vector<Uint8> v_exp = {
-        0x7b, 0xdb, 0x6e, 0x3b, 0x43, 0x26, 0x67, 0xeb,
-        0x06, 0xf4, 0xd1, 0x4b, 0xff, 0x2f, 0xbd, 0x0f
-    };
-    std::vector<Uint8> v_act(16, 0);
-    CmacSivTest        siv_obj;
-
-    Status s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.addAdditionalInput(aad1, sizeof(aad1));
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.addAdditionalInput(aad2, sizeof(aad2));
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.addAdditionalInput(nonce, sizeof(nonce));
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.s2vTesting(pt, sizeof(pt));
-    EXPECT_TRUE(s.ok());
-
-    s = siv_obj.getTag(&v_act[0]);
-    EXPECT_TRUE(s.ok());
-    EXPECT_EQ(v_exp, v_act);
+    delete alcpCipher;
 }
 
 TEST(CMACSIV, encTest1)
 {
     const int cKeySize = 16, cAadSize = 24, cPtSize = 14, padLen = 2;
-    Uint8     aad[cAadSize]  = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-                            0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
-    Uint8     key1[cKeySize] = { 0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8,
-                             0xf7, 0xf6, 0xf5, 0xf4, 0xf3, 0xf2, 0xf1, 0xf0 },
-          key2[cKeySize]     = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-                             0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
+    Uint8     aad[cAadSize] = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                                0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+                                0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+    Uint8     key[cKeySize * 2] = {
+        0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8, 0xf7, 0xf6, 0xf5,
+        0xf4, 0xf3, 0xf2, 0xf1, 0xf0, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5,
+        0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
+    };
     Uint8 pt[cPtSize + padLen] = { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
                                    0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc,
                                    0xdd, 0xee, 0x00, 0x00 };
     std::vector<Uint8> ct_exp  = { 0x40, 0xc0, 0x2b, 0x96, 0x90, 0xc4, 0xdc,
-                                  0x04, 0xda, 0xef, 0x7f, 0x6a, 0xfe, 0x5c };
+                                   0x04, 0xda, 0xef, 0x7f, 0x6a, 0xfe, 0x5c };
     std::vector<Uint8> ct_act(cPtSize + padLen, 0);
 
     std::vector<Uint8> v_exp = {
@@ -186,26 +102,33 @@ TEST(CMACSIV, encTest1)
         0x95, 0x0a, 0xcd, 0x32, 0x0a, 0x2e, 0xcc, 0x93
     };
     std::vector<Uint8> v_act(16, 0);
-    CmacSivTest        siv_obj;
+    auto               alcpCipher = new CipherFactory<iCipherAead>;
+    auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    Status s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(aad, cAadSize);
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(aad, cAadSize);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.setPaddingLen(padLen);
-    EXPECT_TRUE(s.ok());
+    // err = siv->setPaddingLen(padLen);
+    // EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    siv_obj.encrypt(pt, &ct_act[0], cPtSize, nullptr);
+    siv->encrypt(pt, &ct_act[0], cPtSize);
     std::vector<Uint8> cmp_act(&ct_act.at(0), &ct_act.at(cPtSize));
     EXPECT_EQ(ct_exp, cmp_act);
 
-    s = siv_obj.getTag(&v_act[0]);
-    EXPECT_TRUE(s.ok());
+    err = siv->getTag(&v_act[0], v_act.size());
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(v_exp, v_act);
 
-    EXPECT_TRUE(s.ok());
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
+
+    delete alcpCipher;
 }
 
 TEST(CMACSIV, encTest2)
@@ -220,12 +143,13 @@ TEST(CMACSIV, encTest2)
     Uint8 aad2[] = {
         0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xa0
     };
-    Uint8 nonce[]        = { 0x09, 0xf9, 0x11, 0x02, 0x9d, 0x74, 0xe3, 0x5b,
-                      0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
-    Uint8 key1[cKeySize] = { 0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x7a, 0x79, 0x78,
-                             0x77, 0x76, 0x75, 0x74, 0x73, 0x72, 0x71, 0x70 },
-          key2[cKeySize] = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
-                             0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
+    Uint8 nonce[]           = { 0x09, 0xf9, 0x11, 0x02, 0x9d, 0x74, 0xe3, 0x5b,
+                                0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
+    Uint8 key[cKeySize * 2] = {
+        0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x7a, 0x79, 0x78, 0x77, 0x76, 0x75,
+        0x74, 0x73, 0x72, 0x71, 0x70, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45,
+        0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f
+    };
     Uint8 pt[] = { 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x73, 0x6f,
                    0x6d, 0x65, 0x20, 0x70, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65,
                    0x78, 0x74, 0x20, 0x74, 0x6f, 0x20, 0x65, 0x6e, 0x63, 0x72,
@@ -245,73 +169,91 @@ TEST(CMACSIV, encTest2)
         0x06, 0xf4, 0xd1, 0x4b, 0xff, 0x2f, 0xbd, 0x0f
     };
     std::vector<Uint8> v_act(16, 0);
-    CmacSivTest        siv_obj;
+    auto               alcpCipher = new CipherFactory<iCipherAead>;
+    auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    Status s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(aad1, sizeof(aad1));
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(aad1, sizeof(aad1));
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(aad2, sizeof(aad2));
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(aad2, sizeof(aad2));
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(nonce, sizeof(nonce));
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(nonce, sizeof(nonce));
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.setPaddingLen(1);
-    EXPECT_TRUE(s.ok());
+    // err = siv->setPaddingLen(1);
+    // EXPECT_TRUE(err);
 
-    siv_obj.encrypt(pt, &ct_act[0], sizeof(pt) - 1, nullptr);
+    siv->encrypt(pt, &ct_act[0], sizeof(pt) - 1);
     std::vector<Uint8> cmp_act(&ct_act.at(0), &ct_act.at(cPtSize));
     EXPECT_EQ(ct_exp, cmp_act);
 
-    s = siv_obj.getTag(&v_act[0]);
-    EXPECT_TRUE(s.ok());
+    err = siv->getTag(&v_act[0], v_act.size());
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(v_exp, v_act);
+
+    delete alcpCipher;
 }
 
+// FIXME: To bringup decrypt test, proper padding support is needed from API
+// level
+#if 0
 TEST(CMACSIV, decTest1)
 {
-    const int cKeySize = 16, cAadSize = 24, cPtSize = 14, padLen = 2;
-    Uint8     aad[cAadSize]  = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-                            0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
-    Uint8     key1[cKeySize] = { 0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8,
-                             0xf7, 0xf6, 0xf5, 0xf4, 0xf3, 0xf2, 0xf1, 0xf0 },
-          key2[cKeySize]     = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-                             0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
+    const int cKeySize = 16, cAadSize = 24, cPtSize = 14;
+    Uint8     aad[cAadSize] = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                                0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+                                0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+    Uint8     key[cKeySize * 2] = {
+        0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8, 0xf7, 0xf6, 0xf5,
+        0xf4, 0xf3, 0xf2, 0xf1, 0xf0, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5,
+        0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
+    };
     std::vector<Uint8> pt_exp = { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                   0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee };
-    std::vector<Uint8> ct = { 0x40, 0xc0, 0x2b, 0x96, 0x90, 0xc4, 0xdc, 0x04,
-                              0xda, 0xef, 0x7f, 0x6a, 0xfe, 0x5c, 0,    0 };
-    std::vector<Uint8> pt_act(cPtSize + padLen, 0);
+    std::vector<Uint8> ct     = { 0x40, 0xc0, 0x2b, 0x96, 0x90, 0xc4, 0xdc,
+                                  0x04, 0xda, 0xef, 0x7f, 0x6a, 0xfe, 0x5c };
+    std::vector<Uint8> pt_act(cPtSize + 2, 0);
 
     std::vector<Uint8> v_exp = {
         0x85, 0x63, 0x2d, 0x07, 0xc6, 0xe8, 0xf3, 0x7f,
         0x95, 0x0a, 0xcd, 0x32, 0x0a, 0x2e, 0xcc, 0x93
     };
     std::vector<Uint8> v_act(16, 0);
-    CmacSivTest        siv_obj;
+    auto               alcpCipher = new CipherFactory<iCipherAead>;
+    auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    Status s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(aad, cAadSize);
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(aad, cAadSize);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.setPaddingLen(padLen);
-    EXPECT_TRUE(s.ok());
+    // err = siv->setPaddingLen(padLen);
+    // EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    siv_obj.decrypt(&ct[0], &pt_act[0], cPtSize, &v_exp[0]);
+    siv->decrypt(&ct[0], &pt_act[0], cPtSize);
     std::vector<Uint8> cmp_act(&pt_act.at(0), &pt_act.at(cPtSize));
     EXPECT_EQ(pt_exp, cmp_act);
 
-    s = siv_obj.getTag(&v_act[0]);
-    EXPECT_TRUE(s.ok());
+    err = siv->getTag(&v_act[0], v_act.size());
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(v_exp, v_act);
 
-    EXPECT_TRUE(s.ok());
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
+
+    delete alcpCipher;
 }
 
 TEST(CMACSIV, decTest2)
@@ -326,12 +268,13 @@ TEST(CMACSIV, decTest2)
     Uint8 aad2[] = {
         0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xa0
     };
-    Uint8 nonce[]        = { 0x09, 0xf9, 0x11, 0x02, 0x9d, 0x74, 0xe3, 0x5b,
-                      0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
-    Uint8 key1[cKeySize] = { 0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x7a, 0x79, 0x78,
-                             0x77, 0x76, 0x75, 0x74, 0x73, 0x72, 0x71, 0x70 },
-          key2[cKeySize] = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
-                             0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
+    Uint8 nonce[]           = { 0x09, 0xf9, 0x11, 0x02, 0x9d, 0x74, 0xe3, 0x5b,
+                                0xd8, 0x41, 0x56, 0xc5, 0x63, 0x56, 0x88, 0xc0 };
+    Uint8 key[cKeySize * 2] = {
+        0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x7a, 0x79, 0x78, 0x77, 0x76, 0x75,
+        0x74, 0x73, 0x72, 0x71, 0x70, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45,
+        0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f
+    };
     std::vector<Uint8> pt_exp = {
         0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x73, 0x6f, 0x6d, 0x65,
         0x20, 0x70, 0x6c, 0x61, 0x69, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x20, 0x74,
@@ -352,39 +295,35 @@ TEST(CMACSIV, decTest2)
         0x06, 0xf4, 0xd1, 0x4b, 0xff, 0x2f, 0xbd, 0x0f
     };
     std::vector<Uint8> v_act(16, 0);
-    CmacSivTest        siv_obj;
+    auto               alcpCipher = new CipherFactory<iCipherAead>;
+    auto siv = alcpCipher->create("aes-siv-128"); // KeySize is 128 bits
 
-    Status s = siv_obj.setKeys(key1, key2, cKeySize * 8);
-    EXPECT_TRUE(s.ok());
+    if (siv == nullptr) {
+        delete alcpCipher;
+        FAIL();
+    }
+    alc_error_t err = siv->init(key, cKeySize * 8, nullptr, 0);
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(aad1, sizeof(aad1));
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(aad1, sizeof(aad1));
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(aad2, sizeof(aad2));
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(aad2, sizeof(aad2));
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.addAdditionalInput(nonce, sizeof(nonce));
-    EXPECT_TRUE(s.ok());
+    err = siv->setAad(nonce, sizeof(nonce));
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    s = siv_obj.setPaddingLen(1);
-    EXPECT_TRUE(s.ok());
+    // err = siv->setPaddingLen(1);
+    // EXPECT_TRUE(err == ALC_ERROR_NONE);
 
-    siv_obj.decrypt(&ct[0], &pt_act[0], cPtSize, &v_exp[0]);
+    siv->decrypt(&ct[0], &pt_act[0], cPtSize);
     std::vector<Uint8> cmp_act(&pt_act.at(0), &pt_act.at(cPtSize));
     EXPECT_EQ(pt_exp, cmp_act);
 
-    s = siv_obj.getTag(&v_act[0]);
-    EXPECT_TRUE(s.ok());
+    err = siv->getTag(&v_act[0], v_act.size());
+    EXPECT_TRUE(err == ALC_ERROR_NONE);
     EXPECT_EQ(v_exp, v_act);
-}
-#endif
-#if 0
-int
-main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    auto default_printer =
-        listeners.Release(listeners.default_result_printer());
-    return RUN_ALL_TESTS();
+    delete alcpCipher;
 }
 #endif

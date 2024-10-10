@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,179 +30,161 @@
 
 #include "config.h"
 
+#include "alcp/alcp.hh"
+
 #include "alcp/base.hh"
-#include "alcp/cipher_aead.h"
+#include "alcp/error.h"
 
 #include <array>
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <map>
+#include <tuple>
 
-namespace alcp {
-namespace cipher {
-    typedef alc_error_t(Operation)(const Uint8* pSrc,
-                                   Uint8*       pDst,
-                                   Uint64       len,
-                                   const Uint8* pIv) const;
+#include "alcp/utils/cpuid.hh"
 
-    class IEncrypter
+using alcp::utils::CpuCipherFeatures;
+using alcp::utils::CpuId;
+
+namespace alcp { namespace cipher {
+
+    enum class CipherKeyLen
     {
-      public:
-        virtual alc_error_t encrypt(const Uint8* pSrc,
-                                    Uint8*       pDst,
-                                    Uint64       len,
-                                    const Uint8* pIv) const = 0;
-
-      protected:
-        virtual ~IEncrypter() {}
-        IEncrypter() {}
-
-        std::function<alc_error_t(const void*  rCipher,
-                                  const Uint8* pSrc,
-                                  Uint8*       pDst,
-                                  Uint64       len,
-                                  const Uint8* pIv)>
-            m_encrypt_fn;
-
-      private:
+        eKey128Bit,
+        eKey192Bit,
+        eKey256Bit
     };
 
-    class IDecrypter
+    enum class CipherMode
     {
+        eCipherModeNone = 0,
+        /* aes ciphers */
+        eAesCBC,
+        eAesOFB,
+        eAesCTR,
+        eAesCFB,
+        eAesXTS,
+        eCHACHA20, // non-aes
+        /* aes aead ciphers */
+        eAesGCM,
+        eAesCCM,
+        eAesSIV,
+        eCHACHA20_POLY1305, // non-aes
+        eCipherModeMax,
+    };
+
+    using cipherKeyLenTupleT = std::tuple<const CipherMode, const CipherKeyLen>;
+    using cipherAlgoMapT     = std::map<const string, const cipherKeyLenTupleT>;
+
+    // non-aead cipher interface
+    class ALCP_API_EXPORT iCipher
+    {
+
       public:
+        virtual ~iCipher() = default;
+
+        // Set key & iv
+        virtual alc_error_t init(const Uint8* pKey,
+                                 Uint64       keyLen,
+                                 const Uint8* pIv,
+                                 Uint64       ivLen)  = 0;
         virtual alc_error_t decrypt(const Uint8* pSrc,
                                     Uint8*       pDst,
-                                    Uint64       len,
-                                    const Uint8* pIv) const = 0;
+                                    Uint64       len) = 0;
+        virtual alc_error_t encrypt(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       len) = 0;
+        virtual alc_error_t finish(const void*) = 0;
+    };
 
-      protected:
-        virtual ~IDecrypter() {}
-        IDecrypter() {}
+    // iCipher segments
+    class ALCP_API_EXPORT iCipherSeg
+    {
 
-        std::function<alc_error_t(const void*  rCipher,
-                                  const Uint8* pSrc,
-                                  Uint8*       pDst,
-                                  Uint64       len,
-                                  const Uint8* pIv)>
-            m_decrypt_fn;
+      public:
+        virtual ~iCipherSeg() = default;
+
+        // Set key & iv
+        virtual alc_error_t init(const Uint8* pKey,
+                                 Uint64       keyLen,
+                                 const Uint8* pIv,
+                                 Uint64       ivLen)                   = 0;
+        virtual alc_error_t decrypt(const Uint8* pSrc,
+                                    Uint8*       pDst,
+                                    Uint64       len)                  = 0;
+        virtual alc_error_t encrypt(const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       len)                  = 0;
+        virtual alc_error_t decryptSegment(const Uint8* pSrc,
+                                           Uint8*       pDst,
+                                           Uint64       len,
+                                           Uint64       startBlockNum) = 0;
+        virtual alc_error_t encryptSegment(const Uint8* pSrt,
+                                           Uint8*       pDrc,
+                                           Uint64       len,
+                                           Uint64       startBlockNum) = 0;
+        virtual alc_error_t finish(const void*)                  = 0;
+    };
+
+    // Additional Authentication functionality used for AEAD schemes
+    class iCipherAuth
+    {
+      public:
+        virtual ~iCipherAuth()                                       = default;
+        virtual alc_error_t setAad(const Uint8* pAad, Uint64 aadLen) = 0;
+        virtual alc_error_t getTag(Uint8* pTag, Uint64 tagLen)       = 0;
+        // FIXME: Clean up setting lengths
+        /* setPlaintextLength and setTageLength to be one single api */
+        /* setLength(void*ctx, typeofLen, Uint64 len) */
+        virtual alc_error_t setPlainTextLength(Uint64 plaintextLen)
+        {
+            // Only supported in CCM. Will be overridden there.
+            return ALC_ERROR_EXISTS;
+        }
+        virtual alc_error_t setTagLength(Uint64 tagLen) = 0;
+    };
+
+    // aead cipher interface
+    class ALCP_API_EXPORT iCipherAead
+        : public virtual iCipher
+        , public virtual iCipherAuth // authenication class - used for Aead
+                                     // modes
+    {
+      public:
+        virtual ~iCipherAead() = default;
+    };
+
+    /* Cipher Factory for different Aead and non-Aead modes */
+    template<class INTERFACE>
+    class ALCP_API_EXPORT CipherFactory
+    {
+      private:
+        CpuCipherFeatures m_arch =
+            CpuCipherFeatures::eVaes512; // default zen4 arch
+        CpuCipherFeatures m_currentArch = getCpuCipherFeature();
+        CipherKeyLen      m_keyLen      = CipherKeyLen::eKey128Bit;
+        CipherMode        m_cipher_mode = CipherMode::eCipherModeNone;
+        INTERFACE*        m_iCipher     = nullptr;
+        cipherAlgoMapT    m_cipherMap   = {};
+
+      public:
+        CipherFactory();
+        ~CipherFactory();
+
+        // cipher creators
+        INTERFACE* create(const string& name);
+        INTERFACE* create(const string& name, CpuCipherFeatures arch);
+        INTERFACE* create(CipherMode mode, CipherKeyLen keyLen);
+        INTERFACE* create(CipherMode        mode,
+                          CipherKeyLen      keyLen,
+                          CpuCipherFeatures arch);
 
       private:
+        void              initCipherMap();
+        void              clearCipherMap();
+        void              getCipher();
+        CpuCipherFeatures getCpuCipherFeature();
     };
 
-    class IEncryptUpdater
-    {
-      public:
-        virtual alc_error_t encryptUpdate(const Uint8* pSrc,
-                                          Uint8*       pDst,
-                                          Uint64       len,
-                                          const Uint8* pIv) = 0;
-
-      protected:
-        virtual ~IEncryptUpdater() {}
-        IEncryptUpdater() {}
-
-        std::function<alc_error_t(const void*  rCipher,
-                                  const Uint8* pSrc,
-                                  Uint8*       pDst,
-                                  Uint64       len,
-                                  const Uint8* pIv)>
-            m_encryptUpdate_fn;
-    };
-
-    class IDecryptUpdater
-    {
-      public:
-        virtual alc_error_t decryptUpdate(const Uint8* pSrc,
-                                          Uint8*       pDst,
-                                          Uint64       len,
-                                          const Uint8* pIv) = 0;
-
-      protected:
-        virtual ~IDecryptUpdater() {}
-        IDecryptUpdater() {}
-
-        std::function<alc_error_t(const void*  rCipher,
-                                  const Uint8* pSrc,
-                                  Uint8*       pDst,
-                                  Uint64       len,
-                                  const Uint8* pIv)>
-            m_decryptUpdate_fn;
-    };
-
-    class ALCP_API_EXPORT ICipher
-    {
-      public:
-        /**
-         * @brief   CBC Encrypt Operation
-         * @note
-         * @param   pPlainText      Pointer to output buffer
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                    Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const = 0;
-
-        /**
-         * @brief   CBC Decrypt Operation
-         * @note
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                    Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const = 0;
-
-        virtual ~ICipher(){};
-    };
-
-} // namespace cipher
-
-class Cipher
-{
-
-  public:
-    virtual ~Cipher() {}
-
-  protected:
-    Cipher() {}
-
-    // private:
-    // alc_cipher_type_t m_cipher_type;
-};
-
-class ICipher
-    : public cipher::IDecrypter
-    , public cipher::IEncrypter
-{
-  public:
-    ICipher() {}
-
-  protected:
-    virtual ~ICipher() {}
-};
-
-/**
- * @brief ICypherUpdater  - Class useful when stride of data is not
- *                    aligned to natural size of the algorithm
- * @note
- */
-class ICipherUpdater
-    : public cipher::IDecryptUpdater
-    , public cipher::IEncryptUpdater
-{
-  public:
-    ICipherUpdater() {}
-
-  protected:
-    virtual ~ICipherUpdater() {}
-};
-
-} // namespace alcp
+}} // namespace alcp::cipher

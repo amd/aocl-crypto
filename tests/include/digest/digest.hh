@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,15 +37,18 @@ namespace alcp::testing {
 
 struct alcp_digest_data_t
 {
-    const Uint8* m_msg        = nullptr;
-    Uint64       m_msg_len    = 0;
-    Uint8*       m_digest     = nullptr;
-    Uint64       m_digest_len = 0;
+    const Uint8* m_msg     = nullptr;
+    Uint64       m_msg_len = 0;
+    Uint8*       m_digest  = nullptr;
+    Uint8*       m_digest_dup =
+        nullptr; /* digest output read from duplicate handle using the squeeze
+                    api, only for Shake variants */
+    Uint64 m_digest_len = 0;
 };
 
 /* add mapping for SHA mode and length */
-extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
-extern std::map<alc_digest_len_t, alc_sha3_mode_t> sha3_mode_len_map;
+extern std::map<alc_digest_len_t, alc_digest_mode_t> sha2_mode_len_map;
+extern std::map<alc_digest_len_t, alc_digest_mode_t> sha3_mode_len_map;
 
 typedef enum
 {
@@ -64,15 +67,15 @@ class ExecRecPlay
   private:
     File*              m_blackbox_bin = nullptr;
     File*              m_log          = nullptr;
-    time_t             m_start_time;
-    time_t             m_end_time;
+    time_t             m_start_time{};
+    time_t             m_end_time{};
     std::size_t        m_blackbox_start_pos = 0;
     std::size_t        m_blackbox_end_pos   = 0;
-    record_t           m_rec_type;
-    std::vector<Uint8> m_data;
+    record_t           m_rec_type{};
+    std::vector<Uint8> m_data{};
     std::string        m_str_mode = "";
-    long               m_byte_start, m_byte_end, m_rec_t, m_data_size;
-    long               m_prev_log_point;
+    long m_byte_start = 0, m_byte_end = 0, m_rec_t = 0, m_data_size = 0;
+    long m_prev_log_point = 0;
 
   public:
     // Create new files for writing
@@ -125,10 +128,12 @@ class ExecRecPlay
 class DigestBase
 {
   public:
-    virtual bool init(const alc_digest_info_t& info, Int64 digest_len) = 0;
-    virtual bool init()                                                = 0;
-    virtual bool digest_function(const alcp_digest_data_t& data)       = 0;
-    virtual void reset()                                               = 0;
+    virtual bool init()                                          = 0;
+    virtual bool digest_update(const alcp_digest_data_t& data)   = 0;
+    virtual bool digest_finalize(const alcp_digest_data_t& data) = 0;
+    virtual bool digest_squeeze(const alcp_digest_data_t& data)  = 0;
+    virtual bool context_copy()                                  = 0;
+    virtual void reset()                                         = 0;
 };
 
 } // namespace alcp::testing

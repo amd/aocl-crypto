@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,32 +29,72 @@
 #include "alcp/alcp.h"
 #include "alcp/digest.h"
 #include "digest/digest.hh"
+#include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <malloc.h>
 #include <vector>
-
 #pragma once
 
 namespace alcp::testing {
+/* to read csv file */
+inline Uint64
+GetDigestLen(alc_digest_mode_t mode)
+{
+    Uint64 len = 0;
+    switch (mode) {
+        case ALC_SHAKE_128:
+            len = ALC_DIGEST_LEN_128;
+            break;
+        case ALC_SHA2_224:
+        case ALC_SHA3_224:
+        case ALC_SHA2_512_224:
+            len = ALC_DIGEST_LEN_224;
+            break;
+        case ALC_SHA2_256:
+        case ALC_SHA3_256:
+        case ALC_SHA2_512_256:
+        case ALC_SHAKE_256:
+            len = ALC_DIGEST_LEN_256;
+            break;
+        case ALC_SHA2_384:
+        case ALC_SHA3_384:
+            len = ALC_DIGEST_LEN_384;
+            break;
+        case ALC_SHA2_512:
+        case ALC_SHA3_512:
+            len = ALC_DIGEST_LEN_512;
+            break;
+        default:
+            std::cout << "Error: Unsupported mode" << std::endl;
+    }
+    return len;
+}
+
 class AlcpDigestBase : public DigestBase
 {
-    alc_digest_handle_t* m_handle     = {};
-    alc_digest_info_t    m_info       = {};
-    Uint8*               m_message    = {};
-    Uint8*               m_digest     = {};
-    Int64                m_digest_len = {}; /*SHAKE*/
-    void*                m_context    = {};
+    alc_digest_handle_t* m_handle = {};
+    /* duplicate context created from m_handle */
+    alc_digest_handle_t* m_handle_dup = {};
+    alc_digest_mode_t    m_mode       = {};
 
   public:
-    AlcpDigestBase(const alc_digest_info_t& info);
-
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
+    AlcpDigestBase(alc_digest_mode_t mode);
 
     bool init();
 
     ~AlcpDigestBase();
 
-    bool digest_function(const alcp_digest_data_t& data);
+    /* copies ctx from main m_handle to duplicate handle m_handle_dup
+     */
+    bool context_copy();
+
+    bool digest_update(const alcp_digest_data_t& data);
+
+    bool digest_finalize(const alcp_digest_data_t& data);
+
+    bool digest_squeeze(const alcp_digest_data_t& data);
+
     /* Resets the context back to initial condition, reuse context */
     void reset();
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,60 +43,59 @@ using namespace alcp::testing;
 
 ExecRecPlay* fr = nullptr;
 
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_AES
-#define ALC_MODE        ALC_AES_MODE_CBC
-#define STR_MODE        "AES_CBC"
+#define ALC_MODE ALC_AES_MODE_CBC
+#define STR_MODE "AES_CBC"
 
 /* Testing Starts Here! */
 TEST(AES_ENC_128, CROSS_SMALL_128)
 {
-    AesCrosstest(128, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherCrossTest(128, ENCRYPT, ALC_MODE, SMALL);
 }
 TEST(AES_ENC_128, CROSS_BIG_128)
 {
-    AesCrosstest(128, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, BIG);
+    CipherCrossTest(128, ENCRYPT, ALC_MODE, BIG);
 }
 TEST(AES_ENC_256, CROSS_BIG_256)
 {
-    AesCrosstest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, BIG);
+    CipherCrossTest(256, ENCRYPT, ALC_MODE, BIG);
 }
 TEST(AES_ENC_256, CROSS_SMALL_256)
 {
-    AesCrosstest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherCrossTest(256, ENCRYPT, ALC_MODE, SMALL);
 }
 TEST(AES_ENC_192, CROSS_BIG_192)
 {
-    AesCrosstest(192, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, BIG);
+    CipherCrossTest(192, ENCRYPT, ALC_MODE, BIG);
 }
 TEST(AES_ENC_192, CROSS_SMALL_192)
 {
-    AesCrosstest(192, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherCrossTest(192, ENCRYPT, ALC_MODE, SMALL);
 }
 
 /* decrypt tests */
 TEST(AES_DEC_128, CROSS_SMALL_128)
 {
-    AesCrosstest(128, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherCrossTest(128, DECRYPT, ALC_MODE, SMALL);
 }
 TEST(AES_DEC_128, CROSS_BIG_128)
 {
-    AesCrosstest(128, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, BIG);
+    CipherCrossTest(128, DECRYPT, ALC_MODE, BIG);
 }
 TEST(AES_DEC_256, CROSS_BIG_256)
 {
-    AesCrosstest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, BIG);
+    CipherCrossTest(256, DECRYPT, ALC_MODE, BIG);
 }
 TEST(AES_DEC_256, CROSS_SMALL_256)
 {
-    AesCrosstest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherCrossTest(256, DECRYPT, ALC_MODE, SMALL);
 }
 TEST(AES_DEC_192, CROSS_BIG_192)
 {
-    AesCrosstest(192, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, BIG);
+    CipherCrossTest(192, DECRYPT, ALC_MODE, BIG);
 }
 TEST(AES_DEC_192, CROSS_SMALL_192)
 {
-    AesCrosstest(192, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE, SMALL);
+    CipherCrossTest(192, DECRYPT, ALC_MODE, SMALL);
 }
 
 int

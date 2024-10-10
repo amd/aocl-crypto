@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -83,42 +83,23 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     Uint32                 key_size = static_cast<Uint32>(
         keyBitSize / 2); // casting to prevent narrowing conversion
                                          // from int to Uint32 warning
-    alc_error_t       err;
-    const int         err_size = 256;
-    Uint8             err_buf[err_size];
-    alc_cipher_info_t cinfo = {};
+    alc_error_t err;
 
-    cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-    cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-    cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-    cinfo.ci_key_info.key      = pKey;
-    cinfo.ci_key_info.len      = key_size;
-    cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_XTS;
-    cinfo.ci_algo_info.ai_iv   = pTweakPT;
-
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return ippStsErr;
-    }
-
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context)
         return ippStsErr;
 
-    err = alcp_cipher_request(&cinfo, &handle);
+    err = alcp_cipher_segment_request(ALC_AES_MODE_XTS, key_size, &handle);
     if (alcp_is_error(err)) {
+        free(handle.ch_context);
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
 
     // xts init
-    err = alcp_cipher_set_iv(&handle, iv_len, pTweakPT);
+    err = alcp_cipher_segment_init(&handle, pKey, key_size, pTweakPT, iv_len);
     if (alcp_is_error(err)) {
-        printf("Error: unable to set iv\n");
-        alcp_error_str(err, err_buf, err_size);
+        printf("Error: unable to init\n");
         return ippStsErr;
     }
 
@@ -128,7 +109,7 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
 inline void
 alcp_finalizeXTSDirect(alc_cipher_handle_t& handle)
 {
-    alcp_cipher_finish(&handle);
+    alcp_cipher_segment_finish(&handle);
     free(handle.ch_context);
     handle.ch_context = nullptr;
 }
@@ -147,17 +128,14 @@ ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
     printMsg("ippsAESEncryptXTS_Direct : START");
     alc_cipher_handle_t handle;
     alc_error_t         err;
-    const int           err_size = 256;
-    Uint8               err_buf[err_size];
     IppStatus status = alcp_initXTSDirect(handle, pKey, keyBitSize, pTweakPT);
     if (status != 0) {
         return status;
     }
-    err = alcp_cipher_blocks_encrypt(
+    err = alcp_cipher_segment_encrypt_xts(
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
     alcp_finalizeXTSDirect(handle);
@@ -179,17 +157,14 @@ ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
 
     alc_cipher_handle_t handle;
     alc_error_t         err;
-    const int           err_size = 256;
-    Uint8               err_buf[err_size];
     IppStatus status = alcp_initXTSDirect(handle, pKey, keyBitSize, pTweakPT);
     if (status != 0) {
         return status;
     }
-    err = alcp_cipher_blocks_decrypt(
+    err = alcp_cipher_segment_decrypt_xts(
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
     alcp_finalizeXTSDirect(handle);

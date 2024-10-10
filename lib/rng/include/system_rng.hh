@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,9 +44,9 @@ class ALCP_API_EXPORT SystemRng : public IRng
     SystemRng();
     class ISeeder;
     SystemRng(ISeeder& iss);
-    Status      randomize(Uint8 output[], size_t length) override;
-    Status      readRandom(Uint8* pBuf, Uint64 size) override;
-    Status      setPredictionResistance(bool value) override;
+    alc_error_t randomize(Uint8 output[], size_t length) override;
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) override;
+    alc_error_t setPredictionResistance(bool value) override;
     std::string name() const override { return "OsRng"; }
     bool        isSeeded() const override;
     size_t      reseed() override;

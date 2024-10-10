@@ -1,0 +1,29 @@
+flowchart LR
+    S[Support]
+    X{Success?}
+    C[Context Allocation] 
+    Y{Success?}
+    R[Request]
+    Z{Success?}
+    F[Finish]
+    E(Exit)
+    J[Operations]
+    I(Init)
+    W{Success?}
+    V{Success?}
+    S --> X
+    X --> |Yes| C
+    X --> |No| E
+    C --> Y
+    Y --> |Yes| R
+    Y --> |No| E
+    R --> W
+    W --> |Yes| I
+    W --> |No| E
+    I --> V 
+    V --> |Yes| J
+    V --> |No| E
+    J--> Z 
+    Z --> |Yes| F
+    Z --> |No| E
+    F --> E

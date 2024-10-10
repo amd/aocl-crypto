@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,21 +30,20 @@
 #include "alcp/mac.h"
 
 #include "alcp/capi/mac/ctx.hh"
+#include "alcp/utils/cpuid.hh"
 
 namespace alcp::mac {
+using utils::CpuArchFeature;
 
 class MacBuilder
 {
   public:
-    static Uint64 getSize(const alc_mac_info_t& macInfo);
-
-    static Status isSupported(const alc_mac_info_t& macInfo);
-
-    static alcp::base::Status build(const alc_mac_info_t& cipherInfo,
-                                    alcp::mac::Context&   ctx);
+    static alc_error_t build(alc_mac_type_t mi_type, alcp::mac::Context* ctx);
+    static alc_error_t BuildWithCopy(mac::Context* srcCtx,
+                                     mac::Context* destCtx);
 };
 
-Status
-isDigestSupported(const alc_digest_info_t& digestInfo);
+CpuArchFeature
+getCpuArchFeature();
 
 } // namespace alcp::mac

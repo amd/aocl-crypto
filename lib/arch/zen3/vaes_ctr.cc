@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,11 +48,11 @@ ctrInit(__m256i*     c1,
         __m256i*     swap_ctr)
 {
 
-    *onelo   = alcp_set_epi32(0, 0, 0, 0, 1, 0, 0, 0);
-    *one_x   = alcp_set_epi32(2, 0, 0, 0, 2, 0, 0, 0);
-    *two_x   = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0);
-    *three_x = alcp_set_epi32(6, 0, 0, 0, 6, 0, 0, 0);
-    *four_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0);
+    *onelo   = alcp_set_epi32(0, 0, 0, 0, 0, 1, 0, 0);
+    *one_x   = alcp_set_epi32(0, 2, 0, 0, 0, 2, 0, 0);
+    *two_x   = alcp_set_epi32(0, 4, 0, 0, 0, 4, 0, 0);
+    *three_x = alcp_set_epi32(0, 6, 0, 0, 0, 6, 0, 0);
+    *four_x  = alcp_set_epi32(0, 8, 0, 0, 0, 8, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -63,15 +63,15 @@ ctrInit(__m256i*     c1,
     // for counter increment
     // clang-format off
     *swap_ctr = _mm256_setr_epi8( 0,  1,  2,  3,  4,  5,  6,  7,
-                                  8,  9, 10, 11, 15, 14, 13, 12, /* switching last 4 bytes */
+                                 15, 14, 13, 12, 11, 10,  9,  8, /* switching last 4 bytes */
                                  16, 17, 18, 19, 20, 21, 22, 23,
-                                 24, 25, 26, 27, 31, 30, 29, 28); /* switching last 4 bytes */
+                                 31, 30, 29, 28, 27, 26, 25, 24); /* switching last 4 bytes */
     // clang-format on
     // nonce counter
     amd_mm256_broadcast_i64x2((__m128i*)pIv, c1);
     *c1 = alcp_shuffle_epi8(*c1, *swap_ctr);
 
-    __m256i onehi = _mm256_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1);
+    __m256i onehi = _mm256_setr_epi32(0, 0, 0, 0, 0, 0, 1, 0);
     *c1           = alcp_add_epi32(*c1, onehi);
 }
 
@@ -79,15 +79,16 @@ Uint64
 ctrProcessAvx256(const Uint8*   p_in_x,
                  Uint8*         p_out_x,
                  Uint64         blocks,
+                 Uint64         res,
                  const __m128i* pkey128,
-                 const Uint8*   pIv,
+                 Uint8*         pIv,
                  int            nRounds)
 {
     auto p_in_256  = reinterpret_cast<const __m256i*>(p_in_x);
     auto p_out_256 = reinterpret_cast<__m256i*>(p_out_x);
 
     return alcp::cipher::aes::ctrBlk(
-        p_in_256, p_out_256, blocks, pkey128, pIv, nRounds, 2);
+        p_in_256, p_out_256, blocks, res, pkey128, pIv, nRounds, 2);
 }
 
 } // namespace alcp::cipher::vaes

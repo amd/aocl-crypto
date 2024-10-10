@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,457 +31,123 @@
 #include "alcp/error.h"
 
 #include "alcp/cipher/aes.hh"
-
-#include "alcp/cipher/cipher_wrapper.hh"
+#include "alcp/cipher/cipher_common.hh"
 
 #include <cstdint>
 #include <immintrin.h>
 
 namespace alcp::cipher {
 
-/* COMPUTE_HASHSUBKEY_ONCE: Performs better when multipleEncrypt/Decrypt happens
- * with same key. To be turned off when key/IV is modified for each
- * Encrypt/Decrypt*/
-#define COMPUTE_HASHSUBKEY_ONCE 1
-#define MAX_NUM_512_BLKS        8
-
 /*
  * @brief        AES Encryption in GCM(Galois Counter mode)
- * @note        TODO: Move this to a aes_Gcm.hh or other
+ * @note
  */
+
+#define ALCP_GCM_TAG_MAX_SIZE 16
+#define MAX_NUM_512_BLKS      8
+
+typedef struct _alc_cipher_gcm_data
+{
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+
+} _alc_cipher_gcm_data_t;
+
+typedef struct _alc_gcm_local_data
+{
+    // gcm specific params
+    Int32 m_num_512blks_precomputed;
+    Int32 m_num_256blks_precomputed;
+
+    __m128i m_hash_subKey_128;
+    __m128i m_gHash_128;
+    __m128i m_counter_128;
+
+    __m128i m_reverse_mask_128;
+
+    Uint64* m_pHashSubkeyTable_global;
+
+    __m128i m_tag_128;
+    Uint64  m_additionalDataLen;
+
+    _alc_cipher_gcm_data_t m_gcm;
+
+} alc_gcm_local_data_t;
 class ALCP_API_EXPORT Gcm
     : public Aes
-    , cipher::IDecryptUpdater
-    , cipher::IEncryptUpdater
+    , public virtual iCipher
 {
+  protected:
+    alc_gcm_local_data_t m_gcm_local_data;
 
   public:
-    const Uint8* m_enc_key = {};
-    const Uint8* m_dec_key = {};
-    Uint32       m_nrounds = 0;
-
-    __m128i m_reverse_mask_128 =
-        _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    const Uint8* m_iv    = nullptr;
-    Uint64       m_len   = 0;
-    Uint64       m_ivLen = 12; // default 12 bytes or 96bits
-
-  public:
-    explicit Gcm(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
+    Gcm(Uint32 keyLen_in_bytes)
+        : Aes(keyLen_in_bytes)
     {
-        m_enc_key = getEncryptKeys();
-        m_dec_key = getDecryptKeys();
-        m_nrounds = getRounds();
+        setMode(ALC_AES_MODE_GCM);
+        // default ivLength is 12 bytes or 96bits
+        m_ivLen_aes = 12;
+
+        m_gcm_local_data.m_num_512blks_precomputed = 0;
+        m_gcm_local_data.m_num_256blks_precomputed = 0;
+
+        m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
+        m_gcm_local_data.m_gHash_128       = _mm_setzero_si128();
+        m_gcm_local_data.m_counter_128     = _mm_setzero_si128();
+
+        m_gcm_local_data.m_reverse_mask_128 =
+            _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+        // global precomputed hashtable pointer
+        m_gcm_local_data.m_pHashSubkeyTable_global =
+            m_gcm_local_data.m_gcm.m_hashSubkeyTable;
+
+        m_gcm_local_data.m_tag_128           = _mm_setzero_si128();
+        m_gcm_local_data.m_additionalDataLen = 0;
     }
 
-    ~Gcm() {}
-
-  public:
-    static bool isSupported(const Uint32 keyLen)
+    ~Gcm()
     {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
-            || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
+        // clear precomputed hashtable
+        memset(m_gcm_local_data.m_pHashSubkeyTable_global,
+               0,
+               sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
     }
+
+    alc_error_t init(const Uint8* pKey,
+                     Uint64       keyLen,
+                     const Uint8* pIv,
+                     Uint64       ivLen) override;
 };
 
-class ALCP_API_EXPORT GcmAuth : public GcmAuthData
+// GCM authentication class
+class ALCP_API_EXPORT GcmAuth
+    : public Gcm
+    , public virtual iCipherAuth
 {
   public:
-    Uint64  m_tagLen = 0;
-    __m128i m_tag_128; // Uint8 m_tag[16];
-    Uint64  m_additionalDataLen     = 0;
-    Uint64  m_isHashSubKeyGenerated = false;
+    GcmAuth(Uint32 keyLen_in_bytes)
+        : Gcm(keyLen_in_bytes)
+    {}
+    ~GcmAuth() {}
 
-#if COMPUTE_HASHSUBKEY_ONCE
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
-#else
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[8]; // dummy
-#endif
-
-    /**
-     * @brief Get a copy of the Tag
-     *
-     * @param pOutput Memory to write tag into
-     * @param len     Length of the tag in bytes
-     * @return alc_error_t Error code
-     */
-    virtual alc_error_t getTag(Uint8* pOutput, Uint64 len) = 0;
-
-    /**
-     * @brief Set the Iv in bytes
-     *
-     * @param len Length of IV in bytes
-     * @param pIv Address to read the IV from
-     * @return alc_error_t Error code
-     */
-    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv) = 0;
-
-    /**
-     * @brief Set the Additional Data in bytes
-     *
-     * @param pInput Address to Read Additional Data from
-     * @param len Length of Additional Data in Bytes
-     * @return alc_error_t
-     */
-    virtual alc_error_t setAad(const Uint8* pInput, Uint64 len) = 0;
-
-  public:
-    GcmAuth() {}
-
-    ~GcmAuth()
-    {
-#if COMPUTE_HASHSUBKEY_ONCE
-        memset(m_hashSubkeyTable, 0, sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
-#else
-        memset(m_hashSubkeyTable, 0, sizeof(Uint64) * 8);
-#endif
-    }
+    alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
+    alc_error_t getTag(Uint8* pTag, Uint64 tagLen) override;
+    alc_error_t setTagLength(Uint64 tagLen) override;
 };
 
-namespace vaes512 {
+// vaes512 classes
+CIPHER_CLASS_GEN_N(vaes512, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes512, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
 
-    class ALCP_API_EXPORT GcmGhash
-        : public Gcm
-        , public GcmAuth
-    {
-      public:
-        explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
-            : Gcm(pKey, keyLen)
-        {}
+// vaes classes
+CIPHER_CLASS_GEN_N(vaes, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
+CIPHER_CLASS_GEN_N(vaes, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
 
-        ~GcmGhash() {}
-
-        /**
-         * @brief Get a copy of the Tag
-         *
-         * @param pOutput Memory to write tag into
-         * @param len     Length of the tag in bytes
-         * @return alc_error_t Error code
-         */
-        virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
-
-        /**
-         * @brief Set the Iv in bytes
-         *
-         * @param len Length of IV in bytes
-         * @param pIv Address to read the IV from
-         * @return alc_error_t Error code
-         */
-        virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
-
-        /**
-         * @brief Set the Additional Data in bytes
-         *
-         * @param pInput Address to Read Additional Data from
-         * @param len Length of Additional Data in Bytes
-         * @return alc_error_t
-         */
-        virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
-    };
-
-    class ALCP_API_EXPORT GcmAEAD128 : public GcmGhash
-    {
-      public:
-        explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
-        {}
-
-        ~GcmAEAD128() {}
-
-      public:
-        /**
-         * @brief   GCM Encrypt Operation
-         *
-         * @param   pInput      Pointer to input buffer
-         *                          (plainText or Additional data)
-         * @param   pOuput          Pointer to encrypted buffer
-         *                          when pointer NULL, input is additional data
-         * @param   len             Len of input buffer
-         *                          (plainText or Additional data)
-         * @param   pIv             Pointer to Initialization Vector @return
-         * @return alc_error_t
-         */
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-
-        /**
-         * @brief   GCM Decrypt Operation
-         *
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                          Uint8*       pPlainText,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-    };
-
-    class ALCP_API_EXPORT GcmAEAD192 : public GcmGhash
-    {
-
-      public:
-        explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
-        {}
-
-        ~GcmAEAD192() {}
-
-      public:
-        /**
-         * @brief   GCM Encrypt Operation
-         *
-         * @param   pInput      Pointer to input buffer
-         *                          (plainText or Additional data)
-         * @param   pOuput          Pointer to encrypted buffer
-         *                          when pointer NULL, input is additional data
-         * @param   len             Len of input buffer
-         *                          (plainText or Additional data)
-         * @param   pIv             Pointer to Initialization Vector @return
-         * @return alc_error_t
-         */
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-
-        /**
-         * @brief   GCM Decrypt Operation
-         *
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                          Uint8*       pPlainText,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-    };
-
-    class ALCP_API_EXPORT GcmAEAD256 : public GcmGhash
-    {
-
-      public:
-        explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
-        {}
-
-        ~GcmAEAD256() {}
-
-      public:
-        /**
-         * @brief   GCM Encrypt Operation
-         *
-         * @param   pInput      Pointer to input buffer
-         *                          (plainText or Additional data)
-         * @param   pOuput          Pointer to encrypted buffer
-         *                          when pointer NULL, input is additional data
-         * @param   len             Len of input buffer
-         *                          (plainText or Additional data)
-         * @param   pIv             Pointer to Initialization Vector @return
-         * @return alc_error_t
-         */
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-
-        /**
-         * @brief   GCM Decrypt Operation
-         *
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                          Uint8*       pPlainText,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-    };
-
-} // namespace vaes512
-
-// duplication of vaes512 namespace to be avoided.
-namespace aesni {
-    class ALCP_API_EXPORT GcmGhash
-        : public Gcm
-        , public GcmAuth
-    {
-      public:
-        explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
-            : Gcm(pKey, keyLen)
-        {}
-
-        ~GcmGhash() {}
-
-        /**
-         * @brief Get a copy of the Tag
-         *
-         * @param pOutput Memory to write tag into
-         * @param len     Length of the tag in bytes
-         * @return alc_error_t Error code
-         */
-        virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
-
-        /**
-         * @brief Set the Iv in bytes
-         *
-         * @param len Length of IV in bytes
-         * @param pIv Address to read the IV from
-         * @return alc_error_t Error code
-         */
-        virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
-
-        /**
-         * @brief Set the Additional Data in bytes
-         *
-         * @param pInput Address to Read Additional Data from
-         * @param len Length of Additional Data in Bytes
-         * @return alc_error_t
-         */
-        virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
-    };
-
-    class ALCP_API_EXPORT GcmAEAD128 : public GcmGhash
-    {
-      public:
-        explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
-        {}
-
-        ~GcmAEAD128() {}
-
-      public:
-        /**
-         * @brief   GCM Encrypt Operation
-         *
-         * @param   pInput      Pointer to input buffer
-         *                          (plainText or Additional data)
-         * @param   pOuput          Pointer to encrypted buffer
-         *                          when pointer NULL, input is additional data
-         * @param   len             Len of input buffer
-         *                          (plainText or Additional data)
-         * @param   pIv             Pointer to Initialization Vector @return
-         * @return alc_error_t
-         */
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-
-        /**
-         * @brief   GCM Decrypt Operation
-         *
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                          Uint8*       pPlainText,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-    };
-
-    class ALCP_API_EXPORT GcmAEAD192 : public GcmGhash
-    {
-
-      public:
-        explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
-        {}
-
-        ~GcmAEAD192() {}
-
-      public:
-        /**
-         * @brief   GCM Encrypt Operation
-         *
-         * @param   pInput      Pointer to input buffer
-         *                          (plainText or Additional data)
-         * @param   pOuput          Pointer to encrypted buffer
-         *                          when pointer NULL, input is additional data
-         * @param   len             Len of input buffer
-         *                          (plainText or Additional data)
-         * @param   pIv             Pointer to Initialization Vector @return
-         * @return alc_error_t
-         */
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-
-        /**
-         * @brief   GCM Decrypt Operation
-         *
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                          Uint8*       pPlainText,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-    };
-
-    class ALCP_API_EXPORT GcmAEAD256 : public GcmGhash
-    {
-
-      public:
-        explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
-        {}
-
-        ~GcmAEAD256() {}
-
-      public:
-        /**
-         * @brief   GCM Encrypt Operation
-         *
-         * @param   pInput      Pointer to input buffer
-         *                          (plainText or Additional data)
-         * @param   pOuput          Pointer to encrypted buffer
-         *                          when pointer NULL, input is additional data
-         * @param   len             Len of input buffer
-         *                          (plainText or Additional data)
-         * @param   pIv             Pointer to Initialization Vector @return
-         * @return alc_error_t
-         */
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-
-        /**
-         * @brief   GCM Decrypt Operation
-         *
-         * @param   pCipherText     Pointer to encrypted buffer
-         * @param   pPlainText      Pointer to output buffer
-         * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
-         * @return  alc_error_t     Error code
-         */
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                          Uint8*       pPlainText,
-                                          Uint64       len,
-                                          const Uint8* pIv) override;
-    };
-
-} // namespace aesni
+// aesni classes
+CIPHER_CLASS_GEN_N(aesni, Gcm128, GcmAuth, virtual iCipherAead, 128 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm192, GcmAuth, virtual iCipherAead, 192 / 8)
+CIPHER_CLASS_GEN_N(aesni, Gcm256, GcmAuth, virtual iCipherAead, 256 / 8)
 
 } // namespace alcp::cipher
