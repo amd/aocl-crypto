@@ -165,22 +165,24 @@ template<alc_digest_len_t digest_len>
 alc_error_t
 Sha2_512<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool cpu_is_zen3 = CpuId::cpuIsZen3();
-    static bool cpu_is_zen4 = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW);
 
     /* we need len to be multiple of cChunkSize */
     assert((len & cChunkSizeMask) == 0);
 
-    if (cpu_is_zen4) {
+    if (has_Avx512) {
 #ifdef COMPILER_IS_CLANG
         // For AOCC zen3 kernel performs better than zen4
         return zen3::ShaUpdate512(m_hash, pSrc, len);
 #else
         return zen4::ShaUpdate512(m_hash, pSrc, len);
 #endif
-    } else if (cpu_is_zen3) {
-        return zen3::ShaUpdate512(m_hash, pSrc, len);
     } else if (CpuId::cpuHasAvx2()) {
+        return zen3::ShaUpdate512(m_hash, pSrc, len);
+    } else if (CpuId::cpuHasSse3()) {
         return avx2::ShaUpdate512(m_hash, pSrc, len);
     }
     // Else fall to reference implementation.
@@ -332,11 +334,11 @@ Sha2_512<digest_len>::finalize(Uint8* pBuf, Uint64 size)
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
         len_in_bits_high = m_msg_len >> 61;
-        len_in_bits      = m_msg_len << 3;
+        len_in_bits = m_msg_len << 3;
 
     } else {
         len_in_bits_high = 0;
-        len_in_bits      = m_msg_len * 8;
+        len_in_bits = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
         reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));
