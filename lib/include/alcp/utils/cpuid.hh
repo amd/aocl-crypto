@@ -57,6 +57,8 @@ enum class Avx512Flags
     AVX512_DQ = 1,
     AVX512_F,
     AVX512_BW,
+    AVX512_IFMA,
+    AVX512_VL,
 };
 
 enum class CpuZenVer
@@ -98,6 +100,20 @@ class ALCP_API_EXPORT CpuId
      * @return false
      */
     static bool cpuHasAvx512bw();
+    /**
+     * @brief Retrurns true if CPU has AVX512IFMA Flag
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasAvx512ifma();
+    /**
+     * @brief Retrurns true if CPU has AVX512VL Flag
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasAvx512vl();
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *

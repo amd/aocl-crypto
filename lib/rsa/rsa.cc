@@ -213,11 +213,17 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
     static bool zen4_available = CpuId::cpuIsZen4() || CpuId::cpuIsZen5();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_IFMA)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
 
     static bool zen_available_flags =
         CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
-    if (zen4_available) {
+    if (zen4_available && has_Avx512) {
         if (m_key_size == 2048 / 8) {
             zen4::archEncryptPublic<KEY_SIZE_2048>(
                 pEncText, bignum_text, m_pub_key, m_context_pub);
@@ -279,7 +285,14 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
     static bool zen_available_flags =
         CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
-    if (zen4_available) {
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_IFMA)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (zen4_available && has_Avx512) {
         if (m_key_size == 2048 / 8) {
             zen4::archDecryptPrivate<KEY_SIZE_2048>(
                 pText, bignum_text, m_priv_key, m_context_p, m_context_q);
@@ -1029,7 +1042,14 @@ Rsa::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     static bool zen_available_flags =
         CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
-    if (zen4_available) {
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_IFMA)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (zen4_available && has_Avx512) {
         if (m_key_size == 2048 / 8) {
             zen4::archCreateContext<KEY_SIZE_2048>(
                 m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
@@ -1085,7 +1105,14 @@ Rsa::setPublicKeyAsBigNum(const BigNum* exponent, const BigNum* pModulus)
     static bool zen_available_flags =
         CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
-    if (zen4_available) {
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_IFMA)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (zen4_available && has_Avx512) {
         if (m_key_size == 2048 / 8) {
             zen4::archCreateContext<KEY_SIZE_2048>(
                 m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
@@ -1149,7 +1176,14 @@ Rsa::setPrivateKey(const Uint8* dp,
     static bool zen_available_flags =
         CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
-    if (zen4_available) {
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_IFMA)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (zen4_available && has_Avx512) {
         if (m_key_size == 2048 / 8) {
             zen4::archCreateContext<KEY_SIZE_2048>(
                 m_context_p, m_priv_key.m_p, m_priv_key.m_size);
@@ -1231,8 +1265,14 @@ Rsa::setPrivateKeyAsBigNum(const BigNum* dp,
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen_available_flags =
         CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+    static bool has_Avx512 =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_IFMA)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
 
-    if (zen4_available) {
+    if (zen4_available && has_Avx512) {
         if (m_key_size == 2048 / 8) {
             zen4::archCreateContext<KEY_SIZE_2048>(
                 m_context_p, m_priv_key.m_p, m_priv_key.m_size);
