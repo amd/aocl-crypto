@@ -24,11 +24,10 @@ $ ninja
 5. [Enable Valgrind Memcheck Support ](#for-compiling-with-valgrind-memcheck)
 6. [Enable Bench - To compile bench code.](#build-benches)
 7. [Enable Tests - To compile test code](#build-tests-using-kat-vectors)
-8. [Build docs in pdf form](#to-enable-all-pdf-documentation)
-9. [Build Doxygen and Sphinx docs](#to-enable-both-doxygen-and-sphinx)
-10. [Build with dynamic compiler selection ](#to-enable-dynamic-compiler-selection-while-building)
-11. [Build with assembly disabled](#to-disable-assembly-implementation-and-use-intrinsics-kernels)
-12. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
+8. [Build Doxygen and Sphinx docs](#to-enable-both-doxygen-and-sphinx)
+9. [Build with dynamic compiler selection ](#to-enable-dynamic-compiler-selection-while-building)
+10. [Build with assembly disabled](#to-disable-assembly-implementation-and-use-intrinsics-kernels)
+11. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
 
 #### Enable Examples
 
@@ -113,15 +112,6 @@ For more details see **[README.md](./tests/README.md)** from tests.
 
 
 ### Documentation
-
-#### To enable all PDF documentation
-These documentations include design documents, Provider documentation etc in PDF format which will be generated.
-```sh
-$ cmake -DALCP_ENABLE_DOCS=ON ../
-```
-ALCP_ENABLE_DOCS is OFF by default
-
-Note: Needs the proprietary font “Klavika” to be installed in the system
 
 #### To enable both Doxygen and Sphinx
 
