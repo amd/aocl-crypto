@@ -501,7 +501,7 @@ TEST(SHA2, SHA224KAT1)
 
     auto sha_obj = std::make_shared<alcp::digest::Sha224>();
 
-    TestingHmacDrbg hmacDrbg;
+    TestingHmacDrbg hmacDrbg{};
 
     hmacDrbg.testingSetDigest(sha_obj);
 
