@@ -39,7 +39,8 @@ namespace alcp::testing {
 
 OpenSSLEcdhBase::OpenSSLEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{}
+{
+}
 
 OpenSSLEcdhBase::~OpenSSLEcdhBase()
 {
@@ -132,7 +133,6 @@ OpenSSLEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
                    ctx_pkey, &m_pPrivateKey, EVP_PKEY_KEYPAIR, params)
                    <= 0) {
             ERR_print_errors_fp(stderr);
-            // FIXME: Add cleanup
             return false; // Error Status
         }
         // Free unused resources
@@ -200,7 +200,6 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                    ctx_pkey, &externalPeerPubKey, EVP_PKEY_PUBLIC_KEY, params)
                    <= 0) {
             ERR_print_errors_fp(stderr);
-            // FIXME: Add cleanup
             return false; // Error Status
         }
         // Free unused resources

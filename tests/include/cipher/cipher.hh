@@ -61,6 +61,14 @@ struct alcp_dc_ex_t
     Uint8*       m_tkey;  // tweak key
     Uint64       m_tkeyl; // tweak key len
     Uint64       m_block_size;
+
+    const Uint8* m_ad;
+    Uint64       m_adl;
+    Uint8*       m_tag; // Probably const but openssl expects non const
+    Uint64       m_tagl;
+    bool         m_isTagValid;
+
+    Uint8* m_tagBuff; // Place to store tag buffer
     // Initialize everything to 0
     alcp_dc_ex_t()
     {
@@ -73,22 +81,6 @@ struct alcp_dc_ex_t
         m_tkey       = {};
         m_tkeyl      = {};
         m_block_size = {};
-    }
-};
-// alcp_data_cipher_aead_ex_t
-struct alcp_dca_ex_t : public alcp_dc_ex_t
-{
-    const Uint8* m_ad;
-    Uint64       m_adl;
-    Uint8*       m_tag; // Probably const but openssl expects non const
-    Uint64       m_tagl;
-    bool         m_isTagValid;
-
-    Uint8* m_tagBuff; // Place to store tag buffer
-    // Initialize everything to 0
-    alcp_dca_ex_t()
-        : alcp_dc_ex_t::alcp_dc_ex_t()
-    {
         m_ad         = {};
         m_adl        = {};
         m_tag        = {};

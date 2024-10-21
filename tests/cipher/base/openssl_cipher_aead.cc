@@ -398,9 +398,9 @@ OpenSSLCipherAeadBase::encrypt(const Uint8* plaintxt,
 bool
 OpenSSLCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 {
-    int           len_ct = 0;
-    static Uint8  temp;
-    alcp_dca_ex_t data = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
+    int                len_ct = 0;
+    std::vector<Uint8> temp   = std::vector<Uint8>(1);
+    alcp_dc_ex_t       data   = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
 #if 1
     if (m_mode == ALC_AES_MODE_GCM) {
         if (data.m_adl > 0)
@@ -548,8 +548,8 @@ OpenSSLCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 
         /* FIXME: Hack for test data when PT is NULL */
         if (data.m_inl == 0) {
-            data.m_out = &temp;
-            data.m_in  = &temp;
+            data.m_out = &temp[0];
+            data.m_in  = &temp[0];
         }
 
         if (1
@@ -592,9 +592,9 @@ OpenSSLCipherAeadBase::decrypt(const Uint8* ciphertxt,
 bool
 OpenSSLCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
 {
-    int           len_pt = 0;
-    static Uint8  temp;
-    alcp_dca_ex_t data = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
+    int          len_pt = 0;
+    static Uint8 temp;
+    alcp_dc_ex_t data = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
 #if 1
     if (m_mode == ALC_AES_MODE_GCM) {
         if (data.m_adl > 0)

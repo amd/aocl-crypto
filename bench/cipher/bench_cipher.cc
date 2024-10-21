@@ -62,7 +62,7 @@ CipherAeadBench(benchmark::State& state,
     alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8]      = {};
     alcp::testing::CipherAeadBase* p_cb                        = nullptr;
 
-    alcp::testing::alcp_dca_ex_t data;
+    alcp::testing::alcp_dc_ex_t data;
     data.m_in      = vec_in_arr;
     data.m_inl     = cBlockSize;
     data.m_out     = vec_out_arr;

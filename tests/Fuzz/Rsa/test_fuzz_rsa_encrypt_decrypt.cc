@@ -43,7 +43,7 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len)
     std::vector<Uint8> input(size_input, 0);
     std::vector<Uint8> encrypted_text(size_input, 0);
 
-    Uint64 PublicKeyExponent = 0x10001;
+    Uint64 PublicKeyExponent = pub_key_exp;
 
     std::cout << "Running for Input size: " << size_input
               << " and Modulus size " << size_modulus << std::endl;

@@ -88,7 +88,6 @@ OpenSSLRsaBase::init()
     /* digest params to be added only for PADDED mode*/
     if (m_padding_mode != ALCP_TEST_RSA_NO_PADDING) {
         switch (m_digest_info.dt_len) {
-            /* FIXME: add more cases here */
             case ALC_DIGEST_LEN_256:
                 m_digest_str = "sha256";
                 break;
@@ -109,7 +108,7 @@ OpenSSLRsaBase::init()
     }
 
     /* now build key params */
-    unsigned long Exponent = 0x10001;
+    unsigned long Exponent = pub_key_exp;
     BIGNUM *      mod_BN = nullptr, *pvt_exponent_BN = nullptr, *P_BN = nullptr,
            *Q_BN = nullptr, *DP_BN = nullptr, *DQ_BN = nullptr,
            *QINV_BN = nullptr;

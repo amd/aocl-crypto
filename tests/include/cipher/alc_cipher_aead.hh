@@ -141,7 +141,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return
      */
     template<bool enc>
-    inline bool alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpGCMModeToFuncCall(alcp_dc_ex_t& aead_data);
 
     /**
      * @brief
@@ -150,7 +150,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return
      */
     template<bool enc>
-    inline bool alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpCCMModeToFuncCall(alcp_dc_ex_t& aead_data);
 
     /**
      * @brief
@@ -159,7 +159,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return
      */
     template<bool enc>
-    inline bool alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpSIVModeToFuncCall(alcp_dc_ex_t& aead_data);
 
     /**
      * @brief         Initialization/Reinitialization function, created handle
@@ -172,7 +172,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      */
 
     template<bool enc>
-    inline bool alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpChachaPolyModeToFuncCall(alcp_dc_ex_t& aead_data);
     ~AlcpCipherAeadBase();
 
     bool init(const Uint8* iv,

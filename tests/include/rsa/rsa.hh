@@ -47,7 +47,7 @@ namespace alcp::testing {
 #define ALCP_TEST_RSA_ALGO_SIGN_VERIFY 4
 #define ALCP_TEST_RSA_ALGO_ENC_DEC     5
 
-// FIXME: digest_info should be removed from RSA testing
+#define ALCP_RSA_SIGNATURE_LEN 256
 
 typedef struct _alc_digest_info
 {

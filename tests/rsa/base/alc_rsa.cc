@@ -134,7 +134,7 @@ AlcpRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
     alc_error_t err       = ALC_ERROR_NONE;
     Uint64      size_2048 = 0, size_1024 = 0;
 
-    m_pub_key_exp     = 0x10001;
+    m_pub_key_exp     = pub_key_exp;
     BigNum public_key = { &m_pub_key_exp, 1 };
 
     size_2048 = sizeof(PubKey_Modulus_2048);
@@ -259,8 +259,7 @@ AlcpRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
 bool
 AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
-    /*FIXME: where should this be defined? */
-    m_pub_key_exp   = 0x10001;
+    m_pub_key_exp   = pub_key_exp;
     alc_error_t err = ALC_ERROR_NONE;
 
     /* Adding the public key for applying encryption */

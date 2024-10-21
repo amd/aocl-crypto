@@ -55,9 +55,9 @@ class IPPCipherAeadBase : public CipherAeadBase
     int          m_ctxSize    = 0;
     Uint64       m_block_size = 0;
     void         PrintErrors(IppStatus status);
-    bool         alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
-    bool         alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
-    bool         alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc);
+    bool         alcpGCMModeToFuncCall(alcp_dc_ex_t data, bool enc);
+    bool         alcpCCMModeToFuncCall(alcp_dc_ex_t data, bool enc);
+    bool         alcpSIVModeToFuncCall(alcp_dc_ex_t data, bool enc);
 
   public:
     /**

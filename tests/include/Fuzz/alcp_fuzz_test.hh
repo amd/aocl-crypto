@@ -31,6 +31,7 @@
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
 #include "config.h"
+#include "rsa/rsa_keys.hh"
 #include <cstddef>
 #include <cstdint>
 #include <dlfcn.h>

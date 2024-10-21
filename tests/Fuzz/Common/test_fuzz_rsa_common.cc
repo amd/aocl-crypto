@@ -242,7 +242,7 @@ ALCP_Fuzz_Rsa_OAEP(const Uint8* buf,
     size_t size_modulus = 256, size_p_modulus = 128;
     size_t size_label = stream.ConsumeIntegral<Uint16>();
 
-    Uint64             PublicKeyExponent = 0x10001;
+    Uint64             PublicKeyExponent = pub_key_exp;
     Uint64             hash_len          = dinfo.dt_len / 8;
     std::vector<Uint8> fuzz_seed         = stream.ConsumeBytes<Uint8>(hash_len);
 
@@ -406,7 +406,7 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
     /* key component sizes */
     size_t size_modulus = 256, size_p_modulus = 128;
 
-    Uint64 PublicKeyExponent = 0x10001;
+    Uint64 PublicKeyExponent = pub_key_exp;
 
     /* signature output */
     std::vector<Uint8> signature_output(size_modulus, 0);
@@ -548,8 +548,7 @@ ALCP_Fuzz_Rsa_EncryptPubKey(const Uint8* buf, size_t len, bool TestNegLifeCycle)
     std::vector<Uint8> input(size_input, 0);
     std::vector<Uint8> encrypted_text(size_modulus, 0);
 
-    /* FIXME, randomize this as well? */
-    Uint64 PublicKeyExponent = 0x10001;
+    Uint64 PublicKeyExponent = pub_key_exp;
 
     std::cout << "Running for Input size: " << size_input
               << " and Modulus size " << size_modulus << std::endl;
@@ -716,7 +715,7 @@ ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec)
     Uint64             dec_text_size       = 0;
     Uint8*             dec_text            = nullptr;
     Uint64             size_modulus        = 256;
-    Uint64             PublicKeyExponent   = 0x10001;
+    Uint64             PublicKeyExponent   = pub_key_exp;
     std::vector<Uint8> fuzz_input =
         stream.ConsumeBytes<Uint8>(size_encrypted_data);
     std::vector<Uint8> fuzz_random_pad =
@@ -830,7 +829,7 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
     FuzzedDataProvider stream(buf, len);
     Uint64             size              = 0;
     Uint64             size_modulus      = 256;
-    Uint64             PublicKeyExponent = 0x10001;
+    Uint64             PublicKeyExponent = pub_key_exp;
 
     /* Fuzz the hash to be signed */
     size_t             HashSize = stream.ConsumeIntegralInRange<Uint16>(32, 64);

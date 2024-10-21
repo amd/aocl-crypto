@@ -73,18 +73,16 @@ PrintRsaTestData(alcp_rsa_data_t* data, std::string RsaAlgo)
                       << " Len : " << data->m_msg_len << std::endl;
     }
     /* for sign verify tests */
-    /* FIXME: signature len for now is 256, parameterize this !*/
     if (RsaAlgo.compare("SignVerify") == 0
         || RsaAlgo.compare("DigestSignVerify")) {
         if (data->m_signature)
             std::cout << "Signature: "
-                      << parseBytesToHexStr(data->m_signature, 256)
-                      << " Len : " << 256 << std::endl;
+                      << parseBytesToHexStr(data->m_signature,
+                                            ALCP_RSA_SIGNATURE_LEN)
+                      << " Len : " << ALCP_RSA_SIGNATURE_LEN << std::endl;
     }
     return;
 }
-
-/* get padding mode name */
 
 /* to bypass some invalid input cases */
 bool
@@ -122,8 +120,7 @@ SkipTest(int ret_val, std::string LibStr)
     return false;
 }
 
-/* encrypt decrypt tests */
-/* FIXME, change this name to Enc/Dec*/
+/* KAT test function for encrypt decrypt / sign verify */
 void
 Rsa_KAT(std::string             RsaAlgo,
         int                     padding_mode,
@@ -263,7 +260,6 @@ Rsa_KAT(std::string             RsaAlgo,
             FAIL();
         }
 
-        /* FIXME: this is enabled only for ALCP PSS SignVerify */
         if (LibStr.compare("ALCP") == 0) {
             if (RsaAlgo.compare("SignVerify") == 0) {
                 if (!rb->SetPublicKeyBigNum(data)) {

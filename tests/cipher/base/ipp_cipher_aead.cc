@@ -186,7 +186,7 @@ IPPCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
 }
 
 bool
-IPPCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
+IPPCipherAeadBase::alcpGCMModeToFuncCall(alcp_dc_ex_t data, bool enc)
 {
     IppStatus status = ippStsNoErr;
     if (enc) {
@@ -238,7 +238,7 @@ IPPCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
 }
 
 bool
-IPPCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
+IPPCipherAeadBase::alcpCCMModeToFuncCall(alcp_dc_ex_t data, bool enc)
 {
     IppStatus status = ippStsNoErr;
     Ipp8u     Temp   = 0;
@@ -319,7 +319,7 @@ IPPCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
 }
 
 bool
-IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc)
+IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dc_ex_t data, bool enc)
 {
     Ipp8u* ad_ptr_list[]  = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
     int    ad_size_list[] = { (int)data.m_adl, (int)data.m_inl };
@@ -390,8 +390,8 @@ IPPCipherAeadBase::encrypt()
 bool
 IPPCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 {
-    alcp_dca_ex_t data   = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
-    bool          retval = false;
+    alcp_dc_ex_t data   = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
+    bool         retval = false;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             retval = alcpGCMModeToFuncCall(data, true);
@@ -417,8 +417,8 @@ IPPCipherAeadBase::decrypt()
 bool
 IPPCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
 {
-    alcp_dca_ex_t data   = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
-    bool          retval = false;
+    alcp_dc_ex_t data   = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
+    bool         retval = false;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             retval = alcpGCMModeToFuncCall(data, false);

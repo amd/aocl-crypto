@@ -45,7 +45,7 @@ ALCP_Fuzz_Rsa_SignVerify(int PaddingMode, const Uint8* buf, size_t len)
            size_q_modulus = 64, size_dp_exp = 64, size_dq_exp = 64,
            size_q_mod_inv = 64;
 
-    Uint64 PublicKeyExponent = 0x10001;
+    Uint64 PublicKeyExponent = pub_key_exp;
 
     /* fuzzed buffers */
     std::vector<Uint8> fuzz_modulus = stream.ConsumeBytes<Uint8>(size_modulus);
