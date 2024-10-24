@@ -32,8 +32,8 @@ IF(ENABLE_AOCL_UTILS)
 		MESSAGE(STATUS "AOCL_UTILS_INSTALL_DIR set, overriding fetch path")
 	ELSE(AOCL_UTILS_INSTALL_DIR)
         ExternalProject_Add(aoclutils
-            GIT_REPOSITORY git@github.amd.com:AOCL/aocl-utils.git
-            GIT_TAG amd-main
+            GIT_REPOSITORY git@github.com:amd/aocl-utils.git
+            GIT_TAG dev
             SOURCE_DIR "${CMAKE_BINARY_DIR}/external/src/aoclutils"
             BINARY_DIR "${EXTERNAL_INSTALL_LOCATION}/aoclutils"
             CMAKE_ARGS  -DAU_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} "${CMAKE_BINARY_DIR}/external/src/aoclutils"
