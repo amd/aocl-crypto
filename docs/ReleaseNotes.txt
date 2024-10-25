@@ -1,6 +1,6 @@
 (C) 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 
-AOCL Cryptography - Release Notes - AOCL version 4.2.1
+AOCL Cryptography - Release Notes - AOCL version 5.0.1
 ------------------------------------------------------
 
 AOCL Crypto Contents
@@ -18,9 +18,9 @@ implementations of different cryptographic algorithms which is given below:
 -- Chacha20Poly1305 routines.
 
 
-Highlights of AOCL Crypto version 4.2.1
+Highlights of AOCL Crypto version 5.0.1
 ---------------------------------------------------------------------------
-AOCL-July2024
+AOCL-Oct2024
 ---------------------------------------------------------------------------
   - OpenSSL Provider:
     - Enabled support for CMAC, Poly1305, Cipher, RSA Algorithms
@@ -39,6 +39,8 @@ AOCL-July2024
     - Performance improvements in CFB, CBC Decrypt algorithms for vaes512 kernel.
     - Padding support in CBC, CTR, OFB, CFB modes.
     - Unit tests added for all algorithms.
+    - Cipher modes templatized.
+    - Fixed dynamic dispatch on non-avx2 architectures.
 
   - RSA:
       - PKCS Encrypt & Decrypt algorithms.
@@ -81,6 +83,8 @@ AOCL-July2024
       - Ninja build support added.
       - Checks for dependencies (git-lfs, valgrind, lcov, etc)
       - Windows build system updates
+      - Removed dependnecy on lsb_release utility.
+      - Packaging makefile checks openssl version.
 
   - Bug fixes in dynamic dispatcher.
   - Documentation updates related to Doxygen and Sphinx.
@@ -88,6 +92,8 @@ AOCL-July2024
   - Memory errors fixed across various algorithms.
   - High severity defects reported from coverity static analysis tool fixed.
   - Code clean up.
+  - ISA Based dynamic dispatch added for Digest, RSA.
+  - Coverity high and majority of medium severity defects fixed.
 
   - Known issues:
     - IPP Compat library is in experimental state in 5.0 release.
