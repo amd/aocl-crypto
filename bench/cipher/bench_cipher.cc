@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -77,12 +77,21 @@ CipherAeadBench(benchmark::State& state,
     data.m_tkey    = tkey;
     data.m_tkeyl   = 16;
 
+    alc_cipher_state_t cipherState;
+
     if (alcpMode == ALC_AES_MODE_SIV) {
         data.m_ivl = 16;
     }
 
-    alcp::testing::AlcpCipherAeadBase acb = alcp::testing::AlcpCipherAeadBase(
-        alcpMode, data.m_iv, data.m_ivl, key, keylen, data.m_tkey, data.m_outl);
+    alcp::testing::AlcpCipherAeadBase acb =
+        alcp::testing::AlcpCipherAeadBase(alcpMode,
+                                          data.m_iv,
+                                          data.m_ivl,
+                                          key,
+                                          keylen,
+                                          data.m_tkey,
+                                          data.m_outl,
+                                          &cipherState);
 
     p_cb = &acb;
 #ifdef USE_IPP
@@ -94,21 +103,23 @@ CipherAeadBench(benchmark::State& state,
                                                                  key,
                                                                  keylen,
                                                                  data.m_tkey,
-                                                                 data.m_outl);
+                                                                 data.m_outl,
+                                                                 nullptr);
         p_cb = icb.get();
     }
 #endif
 #ifdef USE_OSSL
     std::unique_ptr<alcp::testing::OpenSSLCipherAeadBase> ocb;
     if (useossl) {
-        ocb =
-            std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(alcpMode,
-                                                                   data.m_iv,
-                                                                   data.m_ivl,
-                                                                   key,
-                                                                   keylen,
-                                                                   data.m_tkey,
-                                                                   data.m_outl);
+        ocb = std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(
+            alcpMode,
+            data.m_iv,
+            data.m_ivl,
+            key,
+            keylen,
+            data.m_tkey,
+            data.m_outl,
+            &cipherState);
         p_cb = ocb.get();
     }
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -178,6 +178,7 @@ class CipherAeadTestingCore
     AlcpCipherAeadBase* m_acb           = {};
     LIB_TYPE            m_lib{};
     alc_cipher_mode_t   m_alcpMode{};
+    alc_cipher_state_t  m_pState{};
 #ifdef USE_IPP
     IPPCipherAeadBase* icb = nullptr;
 #endif
@@ -215,7 +216,7 @@ class CipherAeadTestingCore
 #endif
                 break;
             case LIB_TYPE::ALCP:
-                m_acb = new AlcpCipherAeadBase(alcpMode, NULL);
+                m_acb = new AlcpCipherAeadBase(alcpMode, NULL, &m_pState);
                 m_cipherHandler->setcb(m_acb);
                 break;
         }
@@ -229,7 +230,7 @@ class CipherAeadTestingCore
 
         // Initialize cipher testing classes
         m_cipherHandler = new CipherTesting();
-        m_acb           = new AlcpCipherAeadBase(alcpMode, NULL);
+        m_acb           = new AlcpCipherAeadBase(alcpMode, NULL, &m_pState);
         m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
         icb = new IPPCipherAeadBase(alcpMode, NULL);

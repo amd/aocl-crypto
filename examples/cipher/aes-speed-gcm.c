@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -97,7 +97,8 @@ getinput(Uint8* output, int inputLen)
 }
 
 void
-create_aes_session(Uint8*                  key,
+create_aes_session(alc_cipher_state_t*     pcipherState,
+                   Uint8*                  key,
                    Uint8*                  iv,
                    const Uint32            keyLen,
                    const alc_cipher_mode_t mode)
@@ -113,7 +114,8 @@ create_aes_session(Uint8*                  key,
     }
 
     /* Request a context with cipher mode and keyLen */
-    err = alcp_cipher_aead_request(mode, keyLen, &handle);
+    err = alcp_cipher_aead_request_with_extState(
+        mode, keyLen, pcipherState, &handle);
     if (alcp_is_error(err)) {
         free(handle.ch_context);
         printf("Error: unable to request \n");
@@ -301,8 +303,9 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
 
     memset(cipherText, 0, inputLen);
     memset(outputText, 0, inputLen);
+    alc_cipher_state_t cipherState;
 
-    create_aes_session(key, iv, keybits, m);
+    create_aes_session(&cipherState, key, iv, keybits, m);
 
     // same inputText, cipherText and outputText buffer is used multiple times
     // to measure speed, so inputText and outputText after decrypt will not

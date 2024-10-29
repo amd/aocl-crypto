@@ -68,7 +68,9 @@ namespace vaes512 {
         alc_error_t setKey(const Uint8* key, Uint64 keylen);
     };
 
-    class ALCP_API_EXPORT ChaChaPoly : public ChaChaPlusPoly
+    class ALCP_API_EXPORT ChaChaPoly
+        : public ChaChaPlusPoly
+        , public virtual iCipher
     {
 
       public:
@@ -78,7 +80,7 @@ namespace vaes512 {
         alc_error_t init(const Uint8* pKey,
                          Uint64       keyLen,
                          const Uint8* pIv,
-                         Uint64       ivLen);
+                         Uint64       ivLen) override;
     };
 
     AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual iCipherAuth);
@@ -110,7 +112,9 @@ namespace ref {
         alc_error_t setKey(const Uint8* key, Uint64 keylen);
     };
 
-    class ALCP_API_EXPORT ChaChaPoly : public ChaChaPlusPoly
+    class ALCP_API_EXPORT ChaChaPoly
+        : public ChaChaPlusPoly
+        , public virtual iCipher
     {
 
       public:
@@ -120,7 +124,7 @@ namespace ref {
         alc_error_t init(const Uint8* pKey,
                          Uint64       keyLen,
                          const Uint8* pIv,
-                         Uint64       ivLen);
+                         Uint64       ivLen) override;
     };
 
     AEAD_AUTH_CLASS_GEN(ChaChaPolyAuth, ChaChaPoly, virtual iCipherAuth);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -97,15 +97,15 @@ OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv,
                                              const Uint32            cIvLen,
                                              const Uint8*            key,
                                              const Uint32            cKeyLen,
                                              const Uint8*            tkey,
-                                             const Uint64            cBlockSize)
+                                             const Uint64            cBlockSize,
+                                             alc_cipher_state_t* pCipherState)
     : m_mode{ cMode }
     , m_iv{ iv }
     , m_iv_len{ cIvLen }

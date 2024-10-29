@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,38 +46,36 @@ namespace alcp::cipher {
 #define ALCP_GCM_TAG_MAX_SIZE 16
 #define MAX_NUM_512_BLKS      8
 
-typedef struct _alc_cipher_gcm_data
+typedef struct _alc_cipher_gcm_key_data
 {
     __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
 
-} _alc_cipher_gcm_data_t;
+} _alc_cipher_gcm_key_data_t;
 
-typedef struct _alc_gcm_local_data
+typedef struct _alc_gcm_ctx
 {
     // gcm specific params
-    Int32 m_num_512blks_precomputed;
-    Int32 m_num_256blks_precomputed;
+    Int32  m_num_512blks_precomputed;
+    Int32  m_num_256blks_precomputed;
+    Uint64 m_update_counter = 0;
 
     __m128i m_hash_subKey_128;
     __m128i m_gHash_128;
     __m128i m_counter_128;
-
     __m128i m_reverse_mask_128;
-
-    Uint64* m_pHashSubkeyTable_global;
-
     __m128i m_tag_128;
     Uint64  m_additionalDataLen;
 
-    _alc_cipher_gcm_data_t m_gcm{};
+    _alc_cipher_gcm_key_data_t m_gcm_key_data{};
+    Uint64*                    m_pHashSubkeyTable_precomputed = nullptr;
 
-} alc_gcm_local_data_t;
+} alc_gcm_ctx_t;
 class ALCP_API_EXPORT Gcm
     : public Aes
     , public virtual iCipher
 {
   protected:
-    alc_gcm_local_data_t m_gcm_local_data;
+    alc_gcm_ctx_t m_gcm_ctx;
 
   public:
     Gcm(Uint32 keyLen_in_bytes)
@@ -87,30 +85,42 @@ class ALCP_API_EXPORT Gcm
         // default ivLength is 12 bytes or 96bits
         m_ivLen_aes = 12;
 
-        m_gcm_local_data.m_num_512blks_precomputed = 0;
-        m_gcm_local_data.m_num_256blks_precomputed = 0;
+        m_gcm_ctx.m_num_512blks_precomputed = 0;
+        m_gcm_ctx.m_num_256blks_precomputed = 0;
+        m_gcm_ctx.m_update_counter          = 0;
 
-        m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
-        m_gcm_local_data.m_gHash_128       = _mm_setzero_si128();
-        m_gcm_local_data.m_counter_128     = _mm_setzero_si128();
+        m_gcm_ctx.m_hash_subKey_128 = _mm_setzero_si128();
+        m_gcm_ctx.m_gHash_128       = _mm_setzero_si128();
+        m_gcm_ctx.m_counter_128     = _mm_setzero_si128();
 
-        m_gcm_local_data.m_reverse_mask_128 =
+        m_gcm_ctx.m_reverse_mask_128 =
             _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
         // global precomputed hashtable pointer
-        m_gcm_local_data.m_pHashSubkeyTable_global =
-            m_gcm_local_data.m_gcm.m_hashSubkeyTable;
+        m_gcm_ctx.m_pHashSubkeyTable_precomputed =
+            m_gcm_ctx.m_gcm_key_data.m_hashSubkeyTable;
 
-        m_gcm_local_data.m_tag_128           = _mm_setzero_si128();
-        m_gcm_local_data.m_additionalDataLen = 0;
+        m_gcm_ctx.m_tag_128           = _mm_setzero_si128();
+        m_gcm_ctx.m_additionalDataLen = 0;
     }
 
     ~Gcm()
     {
         // clear precomputed hashtable
-        memset(m_gcm_local_data.m_pHashSubkeyTable_global,
-               0,
-               sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
+        if (m_gcm_ctx.m_pHashSubkeyTable_precomputed != nullptr) {
+            memset(m_gcm_ctx.m_pHashSubkeyTable_precomputed,
+                   0,
+                   sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
+        }
+    }
+
+    void setTable(alc_cipher_state_t* pCipherState)
+    {
+        if (pCipherState != nullptr) {
+            // printf("setTable\n");
+            m_gcm_ctx.m_pHashSubkeyTable_precomputed =
+                pCipherState->alcp_precomputed_table;
+        }
     }
 
     alc_error_t init(const Uint8* pKey,
@@ -127,8 +137,7 @@ class ALCP_API_EXPORT GcmAuth
   public:
     GcmAuth(Uint32 keyLen_in_bytes)
         : Gcm(keyLen_in_bytes)
-    {
-    }
+    {}
     ~GcmAuth() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
@@ -145,6 +154,13 @@ class GcmT
     GcmT()
         : GcmAuth((static_cast<Uint32>(keyLenBits)) / 8)
     {}
+
+    GcmT(alc_cipher_state_t* pCipherState)
+        : GcmAuth((static_cast<Uint32>(keyLenBits)) / 8)
+    {
+        setTable(pCipherState);
+    }
+
     ~GcmT() = default;
 
   public:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,23 +38,27 @@
 
 using alcp::utils::CpuId;
 
+#define DEBUG_PROV_GCM_INIT 0
+
 namespace alcp::cipher {
 // init & finish implementation
-
 alc_error_t
 Gcm::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
-
+    // Uint8*      pExpKey = nullptr;
     if (pKey != NULL && keyLen != 0) {
-        err = setKey(pKey, keyLen);
+        // err = setKey(pKey, pExpKey, keyLen);
+        err                        = setKey(pKey, keyLen);
+        m_gcm_ctx.m_update_counter = 0; // reset counter
         if (err != ALC_ERROR_NONE) {
             return err;
         }
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err = setIv(pIv, ivLen);
+        err                        = setIv(pIv, ivLen);
+        m_gcm_ctx.m_update_counter = 0; // reset counter
         if (err != ALC_ERROR_NONE) {
             return err;
         }
@@ -63,18 +67,18 @@ Gcm::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
     // In init call, we generate HashSubKey, partial
     // tag data.
     if (m_ivState_aes && m_isKeySet_aes) {
-        m_gcm_local_data.m_gHash_128       = _mm_setzero_si128();
-        m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
-        m_dataLen                          = 0;
+        m_gcm_ctx.m_gHash_128       = _mm_setzero_si128();
+        m_gcm_ctx.m_hash_subKey_128 = _mm_setzero_si128();
+        m_dataLen                   = 0;
         // printf("\n gcm init");
         err = aesni::InitGcm(m_cipher_key_data.m_enc_key,
                              m_nrounds,
                              m_pIv_aes,
                              m_ivLen_aes,
-                             m_gcm_local_data.m_hash_subKey_128,
-                             m_gcm_local_data.m_tag_128,
-                             m_gcm_local_data.m_counter_128,
-                             m_gcm_local_data.m_reverse_mask_128);
+                             m_gcm_ctx.m_hash_subKey_128,
+                             m_gcm_ctx.m_tag_128,
+                             m_gcm_ctx.m_counter_128,
+                             m_gcm_ctx.m_reverse_mask_128);
     }
 
     return err;
@@ -94,17 +98,17 @@ GcmAuth::setAad(const Uint8* pInput, Uint64 aadLen)
     }
     // additional data processing, when input is
     // additional data & output is NULL
-    const Uint8* pAdditionalData         = pInput;
-    m_gcm_local_data.m_additionalDataLen = aadLen;
+    const Uint8* pAdditionalData  = pInput;
+    m_gcm_ctx.m_additionalDataLen = aadLen;
 #if DEBUG_PROV_GCM_INIT
-    printf("\n processAad adlen %ld ", m_gcm_local_data.m_additionalDataLen);
+    printf("processAad adlen %ld \n", m_gcm_ctx.m_additionalDataLen);
 #endif
     // printf("\n gcm aad");
     err = aesni::processAdditionalDataGcm(pAdditionalData,
-                                          m_gcm_local_data.m_additionalDataLen,
-                                          m_gcm_local_data.m_gHash_128,
-                                          m_gcm_local_data.m_hash_subKey_128,
-                                          m_gcm_local_data.m_reverse_mask_128);
+                                          m_gcm_ctx.m_additionalDataLen,
+                                          m_gcm_ctx.m_gHash_128,
+                                          m_gcm_ctx.m_hash_subKey_128,
+                                          m_gcm_ctx.m_reverse_mask_128);
 
     return err;
 }
@@ -123,7 +127,7 @@ GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
         return ALC_ERROR_INVALID_SIZE;
     }
 #if DEBUG_PROV_GCM_INIT
-    printf("\n getTag taglen %ld isEnc %d", tagLen, ctx->enc);
+    printf("getTag taglen %ld \n\n", tagLen);
 #endif
 
 #if INTERNAL_TAG_MATCH
@@ -138,11 +142,11 @@ GcmAuth::getTag(Uint8* ptag, Uint64 tagLen)
 
     err = aesni::GetTagGcm(tagLen,
                            m_dataLen,
-                           m_gcm_local_data.m_additionalDataLen,
-                           m_gcm_local_data.m_gHash_128,
-                           m_gcm_local_data.m_tag_128,
-                           m_gcm_local_data.m_hash_subKey_128,
-                           m_gcm_local_data.m_reverse_mask_128,
+                           m_gcm_ctx.m_additionalDataLen,
+                           m_gcm_ctx.m_gHash_128,
+                           m_gcm_ctx.m_tag_128,
+                           m_gcm_ctx.m_hash_subKey_128,
+                           m_gcm_ctx.m_reverse_mask_128,
                            ptag);
 
 #if INTERNAL_TAG_MATCH
@@ -180,95 +184,82 @@ GcmT<keyLenBits, arch>::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
         return ALC_ERROR_BAD_STATE;
     }
     m_dataLen += len;
-    bool isFirstUpdate = false;
-    if (len == m_dataLen) {
-        isFirstUpdate = true;
-    }
+
+#if DEBUG_PROV_GCM_INIT
+    printf("decrypt len %ld \n", len);
+#endif
+
+    m_gcm_ctx.m_update_counter++;
 
     if constexpr (arch == CpuCipherFeatures::eVaes512) {
         switch (keyLenBits) {
             case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes512::decryptGcm128(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes512::decryptGcm128(pInput,
+                                             pOutput,
+                                             len,
+                                             m_gcm_ctx.m_update_counter,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes512::decryptGcm192(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes512::decryptGcm192(pInput,
+                                             pOutput,
+                                             len,
+                                             m_gcm_ctx.m_update_counter,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes512::decryptGcm256(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes512::decryptGcm256(pInput,
+                                             pOutput,
+                                             len,
+                                             m_gcm_ctx.m_update_counter,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             &m_gcm_ctx);
                 return err;
         }
 
     } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
         switch (keyLenBits) {
             case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes::decryptGcm128(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes::decryptGcm128(pInput,
+                                          pOutput,
+                                          len,
+                                          m_gcm_ctx.m_update_counter,
+                                          m_cipher_key_data.m_enc_key,
+                                          getRounds(),
+                                          &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes::decryptGcm192(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes::decryptGcm192(pInput,
+                                          pOutput,
+                                          len,
+                                          m_gcm_ctx.m_update_counter,
+                                          m_cipher_key_data.m_enc_key,
+                                          getRounds(),
+                                          &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes::decryptGcm256(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes::decryptGcm256(pInput,
+                                          pOutput,
+                                          len,
+                                          m_gcm_ctx.m_update_counter,
+                                          m_cipher_key_data.m_enc_key,
+                                          getRounds(),
+                                          &m_gcm_ctx);
                 return err;
         }
     } else if constexpr (arch == CpuCipherFeatures::eAesni) {
-        err = aesni::CryptGcm(
-            pInput,
-            pOutput,
-            len,
-            m_cipher_key_data.m_enc_key,
-            m_nrounds,
-            &m_gcm_local_data,
-            false,
-            m_gcm_local_data.m_gcm
-                .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
+        err = aesni::CryptGcm(pInput,
+                              pOutput,
+                              len,
+                              m_cipher_key_data.m_enc_key,
+                              m_nrounds,
+                              &m_gcm_ctx,
+                              false);
     }
 
     return ALC_ERROR_NOT_SUPPORTED;
@@ -286,96 +277,84 @@ GcmT<keyLenBits, arch>::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
         return ALC_ERROR_BAD_STATE;
     }
     m_dataLen += len;
-    bool isFirstUpdate = false;
-    if (len == m_dataLen) {
-        isFirstUpdate = true;
-    }
+
+#if DEBUG_PROV_GCM_INIT
+    printf("encrypt len %ld \n", len);
+#endif
+
+    m_gcm_ctx.m_update_counter++;
+    // printf("\n update counter %ld \n", m_gcm_ctx.m_update_counter);
 
     if constexpr (arch == CpuCipherFeatures::eVaes512) {
 
         switch (keyLenBits) {
             case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes512::encryptGcm128(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes512::encryptGcm128(pInput,
+                                             pOutput,
+                                             len,
+                                             m_gcm_ctx.m_update_counter,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes512::encryptGcm192(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes512::encryptGcm192(pInput,
+                                             pOutput,
+                                             len,
+                                             m_gcm_ctx.m_update_counter,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes512::encryptGcm256(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes512::encryptGcm256(pInput,
+                                             pOutput,
+                                             len,
+                                             m_gcm_ctx.m_update_counter,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             &m_gcm_ctx);
                 return err;
         }
 
     } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
         switch (keyLenBits) {
             case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes::encryptGcm128(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes::encryptGcm128(pInput,
+                                          pOutput,
+                                          len,
+                                          m_gcm_ctx.m_update_counter,
+                                          m_cipher_key_data.m_enc_key,
+                                          getRounds(),
+                                          &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes::encryptGcm192(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes::encryptGcm192(pInput,
+                                          pOutput,
+                                          len,
+                                          m_gcm_ctx.m_update_counter,
+                                          m_cipher_key_data.m_enc_key,
+                                          getRounds(),
+                                          &m_gcm_ctx);
                 return err;
             case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes::encryptGcm256(
-                    pInput,
-                    pOutput,
-                    len,
-                    isFirstUpdate,
-                    m_cipher_key_data.m_enc_key,
-                    getRounds(),
-                    &m_gcm_local_data,
-                    m_gcm_local_data.m_gcm.m_hashSubkeyTable);
+                err = vaes::encryptGcm256(pInput,
+                                          pOutput,
+                                          len,
+                                          m_gcm_ctx.m_update_counter,
+                                          m_cipher_key_data.m_enc_key,
+                                          getRounds(),
+                                          &m_gcm_ctx);
                 return err;
         }
     } else if constexpr (arch == CpuCipherFeatures::eAesni) {
-        err = aesni::CryptGcm(
-            pInput,
-            pOutput,
-            len,
-            m_cipher_key_data.m_enc_key,
-            m_nrounds,
-            &m_gcm_local_data,
-            true,
-            m_gcm_local_data.m_gcm
-                .m_hashSubkeyTable); // ctx->m_gcm.m_hashSubkeyTable);
+        err = aesni::CryptGcm(pInput,
+                              pOutput,
+                              len,
+                              m_cipher_key_data.m_enc_key,
+                              m_nrounds,
+                              &m_gcm_ctx,
+                              true);
     }
 
     return ALC_ERROR_NOT_SUPPORTED;

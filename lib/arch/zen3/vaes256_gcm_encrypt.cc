@@ -71,15 +71,16 @@ template<void AesEncNoLoad_4x256(
 Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
                              __m256i*       p_out_x,
                              Uint64         blocks,
-                             bool           isFirstUpdate,
+                             Uint64         updateCounter,
                              const __m128i* pkey128,
                              int            nRounds,
                              // gcm specific params
-                             alc_gcm_local_data_t* gcmLocalData,
-                             int                   remBytes,
-                             Uint64*               pGcmCtxHashSubkeyTable)
+                             alc_gcm_ctx_t* gcmCtx,
+                             int            remBytes)
 {
     __m256i c1;
+
+    Uint64* pGcmCtxHashSubkeyTable = gcmCtx->m_pHashSubkeyTable_precomputed;
 
     /* gcm init + Hash subkey init */
     // Initalize GCM constants
@@ -100,7 +101,7 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
 
     const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 
-    amd_mm256_broadcast_i64x2(&gcmLocalData->m_counter_128, &c1);
+    amd_mm256_broadcast_i64x2(&gcmCtx->m_counter_128, &c1);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
 
@@ -129,11 +130,11 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
     __m256i  hashSubkeyTableStack[MAX_NUM_256_BLKS] = {};
     __m256i* Hsubkey_256                            = hashSubkeyTableStack;
     if (num_256_blks) {
-        getPrecomputedTable(isFirstUpdate,
+        getPrecomputedTable(updateCounter,
                             Hsubkey_256_precomputed,
                             Hsubkey_256,
                             num_256_blks,
-                            gcmLocalData,
+                            gcmCtx,
                             const_factor_128);
     }
 
@@ -150,7 +151,7 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
     c4 = alcp_add_epi32(c2, two_x);
 
     __m256i Hsubkey_256_0, Hsubkey_256_1, Hsubkey_256_2, Hsubkey_256_3;
-    __m256i gHash_256 = _mm256_zextsi128_si256(gcmLocalData->m_gHash_128);
+    __m256i gHash_256 = _mm256_zextsi128_si256(gcmCtx->m_gHash_128);
 
     if (num_256_blks >= 8) {
         constexpr Uint64 blks_in_256bit = 2;
@@ -488,7 +489,7 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
         p_out_x += 1;
     }
 
-    gcmLocalData->m_gHash_128 = _mm256_castsi256_si128(gHash_256);
+    gcmCtx->m_gHash_128 = _mm256_castsi256_si128(gHash_256);
 
     // residual block=1 when factor = 2, load and store only lower half.
     __m128i c1_128     = _mm256_castsi256_si128(c1);
@@ -510,12 +511,11 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
         // increment counter
         c1_128 = _mm_add_epi32(c1_128, one_lo_128);
 
-        __m128i ra1 = _mm_shuffle_epi8(a1, gcmLocalData->m_reverse_mask_128);
-        gcmLocalData->m_gHash_128 =
-            _mm_xor_si128(ra1, gcmLocalData->m_gHash_128);
-        aesni::gMul(gcmLocalData->m_gHash_128,
-                    gcmLocalData->m_hash_subKey_128,
-                    gcmLocalData->m_gHash_128,
+        __m128i ra1         = _mm_shuffle_epi8(a1, gcmCtx->m_reverse_mask_128);
+        gcmCtx->m_gHash_128 = _mm_xor_si128(ra1, gcmCtx->m_gHash_128);
+        aesni::gMul(gcmCtx->m_gHash_128,
+                    gcmCtx->m_hash_subKey_128,
+                    gcmCtx->m_gHash_128,
                     const_factor_128);
 
         _mm_storeu_si128((__m128i*)p_out_x, a1);
@@ -552,12 +552,11 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
             p_store[i] = p_out[i];
         }
 
-        __m128i ra1 = _mm_shuffle_epi8(a1, gcmLocalData->m_reverse_mask_128);
-        gcmLocalData->m_gHash_128 =
-            _mm_xor_si128(ra1, gcmLocalData->m_gHash_128);
-        aesni::gMul(gcmLocalData->m_gHash_128,
-                    gcmLocalData->m_hash_subKey_128,
-                    gcmLocalData->m_gHash_128,
+        __m128i ra1         = _mm_shuffle_epi8(a1, gcmCtx->m_reverse_mask_128);
+        gcmCtx->m_gHash_128 = _mm_xor_si128(ra1, gcmCtx->m_gHash_128);
+        aesni::gMul(gcmCtx->m_gHash_128,
+                    gcmCtx->m_hash_subKey_128,
+                    gcmCtx->m_gHash_128,
                     const_factor_128);
     }
 
@@ -565,20 +564,19 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
     alcp_clear_keys_zmm(keys);
 
     // Extract the first counter
-    gcmLocalData->m_counter_128 = c1_128;
+    gcmCtx->m_counter_128 = c1_128;
 
     return blocks;
 }
 
 alc_error_t
-encryptGcm128(const Uint8*          pInputText,  // ptr to inputText
-              Uint8*                pOutputText, // ptr to outputtext
-              Uint64                len,         // message length in bytes
-              bool                  isFirstUpdate,
-              const Uint8*          pKey,    // ptr to Key
-              const int             nRounds, // No. of rounds
-              alc_gcm_local_data_t* gcmLocalData,
-              Uint64*               pGcmCtxHashSubkeyTable)
+encryptGcm128(const Uint8*   pInputText,  // ptr to inputText
+              Uint8*         pOutputText, // ptr to outputtext
+              Uint64         len,         // message length in bytes
+              Uint64         updateCounter,
+              const Uint8*   pKey,    // ptr to Key
+              const int      nRounds, // No. of rounds
+              alc_gcm_ctx_t* gcmCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -596,26 +594,23 @@ encryptGcm128(const Uint8*          pInputText,  // ptr to inputText
                    alcp_clear_keys_ymm_10rounds>(p_in_256,
                                                  p_out_256,
                                                  blocks,
-                                                 isFirstUpdate,
+                                                 updateCounter,
                                                  pkey128,
                                                  nRounds,
-                                                 // gcm specific params
-                                                 gcmLocalData,
-                                                 remBytes,
-                                                 pGcmCtxHashSubkeyTable);
+                                                 gcmCtx,
+                                                 remBytes);
 
     return err;
 }
 
 alc_error_t
-encryptGcm192(const Uint8*          pInputText,  // ptr to inputText
-              Uint8*                pOutputText, // ptr to outputtext
-              Uint64                len,         // message length in bytes
-              bool                  isFirstUpdate,
-              const Uint8*          pKey,    // ptr to Key
-              const int             nRounds, // No. of rounds
-              alc_gcm_local_data_t* gcmLocalData,
-              Uint64*               pGcmCtxHashSubkeyTable)
+encryptGcm192(const Uint8*   pInputText,  // ptr to inputText
+              Uint8*         pOutputText, // ptr to outputtext
+              Uint64         len,         // message length in bytes
+              Uint64         updateCounter,
+              const Uint8*   pKey,    // ptr to Key
+              const int      nRounds, // No. of rounds
+              alc_gcm_ctx_t* gcmCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -633,26 +628,23 @@ encryptGcm192(const Uint8*          pInputText,  // ptr to inputText
                    alcp_clear_keys_ymm_12rounds>(p_in_256,
                                                  p_out_256,
                                                  blocks,
-                                                 isFirstUpdate,
+                                                 updateCounter,
                                                  pkey128,
                                                  nRounds,
-                                                 // gcm specific params
-                                                 gcmLocalData,
-                                                 remBytes,
-                                                 pGcmCtxHashSubkeyTable);
+                                                 gcmCtx,
+                                                 remBytes);
 
     return err;
 }
 
 alc_error_t
-encryptGcm256(const Uint8*          pInputText,  // ptr to inputText
-              Uint8*                pOutputText, // ptr to outputtext
-              Uint64                len,         // message length in bytes
-              bool                  isFirstUpdate,
-              const Uint8*          pKey,    // ptr to Key
-              const int             nRounds, // No. of rounds
-              alc_gcm_local_data_t* gcmLocalData,
-              Uint64*               pGcmCtxHashSubkeyTable)
+encryptGcm256(const Uint8*   pInputText,  // ptr to inputText
+              Uint8*         pOutputText, // ptr to outputtext
+              Uint64         len,         // message length in bytes
+              Uint64         updateCounter,
+              const Uint8*   pKey,    // ptr to Key
+              const int      nRounds, // No. of rounds
+              alc_gcm_ctx_t* gcmCtx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -670,13 +662,11 @@ encryptGcm256(const Uint8*          pInputText,  // ptr to inputText
                    alcp_clear_keys_ymm_14rounds>(p_in_256,
                                                  p_out_256,
                                                  blocks,
-                                                 isFirstUpdate,
+                                                 updateCounter,
                                                  pkey128,
                                                  nRounds,
-                                                 // gcm specific params
-                                                 gcmLocalData,
-                                                 remBytes,
-                                                 pGcmCtxHashSubkeyTable);
+                                                 gcmCtx,
+                                                 remBytes);
 
     return err;
 }

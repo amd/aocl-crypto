@@ -143,14 +143,13 @@ namespace aesni {
                                          __m128i      hash_subKey_128,
                                          __m128i      reverse_mask_128);
 
-    alc_error_t CryptGcm(const Uint8*          pInputText,  // ptr to inputText
-                         Uint8*                pOutputText, // ptr to outputtext
-                         Uint64                len,  // message length in bytes
-                         const Uint8*          pKey, // ptr to Key
-                         int                   nRounds, // No. of rounds
-                         alc_gcm_local_data_t* gcmLocalData,
-                         bool                  isEncrypt,
-                         Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t CryptGcm(const Uint8*   pInputText,  // ptr to inputText
+                         Uint8*         pOutputText, // ptr to outputtext
+                         Uint64         len,         // message length in bytes
+                         const Uint8*   pKey,        // ptr to Key
+                         int            nRounds,     // No. of rounds
+                         alc_gcm_ctx_t* gcmCtx,
+                         bool           isEncrypt);
 
     alc_error_t GetTagGcm(Uint64   tagLen,
                           Uint64   plaintextLen,
@@ -203,59 +202,53 @@ namespace vaes512 {
                            int          nRounds,
                            Uint8*       pIv);
 
-    alc_error_t encryptGcm128(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t encryptGcm128(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t encryptGcm192(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t encryptGcm192(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t encryptGcm256(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t encryptGcm256(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t decryptGcm128(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t decryptGcm128(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t decryptGcm192(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t decryptGcm192(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t decryptGcm256(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t decryptGcm256(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
 } // namespace vaes512
 
@@ -286,60 +279,53 @@ namespace vaes {
                            int          nRounds,
                            Uint8*       pIv);
 
-    alc_error_t encryptGcm128(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t encryptGcm128(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t encryptGcm192(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t encryptGcm192(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t encryptGcm256(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
+    alc_error_t encryptGcm256(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-                              Uint64* pGcmCtxHashSubkeyTable);
+    alc_error_t decryptGcm128(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t decryptGcm128(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t decryptGcm192(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
-    alc_error_t decryptGcm192(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
-
-    alc_error_t decryptGcm256(const Uint8*          pPlainText,
-                              Uint8*                pCipherText,
-                              Uint64                len,
-                              bool                  isFirstUpdate,
-                              const Uint8*          pKey,
-                              int                   nRounds,
-                              alc_gcm_local_data_t* gcmLocalData,
-                              Uint64*               pGcmCtxHashSubkeyTable);
+    alc_error_t decryptGcm256(const Uint8*   pPlainText,
+                              Uint8*         pCipherText,
+                              Uint64         len,
+                              Uint64         updateCounter,
+                              const Uint8*   pKey,
+                              int            nRounds,
+                              alc_gcm_ctx_t* gcmCtx);
 
     // ctr APIs for vaes
     void ctrInit(__m256i*     c1,

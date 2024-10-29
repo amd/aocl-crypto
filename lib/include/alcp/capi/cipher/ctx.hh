@@ -38,8 +38,7 @@ typedef struct Context
     void* m_cipher         = nullptr;
     void* m_cipher_factory = nullptr;
 
-    alc_cipher_data_t m_alcp_cipher_data;
-    Uint8             destructed;
+    Uint8 destructed;
 
     // sw methods
     alc_error_t (*decrypt)(const Uint8* pSrc, Uint8* pDst, Uint64 len);
@@ -72,8 +71,7 @@ typedef struct Context
     alc_error_t (*finish)(const void*);
 
     Context()
-        : m_alcp_cipher_data{}
-        , destructed{ 0 }
+        : destructed{ 0 }
         , decrypt{ nullptr }
         , encrypt{ nullptr }
         , encryptBlocksXts{ nullptr }

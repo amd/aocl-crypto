@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -99,6 +99,37 @@ alcp_cipher_aead_request(const alc_cipher_mode_t mode,
     ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
 
     auto aead = alcpCipher->create(getCipherAeadMode(mode), getKeyLen(keyLen));
+    if (aead == nullptr) {
+        printf("\n cipher algo create failed");
+        return ALC_ERROR_GENERIC;
+    }
+    ctx->m_cipher = static_cast<void*>(aead);
+
+    return err;
+}
+
+alc_error_t
+alcp_cipher_aead_request_with_extState(const alc_cipher_mode_t mode,
+                                       const Uint64            keyLen,
+                                       alc_cipher_state_t*     pCipherState,
+                                       alc_cipher_handle_p     pCipherHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    new (ctx) Context;
+
+    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
+
+    auto alcpCipher       = new CipherFactory<iCipherAead>;
+    ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
+    // printf("\n aead request cipherstate %p ", (void*)pCipherState);
+
+    auto aead = alcpCipher->create(
+        getCipherAeadMode(mode), getKeyLen(keyLen), pCipherState);
     if (aead == nullptr) {
         printf("\n cipher algo create failed");
         return ALC_ERROR_GENERIC;

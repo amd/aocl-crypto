@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,15 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
+
+AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
+                                       const Uint8*            iv,
+                                       alc_cipher_state_t*     pCipherState)
+    : m_mode{ cMode }
+    , m_iv{ iv }
+    , m_pState{ pCipherState }
+{}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv,
@@ -55,9 +62,11 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            key,
                                        const Uint32            cKeyLen,
                                        const Uint8*            tkey,
-                                       const Uint64            cBlockSize)
+                                       const Uint64            cBlockSize,
+                                       alc_cipher_state_t*     pCipherState)
     : m_mode{ cMode }
     , m_iv{ iv }
+    , m_pState{ pCipherState }
 {
     init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
 }
@@ -142,7 +151,9 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     }
 #endif
 
-    err = alcp_cipher_aead_request(m_mode, cKeyLen, m_handle);
+    // printf("\n aead request cipherstate %p ", (void*)m_pState);
+    err = alcp_cipher_aead_request_with_extState(
+        m_mode, cKeyLen, m_pState, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         goto out;

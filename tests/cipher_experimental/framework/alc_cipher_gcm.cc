@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,8 +41,8 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
     if (!m_handle.ch_context)
         return false;
 
-    err = alcp_cipher_aead_request(
-        ALC_AES_MODE_GCM, (data_gcm->m_key_len) * 8, &m_handle);
+    err = alcp_cipher_aead_request_with_extState(
+        ALC_AES_MODE_GCM, (data_gcm->m_key_len) * 8, &m_pState, &m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         return false;

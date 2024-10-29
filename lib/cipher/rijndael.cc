@@ -343,6 +343,20 @@ Rijndael::setKey(const Uint8* key, int len)
     expandKeys(key);
 }
 
+void
+Rijndael::setKey(const Uint8* key, Uint8* pExpKey, int len)
+{
+    m_block_size      = BitsToBlockSize(len);
+    const Params& prm = ParamsMap.at(m_block_size);
+    m_nrounds         = prm.Nr;
+    m_key_size        = len / utils::BitsPerByte;
+
+    /* Encryption and Decryption keys */
+    m_enc_key = pExpKey;
+    m_dec_key = pExpKey + (8 * 8);
+    expandKeys(key);
+}
+
 /*
  * FIPS-197 Section 5.1 Psuedo-code for Encryption
  *
@@ -645,6 +659,14 @@ Rijndael::initRijndael(const Uint8* pKey, const Uint64 keyLen)
     setUp();
 }
 
+void
+Rijndael::initRijndael(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen)
+{
+    setKeyLen(keyLen);
+    setKey(pKey, pExpKey, keyLen);
+    setUp();
+}
+
 Rijndael::Rijndael()
 {
     utils::memlock(m_round_key_enc, cMaxKeySize * (cMaxRounds + 2));
@@ -714,8 +736,7 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
     return ALC_ERROR_NONE;
 }
 
-void
-Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     encryptBlockKernel(blk0, blk0, pkey, nr);
 }

@@ -121,6 +121,7 @@ class Aes : public Rijndael
         return false;
     }
 
+    alc_error_t setKey(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen);
     alc_error_t setKey(const Uint8* pKey, const Uint64 keyLen);
     alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
 

@@ -147,6 +147,57 @@ getSiv(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
 
 // copy-paste of siv, can be avoided
 iCipherAead*
+getGcm(const CipherKeyLen      keyLen,
+       const CpuCipherFeatures arch,
+       alc_cipher_state_t*     pCipherState)
+{
+    if (pCipherState == nullptr) {
+        printf("\n State invalid ");
+        return nullptr;
+    }
+
+    if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new GcmT<CipherKeyLen::eKey128Bit,
+                                CpuCipherFeatures::eVaes512>(pCipherState);
+            case CipherKeyLen::eKey192Bit:
+                return new GcmT<CipherKeyLen::eKey192Bit,
+                                CpuCipherFeatures::eVaes512>(pCipherState);
+            case CipherKeyLen::eKey256Bit:
+                return new GcmT<CipherKeyLen::eKey256Bit,
+                                CpuCipherFeatures::eVaes512>(pCipherState);
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eVaes256) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new GcmT<CipherKeyLen::eKey128Bit,
+                                CpuCipherFeatures::eVaes256>(pCipherState);
+            case CipherKeyLen::eKey192Bit:
+                return new GcmT<CipherKeyLen::eKey192Bit,
+                                CpuCipherFeatures::eVaes256>(pCipherState);
+            case CipherKeyLen::eKey256Bit:
+                return new GcmT<CipherKeyLen::eKey256Bit,
+                                CpuCipherFeatures::eVaes256>(pCipherState);
+        }
+    } else if (arch == alcp::utils::CpuCipherFeatures::eAesni) {
+        switch (keyLen) {
+            case CipherKeyLen::eKey128Bit:
+                return new GcmT<CipherKeyLen::eKey128Bit,
+                                CpuCipherFeatures::eAesni>(pCipherState);
+            case CipherKeyLen::eKey192Bit:
+                return new GcmT<CipherKeyLen::eKey192Bit,
+                                CpuCipherFeatures::eAesni>(pCipherState);
+            case CipherKeyLen::eKey256Bit:
+                return new GcmT<CipherKeyLen::eKey256Bit,
+                                CpuCipherFeatures::eAesni>(pCipherState);
+        }
+    }
+    printf("\n Error: Reference kernel not supported ");
+    return nullptr;
+}
+
+iCipherAead*
 getGcm(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
 {
     if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
@@ -402,7 +453,11 @@ CipherFactory<iCipherAead>::getCipher()
     // AEAD ciphers
     switch (m_cipher_mode) {
         case CipherMode::eAesGCM:
-            m_iCipher = getGcm(m_keyLen, m_arch);
+            if (m_cipher_state != nullptr) {
+                m_iCipher = getGcm(m_keyLen, m_arch, m_cipher_state);
+            } else {
+                m_iCipher = getGcm(m_keyLen, m_arch);
+            }
             break;
         case CipherMode::eAesCCM:
             m_iCipher = getCcm(m_keyLen, m_arch);
@@ -474,6 +529,20 @@ CipherFactory<INTERFACE>::create(const CipherMode   mode,
     m_cipher_mode = mode;
     m_keyLen      = keyLen;
     m_arch        = m_currentArch;
+    getCipher();
+    return m_iCipher;
+};
+
+template<class INTERFACE>
+INTERFACE*
+CipherFactory<INTERFACE>::create(const CipherMode    mode,
+                                 const CipherKeyLen  keyLen,
+                                 alc_cipher_state_t* pCipherState)
+{
+    m_cipher_mode  = mode;
+    m_keyLen       = keyLen;
+    m_arch         = m_currentArch;
+    m_cipher_state = pCipherState;
     getCipher();
     return m_iCipher;
 };

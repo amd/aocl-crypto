@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,8 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
     // return NULL;
 
     ctx = OPENSSL_zalloc(sizeof(*ctx));
+    // printf("  \n newctx cipherstate %p ",
+    //(void*)&ctx->base.prov_cipher_data.cipherState);
     if (ctx != NULL) {
 
         // allocate context
@@ -58,10 +60,16 @@ ALCP_prov_alg_gcm_newctx(void* provctx, size_t keybits)
             OPENSSL_clear_free(ctx, sizeof(*ctx));
             return NULL;
         }
-
         // Request handle for the cipher
-        alc_error_t err = alcp_cipher_aead_request(
-            ALC_AES_MODE_GCM, keybits, &(ctx->base.handle));
+
+        // FIXME: Need to pass the state to the request, currently it fails
+        // while passing state from provider ctx
+        alc_error_t err = alcp_cipher_aead_request_with_extState(
+            ALC_AES_MODE_GCM,
+            keybits,
+            // FIXME:  failure observed when passing state from provider ctx
+            NULL, //&(ctx->base.prov_cipher_data.cipherState),
+            &(ctx->base.handle));
 
         if (err == ALC_ERROR_NONE) {
             ALCP_prov_gcm_initctx(provctx, &(ctx->base), keybits);

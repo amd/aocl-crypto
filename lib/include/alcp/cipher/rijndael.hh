@@ -73,10 +73,10 @@ class ALCP_API_EXPORT Rijndael
     static Uint32 constexpr cMaxRounds = 14;
 
   private:
-    __attribute__((aligned(
-        64))) Uint8 m_round_key_enc[cMaxKeySize * (cMaxRounds + 2)] = {};
-    __attribute__((aligned(
-        64))) Uint8 m_round_key_dec[cMaxKeySize * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(64)))
+    Uint8 m_round_key_enc[cMaxKeySize * (cMaxRounds + 2)] = {};
+    __attribute__((aligned(64)))
+    Uint8 m_round_key_dec[cMaxKeySize * (cMaxRounds + 2)] = {};
 
     Uint8* m_enc_key = NULL;
     Uint8* m_dec_key = NULL;
@@ -107,6 +107,7 @@ class ALCP_API_EXPORT Rijndael
     };
 
     void initRijndael(const Uint8* pKey, const Uint64 keyLen);
+    void initRijndael(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen);
     void setEncryptKey(const Uint8* pEncKey, Uint64 len);
     void setDecryptKey(const Uint8* pDecKey, Uint64 len);
 
@@ -131,6 +132,7 @@ class ALCP_API_EXPORT Rijndael
 
     void setUp() { setKey(m_pKey_rij, m_keyLen_rij); }
     void setKey(const Uint8* key, int len);
+    void setKey(const Uint8* key, Uint8* pExpKey, int len);
 
   private:
     void expandKeys(const Uint8* pUserKey) noexcept;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -96,7 +96,8 @@ class IPPCipherAeadBase : public CipherAeadBase
                       const Uint8*            key,
                       const Uint32            key_len,
                       const Uint8*            tkey,
-                      const Uint64            block_size);
+                      const Uint64            block_size,
+                      alc_cipher_state_t*     pCipherState);
 
     ~IPPCipherAeadBase();
     bool init(const Uint8* iv,
