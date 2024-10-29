@@ -30,6 +30,8 @@
 # 4. Digest Provider is disabled by default as there is currently a provider overhead ##
 ########################################################################################
 
+# generic option to enable debug print in provider
+OPTION(ALCP_COMPAT_ENABLE_DEBUG "ENABLE DEBUG PRINTS INSIDE ALCP PROVIDER" OFF)
 
 OPTION(ALCP_COMPAT_ENABLE_OPENSSL_DIGEST "ENABLE SUPPORT FOR OPENSSL DIGEST PROVIDER" OFF)
 OPTION(ALCP_COMPAT_ENABLE_OPENSSL_CIPHER "ENABLE SUPPORT FOR OPENSSL CIPHER PROVIDER" ON)

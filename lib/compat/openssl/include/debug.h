@@ -26,6 +26,7 @@
  *
  */
 
+#include "provider/config.h"
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,19 +34,15 @@
 #ifndef _OPENSSL_DEBUG_H
 #define _OPENSSL_DEBUG_H 2
 
-// #define DEBUG_PROV
-
-#ifdef DEBUG_PROV
+#ifdef ALCP_COMPAT_ENABLE_DEBUG
 #define DBG_PRINT(prfx, fmt, ...) printf(prfx##fmt, __VA_ARGS__)
 
-#define ENTRY()    DBG_PRINT("Entry: ", "%s\n", __func__)
-#define ENTER()    printf("Enter : %s\n", __func__)
+#define ENTER()    printf("Enter : %s:%d\n", __func__, __LINE__);
 #define HERE()     printf("Here : %s:%d\n", __func__, __LINE__)
 #define EXIT()     printf("Exit : %s:%d\n", __func__, __LINE__)
 #define PRINT(MSG) printf(MSG)
 
 #else
-#define ENTRY()
 #define ENTER()
 #define HERE()
 #define EXIT()
