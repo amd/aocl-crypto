@@ -573,6 +573,12 @@ BENCH_CHACHA20_POLY1305_DECRYPT_256(benchmark::State& state)
 int
 AddBenchmarks()
 {
+    /* check if custom block size is provided by user */
+    if (block_size != 0) {
+        std::cout << "Custom block size selected:" << block_size << std::endl;
+        blocksizes.resize(1);
+        blocksizes[0] = block_size;
+    }
     /* IPPCP doesnt have Chacha20 stream cipher variant yet */
     if (!useipp) {
         BENCHMARK(BENCH_CHACHA20_ENCRYPT_256)->ArgsProduct({ blocksizes });
@@ -638,7 +644,7 @@ AddBenchmarks()
 int
 main(int argc, char** argv)
 {
-    parseArgs(&argc, argv);
+    parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp) {
         alcp::testing::utils::printErrors(
@@ -653,8 +659,6 @@ main(int argc, char** argv)
 #endif
     AddBenchmarks();
     ::benchmark::Initialize(&argc, argv);
-    if (::benchmark::ReportUnrecognizedArguments(argc, argv))
-        return 1;
     ::benchmark::RunSpecifiedBenchmarks();
 
     return 0;

@@ -165,6 +165,12 @@ BENCH_HMAC_SHA3_512(benchmark::State& state)
 int
 AddBenchmarks()
 {
+    /* check if custom block size is provided by user */
+    if (block_size != 0) {
+        std::cout << "Custom block size selected:" << block_size << std::endl;
+        hmac_block_sizes.resize(1);
+        hmac_block_sizes[0] = block_size;
+    }
     BENCHMARK(BENCH_HMAC_SHA2_224)->ArgsProduct({ hmac_block_sizes });
     BENCHMARK(BENCH_HMAC_SHA2_256)->ArgsProduct({ hmac_block_sizes });
     BENCHMARK(BENCH_HMAC_SHA2_384)->ArgsProduct({ hmac_block_sizes });

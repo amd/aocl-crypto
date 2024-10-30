@@ -33,7 +33,7 @@
 int
 main(int argc, char** argv)
 {
-    parseArgs(&argc, argv);
+    parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp) {
         std::cout << RED << "Error IPP not found defaulting to ALCP" << RESET
