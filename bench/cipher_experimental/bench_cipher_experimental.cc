@@ -407,6 +407,15 @@ main(int argc, char** argv)
         std::cout << e.what() << '\n';
     }
 
+    /* check if custom block size is provided by user */
+    if (alcp::testing::utils::block_size != 0) {
+        std::cout << "Custom block size selected:"
+                  << alcp::testing::utils::block_size << std::endl;
+        alcp::benchmarking::cipher::blocksizes.resize(1);
+        alcp::benchmarking::cipher::blocksizes[0] =
+            alcp::testing::utils::block_size;
+    }
+
     // GCM
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
@@ -439,8 +448,6 @@ main(int argc, char** argv)
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
-    // if (::benchmark::ReportUnrecognizedArguments(argc, argv))
-    //     return 1;
     ::benchmark::RunSpecifiedBenchmarks();
 
     return 0;
