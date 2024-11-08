@@ -75,4 +75,6 @@
 #cmakedefine ALCP_CPUID_FORCE_ZEN4
 #cmakedefine ALCP_CPUID_FORCE_ZEN5
 
+#cmakedefine ALCP_ENABLE_DEBUG_LOGGING
+
 #endif /* _INCLUDE_CONFIG_H */

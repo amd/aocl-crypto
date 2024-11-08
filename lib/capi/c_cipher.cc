@@ -41,13 +41,15 @@ Uint64
 alcp_cipher_context_size()
 {
     Uint64 size = sizeof(Context);
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CtxSize %6ld", size);
+#endif
     return size;
 }
 
 bool
 validateKeys(const Uint8* tweakKey, const Uint8* encKey, Uint32 len)
 {
-
     for (Uint32 i = 0; i < len / 8; i++) {
         if (tweakKey[i] != encKey[i]) {
             return false;
@@ -95,6 +97,9 @@ alcp_cipher_request(const alc_cipher_mode_t mode,
                     const Uint64            keyLen,
                     alc_cipher_handle_p     pCipherHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeyLen %6ld", keyLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -125,6 +130,9 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pCipherText,
                     Uint64                    len)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "PTLen %6ld", len);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -148,6 +156,9 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pPlainText,
                     Uint64                    len)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CTLen %6ld", len);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -172,6 +183,9 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
                  const Uint8*              pIv,
                  Uint64                    ivLen)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeyLen %6ld,IVLen %6ld", keyLen, ivLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -197,6 +211,9 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
 void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     if (pCipherHandle == nullptr || pCipherHandle->ch_context == nullptr)
         return;
 

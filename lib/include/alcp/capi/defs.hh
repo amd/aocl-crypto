@@ -29,6 +29,20 @@
 
 #include "alcp/base.hh"
 
+#define LOG_INFO (1)
+#define LOG_DBG  (2)
+#define LOG_ERR  (3)
+
+/* add more logging levels here, and deeper level details */
+#define ALCP_DEBUG_LOG(log_level, ...)                                         \
+    do {                                                                       \
+        printf("\t%s\t", __FUNCTION__);                                        \
+        if (log_level >= LOG_DBG) {                                            \
+            __VA_OPT__(printf(__VA_ARGS__));                                   \
+        }                                                                      \
+        printf("\n");                                                          \
+    } while (0)
+
 #define ALCP_BAD_PTR_ERR_RET(ptr, err)                                         \
     do {                                                                       \
         using namespace alcp::base;                                            \
