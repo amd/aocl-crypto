@@ -34,6 +34,7 @@
 
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha3_zen.hh"
+#include "alcp/digest/sha3_zen4.hh"
 #include "alcp/utils/bits.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
@@ -131,6 +132,16 @@ Sha3<digest_len>::squeezeChunk(Uint8* pBuf, Uint64 size)
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
                                  || CpuId::cpuIsZen5();
+
+    static bool avx512f_available =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (avx512f_available) {
+        return zen4::Sha3Finalize(
+            (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
+    }
+
     if (zen3_available) {
         return zen3::Sha3Finalize(
             (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
@@ -177,6 +188,15 @@ Sha3<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
                                  || CpuId::cpuIsZen5();
+
+    static bool avx512f_available =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (avx512f_available) {
+        return zen4::Sha3Update(
+            m_state_flat, p_msg_buffer64, msg_size, m_block_len);
+    }
 
     if (zen3_available) {
         return zen3::Sha3Update(
