@@ -644,7 +644,7 @@ AddBenchmarks()
 int
 main(int argc, char** argv)
 {
-    parseArgs(argc, argv);
+    parseArgs(&argc, argv);
 #ifndef USE_IPP
     if (useipp) {
         alcp::testing::utils::printErrors(
@@ -659,6 +659,8 @@ main(int argc, char** argv)
 #endif
     AddBenchmarks();
     ::benchmark::Initialize(&argc, argv);
+    if (::benchmark::ReportUnrecognizedArguments(argc, argv))
+        return 1;
     ::benchmark::RunSpecifiedBenchmarks();
 
     return 0;

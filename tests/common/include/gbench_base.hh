@@ -27,6 +27,7 @@
  */
 #pragma once
 
+#include "colors.hh"
 #include <iostream>
 #include <string>
 
@@ -36,13 +37,13 @@ static bool useossl = false;
 static int block_size = 0;
 
 void
-parseArgs(int argc, char** argv)
+parseArgs(int* argc, char** argv)
 {
     std::string currentArg;
-    std::string temp;
+    const int   _argc = *argc;
 
-    if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
+    if (*argc > 1) {
+        for (int i = 1; i < _argc; i++) {
             currentArg = std::string(argv[i]);
             if ((currentArg == std::string("--help"))
                 || (currentArg == std::string("-h"))) {
@@ -59,18 +60,33 @@ parseArgs(int argc, char** argv)
                 if (((currentArg.find(std::string("--blocksize"))
                       != currentArg.npos)
                      || (currentArg.find(std::string("-b")) != currentArg.npos))
-                    && (i + 1 < argc)) {
+                    && (i + 1 < _argc)) {
+                    *argc -= 1;
                     std::string nextArg = std::string(argv[i + 1]);
                     // Skip the next iteration
                     i++;
-                    block_size = std::stoi(nextArg);
+
+                    try {
+                        block_size = std::stoi(nextArg);
+                        *argc -= 1;
+                    } catch (const std::invalid_argument& e) {
+                        std::cerr <<  RED << nextArg << " is not an integer or invalid block size."
+                                  << RESET << std::endl;
+                    }
+
+                } else {
+                   std::cerr << RED << "No block size provided"
+                             << RESET << std::endl;
+                   return;
                 }
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;
+                *argc -= 1;
             } else if ((currentArg == std::string("--use-ossl"))
                        || (currentArg == std::string("-o"))) {
                 useossl = true;
+                *argc -= 1;
             }
         }
     }
