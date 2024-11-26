@@ -92,7 +92,7 @@ endfunction(alcp_get_cflags)
 # Generic Debug Flags
 function(alcp_get_cflags_debug)
     set(ALCP_CFLAGS_DEBUG
-        "-ggdb"
+        -g3 -ggdb -O0
         CACHE INTERNAL ""
         )
     set(ALCP_CFLAGS_DEBUG ${ALCP_CFLAGS_DEBUG} PARENT_SCOPE)
