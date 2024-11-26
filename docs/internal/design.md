@@ -99,7 +99,7 @@ AOCL Cryptography assumes following libraries/tools available on system where it
 built or running.
 
   - Required Dependancies
-    - CMake (3.22 or later)
+    - CMake (3.26 or later)
     - GCC (11.0 or later)
     - Git (2.30.2 or later)
     - OpenSSL ( 3.0.8 or later )
