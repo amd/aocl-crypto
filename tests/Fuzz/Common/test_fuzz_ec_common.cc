@@ -91,6 +91,8 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
         stream.ConsumeBytes<Uint8>(key_size);
     std::vector<Uint8> fuzz_pvtkey_data_peer2 =
         stream.ConsumeBytes<Uint8>(key_size);
+
+    // FIXME: Should be removed once EC APIs start taking key size as input
     /*
      * Ensure the key sizes are correct as the EC API always expects key_size to
      * be 32. The FuzzedDataProvider::ConsumeBytes may return a vector of
