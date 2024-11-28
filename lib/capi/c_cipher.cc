@@ -143,6 +143,9 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    if (ctx->destructed == 1) {
+        return ALC_ERROR_BAD_STATE;
+    }
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
     auto i = static_cast<iCipher*>(ctx->m_cipher);
     err    = i->encrypt(pPlainText, pCipherText, len);
@@ -168,6 +171,9 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    if (ctx->destructed == 1) {
+        return ALC_ERROR_BAD_STATE;
+    }
     ALCP_BAD_PTR_ERR_RET(ctx->m_cipher, err);
 
     auto i = static_cast<iCipher*>(ctx->m_cipher);
