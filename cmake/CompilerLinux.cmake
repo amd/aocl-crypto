@@ -181,8 +181,8 @@ function(alcp_add_sanitize_flags)
     set (ALCP_OPTIONS_SANITIZE
             #-fsanitize=memory
             #-fsanitize-memory-track-origins
-            -fsanitize=address
-            -fsanitize=undefined
+            -fsanitize=address,undefined
+            -fno-sanitize=vptr
             -fsanitize=pointer-subtract
             -fsanitize=pointer-compare
             -fPIC
