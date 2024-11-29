@@ -20,7 +20,7 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 5.0.1
 ---------------------------------------------------------------------------
-AOCL-Oct2024
+AOCL-Nov2024
 ---------------------------------------------------------------------------
   - OpenSSL Provider:
     - Enabled support for CMAC, Poly1305, Cipher, RSA Algorithms
@@ -53,8 +53,8 @@ AOCL-Oct2024
       - Bug fixes and performance improvements in HMAC, CMAC and Poly1305
 
   - Digest:
+      - Performance improvements in SHA3, SHA2 and SHAKE
       - SHA3 Shake Squeeze,Digest Context Copy support
-      - Performance improvements in SHA2, SHA3 algorithms.
       - Bug fixes in reference algorithm in Squeeze API
       - Memory alignment fixes in SHA2
       - Bug fixes in Unit tests
@@ -70,7 +70,8 @@ AOCL-Oct2024
       - Crash Fixes, clean up, and improvements in Tests and benchmarks
       - Test framework support for PKCS Encrypt/Decrypt, PKCS Sign Verify
       - Crashes and fixes in tests and micro benchmarks
-      - Refactored tests to align with Openssl Bench's lifecycle
+      - Refactored tests to align with Openssl Bench's lifecycle.
+      - Option to pass custom block size.
   
   - Build system updates:
       - Make test covering all unit tests, all kat and cross tests for all libraries (ipp, openssl)
@@ -79,12 +80,13 @@ AOCL-Oct2024
       - Coverage build support for AOCC/clang.
       - Packaging: Compilation issues fixed in all the example sources
       - Coverity generated errors and warnings fixed all across the example sources.
-      - AOCC5.0, GCC14.1.0 compilation support.
+      - Compilation support for AOCC5.1, GCC14.2.0 (Linux) and Clang18 (Windows).
       - Ninja build support added.
       - Checks for dependencies (git-lfs, valgrind, lcov, etc)
       - Windows build system updates
       - Removed dependnecy on lsb_release utility.
       - Packaging makefile checks openssl version.
+      - Debug logging support in CAPIs and Provider APIs
 
   - Bug fixes in dynamic dispatcher.
   - Documentation updates related to Doxygen and Sphinx.
