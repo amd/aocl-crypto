@@ -316,13 +316,20 @@ ALCP_Fuzz_Cipher_Decrypt(alc_cipher_mode_t Mode,
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    size_t size_key = len;
-    size_t size_ct  = len;
-    size_t size_iv  = len;
+    srand(len);
+
+    size_t size_key = rand() % INT_MAX;
+    size_t size_ct  = rand() % INT_MAX;
+    size_t size_iv  = rand() % INT_MAX;
 
     std::vector<Uint8> fuzz_key = stream.ConsumeBytes<Uint8>(size_key);
     std::vector<Uint8> fuzz_ct  = stream.ConsumeBytes<Uint8>(size_ct);
     std::vector<Uint8> fuzz_iv  = stream.ConsumeBytes<Uint8>(size_iv);
+
+    /* if empty vectors resize and fill */
+    Fill_If_Empty(fuzz_key, size_key, 0);
+    Fill_If_Empty(fuzz_ct, size_ct, 0);
+    Fill_If_Empty(fuzz_iv, size_iv, 0);
 
     std::vector<Uint8> plaintxt(size_ct, 0);
 
