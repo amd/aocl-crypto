@@ -41,8 +41,6 @@
 
 using namespace alcp::testing;
 
-ExecRecPlay* fr = nullptr;
-
 #define ALC_MODE ALC_AES_MODE_GCM
 
 TEST(AES_ENC_128, CROSS_SMALL_128)

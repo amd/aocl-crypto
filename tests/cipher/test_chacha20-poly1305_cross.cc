@@ -41,8 +41,6 @@
 
 using namespace alcp::testing;
 
-ExecRecPlay* fr = nullptr;
-
 #define ALC_MODE ALC_CHACHA20_POLY1305
 
 TEST(ChachaPoly_ENC_256, CROSS_SMALL_256)
