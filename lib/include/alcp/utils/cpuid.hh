@@ -78,6 +78,7 @@ class ALCP_API_EXPORT CpuId
   public:
     CpuId() {}
     ~CpuId() = default;
+
     // Genoa functions
     /**
      * @brief Returns true if CPU has AVX512f Flag
