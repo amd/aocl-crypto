@@ -85,9 +85,6 @@ namespace alcp::digest { namespace zen4 {
     static constexpr Uint8 cRounds   = 24;
     static constexpr Uint8 cRounds12 = 12;
 
-    alignas(64) const __m128i cLoadStoreMask =
-        _mm_set_epi64x(0x8000000000000000, 0x8000000000000000);
-
     alignas(64) const __m128i cRoundConstant[cRounds] = {
         _mm_set_epi64x(0x0, 0x0000000000000001),
         _mm_set_epi64x(0x0, 0x0000000000008082),
@@ -150,14 +147,10 @@ namespace alcp::digest { namespace zen4 {
     {
         // Loading data
         __m128i state[cDim][cRegs]{};
-        long long(*p_para_state_CLL)[cDim] =
-            reinterpret_cast<long long(*)[cDim]>(para_state);
 
         for (Uint64 i = 0; i < cDim; i++) {
-            state[i][0] =
-                _mm_maskload_epi64(&p_para_state_CLL[i][0], cLoadStoreMask);
-            state[i][1] =
-                _mm_maskload_epi64(&p_para_state_CLL[i][2], cLoadStoreMask);
+            state[i][0] = _mm_loadu_epi64(&para_state[i][0]);
+            state[i][1] = _mm_loadu_epi64(&para_state[i][2]);
             state[i][2] = _mm_cvtsi64_si128(para_state[i][4]);
         }
         // Loading data
@@ -539,10 +532,8 @@ namespace alcp::digest { namespace zen4 {
 
         // Storing data
         for (Uint64 i = 0; i < cDim; i++) {
-            _mm_maskstore_epi64(
-                &p_para_state_CLL[i][0], cLoadStoreMask, state[i][0]);
-            _mm_maskstore_epi64(
-                &p_para_state_CLL[i][2], cLoadStoreMask, state[i][1]);
+            _mm_storeu_epi64(&para_state[i][0], state[i][0]);
+            _mm_storeu_epi64(&para_state[i][2], state[i][1]);
             _mm_storeu_si64(&para_state[i][4], state[i][2]);
         }
         // Storing data
