@@ -136,6 +136,7 @@ PS> ctest -C release
 $ Append the argument -DALCP_ENABLE_BENCH=ON
 PS> cmake -DALCP_ENABLE_BENCH=ON ./
 PS> cmake --build . --config=release
+Note: ALCP_ENABLE_TESTS has to be enabled to compile benchmarks.
 
 ```
   This will create bench executable into:

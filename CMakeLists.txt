@@ -214,6 +214,11 @@ ENDIF()
 
 # building test bench
 IF (ALCP_ENABLE_BENCH)
+	# bench wont compile without tests enabled!
+	IF (NOT ALCP_ENABLE_TESTS)
+		MESSAGE(FATAL_ERROR "Tests need to be enabled for Benchmarks!(set ALCP_ENABLE_TESTS to ON)")
+	endif()
+	# check if bench dir exists
 	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/bench)
     	MESSAGE(FATAL_ERROR "Bench folder not found!")
     ENDIF()

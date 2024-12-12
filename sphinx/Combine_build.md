@@ -98,6 +98,8 @@ Benchmarks will be built into `bench/{algorithm_type}/`
 
 Please look into **[ README.md ](bench_README)** from bench.
 
+Note: ALCP_ENABLE_TESTS has to be enabled to compile benchmarks.
+
 #### Execute Benchmarks
 ```
 $ ./bench/{algorithm_type}/bench_{algorithm_type}
@@ -316,7 +318,8 @@ PS> ctest -C release
 
 ##### To Build Bench
 ```
-$ Append the argument -DALCP_ENABLE_BENCH=ON
+$ Append the argument -DALCP_ENABLE_BENCH=ON (Note: ALCP_ENABLE_TESTS has to be enabled to compile benchmarks.
+)
 PS> cmake -DALCP_ENABLE_BENCH=ON ./
 PS> cmake --build . --config=release
 ```

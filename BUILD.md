@@ -83,6 +83,8 @@ Benchmarks will be built into `bench/{algorithm_type}/`
 
 Please look into **[ README.md ](./bench/README.md)** from bench.
 
+Note: ALCP_ENABLE_TESTS has to be enabled to compile benchmarks.
+
 #### Execute Benchmarks
 ```
 $ ./bench/{algorithm_type}/bench_{algorithm_type}
