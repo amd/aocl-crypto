@@ -41,6 +41,9 @@ using namespace alcp::base;
 Uint8
 alcp_is_error(alc_error_t err)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     return err != 0;
 }
 

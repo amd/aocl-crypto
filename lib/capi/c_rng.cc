@@ -48,12 +48,18 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo)
     }
 
     Uint64 size = sizeof(alcp::rng::Context) + RngBuilder::getSize(*pRngInfo);
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CtxSize %6ld", size);
+#endif
     return size;
 }
 
 alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     ALCP_BAD_PTR_ERR_RET(pRngInfo, error);
     alc_error_t error = ALC_ERROR_NONE;
 
@@ -92,6 +98,9 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t error = ALC_ERROR_NOT_SUPPORTED;
     auto        ctx   = static_cast<alcp::rng::Context*>(pHandle->rh_context);
 
@@ -130,6 +139,9 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
                     Uint64           size /* output buffer size */
 )
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "OutputBuff size %6ld", size);
+#endif
     ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
     ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
 
@@ -150,6 +162,9 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
 alc_error_t
 alcp_rng_reseed(alc_rng_handle_p pRngHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
     ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
@@ -161,6 +176,9 @@ alcp_rng_reseed(alc_rng_handle_p pRngHandle)
 alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
     ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
