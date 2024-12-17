@@ -166,7 +166,7 @@ alcp_cipher_segment_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG,
                    "CurrentPTLen %6ld,BlkNo %6ld",
-                   currPlainTextLen,
+                   currCipherTextLen,
                    startBlockNum);
 #endif
     alc_error_t err = ALC_ERROR_NONE;

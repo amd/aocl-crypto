@@ -121,7 +121,7 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG,
-                   "OutputLength %6ld, cSecurityStrength %6ld, "
+                   "OutputLength %6ld, cSecurityStrength %d, "
                    "cAdditionalInputLength %6ld",
                    cOutputLength,
                    cSecurityStrength,
