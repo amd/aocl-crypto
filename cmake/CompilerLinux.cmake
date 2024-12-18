@@ -72,7 +72,7 @@ endfunction(alcp_check_compiler_version)
 
 
 # Generic Warnings
-SET (ALCP_WARNINGS -Wall)
+SET (ALCP_WARNINGS -Wall -Werror -Wno-gnu-zero-variadic-macro-arguments)
 function(alcp_get_cflags_warnings)
     set(ALCP_CFLAGS_WARNINGS ${ALCP_WARNINGS} CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)
@@ -83,7 +83,7 @@ function(alcp_get_cflags)
     set(ALCP_CFLAGS
         -O2
         -pedantic
-        -Werror
+        ${ALCP_WARNINGS}
         CACHE INTERNAL ""
     )
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)
