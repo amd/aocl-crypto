@@ -30,6 +30,8 @@
 #include "alcp/rsa.h"
 #include "alcp/types.hh"
 #include <memory>
+#include <algorithm> // for std::reverse
+#include <openssl/bn.h>
 
 namespace alcp::rsa {
 constexpr Uint32 KEY_SIZE_LONG_INT    = 2048 / 64;

@@ -29,7 +29,6 @@
 #include "alcp/rsa/rsa_internal.hh"
 #include "alcp/utils/copy.hh"
 #include <immintrin.h>
-
 /*
  * AMS1024 is based on Fast modular squaring with AVX512IFMA
  * referenced as mentioned on below link
@@ -44,6 +43,7 @@
  */
 
 namespace alcp::rsa { namespace zen4 {
+
 #include "../../rsa/rsa.cc.inc"
 
     constexpr Uint64 num_digit = (2048 / 52 + 1);
@@ -73,8 +73,6 @@ namespace alcp::rsa { namespace zen4 {
         return val64;
 #endif
     }
-    static inline void Rsa1024Radix64BitToRadix52Bit(Uint64*       out,
-                                                     const Uint64* in);
 
     // Converts the radix 64 bit in 1024 bits to radix 52 with 20 digits
     static inline void Rsa1024Radix64BitToRadix52Bit(Uint64*       out,
@@ -1594,65 +1592,70 @@ namespace alcp::rsa { namespace zen4 {
             AMM2048(res, res, mult, mod_reg, k_reg);
         }
     }
-
     template<>
     inline void mont::MontCompute<KEY_SIZE_2048>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r2               = context.m_r2;
-        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
-        Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
+        const BigNum inp{ mod, size, size - 1 };
+        BigNum       res{ context.m_r2, size, size - 1 };
         context.m_size = size;
-        context.m_k0   = computeMontFactor(mod[0]);
 
-        BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
-
-        computeMontConverter(res, inp);
+        // Compute montgomery constants
+        context.m_k0 = computeMontFactor(mod[0]);
+        computeZen4MontConverter(res, inp);
 
         if (size == 32) {
-            Rsa2048Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
-            Rsa2048Radix64BitToRadix52Bit(r2_radix_52_bit, r2);
-
+            __m512i k_reg = _mm512_set1_epi64(context.m_k0);
             __m512i mod_reg[5];
 
-            LoadReg512(mod_reg, mod_radix_52_bit);
-
-            __m512i k_reg = _mm512_set1_epi64(context.m_k0);
+            Rsa2048Radix64BitToRadix52Bit(context.m_mod_radix_52_bit, mod);
+            Rsa2048Radix64BitToRadix52Bit(context.m_r2_radix_52_bit,
+                                          context.m_r2);
+            LoadReg512(mod_reg, context.m_mod_radix_52_bit);
             //(congruent to 2^(4n-k×m) mod (n is number of bit, k is digits for
             // holding radix 52 number ,m is 52)
             // M)
-            AMM2048(r2_radix_52_bit,
-                    r2_radix_52_bit,
-                    r2_radix_52_bit,
+            AMM2048(context.m_r2_radix_52_bit,
+                    context.m_r2_radix_52_bit,
+                    context.m_r2_radix_52_bit,
                     mod_reg,
                     k_reg);
             // 2^(4km - 4n) in radix 52
             alignas(64) const Uint64 mult[40] = { 0x00, 0x00, 0x1000000 };
 
             //(congruent to 2^2k×m mod M)
-            AMM2048(r2_radix_52_bit, r2_radix_52_bit, mult, mod_reg, k_reg);
+            AMM2048(context.m_r2_radix_52_bit,
+                    context.m_r2_radix_52_bit,
+                    mult,
+                    mod_reg,
+                    k_reg);
         } else {
-            Rsa1024Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
-            Rsa1024Radix64BitToRadix52Bit(r2_radix_52_bit, r2);
+            Rsa1024Radix64BitToRadix52Bit(context.m_mod_radix_52_bit, mod);
+            Rsa1024Radix64BitToRadix52Bit(context.m_r2_radix_52_bit,
+                                          context.m_r2);
 
             __m256i mod_reg[5];
 
-            LoadReg256(mod_reg, mod_radix_52_bit);
+            LoadReg256(mod_reg, context.m_mod_radix_52_bit);
 
             __m256i k_reg = _mm256_set1_epi64x(context.m_k0);
             //(congruent to 2^(4n-k×m) mod
             // M)
-            AMM1024(r2_radix_52_bit,
-                    r2_radix_52_bit,
-                    r2_radix_52_bit,
+            AMM1024(context.m_r2_radix_52_bit,
+                    context.m_r2_radix_52_bit,
+                    context.m_r2_radix_52_bit,
                     mod_reg,
                     k_reg);
             // 2^(4km - 4n) in radix 52
             alignas(64) const Uint64 mult[20] = { 0x00, 0x1000 };
 
             //(congruent to 2^2k×m mod M)
-            AMM1024(r2_radix_52_bit, r2_radix_52_bit, mult, mod_reg, k_reg);
+            AMM1024(context.m_r2_radix_52_bit,
+                    context.m_r2_radix_52_bit,
+                    mult,
+                    mod_reg,
+                    k_reg);
         }
     }
 
@@ -1667,11 +1670,9 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
         context.m_size = size;
-        context.m_k0   = computeMontFactor(mod[0]);
-
-        BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
-
-        computeMontConverter(res, inp);
+        BigNum inp{ mod, size, size - 1 }, res{ r2, size * 2 + 1, size * 2 };
+        context.m_k0 = computeMontFactor(mod[0]);
+        computeZen4MontConverter(res, inp);
 
         MontMultHalf(r3, r2, r2, mod, context.m_k0);
 
@@ -1732,33 +1733,20 @@ namespace alcp::rsa { namespace zen4 {
                 k_reg);
 
         Uint64 val = exp[expSize - 1];
-
-        Uint64 num_leading_zero = _lzcnt_u64(val);
-
-        Uint64 index = num_leading_zero + 1;
-
-        val = val << index;
+        val        = val << (_lzcnt_u64(val) + 1);
 
         alcp::utils::CopyChunk(res_radix_52_bit, input_radix_52_bit, 40 * 8);
 
-        while (index++ < 64) {
-            AMMAndAMS2048(
-                res_radix_52_bit, input_radix_52_bit, mod_reg, k_reg, val);
-            val <<= 1;
-        }
-
-        for (Int64 i = expSize - 2; i >= 0; i--) {
-            val = exp[i];
-            UNROLL_64
-            for (Uint64 j = 0; j < 64; j++) {
+        for (Int64 i = expSize - 1; i >= 0; i--) {
+            while (val) {
                 AMMAndAMS2048(
                     res_radix_52_bit, input_radix_52_bit, mod_reg, k_reg, val);
                 val <<= 1;
             }
+            val = exp[i - 1];
         }
 
         AMM2048Reduce(input_radix_52_bit, res_radix_52_bit, mod_reg, k_reg);
-
         Rsa2048Radix52BitToRadix64Bit(res, input_radix_52_bit);
     }
 
@@ -1827,17 +1815,18 @@ namespace alcp::rsa { namespace zen4 {
                                           RsaPublicKeyBignum& pubKey,
                                           MontContextBignum&  context)
     {
-        auto mod = context.m_mod_radix_52_bit;
-        auto r2  = context.m_r2_radix_52_bit;
-        auto k0  = context.m_k0;
-        auto exp = pubKey.m_public_exponent;
-
         alignas(64) Uint64 res_buffer_bignum[1024 / 64 * 3]{};
         mont::MontCompute<KEY_SIZE_1024>::MontgomeryExp(
-            res_buffer_bignum, pTextBignum, exp, 1, mod, r2, k0);
+            res_buffer_bignum,
+            pTextBignum,
+            pubKey.m_public_exponent,
+            1,
+            context.m_mod_radix_52_bit,
+            context.m_r2_radix_52_bit,
+            context.m_k0);
 
         Uint8* enc_text = reinterpret_cast<Uint8*>(res_buffer_bignum);
-        for (Int64 i = 1024 / 8 - 1, j = 0; i >= 0; --i, ++j) {
+        for (Int64 i = KEY_SIZE_1024 / 8 - 1, j = 0; i >= 0; --i, ++j) {
             pEncText[j] = enc_text[i];
         }
     }
@@ -1848,17 +1837,19 @@ namespace alcp::rsa { namespace zen4 {
                                           RsaPublicKeyBignum& pubKey,
                                           MontContextBignum&  context)
     {
-        auto mod = context.m_mod_radix_52_bit;
-        auto r2  = context.m_r2_radix_52_bit;
-        auto k0  = context.m_k0;
-        auto exp = pubKey.m_public_exponent;
 
-        alignas(64) Uint64 res_buffer_bignum[2048 / 64 * 3]{};
+        alignas(64) Uint64 res_buffer_bignum[KEY_SIZE_2048 / 64 * 3]{};
         mont::MontCompute<KEY_SIZE_2048>::MontgomeryExp(
-            res_buffer_bignum, pTextBignum, exp, 1, mod, r2, k0);
+            res_buffer_bignum,
+            pTextBignum,
+            pubKey.m_public_exponent,
+            1,
+            context.m_mod_radix_52_bit,
+            context.m_r2_radix_52_bit,
+            context.m_k0);
 
         Uint8* enc_text = reinterpret_cast<Uint8*>(res_buffer_bignum);
-        for (Int64 i = 2048 / 8 - 1, j = 0; i >= 0; --i, ++j) {
+        for (Int64 i = KEY_SIZE_2048 / 8 - 1, j = 0; i >= 0; --i, ++j) {
             pEncText[j] = enc_text[i];
         }
     }
@@ -1899,14 +1890,14 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
                                          r1_radix_52_bit_contig + 20 };
         Uint64* input_radix_52[2]    = { input_radix_52_contig,
-                                      input_radix_52_contig + 20 };
+                                         input_radix_52_contig + 20 };
         Uint64* res_radix_52[2]      = { res_radix_52_contig,
-                                    res_radix_52_contig + 20 };
+                                         res_radix_52_contig + 20 };
 
         Uint64* mult_radix_52[2] = { mult_radix_52_contig,
                                      mult_radix_52_contig + 20 };
         Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
-                                   sq_radix_52_contig + 20 };
+                                     sq_radix_52_contig + 20 };
 
         __m256i mod_reg[10];
         LoadReg256(mod_reg, modRadix52Bit[0]);
