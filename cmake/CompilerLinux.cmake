@@ -144,6 +144,7 @@ function(alcp_get_arch_cflags_zen3)
 endfunction(alcp_get_arch_cflags_zen3)
 
 # lib/arch/zen4 Compile Flags
+# FIXME: this function name has to change
 function(alcp_get_arch_cflags_zen4)
     set(ARCH_COMPILE_FLAGS
         -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma
@@ -158,6 +159,12 @@ function(alcp_get_arch_cflags_zen4)
       message(STATUS "Compiler Supports znver4")
       set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
     endif()
+    # check if compiler supports -march=znver5
+    CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
+    if(COMPILER_SUPPORTS_ZNVER5)
+      message(STATUS "Compiler Supports znver5")
+      set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver5 PARENT_SCOPE)
+    endif()
 endfunction(alcp_get_arch_cflags_zen4)
 
 
@@ -170,6 +177,22 @@ function(alcp_get_arch_cflags_zen4_clang)
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+
+    # check if compiler supports -march=znver4 for AOCC
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
+        if(COMPILER_SUPPORTS_ZNVER4)
+            message(STATUS "Compiler Supports znver4")
+            set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
+        endif()
+        # check if compiler supports -march=znver5
+        CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
+        if(COMPILER_SUPPORTS_ZNVER5)
+            message(STATUS "Compiler Supports znver5")
+            set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver5 PARENT_SCOPE)
+        endif()
+    endif()
+
 endfunction(alcp_get_arch_cflags_zen4_clang)
 
 # misc options
