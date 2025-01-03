@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -86,6 +86,8 @@ function(alcp_get_cflags)
         ${ALCP_WARNINGS}
         CACHE INTERNAL ""
     )
+    # this is to obfuscate the source paths in the binary
+    add_compile_options(-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.)
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)
 endfunction(alcp_get_cflags)
 
