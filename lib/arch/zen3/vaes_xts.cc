@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -357,7 +357,7 @@ EncryptXtsKernel(const Uint8* pSrc,
         utils::CopyBytes(p_tweak_8, p_lastTweak8, 16);
 
         utils::CopyBytes(p_stealed_text8 + extra_bytes_in_message_block,
-                         p_dest8 + (16 * (blocks - 1))
+                         (p_dest8 - 16)+ (16 * blocks)
                              + (extra_bytes_in_message_block),
                          (16 - extra_bytes_in_message_block));
 
@@ -369,7 +369,7 @@ EncryptXtsKernel(const Uint8* pSrc,
         AesEnc_1x256(&stealed_text, p_key128, nRounds);
         stealed_text = (tweak_1 ^ stealed_text);
 
-        utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text8, 16);
+        utils::CopyBytes((p_dest8 - 16) + 16 * blocks , p_stealed_text8, 16);
 
 // Swap low and high
 #ifdef AES_MULTI_UPDATE
