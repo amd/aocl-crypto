@@ -87,6 +87,7 @@ AOCL-Nov2024
       - Removed dependnecy on lsb_release utility.
       - Packaging makefile checks openssl version.
       - Debug logging support in CAPIs and Provider APIs
+      - Support for forcing CPUID / arch code path at runtime.
 
   - Bug fixes in dynamic dispatcher.
   - Documentation updates related to Doxygen and Sphinx.
