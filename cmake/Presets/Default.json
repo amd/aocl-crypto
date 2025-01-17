@@ -1,0 +1,212 @@
+{
+    "version": 6,
+    "include": [
+        "Base.json",
+        "Generators/Make.json",
+        "Generators/Ninja.json",
+        "x64-linux-gcc.json",
+        "x64-linux-llvm.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "dev-gcc",
+            "displayName": "Developer Config with GCC-Debug",
+            "inherits": [
+                "make",
+                "base-config-debug",
+                "x64-linux-gcc-debug"
+            ]
+        },
+        {
+            "name": "dev-gcc-ninja",
+            "displayName": "Developer Config with GCC-Debug",
+            "inherits": [
+                "ninja",
+                "dev-gcc"
+            ]
+        },
+        {
+            "name": "dev-clang",
+            "displayName": "Developer Config with Clang-Debug",
+            "inherits": [
+                "make",
+                "base-config-debug",
+                "x64-linux-llvm-debug"
+            ]
+        },
+        {
+            "name": "dev-clang-ninja",
+            "displayName": "Developer Config with Clang-Debug",
+            "inherits": [
+                "ninja",
+                "dev-clang"
+            ]
+        },
+        {
+            "name": "dev-release-gcc",
+            "displayName": "Developer Config with GCC-Release",
+            "inherits": [
+                "make",
+                "base-config-release-dev",
+                "x64-linux-gcc-release"
+            ]
+        },
+        {
+            "name": "dev-release-gcc-ninja",
+            "displayName": "Developer Config with GCC-Release",
+            "inherits": [
+                "ninja",
+                "dev-release-gcc"
+            ]
+        },
+        {
+            "name": "dev-release-clang",
+            "displayName": "Developer Config with Clang-Release",
+            "inherits": [
+                "make",
+                "base-config-release-dev",
+                "x64-linux-llvm-release"
+            ]
+        },
+        {
+            "name": "dev-release-clang-ninja",
+            "displayName": "Developer Config with Clang-Release",
+            "inherits": [
+                "ninja",
+                "dev-release-clang"
+            ]
+        },
+        {
+            "name": "prod-release-gcc",
+            "displayName": "Production Config with GCC-Release",
+            "inherits": [
+                "make",
+                "base-config-rte",
+                "x64-linux-gcc-release"
+            ]
+        },
+        {
+            "name": "prod-release-gcc-ninja",
+            "displayName": "Production Config with GCC-Release with ninja",
+            "inherits": [
+                "ninja",
+                "base-config-rte"
+            ]
+        },
+        {
+            "name": "prod-release-clang",
+            "displayName": "Production Config with Clang-Release",
+            "inherits": [
+                "make",
+                "base-config-rte",
+                "x64-linux-llvm-release"
+            ]
+        },
+        {
+            "name": "prod-release-clang-ninja",
+            "displayName": "Production Config with Clang-Release",
+            "inherits": [
+                "ninja",
+                "base-config-rte"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "dev-gcc",
+            "displayName": "Developer Build with GCC-Debug",
+            "inherits": [
+                "build-debug"
+            ],
+            "configurePreset": "dev-gcc"
+        },
+        {
+            "name": "dev-gcc-ninja",
+            "displayName": "Developer Build with GCC-Debug",
+            "inherits": [
+                "build-debug"
+            ],
+            "configurePreset": "dev-gcc-ninja"
+        },
+        {
+            "name": "dev-clang",
+            "displayName": "Developer Build with Clang-Debug",
+            "inherits": [
+                "build-debug"
+            ],
+            "configurePreset": "dev-clang"
+        },
+        {
+            "name": "dev-clang-ninja",
+            "displayName": "Developer Build with Clang-Debug",
+            "inherits": [
+                "build-debug"
+            ],
+            "configurePreset": "dev-clang-ninja"
+        },
+        {
+            "name": "dev-release-gcc",
+            "displayName": "Developer Build with GCC-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "dev-release-gcc"
+        },
+        {
+            "name": "dev-release-gcc-ninja",
+            "displayName": "Developer Build with GCC-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "dev-release-gcc-ninja"
+        },
+        {
+            "name": "dev-release-clang",
+            "displayName": "Developer Build with Clang-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "dev-release-clang"
+        },
+        {
+            "name": "dev-release-clang-ninja",
+            "displayName": "Developer Build with Clang-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "dev-release-clang-ninja"
+        },
+        {
+            "name": "prod-release-gcc",
+            "displayName": "Production Build with GCC-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "prod-release-gcc"
+        },
+        {
+            "name": "prod-release-gcc-ninja",
+            "displayName": "Production Build with GCC-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "prod-release-gcc-ninja"
+        },
+        {
+            "name": "prod-release-clang",
+            "displayName": "Production Build with Clang-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "prod-release-clang"
+        },
+        {
+            "name": "prod-release-clang-ninja",
+            "displayName": "Production Build with Clang-Release",
+            "inherits": [
+                "build-release"
+            ],
+            "configurePreset": "prod-release-clang-ninja"
+        }
+    ]
+}

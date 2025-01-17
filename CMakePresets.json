@@ -1,76 +1,11 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 22,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "default",
-      "displayName": "ALCP Default Release Config using gcc",
-      "description": "ALCP Release build using Ninja generator",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/default",
-      "cacheVariables": {
-        "OPENSSL_INSTALL_DIR": "$env{OPENSSL_INSTALL_DIR}",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_INSTALL_LIBDIR": "lib",
-        "ALCP_ENABLE_EXAMPLES": "ON",
-        "ENABLE_AOCL_UTILS": "ON",
-        "AOCL_COMPAT_LIBS": "openssl"
-      }
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 23,
+        "patch": 0
     },
-    {
-      "name": "default-clang",
-      "inherits": "default",
-      "displayName": "ALCP Default Release Config using Clang",
-      "description": "ALCP Release build with clang using Ninja generator",
-      "binaryDir": "${sourceDir}/build/default-clang",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "debug",
-      "inherits": "default",
-      "displayName": "Ninja Debug build using gcc",
-      "description": "ALCP Debug build using Ninja generator",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "windows-only",
-      "inherits": "default",
-      "displayName": "Windows-only configuration",
-      "description": "This build is only available on Windows",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    }
-  ],
- "buildPresets": [
-    {
-        "name": "default",
-        "displayName": "Build default",
-        "configurePreset": "default"
-    },
-    {
-        "name": "default-clang",
-        "displayName": "Build default clang",
-        "configurePreset": "default-clang"
-    },
-    {
-      "name": "debug",
-      "displayName": "Build Debug",
-      "configurePreset": "debug"
-    }
-  ]
+    "include": [
+        "cmake/Presets/Default.json"
+    ]
 }

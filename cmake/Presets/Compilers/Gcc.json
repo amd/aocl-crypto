@@ -1,0 +1,30 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "gcc",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_CXX_STANDARD_REQUIRED": "YES"
+            }
+        },
+        {
+            "name": "gcc-debug",
+            "hidden": true,
+            "inherits": "gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "gcc-release",
+            "hidden": true,
+            "inherits": "gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}
