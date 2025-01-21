@@ -1,4 +1,4 @@
-(C) 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+(C) 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 
 AOCL Cryptography - Release Notes - AOCL version 5.0.1
 ------------------------------------------------------
@@ -20,7 +20,7 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 5.0.1
 ---------------------------------------------------------------------------
-AOCL-Nov2024
+AOCL-Jan2025
 ---------------------------------------------------------------------------
   - OpenSSL Provider:
     - Enabled support for CMAC, Poly1305, Cipher, RSA Algorithms
