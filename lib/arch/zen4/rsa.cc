@@ -1672,7 +1672,7 @@ namespace alcp::rsa { namespace zen4 {
         context.m_size = size;
         BigNum inp{ mod, size, size - 1 }, res{ r2, size * 2 + 1, size * 2 };
         context.m_k0 = computeMontFactor(mod[0]);
-        computeZen4MontConverter(res, inp);
+        computeMontConverter(res, inp);
 
         MontMultHalf(r3, r2, r2, mod, context.m_k0);
 
