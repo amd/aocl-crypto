@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,14 +26,13 @@
  *
  */
 
+#include "provider/alcp_provider.h"
+#include "provider/alcp_prov_bio.h"
 #include <openssl/bio.h>
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
 #include <openssl/params.h>
 #include <openssl/provider.h>
-
-#include "provider/alcp_prov_bio.h"
-#include "provider/alcp_provider.h"
 
 static void
 ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
@@ -53,6 +52,31 @@ OSSL_PROVIDER* prov_openssl_default;
 #endif
 
 #define ALCP_OPENSSL_VERSION OPENSSL_VERSION_STR
+
+/**
+ * @brief Validates the installed OpenSSL version in the user environment.
+ * This function compares the runtime OpenSSL version with the OpenSSL
+ * version used to compile alcp, to ensure compatibility.
+ *
+ * @param openssl_version The version of OpenSSL at runtime.
+ * @return It returns true if the openssl version in the environment is <=
+ * version used to compile alcp compat library, else false
+ */
+bool
+ValidateRuntimeOpenSSLVersion(const char* openssl_version)
+{
+    int major1, minor1, patch1;
+    int major2, minor2, patch2;
+
+#if defined(_WIN64) || defined(_WIN32)
+    sscanf_s(ALCP_OPENSSL_VERSION, "%d.%d.%d", &major1, &minor1, &patch1);
+    sscanf_s(openssl_version, "%d.%d.%d", &major2, &minor2, &patch2);
+#else
+    sscanf(ALCP_OPENSSL_VERSION, "%d.%d.%d", &major1, &minor1, &patch1);
+    sscanf(openssl_version, "%d.%d.%d", &major2, &minor2, &patch2);
+#endif
+    return major1 >= major2 && minor1 >= minor2 && patch1 >= patch2;
+}
 
 static const OSSL_ALGORITHM*
 ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
@@ -81,8 +105,8 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 // FIXME: OpenSSL Test test_quic_multistream fails on OpenSSL 3.3.
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
         case OSSL_OP_CIPHER:
-            // Check if openssl is same as compiled "with" version
-            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+            // Check if openssl version is <= than the compiled "with" version
+            if (ValidateRuntimeOpenSSLVersion(openssl_version)) {
                 EXIT();
                 return ALC_prov_ciphers;
             }
@@ -99,19 +123,21 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
         case OSSL_OP_ASYM_CIPHER:
-            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+            if (ValidateRuntimeOpenSSLVersion(openssl_version)) {
                 EXIT();
                 return alc_prov_asym_ciphers;
             }
             break;
         case OSSL_OP_SIGNATURE:
-            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+            if (ValidateRuntimeOpenSSLVersion(openssl_version)) {
                 EXIT();
                 return alc_prov_signature;
             }
             break;
         case OSSL_OP_KEYMGMT:
-            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
+            /* Key management functions are dispatched differently for 3.3.0
+             * onwards */
+            if (!ValidateRuntimeOpenSSLVersion(openssl_version)) {
                 EXIT();
                 return alc_prov_keymgmt;
             }
@@ -206,7 +232,8 @@ ALCP_teardown(void* vctx)
 static const OSSL_DISPATCH ALC_dispatch_table[] = {
     { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (fptr_t)ALCP_query_operation },
     // This is causing crash in provider test on 3.3.0
-    //{ OSSL_FUNC_PROVIDER_GET_REASON_STRINGS, (fptr_t)ALCP_get_reason_strings
+    //{ OSSL_FUNC_PROVIDER_GET_REASON_STRINGS,
+    //(fptr_t)ALCP_get_reason_strings
     //},
     { OSSL_FUNC_PROVIDER_GET_PARAMS, (fptr_t)ALCP_get_params },
     { OSSL_FUNC_PROVIDER_TEARDOWN, (fptr_t)ALCP_teardown },
