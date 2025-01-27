@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "alcp/cipher/aes_gcm.hh"
 #include "alcp/types.hh"
 
 #define NUM_PARALLEL_ZMMS 4
@@ -162,9 +163,6 @@ void inline computeHashSubKeys_withStore(int      num_512_blks,
     }
 }
 
-#define ALWAYS_COMPUTE_512                                                     \
-    0 // FIXME: to be enabled after benchmarking and testing.
-
 void inline getPrecomputedTable(Uint64         updateCounter,
                                 __m512i*       p512GcmCtxHashSubkeyTable,
                                 __m512i*       pHashSubkeyTableLocal,
@@ -174,18 +172,15 @@ void inline getPrecomputedTable(Uint64         updateCounter,
 {
     _mm_prefetch(cast_to(p512GcmCtxHashSubkeyTable), _MM_HINT_T0);
 
-#if ALWAYS_COMPUTE_512
-    if (num_512_blks > gcmCtx->m_num_512blks_precomputed) {
+#if ALWAYS_COMPUTE
+    if (num_512_blks) {
         computeHashSubKeys(num_512_blks,
                            gcmCtx->m_hash_subKey_128,
                            pHashSubkeyTableLocal,
                            const_factor_128);
-
-        gcmCtx->m_num_512blks_precomputed = num_512_blks;
-        updateCounter                     = 1;
         return;
     }
-#else  // ALWAYS_COMPUTE_512
+#else  // ALWAYS_COMPUTE
     if ((updateCounter == 1)
         || (num_512_blks > gcmCtx->m_num_512blks_precomputed)) {
         computeHashSubKeys(num_512_blks,
@@ -233,7 +228,7 @@ void inline getPrecomputedTable(Uint64         updateCounter,
             p512GcmCtxHashSubkeyTable++;
         }
     }
-#endif // ALWAYS_COMPUTE_512
+#endif // ALWAYS_COMPUTE
 }
 
 } // namespace alcp::cipher::vaes512

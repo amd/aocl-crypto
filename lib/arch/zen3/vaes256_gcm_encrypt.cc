@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -79,9 +79,9 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
                              int            remBytes)
 {
     __m256i c1;
-
+#if !ALWAYS_COMPUTE
     Uint64* pGcmCtxHashSubkeyTable = gcmCtx->m_pHashSubkeyTable_precomputed;
-
+#endif
     /* gcm init + Hash subkey init */
     // Initalize GCM constants
     const __m256i one_x  = alcp_set_epi32(2, 0, 0, 0, 2, 0, 0, 0);
@@ -125,10 +125,21 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
 
     num_256_blks = dynamicUnroll(blocks);
 
-    // Get precomputed Hash table for GMUL calculation
-    __m256i* Hsubkey_256_precomputed = (__m256i*)pGcmCtxHashSubkeyTable;
     __m256i  hashSubkeyTableStack[MAX_NUM_256_BLKS] = {};
     __m256i* Hsubkey_256                            = hashSubkeyTableStack;
+
+#if ALWAYS_COMPUTE
+    if (num_256_blks) {
+        getPrecomputedTable(updateCounter,
+                            nullptr,
+                            Hsubkey_256,
+                            num_256_blks,
+                            gcmCtx,
+                            const_factor_128);
+    }
+#else
+    // Get precomputed Hash table for GMUL calculation
+    __m256i* Hsubkey_256_precomputed = (__m256i*)pGcmCtxHashSubkeyTable;
     if (num_256_blks) {
         getPrecomputedTable(updateCounter,
                             Hsubkey_256_precomputed,
@@ -137,7 +148,7 @@ Uint64 inline gcmBlk_256_enc(const __m256i* p_in_x,
                             gcmCtx,
                             const_factor_128);
     }
-
+#endif
     __m256i a1, b1;
 
     Uint64 blockCount_4x256 = 4 * numBlksIn256bit;

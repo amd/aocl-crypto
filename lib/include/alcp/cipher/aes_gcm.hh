@@ -36,6 +36,19 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#define ALWAYS_COMPUTE                                                         \
+    1 // 1: always compute, 0: compute, store and load from table
+
+/*
+- Always compute without storage works well for real-world application where
+init is called for every update call.
+- OpenSSL speed uses single init and multiple update calls.
+   - In such cases, it is better to store the precomputed table and load from
+the table.
+- By choosing always compute without storing, we are favoring real-world
+application instead of OpenSSL speed or internal MicroBenchmark
+*/
+
 namespace alcp::cipher {
 
 /*
@@ -65,10 +78,10 @@ typedef struct _alc_gcm_ctx
     __m128i m_reverse_mask_128;
     __m128i m_tag_128;
     Uint64  m_additionalDataLen;
-
+#if !ALWAYS_COMPUTE
     _alc_cipher_gcm_key_data_t m_gcm_key_data{};
     Uint64*                    m_pHashSubkeyTable_precomputed = nullptr;
-
+#endif
 } alc_gcm_ctx_t;
 class ALCP_API_EXPORT Gcm
     : public Aes
@@ -95,32 +108,36 @@ class ALCP_API_EXPORT Gcm
 
         m_gcm_ctx.m_reverse_mask_128 =
             _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-
+#if !ALWAYS_COMPUTE
         // global precomputed hashtable pointer
         m_gcm_ctx.m_pHashSubkeyTable_precomputed =
             m_gcm_ctx.m_gcm_key_data.m_hashSubkeyTable;
-
+#endif
         m_gcm_ctx.m_tag_128           = _mm_setzero_si128();
         m_gcm_ctx.m_additionalDataLen = 0;
     }
 
     ~Gcm()
     {
+#if !ALWAYS_COMPUTE
         // clear precomputed hashtable
         if (m_gcm_ctx.m_pHashSubkeyTable_precomputed != nullptr) {
             memset(m_gcm_ctx.m_pHashSubkeyTable_precomputed,
                    0,
                    sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
         }
+#endif
     }
 
     void setTable(alc_cipher_state_t* pCipherState)
     {
+#if !ALWAYS_COMPUTE
         if (pCipherState != nullptr) {
             // printf("setTable\n");
             m_gcm_ctx.m_pHashSubkeyTable_precomputed =
                 pCipherState->alcp_precomputed_table;
         }
+#endif
     }
 
     alc_error_t init(const Uint8* pKey,

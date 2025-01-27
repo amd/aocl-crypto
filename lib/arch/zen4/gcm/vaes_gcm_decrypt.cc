@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -77,8 +77,9 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                              int            remBytes)
 {
     __m512i c1{};
-
+#if !ALWAYS_COMPUTE
     Uint64* pGcmCtxHashSubkeyTable = gcmCtx->m_pHashSubkeyTable_precomputed;
+#endif
 
 #if 0
     printf(" blocks %ld remBytes %d totalBytes %ld",
@@ -140,11 +141,21 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
     int num_512_blks = dynamicUnroll(blocks);
 
-    // Get Hash sub key table for GMUL
-    __m512i* p512GcmCtxHashSubkeyTable = (__m512i*)pGcmCtxHashSubkeyTable;
     __m512i  hashSubkeyTableStack[MAX_NUM_512_BLKS];
     __m512i* pHashSubkeyTableLocal = hashSubkeyTableStack;
 
+#if ALWAYS_COMPUTE
+    if (num_512_blks) {
+        getPrecomputedTable(updateCounter,
+                            nullptr,
+                            pHashSubkeyTableLocal,
+                            num_512_blks,
+                            gcmCtx,
+                            const_factor_128);
+    }
+#else
+    // Get Hash sub key table for GMUL
+    __m512i* p512GcmCtxHashSubkeyTable = (__m512i*)pGcmCtxHashSubkeyTable;
     if (num_512_blks) {
         getPrecomputedTable(updateCounter,
                             p512GcmCtxHashSubkeyTable,
@@ -153,7 +164,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                             gcmCtx,
                             const_factor_128);
     }
-
+#endif
     constexpr Uint8  numBlksIn512bit  = 4;
     constexpr Uint64 blockCount_1x512 = numBlksIn512bit;
     constexpr Uint64 blockCount_2x512 = 2 * numBlksIn512bit;

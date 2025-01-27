@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "alcp/cipher/aes_gcm.hh"
 #include "alcp/types.hh"
 
 #define NUM_PARALLEL_YMMS 4
@@ -157,7 +158,6 @@ void inline computeHashSubKeys(int           num_256_blks,
                       const_factor_256);
     }
 }
-#define ALWAYS_COMPUTE_256 0
 
 void inline getPrecomputedTable(Uint64         updateCounter,
                                 __m256i*       pHsubkey_256_precomputed,
@@ -166,8 +166,8 @@ void inline getPrecomputedTable(Uint64         updateCounter,
                                 alc_gcm_ctx_t* gcmCtx,
                                 __m128i        const_factor_128)
 {
-#if ALWAYS_COMPUTE_256
-    if (num_256_blks > gcmCtx->m_num_256blks_precomputed) {
+#if ALWAYS_COMPUTE
+    if (num_256_blks) {
         // compute only
         computeHashSubKeys(num_256_blks,
                            gcmCtx->m_hash_subKey_128,
