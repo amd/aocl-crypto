@@ -260,6 +260,7 @@ GcmT<keyLenBits, arch>::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
                               m_nrounds,
                               &m_gcm_ctx,
                               false);
+        return err;
     }
 
     return ALC_ERROR_NOT_SUPPORTED;
@@ -355,6 +356,7 @@ GcmT<keyLenBits, arch>::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
                               m_nrounds,
                               &m_gcm_ctx,
                               true);
+        return err;
     }
 
     return ALC_ERROR_NOT_SUPPORTED;
