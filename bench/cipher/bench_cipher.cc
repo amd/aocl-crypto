@@ -554,6 +554,51 @@ BENCH_AES_DECRYPT_SIV_256(benchmark::State& state)
 }
 // END 256 bit keysize
 
+/* Multi-init Benchmarks*/
+#ifdef MULTI_INIT_BENCH
+static void
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 128));
+}
+
+static void
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 128));
+}
+
+static void
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 192));
+}
+
+static void
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 192));
+}
+
+static void
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 256));
+}
+
+static void
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 256));
+}
+#endif
+
 /* non AES ciphers */
 static void
 BENCH_CHACHA20_ENCRYPT_256(benchmark::State& state)
@@ -649,6 +694,17 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_CCM_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CCM_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CCM_192)->ArgsProduct({ blocksizes });
+
+#ifdef MULTI_INIT_BENCH
+    //Multi-Init Benchmarks
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
+#endif
+
     return 0;
 }
 
