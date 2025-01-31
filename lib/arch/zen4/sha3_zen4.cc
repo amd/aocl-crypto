@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -73,7 +73,7 @@
 // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf
 
 // Additionally this implementation uses __m128i matrix of size 5x3 to store the
-// state, which helps eleminate use of permutaion operation.
+// state, which helps eliminate use of permutation operation.
 
 namespace alcp::digest { namespace zen4 {
 
@@ -143,15 +143,132 @@ namespace alcp::digest { namespace zen4 {
     };
     // Constants
 
-    static inline void fFunction(Uint64 para_state[cDim][cDim])
+    static inline void load128Absorb128(__m128i&      dest_State,
+                                        const Uint64* p_src_state,
+                                        const Uint64* p_src)
+    {
+        dest_State = _mm_loadu_epi64(p_src_state);
+        dest_State =
+            _mm_xor_epi64(dest_State, _mm_lddqu_si128((const __m128i*)(p_src)));
+    }
+
+    static inline void load128Absorb64(__m128i&      dest_State,
+                                       Uint64*       p_src_state,
+                                       const Uint64* p_src)
+    {
+        (*p_src_state) ^= (*p_src);
+        dest_State = _mm_loadu_epi64(p_src_state);
+    }
+
+    static inline void absorbRow(__m128i       state[cDim][cRegs],
+                                 Uint64        para_state[cDim][cDim],
+                                 const Uint64* pSrc,
+                                 const Uint64  row)
+    {
+        load128Absorb128(state[row][0], &para_state[row][0], &pSrc[0]);
+        load128Absorb128(state[row][1], &para_state[row][2], &pSrc[2]);
+        state[row][2] = _mm_cvtsi64_si128(para_state[row][4] ^ pSrc[4]);
+    }
+
+    static inline void loadRow(__m128i      state[cDim][cRegs],
+                               Uint64       para_state[cDim][cDim],
+                               const Uint64 row)
+    {
+        state[row][0] = _mm_loadu_epi64(&para_state[row][0]);
+        state[row][1] = _mm_loadu_epi64(&para_state[row][2]);
+        state[row][2] = _mm_cvtsi64_si128(para_state[row][4]);
+    }
+
+    static inline void fFunction(Uint64        para_state[cDim][cDim],
+                                 const Uint64* pSrc,
+                                 const Uint64  chunk_size_u64)
     {
         // Loading data
         __m128i state[cDim][cRegs]{};
 
-        for (Uint64 i = 0; i < cDim; i++) {
-            state[i][0] = _mm_loadu_epi64(&para_state[i][0]);
-            state[i][1] = _mm_loadu_epi64(&para_state[i][2]);
-            state[i][2] = _mm_cvtsi64_si128(para_state[i][4]);
+        /**
+         * The only possible values of digest_len are 128, 224, 256, 384, and
+         * 512 bits. Chunk size in bits is calculated as: 1600 - 2 * digest_len.
+         * Hence, in terms of 64-bit words:
+         * - When digest_len = 128, chunk_size_u64 = (1600 - 2 * 128) / 64 = 21
+         * - When digest_len = 224, chunk_size_u64 = (1600 - 2 * 224) / 64 = 18
+         * - When digest_len = 256, chunk_size_u64 = (1600 - 2 * 256) / 64 = 17
+         * - When digest_len = 384, chunk_size_u64 = (1600 - 2 * 384) / 64 = 13
+         * - When digest_len = 512, chunk_size_u64 = (1600 - 2 * 512) / 64 = 9
+         * - And =0 in Sha3Finalize calls because we don't absorb any input in
+         * the squeezing phase.
+         */
+        if (chunk_size_u64 == 9) {
+            // SHA3-512
+            // Row 0
+            absorbRow(state, para_state, pSrc, 0);
+            // Row 1
+            load128Absorb128(state[1][0], &para_state[1][0], &pSrc[5]);
+            load128Absorb128(state[1][1], &para_state[1][2], &pSrc[7]);
+            state[1][2] = _mm_cvtsi64_si128(para_state[1][4]);
+            // Row 2-4
+            for (Uint64 i = 2; i < 5; i++) {
+                loadRow(state, para_state, i);
+            }
+        } else if (chunk_size_u64 == 13) {
+            // SHA3-384
+            // Row 0
+            absorbRow(state, para_state, pSrc, 0);
+            // Row 1
+            absorbRow(state, para_state, &pSrc[5], 1);
+            // Row 2
+            load128Absorb128(state[2][0], &para_state[2][0], &pSrc[10]);
+            load128Absorb64(state[2][1], &para_state[2][2], &pSrc[12]);
+            state[2][2] = _mm_cvtsi64_si128(para_state[2][4]);
+            // Row 3
+            loadRow(state, para_state, 3);
+            loadRow(state, para_state, 4);
+        } else if (chunk_size_u64 == 17) {
+            // SHA3-256, SHAKE-256
+            // Row 0
+            absorbRow(state, para_state, pSrc, 0);
+            // Row 1
+            absorbRow(state, para_state, &pSrc[5], 1);
+            // Row 2
+            absorbRow(state, para_state, &pSrc[10], 2);
+            // Row 3
+            load128Absorb128(state[3][0], &para_state[3][0], &pSrc[15]);
+            state[3][1] = _mm_loadu_epi64(&para_state[3][2]);
+            state[3][2] = _mm_cvtsi64_si128(para_state[3][4]);
+            // Row 4
+            loadRow(state, para_state, 4);
+        } else if (chunk_size_u64 == 18) {
+            // SHA3-224
+            // Row 0
+            absorbRow(state, para_state, pSrc, 0);
+            // Row 1
+            absorbRow(state, para_state, &pSrc[5], 1);
+            // Row 2
+            absorbRow(state, para_state, &pSrc[10], 2);
+            // Row 3
+            load128Absorb128(state[3][0], &para_state[3][0], &pSrc[15]);
+            load128Absorb64(state[3][1], &para_state[3][2], &pSrc[17]);
+            state[3][2] = _mm_cvtsi64_si128(para_state[3][4]);
+            // Row 4
+            loadRow(state, para_state, 4);
+        } else if (chunk_size_u64 == 21) {
+            // SHAKE-128
+            // Row 0
+            absorbRow(state, para_state, pSrc, 0);
+            // Row 1
+            absorbRow(state, para_state, &pSrc[5], 1);
+            // Row 2
+            absorbRow(state, para_state, &pSrc[10], 2);
+            // Row 3
+            absorbRow(state, para_state, &pSrc[15], 3);
+            // Row 4
+            para_state[4][0] ^= pSrc[20];
+            loadRow(state, para_state, 4);
+        } else {
+            // Calls from Sha3Finalize go here
+            for (Uint64 i = 0; i < cDim; i++) {
+                loadRow(state, para_state, i);
+            }
         }
         // Loading data
 
@@ -539,17 +656,6 @@ namespace alcp::digest { namespace zen4 {
         // Storing data
     }
 
-    inline void absorbChunk(Uint64* pSrc, Uint64 chunk_size_u64, Uint64* pState)
-    {
-        Uint8P p_src         = reinterpret_cast<Uint8P>(pSrc);
-        Uint8P p_state       = reinterpret_cast<Uint8P>(pState);
-        Uint64 chunk_size_u8 = chunk_size_u64 * 8;
-        for (Uint64 i = 0; i < chunk_size_u8; ++i) {
-            p_state[i] ^= p_src[i];
-        }
-        fFunction(reinterpret_cast<Uint64(*)[cDim]>(pState));
-    }
-
     alc_error_t Sha3Update(Uint64* state,
                            Uint64* pSrc,
                            Uint64  msg_size,
@@ -560,7 +666,8 @@ namespace alcp::digest { namespace zen4 {
         Uint64 chunk_size_u64 = chunk_size / 8;
 
         for (Uint32 i = 0; i < num_chunks; i++) {
-            absorbChunk(pSrc, chunk_size_u64, state);
+            fFunction(
+                reinterpret_cast<Uint64(*)[cDim]>(state), pSrc, chunk_size_u64);
             pSrc += chunk_size_u64;
         }
 
@@ -586,7 +693,7 @@ namespace alcp::digest { namespace zen4 {
         index = 0;
 
         while (hash_size) {
-            fFunction(reinterpret_cast<Uint64(*)[cDim]>(state));
+            fFunction(reinterpret_cast<Uint64(*)[cDim]>(state), nullptr, 0);
             if (hash_size <= chunk_size) {
                 CopyBlock(hash, state + index, hash_size);
                 index = (index + hash_size);
