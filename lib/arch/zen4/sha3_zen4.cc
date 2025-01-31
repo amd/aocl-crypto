@@ -84,63 +84,6 @@ namespace alcp::digest { namespace zen4 {
     static constexpr Uint8 cRegs     = 3;
     static constexpr Uint8 cRounds   = 24;
     static constexpr Uint8 cRounds12 = 12;
-
-    alignas(64) const __m128i cRoundConstant[cRounds] = {
-        _mm_set_epi64x(0x0, 0x0000000000000001),
-        _mm_set_epi64x(0x0, 0x0000000000008082),
-        _mm_set_epi64x(0x0, 0x800000000000808A),
-        _mm_set_epi64x(0x0, 0x8000000080008000),
-        _mm_set_epi64x(0x0, 0x000000000000808B),
-        _mm_set_epi64x(0x0, 0x0000000080000001),
-        _mm_set_epi64x(0x0, 0x8000000080008081),
-        _mm_set_epi64x(0x0, 0x8000000000008009),
-        _mm_set_epi64x(0x0, 0x000000000000008A),
-        _mm_set_epi64x(0x0, 0x0000000000000088),
-        _mm_set_epi64x(0x0, 0x0000000080008009),
-        _mm_set_epi64x(0x0, 0x000000008000000A),
-        _mm_set_epi64x(0x0, 0x000000008000808B),
-        _mm_set_epi64x(0x0, 0x800000000000008B),
-        _mm_set_epi64x(0x0, 0x8000000000008089),
-        _mm_set_epi64x(0x0, 0x8000000000008003),
-        _mm_set_epi64x(0x0, 0x8000000000008002),
-        _mm_set_epi64x(0x0, 0x8000000000000080),
-        _mm_set_epi64x(0x0, 0x000000000000800A),
-        _mm_set_epi64x(0x0, 0x800000008000000A),
-        _mm_set_epi64x(0x0, 0x8000000080008081),
-        _mm_set_epi64x(0x0, 0x8000000000008080),
-        _mm_set_epi64x(0x0, 0x0000000080000001),
-        _mm_set_epi64x(0x0, 0x8000000080008008)
-    };
-
-    alignas(64) const __m128i cRotate0[5][3] = {
-        { _mm_set_epi64x(1, 0), _mm_set_epi64x(28, 62), _mm_set_epi64x(0, 27) },
-        { _mm_set_epi64x(44, 36),
-          _mm_set_epi64x(55, 6),
-          _mm_set_epi64x(0, 20) },
-        { _mm_set_epi64x(10, 3),
-          _mm_set_epi64x(25, 43),
-          _mm_set_epi64x(0, 39) },
-        { _mm_set_epi64x(45, 41),
-          _mm_set_epi64x(21, 15),
-          _mm_set_epi64x(0, 8) },
-        { _mm_set_epi64x(2, 18), _mm_set_epi64x(56, 61), _mm_set_epi64x(0, 14) }
-    };
-
-    alignas(64) const __m128i cRotate1[5][3] = {
-        { _mm_set_epi64x(44, 0),
-          _mm_set_epi64x(21, 43),
-          _mm_set_epi64x(0, 14) },
-        { _mm_set_epi64x(1, 18), _mm_set_epi64x(25, 6), _mm_set_epi64x(0, 8) },
-        { _mm_set_epi64x(2, 41),
-          _mm_set_epi64x(55, 62),
-          _mm_set_epi64x(0, 39) },
-        { _mm_set_epi64x(45, 3),
-          _mm_set_epi64x(28, 61),
-          _mm_set_epi64x(0, 20) },
-        { _mm_set_epi64x(10, 36),
-          _mm_set_epi64x(56, 15),
-          _mm_set_epi64x(0, 27) }
-    };
     // Constants
 
     static inline void load128Absorb128(__m128i&      dest_State,
@@ -183,6 +126,71 @@ namespace alcp::digest { namespace zen4 {
                                  const Uint64* pSrc,
                                  const Uint64  chunk_size_u64)
     {
+        // setting constants
+        alignas(64) static const __m128i cRoundConstant[cRounds] = {
+            _mm_set_epi64x(0x0, 0x0000000000000001),
+            _mm_set_epi64x(0x0, 0x0000000000008082),
+            _mm_set_epi64x(0x0, 0x800000000000808A),
+            _mm_set_epi64x(0x0, 0x8000000080008000),
+            _mm_set_epi64x(0x0, 0x000000000000808B),
+            _mm_set_epi64x(0x0, 0x0000000080000001),
+            _mm_set_epi64x(0x0, 0x8000000080008081),
+            _mm_set_epi64x(0x0, 0x8000000000008009),
+            _mm_set_epi64x(0x0, 0x000000000000008A),
+            _mm_set_epi64x(0x0, 0x0000000000000088),
+            _mm_set_epi64x(0x0, 0x0000000080008009),
+            _mm_set_epi64x(0x0, 0x000000008000000A),
+            _mm_set_epi64x(0x0, 0x000000008000808B),
+            _mm_set_epi64x(0x0, 0x800000000000008B),
+            _mm_set_epi64x(0x0, 0x8000000000008089),
+            _mm_set_epi64x(0x0, 0x8000000000008003),
+            _mm_set_epi64x(0x0, 0x8000000000008002),
+            _mm_set_epi64x(0x0, 0x8000000000000080),
+            _mm_set_epi64x(0x0, 0x000000000000800A),
+            _mm_set_epi64x(0x0, 0x800000008000000A),
+            _mm_set_epi64x(0x0, 0x8000000080008081),
+            _mm_set_epi64x(0x0, 0x8000000000008080),
+            _mm_set_epi64x(0x0, 0x0000000080000001),
+            _mm_set_epi64x(0x0, 0x8000000080008008)
+        };
+
+        alignas(64) static const __m128i cRotate0[5][3] = {
+            { _mm_set_epi64x(1, 0),
+              _mm_set_epi64x(28, 62),
+              _mm_set_epi64x(0, 27) },
+            { _mm_set_epi64x(44, 36),
+              _mm_set_epi64x(55, 6),
+              _mm_set_epi64x(0, 20) },
+            { _mm_set_epi64x(10, 3),
+              _mm_set_epi64x(25, 43),
+              _mm_set_epi64x(0, 39) },
+            { _mm_set_epi64x(45, 41),
+              _mm_set_epi64x(21, 15),
+              _mm_set_epi64x(0, 8) },
+            { _mm_set_epi64x(2, 18),
+              _mm_set_epi64x(56, 61),
+              _mm_set_epi64x(0, 14) }
+        };
+
+        alignas(64) static const __m128i cRotate1[5][3] = {
+            { _mm_set_epi64x(44, 0),
+              _mm_set_epi64x(21, 43),
+              _mm_set_epi64x(0, 14) },
+            { _mm_set_epi64x(1, 18),
+              _mm_set_epi64x(25, 6),
+              _mm_set_epi64x(0, 8) },
+            { _mm_set_epi64x(2, 41),
+              _mm_set_epi64x(55, 62),
+              _mm_set_epi64x(0, 39) },
+            { _mm_set_epi64x(45, 3),
+              _mm_set_epi64x(28, 61),
+              _mm_set_epi64x(0, 20) },
+            { _mm_set_epi64x(10, 36),
+              _mm_set_epi64x(56, 15),
+              _mm_set_epi64x(0, 27) }
+        };
+        // setting constants
+
         // Loading data
         __m128i state[cDim][cRegs]{};
 
