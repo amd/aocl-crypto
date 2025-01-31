@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -120,7 +120,6 @@ known_answer_map_t KAT_ShaDataset {
             "53616d706c65206d65737361676520666f72206b65796c656e3d626c6f636b6c656e",
             "8bb9a1db9806f20df7f77b82138c7914d174d59e13dc4d0169c9057b133e1d62"
         }
-
     },
     {
         "SHA2_256_KEYLEN_LT_B",
@@ -398,7 +397,10 @@ class HmacTestFixture
 
 TEST(HmacReliabilityTest, NullUpdate)
 {
-    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    auto pos = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    if (pos == KAT_ShaDataset.end()) {
+        GTEST_FAIL();
+    }
     param_tuple data = pos->second;
 
     auto key         = parseHexStrToBin(std::get<0>(data));
@@ -468,7 +470,10 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
 
 TEST(HmacTest, UpdateReset)
 {
-    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    auto pos = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    if (pos == KAT_ShaDataset.end()) {
+        GTEST_FAIL();
+    }
     param_tuple data = pos->second;
 
     auto key         = parseHexStrToBin(std::get<0>(data));
@@ -491,7 +496,10 @@ TEST(HmacTest, UpdateReset)
 
 TEST(HmacTest, FinalizeReset)
 {
-    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    auto pos = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    if (pos == KAT_ShaDataset.end()) {
+        GTEST_FAIL();
+    }
     param_tuple data = pos->second;
 
     auto key         = parseHexStrToBin(std::get<0>(data));
@@ -514,7 +522,10 @@ TEST(HmacTest, FinalizeReset)
 
 TEST(HmacTest, UpdateFinalizeReset)
 {
-    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    auto pos = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    if (pos == KAT_ShaDataset.end()) {
+        GTEST_FAIL();
+    }
     param_tuple data = pos->second;
 
     auto key         = parseHexStrToBin(std::get<0>(data));
@@ -545,7 +556,11 @@ TEST(HmacTest, UpdateFinalizeReset)
 
 TEST(HmacTest, setKeyAfterFinalize)
 {
-    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    auto pos = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    if (pos == KAT_ShaDataset.end()) {
+        GTEST_FAIL();
+    }
+
     param_tuple data = pos->second;
 
     auto key         = parseHexStrToBin(std::get<0>(data));
@@ -568,8 +583,11 @@ TEST(HmacTest, setKeyAfterFinalize)
     hmac.finalize(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
 
-    pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_LT_B");
-    data = pos->second;
+    auto pos2 = KAT_ShaDataset.find("SHA2_256_KEYLEN_LT_B");
+    if (pos2 == KAT_ShaDataset.end()) {
+        GTEST_FAIL();
+    }
+    data = pos2->second;
 
     key         = parseHexStrToBin(std::get<0>(data));
     cipher_text = parseHexStrToBin(std::get<1>(data));

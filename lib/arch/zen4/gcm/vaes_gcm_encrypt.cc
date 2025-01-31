@@ -536,7 +536,8 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     }
 
     if (remBytes) {
-        Uint64  mask         = (1 << remBytes) - 1;
+        Uint64 mask = (static_cast<alcp::Uint64>(1) << remBytes)
+                      - static_cast<alcp::Uint64>(1);
         __m128i a1           = _mm_setzero_si128();
         __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
         __m128i b1           = _mm_shuffle_epi8(c1_128, swap_ctr_128);

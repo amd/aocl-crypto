@@ -385,9 +385,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
         alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
 
-        Uint64 mask = (1 << remBytes) - 1;
-        a1          = _mm_setzero_si128();
-        a1          = _mm_mask_loadu_epi8(a1, mask, p_in_x);
+        Uint64 mask = (static_cast<alcp::Uint64>(1) << remBytes)
+                      - static_cast<alcp::Uint64>(1);
+        a1 = _mm_setzero_si128();
+        a1 = _mm_mask_loadu_epi8(a1, mask, p_in_x);
 
         __m128i ra1         = _mm_shuffle_epi8(a1, gcmCtx->m_reverse_mask_128);
         gcmCtx->m_gHash_128 = _mm_xor_si128(ra1, gcmCtx->m_gHash_128);

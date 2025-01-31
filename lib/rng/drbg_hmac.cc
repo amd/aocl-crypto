@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -70,9 +70,9 @@ DebugPrint(const std::vector<Uint8>& in,
 class HmacDrbg::Impl
 {
   private:
-    std::shared_ptr<alcp::digest::IDigest> m_digest;
+    std::shared_ptr<alcp::digest::IDigest> m_digest{};
     std::vector<Uint8>                     m_v = {}, m_key = {};
-    Hmac                                   m_hmac_obj;
+    Hmac                                   m_hmac_obj{};
 
   public:
     /**
