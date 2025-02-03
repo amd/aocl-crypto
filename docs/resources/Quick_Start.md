@@ -16,7 +16,6 @@ Some packages which are required for AOCL-Cryptography can be installed with bel
 ```bash
 sudo apt update                      # Sync repository information
 sudo apt install build-essential     # Basic packages to support compilation
-sudo apt install lsb-release         # LSB release to identify OS
 sudo apt install git                 # To clone github repositories
 sudo apt install libssl-dev          # For openssl
 sudo apt install make                # Build system
@@ -157,8 +156,6 @@ ensure_packages(){
         sudo apt update                      # Sync repository information
         echo "Running \"apt install build-essential\""
         sudo apt install build-essential     # Basic packages to support compilation
-        echo "Running \"apt install lsb-release\""
-        sudo apt install lsb-release         # LSB release to identify OS
         quit_if_status_not_zero $?
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories

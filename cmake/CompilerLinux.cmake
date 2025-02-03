@@ -268,3 +268,13 @@ function(alcp_add_coverage_flags)
         target_link_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
     endif()
 endfunction(alcp_add_coverage_flags)
+
+# check if 7zip utility is installed
+function(check_7zip_installed)
+    find_program(7_ZIP 7z)
+    if (7_ZIP)
+        message(STATUS "7zip is installed: ${7_ZIP}")
+    else()
+        message(FATAL_ERROR "7zip is not installed, alcp compilation wont work!")
+    endif()
+endfunction()

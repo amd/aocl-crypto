@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -52,8 +52,6 @@ ensure_packages(){
         sudo apt update                      # Sync repository information
         echo "Running \"apt install build-essential\""
         sudo apt install build-essential     # Basic packages to support compilation
-        echo "Running \"apt install lsb-release\""
-        sudo apt install lsb-release         # LSB release to identify OS
         quit_if_status_not_zero $?
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories

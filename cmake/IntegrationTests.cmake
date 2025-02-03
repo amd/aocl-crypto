@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,10 +32,26 @@ FetchContent_MakeAvailable(gtest)
 find_package(Threads)
 
 message(STATUS "checking for git-lfs installation")
-    find_program(GITLFS "git-lfs")
-    if (NOT GITLFS)
-        message(FATAL_ERROR "git-lfs installation not found, KAT tests will not run!")
+find_program(GITLFS "git-lfs")
+if (NOT GITLFS)
+    message(FATAL_ERROR "git-lfs installation not found, KAT tests will not run!")
+else()
+    message(STATUS "git-lfs installation found")
+    # execute git-lfs fetch command
+    execute_process(COMMAND ${GITLFS} fetch
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    RESULT_VARIABLE result)
+    if (NOT result EQUAL 0)
+        message(FATAL_ERROR "git-lfs fetch command failed, KAT tests will not run!")
     endif()
+    # execute git-lfs checkout command
+    execute_process(COMMAND ${GITLFS} checkout
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    RESULT_VARIABLE result)
+    if (NOT result EQUAL 0)
+        message(FATAL_ERROR "git-lfs checkout command failed, KAT tests will not run!")
+    endif()
+endif()
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 

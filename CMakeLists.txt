@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -63,6 +63,11 @@ alcp_check_compiler_version()
 
 # check build environment
 alcp_get_build_environment()
+
+# check for 7zip installation, needed by static library creation on linux
+if(UNIX)
+	check_7zip_installed()
+endif(UNIX)
 
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
