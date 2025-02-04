@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -30,7 +30,6 @@ from config import VERBOSE_LEVEL
 from colors import Colors
 import sys
 from inspect import currentframe, getframeinfo
-
 
 class Copyright:
     from pathlib import Path
@@ -258,6 +257,8 @@ arguments = {
 
 def argument_parser():
     if (len(sys.argv) == 1):
+        print("No arguments specified")
+        help()
         return
     i = 1
     while (i < len(sys.argv)):
