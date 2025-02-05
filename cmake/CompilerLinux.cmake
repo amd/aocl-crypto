@@ -47,7 +47,6 @@ function(alcp_check_compiler_version)
     set (CLANG_MIN_REQ "14.0.0")
     # if gcc
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-
         set(CMAKE_COMPILER_IS_GCC ON PARENT_SCOPE)
         string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 2 CMAKE_COMPILER_GCC_VERSION)
         set(CMAKE_COMPILER_GCC_VERSION ${CMAKE_COMPILER_GCC_VERSION} PARENT_SCOPE)
@@ -67,6 +66,10 @@ function(alcp_check_compiler_version)
         if(${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
             message(FATAL_ERROR "Using c++ compiler version ${CMAKE_CXX_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
         endif()
+    endif()
+    # check if cc and cxx version mismatch
+    if (NOT ${CMAKE_C_COMPILER_VERSION} STREQUAL ${CMAKE_CXX_COMPILER_VERSION})
+        message(FATAL_ERROR "cc and cxx versions are different!")
     endif()
 endfunction(alcp_check_compiler_version)
 
