@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -192,14 +192,14 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             break;
         case ALC_DRBG_CTR:
             err = CtrDrbgBuilder::build(drbgInfo, ctx);
-            if (alcp_is_error(err)) {
-                return err;
-            }
             break;
         default:
             // Unknown MAC Type
             err = ALC_ERROR_INVALID_ARG;
             break;
+    }
+    if (alcp_is_error(err)) {
+        return err;
     }
 
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
