@@ -36,8 +36,12 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#ifdef GCM_ALWAYS_COMPUTE
 #define ALWAYS_COMPUTE                                                         \
     1 // 1: always compute, 0: compute, store and load from table
+#else
+#define ALWAYS_COMPUTE 0
+#endif
 
 /*
 - Always compute without storage works well for real-world application where
@@ -154,7 +158,8 @@ class ALCP_API_EXPORT GcmAuth
   public:
     GcmAuth(Uint32 keyLen_in_bytes)
         : Gcm(keyLen_in_bytes)
-    {}
+    {
+    }
     ~GcmAuth() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
@@ -170,7 +175,8 @@ class GcmT
   public:
     GcmT()
         : GcmAuth((static_cast<Uint32>(keyLenBits)) / 8)
-    {}
+    {
+    }
 
     GcmT(alc_cipher_state_t* pCipherState)
         : GcmAuth((static_cast<Uint32>(keyLenBits)) / 8)
