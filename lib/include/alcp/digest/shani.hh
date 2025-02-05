@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,5 @@
 
 namespace alcp::digest { namespace shani {
 
-    alc_error_t ShaUpdate256(Uint32*       pHash,
-                             const Uint8*  pSrc,
-                             Uint64        src_len,
-                             const Uint32* pHashConstants);
+    alc_error_t ShaUpdate256(Uint32* pHash, const Uint8* pSrc, Uint64 src_len);
 }} // namespace alcp::digest::shani
