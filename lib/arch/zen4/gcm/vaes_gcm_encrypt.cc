@@ -137,7 +137,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
     int num_512_blks = dynamicUnroll(blocks);
 
-    __m512i  hashSubkeyTableStack[MAX_NUM_512_BLKS];
+    __m512i  hashSubkeyTableStack[MAX_NUM_512_BLKS]{};
     __m512i* pHashSubkeyTableLocal = hashSubkeyTableStack;
 
 #if ALWAYS_COMPUTE
