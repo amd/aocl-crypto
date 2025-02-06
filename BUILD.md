@@ -154,3 +154,4 @@ By default all of the below features are OFF and they can be enabled optionally 
 - To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
 - To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 
 - To Enable OFB multi update feature append flag `-DALCP_ENABLE_OFB_MULTI_UPDATE=ON` to build flags.
+- To Enable GCM always compute table option to boost performance uplift in applications, append `-DALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE=ON` to build flags.

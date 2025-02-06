@@ -33,6 +33,9 @@ Example for selecting only "SHA256" benchmarks
 
 ​	`$./bench/digest/bench_digest --benchmark_filter="SHA2_256"`
 
+To pass custom block size (example: 1024 bytes) to the benchmark:
+   `$./bench/cipher/bench_cipher -b 1024`
+
 Always you can use `--help` to know all the command line arguments which can be given to the executable.
 
 #### Supported Benchmarks
@@ -111,3 +114,9 @@ For using IPP just specify `-i` command line argument.
 
 For using OpenSSL just specify `-o` command line argument.
 
+### Force runtime CPU Architecture
+To force runtime CPU Architecture, use the environment variable ALCP_ENABLE_INSTRUCTIONS before running the test executable.
+Supported options are ZEN1, ZEN2, ZEN3, ZEN4, ZEN5
+```sh
+$ ALCP_ENABLE_INSTRUCTIONS=ZEN3 ./bench/cipher/bench_cipher
+```
