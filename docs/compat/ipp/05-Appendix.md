@@ -2,10 +2,10 @@
 
 ## Compiling and installing IPPCP
 
-For official guide on how to compile and install IPPCP [click here](https://github.com/intel/ipp-crypto/blob/develop/BUILD.md)
+For official guide on how to compile and install IPPCP [click here](https://github.com/intel/cryptography-primitives/blob/develop/BUILD.md)
 
 ```bash
-git clone https://github.com/intel/ipp-crypto -b ipp-crypto_2021_6
+git https://github.com/intel/cryptography-primitives -b ipp-crypto_2021_6
 cd ipp-crypto
 mkdir build
 cd build

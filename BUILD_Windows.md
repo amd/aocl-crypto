@@ -4,7 +4,7 @@
 
 - MS Visual Studio (2019 or greater)
 - Clang 15.0 or above
-- Cmake 3.21 or greater
+- Cmake 3.26 or greater
 - Git
 - Ninja(Alternative to Visual Studio Build System)
 
@@ -50,6 +50,11 @@ PS > cmake -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE/DE
 * 2. cmake --build .\build --config=release
 ```
 
+#### CMake Presets
+Some preconfigured CMake presets are available. To view the available presets, run:
+```sh
+cmake --list-presets
+```
 
 ### Enabling features of AOCL Cryptography
 
@@ -98,6 +103,9 @@ PS> cmake --build .\build --config=release
 PS> cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
 PS> cmake --build .\build --config=debug
 ```
+
+To enable debug logging from within the CAPIs, append `-DALCP_ENABLE_DEBUG_LOGGING=ON` to the cmake config.
+ALCP_ENABLE_DEBUG_LOGGING is set to OFF by default
 
 #### For Compiling with Address Sanitizer Support 
 
@@ -158,10 +166,17 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 ```
 
 ### Disabling/Enabling Optional Features
-By default all of the below features are OFF and they can be enabled optionally by setting their corresponding flags to ON
-- To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
-- To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 
-- To Enable OFB multi update feature append flag `-DALCP_ENABLE_OFB_MULTI_UPDATE=ON` to build flags.
+These are flags to enable/disable optional features as required.
+
+1. "ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE" is ON by default, which precomputes table for every encrypt/decrypt update without storage. 
+	- To disable GCM Always compute subkeys hash table, use ` -DALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE=OFF`.
+		- When disabled, stored precomputed subkeys table are used for next encrypt/decrypt calls if there is no change in key or iv. 
+	- ` -DALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE=ON` (default behavior) is better for improving the application performance 
+	- ` -DALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE=OFF` will improve performance in OpenSSL speed and microbenchmarks.
+
+2. To enable multi update feature for all supported ciphers append `-DALCP_ENABLE_CIPHER_MULTI_UPDATE=ON` to build flags. 
+3. To Enable CCM multi update feature append flag `-DALCP_ENABLE_CCM_MULTI_UPDATE=ON` to build flags. 
+4. To Enable OFB multi update feature append flag `-DALCP_ENABLE_OFB_MULTI_UPDATE=ON` to build flags.
 
 ### Enabling compat libs
 

@@ -8,7 +8,8 @@
 4. `cmake --build build`
 
 > <span style="color:red">__Note:__</span> To include IPP, please define `-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix` in step 3. <br>
-> <span style="color:red"> __Note:__</span> To include OpenSSL, please define `-DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix` in step 3.
+> <span style="color:red"> __Note:__</span> To include OpenSSL, please define `-DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix` in step 3.<br>
+> <span style="color:red">__Note:__</span> To enable Multi Init lifecycle benchmarking, please append `-DMULTI_INIT_BENCH=ON` in step3<br>
 
 
 <a name = "Executing_Benches"></a>
