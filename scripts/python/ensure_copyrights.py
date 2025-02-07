@@ -256,6 +256,10 @@ arguments = {
 
 
 def argument_parser():
+    # while executing git commands during commit
+    if len(sys.argv) == 2 and sys.argv[1] == "PreCommit":
+        return
+    # while running the script seperately for copyright checks
     if (len(sys.argv) == 1):
         print("No arguments specified")
         help()
