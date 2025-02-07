@@ -45,7 +45,6 @@ template<CipherMode MODE>
 iCipher*
 getGenericCiphers(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
 {
-
     if (arch < alcp::utils::CpuCipherFeatures::eAesni) {
         printf("\n Error: Reference kernel not supported ");
         return nullptr;
@@ -255,9 +254,6 @@ getCcm(const CipherKeyLen keyLen, const CpuCipherFeatures arch)
             case CipherKeyLen::eKey256Bit:
                 return new CcmT<CipherKeyLen::eKey256Bit,
                                 CpuCipherFeatures::eAesni>();
-            default:
-                printf("\n Error: key length not supported ");
-                return nullptr;
         }
     }
     printf("\n Error: Reference kernel not supported ");
@@ -272,7 +268,6 @@ getXts(const CipherKeyLen keyLenBits, const CpuCipherFeatures arch)
         printf("\n Error: key length not supported ");
         return nullptr;
     }
-
     if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
         switch (keyLenBits) {
             case CipherKeyLen::eKey128Bit:
@@ -319,7 +314,6 @@ getXtsBlock(const CipherKeyLen keyLenBits, const CpuCipherFeatures arch)
         printf("\n Error: key length not supported ");
         return nullptr;
     }
-
     if (arch == alcp::utils::CpuCipherFeatures::eVaes512) {
         switch (keyLenBits) {
             case CipherKeyLen::eKey128Bit:
