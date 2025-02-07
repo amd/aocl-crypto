@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -320,7 +320,7 @@ class CrossTest : public CrossTestFixture
         : _select1(select1)
         , _select2(select2)
     {
-        _rng = rng;
+        _rng = std::move(rng);
     }
     void TestBody() override { CrossTestGCM(_rng, _select1, _select2); }
 
@@ -346,7 +346,7 @@ RegisterMyTests(std::string              testSuiteName,
         __LINE__,
         // Important to use the fixture type as the return type here.
         [=]() -> CrossTestFixture* {
-            return new CrossTest(rng, select1, select2);
+            return new CrossTest(std::move(rng), select1, select2);
         });
 }
 } // namespace alcp::testing::cipher::gcm
@@ -399,7 +399,7 @@ main(int argc, char** argv)
         if (std::get<bool>(argsMap["USE_IPP"].value)) {
             RegisterMyTests("KnownAnswerTest",
                             "GCM_CROSS_EXPERIMENTAL_IPP",
-                            rng,
+                            std::move(rng),
                             LibrarySelect::IPP,
                             LibrarySelect::ALCP);
         }

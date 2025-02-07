@@ -554,7 +554,7 @@ HmacDrbg::Impl::internalReseed(const std::vector<Uint8>& cEntropyInput,
 void
 HmacDrbg::Impl::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    m_digest = digest_obj;
+    m_digest = std::move(digest_obj);
     // Initialize Internal States (Will serve also as reset)
     m_v   = std::vector<Uint8>(m_digest->getHashSize());
     m_key = std::vector<Uint8>(m_digest->getHashSize());
@@ -635,7 +635,7 @@ HmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
 void
 HmacDrbg::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    p_impl->setDigest(digest_obj);
+    p_impl->setDigest(std::move(digest_obj));
 }
 
 std::string

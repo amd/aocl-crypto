@@ -910,7 +910,7 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             data.m_inl = pt.size();
         }
 
-        expected_output   = ct;
+        expected_output   = std::move(ct);
         actual_output     = std::vector<Uint8>(expected_output.size());
         data.m_block_size = actual_output.size();
 
@@ -934,7 +934,7 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             data.m_inl = ct.size();
         }
 
-        expected_output   = pt;
+        expected_output   = std::move(pt);
         actual_output     = std::vector<Uint8>(expected_output.size());
         data.m_block_size = actual_output.size();
 

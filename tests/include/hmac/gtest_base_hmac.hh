@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -117,7 +117,7 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
 
     std::string TestDataFile = std::string("dataset_HMAC_" + HmacType + "_"
                                            + std::to_string(HmacSize) + ".csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {

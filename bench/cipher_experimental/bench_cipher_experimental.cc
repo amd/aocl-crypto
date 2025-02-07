@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -76,8 +76,10 @@ BenchCipherExperimental(benchmark::State&            state,
 
     // Cleanup
     no_err &= iTestCipher->finalize(&dataFinalize);
-    //FIXME: 'finalize' does not need to be benched after multi-decrypt operations on a single encrypted buffer.
-    // It errors out due to tag mismatches in case of openssl.Add error check for finalize().
+    // FIXME: 'finalize' does not need to be benched after multi-decrypt
+    // operations on a single encrypted buffer.
+    //  It errors out due to tag mismatches in case of openssl.Add error check
+    //  for finalize().
 
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * cBlockSize, benchmark::Counter::kIsRate);
@@ -126,7 +128,8 @@ BenchGcmCipherExperimental(benchmark::State&            state,
 
     if constexpr (encryptor == false) { // Decrypt
         // Create a vaid data for decryption (mainly tag and ct)
-        std::unique_ptr<ITestCipher> iTestCipher = std::make_unique<AlcpGcmCipher<true>>();
+        std::unique_ptr<ITestCipher> iTestCipher =
+            std::make_unique<AlcpGcmCipher<true>>();
         bool no_err = true;
         no_err &= iTestCipher->init(&dataInit);
         if (no_err == false) {
@@ -445,7 +448,8 @@ main(int argc, char** argv)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+        ->ArgsProduct(
+            { alcp::benchmarking::cipher::blocksizes, std::move(testlibs) });
 
     ::benchmark::RunSpecifiedBenchmarks();
 

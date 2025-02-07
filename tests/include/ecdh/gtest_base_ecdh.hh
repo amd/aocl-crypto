@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -115,7 +115,7 @@ ecdh_KAT(alc_ec_info_t info)
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {
@@ -238,7 +238,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH_p256.csv");
-    Csv         csv          = Csv(TestDataFile);
+    Csv         csv          = Csv(std::move(TestDataFile));
 
     /* check if file is valid */
     if (!csv.m_file_exists) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -239,7 +239,7 @@ Poly_Kat()
         }
 
         if (verbose > 1)
-            PrintmacTestData(key, data, LibStr);
+            PrintmacTestData(std::move(key), data, LibStr);
 
         /*conv mac output into a vector */
         /* we need only the no of bytes needed, from the output */

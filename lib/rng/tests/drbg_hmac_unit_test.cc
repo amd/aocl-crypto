@@ -146,7 +146,7 @@ class TestingHmacDrbg : public HmacDrbg
 
     void testingSetDigest(std::shared_ptr<IDigest> digestObj)
     {
-        setDigest(digestObj);
+        setDigest(std::move(digestObj));
     }
 
     std::vector<Uint8> testingGetKCopy() { return getKCopy(); }
@@ -383,7 +383,7 @@ TEST(Instantiate, SHA256)
 
     TestingHmacDrbg hmacDrbg;
 
-    hmacDrbg.testingSetDigest(sha_obj);
+    hmacDrbg.testingSetDigest(std::move(sha_obj));
 
     std::vector<Uint8> key_exp = { 0x3D, 0xDA, 0x54, 0x3E, 0x7E, 0xEF, 0x14,
                                    0xF9, 0x36, 0x23, 0x7B, 0xE6, 0x5D, 0x09,

@@ -80,8 +80,11 @@ class CustomRng : public IRng
         return ALC_ERROR_NONE;
     }
 
-    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
-    void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
+    void setEntropy(std::vector<Uint8> entropy)
+    {
+        m_entropy = std::move(entropy);
+    }
+    void setNonce(std::vector<Uint8> nonce) { m_nonce = std::move(nonce); }
 
     void reset()
     {
@@ -181,8 +184,8 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
         }
 
         auto customRng = std::make_shared<alcp::drbg::CustomRng>();
-        customRng->setEntropy(entropy_vect);
-        customRng->setNonce(nonce_vect);
+        customRng->setEntropy(std::move(entropy_vect));
+        customRng->setNonce(std::move(nonce_vect));
         irng = customRng;
     }
 
@@ -204,7 +207,7 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
 
-    err = p_drbg->setRng(irng);
+    err = p_drbg->setRng(std::move(irng));
     if (alcp_is_error(err)) {
         return err;
     }

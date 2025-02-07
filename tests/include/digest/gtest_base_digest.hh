@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -119,7 +119,7 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
         TestDataFile = "dataset_" + GetDigestStr(mode) + "_"
                        + std::to_string(GetDigestLen(mode)) + ".csv";
     }
-    Csv csv = Csv(TestDataFile);
+    Csv csv = Csv(std::move(TestDataFile));
     // check if file is valid
     if (!csv.m_file_exists) {
         FAIL();
@@ -281,7 +281,7 @@ Digest_Cross(int HashSize, alc_digest_mode_t mode, bool ctx_copy)
     if (useipp == true)
         extDb = &idb;
 #endif
-        /* do cross tests between ipp and openssl */
+    /* do cross tests between ipp and openssl */
 #if defined(USE_IPP) && defined(USE_OSSL)
     if (oa_override) {
         extDb = &odb;
