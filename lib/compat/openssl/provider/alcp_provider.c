@@ -65,17 +65,17 @@ OSSL_PROVIDER* prov_openssl_default;
 bool
 ValidateRuntimeOpenSSLVersion(const char* openssl_version)
 {
-    int major1, minor1, patch1;
-    int major2, minor2, patch2;
+    int major1, minor1;
+    int major2, minor2;
 
 #if defined(_WIN64) || defined(_WIN32)
-    sscanf_s(ALCP_OPENSSL_VERSION, "%d.%d.%d", &major1, &minor1, &patch1);
-    sscanf_s(openssl_version, "%d.%d.%d", &major2, &minor2, &patch2);
+    sscanf_s(ALCP_OPENSSL_VERSION, "%d.%d", &major1, &minor1);
+    sscanf_s(openssl_version, "%d.%d", &major2, &minor2);
 #else
-    sscanf(ALCP_OPENSSL_VERSION, "%d.%d.%d", &major1, &minor1, &patch1);
-    sscanf(openssl_version, "%d.%d.%d", &major2, &minor2, &patch2);
+    sscanf(ALCP_OPENSSL_VERSION, "%d.%d", &major1, &minor1);
+    sscanf(openssl_version, "%d.%d", &major2, &minor2);
 #endif
-    return major1 >= major2 && minor1 >= minor2 && patch1 >= patch2;
+    return major1 >= major2 && minor1 >= minor2;
 }
 
 static const OSSL_ALGORITHM*
@@ -123,13 +123,13 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 
 #ifdef ALCP_COMPAT_ENABLE_OPENSSL_RSA
         case OSSL_OP_ASYM_CIPHER:
-            if (ValidateRuntimeOpenSSLVersion(openssl_version)) {
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
                 EXIT();
                 return alc_prov_asym_ciphers;
             }
             break;
         case OSSL_OP_SIGNATURE:
-            if (ValidateRuntimeOpenSSLVersion(openssl_version)) {
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
                 EXIT();
                 return alc_prov_signature;
             }
@@ -137,7 +137,7 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
         case OSSL_OP_KEYMGMT:
             /* Key management functions are dispatched differently for 3.3.0
              * onwards */
-            if (!ValidateRuntimeOpenSSLVersion(openssl_version)) {
+            if (!strncmp(ALCP_OPENSSL_VERSION, openssl_version, 3)) {
                 EXIT();
                 return alc_prov_keymgmt;
             }
