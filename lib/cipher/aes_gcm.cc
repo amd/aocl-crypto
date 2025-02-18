@@ -192,65 +192,66 @@ GcmT<keyLenBits, arch>::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
     m_gcm_ctx.m_update_counter++;
 
     if constexpr (arch == CpuCipherFeatures::eVaes512) {
-        switch (keyLenBits) {
-            case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes512::decryptGcm128(pInput,
-                                             pOutput,
-                                             len,
-                                             m_gcm_ctx.m_update_counter,
-                                             m_cipher_key_data.m_enc_key,
-                                             getRounds(),
-                                             &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes512::decryptGcm192(pInput,
-                                             pOutput,
-                                             len,
-                                             m_gcm_ctx.m_update_counter,
-                                             m_cipher_key_data.m_enc_key,
-                                             getRounds(),
-                                             &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes512::decryptGcm256(pInput,
-                                             pOutput,
-                                             len,
-                                             m_gcm_ctx.m_update_counter,
-                                             m_cipher_key_data.m_enc_key,
-                                             getRounds(),
-                                             &m_gcm_ctx);
-                return err;
+        if constexpr (keyLenBits == alcp::cipher::CipherKeyLen::eKey128Bit) {
+            err = vaes512::decryptGcm128(pInput,
+                                         pOutput,
+                                         len,
+                                         m_gcm_ctx.m_update_counter,
+                                         m_cipher_key_data.m_enc_key,
+                                         getRounds(),
+                                         &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey192Bit) {
+            err = vaes512::decryptGcm192(pInput,
+                                         pOutput,
+                                         len,
+                                         m_gcm_ctx.m_update_counter,
+                                         m_cipher_key_data.m_enc_key,
+                                         getRounds(),
+                                         &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey256Bit) {
+            err = vaes512::decryptGcm256(pInput,
+                                         pOutput,
+                                         len,
+                                         m_gcm_ctx.m_update_counter,
+                                         m_cipher_key_data.m_enc_key,
+                                         getRounds(),
+                                         &m_gcm_ctx);
+            return err;
         }
-
     } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
-        switch (keyLenBits) {
-            case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes::decryptGcm128(pInput,
-                                          pOutput,
-                                          len,
-                                          m_gcm_ctx.m_update_counter,
-                                          m_cipher_key_data.m_enc_key,
-                                          getRounds(),
-                                          &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes::decryptGcm192(pInput,
-                                          pOutput,
-                                          len,
-                                          m_gcm_ctx.m_update_counter,
-                                          m_cipher_key_data.m_enc_key,
-                                          getRounds(),
-                                          &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes::decryptGcm256(pInput,
-                                          pOutput,
-                                          len,
-                                          m_gcm_ctx.m_update_counter,
-                                          m_cipher_key_data.m_enc_key,
-                                          getRounds(),
-                                          &m_gcm_ctx);
-                return err;
+        if (keyLenBits == alcp::cipher::CipherKeyLen::eKey128Bit) {
+            err = vaes::decryptGcm128(pInput,
+                                      pOutput,
+                                      len,
+                                      m_gcm_ctx.m_update_counter,
+                                      m_cipher_key_data.m_enc_key,
+                                      getRounds(),
+                                      &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey192Bit) {
+            err = vaes::decryptGcm192(pInput,
+                                      pOutput,
+                                      len,
+                                      m_gcm_ctx.m_update_counter,
+                                      m_cipher_key_data.m_enc_key,
+                                      getRounds(),
+                                      &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey256Bit) {
+            err = vaes::decryptGcm256(pInput,
+                                      pOutput,
+                                      len,
+                                      m_gcm_ctx.m_update_counter,
+                                      m_cipher_key_data.m_enc_key,
+                                      getRounds(),
+                                      &m_gcm_ctx);
+            return err;
         }
     } else if constexpr (arch == CpuCipherFeatures::eAesni) {
         err = aesni::CryptGcm(pInput,
@@ -287,66 +288,66 @@ GcmT<keyLenBits, arch>::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
     // printf("\n update counter %ld \n", m_gcm_ctx.m_update_counter);
 
     if constexpr (arch == CpuCipherFeatures::eVaes512) {
-
-        switch (keyLenBits) {
-            case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes512::encryptGcm128(pInput,
-                                             pOutput,
-                                             len,
-                                             m_gcm_ctx.m_update_counter,
-                                             m_cipher_key_data.m_enc_key,
-                                             getRounds(),
-                                             &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes512::encryptGcm192(pInput,
-                                             pOutput,
-                                             len,
-                                             m_gcm_ctx.m_update_counter,
-                                             m_cipher_key_data.m_enc_key,
-                                             getRounds(),
-                                             &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes512::encryptGcm256(pInput,
-                                             pOutput,
-                                             len,
-                                             m_gcm_ctx.m_update_counter,
-                                             m_cipher_key_data.m_enc_key,
-                                             getRounds(),
-                                             &m_gcm_ctx);
-                return err;
+        if constexpr (keyLenBits == alcp::cipher::CipherKeyLen::eKey128Bit) {
+            err = vaes512::encryptGcm128(pInput,
+                                         pOutput,
+                                         len,
+                                         m_gcm_ctx.m_update_counter,
+                                         m_cipher_key_data.m_enc_key,
+                                         getRounds(),
+                                         &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey192Bit) {
+            err = vaes512::encryptGcm192(pInput,
+                                         pOutput,
+                                         len,
+                                         m_gcm_ctx.m_update_counter,
+                                         m_cipher_key_data.m_enc_key,
+                                         getRounds(),
+                                         &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey256Bit) {
+            err = vaes512::encryptGcm256(pInput,
+                                         pOutput,
+                                         len,
+                                         m_gcm_ctx.m_update_counter,
+                                         m_cipher_key_data.m_enc_key,
+                                         getRounds(),
+                                         &m_gcm_ctx);
+            return err;
         }
-
     } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
-        switch (keyLenBits) {
-            case alcp::cipher::CipherKeyLen::eKey128Bit:
-                err = vaes::encryptGcm128(pInput,
-                                          pOutput,
-                                          len,
-                                          m_gcm_ctx.m_update_counter,
-                                          m_cipher_key_data.m_enc_key,
-                                          getRounds(),
-                                          &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey192Bit:
-                err = vaes::encryptGcm192(pInput,
-                                          pOutput,
-                                          len,
-                                          m_gcm_ctx.m_update_counter,
-                                          m_cipher_key_data.m_enc_key,
-                                          getRounds(),
-                                          &m_gcm_ctx);
-                return err;
-            case alcp::cipher::CipherKeyLen::eKey256Bit:
-                err = vaes::encryptGcm256(pInput,
-                                          pOutput,
-                                          len,
-                                          m_gcm_ctx.m_update_counter,
-                                          m_cipher_key_data.m_enc_key,
-                                          getRounds(),
-                                          &m_gcm_ctx);
-                return err;
+        if constexpr (keyLenBits == alcp::cipher::CipherKeyLen::eKey128Bit) {
+            err = vaes::encryptGcm128(pInput,
+                                      pOutput,
+                                      len,
+                                      m_gcm_ctx.m_update_counter,
+                                      m_cipher_key_data.m_enc_key,
+                                      getRounds(),
+                                      &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey192Bit) {
+            err = vaes::encryptGcm192(pInput,
+                                      pOutput,
+                                      len,
+                                      m_gcm_ctx.m_update_counter,
+                                      m_cipher_key_data.m_enc_key,
+                                      getRounds(),
+                                      &m_gcm_ctx);
+            return err;
+        } else if constexpr (keyLenBits
+                             == alcp::cipher::CipherKeyLen::eKey256Bit) {
+            err = vaes::encryptGcm256(pInput,
+                                      pOutput,
+                                      len,
+                                      m_gcm_ctx.m_update_counter,
+                                      m_cipher_key_data.m_enc_key,
+                                      getRounds(),
+                                      &m_gcm_ctx);
+            return err;
         }
     } else if constexpr (arch == CpuCipherFeatures::eAesni) {
         err = aesni::CryptGcm(pInput,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -147,8 +147,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha224Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha224Test::ParamType>& info)
-        -> const std::string { return info.param.first; });
+    [](const testing::TestParamInfo<Sha224Test::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
 
 TEST(Sha224Test, invalid_input_update_test)
 {
@@ -244,7 +244,7 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswerTest,
     Sha224Kat,
     testing::ValuesIn(KATDataset2),
-    [](const testing::TestParamInfo<Sha224Kat::ParamType>& info)
-        -> const std::string { return info.param.first; });
+    [](const testing::TestParamInfo<Sha224Kat::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
 
 } // namespace

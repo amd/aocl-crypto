@@ -52,20 +52,40 @@ CipherAeadBench(benchmark::State& state,
         return -1;
     }
     // Allocate with 512 bit alignment
-    alignas(64) Uint8              vec_in_arr[MAX_BLOCK_SIZE]  = {};
-    alignas(64) Uint8              vec_out_arr[MAX_BLOCK_SIZE] = {};
-    alignas(16) Uint8              tag_buffer[16]              = {};
-    alignas(16) Uint8              key[MAX_KEY_SIZE / 8]       = {};
-    alignas(16) Uint8              iv[16]                      = {};
-    alignas(16) Uint8              ad[16]                      = {};
-    alignas(16) Uint8              tag[16]                     = {};
-    alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8]      = {};
-    alcp::testing::CipherAeadBase* p_cb                        = nullptr;
+    /* this is to avoid large stack use(MAX_BLOCK_SIZE),reported by Coverity
+     */
+#ifdef _WIN32
+    auto vec_in_arr = std::unique_ptr<Uint8[], decltype(&_aligned_free)>(
+        static_cast<Uint8*>(
+            _aligned_malloc(MAX_BLOCK_SIZE * sizeof(Uint8), 64)),
+        _aligned_free);
+    auto vec_out_arr = std::unique_ptr<Uint8[], decltype(&_aligned_free)>(
+        static_cast<Uint8*>(
+            _aligned_malloc(MAX_BLOCK_SIZE * sizeof(Uint8), 64)),
+        _aligned_free);
+#else
+    auto vec_in_arr = std::unique_ptr<Uint8[], decltype(&std::free)>(
+        static_cast<Uint8*>(
+            std::aligned_alloc(64, MAX_BLOCK_SIZE * sizeof(Uint8))),
+        std::free);
+    auto vec_out_arr = std::unique_ptr<Uint8[], decltype(&std::free)>(
+        static_cast<Uint8*>(
+            std::aligned_alloc(64, MAX_BLOCK_SIZE * sizeof(Uint8))),
+        std::free);
+#endif
+
+    alignas(16) Uint8              tag_buffer[16]         = {};
+    alignas(16) Uint8              key[MAX_KEY_SIZE / 8]  = {};
+    alignas(16) Uint8              iv[16]                 = {};
+    alignas(16) Uint8              ad[16]                 = {};
+    alignas(16) Uint8              tag[16]                = {};
+    alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8] = {};
+    alcp::testing::CipherAeadBase* p_cb                   = nullptr;
 
     alcp::testing::alcp_dc_ex_t data;
-    data.m_in      = vec_in_arr;
+    data.m_in      = vec_in_arr.get();
     data.m_inl     = cBlockSize;
-    data.m_out     = vec_out_arr;
+    data.m_out     = vec_out_arr.get();
     data.m_outl    = cBlockSize;
     data.m_iv      = iv;
     data.m_ivl     = 12;
@@ -128,8 +148,8 @@ CipherAeadBench(benchmark::State& state,
         if (!p_cb->encrypt(data)) {
             state.SkipWithError("AEAD : BENCH_ENC_FAILURE");
         }
-        data.m_in  = vec_out_arr;
-        data.m_out = vec_in_arr;
+        data.m_in  = vec_out_arr.get();
+        data.m_out = vec_in_arr.get();
         // TAG is the IV
         // cb->init(key, keylen);
         if (alcpMode == ALC_AES_MODE_SIV) {
@@ -696,13 +716,19 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_CCM_192)->ArgsProduct({ blocksizes });
 
 #ifdef MULTI_INIT_BENCH
-    //Multi-Init Benchmarks
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
+    // Multi-Init Benchmarks
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)
+        ->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)
+        ->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192)
+        ->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_192)
+        ->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256)
+        ->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)
+        ->ArgsProduct({ blocksizes });
 #endif
 
     return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -90,7 +90,7 @@ namespace alcp::ec { namespace zen {
         Uint64 iswap = ((Uint8)j >> 7);
 
         UNROLL_4
-        for (int i = 0; i < 4; i++) {
+        for (i = 0; i < 4; i++) {
             LoadConditional(&x[i], &negative_point_x[i], iswap);
             LoadConditional(&y[i], &negative_point_y[i], iswap);
             LoadConditional(&z[i], &negative_point_z[i], iswap);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -98,8 +98,8 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     Sha3_384_Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<Sha3_384_Test::ParamType>& info)
-        -> const std::string { return info.param.first; });
+    [](const testing::TestParamInfo<Sha3_384_Test::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
 
 TEST(Sha3_384_Test, invalid_input_update_test)
 {

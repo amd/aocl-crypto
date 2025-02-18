@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,59 +66,50 @@ AesGenericCiphersT<mode, keyLenBits, arch>::encrypt(const Uint8* pinput,
         return ALC_ERROR_NOT_SUPPORTED;
     }
 
-    constexpr alcp::cipher::CipherMode cMode = mode;
-
-    switch (cMode) {
-        case CipherMode::eAesCBC:
-            err = aesni::EncryptCbc(pinput,
-                                    pOutput,
-                                    len,
-                                    m_cipher_key_data.m_enc_key,
-                                    getRounds(),
-                                    m_pIv_aes);
-            break;
-        case CipherMode::eAesOFB:
-            err = aesni::EncryptOfb(pinput,
-                                    pOutput,
-                                    len,
-                                    m_cipher_key_data.m_enc_key,
-                                    getRounds(),
-                                    m_pIv_aes);
-            break;
-        case CipherMode::eAesCTR:
-            if constexpr (arch == CpuCipherFeatures::eVaes512) {
-                err = CryptCtr<keyLenBits, arch>(pinput,
-                                                 pOutput,
-                                                 len,
-                                                 m_cipher_key_data.m_enc_key,
-                                                 getRounds(),
-                                                 m_pIv_aes);
-            } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
-                err = vaes::CryptCtr(pinput,
-                                     pOutput,
-                                     len,
-                                     m_cipher_key_data.m_enc_key,
-                                     getRounds(),
-                                     m_pIv_aes);
-            } else if constexpr (arch == CpuCipherFeatures::eAesni) {
-                err = aesni::CryptCtr(pinput,
-                                      pOutput,
-                                      len,
-                                      m_cipher_key_data.m_enc_key,
-                                      getRounds(),
-                                      m_pIv_aes);
-            }
-            break;
-        case CipherMode::eAesCFB:
-            err = aesni::EncryptCfb(pinput,
-                                    pOutput,
-                                    len,
-                                    m_cipher_key_data.m_enc_key,
-                                    getRounds(),
-                                    m_pIv_aes);
-            break;
-        default:
-            break;
+    if constexpr (mode == CipherMode::eAesCBC) {
+        err = aesni::EncryptCbc(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_pIv_aes);
+    } else if constexpr (mode == CipherMode::eAesOFB) {
+        err = aesni::EncryptOfb(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_pIv_aes);
+    } else if constexpr (mode == CipherMode::eAesCTR) {
+        if constexpr (arch == CpuCipherFeatures::eVaes512) {
+            err = CryptCtr<keyLenBits, arch>(pinput,
+                                             pOutput,
+                                             len,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             m_pIv_aes);
+        } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
+            err = vaes::CryptCtr(pinput,
+                                 pOutput,
+                                 len,
+                                 m_cipher_key_data.m_enc_key,
+                                 getRounds(),
+                                 m_pIv_aes);
+        } else if constexpr (arch == CpuCipherFeatures::eAesni) {
+            err = aesni::CryptCtr(pinput,
+                                  pOutput,
+                                  len,
+                                  m_cipher_key_data.m_enc_key,
+                                  getRounds(),
+                                  m_pIv_aes);
+        }
+    } else if constexpr (mode == CipherMode::eAesCFB) {
+        err = aesni::EncryptCfb(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_pIv_aes);
     }
     // WIP, other generic modes to be added.
     return err;
@@ -146,60 +137,46 @@ AesGenericCiphersT<mode, keyLenBits, arch>::decrypt(const Uint8* pinput,
         return ALC_ERROR_NOT_SUPPORTED;
     }
 
-    constexpr alcp::cipher::CipherMode cMode = mode;
-
-    switch (cMode) {
-        case CipherMode::eAesCBC:
-            err = alcp::cipher::tDecryptCbc<keyLenBits, arch>(
-                pinput, pOutput, len, m_cipher_key_data.m_dec_key, m_pIv_aes);
-            break;
-
-        case CipherMode::eAesOFB:
-            err = aesni::DecryptOfb(pinput,
-                                    pOutput,
-                                    len,
-                                    m_cipher_key_data.m_enc_key,
-                                    getRounds(),
-                                    m_pIv_aes);
-            break;
-
-        case CipherMode::eAesCTR:
-            if constexpr (arch == CpuCipherFeatures::eVaes512) {
-                err = CryptCtr<keyLenBits, arch>(pinput,
-                                                 pOutput,
-                                                 len,
-                                                 m_cipher_key_data.m_enc_key,
-                                                 getRounds(),
-                                                 m_pIv_aes);
-            } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
-                err = vaes::CryptCtr(pinput,
-                                     pOutput,
-                                     len,
-                                     m_cipher_key_data.m_enc_key,
-                                     getRounds(),
-                                     m_pIv_aes);
-            } else if constexpr (arch == CpuCipherFeatures::eAesni) {
-                err = aesni::CryptCtr(pinput,
-                                      pOutput,
-                                      len,
-                                      m_cipher_key_data.m_enc_key,
-                                      getRounds(),
-                                      m_pIv_aes);
-            }
-            break;
-
-        case CipherMode::eAesCFB:
-            err = DecryptCfb<keyLenBits, arch>(
-                pinput,
-                pOutput,
-                len,
-                m_cipher_key_data.m_enc_key,
-                getRounds(), // getCipherRounds(keyLenBits),
-                m_pIv_aes);
-            break;
-
-        default:
-            break;
+    if constexpr (mode == CipherMode::eAesCBC) {
+        err = alcp::cipher::tDecryptCbc<keyLenBits, arch>(
+            pinput, pOutput, len, m_cipher_key_data.m_dec_key, m_pIv_aes);
+    } else if constexpr (mode == CipherMode::eAesOFB) {
+        err = aesni::DecryptOfb(pinput,
+                                pOutput,
+                                len,
+                                m_cipher_key_data.m_enc_key,
+                                getRounds(),
+                                m_pIv_aes);
+    } else if constexpr (mode == CipherMode::eAesCTR) {
+        if constexpr (arch == CpuCipherFeatures::eVaes512) {
+            err = CryptCtr<keyLenBits, arch>(pinput,
+                                             pOutput,
+                                             len,
+                                             m_cipher_key_data.m_enc_key,
+                                             getRounds(),
+                                             m_pIv_aes);
+        } else if constexpr (arch == CpuCipherFeatures::eVaes256) {
+            err = vaes::CryptCtr(pinput,
+                                 pOutput,
+                                 len,
+                                 m_cipher_key_data.m_enc_key,
+                                 getRounds(),
+                                 m_pIv_aes);
+        } else if constexpr (arch == CpuCipherFeatures::eAesni) {
+            err = aesni::CryptCtr(pinput,
+                                  pOutput,
+                                  len,
+                                  m_cipher_key_data.m_enc_key,
+                                  getRounds(),
+                                  m_pIv_aes);
+        }
+    } else if constexpr (mode == CipherMode::eAesCFB) {
+        err = DecryptCfb<keyLenBits, arch>(pinput,
+                                           pOutput,
+                                           len,
+                                           m_cipher_key_data.m_enc_key,
+                                           getRounds(),
+                                           m_pIv_aes);
     }
     return err;
 }

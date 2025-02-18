@@ -516,9 +516,8 @@ namespace alcp::rsa { namespace zen4 {
         res[1]       = _mm256_add_epi64(temp, res[1]);
     }
 
-    static inline void FusedMultiplyAddShiftLow256Stage5(__m256i& res,
-                                                         __m256i  first,
-                                                         __m256i  second)
+    __attribute__((used)) static inline void FusedMultiplyAddShiftLow256Stage5(
+        __m256i& res, __m256i first, __m256i second)
     {
         res = _mm256_madd52lo_epu64(res, first, second);
     }

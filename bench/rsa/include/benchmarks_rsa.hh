@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -97,7 +97,7 @@ Rsa_Bench(benchmark::State&       state,
 #endif
 
     rb->m_padding_mode = padding_mode;
-    rb->m_rsa_algo     = RsaAlgo;
+    rb->m_rsa_algo     = std::move(RsaAlgo);
 
     /* for encrypt/ decrypt */
     if (padding_mode != ALCP_TEST_RSA_NO_PADDING) {

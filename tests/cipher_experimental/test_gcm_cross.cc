@@ -345,7 +345,7 @@ RegisterMyTests(std::string              testSuiteName,
         __FILE__,
         __LINE__,
         // Important to use the fixture type as the return type here.
-        [=]() -> CrossTestFixture* {
+        [rng = std::move(rng), select1, select2]() -> CrossTestFixture* {
             return new CrossTest(std::move(rng), select1, select2);
         });
 }

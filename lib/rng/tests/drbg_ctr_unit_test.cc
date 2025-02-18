@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -396,7 +396,7 @@ class CtrDrbgFuncionalityTest
 
     void SetUp() override
     {
-        const auto  cParams      = GetParam();
+        const auto& cParams      = GetParam();
         param_tuple tuple_values = cParams.second;
         EntropyInput = parseHexStrToBin(tuple_values.at("EntropyInput"));
         nonce        = parseHexStrToBin(tuple_values.at("nonce"));
@@ -496,6 +496,5 @@ INSTANTIATE_TEST_SUITE_P(
     CtrTest,
     CtrDrbgFuncionalityTest,
     testing::ValuesIn(KAT_CtrDrbgDataset),
-    [](const testing::TestParamInfo<CtrDrbgFuncionalityTest::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<CtrDrbgFuncionalityTest::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });

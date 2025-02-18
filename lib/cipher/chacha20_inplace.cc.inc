@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -173,7 +173,7 @@ ProcessInput(const Uint8 key[],
     Uint64       plaintextLength = (blocks * 64) + remBytes;
     const Uint32 cInitialCounter = *(reinterpret_cast<const Uint32*>(iv));
     Uint32       state[16];
-    for (Uint64 blocks = 0; blocks < plaintextLength; blocks += 64) {
+    for (blocks = 0; blocks < plaintextLength; blocks += 64) {
         CreateInitialState(
             state, key, keylen, iv, ivlen, cInitialCounter + blocks / 64);
         Uint32 working_state[16];

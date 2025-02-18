@@ -426,7 +426,7 @@ TEST(HmacReliabilityTest, NullUpdate)
 
 TEST_P(HmacTestFixture, HMAC_UPDATE)
 {
-    const auto cParams = GetParam();
+    const auto& cParams = GetParam();
     setUp(cParams);
     setUpHash(cParams.first);
 
@@ -440,7 +440,7 @@ TEST_P(HmacTestFixture, HMAC_UPDATE)
 
 TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
 {
-    const auto cParams = GetParam();
+    const auto& cParams = GetParam();
 
     setUp(cParams);
     setUpHash(cParams.first);
@@ -691,6 +691,5 @@ INSTANTIATE_TEST_SUITE_P(
     HmacTest,
     HmacTestFixture,
     testing::ValuesIn(KAT_ShaDataset),
-    [](const testing::TestParamInfo<HmacTestFixture::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<HmacTestFixture::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });

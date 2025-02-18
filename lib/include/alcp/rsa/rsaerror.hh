@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,22 +55,22 @@ class RsaError final : public ErrorBase
 
   public:
     RsaError()
-        : ErrorBase{ ErrorCode::eOk }
+        : ErrorBase{ static_cast<Uint16>(ErrorCode::eOk) }
     {
     }
 
     RsaError(Uint64 ecode)
-        : ErrorBase{ RsaError::toUint16(ecode) }
+        : ErrorBase{ static_cast<Uint16>(ecode) }
     {
     }
 
     RsaError(rsa::ErrorCode ecode)
-        : ErrorBase{ ecode }
+        : ErrorBase{ static_cast<Uint16>(ecode) }
     {
     }
 
     RsaError(base::ErrorCode bcode, rsa::ErrorCode ecode)
-        : ErrorBase{ ecode }
+        : ErrorBase{ static_cast<Uint16>(ecode) }
     {
         setBaseError(static_cast<Uint16>(bcode));
         setModuleId(static_cast<Uint16>(alcp::module::Type::eModuleRsa));

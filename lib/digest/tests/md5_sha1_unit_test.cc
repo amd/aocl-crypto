@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -106,7 +106,7 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswer,
     MD5_Sha1Test,
     testing::ValuesIn(message_digest),
-    [](const testing::TestParamInfo<MD5_Sha1Test::ParamType>& info)
-        -> const std::string { return info.param.first; });
+    [](const testing::TestParamInfo<MD5_Sha1Test::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
 
 } // namespace

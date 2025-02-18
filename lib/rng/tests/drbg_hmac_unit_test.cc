@@ -265,8 +265,8 @@ class HmacDrbgKat
         //     DigestClass,Entropy,ReseedEntropy,Nonce,
         //     PersonalizationStr,AdditionalInpt,GeneratedBits
         // }
-        const auto params   = GetParam();
-        const auto testName = params.first;
+        const auto& params = GetParam();
+        // const auto& testName = params.first;
 
         std::tie(m_genCount,
                  m_entropy,
@@ -348,17 +348,15 @@ INSTANTIATE_TEST_SUITE_P(
     KnownAnswerTest,
     HmacDrbgKatSHA2_256,
     testing::ValuesIn(KATDatasetSha256),
-    [](const testing::TestParamInfo<HmacDrbgKatSHA2_256::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<HmacDrbgKatSHA2_256::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
 
 INSTANTIATE_TEST_SUITE_P(
     KnownAnswerTest,
     HmacDrbgKatSHA2_224,
     testing::ValuesIn(KATDatasetSha224),
-    [](const testing::TestParamInfo<HmacDrbgKatSHA2_224::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<HmacDrbgKatSHA2_224::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
 
 TEST(Instantiate, SHA256)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -45,6 +45,7 @@ class ALCP_API_EXPORT BigNum final
     BigNum(const BigNum& b);
     BigNum(const BigNum&& b);
     BigNum& operator=(const BigNum& rhs);
+    BigNum& operator=(BigNum&& rhs) noexcept;
 
   public:
     /* Unary -(minus) operator */

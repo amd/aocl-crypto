@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -167,8 +167,8 @@ class CMACFuncionalityTest
 
     void SetUp() override
     {
-        const auto cParams      = GetParam();
-        auto       tuple_values = cParams.second;
+        const auto& cParams      = GetParam();
+        const auto& tuple_values = cParams.second;
 
         tie(m_key, m_plain_text, m_expected_mac) = tuple_values;
         m_cmac                                   = std::make_unique<Cmac>();
@@ -315,6 +315,8 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
     ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
+/* GTEST_SKIP() reports (UNREACHABLE) dead code from coverity builds */
+#if 0
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)
 {
     GTEST_SKIP() << "Skipping the test due to failure in Rijindael";
@@ -328,11 +330,11 @@ TEST(CMACRobustnessTest, CMAC_wrongKeySize)
     err             = cmac2.init(key, sizeof(key));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 }
+#endif
 
 INSTANTIATE_TEST_SUITE_P(
     CMACTest,
     CMACFuncionalityTest,
     testing::ValuesIn(KAT_CmacDataset),
-    [](const testing::TestParamInfo<CMACFuncionalityTest::ParamType>& info) {
-        return info.param.first;
-    });
+    [](const testing::TestParamInfo<CMACFuncionalityTest::ParamType>& tpInfo)
+        -> const std::string { return tpInfo.param.first; });
