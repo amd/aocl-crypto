@@ -95,7 +95,9 @@ ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 #endif
 
 #if OPENSSL_API_LEVEL >= 30100
+#if defined(ALCP_COMPAT_ENABLE_OPENSSL_CIPHER) || defined(ALCP_COMPAT_ENABLE_OPENSSL_RSA)
     const char* openssl_version = OpenSSL_version(OPENSSL_VERSION_STRING);
+#endif
     switch (operation_id) {
 /*FIXME: When Cipher Provider is enabled and MAC provider is
  * disabled, CMAC will fail with OpenSSL Provider as OpenSSL

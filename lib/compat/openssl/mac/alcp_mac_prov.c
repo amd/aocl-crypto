@@ -107,7 +107,9 @@ alcp_prov_mac_final(void* vctx, Uint8* out, Uint64* outl, Uint64 outsize)
     return 1;
 }
 
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_MAC
 static const char MAC_DEF_PROP[] = "provider=alcp,fips=no";
+#endif
 
 extern const OSSL_DISPATCH alcp_cmac_functions[];
 extern const OSSL_DISPATCH alcp_hmac_functions[];
