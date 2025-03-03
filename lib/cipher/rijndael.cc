@@ -183,12 +183,6 @@ static Uint32
 gmulx2(Uint32 val)
 {
     /*
-
-        Reference Link & Source for Understanding:
-        https://en.wikipedia.org/wiki/Finite_field_arithmetic
-        4th topic Multiplication
-
-
         galois Multiple of val*2 for 32 bit
 
         val (32bit) = 4 val (8bit); 0xfefefefe to be used so that 8 bits
@@ -736,7 +730,8 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
     return ALC_ERROR_NONE;
 }
 
-void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void
+Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     encryptBlockKernel(blk0, blk0, pkey, nr);
 }
