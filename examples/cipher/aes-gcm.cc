@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -51,40 +51,87 @@ main()
     Uint8* aad        = new Uint8[16];
     Uint8* tag        = new Uint8[16];
 
+    memset(inputText, 10, dataLen);
+    memset(aad, 30, 16);
+
     auto alcpCipher = new CipherFactory<iCipherAead>;
     auto aead       = alcpCipher->create("aes-gcm-192");
 
     if (aead == nullptr) {
-        printf("\n cipher create failed");
+        printf("\n cipher create failed\n");
         err = ALC_ERROR_GENERIC;
         goto dealloc;
     }
 
-    // init
     err = aead->init(key, 192, iv, 16);
     if (err != ALC_ERROR_NONE) {
-        printf("\n cipher init failed");
+        printf("\n cipher init failed\n");
         goto dealloc;
     }
 
-    // core encrypt + auth
     err = aead->setAad(aad, 16);
     if (err != ALC_ERROR_NONE) {
-        printf("\n cipher setAad failed");
+        printf("\n cipher setAad failed\n");
         goto dealloc;
     }
+
     err = aead->encrypt(inputText, cipherText, dataLen);
     if (err != ALC_ERROR_NONE) {
-        printf("\n cipher encrypt failed");
+        printf("\n cipher encrypt failed\n");
         goto dealloc;
     }
+    printf("Encrypt succeeded\n");
+
     err = aead->getTag(tag, 16);
     if (err != ALC_ERROR_NONE) {
-        printf("\n cipher tag failed");
+        printf("\n cipher tag failed\n");
         goto dealloc;
     }
 
     err = aead->finish(NULL);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher finish failed\n");
+        goto dealloc;
+    }
+
+    err = aead->init(key, 192, iv, 16);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher init for decrypt failed\n");
+        goto dealloc;
+    }
+
+    err = aead->setAad(aad, 16);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher setAad for decrypt failed\n");
+        goto dealloc;
+    }
+
+    err = aead->setTagLength(16);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher setTaglen failed\n");
+        goto dealloc;
+    }
+
+    // Decrypt
+    err = aead->decrypt(cipherText, outputText, dataLen);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher decrypt failed\n");
+        goto dealloc;
+    }
+    printf("Decrypt succeeded\n");
+
+    err = aead->finish(NULL);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher finish for decrypt failed\n");
+        goto dealloc;
+    }
+
+    if (memcmp(inputText, outputText, dataLen) != 0) {
+        printf("\nInput and decrypted output don't match\n");
+        err = ALC_ERROR_GENERIC;
+    } else {
+        printf("\nInput and decrypted output match\n");
+    }
 
 dealloc:
     delete alcpCipher;
