@@ -1,17 +1,15 @@
 (C) 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
-
 AOCL Cryptography - Release Notes - AOCL version 5.0.1
 ------------------------------------------------------
-
 AOCL Crypto Contents
 --------------------
 AOCL Cryptography is a library consisting of basic cryptographic functions
 optimized for AMD Zen microarchitecture. This library has multiple
-implementations of different cryptographic algorithms which is given below: 
--- AES cryptographic encryption / decryption routines
+implementations of different cryptographic algorithms which are given below:
+-- AES cryptographic encryption / decryption routines.
 -- SHA2, SHA3 Digest routines.
--- MAC (Cipher and Hash based) routines
--- ECDH x25519 Key exchange functions
+-- MAC (Cipher and Hash based) routines.
+-- ECDH x25519 Key exchange functions.
 -- RSA Encrypt/Decrypt and Sign/Verify functions.
 -- Chacha20 stream cipher functions.
 -- Poly1305 MAC functions.
@@ -20,84 +18,23 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 5.0.1
 ---------------------------------------------------------------------------
-AOCL-Jan2025
----------------------------------------------------------------------------
-  - OpenSSL Provider:
-    - Enabled support for CMAC, Poly1305, Cipher, RSA Algorithms
-    - Various Bug fixes in provider path.
-
-  - Cipher:
-    - Chacha20: Performance Improvements and bug fixes.
-    - Chacha20-Poly1305 Cipher Algorithm.
-    - GCM: Bug fixes and performance improvements.
-    - Added more unit tests for all algorithms.
-    - Clean up:
-      - C APIS removed alcp_cipher_aead_encrypt alcp_cipher_aead_decrypt
-      - C APIs encryptUpdate/decryptUpdate modified to encrypt/decrypt
-    - Multi update: support option added for all non aead, gcm and ccm cipher algorithms
-    - Cipher API homogenization and C++ Interface
-    - Performance improvements in CFB, CBC Decrypt algorithms for vaes512 kernel.
-    - Padding support in CBC, CTR, OFB, CFB modes.
-    - Unit tests added for all algorithms.
-    - Cipher modes templatized.
-    - Fixed dynamic dispatch on non-avx2 architectures.
-
-  - RSA:
-      - PKCS Encrypt & Decrypt algorithms.
-      - Bug fixes in Encrypt & Decrypt algorithms.
-      - Sign & Verify APIs for PSS and PKCS Padding schemes.
-      - Bug fix in PKCS Sign API.
-      - Performance improvements in OAEP Encrypt / Decrypt.
-
-  - MAC:
-      - Bug fixes and performance improvements in HMAC, CMAC and Poly1305
-
-  - Digest:
-      - Performance improvements in SHA3, SHA2 and SHAKE
-      - SHA3 Shake Squeeze,Digest Context Copy support
-      - Bug fixes in reference algorithm in Squeeze API
-      - Memory alignment fixes in SHA2
-      - Bug fixes in Unit tests
-
-  - Tests and Benchmarks:
-      - Misaligned pointer tests in all the integration test modules
-      - Fuzz Testing: Support for all algorithms.
-      - Lifecycle Tests: Support for all algorithms.
-      - HMAC: Support for Digest Truncated variants and bug fixes
-      - Digest: SHA3 Shake Squeeze and Context copy support in integration tests.
-      - RSA: Test and bench support for Signature generation and verification (PKCS, PSS Padding)
-      - Cleanup and refactoring in all modules.
-      - Crash Fixes, clean up, and improvements in Tests and benchmarks
-      - Test framework support for PKCS Encrypt/Decrypt, PKCS Sign Verify
-      - Crashes and fixes in tests and micro benchmarks
-      - Refactored tests to align with Openssl Bench's lifecycle.
-      - Option to pass custom block size.
-  
-  - Build system updates:
-      - Make test covering all unit tests, all kat and cross tests for all libraries (ipp, openssl)
-      - Make test supporting valgrind runs.
-      - Cmake preset files added for configure and build.
-      - Coverage build support for AOCC/clang.
-      - Packaging: Compilation issues fixed in all the example sources
-      - Coverity generated errors and warnings fixed all across the example sources.
-      - Compilation support for AOCC5.1, GCC14.2.0 (Linux) and Clang18 (Windows).
-      - Ninja build support added.
-      - Checks for dependencies (git-lfs, valgrind, lcov, etc)
-      - Windows build system updates
-      - Removed dependnecy on lsb_release utility.
-      - Packaging makefile checks openssl version.
-      - Debug logging support in CAPIs and Provider APIs
-      - Support for forcing CPUID / arch code path at runtime.
-
-  - Bug fixes in dynamic dispatcher.
-  - Documentation updates related to Doxygen and Sphinx.
-  - Secure memcopy utilily function.
-  - Memory errors fixed across various algorithms.
-  - High severity defects reported from coverity static analysis tool fixed.
-  - Code clean up.
-  - ISA Based dynamic dispatch added for Digest, RSA.
-  - Coverity high and majority of medium severity defects fixed.
-
-  - Known issues:
-    - IPP Compat library is in experimental state in 5.0 release.
+- Performance improvements in SHA3.
+- Performance improvements in AES-GCM for real-world benchmarks (WRK, ApacheBench, etc).
+    - Performance drop with AES-GCM is expected in Micro-benchmarks such as OpenSSL Speed.
+- OpenSSL Provider support for SHA3 and SHAKE.
+ 
+- Bug fixes and improvements in OpenSSL provider dispatch for RSA and Ciphers.
+- Coverity high and majority of medium and low severity defects fixed.
+ 
+- Improvements and enhancements in test and benchmarks.
+- Added multi-init benchmark support for AEAD Ciphers.
+ 
+- Added CMake preset config files.
+- Runtime forcing of CPUID / arch code path support using aocl-utils.
+- Debug logging support in CAPIs and Provider APIs.
+ 
+- Known limitations:
     - AES Ciphers, RSA and EC algorithms are not supported in pre-AVX2 architectures.
+    - OpenSSL Provider dispatch for RSA works only if runtime OpenSSL version is the same as the version used to compile the compat binary.
+       (Tested OpenSSL versions are: 3.1.3 through 3.3.0)
+    - Performance drop with AES-GCM is expected in Micro-benchmarks such as OpenSSL Speed.
