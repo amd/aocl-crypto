@@ -1,4 +1,4 @@
-RNG API
+RNG
 **********
 Random number generation is a crucial component of cryptography, used to create keys and prevent attackers from predicting or replicating patterns in data. It is typically implemented using specialized algorithms or hardware.
 

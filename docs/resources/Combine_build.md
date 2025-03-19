@@ -369,7 +369,7 @@ PS> cd aocl-crypto/build
 PS> cmake -DAOCL_COMPAT_LIBS=openssl ../
 PS> cmake --build build --config=release
 ```
-After running all the above commands you should see a `openssl-compat.dll` in \lib\compat\openssl\Release directory
+After running all the above commands you should see a `openssl-compat.dll` in `\lib\compat\openssl\Release` directory
 
 #### Benchmarking
 	To bench using provider path, use the following example assuming you are executing command from openssl bin directory.

@@ -1,4 +1,4 @@
-RSA API
+RSA
 **********
 RSA algorithm is a public-key cryptosystem. In a public-key cryptosystem, the encryption key is public and decryption key is private. RSA algorithm involves key generation, encryption / decryption and signature.
 

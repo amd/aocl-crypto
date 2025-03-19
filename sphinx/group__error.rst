@@ -1,4 +1,4 @@
-Error API
+Error
 **********
 Error APIs are used to know the failures caused by any other API used.
 

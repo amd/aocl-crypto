@@ -1,4 +1,4 @@
-EC API
+EC
 **********
 Elliptic Curve Cryptography (ECC) is a type of public key cryptography that uses the mathematics of elliptic curves to secure information and protect sensitive data.
 

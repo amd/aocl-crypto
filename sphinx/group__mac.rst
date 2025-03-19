@@ -1,4 +1,4 @@
-MAC API
+MAC
 **********
 A Message Authentication Code (MAC) is a cryptographic technique used to verify the authenticity and integrity of a message, ensuring that it has not been tampered during transmission.
 

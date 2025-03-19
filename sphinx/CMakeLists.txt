@@ -1,4 +1,4 @@
- # Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -45,16 +45,6 @@ else()
     # Copy contents of below folders to Sphinx_Build Dir
     file(COPY ${PROJECT_SOURCE_DIR}/sphinx/ DESTINATION ${SPHINX_BUILD_DIR}/)
 
-    # Function to create Symbolic Links for the dependent files
-    FUNCTION(FILE_SYMLINK MYFILE OUTFILE)
-        LINK_IF_EXISTS(${MYFILE} ${SPHINX_BUILD_DIR}/${OUTFILE} SYMBOLIC)
-    ENDFUNCTION(FILE_SYMLINK MYFILE OUTFILE)
-
-    FILE_SYMLINK(${PROJECT_SOURCE_DIR}/docs/resources/Quick_Start.md Quick_Start.md)
-    FILE_SYMLINK(${PROJECT_SOURCE_DIR}/tests/README.md tests_README.md)
-    FILE_SYMLINK(${PROJECT_SOURCE_DIR}/bench/README.md bench_README.md)
-    FILE_SYMLINK(${PROJECT_SOURCE_DIR}/lib/compat/ipp/README.md ipp_README.md)
-    FILE_SYMLINK(${PROJECT_SOURCE_DIR}/lib/compat/openssl/README.md openssl_README.md)
 
     # Only regenerate Sphinx when:
     # - Doxygen has rerun

@@ -92,7 +92,7 @@ alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
  * @endparblock
  * @note     Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false
- * @param [in]    cipherMode       AEAD cipher mode to be set
+ * @param [in]    mode       AEAD cipher mode to be set
  * @param [in]    keyLen           key length in bits
  * @param [in]    pCipherState           pointer to the state of the cipher
  * holding expanded and precomputed keys

@@ -1,4 +1,4 @@
-Digest API
+Digest
 **********
 A digest is a one way cryptographic function by which a message of any length can be mapped into a fixed-length output. It can be used for verifying integrity or passwords.
 
