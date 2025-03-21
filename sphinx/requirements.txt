@@ -28,4 +28,4 @@ breathe==4.35.0
 myst-parser==3.0.1
 linkify==1.4
 linkify-it-py==2.0.3
-rocm-docs-core==0.32.0
+rocm-docs-core

@@ -11,81 +11,65 @@ AOCL Crypto framework is developed in C / C++ for Unix and Windows based systems
 
 Cipher
 ~~~~~~
+Encrypt/Decrypt routines for the following cipher schemes:
 
-    AES - Block Cipher algorithms
-        
-        AES Encrypt / Decrypt routines which will support the following cipher schemes:
-            -  CBC, CFB, OFB, CTR, GCM, XTS, CCM, SIV.
-    
-    Chacha20 - Stream Cipher algorithms
-    
-    Chacha20-Poly1305 AEAD
+1. **AES**
 
-- Click to know about more about `AOCL Cipher API <group__cipher.html>`_
+- AEAD :  GCM, CCM, SIV
+- Non AEAD :  CBC, CFB, OFB, XTS, CTR
+
+2. **Chacha20 Stream Cipher Algorithm**
+
+3. **Chacha20-Poly1305 AEAD**
 
 Digest
 ~~~~~~
 
-    SHA2
-    
-        Digest routines for the following schemes:
-            - SHA2_224, SHA2_256, SHA2_384, SHA2_512, SHA2_512_224, SHA2_512_256
-    
-    SHA3
-    
-        Digest routines for the following schemes:
-            - SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256
+1. **SHA2**
 
-- Click to know more about `AOCL Digest API <group__digest.html>`_
+- SHA2_224, SHA2_256, SHA2_384, SHA2_512
+- SHA2_512_224, SHA2_512_256
 
-Elliptic curve
-~~~~~~~~~~~~~~
+2. **SHA3**
 
-    EC 
-    
-        EC key generation routines for the following schemes:
-            - x25519 and Nist-P256
-
-- Click to know more about `AOCL EC API <group__ec.html>`_
+- SHA3_224, SHA3_256, SHA3_384, SHA3_512
+- SHAKE_128, SHAKE_256
 
 Message Authentication Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    HMAC 
-    
-        MAC routines for the following schemes:
-            - HMAC_SHA2_224, HMAC_SHA2_256, HMAC_SHA2_384, HMAC_SHA2_512
-            - HMAC_SHA3_224, HMAC_SHA3_256, HMAC_SHA3_384, HMAC_SHA3_512
-            - HMAC_SHA2_512_224, HMAC_SHA2_512_256
-    
-    CMAC 
-    
-        MAC routines for the following schemes:
-            - CMAC - AES (for key size 128,192 and 256)
-    
-    Poly 1305 MAC routines
+1. **HMAC**
 
-- Click to know more about `AOCL MAC API <group__mac.html>`_
+- HMAC_SHA2_224, HMAC_SHA2_256, HMAC_SHA2_384, HMAC_SHA2_512
+- HMAC_SHA3_224, HMAC_SHA3_256, HMAC_SHA3_384, HMAC_SHA3_512
+- HMAC_SHA2_512_224, HMAC_SHA2_512_256
+
+2. **CMAC**
+
+- CMAC - AES (for key size 128, 192 and 256)
+
+3. **Poly1305**
 
 RSA
 ~~~
 
-    RSA
-        - Encrypt text with public key (Non Padded, OAEP, PKCS)
-        - Decrypt text with private Key (Non Padded,OAEP, PKCS)
-        - Sign with private key and verify with public key (PKCS,PSS)
+- Encrypt text with public key (Non Padded, OAEP, PKCS) 
+- Decrypt text with private Key (Non Padded,OAEP, PKCS) 
+- Sign with private key and verify with public key (PKCS,PSS) 
 
-- Click to know more about `AOCL RSA API <group__rsa.html>`_
+Elliptic Curve
+~~~~~~~~~~~~~~
+
+EC key generation routines for the following schemes:
+
+1. **X25519**
+2. **NIST-P256**
 
 Random Number Generator (RNG)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    RNG
-    
-        - Generate random number
-        - Seed random number generator with random data
-
-- Click to know more about `AOCL RNG API <group__rng.html>`_
+- Generate random number
+- Seed random number generator with random data
 
 .. toctree::
     :maxdepth: 1
@@ -95,6 +79,6 @@ Random Number Generator (RNG)
     Digest APIs <group__digest>
     MAC APIs <group__mac>
     RSA APIs <group__rsa>
-    Elliptic Curve APIs <group__ec>
-    Random Number Generator APIs <group__rng>
+    EC APIs <group__ec>
+    RNG APIs <group__rng>
     Error Handling APIs <group__error>
