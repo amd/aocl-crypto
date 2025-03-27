@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -24,8 +24,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
-    # Configuration file
-    SET(DOXYGEN_CONFIG_FILE "${CMAKE_SOURCE_DIR}/doxygen/config.doxy")
+
+    set(DOXYGEN_CONFIG_FILE "${CMAKE_BINARY_DIR}/doxygen/config.doxy")
+    # Set the build directory for Doxygen within the config.doxy file via configure_file
+    set(DOXYGEN_BUILD_DIR ${CMAKE_BINARY_DIR}/doxygen)
+    configure_file(${CMAKE_SOURCE_DIR}/doxygen/config.doxy.in 
+                   ${DOXYGEN_CONFIG_FILE}
+                   @ONLY) 
 
     message(STATUS "Building Doxygen")
 
@@ -34,6 +39,6 @@ if (DOXYGEN_FOUND)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Generate API documentation with Doxygen"
         VERBATIM )
-else (DOXYGEN_FOUND)
-  message(FATAL "Doxygen seems not to be installed, try 'apt install doxygen' if debain based.")
-endif (DOXYGEN_FOUND)
+else()
+  message(FATAL "Doxygen seems not to be installed, try 'apt install doxygen' if debian based.")
+endif()
