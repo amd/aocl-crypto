@@ -61,9 +61,6 @@ myst_enable_extensions = ["html_admonition",
                         "linkify", 
                         "attrs_inline"
                         ]
-breathe_projects = { "aocl-crypto": "build/doxygen/xml" }
-breathe_default_project = "aocl-crypto"
-
 myst_title_to_header = True
 myst_heading_anchors = 3
 suppress_warnings = ["myst.header", "myst.xref_missing"]

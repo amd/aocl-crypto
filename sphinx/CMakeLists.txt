@@ -54,7 +54,7 @@ else()
                     COMMAND 
                     ${SPHINX_EXECUTABLE} -b html
                     # Tell Breathe where to find the Doxygen output
-                    -Dbreathe_projects.aocl-crypto=${DOXYGEN_OUT_DIR}/xml
+                    -Dbreathe_projects.crypto=${DOXYGEN_OUT_DIR}/xml
                     ${SPHINX_BUILD_DIR} ${SPHINX_BUILD_DIR}/html
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                     DEPENDS ${SPHINX_BUILD_DIR}
