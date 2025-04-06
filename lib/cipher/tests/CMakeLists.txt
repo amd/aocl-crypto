@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -41,9 +41,14 @@ foreach(testFile IN LISTS TEST_FILES)
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}
     )
+    
     IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
-	    SET_SOURCE_FILES_PROPERTIES(${currentTestFile} PROPERTIES COMPILE_FLAGS "-DAES_MULTI_UPDATE")
+        set_property(SOURCE ${currentTestFile} APPEND_STRING PROPERTY COMPILE_FLAGS " -DAES_MULTI_UPDATE")
     ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
+    
+    IF(ALCP_ENABLE_CBC_INPLACE_BUFFER)
+        set_property(SOURCE ${currentTestFile} APPEND_STRING PROPERTY COMPILE_FLAGS " -DCBC_INPLACE_BUFFER")
+    ENDIF(ALCP_ENABLE_CBC_INPLACE_BUFFER)
 endforeach()
 
 

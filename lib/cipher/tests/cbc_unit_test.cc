@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -249,6 +249,91 @@ TEST(CBC, MultiUpdateDecryption)
     }
 }
 
+TEST(CBC, InplaceEncryption)
+{
+#ifndef CBC_INPLACE_BUFFER
+    GTEST_SKIP() << "In-place encryption functionality disabled!";
+#endif
+    std::vector<CpuCipherFeatures> cpu_features = getSupportedFeatures();
+
+    // Test for all arch
+    for (CpuCipherFeatures feature : cpu_features) {
+#ifdef DEBUG
+        std::cout
+            << "Cpu Feature:"
+            << static_cast<
+                   typename std::underlying_type<CpuCipherFeatures>::type>(
+                   feature)
+            << std::endl;
+#endif
+        auto alcpCipher = new CipherFactory<iCipher>;
+        auto cbc =
+            alcpCipher->create("aes-cbc-128", feature); // KeySize is 128 bits
+
+        if (cbc == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+
+        // Create a copy of plainText to avoid modifying the original
+        std::vector<Uint8> plainText_copy = plainText;
+
+        cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
+
+        // Encrypt in-place using the copy
+        cbc->encrypt(
+            &plainText_copy[0], &plainText_copy[0], plainText_copy.size());
+
+        EXPECT_EQ(cipherText, plainText_copy)
+            << "FAIL CPU_FEATURE:"
+            << std::underlying_type<CpuCipherFeatures>::type(feature);
+
+        delete alcpCipher;
+    }
+}
+
+TEST(CBC, InplaceDecryption)
+{
+#ifndef CBC_INPLACE_BUFFER
+    GTEST_SKIP() << "In-place decryption functionality disabled!";
+#endif
+    std::vector<CpuCipherFeatures> cpu_features = getSupportedFeatures();
+
+    // Test for all arch
+    for (CpuCipherFeatures feature : cpu_features) {
+#ifdef DEBUG
+        std::cout
+            << "Cpu Feature:"
+            << static_cast<
+                   typename std::underlying_type<CpuCipherFeatures>::type>(
+                   feature)
+            << std::endl;
+#endif
+        auto alcpCipher = new CipherFactory<iCipher>;
+        auto cbc =
+            alcpCipher->create("aes-cbc-128", feature); // KeySize is 128 bits
+
+        if (cbc == nullptr) {
+            delete alcpCipher;
+            FAIL();
+        }
+
+        // Make a copy of cipherText for each feature test
+        std::vector<Uint8> cipherText_copy = cipherText;
+
+        // In-place decryption (source and destination are the same)
+        cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
+        cbc->decrypt(
+            &cipherText_copy[0], &cipherText_copy[0], cipherText_copy.size());
+
+        EXPECT_EQ(plainText, cipherText_copy)
+            << "FAIL CPU_FEATURE:"
+            << std::underlying_type<CpuCipherFeatures>::type(feature);
+
+        delete alcpCipher;
+    }
+}
+
 void
 printHexString(const char* info, const unsigned char* bytes, int length)
 {
@@ -304,9 +389,9 @@ TEST(CBC, PaddingEncryption)
         alc_error_t err = cbc->init(&key[0], key.size() * 8, &iv[0], iv.size());
 
         err = cbc->encrypt(&pt[0], &output[0], pt.size());
-
+#ifdef DEBUG
         printHexString("CT", &output[0], output.size());
-
+#endif
         if (alcp_is_error(err)) {
             std::cout << "Encrypt failed!" << std::endl;
         }
@@ -372,7 +457,27 @@ TEST(CBC, RandomEncryptDecryptTest)
             cbc->decrypt(
                 &cipher_text_vect[0], &plainTextOut[0], plainTextVect.size());
 
-            EXPECT_EQ(plainTextVect, plainTextOut);
+#ifdef DEBUG
+
+            if (plainTextVect != plainTextOut) {
+                // Print the key, IV, and ciphertext for debugging
+                printHexString("Key", key_256, 32);
+                printHexString("IV", iv, 16);
+                printHexString(
+                    "Ciphertext", &cipher_text_vect[0], plainTextVect.size());
+                printHexString(
+                    "plainTextVect", &plainTextVect[0], plainTextVect.size());
+
+                printf("\n");
+                printHexString(
+                    "plainTextOut", &plainTextOut[0], plainTextOut.size());
+                printf("\n");
+
+                printf("Length: %zu\n", plainTextVect.size());
+            }
+#endif
+
+            ASSERT_EQ(plainTextVect, plainTextOut);
 
             delete alcpCipher;
 #ifdef DEBUG

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -82,8 +82,22 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         vaes::AesDecrypt(&a1, pkey128, nRounds);
         a1 = _mm256_xor_si256(a1, b1);
 
+#ifdef AES_CBC_INPLACE_BUFFER
+        // Load the next IV from the ciphertext buffer before writing the
+        // plaintext to the output buffer to ensure IV is not corrupted when
+        // buffers are inplace.
+        if ((blocks >= 2) || (res != 0)) { // Load next IV only if there is some
+                                           // ciphertext left to be decrypted.
+            b1 = _mm256_loadu_si256((__m256i*)(p_in_128) + 0);
+        } else {
+            // For Multi update scenario when there is only one block, this will
+            // be written back to IV
+#endif
+            b1 = input_128_a1;
+#ifdef AES_CBC_INPLACE_BUFFER
+        }
+#endif
         _mm256_maskstore_epi64((long long*)p_out_128, mask_lo, a1);
-        b1 = input_128_a1;
         p_in_128++;
         p_out_128++;
         blocks--;
@@ -93,15 +107,21 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     for (; blocks >= 8; blocks -= 8) {
         // Note below uses up 1 Kilobit of data, 128 bytes
         // Load in the format a1 = c1,c2.
-        a1 = input_128_a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 0);
-        a2 = input_128_a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 1);
-        a3 = input_128_a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 2);
-        a4 = input_128_a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 3);
-        // Load in the format b1 = c0,c1. Counting on cache to have data
-        b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1) + 0);
-        b2 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 1);
-        b3 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 2);
-        b4 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 3);
+        a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 0);
+        a2 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 1);
+        a3 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 2);
+        a4 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 3);
+
+// Load in the format b1 = c0,c1. Counting on cache to have data
+#ifndef AES_CBC_INPLACE_BUFFER
+        // If the buffer is not inplace, load the next IV from the
+        // previous ciphertext directly since it was not overwritten in
+        // the last iteration.
+        b1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1) + 0);
+#endif
+        b2 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 1);
+        b3 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 2);
+        b4 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 3);
 
         AesDec_4x128(&a1, &a2, &a3, &a4, pkey128, nRounds);
 
@@ -110,7 +130,15 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         a2 = _mm256_xor_si256(a2, b2);
         a3 = _mm256_xor_si256(a3, b3);
         a4 = _mm256_xor_si256(a4, b4);
-
+#ifdef AES_CBC_INPLACE_BUFFER
+        // Load the next IV from the ciphertext buffer before writing the
+        // plaintext to the output buffer to ensure IV is not corrupted when
+        // buffers are inplace.
+        if (blocks >= 9 || res != 0) { // Load next IV only if there is some
+                                       // ciphertext left to be decrypted.
+            b1 = _mm256_loadu_si256((__m256i*)(p_in_128 + 7) + 0);
+        }
+#endif
         // Store decrypted blocks.
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), a1);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 1, a2);
@@ -126,10 +154,15 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         // Note below uses up 0.5 Kilobit of data, 64 bytes
         // Load in the format a1 = c1,c2.
         a1 = input_128_a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 0);
-        a2 = input_128_a1 = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 1);
+        a2                = _mm256_loadu_si256(((__m256i*)p_in_128 - 0) + 1);
         // Load in the format b1 = c0,c1. Counting on cache to have data
-        b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1) + 0);
-        b2 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 1);
+#ifndef AES_CBC_INPLACE_BUFFER
+        // If the buffer is not inplace, load the next IV from the
+        // previous ciphertext directly since it was not overwritten in
+        // the last iteration.
+        b1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1) + 0);
+#endif
+        b2 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 1);
 
         AesDec_2x128(&a1, &a2, pkey128, nRounds);
 
@@ -137,6 +170,16 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         a1 = _mm256_xor_si256(a1, b1);
         a2 = _mm256_xor_si256(a2, b2);
 
+#ifdef AES_CBC_INPLACE_BUFFER
+        // Load the next IV from the ciphertext buffer before writing the
+        // plaintext to the output buffer to ensure IV is not corrupted when
+        // buffers are inplace.
+        if ((blocks >= 5) || (res != 0)) { // Load next IV only if there is some
+                                           // ciphertext left to be decrypted.
+                                           // if (blocks >= 5) {
+            b1 = _mm256_loadu_si256((__m256i*)(p_in_128 + 3) + 0);
+        }
+#endif
         // Store decrypted blocks.
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), a1);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 1, a2);
@@ -149,14 +192,30 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     for (; blocks >= 2; blocks -= 2) {
         // Note below uses up 0.25 Kilobit of data, 32 bytes
         // Load in the format a1 = c1,c2.
-        a1 = input_128_a1 = _mm256_loadu_si256((__m256i*)p_in_128);
-        // Load in the format b1 = c0,c1. Counting on cache to have data
-        b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1));
+        a1 = _mm256_loadu_si256((__m256i*)p_in_128);
 
+// Load in the format b1 = c0,c1. Counting on cache to have data
+#ifndef AES_CBC_INPLACE_BUFFER
+        // If the buffer is not inplace, load the next IV from the
+        // previous ciphertext directly since it was not overwritten in
+        // the last iteration.
+        b1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1));
+#endif
         AesDec_1x128(&a1, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
+
+#ifdef AES_CBC_INPLACE_BUFFER
+        // Load the next IV from the ciphertext buffer before writing the
+        // plaintext to the output buffer to ensure IV is not corrupted when
+        // buffers are inplace.
+        if (blocks >= 3 || res != 0) { // Load next IV only if there is some
+                                       // ciphertext left to be decrypted.
+            // Load in the format b1 = c0,c1. Counting on cache to have data
+            b1 = _mm256_loadu_si256((__m256i*)(p_in_128 + 1));
+        }
+#endif
 
         // Store decrypted blocks.
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), a1);
@@ -165,9 +224,15 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         p_out_128 += 2;
     }
 
-    // If more blocks are left, prepare b1 with cN-1 cuz need for xor
-    if (blocks >= 1)
+#ifndef AES_CBC_INPLACE_BUFFER
+    // If the buffer is not inplace, load the next IV from the
+    // previous ciphertext directly since it was not overwritten in
+    // the last iteration.
+    if (blocks >= 1) {
+        // If more blocks are left, prepare b1 with cN-1 cuz need for xor
         b1 = _mm256_maskload_epi64((long long*)(p_in_128 - 1), mask_lo);
+    }
+#endif
 
     for (; blocks >= 1; blocks -= 1) {
         // Load the Nth block
