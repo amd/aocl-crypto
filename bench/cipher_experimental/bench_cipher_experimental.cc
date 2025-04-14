@@ -125,10 +125,10 @@ BenchGcmCipherExperimental(benchmark::State&            state,
     dataFinalize.m_tag_len      = 16;
     dataFinalize.m_tag          = tag;
     dataFinalize.verified       = false;
-
     if constexpr (encryptor == false) { // Decrypt
         // Create a vaid data for decryption (mainly tag and ct)
-        iTestCipher = std::make_unique<AlcpGcmCipher<true>>();
+        std::unique_ptr<ITestCipher> iTestCipher =
+            std::make_unique<AlcpGcmCipher<true>>();
         bool no_err = true;
         no_err &= iTestCipher->init(&dataInit);
         if (no_err == false) {
