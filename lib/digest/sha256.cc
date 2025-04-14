@@ -81,7 +81,7 @@ Sha2<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
     assert((len & cChunkSizeMask) == 0);
 
     if (shani_available) {
-        return shani::ShaUpdate256(m_hash, pSrc, len);
+        return shani::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
     } else if (avx2_available) {
         return avx2::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
     }
@@ -226,12 +226,12 @@ Sha2<digest_len>::update(const Uint8* pSrc, Uint64 size)
     Uint64 num_chunks = size / cChunkSize;
     if (num_chunks) {
 
-        Uint64 sizeChunk = num_chunks * cChunkSize;
+        Uint64 size_chunk = num_chunks * cChunkSize;
 
-        err = processChunk(pSrc, sizeChunk);
+        err = processChunk(pSrc, size_chunk);
 
-        pSrc += sizeChunk;
-        size -= sizeChunk;
+        pSrc += size_chunk;
+        size -= size_chunk;
     }
 
     /*
@@ -252,6 +252,16 @@ Sha2<digest_len>::finalize(Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    if (pBuf == nullptr) {
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+
+    if (size != m_digest_len) {
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+
     if (m_finished) {
         return err;
     }
@@ -262,34 +272,45 @@ Sha2<digest_len>::finalize(Uint8* pBuf, Uint64 size)
      * Default padding is 'length encoding'
      */
 
-    m_buffer[m_idx++] = 0x80;
+    static bool shani_available = CpuId::cpuHasShani();
 
-    Uint64 buf_len = m_idx <= (cChunkSize - 8) ? cChunkSize : sizeof(m_buffer);
-    Uint64 bytes_left = buf_len - m_idx - utils::BytesPerDWord;
+    if (shani_available) {
+        err = shani::ShaFinalize256(m_buffer,
+                                    pBuf,
+                                    m_hash,
+                                    cRoundConstants,
+                                    m_idx,
+                                    m_msg_len,
+                                    m_digest_len);
+    } else {
+        m_buffer[m_idx++] = 0x80;
 
-    utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, bytes_left);
+        Uint64 block_size = m_idx <= (cChunkSize - 8) ? cChunkSize
+                                                      : sizeof(m_buffer);
+        Uint64 bytes_left = block_size - m_idx - utils::BytesPerDWord;
 
-    /* Store total length in the last 64-bit (8-bytes) */
-    Uint64  len_in_bits = m_msg_len * 8;
-    Uint64* msg_len_ptr =
-        reinterpret_cast<Uint64*>(&m_buffer[buf_len] - sizeof(Uint64));
-    msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
+        utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, bytes_left);
 
-    err = processChunk(m_buffer, buf_len);
+        /* Store total length in the last 64-bit (8-bytes) */
+        Uint64  len_in_bits = m_msg_len * 8;
+        Uint64* p_msg_len_ptr =
+            reinterpret_cast<Uint64*>(&m_buffer[block_size] - sizeof(Uint64));
+        p_msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
+
+        err = processChunk(m_buffer, block_size);
+
+        utils::CopyBlockWith<Uint32, true>(
+            pBuf, m_hash, m_digest_len, utils::ToBigEndian<Uint32>);
+    }
 
     if (err != ALC_ERROR_NONE) {
         return err;
     }
 
-    if (pBuf != nullptr && size == m_digest_len) {
-        utils::CopyBlockWith<Uint32, true>(
-            pBuf, m_hash, m_digest_len, utils::ToBigEndian<Uint32>);
-        m_idx      = 0;
-        m_finished = true;
-        return ALC_ERROR_NONE;
-    } else {
-        return ALC_ERROR_INVALID_ARG;
-    }
+    m_idx      = 0;
+    m_finished = true;
+
+    return err;
 }
 
 template class Sha2<ALC_DIGEST_LEN_224>;

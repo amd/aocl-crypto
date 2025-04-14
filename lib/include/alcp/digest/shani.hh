@@ -32,5 +32,16 @@
 
 namespace alcp::digest { namespace shani {
 
-    alc_error_t ShaUpdate256(Uint32* pHash, const Uint8* pSrc, Uint64 src_len);
+    alc_error_t ShaUpdate256(Uint32*       pHash,
+                             const Uint8*  pSrc,
+                             Uint64        src_len,
+                             const Uint32* pRoundConstants);
+
+    alc_error_t ShaFinalize256(Uint8*        pSrc,
+                               Uint8*        pDest,
+                               Uint32*       pHash,
+                               const Uint32* pRoundConstantsm,
+                               const Uint32  c_byte_offset,
+                               const Uint64  c_msg_len,
+                               const Uint64  c_digest_len);
 }} // namespace alcp::digest::shani
