@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,6 +39,7 @@ class AlcpGcmCipher : public ITestCipher
 {
   private:
     alc_cipher_handle_t m_handle = {};
+    alc_cipher_state_t  m_pState{};
 
   public:
     bool init(alc_test_init_data_p data) override;
@@ -50,4 +51,4 @@ class AlcpGcmCipher : public ITestCipher
     ~AlcpGcmCipher() = default;
 };
 
-} // namespace alcp::testing::cipher
+} // namespace alcp::testing::cipher::gcm

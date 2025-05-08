@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -178,10 +178,8 @@ ecdh_KAT(alc_ec_info_t info)
             FAIL();
         }
         /* now check both Peers' secret keys match or not */
-        EXPECT_TRUE(ArraysMatch(std::move(Peer1_SecretKey),
-                                std::move(Peer2_SecretKey),
-                                csv,
-                                std::string("ECDH")));
+        EXPECT_TRUE(ArraysMatch(
+            Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
         EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen)
@@ -290,7 +288,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
         }
 
         /* now check both Peers' secret keys match or not */
-        EXPECT_TRUE(ArraysMatch(std::move(Peer1_SecretKey),
+        EXPECT_TRUE(ArraysMatch(Peer1_SecretKey,
                                 csv.getVect("SECRET_KEY"),
                                 csv,
                                 std::string("ECDH_P256")));

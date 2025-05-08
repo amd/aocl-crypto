@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -97,15 +97,15 @@ OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 OpenSSLCipherAeadBase::OpenSSLCipherAeadBase(const alc_cipher_mode_t cMode,
                                              const Uint8*            iv,
                                              const Uint32            cIvLen,
                                              const Uint8*            key,
                                              const Uint32            cKeyLen,
                                              const Uint8*            tkey,
-                                             const Uint64            cBlockSize)
+                                             const Uint64            cBlockSize,
+                                             alc_cipher_state_t* pCipherState)
     : m_mode{ cMode }
     , m_iv{ iv }
     , m_iv_len{ cIvLen }
@@ -176,8 +176,9 @@ OpenSSLCipherAeadBase::init(const Uint8* iv,
 bool
 OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
-    m_key     = key;
-    m_key_len = cKeyLen;
+    m_key           = key;
+    m_key_len       = cKeyLen;
+    alc_error_t err = ALC_ERROR_NONE;
 
 #ifdef USE_PROVIDER
     if (m_alcp_provider == nullptr) {
@@ -195,8 +196,13 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
     // Key
     if (m_mode == ALC_AES_MODE_SIV) {
         CopyBytes(m_key_final, m_key, cKeyLen / 8);
-        CopyBytes(m_key_final + cKeyLen / 8, m_tkey, cKeyLen / 8);
+        err = alcp::utils::SecureCopy<Uint8>(
+            m_key_final + cKeyLen / 8, cKeyLen / 8, m_tkey, cKeyLen / 8);
         m_key = m_key_final;
+        if (alcp_is_error(err)) {
+            std::cout << "Error from Secure copy" << std::endl;
+            return false;
+        }
     }
 
     // Create context for encryption and initialize
@@ -392,9 +398,9 @@ OpenSSLCipherAeadBase::encrypt(const Uint8* plaintxt,
 bool
 OpenSSLCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 {
-    int           len_ct = 0;
-    static Uint8  temp;
-    alcp_dca_ex_t data = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
+    int                len_ct = 0;
+    std::vector<Uint8> temp   = std::vector<Uint8>(1);
+    alcp_dc_ex_t       data   = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
 #if 1
     if (m_mode == ALC_AES_MODE_GCM) {
         if (data.m_adl > 0)
@@ -542,8 +548,8 @@ OpenSSLCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 
         /* FIXME: Hack for test data when PT is NULL */
         if (data.m_inl == 0) {
-            data.m_out = &temp;
-            data.m_in  = &temp;
+            data.m_out = &temp[0];
+            data.m_in  = &temp[0];
         }
 
         if (1
@@ -586,9 +592,9 @@ OpenSSLCipherAeadBase::decrypt(const Uint8* ciphertxt,
 bool
 OpenSSLCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
 {
-    int           len_pt = 0;
-    static Uint8  temp;
-    alcp_dca_ex_t data = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
+    int          len_pt = 0;
+    static Uint8 temp;
+    alcp_dc_ex_t data = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
 #if 1
     if (m_mode == ALC_AES_MODE_GCM) {
         if (data.m_adl > 0)

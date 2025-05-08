@@ -27,8 +27,4 @@ int main(void)
 }
 ```
 
-[OSSL_PROVIDER_set_default_search_path](https://www.openssl.org/docs/man3.0/man3/OSSL_PROVIDER_set_default_search_path.html) - Where OpenSSL searches for the provider binary.
-
-[OSSL_PROVIDER_load](https://www.openssl.org/docs/man3.0/man3/OSSL_PROVIDER_load.html) - Name of the provider to load.
-
-[OSSL_PROVIDER_unload](https://www.openssl.org/docs/manmaster/man3/OSSL_PROVIDER_unload.html) - Unload the named provider.
+For more information on the Provider APIs OSSL_PROVIDER_set_default_search_path, OSSL_PROVIDER_load, OSSL_PROVIDER_unload etc. please refer to https://docs.openssl.org/3.0/man3/OSSL_PROVIDER/.

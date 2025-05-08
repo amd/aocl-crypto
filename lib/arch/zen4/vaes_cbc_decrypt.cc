@@ -62,8 +62,8 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     auto        pb_128   = pa_128;
     auto        pOut_512 = reinterpret_cast<__m512i*>(pPlainText);
 
-    // pa_128 will lead while pb_128 will lag behind (1 block) due to IV taken
-    // as first block to XOR
+    // pa_128 will lead while pb_128 will lag behind (1 block) due to IV
+    // taken as first block to XOR
 
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
@@ -222,65 +222,77 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     }
 
 #ifdef AES_MULTI_UPDATE
-    // IV is no longer needed hence we can write the old ciphertext back to IV
+    // IV is no longer needed hence we can write the old ciphertext back to
+    // IV
     alcp_storeu_128(reinterpret_cast<__m512i*>(pIv),
                     alcp_loadu_128((const __m512i*)(pb_128)));
 #endif
 
     alcp_clear_keys_zmm(keys);
-
     return err;
 }
 
+} // namespace alcp::cipher::vaes512
+
+namespace alcp::cipher {
+
+template<alcp::cipher::CipherKeyLen T, alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
-              Uint8*       pDest,   // ptr to plaintext
-              Uint64       len,     // message length in bytes
-              const Uint8* pKey,    // ptr to Key
-              int          nRounds, // No. of rounds
-              Uint8*       pIv      // ptr to Initialization Vector
-)
+tDecryptCbc(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
 {
+    using namespace vaes512;
     return DecryptCbc<AesDecryptNoLoad_1x512Rounds10,
                       AesDecryptNoLoad_2x512Rounds10,
                       AesDecryptNoLoad_4x512Rounds10,
                       alcp_load_key_zmm_10rounds,
                       alcp_clear_keys_zmm_10rounds>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, 10, pIv);
 }
 
+template<>
 alc_error_t
-DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
-              Uint8*       pDest,   // ptr to plaintext
-              Uint64       len,     // message length in bytes
-              const Uint8* pKey,    // ptr to Key
-              int          nRounds, // No. of rounds
-              Uint8*       pIv      // ptr to Initialization Vector
-)
+tDecryptCbc<alcp::cipher::CipherKeyLen::eKey128Bit,
+            alcp::utils::CpuCipherFeatures::eVaes512>(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
 {
+    using namespace vaes512;
+    return DecryptCbc<AesDecryptNoLoad_1x512Rounds10,
+                      AesDecryptNoLoad_2x512Rounds10,
+                      AesDecryptNoLoad_4x512Rounds10,
+                      alcp_load_key_zmm_10rounds,
+                      alcp_clear_keys_zmm_10rounds>(
+        pSrc, pDest, len, pKey, 10, pIv);
+}
+
+template<>
+alc_error_t
+tDecryptCbc<alcp::cipher::CipherKeyLen::eKey192Bit,
+            alcp::utils::CpuCipherFeatures::eVaes512>(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
+{
+    using namespace vaes512;
     return DecryptCbc<AesDecryptNoLoad_1x512Rounds12,
                       AesDecryptNoLoad_2x512Rounds12,
                       AesDecryptNoLoad_4x512Rounds12,
                       alcp_load_key_zmm_12rounds,
                       alcp_clear_keys_zmm_12rounds>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, 12, pIv);
 }
 
+template<>
 alc_error_t
-DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
-              Uint8*       pDest,   // ptr to plaintext
-              Uint64       len,     // message length in bytes
-              const Uint8* pKey,    // ptr to Key
-              int          nRounds, // No. of rounds
-              Uint8*       pIv      // ptr to Initialization Vector
-)
+tDecryptCbc<alcp::cipher::CipherKeyLen::eKey256Bit,
+            alcp::utils::CpuCipherFeatures::eVaes512>(
+    const Uint8* pSrc, Uint8* pDest, Uint64 len, const Uint8* pKey, Uint8* pIv)
 {
+    using namespace vaes512;
     return DecryptCbc<AesDecryptNoLoad_1x512Rounds14,
                       AesDecryptNoLoad_2x512Rounds14,
                       AesDecryptNoLoad_4x512Rounds14,
                       alcp_load_key_zmm_14rounds,
                       alcp_clear_keys_zmm_14rounds>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, 14, pIv);
 }
 
-} // namespace alcp::cipher::vaes512
+} // namespace alcp::cipher

@@ -41,8 +41,6 @@
 
 using namespace alcp::testing;
 
-ExecRecPlay* fr = nullptr;
-
 #define ALC_MODE ALC_AES_MODE_CTR
 #define STR_MODE "AES_CTR"
 

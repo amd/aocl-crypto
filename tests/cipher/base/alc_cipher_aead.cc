@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,6 +39,14 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            iv,
+                                       alc_cipher_state_t*     pCipherState)
+    : m_mode{ cMode }
+    , m_iv{ iv }
+    , m_pState{ pCipherState }
+{}
+
+AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
+                                       const Uint8*            iv,
                                        const Uint8*            key,
                                        const Uint32            cKeyLen)
     : m_mode{ cMode }
@@ -54,9 +62,11 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t cMode,
                                        const Uint8*            key,
                                        const Uint32            cKeyLen,
                                        const Uint8*            tkey,
-                                       const Uint64            cBlockSize)
+                                       const Uint64            cBlockSize,
+                                       alc_cipher_state_t*     pCipherState)
     : m_mode{ cMode }
     , m_iv{ iv }
+    , m_pState{ pCipherState }
 {
     init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
 }
@@ -135,20 +145,15 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
 
 #if 1
     if (m_mode == ALC_AES_MODE_SIV) {
-        // m_cinfo.ci_key    = m_tkey; // Using tkey as CTR key for SIV
-        // m_cinfo.ci_keyLen = cKeyLen;
         std::copy(key, key + (m_keyLen / 8), m_combined_key);
         std::copy(
             m_tkey, m_tkey + (m_keyLen / 8), m_combined_key + (m_keyLen / 8));
-
-        // FIXME: Need to be removed from the library
-        // m_cinfo.ci_key = key;
     }
 #endif
 
-    /* Request Handle */
-    // FIXME:  m_cinfo.ci_mode getting corrupt
-    err = alcp_cipher_aead_request(m_mode, cKeyLen, m_handle);
+    // printf("\n aead request cipherstate %p ", (void*)m_pState);
+    err = alcp_cipher_aead_request_with_extState(
+        m_mode, cKeyLen, m_pState, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         goto out;
@@ -168,7 +173,7 @@ out:
 bool
 AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
 {
-    alcp_dca_ex_t  aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
+    alcp_dc_ex_t   aead_data = *reinterpret_cast<alcp_dc_ex_t*>(&data);
     constexpr bool cEnc      = true;
 
     switch (m_mode) {
@@ -188,7 +193,7 @@ AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
 bool
 AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
 {
-    alcp_dca_ex_t  aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
+    alcp_dc_ex_t   aead_data = *reinterpret_cast<alcp_dc_ex_t*>(&data);
     constexpr bool cEnc      = false;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
@@ -206,7 +211,7 @@ AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
 
 template<bool enc>
 bool
-AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
+AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dc_ex_t& aead_data)
 {
     alc_error_t err;
 
@@ -267,7 +272,7 @@ AlcpCipherAeadBase::alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data)
 
 template<bool enc>
 bool
-AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
+AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dc_ex_t& aead_data)
 {
     alc_error_t err;
 
@@ -336,7 +341,7 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 
 template<bool enc>
 bool
-AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
+AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dc_ex_t& aead_data)
 {
     alc_error_t err;
     err = alcp_cipher_aead_set_tag_length(m_handle, aead_data.m_tagl);
@@ -421,7 +426,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 
 template<bool enc>
 bool
-AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
+AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dc_ex_t& aead_data)
 {
     alc_error_t err;
 

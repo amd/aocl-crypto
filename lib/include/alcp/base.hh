@@ -34,18 +34,18 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <memory>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <vector>
-
 #include "alcp/base/error.hh"
 #include "alcp/base/exception.hh"
 #include "alcp/base/status.hh"
 #include "alcp/base/statusor.hh"
 #include "alcp/defs.hh"
 #include "alcp/types.hh"
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace alcp {
 

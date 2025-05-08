@@ -50,6 +50,7 @@ EXTERN_C_BEGIN
  * @return Error Code for the API called . if alc_error_t is not zero then an
  * error has occurred and handle will be invalid for future operations
  */
+// TODO: keylength parameter should be added to the function signature
 ALCP_API_EXPORT alc_error_t
 alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
 

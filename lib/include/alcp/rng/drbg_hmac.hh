@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use p_cIn source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -52,7 +52,7 @@ class ALCP_API_EXPORT HmacDrbg : public Drbg
   private:
     class Impl;
 
-    std::unique_ptr<Impl> p_impl;
+    std::unique_ptr<Impl> p_impl{};
 
   public:
     std::string name() const;

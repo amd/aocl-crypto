@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,8 @@
 #include "alcp/rsa.h"
 #include "alcp/types.hh"
 #include <memory>
+#include <algorithm> // for std::reverse
+#include <openssl/bn.h>
 
 namespace alcp::rsa {
 constexpr Uint32 KEY_SIZE_LONG_INT    = 2048 / 64;

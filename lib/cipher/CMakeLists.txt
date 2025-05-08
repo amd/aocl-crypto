@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -31,10 +31,12 @@ OPTION(ALCP_ENABLE_CCM_MULTI_UPDATE "ENABLE SUPPORT FOR MULTIPLE ENCRYPT/DECRYPT
 OPTION(ALCP_ENABLE_CIPHER_MULTI_UPDATE "ENABLE SUPPORT FOR MULTIPLE ENCRYPT/DECRYPT WITH AES" OFF)
 OPTION(ALCP_ENABLE_OFB_MULTI_UPDATE "ENABLE SUPPORT FOR MULTIPLE ENCRYPT/DECRYPT WITH AES OFB" OFF)
 
+
 # set the options so they are available to the parent scope
 set(ALCP_ENABLE_CCM_MULTI_UPDATE ${ALCP_ENABLE_CCM_MULTI_UPDATE} PARENT_SCOPE)
 set(ALCP_ENABLE_CIPHER_MULTI_UPDATE ${ALCP_ENABLE_CIPHER_MULTI_UPDATE} PARENT_SCOPE)
 set(ALCP_ENABLE_OFB_MULTI_UPDATE ${ALCP_ENABLE_OFB_MULTI_UPDATE} PARENT_SCOPE)
+set(ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE ${ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE} PARENT_SCOPE)
 
 TARGET_SOURCES(alcp
 	PRIVATE
@@ -47,4 +49,8 @@ TARGET_SOURCES(alcp_static
 	)
 
 
-ADD_SUBDIRECTORY(tests)
+# FIXME: due to a known failure from valgrind + AOCL Utils' cpuid checks, disabling cipher unit tests with valgrind
+# for more details, refer to https://ontrack-internal.amd.com/browse/CPUPL-4109
+if(NOT ALCP_MEMCHECK_VALGRIND)
+	ADD_SUBDIRECTORY(tests)
+endif()

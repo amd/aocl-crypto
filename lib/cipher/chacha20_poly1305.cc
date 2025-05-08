@@ -110,21 +110,7 @@ namespace vaes512 {
             }
         }
 
-        /*FIXME: Workaround to use the 1x kernel in poly1305 due to known issue
-           in 8x kernel. Remove the while loop and update in a single call once
-           the issue is resolved.
-        */
-        // err = Poly1305::update(outputBuffer, bufferLength); // loop
-        while (bufferLength) {
-            if (bufferLength >= 256) {
-                err = Poly1305::update(outputBuffer, 256); // loop
-                outputBuffer += 256;
-                bufferLength -= 256;
-            } else {
-                err = Poly1305::update(outputBuffer, bufferLength); // loop
-                bufferLength = 0;
-            }
-        }
+        err = Poly1305::update(outputBuffer, bufferLength); // loop
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -176,24 +162,9 @@ namespace vaes512 {
             }
         }
 
-        /*FIXME: Workaround to use the 1x kernel in poly1305 due to known issue
-            in 8x kernel. Remove the while loop and update in a single call once
-            the issue is resolved.
-        */
         //  In case of decryption one should change the order of updation i.e
         //  input (which is the ciphertext) should be updated
-        // err = Poly1305::update(inputBuffer, bufferLength);
-
-        while (bufferLength) {
-            if (bufferLength >= 256) {
-                err = Poly1305::update(inputBuffer, 256); // loop
-                inputBuffer += 256;
-                bufferLength -= 256;
-            } else {
-                err = Poly1305::update(inputBuffer, bufferLength); // loop
-                bufferLength = 0;
-            }
-        }
+        err = Poly1305::update(inputBuffer, bufferLength);
 
         if (err != ALC_ERROR_NONE) {
             return err;
@@ -233,9 +204,6 @@ namespace vaes512 {
     alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
         alc_error_t err = Poly1305::finalize(pOutput, len);
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
         return err;
     }
 
@@ -282,9 +250,6 @@ namespace ref {
         m_len_input_processed.u64 = 0;
         m_len_aad_processed.u64   = 0;
 
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
         return ALC_ERROR_NONE;
     }
 
@@ -423,9 +388,6 @@ namespace ref {
     alc_error_t ChaChaPolyAuth::getTag(Uint8* pOutput, Uint64 len)
     {
         alc_error_t err = Poly1305::finalize(pOutput, len);
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
         return err;
     }
 

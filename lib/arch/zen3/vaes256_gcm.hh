@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "alcp/cipher/aes_gcm.hh"
 #include "alcp/types.hh"
 
 #define NUM_PARALLEL_YMMS 4
@@ -158,23 +159,31 @@ void inline computeHashSubKeys(int           num_256_blks,
     }
 }
 
-void inline getPrecomputedTable(bool                  isFirstUpdate,
-                                __m256i*              pHsubkey_256_precomputed,
-                                __m256i*              pHsubkey_256,
-                                int                   num_256_blks,
-                                alc_gcm_local_data_t* gcmLocalData,
-                                __m128i               const_factor_128)
+void inline getPrecomputedTable(Uint64         updateCounter,
+                                __m256i*       pHsubkey_256_precomputed,
+                                __m256i*       pHsubkey_256,
+                                int            num_256_blks,
+                                alc_gcm_ctx_t* gcmCtx,
+                                __m128i        const_factor_128)
 {
-
-    if (isFirstUpdate
-        || (num_256_blks > gcmLocalData->m_num_256blks_precomputed)) {
-
+#if ALWAYS_COMPUTE
+    if (num_256_blks) {
+        // compute only
         computeHashSubKeys(num_256_blks,
-                           gcmLocalData->m_hash_subKey_128,
+                           gcmCtx->m_hash_subKey_128,
+                           pHsubkey_256,
+                           const_factor_128);
+    }
+#else
+    if ((updateCounter == 1)
+        || (num_256_blks > gcmCtx->m_num_256blks_precomputed)) {
+        // compute and store in table
+        computeHashSubKeys(num_256_blks,
+                           gcmCtx->m_hash_subKey_128,
                            pHsubkey_256,
                            const_factor_128);
 
-        gcmLocalData->m_num_256blks_precomputed = num_256_blks;
+        gcmCtx->m_num_256blks_precomputed = num_256_blks;
 
         for (int i = 0; i < num_256_blks; i++) {
             __m256i temp = _mm256_loadu_si256(pHsubkey_256);
@@ -184,6 +193,7 @@ void inline getPrecomputedTable(bool                  isFirstUpdate,
             pHsubkey_256_precomputed++;
         }
     } else {
+        // load from table
         for (int i = 0; i < num_256_blks; i++) {
             __m256i temp = _mm256_loadu_si256(pHsubkey_256_precomputed);
             _mm256_storeu_si256(pHsubkey_256, temp);
@@ -192,6 +202,7 @@ void inline getPrecomputedTable(bool                  isFirstUpdate,
             pHsubkey_256_precomputed++;
         }
     }
+#endif
 }
 
 } // namespace alcp::cipher::vaes

@@ -49,6 +49,14 @@ namespace alcp::utils {
 using namespace Au;
 #endif
 
+/* runtime env for forcing cpuid */
+#define ALCP_ENABLE_INSTR_ZEN5    5
+#define ALCP_ENABLE_INSTR_ZEN4    4
+#define ALCP_ENABLE_INSTR_ZEN3    3
+#define ALCP_ENABLE_INSTR_ZEN2    2
+#define ALCP_ENABLE_INSTR_ZEN     1
+#define ALCP_ENABLE_INSTR_INVALID -1
+
 // FIXME: Memory Allocations for static variables
 std::unique_ptr<CpuId::Impl> CpuId::pImpl = std::make_unique<CpuId::Impl>();
 // Impl class declaration
@@ -62,6 +70,15 @@ class CpuId::Impl
 #endif
 
   public:
+    bool AlcpEnableInstructionSet = false;
+    bool cpuid_disable_avx512     = false;
+    bool cpuid_disable_vaes       = false;
+
+    /* force to which arch? */
+    int AlcpForcedArch = 0;
+
+    void get_alcp_enabled_instr();
+
     // Genoa functions
     /**
      * @brief Returns true if CPU has AVX512f Flag
@@ -84,6 +101,20 @@ class CpuId::Impl
      * @return false
      */
     bool cpuHasAvx512bw();
+    /**
+     * @brief Returns true if CPU has AVX512IFMA Flag
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasAvx512ifma();
+    /**
+     * @brief Returns true if CPU has AVX512VL Flag
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasAvx512vl();
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
@@ -126,6 +157,13 @@ class CpuId::Impl
      * @return false
      */
     bool cpuHasAvx2();
+    /**
+     * @brief Returns true if CPU supports SSE3 instructions
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasSse3();
     /**
      * @brief Returns true if RDRAND, secure RNG number generator is
      * supported by CPU
@@ -237,6 +275,18 @@ CpuId::Impl::Impl()
 #endif
 #endif
 
+    /* read environment variable to force cpu arch */
+    get_alcp_enabled_instr();
+    try {
+        if (AlcpForcedArch == ALCP_ENABLE_INSTR_INVALID)
+            throw "Invalid option passed to environment variable "
+                  "ALCP_ENABLE_INSTRUCTIONS "
+                  "(Supported values: ZEN/ZEN2/ZEN3/ZEN4/ZEN5)";
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+        std::exit(-1);
+    }
+
 #ifndef ALCP_ENABLE_AOCL_UTILS
     std::fprintf(stderr,
                  "AOCL-Utils is unavailable at compile time! Defaulting to "
@@ -247,57 +297,122 @@ CpuId::Impl::Impl()
 #endif
 }
 
+/**
+ * @brief Reads the environment variable `ALCP_ENABLE_INSTRUCTIONS` to determine
+ * the enabled CPU instructions.
+ *
+ * This function sets the `AlcpForcedArch` variable based on the value of the
+ * environment variable. It also disables certain CPU features based on the
+ * selected architecture. If the environment variable is not set or has an
+ * invalid value, it returns ALCP_ENABLE_INSTR_INVALID
+ */
+void
+CpuId::Impl::get_alcp_enabled_instr()
+{
+    const char* ALCP_Enable_Inst = std::getenv("ALCP_ENABLE_INSTRUCTIONS");
+
+    if (ALCP_Enable_Inst != NULL) {
+        if (strcmp(ALCP_Enable_Inst, "ZEN5") == 0) {
+            AlcpForcedArch = ALCP_ENABLE_INSTR_ZEN5;
+        } else if (strcmp(ALCP_Enable_Inst, "ZEN4") == 0) {
+            AlcpForcedArch = ALCP_ENABLE_INSTR_ZEN4;
+        } else if (strcmp(ALCP_Enable_Inst, "ZEN3") == 0) {
+            cpuid_disable_avx512 = true;
+            AlcpForcedArch       = ALCP_ENABLE_INSTR_ZEN3;
+        } else if (strcmp(ALCP_Enable_Inst, "ZEN2") == 0) {
+            cpuid_disable_avx512 = true;
+            cpuid_disable_vaes   = true;
+            AlcpForcedArch       = ALCP_ENABLE_INSTR_ZEN2;
+        } else if ((strcmp(ALCP_Enable_Inst, "ZEN") == 0)
+                   || (strcmp(ALCP_Enable_Inst, "ZEN1") == 0)) {
+            cpuid_disable_avx512 = true;
+            cpuid_disable_vaes   = true;
+            AlcpForcedArch       = ALCP_ENABLE_INSTR_ZEN;
+        } else {
+            AlcpForcedArch = ALCP_ENABLE_INSTR_INVALID; /* never come here */
+        }
+    }
+    AlcpEnableInstructionSet = true;
+    return;
+}
+
 bool
 CpuId::Impl::cpuHasAvx512f()
 {
-#ifdef ALCP_CPUID_DISABLE_AVX512
-    return false;
-#else
+    if (AlcpEnableInstructionSet && cpuid_disable_avx512) {
+        return false;
+    }
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512f);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 
 bool
 CpuId::Impl::cpuHasAvx512dq()
 {
-#ifdef ALCP_CPUID_DISABLE_AVX512
-    return false;
-#else
+    if (AlcpEnableInstructionSet && cpuid_disable_avx512) {
+        return false;
+    }
+
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512dq);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 
 bool
 CpuId::Impl::cpuHasAvx512bw()
 {
-#ifdef ALCP_CPUID_DISABLE_AVX512
-    return false;
-#else
+    if (cpuid_disable_avx512) {
+        return false;
+    }
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512bw);
 #else
     static bool state = false;
 #endif
     return state;
+}
+
+bool
+CpuId::Impl::cpuHasAvx512ifma()
+{
+    if (cpuid_disable_avx512) {
+        return false;
+    }
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512ifma);
+#else
+    static bool state = false;
 #endif
+    return state;
+}
+
+bool
+CpuId::Impl::cpuHasAvx512vl()
+{
+    if (cpuid_disable_avx512) {
+        return false;
+    }
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx512vl);
+#else
+    static bool state = false;
+#endif
+    return state;
 }
 
 bool
 CpuId::Impl::cpuHasAvx512(Avx512Flags flag)
 {
-#ifdef ALCP_CPUID_DISABLE_AVX512
-    return false;
-#else
+    if (cpuid_disable_avx512) {
+        return false;
+    }
     switch (flag) {
         case Avx512Flags::AVX512_DQ:
             return cpuHasAvx512dq();
@@ -305,199 +420,183 @@ CpuId::Impl::cpuHasAvx512(Avx512Flags flag)
             return cpuHasAvx512f();
         case Avx512Flags::AVX512_BW:
             return cpuHasAvx512bw();
+        case Avx512Flags::AVX512_IFMA:
+            return cpuHasAvx512ifma();
+        case Avx512Flags::AVX512_VL:
+            return cpuHasAvx512vl();
         default:
             // FIXME: Raise an exception
             return false;
     }
-#endif
 }
 
 bool
 CpuId::Impl::cpuHasVaes()
 {
-#ifdef ALCP_CPUID_DISABLE_VAES
-    return false;
-#else
+    if (cpuid_disable_vaes) {
+        return false;
+    }
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::vaes);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasAesni()
 {
-#ifdef ALCP_CPUID_DISABLE_AESNI
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::aes);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasShani()
 {
-#ifdef ALCP_CPUID_DISABLE_SHANI
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::sha_ni);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasAvx2()
 {
-#ifdef ALCP_CPUID_DISABLE_AVX2
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::avx2);
 #else
     static bool state = true;
 #endif
     return state;
+}
+bool
+CpuId::Impl::cpuHasSse3()
+{
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::sse3);
+#else
+    static bool state = true;
 #endif
+    return state;
 }
 bool
 CpuId::Impl::cpuHasRdRand()
 {
-#ifdef ALCP_CPUID_DISABLE_RAND
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::rdrand);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasRdSeed()
 {
-#ifdef ALCP_CPUID_DISABLE_RAND
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::rdseed);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasAdx()
 {
-#ifdef ALCP_CPUID_DISABLE_ADX
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::adx);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuHasBmi2()
 {
-#ifdef ALCP_CPUID_DISABLE_BMI2
-    return false;
-#else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->hasFlag(ECpuidFlag::bmi2);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuIsZen1()
 {
-#if defined(ALCP_CPUID_FORCE)
-    static bool flag = ensureCpuArch(CpuZenVer::ZEN);
-    return flag;
-#else
+    if (AlcpEnableInstructionSet) {
+        static bool flag = ensureCpuArch(CpuZenVer::ZEN);
+        return flag;
+    }
+
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->isUarch(EUarch::Zen);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuIsZen2()
 {
-#if defined(ALCP_CPUID_FORCE)
-    static bool flag = ensureCpuArch(CpuZenVer::ZEN2);
-    return flag;
-#else
+    if (AlcpEnableInstructionSet) {
+        static bool flag = ensureCpuArch(CpuZenVer::ZEN2);
+        return flag;
+    }
+
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->isUarch(EUarch::Zen2);
 #else
     static bool state = true;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuIsZen3()
 {
-#if defined(ALCP_CPUID_FORCE)
-    static bool flag = ensureCpuArch(CpuZenVer::ZEN3);
-    return flag;
-#else
+    if (AlcpEnableInstructionSet) {
+        static bool flag = ensureCpuArch(CpuZenVer::ZEN3);
+        return flag;
+    }
+
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->isUarch(EUarch::Zen3);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuIsZen4()
 {
-#if defined(ALCP_CPUID_FORCE)
-    static bool flag = ensureCpuArch(CpuZenVer::ZEN4);
-    return flag;
-#else
+    if (AlcpEnableInstructionSet) {
+        static bool flag = ensureCpuArch(CpuZenVer::ZEN4);
+        return flag;
+    }
+
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->isUarch(EUarch::Zen4);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 bool
 CpuId::Impl::cpuIsZen5()
 {
-#if defined(ALCP_CPUID_FORCE)
-    static bool flag = ensureCpuArch(CpuZenVer::ZEN5);
-    return flag;
-#else
+    if (AlcpEnableInstructionSet) {
+        static bool flag = ensureCpuArch(CpuZenVer::ZEN5);
+        return flag;
+    }
+
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu->isUarch(EUarch::Zen5);
 #else
     static bool state = false;
 #endif
     return state;
-#endif
 }
 
 bool
@@ -519,39 +618,47 @@ CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
     bool zen4_flag = false;
     bool zen5_flag = false;
 #endif
-#if defined(ALCP_CPUID_FORCE)
-#if defined(ALCP_CPUID_FORCE_ZEN5)
-    if (zen5_flag) {
-        return (cpuZenVer == CpuZenVer::ZEN5);
+    /* FIXME: we should raise an error message if invalid arch upgrade is done
+     * from the user, and fall back to the lower supported arch */
+    if (AlcpEnableInstructionSet) {
+        if (AlcpForcedArch == ALCP_ENABLE_INSTR_ZEN5) {
+            if (zen5_flag) {
+                return (cpuZenVer == CpuZenVer::ZEN5
+                        || cpuZenVer == CpuZenVer::ZEN4
+                        || cpuZenVer == CpuZenVer::ZEN3
+                        || cpuZenVer == CpuZenVer::ZEN2
+                        || cpuZenVer == CpuZenVer::ZEN);
+            }
+        } else if (AlcpForcedArch == ALCP_ENABLE_INSTR_ZEN4) {
+            if (zen4_flag || zen5_flag) {
+                return (cpuZenVer == CpuZenVer::ZEN4
+                        || cpuZenVer == CpuZenVer::ZEN3
+                        || cpuZenVer == CpuZenVer::ZEN2
+                        || cpuZenVer == CpuZenVer::ZEN);
+            }
+        } else if (AlcpForcedArch == ALCP_ENABLE_INSTR_ZEN3) {
+            if (zen3_flag || zen4_flag || zen5_flag) {
+                return (cpuZenVer == CpuZenVer::ZEN3
+                        || cpuZenVer == CpuZenVer::ZEN2
+                        || cpuZenVer == CpuZenVer::ZEN);
+            }
+        } else if (AlcpForcedArch == ALCP_ENABLE_INSTR_ZEN2) {
+            if (zen2_flag || zen3_flag || zen4_flag || zen5_flag) {
+                return (cpuZenVer == CpuZenVer::ZEN2
+                        || cpuZenVer == CpuZenVer::ZEN);
+            }
+        } else if (AlcpForcedArch == ALCP_ENABLE_INSTR_ZEN) {
+            if (zen1_flag || zen2_flag || zen3_flag || zen4_flag || zen5_flag) {
+                return (cpuZenVer == CpuZenVer::ZEN);
+            }
+        } else {
+            /* should not come here!*/
+            if (AlcpForcedArch == ALCP_ENABLE_INSTR_INVALID) {
+                std::cout << "Invalid option!" << std::endl;
+            }
+        }
     }
-#elif defined(ALCP_CPUID_FORCE_ZEN4)
-    if (zen4_flag || zen5_flag) {
-        return (cpuZenVer == CpuZenVer::ZEN4);
-    }
-#elif defined(ALCP_CPUID_FORCE_ZEN3)
-    if (zen3_flag || zen4_flag || zen5_flag) {
-        return (cpuZenVer == CpuZenVer::ZEN3);
-    }
-#elif defined(ALCP_CPUID_FORCE_ZEN2)
-    if (zen2_flag || zen3_flag || zen4_flag || zen5_flag) {
-        return (cpuZenVer == CpuZenVer::ZEN2);
-    }
-#elif defined(ALCP_CPUID_FORCE_ZEN)
-    if (zen1_flag || zen2_flag || zen3_flag || zen4_flag || zen5_flag) {
-        return (cpuZenVer == CpuZenVer::ZEN);
-    }
-#else
-    if (true) {
-    }
-#endif
-    // Probably will never be used but if it comes to it.
-    // This will trigger in case of an invalid cpuid force
-    // Dispatch to highest possible cpu arch
-    else {
-        std::fprintf(stderr, "ZenVer upgrade cannot be done!\n");
-        std::fprintf(stderr, "Finding best possible ZenVer!\n");
-    }
-#endif
+
     switch (cpuZenVer) {
         case CpuZenVer::ZEN5:
             return zen5_flag;
@@ -584,6 +691,12 @@ CpuId::cpuHasAvx2()
 }
 
 bool
+CpuId::cpuHasSse3()
+{
+    return pImpl.get()->cpuHasSse3();
+}
+
+bool
 CpuId::cpuHasAvx512(Avx512Flags flag)
 {
     return pImpl.get()->cpuHasAvx512(flag);
@@ -605,6 +718,18 @@ bool
 CpuId::cpuHasAvx512f()
 {
     return pImpl.get()->cpuHasAvx512f();
+}
+
+bool
+CpuId::cpuHasAvx512ifma()
+{
+    return pImpl.get()->cpuHasAvx512ifma();
+}
+
+bool
+CpuId::cpuHasAvx512vl()
+{
+    return pImpl.get()->cpuHasAvx512vl();
 }
 
 bool

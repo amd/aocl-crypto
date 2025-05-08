@@ -92,5 +92,5 @@ endif(ALCP_ENABLE_FUZZ_TESTS)
 
 # FIXME: Enable this once this test is up and running on windows
 IF(UNIX)
-    ADD_SUBDIRECTORY(dl_load)
+   ADD_SUBDIRECTORY(dl_load)
 ENDIF(UNIX)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -74,10 +74,14 @@ typedef enum _alc_cipher_mode
 
 } alc_cipher_mode_t;
 
-typedef struct _alc_cipher_data
+typedef struct _alc_cipher_state
 {
-    Uint32 alcp_keyLen_in_bytes;
-} alc_cipher_data_t;
+    __attribute__((aligned(64))) Uint64 alcp_exp_enc_key[64];
+    __attribute__((aligned(64))) Uint64 alcp_exp_dec_key[64];
+    __attribute__((aligned(64))) Uint64 alcp_precomputed_table[64];
+    Uint32                              alcp_keyLen_in_bytes;
+
+} alc_cipher_state_t;
 
 /**
  * @brief  Opaque type of a cipher context, comes from the library.

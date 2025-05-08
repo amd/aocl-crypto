@@ -1,0 +1,111 @@
+{
+    "version": 6,
+    "include": [
+        "Project.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "base-config",
+            "hidden": true,
+            "inherits": [
+                "project-vars",
+                "project-options"
+            ],
+            "cacheVariables":{
+                "OPENSSL_INSTALL_DIR": "$env{OPENSSL_INSTALL_DIR}",
+                "ENABLE_AOCL_UTILS": "ON",
+                "AOCL_COMPAT_LIBS": "openssl"
+            },
+            "binaryDir": "build/${presetName}",
+            "installDir": "build/${presetName}/install"
+        },
+        {
+            "name": "base-config-release",
+            "hidden": true,
+            "displayName": "Configure Release",
+            "inherits": "base-config",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ALCP_BUILD_WITH_ASAN": "OFF",
+                "ALCP_ENABLE_TESTS": "OFF",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": true,
+                "CMAKE_EXPORT_COMPILE_COMMANDS": false,
+                "CMAKE_VERBOSE_MAKEFILE": "OFF"
+            }
+        },
+        {
+            "name": "base-config-release-dev",
+            "hidden": true,
+            "displayName": "Configure Release for Development",
+            "inherits": "base-config",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ALCP_BUILD_WITH_ASAN": "ON",
+                "ALCP_ENABLE_TESTS": "ON",
+                "ENABLE_TESTS_OPENSSL_API": "ON",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": false,
+                "CMAKE_EXPORT_COMPILE_COMMANDS": false,
+                "CMAKE_VERBOSE_MAKEFILE": "OFF"
+            }
+        },
+        {
+            "name": "base-config-rte",
+            "hidden": true,
+            "displayName": "Configure for Release packaging",
+            "inherits": "base-config",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ALCP_BUILD_WITH_ASAN": "OFF",
+                "ALCP_ENABLE_TESTS": "OFF",
+                "IPP_INSTALL_DIR": "$env{IPP_INSTALL_DIR}",
+                "AOCL_COMPAT_LIBS": "openssl,ipp",
+                "ENABLE_TESTS_OPENSSL_API": "OFF",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": false,
+                "CMAKE_EXPORT_COMPILE_COMMANDS": false,
+                "CMAKE_VERBOSE_MAKEFILE": "OFF"
+            }
+        },
+        {
+            "name": "base-config-debug",
+            "hidden": true,
+            "displayName": "Configure Debug",
+            "inherits": "base-config",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ALCP_SANITIZE": "ON",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": false,
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_VERBOSE_MAKEFILE": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-debug",
+            "displayName": "Build Debug",
+            "configurePreset": "base-config-debug",
+            "targets": [
+                "install"
+            ],
+            "hidden": true
+        },
+        {
+            "name": "build-release",
+            "displayName": "Build Release",
+            "configurePreset": "base-config-release",
+            "targets": [
+                "install"
+            ],
+            "hidden": true
+        },
+        {
+            "name": "build-release-rte",
+            "displayName": "Build Release RTE package",
+            "configurePreset": "base-config-rte",
+            "targets": [
+                "install"
+            ],
+            "hidden": true
+        }
+    ]
+}

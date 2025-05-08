@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -79,6 +79,34 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
                          const Uint64            keyLen,
                          alc_cipher_handle_p     pCipherHandle);
+
+/**
+ * @brief    Request for populating handle with algorithm specified by
+ * cipher mode and key length info. This API is used when memory for expanded
+ * keys and precomputed keys is already allocated by the application.
+ *
+ * @parblock <br> &nbsp;
+ * <b>This AEAD API can be called after @ref alcp_cipher_aead_context_size is
+ * called
+ * </b>
+ * @endparblock
+ * @note     Error needs to be checked for each call,
+ *           valid only if @ref alcp_is_error (ret) is false
+ * @param [in]    cipherMode       AEAD cipher mode to be set
+ * @param [in]    keyLen           key length in bits
+ * @param [in]    pCipherState           pointer to the state of the cipher
+ * holding expanded and precomputed keys
+ * @param [out]   pCipherHandle    Library populated session handle for future
+ * cipher operations.
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then an error has occurred and handle will be invalid
+ * for future operations
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_aead_request_with_extState(const alc_cipher_mode_t mode,
+                                       const Uint64            keyLen,
+                                       alc_cipher_state_t*     pCipherState,
+                                       alc_cipher_handle_p     pCipherHandle);
 /**
  * @brief  Cipher aead init.
  * @parblock <br> &nbsp;

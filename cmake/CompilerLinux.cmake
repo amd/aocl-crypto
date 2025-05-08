@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -32,22 +32,11 @@ function(alcp_get_build_environment)
         set (ALCP_BUILD_COMPILER "Clang_v${CMAKE_CXX_COMPILER_VERSION}")
     endif()
 
-    # uses lsb_release utility on linux, as cmake doesnt have a variable which has the Linux flavor information
-    find_program(LSB_RELEASE_EXEC lsb_release)
-    if(NOT LSB_RELEASE_EXEC)
-        MESSAGE(FATAL_ERROR "LSB Release is missing from the machine, please install lsb_release!")
-    endif()
-    execute_process(COMMAND ${LSB_RELEASE_EXEC} -r -s
-        OUTPUT_VARIABLE OS_VERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    execute_process(COMMAND ${LSB_RELEASE_EXEC} -i -s
-        OUTPUT_VARIABLE OS_VENDOR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    
+    cmake_host_system_information(RESULT OS_VERSION QUERY DISTRIB_PRETTY_NAME)
+    message(STATUS "OS Information: ${OS_VERSION}")
+
     # final build env string will contain compiler and system environment details where the binary was created
-    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VENDOR}_${OS_VERSION} PARENT_SCOPE)
+    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VERSION} PARENT_SCOPE)
 endfunction(alcp_get_build_environment)
 
 
@@ -58,7 +47,6 @@ function(alcp_check_compiler_version)
     set (CLANG_MIN_REQ "14.0.0")
     # if gcc
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-
         set(CMAKE_COMPILER_IS_GCC ON PARENT_SCOPE)
         string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 2 CMAKE_COMPILER_GCC_VERSION)
         set(CMAKE_COMPILER_GCC_VERSION ${CMAKE_COMPILER_GCC_VERSION} PARENT_SCOPE)
@@ -79,11 +67,15 @@ function(alcp_check_compiler_version)
             message(FATAL_ERROR "Using c++ compiler version ${CMAKE_CXX_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
         endif()
     endif()
+    # check if cc and cxx version mismatch
+    if (NOT ${CMAKE_C_COMPILER_VERSION} STREQUAL ${CMAKE_CXX_COMPILER_VERSION})
+        message(FATAL_ERROR "cc and cxx versions are different!")
+    endif()
 endfunction(alcp_check_compiler_version)
 
 
 # Generic Warnings
-SET (ALCP_WARNINGS -Wall)
+SET (ALCP_WARNINGS -Wall -Werror -Wno-gnu-zero-variadic-macro-arguments)
 function(alcp_get_cflags_warnings)
     set(ALCP_CFLAGS_WARNINGS ${ALCP_WARNINGS} CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)
@@ -94,16 +86,18 @@ function(alcp_get_cflags)
     set(ALCP_CFLAGS
         -O2
         -pedantic
-        -Werror
+        ${ALCP_WARNINGS}
         CACHE INTERNAL ""
     )
+    # this is to obfuscate the source paths in the binary
+    add_compile_options(-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.)
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)
 endfunction(alcp_get_cflags)
 
 # Generic Debug Flags
 function(alcp_get_cflags_debug)
     set(ALCP_CFLAGS_DEBUG
-        "-ggdb"
+        -g3 -ggdb -O0
         CACHE INTERNAL ""
         )
     set(ALCP_CFLAGS_DEBUG ${ALCP_CFLAGS_DEBUG} PARENT_SCOPE)
@@ -155,6 +149,7 @@ function(alcp_get_arch_cflags_zen3)
 endfunction(alcp_get_arch_cflags_zen3)
 
 # lib/arch/zen4 Compile Flags
+# FIXME: this function name has to change
 function(alcp_get_arch_cflags_zen4)
     set(ARCH_COMPILE_FLAGS
         -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma
@@ -169,6 +164,12 @@ function(alcp_get_arch_cflags_zen4)
       message(STATUS "Compiler Supports znver4")
       set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
     endif()
+    # check if compiler supports -march=znver5
+    CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
+    if(COMPILER_SUPPORTS_ZNVER5)
+      message(STATUS "Compiler Supports znver5")
+      set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver5 PARENT_SCOPE)
+    endif()
 endfunction(alcp_get_arch_cflags_zen4)
 
 
@@ -181,6 +182,22 @@ function(alcp_get_arch_cflags_zen4_clang)
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+
+    # check if compiler supports -march=znver4 for AOCC
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
+        if(COMPILER_SUPPORTS_ZNVER4)
+            message(STATUS "Compiler Supports znver4")
+            set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
+        endif()
+        # check if compiler supports -march=znver5
+        CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
+        if(COMPILER_SUPPORTS_ZNVER5)
+            message(STATUS "Compiler Supports znver5")
+            set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver5 PARENT_SCOPE)
+        endif()
+    endif()
+
 endfunction(alcp_get_arch_cflags_zen4_clang)
 
 # misc options
@@ -189,33 +206,24 @@ function(alcp_add_sanitize_flags)
     # memory sanitizer supported only by clang
     # FIXME: since memsan is not supported by all the dependency libraries,
     # compilation is disabled with memsan.
-    set (ALCP_SANITIZE_OPTIONS_CLANG
+    set (ALCP_OPTIONS_SANITIZE
             #-fsanitize=memory
             #-fsanitize-memory-track-origins
+            -fsanitize=address,undefined
+            -fno-sanitize=vptr
+            -fsanitize=pointer-subtract
+            -fsanitize=pointer-compare
             -fPIC
             -fno-omit-frame-pointer
             CACHE INTERNAL ""
         )
 
-    set(ALCP_OPTIONS_SANITIZE
-            -fsanitize=address
-            -fsanitize=undefined
-            -fsanitize=pointer-subtract
-            -fsanitize=pointer-compare
-            CACHE INTERNAL ""
-        )
-
-    # now check compiler and link to asan libs
-    add_compile_definitions(ALCP_COMPILE_OPTIONS_SANITIZE)
-
+    # if gcc, link to libasan
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         link_libraries(asan)
-        add_compile_options(${ALCP_OPTIONS_SANITIZE})
-        add_link_options(${ALCP_OPTIONS_SANITIZE})
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        add_compile_options(${ALCP_SANITIZE_OPTIONS_CLANG})
-        add_link_options(${ALCP_SANITIZE_OPTIONS_CLANG})
     endif()
+    add_compile_options(${ALCP_OPTIONS_SANITIZE})
+    add_link_options(${ALCP_OPTIONS_SANITIZE})
 endfunction(alcp_add_sanitize_flags)
 
 # coverage flags
@@ -263,3 +271,13 @@ function(alcp_add_coverage_flags)
         target_link_options(alcp_static PUBLIC ${ALCP_CFLAGS_COV_CLANG})
     endif()
 endfunction(alcp_add_coverage_flags)
+
+# check if 7zip utility is installed
+function(check_7zip_installed)
+    find_program(7_ZIP 7z)
+    if (7_ZIP)
+        message(STATUS "7zip is installed: ${7_ZIP}")
+    else()
+        message(FATAL_ERROR "7zip is not installed, alcp compilation wont work!")
+    endif()
+endfunction()

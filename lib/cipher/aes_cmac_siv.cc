@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/utils/compare.hh"
+#include <string.h>
 
 namespace alcp::cipher {
 
@@ -77,25 +78,22 @@ Siv::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
     }
 
     if (pKey != nullptr) {
-
-        if (utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8)
-            != ALC_ERROR_NONE) {
-            return ALC_ERROR_INVALID_SIZE;
+        err = utils::SecureCopy<Uint8>(m_key1, 32, pKey, keyLength / 8);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-
-        if (utils::SecureCopy<Uint8>(
-                m_key2, 32, pKey + (keyLength / 8), keyLength / 8)
-            != ALC_ERROR_NONE) {
-            return ALC_ERROR_INVALID_SIZE;
+        err = utils::SecureCopy<Uint8>(
+            m_key2, 32, pKey + (keyLength / 8), keyLength / 8);
+        if (err != ALC_ERROR_NONE) {
+            return err;
         }
-
         err = setKeys(m_key1, keyLength);
         if (err != ALC_ERROR_NONE) {
             return err;
         }
     }
 
-    return ALC_ERROR_NONE;
+    return err;
 }
 
 alc_error_t
@@ -297,17 +295,19 @@ SivHash::setTagLength(Uint64 tagLength)
 // class SivAead Functions
 
 // aesni functions
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-Siv128_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
+SivT<keyLenBits, arch>::encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len)
 {
     alc_error_t err = ALC_ERROR_NONE;
-
     // Mask Vector for disabling 2 bits in the counter
     Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
     err = s2v(pPlainText, len); // Nullptr check inside this function
-
     if (err != ALC_ERROR_NONE) {
         return err;
     }
@@ -316,20 +316,21 @@ Siv128_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
     for (Uint64 i = 0; i < SIZE_CMAC; i++) {
         q[i] = m_cmacTemp[i] & q[i];
     }
-
-    ctrobj->init(m_key2, 128, q, 16);
-
+    ctrobj->init(m_key2, (static_cast<Uint32>(keyLenBits)), q, 16);
     err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
     if (alcp_is_error(err)) {
         err = ALC_ERROR_BAD_STATE;
         return err;
     }
-
     return err;
 }
 
+template<alcp::cipher::CipherKeyLen     keyLenBits,
+         alcp::utils::CpuCipherFeatures arch>
 alc_error_t
-Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
+SivT<keyLenBits, arch>::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len)
 
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -343,20 +344,15 @@ Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
         q[i] = m_iv_aes[i] & q[i];
     }
 
-    ctrobj->init(m_key2, 128, q, 16);
+    ctrobj->init(m_key2, (static_cast<Uint32>(keyLenBits)), q, 16);
     err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
     if (alcp_is_error(err)) {
         err = ALC_ERROR_BAD_STATE;
         return err;
     }
 
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
     // Create the tag from generated plain text
     err = s2v(pPlainText, len);
-
     if (err != ALC_ERROR_NONE) {
         return err;
     }
@@ -369,672 +365,31 @@ Siv128_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
             cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
         s.update(cer, cer.message());
 #else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
+        return ALC_ERROR_TAG_MISMATCH;
 #endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
     }
     return err;
 }
 
-alc_error_t
-Siv192_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 192, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv192_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 192, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-alc_error_t
-Siv256_aesni::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 256, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv256_aesni::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 256, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-// vaes functions
-alc_error_t
-Siv128_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 128, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv128_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 128, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-alc_error_t
-Siv192_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 192, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv192_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 192, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-alc_error_t
-Siv256_vaes::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 256, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv256_vaes::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 256, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-// vaes512 functions
-alc_error_t
-Siv128_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 128, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv128_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 128, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-alc_error_t
-Siv192_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 192, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv192_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 192, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
-
-alc_error_t
-Siv256_vaes512::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    err = s2v(pPlainText, len); // Nullptr check inside this function
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_cmacTemp[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 256, q, 16);
-
-    err = ctrobj->encrypt(pPlainText, pCipherText, len + m_padLen);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    return err;
-}
-
-alc_error_t
-Siv256_vaes512::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len)
-
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // Mask Vector for disabling 2 bits in the counter
-    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
-
-    // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
-        q[i] = m_iv_aes[i] & q[i];
-    }
-
-    ctrobj->init(m_key2, 256, q, 16);
-    err = ctrobj->decrypt(pCipherText, pPlainText, len); //, mac);
-    if (alcp_is_error(err)) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Create the tag from generated plain text
-    err = s2v(pPlainText, len);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
-    }
-
-    // Verify tag, which just got generated
-    if (utils::CompareConstTime(&(m_cmacTemp[0]), m_iv_aes, SIZE_CMAC) == 0) {
-// FIXME: Initiate Wipedown!
-#if 0
-        auto cer =
-            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
-        s.update(cer, cer.message());
-#else
-        err = ALC_ERROR_TAG_MISMATCH;
-        return err;
-#endif
-        if (err != ALC_ERROR_NONE) {
-            return err;
-        }
-    }
-    return err;
-}
+template class SivT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eVaes512>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes512>;
+
+template class SivT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eVaes256>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eVaes256>;
+
+template class SivT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eAesni>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eAesni>;
+template class SivT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

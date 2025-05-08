@@ -36,21 +36,6 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
-#define CRYPT_CCM_WRAPPER_FUNC(                                                \
-    NAMESPACE, CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, IS_ENC)                    \
-    alc_error_t CLASS_NAME##_##NAMESPACE::WRAPPER_FUNC(                        \
-        const Uint8* pInput, Uint8* pOutput, Uint64 len)                       \
-    {                                                                          \
-        alc_error_t err = ALC_ERROR_NONE;                                      \
-        m_isEnc_aes     = IS_ENC;                                              \
-        if (!(m_ivState_aes && m_isKeySet_aes)) {                              \
-            printf("\nError: Key or Iv not set \n");                           \
-            return ALC_ERROR_BAD_STATE;                                        \
-        }                                                                      \
-        err = Ccm::FUNC_NAME(pInput, pOutput, len, IS_ENC);                    \
-        return err;                                                            \
-    } // namespace alcp::cipher
-
 inline void
 ctrInc(Uint8 ctr[])
 {
@@ -160,7 +145,7 @@ Ccm::cryptUpdate(const Uint8 pInput[],
     alc_error_t err = ALC_ERROR_NONE;
     if ((pInput == NULL) || (pOutput == NULL)) {
         // InvalidValue: "Input or Output Null Pointer!"
-        err = ALC_ERROR_INVALID_ARG;
+        return ALC_ERROR_INVALID_ARG;
     }
 
 #ifndef CCM_MULTI_UPDATE
@@ -227,7 +212,7 @@ Ccm::setIv(ccm_data_t* ccm_data,
            Uint64      ivLen,
            Uint64      dataLen)
 {
-    unsigned int q   = ccm_data->nonce[0] & 7;
+    unsigned int q;
     Uint64       len = dataLen;
 #ifdef CCM_MULTI_UPDATE
     len = m_plainTextLength;
@@ -237,6 +222,8 @@ Ccm::setIv(ccm_data_t* ccm_data,
         // InvalidValue("Null Pointer is not expected!")
         return ALC_ERROR_INVALID_ARG;
     }
+
+    q = ccm_data->nonce[0] & 7;
 
     if (ivLen < (14 - q)) {
         // InvalidValue("Length of nonce is too small!")
@@ -343,13 +330,40 @@ CcmHash::getTag(Uint8* pOutput, Uint64 tagLen)
 // Aead class definitions
 
 // aesni member functions
-CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm128, encrypt, cryptUpdate, ALCP_ENC)
-CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm128, decrypt, cryptUpdate, ALCP_DEC)
 
-CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm192, encrypt, cryptUpdate, ALCP_ENC)
-CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm192, decrypt, cryptUpdate, ALCP_DEC)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+alc_error_t
+CcmT<keyLenBits, arch>::encrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    m_isEnc_aes     = ALCP_ENC;
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    err = Ccm::cryptUpdate(pInput, pOutput, len, 1);
+    return err;
+}
 
-CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm256, encrypt, cryptUpdate, ALCP_ENC)
-CRYPT_CCM_WRAPPER_FUNC(aesni, Ccm256, decrypt, cryptUpdate, ALCP_DEC)
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+alc_error_t
+CcmT<keyLenBits, arch>::decrypt(const Uint8* pInput, Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    m_isEnc_aes     = ALCP_DEC;
+    if (!(m_ivState_aes && m_isKeySet_aes)) {
+        printf("\nError: Key or Iv not set \n");
+        return ALC_ERROR_BAD_STATE;
+    }
+    err = Ccm::cryptUpdate(pInput, pOutput, len, 0);
+    return err;
+}
+
+template class CcmT<alcp::cipher::CipherKeyLen::eKey128Bit,
+                    CpuCipherFeatures::eAesni>;
+template class CcmT<alcp::cipher::CipherKeyLen::eKey192Bit,
+                    CpuCipherFeatures::eAesni>;
+template class CcmT<alcp::cipher::CipherKeyLen::eKey256Bit,
+                    CpuCipherFeatures::eAesni>;
 
 } // namespace alcp::cipher

@@ -71,7 +71,7 @@ class ALCP_API_EXPORT CtrDrbg : public Drbg
   private:
     class Impl;
 
-    std::unique_ptr<Impl> p_impl;
+    std::unique_ptr<Impl> p_impl{};
 
   public:
     std::string name() const;

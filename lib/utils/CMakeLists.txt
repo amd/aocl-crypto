@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -50,7 +50,7 @@ TARGET_SOURCES(alcp_static
 
 IF(UNIX)
   IF (NOT IS_DIRECTORY ${OPENSSL_INSTALL_DIR})
-    MESSAGE(FATAL_ERROR "OpenSSL installation dir not found!")
+    MESSAGE(FATAL_ERROR "OpenSSL installation dir not found!, please export OPENSSL_INSTALL_DIR=<your path to openssl installation> and retry")
   ENDIF ()
   IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
     TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

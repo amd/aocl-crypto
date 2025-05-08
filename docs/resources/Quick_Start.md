@@ -16,7 +16,6 @@ Some packages which are required for AOCL-Cryptography can be installed with bel
 ```bash
 sudo apt update                      # Sync repository information
 sudo apt install build-essential     # Basic packages to support compilation
-sudo apt install lsb-release         # LSB release to identify OS
 sudo apt install git                 # To clone github repositories
 sudo apt install libssl-dev          # For openssl
 sudo apt install make                # Build system
@@ -32,8 +31,8 @@ What is given above should be sufficient for most users but if your OS did not c
 There are mainly two repositories which are needed, one being `aocl-crypto` and the other which is a dependency named `aocl-utils`. `AOCL-Utils` provide the means to correctly identify the CPU. This is a necessary dependency to ensure optimal performance of `AOCL-Crypto`. Both of these repositories can be cloned with below command
 
 ```bash
-git clone https://github.com/amd/aocl-crypto.git -b aocl-5.0
-git clone https://github.com/amd/aocl-utils.git  -b aocl-5.0
+git clone https://github.com/amd/aocl-crypto.git -b dev
+git clone https://github.com/amd/aocl-utils.git  -b dev
 ```
 
 Please ensure that you are running the above commands from a directory where you have write access.
@@ -129,58 +128,17 @@ To end with, here is a script which runs everything. Feel free to save this scri
 ```bash
 #!/usr/bin/env bash
 
-# This file is supposed to be a guide to compile aocl-crypto with examples
+# This file is supposed to be a guide to compile aocl-crypto with examples 
 # from source.
 # It should only require minimal interaction from user.
 # All functions in this file should be straight forward and minimal.
-# For detailed info please take a look at BUILD.md located in the root of
+# For detailed info please take a look at BUILD.md located in the root of 
 # AOCL-Cryptography source code directory.
 
 # Global Variables to be modifed depending on repo location
 AOCL_CRYPTO_REPO="https://github.com/amd/aocl-crypto.git"
 AOCL_UTILS_REPO="https://github.com/amd/aocl-utils.git"
-AOCL_BRANCH="aocl-5.0"
-
-# Function to check if lsb_release is installed
-ensure_lsb_release(){
-    if ! type "lsb_release" > /dev/null; then
-        if type "apt" > /dev/null; then
-            if type "sudo" > /dev/null; then
-                sudo apt update
-                sudo apt install lsb-release
-            else
-                echo "lsb-release not found, cannot install! missing \"sudo\" binary"
-                exit -1; # We cannot do anything anymore
-            fi
-        else
-            echo "lsb-release not found, cannot install! missing \"apt\" binary"
-        fi
-    fi
-
-    type lsb_release > /dev/null
-    if [ $? -ne 0 ]; then
-        echo "lsb_release not found!"
-        exit -1;
-    else
-        echo "lsb_release found"
-    fi
-}
-
-# Function to check if OS is ubuntu with a specific version
-detect_ubuntu(){
-
-    lsb_release --id | grep "Ubuntu" > /dev/null
-    if [ $? -eq 0 ]; then
-        # Detected Ubuntu
-        echo "Detected Ubuntu"
-        lsb_release --release | grep $1 > /dev/null
-        if [ $? -eq 0 ]; then
-            echo "Detected OS Release Version $1"
-            return 0
-        fi
-    fi
-    return 1 # Return error
-}
+AOCL_BRANCH="dev"
 
 # Function to exit with an error if some execution failed
 quit_if_status_not_zero(){
@@ -198,8 +156,6 @@ ensure_packages(){
         sudo apt update                      # Sync repository information
         echo "Running \"apt install build-essential\""
         sudo apt install build-essential     # Basic packages to support compilation
-        echo "Running \"apt install lsb-release\""
-        sudo apt install lsb-release         # LSB release to identify OS
         quit_if_status_not_zero $?
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories
@@ -338,8 +294,6 @@ run_example_cfb(){
 
 # Make sure we dont destroy anything
 ensure_no_directory_conflict
-# Make sure we can detect the OS
-ensure_lsb_release
 # Make sure all the needed packages (dependancies) are installed
 ensure_packages
 # Clone Utils and Crypto

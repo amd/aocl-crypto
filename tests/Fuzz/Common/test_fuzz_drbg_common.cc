@@ -89,7 +89,6 @@ ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType,
     drbg_randomize_call_count = id(rng);
     securitystrength          = id(rng);
 
-    /* FIXME: add other digest modes */
     alc_drbg_handle_p handle{};
 
     alc_drbg_info_t drbg_info{};

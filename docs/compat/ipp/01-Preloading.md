@@ -81,7 +81,7 @@ LD_PRELOAD=$PWD/lib/libipp-compat.so executable_path
 Example with Intel IPP AES CTR Encryption.
 
 ```bash
-wget https://raw.githubusercontent.com/intel/ipp-crypto/ipp-crypto_2021_6/examples/aes/aes-256-ctr-encryption.cpp -O aes-256-ctr-encryption.cpp
+wget https://raw.githubusercontent.com/intel/cryptography-primitives/refs/heads/develop/examples/aes/aes-256-ctr-encryption.cpp -O aes-256-ctr-encryption.cpp
 g++ aes-256-ctr-encryption.cpp -o aes-ctr -lippcp
 LD_PRELOAD=$PWD/lib/libipp-compat.so ./aes_ctr
 ```

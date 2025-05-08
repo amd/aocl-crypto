@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -385,7 +385,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
 
         utils::CopyBytes(
             p_stealed_text + extra_bytes_in_message_block,
-            p_dest8 + (extra_bytes_in_message_block + (16 * (blocks - 1))),
+            (p_dest8 - 16)+ (extra_bytes_in_message_block + 16 *blocks),
             (16 - extra_bytes_in_message_block));
 
         utils::CopyBytes(p_stealed_text,
@@ -396,7 +396,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
         AesEnc_1x512(&stealed_text, p_key128, nRounds);
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
 
-        utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
+        utils::CopyBytes((p_dest8- 16 )+ 16 * blocks , p_stealed_text, 16);
 
 // Rotate to get next tweak block
 #ifdef AES_MULTI_UPDATE
@@ -800,12 +800,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
 }
 
 alc_error_t
-EncryptXts128(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
+EncryptXts(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv)
 {
     // AesEncrypt 1Block, 2Block, 3Block, 4Block
     return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
@@ -813,40 +813,12 @@ EncryptXts128(const Uint8* pSrc,
 }
 
 alc_error_t
-EncryptXts256(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    // AesEncrypt 1Block, 2Block, 3Block, 4Block
-    return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptXts128(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
-{
-    return DecryptXtsAvx512<AesEncrypt,
-                            AesDecrypt,
-                            AesDecrypt,
-                            AesDecrypt,
-                            AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptXts256(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              int          nRounds,
-              Uint8*       pIv)
+DecryptXts(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv)
 {
     return DecryptXtsAvx512<AesEncrypt,
                             AesDecrypt,

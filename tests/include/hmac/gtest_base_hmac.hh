@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -167,8 +167,8 @@ Hmac_KAT(alc_digest_mode_t HmacDigestMode)
         std::vector<Uint8> hmac_vector(std::begin(hmac), std::end(hmac));
 
         EXPECT_TRUE(ArraysMatch(
-            std::move(hmac_vector), // Actual output
-            csv.getVect("HMAC"),    // expected output, from the csv test data
+            hmac_vector,         // Actual output
+            csv.getVect("HMAC"), // expected output, from the csv test data
             csv,
             std::string("HMAC_" + HmacType + "_" + std::to_string(HmacSize)
                         + "_KAT")));

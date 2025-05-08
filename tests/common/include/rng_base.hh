@@ -30,7 +30,6 @@
 #include <alcp/alcp.h>
 #include <random>
 #include <vector>
-
 namespace alcp::testing {
 class RngBase
 {

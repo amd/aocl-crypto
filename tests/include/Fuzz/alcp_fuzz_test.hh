@@ -31,6 +31,7 @@
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
 #include "config.h"
+#include "rsa/rsa_keys.hh"
 #include <cstddef>
 #include <cstdint>
 #include <dlfcn.h>
@@ -42,6 +43,13 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+
+/* Fill vector if empty */
+#define Fill_If_Empty(vec, _size, value)                                       \
+    if (vec.empty()) {                                                         \
+        vec.resize(_size);                                                     \
+        std::fill(vec.begin(), vec.end(), value);                              \
+    }
 
 static std::random_device rd;
 static std::mt19937       rng{ rd() };

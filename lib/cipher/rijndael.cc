@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -183,12 +183,6 @@ static Uint32
 gmulx2(Uint32 val)
 {
     /*
-
-        Reference Link & Source for Understanding:
-        https://en.wikipedia.org/wiki/Finite_field_arithmetic
-        4th topic Multiplication
-
-
         galois Multiple of val*2 for 32 bit
 
         val (32bit) = 4 val (8bit); 0xfefefefe to be used so that 8 bits
@@ -340,6 +334,20 @@ Rijndael::setKey(const Uint8* key, int len)
     /* Encryption and Decryption keys */
     m_enc_key = m_round_key_enc;
     m_dec_key = m_round_key_dec;
+    expandKeys(key);
+}
+
+void
+Rijndael::setKey(const Uint8* key, Uint8* pExpKey, int len)
+{
+    m_block_size      = BitsToBlockSize(len);
+    const Params& prm = ParamsMap.at(m_block_size);
+    m_nrounds         = prm.Nr;
+    m_key_size        = len / utils::BitsPerByte;
+
+    /* Encryption and Decryption keys */
+    m_enc_key = pExpKey;
+    m_dec_key = pExpKey + (8 * 8);
     expandKeys(key);
 }
 
@@ -645,6 +653,14 @@ Rijndael::initRijndael(const Uint8* pKey, const Uint64 keyLen)
     setUp();
 }
 
+void
+Rijndael::initRijndael(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen)
+{
+    setKeyLen(keyLen);
+    setKey(pKey, pExpKey, keyLen);
+    setUp();
+}
+
 Rijndael::Rijndael()
 {
     utils::memlock(m_round_key_enc, cMaxKeySize * (cMaxRounds + 2));
@@ -697,10 +713,13 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
                 "Plaintext length is not a multiple of cBlockSize");
 
     while (n_words >= 4) {
-        auto   pt = reinterpret_cast<const Uint32(*)[4]>(&pPlaintxt);
+        // auto   pt = reinterpret_cast<const Uint32(*)[4]>(&pPlaintxt);
+        Uint32 pt[4];
         Uint32 ct[4];
 
-        encryptBlockKernel(*pt, ct, getEncryptKeys(), getRounds());
+        utils::CopyBytes(pt, pPlaintxt, sizeof(pt));
+        encryptBlockKernel(
+            *(const Uint32(*)[4])pt, ct, getEncryptKeys(), getRounds());
         utils::CopyBytes(pCiphertxt, ct, sizeof(ct));
 
         pPlaintxt += cBlockSize;
@@ -711,7 +730,8 @@ Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
     return ALC_ERROR_NONE;
 }
 
-void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void
+Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     encryptBlockKernel(blk0, blk0, pkey, nr);
 }

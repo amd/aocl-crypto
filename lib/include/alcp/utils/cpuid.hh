@@ -57,6 +57,8 @@ enum class Avx512Flags
     AVX512_DQ = 1,
     AVX512_F,
     AVX512_BW,
+    AVX512_IFMA,
+    AVX512_VL,
 };
 
 enum class CpuZenVer
@@ -76,6 +78,7 @@ class ALCP_API_EXPORT CpuId
   public:
     CpuId() {}
     ~CpuId() = default;
+
     // Genoa functions
     /**
      * @brief Returns true if CPU has AVX512f Flag
@@ -98,6 +101,20 @@ class ALCP_API_EXPORT CpuId
      * @return false
      */
     static bool cpuHasAvx512bw();
+    /**
+     * @brief Retrurns true if CPU has AVX512IFMA Flag
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasAvx512ifma();
+    /**
+     * @brief Retrurns true if CPU has AVX512VL Flag
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasAvx512vl();
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
@@ -139,6 +156,13 @@ class ALCP_API_EXPORT CpuId
      * @return false
      */
     static bool cpuHasAvx2();
+    /**
+     * @brief Returns true if CPU supports SSE3 instructions
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasSse3();
     /**
      * @brief Returns true if RDRAND, secure RNG number generator is supported
      * by CPU

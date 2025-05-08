@@ -42,12 +42,18 @@ Uint64
 alcp_mac_context_size(void)
 {
     Uint64 size = sizeof(mac::Context);
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CtxSize %6ld", size);
+#endif
     return size;
 }
 
 alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
@@ -63,6 +69,9 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
 alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "MacSize %6ld", size);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
@@ -76,6 +85,9 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
 alc_error_t
 alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "MacSize %6ld", size);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
@@ -89,6 +101,9 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
 alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
@@ -104,6 +119,9 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle)
 alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
@@ -121,6 +139,9 @@ alcp_mac_init(alc_mac_handle_p pMacHandle,
               Uint64           size,
               alc_mac_info_t*  info)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeySize %6ld", size);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
@@ -138,6 +159,9 @@ alc_error_t
 alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
                       const alc_mac_handle_p pDestHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pSrcHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDestHandle, err);

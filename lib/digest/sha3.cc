@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha3_zen.hh"
+#include "alcp/digest/sha3_zen4.hh"
 #include "alcp/utils/bits.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
@@ -129,8 +130,34 @@ inline void
 Sha3<digest_len>::squeezeChunk(Uint8* pBuf, Uint64 size)
 {
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
-                                 || CpuId::cpuIsZen5();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen5_available = CpuId::cpuIsZen5();
+
+    static bool avx512f_available =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (zen5_available) {
+#ifdef COMPILER_IS_CLANG
+        return zen3::Sha3Finalize(
+            (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
+#else
+        if (avx512f_available) {
+            return zen4::Sha3Finalize(
+                (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
+        } else {
+            return zen3::Sha3Finalize(
+                (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
+        }
+#endif
+    }
+
+    if (zen4_available && avx512f_available) {
+        return zen4::Sha3Finalize(
+            (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
+    }
+
     if (zen3_available) {
         return zen3::Sha3Finalize(
             (Uint8*)m_state_flat, pBuf, size, m_block_len, m_shake_index);
@@ -175,8 +202,33 @@ Sha3<digest_len>::processChunk(const Uint8* pSrc, Uint64 len)
     Uint64  chunk_size_u64 = m_block_len / 8;
 
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4()
-                                 || CpuId::cpuIsZen5();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen5_available = CpuId::cpuIsZen5();
+
+    static bool avx512f_available =
+        CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_VL);
+
+    if (zen5_available) {
+#ifdef COMPILER_IS_CLANG
+        return zen3::Sha3Update(
+            m_state_flat, p_msg_buffer64, msg_size, m_block_len);
+#else
+        if (avx512f_available) {
+            return zen4::Sha3Update(
+                m_state_flat, p_msg_buffer64, msg_size, m_block_len);
+        } else {
+            return zen3::Sha3Update(
+                m_state_flat, p_msg_buffer64, msg_size, m_block_len);
+        }
+#endif
+    }
+
+    if (zen4_available && avx512f_available) {
+        return zen4::Sha3Update(
+            m_state_flat, p_msg_buffer64, msg_size, m_block_len);
+    }
 
     if (zen3_available) {
         return zen3::Sha3Update(

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -84,7 +84,7 @@ class CustomRng : public IRng
     {
         m_entropy = std::move(entropy);
     }
-    void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
+    void setNonce(std::vector<Uint8> nonce) { m_nonce = std::move(nonce); }
 
     void reset()
     {
@@ -184,8 +184,8 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
         }
 
         auto customRng = std::make_shared<alcp::drbg::CustomRng>();
-        customRng->setEntropy(entropy_vect);
-        customRng->setNonce(nonce_vect);
+        customRng->setEntropy(std::move(entropy_vect));
+        customRng->setNonce(std::move(nonce_vect));
         irng = customRng;
     }
 
@@ -195,19 +195,19 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             break;
         case ALC_DRBG_CTR:
             err = CtrDrbgBuilder::build(drbgInfo, ctx);
-            if (alcp_is_error(err)) {
-                return err;
-            }
             break;
         default:
             // Unknown MAC Type
             err = ALC_ERROR_INVALID_ARG;
             break;
     }
+    if (alcp_is_error(err)) {
+        return err;
+    }
 
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
 
-    err = p_drbg->setRng(irng);
+    err = p_drbg->setRng(std::move(irng));
     if (alcp_is_error(err)) {
         return err;
     }

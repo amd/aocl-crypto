@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,10 @@
 
  IF(ENABLE_TESTS_IPP_API)
      ADD_COMPILE_OPTIONS("-DUSE_IPP")
+     IF (NOT IS_DIRECTORY ${IPP_INSTALL_DIR})
+        MESSAGE(FATAL_ERROR "IPPCP installation not found!, please export IPP_INSTALL_DIR=<your path to ippcp installation> and retry")
+     ENDIF()
+
      IF(IPP_INSTALL_DIR)
          MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
      ELSE(IPP_INSTALL_DIR)

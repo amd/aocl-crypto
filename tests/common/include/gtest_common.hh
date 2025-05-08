@@ -199,6 +199,7 @@ parseArgs(int argc, char** argv)
                 std::cout << "--replay-blackbox or -r replay blackbox with "
                              "log file"
                           << std::endl;
+                exit(-1);
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 /* now extract the verbose level integer */

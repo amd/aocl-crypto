@@ -26,33 +26,18 @@
  *
  */
 
-// config.h is cmake generated, please modify config.h.in instead.
-#ifndef _INCLUDE_PROVIDER_CONFIG_H
-#define _INCLUDE_PROVIDER_CONFIG_H 2
+#pragma once
 
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST */
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER
-#define ALCP_COMPAT_ENABLE_OPENSSL_RSA
-#define ALCP_COMPAT_ENABLE_OPENSSL_MAC
+#include "alcp/error.h"
 
-// Sub options for DIGEST
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA2 */
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA3 */
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHAKE */
-
-// Sub options for CIPHER
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CBC */
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_OFB
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CFB
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CTR
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_XTS
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_GCM
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CCM */
-#define ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_SIV
-
-// Sub options for MAC
-/* #undef ALCP_COMPAT_ENABLE_OPENSSL_MAC_HMAC */
-#define ALCP_COMPAT_ENABLE_OPENSSL_MAC_CMAC
-#define ALCP_COMPAT_ENABLE_OPENSSL_MAC_POLY1305
-
-#endif
+namespace alcp::digest { namespace zen4 {
+    alc_error_t Sha3Update(Uint64* pState,
+                           Uint64* pSrc,
+                           Uint64  msg_size,
+                           Uint64  chunk_size);
+    void        Sha3Finalize(Uint8*  state,
+                             Uint8*  hash,
+                             Uint64  hash_size,
+                             Uint64  chunk_size,
+                             Uint64& index);
+}} // namespace alcp::digest::zen4

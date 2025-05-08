@@ -34,6 +34,8 @@
 
 namespace alcp::testing::utils {
 
+int block_size = 0;
+
 enum class ParamType
 {
     TYPE_STR  = 0,
@@ -77,18 +79,11 @@ parseArgs(int argc, char** argv)
 
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
+            /* read current arg */
             currentArg = std::string(argv[i]);
+            /* check if help option entered */
             if ((currentArg == std::string("--help"))
                 || (currentArg == std::string("-h"))) {
-
-#if 0
-                std::string verbosity_string = "(";
-                for (size_t j = 0; j < verbosity_levels.size() - 1; j++) {
-                    verbosity_string += static_cast<char>(j) + '/';
-                }
-                verbosity_string +=
-                    verbosity_levels.at(verbosity_levels.size() - 1) + ")";
-#endif
                 std::cout << std::endl
                           << "Additional help for microtests" << std::endl;
                 std::cout << "--verbose or -v <space>  <verbosity level(0/1/2)>"
@@ -97,47 +92,30 @@ parseArgs(int argc, char** argv)
                           << std::endl;
                 std::cout << "--use-ossl or -o force OpenSSL use in testing"
                           << std::endl;
-                std::cout << "--replay-blackbox or -r replay blackbox with "
-                             "log file"
-                          << std::endl;
-            }
-#if 0
-            else if ((currentArg == std::string("--verbose"))
-                       || (currentArg == std::string("-v"))) {
+                std::cout << "-b <custom block size" << std::endl;
+                exit(-1);
+            } else if ((currentArg == std::string("--blocksize"))
+                       || (currentArg == std::string("-b"))) {
                 /* now extract the verbose level integer */
-                if (((currentArg.find(std::string("--verbose"))
+                if (((currentArg.find(std::string("--blocksize"))
                       != currentArg.npos)
-                     || (currentArg.find(std::string("-v")) !=
-                     currentArg.npos))
+                     || (currentArg.find(std::string("-b")) != currentArg.npos))
                     && (i + 1 < argc)) {
                     std::string nextArg = std::string(argv[i + 1]);
                     // Skip the next iteration
                     i++;
-                    // check if the provided verbosity is supported
-                    auto it = std::find(verbosity_levels.begin(),
-                                        verbosity_levels.end(),
-                                        nextArg);
-                    if (it != verbosity_levels.end()) {
-                        verbose = std::stoi(nextArg);
-                    } else {
-                        std::cout << RED << "Invalid Verbosity Level \""
-                                  << nextArg << "\"" << RESET << std::endl;
-                        exit(-1);
-                    }
+                    alcp::testing::utils::block_size = std::stoi(nextArg);
                 }
-            }
-#endif
-            else if ((currentArg == std::string("--use-ipp"))
-                     || (currentArg == std::string("-i"))) {
+            } else if ((currentArg == std::string("--use-ipp"))
+                       || (currentArg == std::string("-i"))) {
+
                 argsMap["USE_IPP"].value = true;
             } else if ((currentArg == std::string("--use-ossl"))
                        || (currentArg == std::string("-o"))) {
                 argsMap["USE_OSSL"].value = true;
-
             } else if ((currentArg == std::string("--use-alcp"))
                        || (currentArg == std::string("-a"))) {
                 argsMap["USE_ALCP"].value = true;
-
             } else if ((currentArg == std::string("--override-alcp"))
                        || (currentArg == std::string("-oa"))) {
                 argsMap["OVERRIDE_ALCP"].value = true;

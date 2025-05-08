@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,30 +28,32 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
-#include "alcp/error.h"
 
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
+
 namespace alcp::cipher {
 
-class ALCP_API_EXPORT Cfb
+/*
+ * @brief        AES Encryption
+ */
+
+class ALCP_API_EXPORT AesGenericInit
     : public Aes
     , public virtual iCipher
 {
   public:
-    Cfb(Uint32 keyLen_in_bytes)
+    AesGenericInit(Uint32 keyLen_in_bytes, CipherMode mode)
         : Aes(keyLen_in_bytes)
     {
-        setMode(ALC_AES_MODE_CFB);
+        setMode(mode);
         m_ivLen_max = 16;
         m_ivLen_min = 16;
     };
-    ~Cfb() {}
+    ~AesGenericInit() {}
     alc_error_t init(const Uint8* pKey,
                      Uint64       keyLen,
                      const Uint8* pIv,
@@ -61,19 +63,25 @@ class ALCP_API_EXPORT Cfb
     }
 };
 
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Cfb128, Cfb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cfb192, Cfb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Cfb256, Cfb, virtual iCipher, 256 / 8)
+template<CipherMode mode, CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class AesGenericCiphersT
+    : public AesGenericInit
+    , public virtual iCipher
+{
+  public:
+    AesGenericCiphersT()
+        : AesGenericInit((static_cast<Uint32>(keyLenBits)) / 8, mode)
+    {}
+    ~AesGenericCiphersT() = default;
 
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Cfb128, Cfb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cfb192, Cfb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Cfb256, Cfb, virtual iCipher, 256 / 8)
-
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Cfb128, Cfb, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cfb192, Cfb, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Cfb256, Cfb, virtual iCipher, 256 / 8)
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher

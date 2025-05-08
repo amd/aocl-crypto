@@ -129,7 +129,7 @@ class MyTest : public MyFixture
         if (iTestCipher == nullptr) {
             FAIL() << "Requested Library object could not be initialized!";
         }
-        xtsKat<encryptor>("dataset_xts.csv", std::move(iTestCipher));
+        xtsKat<encryptor>("dataset_xts.csv", iTestCipher);
     }
 
   private:

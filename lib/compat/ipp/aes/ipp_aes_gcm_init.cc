@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,8 +64,10 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
     std::fill(alcp_ctx, alcp_ctx + alcp_cipher_aead_context_size(), 0);
 
     // Request for the GCM Cipher
-    err = alcp_cipher_aead_request(
-        ALC_AES_MODE_GCM, keyLen * 8, &(context_aead->handle));
+    err = alcp_cipher_aead_request_with_extState(ALC_AES_MODE_GCM,
+                                                 keyLen * 8,
+                                                 nullptr, // cipherState
+                                                 &(context_aead->handle));
     if (alcp_is_error(err)) {
         printErr("Unable to request");
         return ippStsErr;

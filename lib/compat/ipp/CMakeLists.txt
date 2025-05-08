@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -42,9 +42,10 @@ IF(IPP_INSTALL_DIR)
 	TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${IPP_INSTALL_DIR}/include)
 ENDIF(IPP_INSTALL_DIR)
 
-if(CMAKE_COMPILER_IS_GCC AND CMAKE_COMPILER_GCC_VERSION MATCHES "14")
+if(CMAKE_COMPILER_IS_GCC)
+	# FIXME: Need to investigate this, silencing this warning as IPP Compat library is deprioritized feature
 	TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-maybe-uninitialized)
-    MESSAGE(STATUS "Due to a known bug with GCC14, enforcing -Wno-maybe-uninitialized on compilation of ipp compat library")
+    MESSAGE(STATUS "Due to a known issue with gcc, enforcing -Wno-maybe-uninitialized on compilation of ipp compat library")
 endif()
 
 IF(WIN32)

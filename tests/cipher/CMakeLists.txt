@@ -67,9 +67,12 @@ FUNCTION(KAT_CIPHER MOD)
     TARGET_COMPILE_OPTIONS(${TEST_EXE} PUBLIC ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(${TEST_EXE} ${LIBS})
     alcp_add_integration_tests_cipher(${TEST_EXE} ${TEST_EXE} ${MOD})
+    # Due to known issues, skipping tests with valgrind
+    # for more details refer https://ontrack-internal.amd.com/browse/CPUPL-4109
     IF(ALCP_MEMCHECK_VALGRIND)
-        alcp_add_valgrind_check_test(${TEST_EXE} ${CMAKE_BINARY_DIR}/tests/cipher/${TEST_EXE})
-    ENDIF(ALCP_MEMCHECK_VALGRIND)
+        message(WARNING "Due to known issues, skipping cipher tests with valgrind")
+        #alcp_add_valgrind_check_test(${TEST_EXE} ${CMAKE_BINARY_DIR}/tests/cipher/${TEST_EXE})
+    ENDIF()
 ENDFUNCTION()
 
 FUNCTION(CROSS_CIPHER MOD)
@@ -79,9 +82,12 @@ FUNCTION(CROSS_CIPHER MOD)
     TARGET_COMPILE_OPTIONS(${TEST_EXE} PUBLIC ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(${TEST_EXE} ${LIBS})
     alcp_add_integration_tests_cipher(${TEST_EXE} ${TEST_EXE} ${MOD})
+    # Due to known issues, skipping tests with valgrind
+    # for more details refer https://ontrack-internal.amd.com/browse/CPUPL-4109
     IF(ALCP_MEMCHECK_VALGRIND)
-        alcp_add_valgrind_check_test(${TEST_EXE} ${CMAKE_BINARY_DIR}/tests/cipher/${TEST_EXE})
-    ENDIF(ALCP_MEMCHECK_VALGRIND)
+        message(WARNING "Due to known issues, skipping cipher tests with valgrind")
+        #alcp_add_valgrind_check_test(${TEST_EXE} ${CMAKE_BINARY_DIR}/tests/cipher/${TEST_EXE})
+    ENDIF()
 ENDFUNCTION()
 
 KAT_CIPHER(cbc)

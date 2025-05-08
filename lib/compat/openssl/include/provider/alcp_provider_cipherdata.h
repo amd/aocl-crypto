@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -100,7 +100,7 @@ typedef struct _alc_prov_cipher_data
 
     _alc_cipher_generic_data_t generic;
     _alc_cipher_ccm_data_t     ccm;
-
+    alc_cipher_state_t         cipherState;
 } alc_prov_cipher_data_t;
 
 #endif /* ALCP_PROVIDER_CIPHERDATA_H */

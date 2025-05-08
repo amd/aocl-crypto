@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -60,14 +60,13 @@ typedef struct alcp_prov_cipher_ctx_st
     alc_cipher_handle_t    handle;
     alc_prov_cipher_data_t prov_cipher_data; /* cipher params */
     OSSL_LIB_CTX*          libctx;           /* needed for rand calls */
-} ALCP_PROV_CIPHER_CTX;
+} __attribute__((aligned(64))) ALCP_PROV_CIPHER_CTX;
 
 typedef struct alcp_prov_aes_ctx_st
 {
     ALCP_PROV_CIPHER_CTX base; /* must be first entry in struct */
-    // key memory to be aligned
-    ALCP_AES_KEY ks;
-} ALCP_PROV_AES_CTX;
+    ALCP_AES_KEY         ks;
+} __attribute__((aligned(64))) ALCP_PROV_AES_CTX;
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];

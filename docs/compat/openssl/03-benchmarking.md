@@ -40,7 +40,7 @@ openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
 -evp aes-128-cbc
 ```
 
-### All supported possible commands for OpenSSL speed
+### More Examples of running openssl speed
 #### AES-CBC
 ```bash
 openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
@@ -96,5 +96,6 @@ openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
 openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
 -evp aes-256-gcm
 ```
-<!-- XTS Mode should come here once implemented -->
+
+
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,6 +32,7 @@
 
 #include "alcp/alcp.hh"
 
+#include "alcp/alcp.h"
 #include "alcp/base.hh"
 #include "alcp/error.h"
 
@@ -48,12 +49,11 @@ using alcp::utils::CpuCipherFeatures;
 using alcp::utils::CpuId;
 
 namespace alcp { namespace cipher {
-
     enum class CipherKeyLen
     {
-        eKey128Bit,
-        eKey192Bit,
-        eKey256Bit
+        eKey128Bit = 128,
+        eKey192Bit = 192,
+        eKey256Bit = 256
     };
 
     enum class CipherMode
@@ -162,11 +162,12 @@ namespace alcp { namespace cipher {
       private:
         CpuCipherFeatures m_arch =
             CpuCipherFeatures::eVaes512; // default zen4 arch
-        CpuCipherFeatures m_currentArch = getCpuCipherFeature();
-        CipherKeyLen      m_keyLen      = CipherKeyLen::eKey128Bit;
-        CipherMode        m_cipher_mode = CipherMode::eCipherModeNone;
-        INTERFACE*        m_iCipher     = nullptr;
-        cipherAlgoMapT    m_cipherMap   = {};
+        CpuCipherFeatures   m_currentArch  = getCpuCipherFeature();
+        CipherKeyLen        m_keyLen       = CipherKeyLen::eKey128Bit;
+        CipherMode          m_cipher_mode  = CipherMode::eCipherModeNone;
+        INTERFACE*          m_iCipher      = nullptr;
+        cipherAlgoMapT      m_cipherMap    = {};
+        alc_cipher_state_t* m_cipher_state = nullptr;
 
       public:
         CipherFactory();
@@ -175,10 +176,13 @@ namespace alcp { namespace cipher {
         // cipher creators
         INTERFACE* create(const string& name);
         INTERFACE* create(const string& name, CpuCipherFeatures arch);
-        INTERFACE* create(CipherMode mode, CipherKeyLen keyLen);
-        INTERFACE* create(CipherMode        mode,
-                          CipherKeyLen      keyLen,
-                          CpuCipherFeatures arch);
+        INTERFACE* create(const CipherMode mode, const CipherKeyLen keyLen);
+        INTERFACE* create(const CipherMode    mode,
+                          const CipherKeyLen  keyLen,
+                          alc_cipher_state_t* pCipherState);
+        INTERFACE* create(const CipherMode        mode,
+                          const CipherKeyLen      keyLen,
+                          const CpuCipherFeatures arch);
 
       private:
         void              initCipherMap();

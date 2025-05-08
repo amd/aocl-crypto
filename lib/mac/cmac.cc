@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
  */
 
 #include "alcp/mac/cmac.hh"
+#include "alcp/cipher.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
@@ -37,7 +38,7 @@ namespace alcp::mac {
 using utils::CpuId;
 Cmac::Cmac()
 {
-    setMode(ALC_AES_MODE_NONE);
+    setMode(alcp::cipher::CipherMode::eCipherModeNone);
 }
 
 Cmac::Cmac(const Cmac& cmac)
@@ -102,31 +103,35 @@ Cmac::update(const Uint8* pMsgBuf, Uint64 size)
     int n_blocks = 0;
     // Variable to keep track of the number of bytes not processed in this
     // update which needs to be copied to the internal buffer
-    int bytes_to_copy = 0;
+    int unprocessed_bytes_left = 0;
     /* For processing, it is assumed storage buffer is always complete. So
     copy data from pMsgBuf buffer to internal storage buffer until it
     is complete */
-    if (m_buff_offset <= cAESBlockSize) {
-        int b = cAESBlockSize - (m_buff_offset);
+
+    int b = cAESBlockSize - (m_buff_offset);
+    if (b > 0) {
         utils::CopyBlock<Uint64>(m_buff + m_buff_offset, pMsgBuf, b);
-        m_buff_offset = cAESBlockSize;
+        m_buff_offset += b;
         pMsgBuf += b;
+    }
 
-        /* Calculations to check if internal storage buffer and pMsgBuf
-        bytes combined is divisible by Cipher block size or not. If
-        bytes_to_copy is zero it is divisible*/
-        int ptxt_bytes_rem = size - b;
-        n_blocks           = ((ptxt_bytes_rem) / cAESBlockSize);
-        bytes_to_copy      = ((ptxt_bytes_rem)-cAESBlockSize * (n_blocks));
+    /* Calculations to check if internal storage buffer and pMsgBuf
+    bytes combined is divisible by Cipher block size or not. If
+    unprocessed_bytes_left is zero it is divisible*/
+    /*This is just a modulus operation. This is done to see how many bytes we
+    wont be able to process becauase
+    it has to be a multiple of block size to be processed.*/
+    int ptxt_bytes_rem     = size - b;
+    n_blocks               = ((ptxt_bytes_rem) / cAESBlockSize);
+    unprocessed_bytes_left = ((ptxt_bytes_rem)-cAESBlockSize * (n_blocks));
 
-        if (bytes_to_copy == 0) {
-            // If the total number of blocks are a multiple of Cipher Block
-            // Size then don't process the last block size
-            n_blocks = n_blocks - 1;
-            // Assigning this will cause one unprocessed block to be copied
-            // back to the buffer after update is complete
-            bytes_to_copy = cAESBlockSize;
-        }
+    if (unprocessed_bytes_left == 0) {
+        // If the total number of blocks are a multiple of Cipher Block
+        // Size then don't process the last block
+        n_blocks = n_blocks - 1;
+        // Assigning this will cause one unprocessed block to be copied
+        // back to the buffer after update is complete
+        unprocessed_bytes_left = cAESBlockSize;
     }
 
     if (has_avx2_aesni) {
@@ -147,8 +152,9 @@ Cmac::update(const Uint8* pMsgBuf, Uint64 size)
         }
     }
     // Copy the unprocessed pMsgBuf bytes to the internal buffer
-    utils::CopyBytes(m_buff, pMsgBuf + cAESBlockSize * n_blocks, bytes_to_copy);
-    m_buff_offset = bytes_to_copy;
+    utils::CopyBytes(
+        m_buff, pMsgBuf + cAESBlockSize * n_blocks, unprocessed_bytes_left);
+    m_buff_offset = unprocessed_bytes_left;
 
     return err;
 }

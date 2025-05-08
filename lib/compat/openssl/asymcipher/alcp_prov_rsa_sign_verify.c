@@ -505,8 +505,8 @@ alcp_prov_rsa_verify_recover(void*                vprsactx,
                              const unsigned char* sig,
                              size_t               siglen)
 {
+    alc_error_t       err     = ALC_ERROR_NONE;
     alc_prov_rsa_ctx* prsactx = (alc_prov_rsa_ctx*)vprsactx;
-    int               ret;
     ENTER();
 
     if (rout == NULL) {
@@ -516,26 +516,17 @@ alcp_prov_rsa_verify_recover(void*                vprsactx,
     }
 
     if (prsactx->ossl_rsa_ctx->mdname[0] != '\0') {
-        switch (prsactx->ossl_rsa_ctx->pad_mode) {
-            case RSA_PKCS1_PADDING: {
-                // ToDo : Implement the recover operation
-                ret = 0;
-                if (ret <= 0) {
-                    ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
-                    return 0;
-                }
-                break; // To fix coverity issues
-            }
-
-            default:
-                ERR_raise_data(ERR_LIB_PROV,
-                               PROV_R_INVALID_PADDING_MODE,
-                               "Only PKCS#1 v1.5 padding allowed");
-                return 0;
+        if (prsactx->ossl_rsa_ctx->pad_mode == RSA_PKCS1_PADDING) {
+            // ToDo : Implement the recover operation
+            ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
+        } else {
+            ERR_raise_data(ERR_LIB_PROV,
+                           PROV_R_INVALID_PADDING_MODE,
+                           "Only PKCS#1 v1.5 padding allowed");
         }
+        return 0;
     } else {
-        alc_error_t err =
-            alcp_rsa_publickey_encrypt(&prsactx->handle, sig, siglen, rout);
+        err = alcp_rsa_publickey_encrypt(&prsactx->handle, sig, siglen, rout);
         if (err != ALC_ERROR_NONE) {
             ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
             return 0;

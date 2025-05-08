@@ -65,6 +65,9 @@ alcp_cipher_segment_request(const alc_cipher_mode_t mode,
                             const Uint64            keyLen,
                             alc_cipher_handle_p     pCipherHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeyLen %6ld", keyLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -96,6 +99,9 @@ alcp_cipher_segment_init(const alc_cipher_handle_p pCipherHandle,
                          const Uint8*              pIv,
                          Uint64                    ivLen)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeyLen %6ld,IVLen %6ld", keyLen, ivLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -125,6 +131,12 @@ alcp_cipher_segment_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
                                 Uint64                    currPlainTextLen,
                                 Uint64                    startBlockNum)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG,
+                   "CurrentPTLen %6ld,BlkNo %6ld",
+                   currPlainTextLen,
+                   startBlockNum);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -151,6 +163,12 @@ alcp_cipher_segment_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
                                 Uint64                    currCipherTextLen,
                                 Uint64                    startBlockNum)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG,
+                   "CurrentPTLen %6ld,BlkNo %6ld",
+                   currCipherTextLen,
+                   startBlockNum);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -173,6 +191,9 @@ alcp_cipher_segment_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
 void
 alcp_cipher_segment_finish(const alc_cipher_handle_p pCipherHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     if (pCipherHandle == nullptr || pCipherHandle->ch_context == nullptr)
         return;
 

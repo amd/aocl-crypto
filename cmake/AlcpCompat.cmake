@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -42,13 +42,19 @@ FUNCTION(alcp_check_compat_option)
 			# If comparision true then enable openssl-compat
 			SET(ENABLE_OPENSSL_COMPAT TRUE PARENT_SCOPE)
 			MESSAGE("-- Enabled OpenSSL Compatibility SHIM Layer")
+			IF (NOT IS_DIRECTORY ${OPENSSL_INSTALL_DIR})
+				MESSAGE(FATAL_ERROR "OpenSSL installation dir not found!, please export OPENSSL_INSTALL_DIR=<your path to openssl installation> and retry")
+			endif()
 		ENDIF()
 		# Compare the value to ipp
 		string(COMPARE EQUAL "${value}" "ipp" result)
 		IF (result)
-			# If comparision true then enable ipp-compat
+			# If comparison true then enable ipp-compat
 			SET(ENABLE_IPP_COMPAT TRUE PARENT_SCOPE)
 			MESSAGE("-- Enabled IPP Compatibility SHIM Layer")
+			IF (NOT IS_DIRECTORY ${IPP_INSTALL_DIR})
+				MESSAGE(FATAL_ERROR "IPPCP installation not found!, please export IPP_INSTALL_DIR=<your path to ippcp installation> and retry")
+			ENDIF()
 		ENDIF(result)
 	ENDFOREACH(value ${AOCL_COMPAT_LIBS})
 ENDFUNCTION(alcp_check_compat_option)

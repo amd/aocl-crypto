@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -389,7 +389,7 @@ main(int argc, char** argv)
         if (std::get<bool>(argsMap["USE_OSSL"].value)) {
             RegisterMyTests("KnownAnswerTest",
                             "GCM_CROSS_EXPERIMENTAL_OPENSSL",
-                            std::move(rng),
+                            rng,
                             LibrarySelect::OPENSSL,
                             LibrarySelect::ALCP);
         }

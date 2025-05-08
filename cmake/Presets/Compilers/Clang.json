@@ -1,0 +1,29 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "llvm",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "llvm-debug",
+            "hidden": true,
+            "inherits": "llvm",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "llvm-release",
+            "hidden": true,
+            "inherits": "llvm",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}

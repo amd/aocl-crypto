@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,6 +42,9 @@ Uint64
 alcp_cipher_aead_context_size()
 {
     Uint64 size = sizeof(Context);
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CtxSize %6ld", size);
+#endif
     return size;
 }
 
@@ -79,6 +82,9 @@ alcp_cipher_aead_request(const alc_cipher_mode_t mode,
                          const Uint64            keyLen,
                          alc_cipher_handle_p     pCipherHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeyLen %6ld", keyLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -103,11 +109,45 @@ alcp_cipher_aead_request(const alc_cipher_mode_t mode,
 }
 
 alc_error_t
+alcp_cipher_aead_request_with_extState(const alc_cipher_mode_t mode,
+                                       const Uint64            keyLen,
+                                       alc_cipher_state_t*     pCipherState,
+                                       alc_cipher_handle_p     pCipherHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
+    auto ctx = static_cast<Context*>(pCipherHandle->ch_context);
+    new (ctx) Context;
+
+    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
+
+    auto alcpCipher       = new CipherFactory<iCipherAead>;
+    ctx->m_cipher_factory = static_cast<void*>(alcpCipher);
+    // printf("\n aead request cipherstate %p ", (void*)pCipherState);
+
+    auto aead = alcpCipher->create(
+        getCipherAeadMode(mode), getKeyLen(keyLen), pCipherState);
+    if (aead == nullptr) {
+        printf("\n cipher algo create failed");
+        return ALC_ERROR_GENERIC;
+    }
+    ctx->m_cipher = static_cast<void*>(aead);
+
+    return err;
+}
+
+alc_error_t
 alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
                          const Uint8*              pInput,
                          Uint8*                    pOutput,
                          Uint64                    len)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "EncLen %6ld", len);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -134,6 +174,9 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
                          Uint8*                    pOutput,
                          Uint64                    len)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "DecLen %6ld", len);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -162,6 +205,9 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
                       const Uint8*              pIv,
                       Uint64                    ivLen)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "KeyLen %6ld,IVLen %6ld", keyLen, ivLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -188,6 +234,9 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
                          const Uint8*              pInput,
                          Uint64                    aadLen)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "ADLen %6ld", aadLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     if (aadLen == 0) {
         return err;
@@ -215,6 +264,9 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
                          Uint8*                    pOutput,
                          Uint64                    tagLen)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "TagLen %6ld", tagLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -241,6 +293,9 @@ alc_error_t
 alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
                                 Uint64                    tagLen)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "TagLen %ld", tagLen);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -265,6 +320,9 @@ alc_error_t
 alcp_cipher_aead_set_ccm_plaintext_length(
     const alc_cipher_handle_p pCipherHandle, Uint64 plaintextLength)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "PTLen %6ld", plaintextLength);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -280,6 +338,9 @@ alcp_cipher_aead_set_ccm_plaintext_length(
 void
 alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     if (nullptr == pCipherHandle)
         return;
     if (pCipherHandle->ch_context == nullptr) {

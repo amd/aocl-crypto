@@ -88,11 +88,11 @@ class ALCP_API_EXPORT Ccm
   protected:
     Uint64       m_tagLen            = 12; // default taglen
     Uint64       m_additionalDataLen = 0;
-    const Uint8* m_additionalData;
+    const Uint8* m_additionalData{};
     Uint64       m_plainTextLength      = 0;
     bool         m_is_plaintext_len_set = false;
     Uint64       m_updatedLength        = 0;
-    ccm_data_t   m_ccm_data;
+    ccm_data_t   m_ccm_data{};
 
   protected:
     alc_error_t setIv(ccm_data_t* ccm_data,
@@ -101,9 +101,11 @@ class ALCP_API_EXPORT Ccm
                       Uint64      dataLen);
 
   public:
-    Ccm(Uint32 keyLen_in_bytes)
+    Ccm(Uint32 keyLen_in_bytes, CipherMode mode)
         : Aes(keyLen_in_bytes)
-    {}
+    {
+        setMode(mode);
+    }
 
     ~Ccm() = default;
 
@@ -118,14 +120,13 @@ class ALCP_API_EXPORT Ccm
                             bool        isEncrypt);
 };
 
-// AEAD_AUTH_CLASS_GEN(CcmHash, Ccm, virtual iCipherAuth);
 class ALCP_API_EXPORT CcmHash
     : public Ccm
     , public virtual iCipherAuth
 {
   public:
-    CcmHash(Uint32 keyLen_in_bytes)
-        : Ccm(keyLen_in_bytes)
+    CcmHash(Uint32 keyLen_in_bytes, CipherMode mode)
+        : Ccm(keyLen_in_bytes, mode)
     {}
     ~CcmHash() {}
 
@@ -137,9 +138,25 @@ class ALCP_API_EXPORT CcmHash
         Uint64 len) override; // used in multiupdate case only
 };
 
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Ccm128, CcmHash, virtual iCipherAead, 128 / 8);
-CIPHER_CLASS_GEN_N(aesni, Ccm192, CcmHash, virtual iCipherAead, 192 / 8);
-CIPHER_CLASS_GEN_N(aesni, Ccm256, CcmHash, virtual iCipherAead, 256 / 8);
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class CcmT
+    : public CcmHash
+    , public virtual iCipherAead
+{
+  public:
+    CcmT()
+        : CcmHash((static_cast<Uint32>(keyLenBits)) / 8, CipherMode::eAesCCM)
+    {}
+    ~CcmT() = default;
+
+  public:
+    alc_error_t encrypt(const Uint8* pPlainText,
+                        Uint8*       pCipherText,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -191,7 +191,7 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
                 FAIL();
             }
             EXPECT_TRUE(ArraysMatch(
-                std::move(digest_),    // output
+                digest_,               // output
                 csv.getVect("DIGEST"), // expected, from the KAT test data
                 csv,
                 std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
@@ -200,8 +200,7 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
             /* for squeeze test, check digest outputs from both handles */
             if (test_squeeze) {
                 EXPECT_TRUE(ArraysMatch(
-                    std::move(
-                        digest_dup_), // output squeezed out of m_handle_dup
+                    digest_dup_, // output squeezed out of m_handle_dup
                     csv.getVect("DIGEST"), // expected, from the KAT test data
                     csv,
                     std::string(GetDigestStr(mode) + "_" + SHA3_SHAKE_Len_Str
@@ -251,8 +250,8 @@ Digest_KAT(alc_digest_mode_t mode, bool ctx_copy, bool test_squeeze)
                                              std::end(digest));
 
             EXPECT_TRUE(ArraysMatch(
-                std::move(digest_vector), // output
-                csv.getVect("DIGEST"),    // expected, from the KAT test data
+                digest_vector,         // output
+                csv.getVect("DIGEST"), // expected, from the KAT test data
                 csv,
                 std::string(GetDigestStr(mode) + "_"
                             + std::to_string(GetDigestLen(mode)) + "_KAT")));
@@ -282,7 +281,7 @@ Digest_Cross(int HashSize, alc_digest_mode_t mode, bool ctx_copy)
     if (useipp == true)
         extDb = &idb;
 #endif
-        /* do cross tests between ipp and openssl */
+    /* do cross tests between ipp and openssl */
 #if defined(USE_IPP) && defined(USE_OSSL)
     if (oa_override) {
         extDb = &odb;

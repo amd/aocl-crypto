@@ -42,7 +42,6 @@
 
 /* Provider Internal Headers */
 #include "debug.h"
-#include "provider/alcp_provider.h"
 
 /*
  * Dispatchers are created by alcp_cipher_aes.c using macro

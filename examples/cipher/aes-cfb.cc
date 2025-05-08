@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -72,6 +72,7 @@ main()
         printf("\n cipher encrypt failed");
         goto dealloc;
     }
+    printf("Encrypt succeeded\n");
 
     // init decrypt
     err = aesmode->init(key, 192, iv, 16);
@@ -85,12 +86,19 @@ main()
         printf("\n cipher encrypt failed");
         goto dealloc;
     }
+    printf("Decrypt succeeded\n");
 
     if (memcmp(inputText, outputText, dataLen)) {
-        printf("\n encrypted input and decrypted output doesnt match");
+        printf("\nInput and decrypted output dont match");
     }
+    printf("\nInput and decrypted output match\n");
 
     err = aesmode->finish(NULL);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n cipher finish failed");
+        goto dealloc;
+    }
+
 dealloc:
     delete alcpCipher;
     delete[] inputText;

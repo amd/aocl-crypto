@@ -1,0 +1,31 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "project-vars",
+            "hidden": true,
+            "cacheVariables": {
+                "ALCP_PROJECT_NAME": "AOCL-Crypto",
+                "ALCP_PROJECT_DESCRIPTION": "AOCL-Crypto is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture.",
+                "ALCP_VENDOR_URL": "https://www.amd.com/en/developer/aocl.html",
+                "ALCP_VENDOR_NAME": "AMD",
+                "ALCP_VENDOR_CONTACT": "AOCL <aocl@amd.com>"
+            }
+        },
+        {
+            "name": "project-options",
+            "hidden": true,
+            "cacheVariables": {
+                "ALCP_CMAKE_VERBOSE": "ON",
+                "ALCP_BUILD_DOCS": "OFF",
+                "ALCP_BUILD_TESTS": "OFF",
+                "ALCP_BUILD_EXAMPLES": "ON",
+                "ALCP_ENABLE_ASSERTIONS": "OFF",
+                "ALCP_BUILD_WITH_ASAN": "OFF",
+                "OPENSSL_INSTALL_DIR": "$env{OPENSSL_INSTALL_DIR}",
+                "ENABLE_AOCL_UTILS": "ON",
+                "AOCL_COMPAT_LIBS": "openssl"
+            }
+        }
+    ]
+}

@@ -36,7 +36,10 @@ function(alcp_add_valgrind_check_test test_name test_binary)
     endif()
     # add more valgrind options here
     set(VALGRIND_ARGS "--leak-check=full")
-    add_test(${test_name}_valgrind ${VALGRIND} ${VALGRIND_ARGS} ${test_binary})
+    # valgrind is supported only on windows at the moment
+    if (UNIX)
+        add_test(${test_name}_valgrind ${VALGRIND} ${VALGRIND_ARGS} ${test_binary})
+    endif()
 endfunction(alcp_add_valgrind_check_test)
 
 function(alcp_add_integration_tests test_name test_binary)

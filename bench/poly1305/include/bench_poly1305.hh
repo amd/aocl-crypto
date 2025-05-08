@@ -110,6 +110,12 @@ BENCH_POLY1305(benchmark::State& state)
 int
 AddBenchmarks_Poly1305()
 {
+    /* check if custom block size is provided by user */
+    if (block_size != 0) {
+        std::cout << "Custom block size selected:" << block_size << std::endl;
+        poly1305_blocksizes.resize(1);
+        poly1305_blocksizes[0] = block_size;
+    }
     /* ippcp doesnt have poly1305 mac implementations yet */
     if (!useipp)
         BENCHMARK(BENCH_POLY1305)->ArgsProduct({ poly1305_blocksizes });

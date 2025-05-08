@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -383,7 +383,7 @@ ALCP_prov_gcm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         }
         cipherctx->tagLength = sz;
 #if PROV_GCM_DEBUG
-        printf("taglen set %lu ", cipherctx->tagLength);
+        printf("taglen set %lu \n", cipherctx->tagLength);
 #endif
     }
 
@@ -404,7 +404,7 @@ ALCP_prov_gcm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             cipherctx->ivLen = sz;
         }
 #if PROV_GCM_DEBUG
-        printf("ivlen set %lu ", cipherctx->ivLen);
+        printf("ivlen set %lu \n", cipherctx->ivLen);
 #endif
     }
 
@@ -421,7 +421,7 @@ ALCP_prov_gcm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         }
         cipherctx->tls_aad_pad_sz = sz;
 #if PROV_GCM_DEBUG
-        printf("add_pad set %u ", cipherctx->tls_aad_pad_sz);
+        printf("\t add_pad set %u ", cipherctx->tls_aad_pad_sz);
 #endif
     }
 
@@ -450,7 +450,6 @@ ALCP_prov_gcm_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         }
     }
 
-    EXIT();
     return 1;
 }
 
@@ -575,7 +574,7 @@ gcm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
 
     if (cipherctx->tls_aad_len != UNINITIALISED_SIZET) {
 #if PROV_GCM_DEBUG
-        printf(" tlscipher len %lu padlen %lu", len, *padlen);
+        printf("\n tlscipher len %5lu ", len);
 #endif
         return gcm_tls_cipher(ctx, out, padlen, in, len);
     }
@@ -621,8 +620,10 @@ gcm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
             /* The input is ciphertext OR plaintext */
             if (cipherctx->enc) {
 #if PROV_GCM_DEBUG
-                printf(" enc %lu ", len);
+                printf(" enc %lu \n", len);
 #endif
+                // printf("  \n cipherstate %p ",
+                // (void*)&ctx->prov_cipher_data.cipherState);
                 err = alcp_cipher_aead_encrypt(&(ctx->handle), in, out, len);
             } else {
 #if PROV_GCM_DEBUG
@@ -647,7 +648,7 @@ gcm_cipher_internal(ALCP_PROV_CIPHER_CTX* ctx,
         if (!cipherctx->enc && cipherctx->tagLength == UNINITIALISED_SIZET)
             goto err;
 #if PROV_GCM_DEBUG
-        printf(" tag %lu ", cipherctx->tagLength);
+        printf(" tag %lu \n", cipherctx->tagLength);
 #endif
 
         Uint8 tagBuf[AES_BLOCK_SIZE];
@@ -764,8 +765,14 @@ alcp_gcm_one_shot(ALCP_PROV_CIPHER_CTX* ctx,
 
     if (cipherctx->enc) {
         err = alcp_cipher_aead_encrypt(&(ctx->handle), in, out, in_len);
+#if PROV_GCM_DEBUG
+        printf(" enc len %lu \n", in_len);
+#endif
     } else {
         err = alcp_cipher_aead_decrypt(&(ctx->handle), in, out, in_len);
+#if PROV_GCM_DEBUG
+        printf(" dec len %lu \n", in_len);
+#endif
     }
     if (alcp_is_error(err)) {
         printf("Error: gcm cipherUpdate \n");
@@ -879,5 +886,6 @@ err:
     cipherctx->ivState     = IV_STATE_FINISHED;
     cipherctx->tls_aad_len = UNINITIALISED_SIZET;
     *padlen                = plen;
+    // printf(" alcp tls_cipher padlen %ld \n", *padlen);
     return rv;
 }

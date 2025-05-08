@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -56,8 +56,7 @@ using namespace alcp::testing;
 
 /* print params verbosely */
 inline void
-PrintCmacTestData(std::vector<Uint8> key,
-                  alcp_cmac_data_t   data)
+PrintCmacTestData(std::vector<Uint8> key, alcp_cmac_data_t data)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
@@ -139,8 +138,8 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             std::begin(cmac), std::begin(cmac) + csv.getVect("CMAC").size());
 
         EXPECT_TRUE(ArraysMatch(
-            std::move(cmac_vector), // Actual output
-            csv.getVect("CMAC"),    // expected output, from the csv test data
+            cmac_vector,         // Actual output
+            csv.getVect("CMAC"), // expected output, from the csv test data
             csv,
             std::string("CMAC_" + CmacType + "_" + std::to_string(KeySize)
                         + "_KAT")));
@@ -174,7 +173,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         extCb = &icb;
 #endif
 
-        /* do cross tests between ipp and openssl */
+    /* do cross tests between ipp and openssl */
 #if defined(USE_IPP) && defined(USE_OSSL)
     if (oa_override) {
         extCb = &ocb;

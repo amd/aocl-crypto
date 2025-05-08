@@ -32,7 +32,8 @@
 #include <cstdint>
 #include <immintrin.h>
 
-namespace alcp::cipher { namespace aesni {
+namespace alcp::cipher {
+namespace aesni {
 
     template<
         void AesEnc_1x128(__m128i* pBlk0, const __m128i* pKey, int nRounds),
@@ -44,12 +45,12 @@ namespace alcp::cipher { namespace aesni {
                           __m128i*       pBlk3,
                           const __m128i* pKey,
                           int            nRounds)>
-    alc_error_t inline DecryptCfb(const Uint8* pSrc,
-                                  Uint8*       pDest,
-                                  Uint64       len,
-                                  const Uint8* pKey,
-                                  int          nRounds,
-                                  Uint8*       pIv)
+    alc_error_t inline DecryptCfbKernel(const Uint8* pSrc,
+                                        Uint8*       pDest,
+                                        Uint64       len,
+                                        const Uint8* pKey,
+                                        int          nRounds,
+                                        Uint8*       pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
         auto        p_key128  = reinterpret_cast<const __m128i*>(pKey);
@@ -145,12 +146,12 @@ namespace alcp::cipher { namespace aesni {
 
     template<
         void AesEnc_1x128(__m128i* pBlk0, const __m128i* pKey, int nRounds)>
-    alc_error_t inline EncryptCfb(const Uint8* pSrc,
-                                  Uint8*       pDest,
-                                  Uint64       len,
-                                  const Uint8* pKey,
-                                  int          nRounds,
-                                  Uint8*       pIv)
+    alc_error_t inline EncryptCfbKernel(const Uint8* pSrc,
+                                        Uint8*       pDest,
+                                        Uint64       len,
+                                        const Uint8* pKey,
+                                        int          nRounds,
+                                        Uint8*       pIv)
     {
         auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
@@ -245,82 +246,82 @@ namespace alcp::cipher { namespace aesni {
         return ALC_ERROR_NONE;
     }
 
-    ALCP_API_EXPORT
-    alc_error_t EncryptCfb128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv)
+    alc_error_t EncryptCfb(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           int          nRounds,
+                           Uint8*       pIv)
     {
-        return EncryptCfb<aesni::AesEncrypt>(
+
+        return EncryptCfbKernel<AesEncrypt>(
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
-    ALCP_API_EXPORT
-    alc_error_t EncryptCfb192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv)
-    {
-        return EncryptCfb<aesni::AesEncrypt>(
-            pSrc, pDest, len, pKey, nRounds, pIv);
-    }
+} // namespace aesni
 
-    ALCP_API_EXPORT
-    alc_error_t EncryptCfb256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv)
-    {
-        return EncryptCfb<aesni::AesEncrypt>(
-            pSrc, pDest, len, pKey, nRounds, pIv);
-    }
+// Decrypt
+template<alcp::cipher::CipherKeyLen T, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+DecryptCfb(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           int          nRounds,
+           Uint8*       pIv)
+{
+    return alcp::cipher::aesni::DecryptCfbKernel<
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
 
-    // Decrypt
-    ALCP_API_EXPORT
-    alc_error_t DecryptCfb128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv)
-    {
-        return DecryptCfb<aesni::AesEncrypt,
-                          aesni::AesEncrypt,
-                          aesni::AesEncrypt>(
-            pSrc, pDest, len, pKey, nRounds, pIv);
-    }
+template<>
+alc_error_t
+DecryptCfb<alcp::cipher::CipherKeyLen::eKey128Bit,
+           alcp::utils::CpuCipherFeatures::eAesni>(const Uint8* pSrc,
+                                                   Uint8*       pDest,
+                                                   Uint64       len,
+                                                   const Uint8* pKey,
+                                                   int          nRounds,
+                                                   Uint8*       pIv)
+{
+    return alcp::cipher::aesni::DecryptCfbKernel<
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
 
-    ALCP_API_EXPORT
-    alc_error_t DecryptCfb192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv)
-    {
-        return DecryptCfb<aesni::AesEncrypt,
-                          aesni::AesEncrypt,
-                          aesni::AesEncrypt>(
-            pSrc, pDest, len, pKey, nRounds, pIv);
-    }
+template<>
+alc_error_t
+DecryptCfb<alcp::cipher::CipherKeyLen::eKey192Bit,
+           alcp::utils::CpuCipherFeatures::eAesni>(const Uint8* pSrc,
+                                                   Uint8*       pDest,
+                                                   Uint64       len,
+                                                   const Uint8* pKey,
+                                                   int          nRounds,
+                                                   Uint8*       pIv)
+{
+    return alcp::cipher::aesni::DecryptCfbKernel<
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
 
-    ALCP_API_EXPORT
-    alc_error_t DecryptCfb256(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              int          nRounds,
-                              Uint8*       pIv)
-    {
-        return DecryptCfb<aesni::AesEncrypt,
-                          aesni::AesEncrypt,
-                          aesni::AesEncrypt>(
-            pSrc, pDest, len, pKey, nRounds, pIv);
-    }
-}} // namespace alcp::cipher::aesni
+template<>
+alc_error_t
+DecryptCfb<alcp::cipher::CipherKeyLen::eKey256Bit,
+           alcp::utils::CpuCipherFeatures::eAesni>(const Uint8* pSrc,
+                                                   Uint8*       pDest,
+                                                   Uint64       len,
+                                                   const Uint8* pKey,
+                                                   int          nRounds,
+                                                   Uint8*       pIv)
+{
+    return alcp::cipher::aesni::DecryptCfbKernel<
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt,
+        alcp::cipher::aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+} // namespace alcp::cipher

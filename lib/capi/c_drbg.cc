@@ -44,12 +44,18 @@ Uint64
 alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo)
 {
     Uint64 size = sizeof(Context) + DrbgBuilder::getSize(*pDrbgInfo);
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CtxSize %6ld", size);
+#endif
     return size;
 }
 
 alc_error_t
 alcp_drbg_supported(const alc_drbg_info_p pcDrbgInfo)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pcDrbgInfo, err);
     // FIXME: Implement Digest Support check
@@ -62,6 +68,9 @@ alc_error_t
 alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
                   const alc_drbg_info_p pDrbgInfo)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
@@ -81,6 +90,11 @@ alcp_drbg_initialize(alc_drbg_handle_p pDrbgHandle,
                      Uint8*            personalization_string,
                      Uint64            personalization_string_length)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG,
+                   "personalization_string_length %6ld",
+                   personalization_string_length);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
@@ -105,6 +119,14 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
                     const Uint8       cAdditionalInput[],
                     const size_t      cAdditionalInputLength)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG,
+                   "OutputLength %6ld, cSecurityStrength %d, "
+                   "cAdditionalInputLength %6ld",
+                   cOutputLength,
+                   cSecurityStrength,
+                   cAdditionalInputLength);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
@@ -126,6 +148,9 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
 alc_error_t
 alcp_drbg_finish(alc_drbg_handle_p pDrbgHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);

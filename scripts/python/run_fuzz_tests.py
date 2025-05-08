@@ -76,7 +76,7 @@ for FuzzTarget in Fuzz_Targets:
             Fuzz_Executables.append(os.path.join(fuzz_dir, f))
             
 # run exes
-default_args = ['-rss_limit_mb=32768', '-detect_leaks=0', '-max_total_time=20',]
+default_args = ['-rss_limit_mb=32768', '-detect_leaks=0', '-max_total_time=30',]
 crash_path_arg = '-exact_artifact_path='
 for Exe in Fuzz_Executables:
     crash_path = os.path.join(CorpusDir, ntpath.basename(Exe))

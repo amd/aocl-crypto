@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -69,7 +69,7 @@ class Aes : public Rijndael
     Uint32                m_nrounds = 0;
     alc_cipher_key_data_t m_cipher_key_data{};
 
-    Uint32                             m_keyLen_in_bytes_aes;
+    Uint32                             m_keyLen_in_bytes_aes        = 0;
     __attribute__((aligned(16))) Uint8 m_iv_aes[MAX_CIPHER_IV_SIZE] = {};
     Uint8*                             m_pIv_aes                    = m_iv_aes;
     Uint64                             m_ivLen_aes                  = 0;
@@ -121,6 +121,7 @@ class Aes : public Rijndael
         return false;
     }
 
+    alc_error_t setKey(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen);
     alc_error_t setKey(const Uint8* pKey, const Uint64 keyLen);
     alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
 
@@ -132,11 +133,11 @@ class Aes : public Rijndael
     }
 
   protected:
-    ALCP_API_EXPORT virtual alc_error_t setMode(alc_cipher_mode_t mode);
+    ALCP_API_EXPORT virtual alc_error_t setMode(CipherMode mode);
 
   protected:
-    alc_cipher_mode_t m_mode;
-    void*             m_this;
+    CipherMode m_mode{};
+    void*      m_this{};
 };
 
 } // namespace alcp::cipher

@@ -28,7 +28,7 @@ colorlinks: true
 
   Link to other documentations:
 
-  1. [AOCL-Crypto API Documentation](https://docs.amd.com/r/en-US/63862-AOCL-cryptography/AOCL-Cryptography-Library-63862)
+  1. [AOCL-Crypto API Documentation](https://amd.github.io/aocl-crypto/crypto/html/aocl_crypto.html)
   
   2. [AOCL Documentation](https://www.amd.com/en/developer/aocl.html)
 
@@ -44,10 +44,11 @@ colorlinks: true
   If you trying to integrate with already exisiting application, it will take time for you to change from your current library provider to AOCL-Cryptography in one go. Hence we recommend you to use OpenSSL provider (if already using OpenSSL) or (IPP Provider), then rewrite the parts of your code step by step slowly until you replace the dependency with OpenSSL or IPP.
 
 #### OpenSSL 3.x Based Application
-  Application based on OpenSSL can easily use AOCL-Crypto by configuring it to use the provider. AOCL-Crypto's OpenSSL provider documentation found in the API documentation, will provide the necessary steps to configure openssl provider for your application. Taking each module, removing OpenSSL code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
+  Application based on OpenSSL can easily use AOCL-Crypto by configuring it to use the provider. AOCL-Crypto's OpenSSL provider documentation found [here](https://amd.github.io/aocl-crypto/crypto/html/openssl_README.html), will provide the necessary steps to configure openssl provider for your application. Taking each module, removing OpenSSL code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
 
 #### IPP-CP based Application
-  Application based on IPP-CP can easily use AOCL-Crypto by configuring it to use the wrapper, IPP-CP provider documentation can be found in the API documentation. Taking each module, removing IPP-CP code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort. Note:   (Note: IPP  Compat  library is in experimental  state in 5.0 release)
+  Application based on IPP-CP can easily use AOCL-Crypto by configuring it to use the wrapper, IPP-CP provider documentation can be found [here](https://amd.github.io/aocl-crypto/crypto/html/ipp_README.html). Taking each module, removing IPP-CP code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort. Note:   (Note: IPP  Compat  library is in experimental  state in 5.0 release) 
+
 
 #### Other library based Application
   Other Libraries can be a fork of OpenSSL or IPP-CP, in that case the provider or wrapper interface may still work, its not recommended to use provider or wrapper interface in the perticular situation as it may result in undefined behaviour in the cryptographic application and this can cause security vulnerabilities. Some other libraries like libsodium, libsalt, WolfSSL, MbedTLS etc does not have any provider or wrapper implementation.

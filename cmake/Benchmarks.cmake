@@ -1,4 +1,4 @@
-# Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,11 @@ FetchContent_Declare(benchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
     GIT_TAG v1.8.3)
 FetchContent_MakeAvailable(benchmark)
+
+option(MULTI_INIT_BENCH "Enable Multi-Init Benchmarks" OFF)
+if(MULTI_INIT_BENCH)
+    add_definitions(-DMULTI_INIT_BENCH)
+endif()
 
 if(COMPILER_SUPPORTS_NO_MAYBE_UNINITIALIZED)
     target_compile_options(benchmark PRIVATE -Wno-maybe-uninitialized)

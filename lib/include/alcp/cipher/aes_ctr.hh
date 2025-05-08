@@ -35,50 +35,8 @@
 #include "alcp/error.h"
 
 #include <immintrin.h>
-namespace alcp::cipher {
 
-/*
- * @brief        AES Encryption in Ctr(Counter mode)
- * @note        TODO: Move this to a aes_Ctr.hh or other
- */
-class ALCP_API_EXPORT Ctr
-    : public Aes
-    , public virtual iCipher
-{
-  public:
-    Ctr(Uint32 keyLen_in_bytes)
-        : Aes(keyLen_in_bytes)
-    {
-        setMode(ALC_AES_MODE_CTR);
-        m_ivLen_max = 16;
-        m_ivLen_min = 16;
-    };
-    ~Ctr() {}
-    alc_error_t init(const Uint8* pKey,
-                     Uint64       keyLen,
-                     const Uint8* pIv,
-                     Uint64       ivLen) override
-    {
-        return Aes::init(pKey, keyLen, pIv, ivLen);
-    }
-};
-
-// vaes512 classes
-CIPHER_CLASS_GEN_N(vaes512, Ctr128, Ctr, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Ctr192, Ctr, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes512, Ctr256, Ctr, virtual iCipher, 256 / 8)
-
-// vaes classes
-CIPHER_CLASS_GEN_N(vaes, Ctr128, Ctr, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(vaes, Ctr192, Ctr, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(vaes, Ctr256, Ctr, virtual iCipher, 256 / 8)
-
-// aesni classes
-CIPHER_CLASS_GEN_N(aesni, Ctr128, Ctr, virtual iCipher, 128 / 8)
-CIPHER_CLASS_GEN_N(aesni, Ctr192, Ctr, virtual iCipher, 192 / 8)
-CIPHER_CLASS_GEN_N(aesni, Ctr256, Ctr, virtual iCipher, 256 / 8)
-
-namespace aes {
+namespace alcp::cipher { namespace aes {
 
     using namespace aesni;
     using namespace vaes;
@@ -224,5 +182,4 @@ namespace aes {
         return blocks;
     }
 
-} // namespace aes
-} // namespace alcp::cipher
+}} // namespace alcp::cipher::aes

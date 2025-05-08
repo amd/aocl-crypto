@@ -1,5 +1,6 @@
 # Instructions to Build/Use OpenSSL plugin
-AOCL Cryptography's OpenSSL compat library works as an OpenSSL Provider which will redirect API calls from within OpenSSL to AOCL-Cryptography. Currently its enabled only for OpenSSL versions above 3.1 .
+AOCL Cryptography's OpenSSL compat library works as an OpenSSL Provider which will redirect API calls from within OpenSSL to AOCL-Cryptography. Currently provider only supports OpenSSL versions from 3.1.3 to 3.3.0 .
+The provider only works when the version of the OpenSSL used to compile provider is greater than or equal to the version of the openssl library currently being loaded. 
  
 > <span style="color:red">__Note:__</span> Known issue with test_quick_multistream test
 
@@ -14,6 +15,8 @@ cmake --build .
 ```
 
 After running all the above commands you should see a `libopenssl-compat.so` in build directory.
+
+To enable debug logging from within AOCL-Crypto OpenSSL provider, add `-DALCP_COMPAT_ENABLE_DEBUG=ON` during the cmake configuration.
 
 ## Usage Instructions
 
@@ -96,7 +99,7 @@ Certain algorithms within provider are disabled and has to be enabled manually d
 Feature | Compiler Option|Default value|
 :------:|:--------------:|:-----------:|
 |Cipher|ALCP_COMPAT_ENABLE_OPENSSL_CIPHER|ON|
-|Digest|ALCP_COMPAT_ENABLE_OPENSSL_DIGEST|OFF|
+|Digest|ALCP_COMPAT_ENABLE_OPENSSL_DIGEST|ON|
 |MAC   |ALCP_COMPAT_ENABLE_OPENSSL_MAC   |ON|
 |RSA   | ALCP_COMPAT_ENABLE_OPENSSL_RSA  |ON|
 
@@ -117,11 +120,9 @@ Cipher Algorithm | Compiler Option|Default value|
 
 *Digests:*
 
-Since ALCP_COMPAT_ENABLE_OPENSSL_DIGEST is OFF by default, first set ALCP_COMPAT_ENABLE_OPENSSL_DIGEST=ON in conjuction with the below flags.
-
 Digest Algorithm | Compiler Option|Default value|
 :------:|:--------------:|:-----------:|
-|SHA2|ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA2|ON|
+|SHA2|ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA2|OFF|
 |SHA3|ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA3|ON|
 |SHAKE|ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHAKE|ON|
 

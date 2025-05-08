@@ -72,8 +72,9 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
     alc_error_t        err;
     FuzzedDataProvider stream(buf, len);
 
-    /* supported key size is 32, still this should not cause a crash */
-    size_t key_size = stream.ConsumeIntegral<Uint16>();
+    /* Fix the key size as 32 */
+    size_t key_size = 32;
+
     Uint64 size;
     Uint8  secret_key_peer1[key_size];
     Uint64 key_len_peer1;
@@ -91,9 +92,18 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
     std::vector<Uint8> fuzz_pvtkey_data_peer2 =
         stream.ConsumeBytes<Uint8>(key_size);
 
-    std::cout << "Generating for Key size: " << key_size << std::endl;
-
-    if (key_size != 256 / 8) {
+    // FIXME: Should be removed once EC APIs start taking key size as input
+    /*
+     * Ensure the key sizes are correct as the EC API always expects key_size to
+     * be 32. The FuzzedDataProvider::ConsumeBytes may return a vector of
+     * incorrect size if the buffer is too small.
+     */
+    if (fuzz_pubkey_data_peer1.size() != key_size
+        || fuzz_pvtkey_data_peer1.size() != key_size
+        || fuzz_pubkey_data_peer2.size() != key_size
+        || fuzz_pvtkey_data_peer2.size() != key_size) {
+        std::cout << "Error: One or more keys are not of size " << key_size
+                  << std::endl;
         return -1;
     }
 

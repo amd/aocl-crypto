@@ -230,7 +230,7 @@ IPPRsaBase::SetPublicKeyBigNum(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
 
-    Ipp32u PublicKeyExponent = 0x10001; // public exponent
+    Ipp32u PublicKeyExponent = pub_key_exp; // public exponent
 
     int keyCtxSize;
 

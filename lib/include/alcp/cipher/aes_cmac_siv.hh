@@ -30,7 +30,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher/aes.hh"
-#include "alcp/cipher/aes_ctr.hh"
+#include "alcp/cipher/aes_generic.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/cpuid.hh"
 
@@ -46,10 +46,6 @@ using Cmac = alcp::mac::Cmac;
 namespace alcp::cipher {
 
 using utils::CpuId;
-
-// RFC5297
-
-// #define MAX_ADD_SIZE_SIV (126 * 16) // 126*16
 
 class ALCP_API_EXPORT Siv
     : public Aes
@@ -70,8 +66,8 @@ class ALCP_API_EXPORT Siv
 
     alignas(16) Uint8 m_cmacTemp[SIZE_CMAC] = {};
     Uint64 m_additionalDataProcessedSize    = {};
-    Uint8  m_key1[32];
-    Uint8  m_key2[32];
+    Uint8  m_key1[32]{};
+    Uint8  m_key2[32]{};
     Uint64 m_padLen = 0;
     Cmac   m_cmac;
 
@@ -91,13 +87,12 @@ class ALCP_API_EXPORT Siv
 
     Siv(Uint32 keyLen_in_bytes)
         : Aes(keyLen_in_bytes)
-    {}
+    {
+    }
     ~Siv();
 };
 
-// AEAD_AUTH_CLASS_GEN(SivHash, Siv, virtual iCipherAuth);
-
-// GCM authentication class
+// SIV authentication class
 class ALCP_API_EXPORT SivHash
     : public Siv
     , public virtual iCipherAuth
@@ -105,7 +100,8 @@ class ALCP_API_EXPORT SivHash
   public:
     SivHash(Uint32 keyLen_in_bytes)
         : Siv(keyLen_in_bytes)
-    {}
+    {
+    }
     ~SivHash() {}
 
     alc_error_t setAad(const Uint8* pInput, Uint64 aadLen) override;
@@ -113,29 +109,31 @@ class ALCP_API_EXPORT SivHash
     alc_error_t setTagLength(Uint64 tagLen) override;
 };
 
-// Declare AEAD Classes
-// vaes512 classes
-CIPHER_CLASS_GEN_DOUBLE(
-    vaes512, Siv128, Ctr128, SivHash, virtual iCipherAead, 128 / 8);
-CIPHER_CLASS_GEN_DOUBLE(
-    vaes512, Siv192, Ctr192, SivHash, virtual iCipherAead, 192 / 8);
-CIPHER_CLASS_GEN_DOUBLE(
-    vaes512, Siv256, Ctr256, SivHash, virtual iCipherAead, 256 / 8);
+template<CipherKeyLen keyLenBits, CpuCipherFeatures arch>
+class SivT
+    : public SivHash
+    , public virtual iCipherAead
+{
+  private:
+    AesGenericCiphersT<CipherMode::eAesCTR, keyLenBits, arch>* ctrobj;
 
-// vaes classes
-CIPHER_CLASS_GEN_DOUBLE(
-    vaes, Siv128, Ctr128, SivHash, virtual iCipherAead, 128 / 8);
-CIPHER_CLASS_GEN_DOUBLE(
-    vaes, Siv192, Ctr192, SivHash, virtual iCipherAead, 192 / 8);
-CIPHER_CLASS_GEN_DOUBLE(
-    vaes, Siv256, Ctr256, SivHash, virtual iCipherAead, 256 / 8);
+  public:
+    SivT()
+        : SivHash((static_cast<Uint32>(keyLenBits)) / 8)
+    {
+        ctrobj =
+            new AesGenericCiphersT<CipherMode::eAesCTR, keyLenBits, arch>();
+    }
+    ~SivT() { delete ctrobj; }
 
-// aesni classes
-CIPHER_CLASS_GEN_DOUBLE(
-    aesni, Siv128, Ctr128, SivHash, virtual iCipherAead, 128 / 8);
-CIPHER_CLASS_GEN_DOUBLE(
-    aesni, Siv192, Ctr192, SivHash, virtual iCipherAead, 192 / 8);
-CIPHER_CLASS_GEN_DOUBLE(
-    aesni, Siv256, Ctr256, SivHash, virtual iCipherAead, 256 / 8);
+  public:
+    alc_error_t encrypt(const Uint8* pInput,
+                        Uint8*       pOutput,
+                        Uint64       len) override;
+    alc_error_t decrypt(const Uint8* pCipherText,
+                        Uint8*       pPlainText,
+                        Uint64       len) override;
+    alc_error_t finish(const void*) override { return ALC_ERROR_NONE; }
+};
 
 } // namespace alcp::cipher

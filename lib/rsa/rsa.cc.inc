@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,6 +26,7 @@
  *
  */
 
+#include <openssl/bn.h>
 namespace mont {
 
 #ifdef COMPILER_IS_GCC
@@ -77,6 +78,54 @@ struct BigNum
     Uint64  m_pos  = 0;
 };
 
+// Convert BigNum to OpenSSL BIGNUM
+BIGNUM*
+BigNumToBignum(const BigNum& customBN)
+{
+    BIGNUM* bn = BN_new();
+    if (!bn) {
+        return nullptr;
+    }
+    int byteIndex = 0 ;
+    // Convert the BigNum array to a byte array
+    unsigned char* bytes = new unsigned char[customBN.m_size * 8]();
+    for (int i = customBN.m_size - 1; i >= 0; --i) {
+        for (int j = 7; j >=0; --j) {
+            bytes[byteIndex++] = (customBN.m_num[i] >> j*8) & 0xFF;
+        }
+    }
+
+    // Assign the byte array to the BIGNUM
+    BN_bin2bn(bytes, customBN.m_size*8, bn);
+    delete[] bytes;
+    return bn;
+}
+// Overloaded function: Convert OpenSSL BIGNUM to BigNum (with result passed by
+// reference)
+void
+BignumToBigNum(const BIGNUM* bn, BigNum& customBN)
+{
+    int            numBytes = BN_num_bytes(bn);
+    unsigned char* bytes    = new unsigned char[numBytes];
+    BN_bn2bin(bn, bytes);
+    for (int i = 0; i < numBytes / 2; ++i) {
+        std::swap(bytes[i], bytes[numBytes - 1 - i]);
+    }
+
+    // Convert the bytes back to uint64_t array
+    customBN.m_size = (numBytes + 7) / 8; // Calculate number of 64-bit words
+    for (int i = customBN.m_size - 1; i >= 0; --i) {
+        customBN.m_num[i] = 0;  // Initialize the 64-bit word to 0
+        for (int j = 7; j >= 0; --j) {
+            int byteIndex = i * 8 + j;
+            if (byteIndex < numBytes) {
+                customBN.m_num[i] = (customBN.m_num[i] << 8) | bytes[byteIndex];
+            }
+        }
+    }
+    customBN.m_pos = BN_is_negative(bn) ? 1 : 0;
+    delete[] bytes;
+}
 static inline void
 GetFromTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
 {
@@ -194,6 +243,34 @@ struct MontCompute
             bigNumRes.m_num, bigNumTmp.m_num, bigNumRes.m_size * 8);
     }
 
+    static inline void computeZen4MontConverter(BigNum& res, const BigNum inp)
+    {
+        BIGNUM* bn = BN_new();
+
+        if (bn == NULL) {
+            return;
+        }
+
+        // Set bn to 2^4096
+        if (!BN_set_bit(bn, res.m_size * 2 * 8 * 8)) {
+            BN_free(bn);
+            return;
+        }
+
+        BIGNUM* bn_mod = BigNumToBignum(inp);
+
+        // Perform BN_mod operation
+        BN_CTX* ctx = BN_CTX_new();
+        if (!BN_mod(bn, bn, bn_mod, ctx)) {
+            return;
+        }
+
+        // Convert the result back to custom BigNum
+        BignumToBigNum(bn, res);
+        BN_free(bn);
+        BN_free(bn_mod);
+        BN_CTX_free(ctx);
+    }
     static inline Uint8 SubBigNum(Uint64*       res,
                                   const Uint64* first,
                                   const Uint64* second,

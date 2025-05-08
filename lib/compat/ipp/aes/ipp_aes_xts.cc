@@ -47,7 +47,6 @@ ippsAES_XTSEncrypt(const Ipp8u*           pSrc,
                           startCipherBlkNo,
                           ALC_AES_MODE_XTS,
                           true);
-    printMsg("ippsAESEncryptXTS_Direct End");
 }
 
 IppStatus
@@ -69,7 +68,6 @@ ippsAES_XTSDecrypt(const Ipp8u*           pSrc,
                           startCipherBlkNo,
                           ALC_AES_MODE_XTS,
                           false);
-    printMsg("ippsAES_XTSDecrypt End");
 }
 
 inline IppStatus

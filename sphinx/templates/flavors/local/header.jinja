@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
             }
 
             elements = document.querySelector("body > footer > div > section > div:nth-child(1) > div > ul").children;
-            var removable_items = ['2024, Advanced Micro Devices, Inc', 'Statement on Forced Labor', 'Fair and Open Competition', 'UK Tax Strategy', 'Cookie Policy', 'Cookie Settings'];
+            var removable_items = ['2025, Advanced Micro Devices, Inc', 'Statement on Forced Labor', 'Fair and Open Competition', 'UK Tax Strategy', 'Cookie Policy', 'Cookie Settings'];
             for(var i = 0; i < elements.length; i++) {
                 if(removable_items.includes(elements[i].innerText)) {
                     elements[i].remove();
@@ -41,7 +41,7 @@
                 }
             }
             
-            document.querySelector('.copyright').textContent = "© 2024 Advanced Micro Devices, Inc";
+            document.querySelector('.copyright').textContent = "© 2025 Advanced Micro Devices, Inc";
         })
     </script>
 {%- endmacro -%}

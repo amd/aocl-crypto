@@ -74,9 +74,6 @@ namespace utilities {
         {
             Uint64             rem = 16 - (in.size() % 16);
             std::vector<Uint8> out = in;
-            if (rem == 0) {
-                rem = 16;
-            }
             out.push_back(0x0f); // Pushing Excape, mark padding
             rem--;
             for (Uint64 i = 0; i < rem; i++) {
@@ -458,6 +455,10 @@ printHelp()
               << "| --iv       |   32 char hex encoded IV     |" << std::endl
               << "| --key      |   32-64 char hex encoded Key |" << std::endl
               << "| --alg      |   --alg aes-ctr-128          |" << std::endl
+              << "| -i         |   Path to input file         |" << std::endl
+              << "| -o         |   Path to output file        |" << std::endl
+              << "| -e         |   Select Encrypt operation   |" << std::endl
+              << "| -d         |   Select Decrypt operation   |" << std::endl
               << "+-------------------------------------------+" << std::endl;
 }
 

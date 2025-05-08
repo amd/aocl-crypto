@@ -61,6 +61,14 @@ struct alcp_dc_ex_t
     Uint8*       m_tkey;  // tweak key
     Uint64       m_tkeyl; // tweak key len
     Uint64       m_block_size;
+
+    const Uint8* m_ad;
+    Uint64       m_adl;
+    Uint8*       m_tag; // Probably const but openssl expects non const
+    Uint64       m_tagl;
+    bool         m_isTagValid;
+
+    Uint8* m_tagBuff; // Place to store tag buffer
     // Initialize everything to 0
     alcp_dc_ex_t()
     {
@@ -73,22 +81,6 @@ struct alcp_dc_ex_t
         m_tkey       = {};
         m_tkeyl      = {};
         m_block_size = {};
-    }
-};
-// alcp_data_cipher_aead_ex_t
-struct alcp_dca_ex_t : public alcp_dc_ex_t
-{
-    const Uint8* m_ad;
-    Uint64       m_adl;
-    Uint8*       m_tag; // Probably const but openssl expects non const
-    Uint64       m_tagl;
-    bool         m_isTagValid;
-
-    Uint8* m_tagBuff; // Place to store tag buffer
-    // Initialize everything to 0
-    alcp_dca_ex_t()
-        : alcp_dc_ex_t::alcp_dc_ex_t()
-    {
         m_ad         = {};
         m_adl        = {};
         m_tag        = {};
@@ -105,84 +97,6 @@ typedef enum
     BIG_DEC,
     BIG_ENC,
 } record_t;
-
-class ExecRecPlay
-{
-  private:
-    File*              m_blackbox_bin = nullptr;
-    File*              m_log          = nullptr;
-    time_t             m_start_time{};
-    time_t             m_end_time{};
-    std::size_t        m_blackbox_start_pos = 0;
-    std::size_t        m_blackbox_end_pos   = 0;
-    record_t           m_rec_type{};
-    std::vector<Uint8> m_key{};
-    std::vector<Uint8> m_iv{};
-    std::vector<Uint8> m_data{};
-    std::string        m_str_mode = "";
-    long m_byte_start = 0, m_byte_end = 0, m_rec_t = 0, m_key_size = 0,
-         m_data_size      = 0;
-    long m_prev_log_point = 0;
-
-  public:
-    // Create new files for writing
-    ExecRecPlay();                     // Default Record Mode
-    ExecRecPlay(std::string str_mode); // Default Record Mode
-    ExecRecPlay(std::string str_mode, bool playback);
-    ExecRecPlay(std::string str_mode, std::string dir_name, bool playback);
-
-    // Destructor, free and clear pointers
-    ~ExecRecPlay();
-
-    void init(std::string str_mode, std::string dir_name, bool playback);
-
-    // Rewind log pointer
-    bool rewindLog();
-    bool nextLog();
-    bool fastForward(record_t rec);
-    bool getValues(std::vector<Uint8>* key,
-                   std::vector<Uint8>* iv,
-                   std::vector<Uint8>* data);
-
-    bool playbackLocateEvent(record_t rec);
-
-    // Start a new event, so initalize new entry.
-    void startRecEvent();
-
-    // End the event, so record end time.
-    void endRecEvent();
-
-    /**
-     * @brief Set everything generated during test
-     *
-     * @param key - 128/192/256 bit KEY
-     * @param iv - 128 bit IV
-     * @param data - PlainText/CipherText
-     * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
-     */
-    void setRecEvent(std::vector<Uint8> key,
-                     std::vector<Uint8> iv,
-                     std::vector<Uint8> data,
-                     record_t           rec);
-
-    // Sets the Key of the event
-    void setRecKey(std::vector<Uint8> key);
-
-    // Sets the IV of the event
-    void setRecIv(std::vector<Uint8> iv);
-
-    // Sets the Data in the event
-    void setRecData(std::vector<Uint8> data);
-
-    // Set Test type, BIG_ENC,SMALL_ENC etc..
-    void setRecType(record_t rec);
-
-    // Write to backbox, write binary data, not the actual log
-    void dumpBlackBox();
-
-    // Write to event log, csv file about the event
-    void dumpLog();
-};
 
 /**
  * @brief CipherBase is a wrapper for which library to use

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -93,7 +93,7 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     }
     ctx.m_drbg = static_cast<void*>(hmacdrbg);
 
-    hmacdrbg->setDigest(p_digest);
+    hmacdrbg->setDigest(std::move(p_digest));
 
     return err;
 }

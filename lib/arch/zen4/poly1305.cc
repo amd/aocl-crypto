@@ -342,6 +342,53 @@ loadx8_message_radix44(const Uint8* p_msg,
     return 512;
 }
 
+inline int
+loadx7_message_radix44(const Uint8* p_msg,
+                       __m512i&     m0,
+                       __m512i&     m1,
+                       __m512i&     m2)
+{
+    __m512i temp0, temp1, temp2, temp3;
+    // Load 512 bits from p_msg into m0 and m1 using _mm512_loadu_si512
+    m0 = _mm512_setzero_si512();
+    m0 = _mm512_mask_loadu_epi64(m0, 0b11111100, p_msg - 16);
+    m1 = _mm512_loadu_si512(p_msg + 48);
+
+    // Unpack 64 bit integers from m0 and m1 and save it to temp0 and temp1
+    temp0 = _mm512_unpacklo_epi64(m0, m1);
+    temp1 = _mm512_unpackhi_epi64(m0, m1);
+
+    // Radix first value calculation
+    // Truncate to 44 bits
+    m0 = _mm512_and_epi64(temp0, _mm512_set1_epi64(0xfffffffffff));
+    // Radix second value calculation
+    // Take out 44 bits which has been consumed by 1st part of radix
+    temp2 = _mm512_srlv_epi64(temp0, _mm512_set1_epi64(44));
+    // Make space for 20 bits from lo, which combined with 24 bits from hi will
+    // make 44 bits
+    temp3 = _mm512_sllv_epi64(temp1, _mm512_set1_epi64(20));
+    // Or temp2 and temp3 to create radix second value
+    temp2 = _mm512_or_epi64(temp2, temp3);
+    // Truncate to 44 bits
+    m1 = _mm512_and_epi64(temp2, _mm512_set1_epi64(0xfffffffffff));
+    // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
+    // of radix
+    temp3 = _mm512_srlv_epi64(temp1, _mm512_set1_epi64(24));
+    // Truncate to 44 bits
+    m2 = _mm512_and_epi64(temp3, _mm512_set1_epi64(0xfffffffffff));
+    m2 = _mm512_or_epi64(m2,
+                         _mm512_setr_epi64(0,
+                                           1ULL << 40,
+                                           1ULL << 40,
+                                           1ULL << 40,
+                                           1ULL << 40,
+                                           1ULL << 40,
+                                           1ULL << 40,
+                                           1ULL << 40));
+
+    return 384;
+}
+
 // Function to broadcast r value to reg0, reg1, reg2 which are 512 bit registers
 inline void
 broadcast_r(const Uint64 r[3], __m512i& reg0, __m512i& reg1, __m512i& reg2)
@@ -476,7 +523,7 @@ poly1305_multx1_radix44_standalone(const Uint64 a[3],
     _mm512_mask_storeu_epi64(out + 2, 0x01, m2);
 }
 
-void
+inline void
 load_all_r(Uint64   r[3],
            Uint64   r2[3],
            Uint64   r3[3],
@@ -498,18 +545,36 @@ load_all_r(Uint64   r[3],
         r8[2], r4[2], r7[2], r3[2], r6[2], r2[2], r5[2], r[2]);
 }
 
+inline void
+load_r1_to_r7(Uint64   r[3],
+              Uint64   r2[3],
+              Uint64   r3[3],
+              Uint64   r4[3],
+              Uint64   r5[3],
+              Uint64   r6[3],
+              Uint64   r7[3],
+              __m512i& reg0,
+              __m512i& reg1,
+              __m512i& reg2)
+{
+    // FIXME: Order of r, r2, r3, r4, r5, r6, r7, r8 is wrong
+    reg0 = _mm512_setr_epi64(r7[0], r3[0], r6[0], r2[0], r5[0], r[0], r4[0], 1);
+    reg1 = _mm512_setr_epi64(r7[1], r3[1], r6[1], r2[1], r5[1], r[1], r4[1], 0);
+    reg2 = _mm512_setr_epi64(r7[2], r3[2], r6[2], r2[2], r5[2], r[2], r4[2], 0);
+}
+
 void
-poly1305_block_finalx8(__m512i& a0,
-                       __m512i& a1,
-                       __m512i& a2,
-                       Uint64   r[3],
-                       Uint64   r2[3],
-                       Uint64   r3[3],
-                       Uint64   r4[3],
-                       Uint64   r5[3],
-                       Uint64   r6[3],
-                       Uint64   r7[3],
-                       Uint64   r8[3])
+poly1305_blocksx8_final(__m512i& a0,
+                        __m512i& a1,
+                        __m512i& a2,
+                        Uint64   r[3],
+                        Uint64   r2[3],
+                        Uint64   r3[3],
+                        Uint64   r4[3],
+                        Uint64   r5[3],
+                        Uint64   r6[3],
+                        Uint64   r7[3],
+                        Uint64   r8[3])
 {
     __m512i reg_r0, reg_r1, reg_r2;
     __m512i reg_s1, reg_s2;
@@ -622,6 +687,7 @@ poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32])
     poly1305_multx1_radix44_standalone(state.r7, state.r, state.r8);
 }
 
+#if 0
 inline void
 poly1305_blocksx8_radix44(Poly1305State44& state,
                           const Uint8*&    pMsg,
@@ -674,45 +740,86 @@ poly1305_blocksx8_radix44(Poly1305State44& state,
     _mm512_store_epi64(state.acc1, reg_acc1);
     _mm512_store_epi64(state.acc2, reg_acc2);
 }
+#else
 
+/**
+ * @brief Downgrades X1 state to X8 state.
+ *
+ * X8 state is divided into 8 acc
+ * Each acc is to be properly multiplied and added together
+ *
+ *  =========================================================
+ * | acc[0] = acc[0]                                         |
+ * | acc[1] = 0                                              |
+ * | acc[2] = 0                                              |
+ * | acc[3] = 0                                              |
+ * | acc[4] = 0                                              |
+ * | acc[5] = 0                                              |
+ * | acc[6] = 0                                              |
+ * | acc[7] = 0                                              |
+ *  =========================================================
+ * @param state
+ * @param pMsg
+ * @param len
+ */
 inline void
-poly1305_blocksx1_radix44(Poly1305State44& state,
-                          const Uint8*&    pMsg,
-                          Uint64&          len)
+poly1305_blocksx1_to_blocksx8(Poly1305State44& state,
+                              const Uint8*&    pMsg,
+                              Uint64&          len)
 {
-    __m512i reg_msg0, reg_msg1, reg_msg2;
+    // Upgrade x1 to x8
     __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
             reg_acc1 = _mm512_load_epi64(state.acc1),
             reg_acc2 = _mm512_load_epi64(state.acc2);
 
-    __m512i reg_r0, reg_r1, reg_r2;
-    __m512i reg_s1, reg_s2;
-    if (state.fold) {
-        poly1305_block_finalx8(reg_acc0,
-                               reg_acc1,
-                               reg_acc2,
-                               state.r,
-                               state.r2,
-                               state.r3,
-                               state.r4,
-                               state.r5,
-                               state.r6,
-                               state.r7,
-                               state.r8);
-        state.fold = false;
+    __m512i reg_msg0, reg_msg1, reg_msg2;
+
+    // Mask every value except the first acc
+    __m512i mask = _mm512_setr_epi64(-1, 0, 0, 0, 0, 0, 0, 0);
+
+    reg_acc0 = _mm512_and_epi64(reg_acc0, mask);
+    reg_acc1 = _mm512_and_epi64(reg_acc1, mask);
+    reg_acc2 = _mm512_and_epi64(reg_acc2, mask);
+
+    loadx7_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
+
+    reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
+    reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
+    reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
+
+    len -= 112;
+    pMsg += 112;
+
+    _mm512_store_epi64(state.acc0, reg_acc0);
+    _mm512_store_epi64(state.acc1, reg_acc1);
+    _mm512_store_epi64(state.acc2, reg_acc2);
+}
+
+inline void
+poly1305_blocksx8_radix44(Poly1305State44& state,
+                          const Uint8*&    pMsg,
+                          Uint64&          len)
+{
+    __m512i reg_msg0, reg_msg1, reg_msg2;
+
+    __m512i reg_r0{}, reg_r1{}, reg_r2{};
+    __m512i reg_s1{}, reg_s2{};
+
+    if (state.fold == false) {
+        poly1305_blocksx1_to_blocksx8(state, pMsg, len);
+        state.fold = true;
     }
-    broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
+
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
+
+    // Move to init sequence
+    broadcast_r(state.r8, reg_r0, reg_r1, reg_r2);
     poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
 
-    while (len >= 16) {
-        loadx1_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
-        // Add m0, m1, m2 to a0, a1, a2
-        reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
-        reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
-        reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
-
-        pMsg += 16;
-        len -= 16;
+    while (len >= 128) {
+        loadx8_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
 
         poly1305_multx8_radix44(reg_acc0,
                                 reg_acc1,
@@ -722,10 +829,198 @@ poly1305_blocksx1_radix44(Poly1305State44& state,
                                 reg_r2,
                                 reg_s1,
                                 reg_s2);
+
+        reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
+        reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
+        reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
+
+        len -= 128;
+        pMsg += 128;
+    }
+
+    _mm512_store_epi64(state.acc0, reg_acc0);
+    _mm512_store_epi64(state.acc1, reg_acc1);
+    _mm512_store_epi64(state.acc2, reg_acc2);
+}
+
+#endif
+
+/**
+ * @brief Downgrades X8 state to X1 state.
+ *
+ * X8 state is divided into 8 acc
+ * Each acc is to be properly multiplied and added together
+ *
+ * acc[0] =
+ *  =========================================================
+ * | acc[0]*r**7 + acc[1]*r**6 + acc[2]*r**5 + acc[3]*r**4 + |
+ * | acc[4]*r**3 + acc[5]*r**2 + acc[6]*r**1 + acc[7]*r**0   |
+ *  =========================================================
+ * @param state
+ * @param pMsg
+ * @param len
+ */
+inline void
+poly1305_blocksx8_to_blocksx1(Poly1305State44& state) // len is useless here
+{
+    // Downgrade x8 to x1
+
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
+
+    __m512i reg_r0, reg_r1, reg_r2;
+    __m512i reg_s1, reg_s2;
+
+    load_r1_to_r7(state.r,
+                  state.r2,
+                  state.r3,
+                  state.r4,
+                  state.r5,
+                  state.r6,
+                  state.r7,
+                  reg_r0,
+                  reg_r1,
+                  reg_r2);
+
+    // acc *= 1,r,r2,r3,r4,r5,r6,r7
+    poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
+
+    poly1305_multx8_radix44(
+        reg_acc0, reg_acc1, reg_acc2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
+
+    // Horizontal addition
+    // Downgrade to avx2, a0_256_0 and a0_256_1, a1_256_0 and a1_256_1 and
+    // a2_256_0 and a2_256_1
+    __m256i a0_256_0 = _mm512_extracti64x4_epi64(reg_acc0, 0);
+    __m256i a0_256_1 = _mm512_extracti64x4_epi64(reg_acc0, 1);
+    __m256i a1_256_0 = _mm512_extracti64x4_epi64(reg_acc1, 0);
+    __m256i a1_256_1 = _mm512_extracti64x4_epi64(reg_acc1, 1);
+    __m256i a2_256_0 = _mm512_extracti64x4_epi64(reg_acc2, 0);
+    __m256i a2_256_1 = _mm512_extracti64x4_epi64(reg_acc2, 1);
+    // Add a0_256_0 and a0_256_1 and save it to a0_256_0
+    a0_256_0 = _mm256_add_epi64(a0_256_0, a0_256_1);
+    // Add a1_256_0 and a1_256_1 and save it to a1_256_0
+    a1_256_0 = _mm256_add_epi64(a1_256_0, a1_256_1);
+    // Add a2_256_0 and a2_256_1 and save it to a2_256_0
+    a2_256_0 = _mm256_add_epi64(a2_256_0, a2_256_1);
+
+    // Downgrade to SSE, a0_128_0, a0_128_1, a1_128_0, a1_128_1, a2_128_0,
+    // a2_128_1
+    __m128i a0_128_0 = _mm256_extracti128_si256(a0_256_0, 0);
+    __m128i a0_128_1 = _mm256_extracti128_si256(a0_256_0, 1);
+    __m128i a1_128_0 = _mm256_extracti128_si256(a1_256_0, 0);
+    __m128i a1_128_1 = _mm256_extracti128_si256(a1_256_0, 1);
+    __m128i a2_128_0 = _mm256_extracti128_si256(a2_256_0, 0);
+    __m128i a2_128_1 = _mm256_extracti128_si256(a2_256_0, 1);
+    // Add a0_128_0 and a0_128_1 and save it to a0_128_0
+    a0_128_0 = _mm_add_epi64(a0_128_0, a0_128_1);
+    // Add a1_128_0 and a1_128_1 and save it to a1_128_0
+    a1_128_0 = _mm_add_epi64(a1_128_0, a1_128_1);
+    // Add a2_128_0 and a2_128_1 and save it to a2_128_0
+    a2_128_0 = _mm_add_epi64(a2_128_0, a2_128_1);
+
+    // Fold a0_128_0, a1_128_0, a2_128_0 to a0, a1, a2
+    Uint64 _a0, _a1, _a2;
+    _a0 = a0_128_0[0] + a0_128_0[1];
+    _a1 = a1_128_0[0] + a1_128_0[1];
+    _a2 = a2_128_0[0] + a2_128_0[1];
+
+    // Save back _a0, _a1, _a2 to a0, a1, a2, set all other values to 0
+    reg_acc0 = _mm512_setr_epi64(_a0, 0, 0, 0, 0, 0, 0, 0);
+    reg_acc1 = _mm512_setr_epi64(_a1, 0, 0, 0, 0, 0, 0, 0);
+    reg_acc2 = _mm512_setr_epi64(_a2, 0, 0, 0, 0, 0, 0, 0);
+
+    // Optimization: Use 64 bit math to calculate a0, a1, a2 than using 512 bit
+    // math. Carry propagation with modulo Right shift a0 by 44 bits
+    __m512i carry = _mm512_srlv_epi64(reg_acc0, _mm512_set1_epi64(44));
+    // Mask 0xfffffffffff (44 bits) to a0
+    reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(0xfffffffffff));
+    // Add carry to a1
+    reg_acc1 = _mm512_add_epi64(reg_acc1, carry);
+    // Right shift reg_acc1 by 44 bits
+    carry = _mm512_srlv_epi64(reg_acc1, _mm512_set1_epi64(44));
+    // Mask 0xfffffffffff (44 bits) to reg_acc1
+    reg_acc1 = _mm512_and_epi64(reg_acc1, _mm512_set1_epi64(0xfffffffffff));
+    // Add carry to a2
+    reg_acc2 = _mm512_add_epi64(reg_acc2, carry);
+    // Right shift reg_acc2 by 42 bits
+    carry = _mm512_srlv_epi64(reg_acc2, _mm512_set1_epi64(42));
+    // Mask 0x3ffffffffff (42 bits) to reg_acc2
+    reg_acc2 = _mm512_and_epi64(reg_acc2, _mm512_set1_epi64(0x3ffffffffff));
+    // Add carry to reg_acc0
+    reg_acc0 = _mm512_add_epi64(
+        reg_acc0, _mm512_mullo_epi64(carry, _mm512_set1_epi64(5)));
+    // Right shift reg_acc0 by 44 bits
+    carry = _mm512_srlv_epi64(reg_acc0, _mm512_set1_epi64(44));
+    // Mask 0xfffffffffff (44 bits) to reg_acc0
+    reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(0xfffffffffff));
+    // Add carry to reg_acc1
+    reg_acc1 = _mm512_add_epi64(reg_acc1, carry);
+
+    _mm512_store_epi64(state.acc0, reg_acc0);
+    _mm512_store_epi64(state.acc1, reg_acc1);
+    _mm512_store_epi64(state.acc2, reg_acc2);
+}
+
+inline void
+poly1305_blocksx1_radix44(Poly1305State44& state,
+                          const Uint8*&    pMsg,
+                          Uint64&          len)
+{
+    __m512i reg_msg0, reg_msg1, reg_msg2;
+
+    __m512i reg_r0, reg_r1, reg_r2;
+    __m512i reg_s1, reg_s2;
+    if (state.fold) {
+        // No need to completely fold
+        poly1305_blocksx8_to_blocksx1(state);
+        state.fold = false;
+    }
+
+    __m512i reg_acc0 = _mm512_load_epi64(state.acc0),
+            reg_acc1 = _mm512_load_epi64(state.acc1),
+            reg_acc2 = _mm512_load_epi64(state.acc2);
+
+    broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
+    poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
+
+    while (len >= 16) {
+        loadx1_message_radix44(pMsg, reg_msg0, reg_msg1, reg_msg2);
+
+        poly1305_multx8_radix44(reg_acc0,
+                                reg_acc1,
+                                reg_acc2,
+                                reg_r0,
+                                reg_r1,
+                                reg_r2,
+                                reg_s1,
+                                reg_s2);
+
+        // Add m0, m1, m2 to a0, a1, a2
+        reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
+        reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
+        reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
+
+        pMsg += 16;
+        len -= 16;
     }
     _mm512_store_epi64(state.acc0, reg_acc0);
     _mm512_store_epi64(state.acc1, reg_acc1);
     _mm512_store_epi64(state.acc2, reg_acc2);
+}
+
+inline void
+poly1305_blockx1_final(__m512i& a0, __m512i& a1, __m512i& a2, Uint64 r[3])
+{
+    __m512i reg_r0, reg_r1, reg_r2;
+    __m512i reg_s1, reg_s2;
+
+    broadcast_r(r, reg_r0, reg_r1, reg_r2);
+    poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
+
+    /* Do the last multiplication with "r" */
+    poly1305_multx8_radix44(a0, a1, a2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
 }
 
 void
@@ -743,17 +1038,17 @@ poly1305_partial_blocks(Poly1305State44& state)
 
     assert(state.msg_buffer_len < 16);
     if (state.fold == true) {
-        poly1305_block_finalx8(reg_acc0,
-                               reg_acc1,
-                               reg_acc2,
-                               state.r,
-                               state.r2,
-                               state.r3,
-                               state.r4,
-                               state.r5,
-                               state.r6,
-                               state.r7,
-                               state.r8);
+        poly1305_blocksx8_final(reg_acc0,
+                                reg_acc1,
+                                reg_acc2,
+                                state.r,
+                                state.r2,
+                                state.r3,
+                                state.r4,
+                                state.r5,
+                                state.r6,
+                                state.r7,
+                                state.r8);
         state.fold = false;
     }
 
@@ -769,15 +1064,16 @@ poly1305_partial_blocks(Poly1305State44& state)
     broadcast_r(state.r, reg_r0, reg_r1, reg_r2);
     poly1305_calculate_modulo_trick_value(reg_r1, reg_r2, reg_s1, reg_s2);
 
+    state.msg_buffer_len = 0; // Reset message buffer
+
+    // Multiply with r
+    poly1305_multx8_radix44(
+        reg_acc0, reg_acc1, reg_acc2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
+
     // Add m0, m1, m2 to a0, a1, a2
     reg_acc0 = _mm512_add_epi64(reg_acc0, reg_msg0);
     reg_acc1 = _mm512_add_epi64(reg_acc1, reg_msg1);
     reg_acc2 = _mm512_add_epi64(reg_acc2, reg_msg2);
-
-    state.msg_buffer_len = 0; // Reset message buffer
-
-    poly1305_multx8_radix44(
-        reg_acc0, reg_acc1, reg_acc2, reg_r0, reg_r1, reg_r2, reg_s1, reg_s2);
 
     _mm512_store_epi64(state.acc0, reg_acc0);
     _mm512_store_epi64(state.acc1, reg_acc1);
@@ -839,18 +1135,20 @@ poly1305_finalize_radix44(Poly1305State44& state,
             reg_acc1 = _mm512_load_epi64(state.acc1),
             reg_acc2 = _mm512_load_epi64(state.acc2);
     if (state.fold) {
-        poly1305_block_finalx8(reg_acc0,
-                               reg_acc1,
-                               reg_acc2,
-                               state.r,
-                               state.r2,
-                               state.r3,
-                               state.r4,
-                               state.r5,
-                               state.r6,
-                               state.r7,
-                               state.r8);
+        poly1305_blocksx8_final(reg_acc0,
+                                reg_acc1,
+                                reg_acc2,
+                                state.r,
+                                state.r2,
+                                state.r3,
+                                state.r4,
+                                state.r5,
+                                state.r6,
+                                state.r7,
+                                state.r8);
         state.fold = false;
+    } else {
+        poly1305_blockx1_final(reg_acc0, reg_acc1, reg_acc2, state.r);
     }
 
     reg_acc0 = _mm512_add_epi64(reg_acc0, _mm512_set1_epi64(state.s[0]));

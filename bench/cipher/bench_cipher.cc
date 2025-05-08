@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,7 @@ CipherAeadBench(benchmark::State& state,
     alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8]      = {};
     alcp::testing::CipherAeadBase* p_cb                        = nullptr;
 
-    alcp::testing::alcp_dca_ex_t data;
+    alcp::testing::alcp_dc_ex_t data;
     data.m_in      = vec_in_arr;
     data.m_inl     = cBlockSize;
     data.m_out     = vec_out_arr;
@@ -77,12 +77,21 @@ CipherAeadBench(benchmark::State& state,
     data.m_tkey    = tkey;
     data.m_tkeyl   = 16;
 
+    alc_cipher_state_t cipherState;
+
     if (alcpMode == ALC_AES_MODE_SIV) {
         data.m_ivl = 16;
     }
 
-    alcp::testing::AlcpCipherAeadBase acb = alcp::testing::AlcpCipherAeadBase(
-        alcpMode, data.m_iv, data.m_ivl, key, keylen, data.m_tkey, data.m_outl);
+    alcp::testing::AlcpCipherAeadBase acb =
+        alcp::testing::AlcpCipherAeadBase(alcpMode,
+                                          data.m_iv,
+                                          data.m_ivl,
+                                          key,
+                                          keylen,
+                                          data.m_tkey,
+                                          data.m_outl,
+                                          &cipherState);
 
     p_cb = &acb;
 #ifdef USE_IPP
@@ -94,21 +103,23 @@ CipherAeadBench(benchmark::State& state,
                                                                  key,
                                                                  keylen,
                                                                  data.m_tkey,
-                                                                 data.m_outl);
+                                                                 data.m_outl,
+                                                                 nullptr);
         p_cb = icb.get();
     }
 #endif
 #ifdef USE_OSSL
     std::unique_ptr<alcp::testing::OpenSSLCipherAeadBase> ocb;
     if (useossl) {
-        ocb =
-            std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(alcpMode,
-                                                                   data.m_iv,
-                                                                   data.m_ivl,
-                                                                   key,
-                                                                   keylen,
-                                                                   data.m_tkey,
-                                                                   data.m_outl);
+        ocb = std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(
+            alcpMode,
+            data.m_iv,
+            data.m_ivl,
+            key,
+            keylen,
+            data.m_tkey,
+            data.m_outl,
+            &cipherState);
         p_cb = ocb.get();
     }
 #endif
@@ -543,6 +554,51 @@ BENCH_AES_DECRYPT_SIV_256(benchmark::State& state)
 }
 // END 256 bit keysize
 
+/* Multi-init Benchmarks*/
+#ifdef MULTI_INIT_BENCH
+static void
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 128));
+}
+
+static void
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 128));
+}
+
+static void
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 192));
+}
+
+static void
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 192));
+}
+
+static void
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 256));
+}
+
+static void
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 256));
+}
+#endif
+
 /* non AES ciphers */
 static void
 BENCH_CHACHA20_ENCRYPT_256(benchmark::State& state)
@@ -573,6 +629,12 @@ BENCH_CHACHA20_POLY1305_DECRYPT_256(benchmark::State& state)
 int
 AddBenchmarks()
 {
+    /* check if custom block size is provided by user */
+    if (block_size != 0) {
+        std::cout << "Custom block size selected:" << block_size << std::endl;
+        blocksizes.resize(1);
+        blocksizes[0] = block_size;
+    }
     /* IPPCP doesnt have Chacha20 stream cipher variant yet */
     if (!useipp) {
         BENCHMARK(BENCH_CHACHA20_ENCRYPT_256)->ArgsProduct({ blocksizes });
@@ -632,6 +694,17 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_CCM_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CCM_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CCM_192)->ArgsProduct({ blocksizes });
+
+#ifdef MULTI_INIT_BENCH
+    //Multi-Init Benchmarks
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
+#endif
+
     return 0;
 }
 

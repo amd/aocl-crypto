@@ -29,6 +29,8 @@
 #ifndef _UTILS_COPY_HH
 #define _UTILS_COPY_HH 2
 
+#define __STDC_WANT_LIB_EXT1__ 1
+
 #pragma once
 
 #include <cassert>
@@ -39,8 +41,8 @@
 #include <cstring>
 
 // FIXME: Temporarily memcpy and memset are used for CopyBytes, CopyBlock,
-// CopyBlock, PadBlock and PadBytes as the addresses may not be aligned for the
-// CopyType and can cause misaligned load or misaligned store undefined
+// CopyBlock, PadBlock and PadBytes as the addresses may not be aligned for
+// the CopyType and can cause misaligned load or misaligned store undefined
 // behaviours.
 
 namespace alcp::utils {
@@ -229,7 +231,10 @@ static inline alc_error_t
 SecureCopy(void* pDest, Uint64 destSize, const void* pSrc, Uint64 srcSize)
 {
 #ifdef __STDC_LIB_EXT1__
-    memcpy_s(pDest, destSize, pSrc, srcSize);
+    int err = memcpy_s(pDest, destSize, pSrc, srcSize);
+    if (err != 0) {
+        return ALC_ERROR_EXISTS;
+    }
 #else
     if (pDest == nullptr || pSrc == nullptr) {
         return ALC_ERROR_INVALID_ARG;
@@ -237,9 +242,9 @@ SecureCopy(void* pDest, Uint64 destSize, const void* pSrc, Uint64 srcSize)
     if (destSize < srcSize) {
         return ALC_ERROR_INVALID_SIZE;
     }
-    CopyBlock<T>(pDest, pSrc, srcSize);
-    return ALC_ERROR_NONE;
+    memcpy(pDest, pSrc, srcSize);
 #endif
+    return ALC_ERROR_NONE;
 }
 
 } // namespace alcp::utils

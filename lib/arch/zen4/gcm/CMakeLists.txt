@@ -1,4 +1,4 @@
- # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -26,49 +26,49 @@
 
 FILE(GLOB ZEN4_GCM_SRCS "*.cc")
 
-
 # clang compiler generates optimal code compared to gcc.
-# FIXME! avoid duplication below. Issue for clang > 18
 if(ALCP_ENABLE_DYNAMIC_COMPILER_PICK)
 	if(CMAKE_COMPILER_IS_GCC)
-		find_program(CLANG14 clang-14)
-		find_program(CLANG15 clang-15)
-		find_program(CLANG16 clang-16)
-		find_program(CLANG17 clang-17)
-		find_program(CLANG18 clang-18)
+		find_program(CLANG_14 clang-14)
+		find_program(CLANGPP_14 clang++-14)
+		find_program(CLANG_15 clang-15)
+		find_program(CLANGPP_15 clang++-15)
+		find_program(CLANG_16 clang-16)
+		find_program(CLANG_PP16 clang++-16)
+		find_program(CLANG_17 clang-17)
+		find_program(CLANGPP_17 clang++-17)
+		find_program(CLANG_18 clang-18)
+		find_program(CLANGPP_18 clang++-18)
  		#below order preference can be modified based on results.
-		if (CLANG14)
+		if (CLANG_14 AND CLANGPP_14)
 			set(CMAKE_C_COMPILER "clang-14")
 			set(CMAKE_CXX_COMPILER "clang++-14")
 			message(STATUS  "clang-14 has been chosen for gcm-zen4 for better performance")
-		elseif (CLANG15)
+		elseif (CLANG15 AND CLANGPP_15)
 			set(CMAKE_C_COMPILER "clang-15")
 			set(CMAKE_CXX_COMPILER "clang++-15")
-			message(STATUS  "clang-15 has been chosen for gcm-zen4 for better performance")
-		elseif (CLANG16)
+			message(WARNING  "Using clang-15, but clang-14 is recommended for gcm-zen4 for better performance")
+		elseif (CLANG16 AND CLANGPP_16)
 			set(CMAKE_C_COMPILER "clang-16")
 			set(CMAKE_CXX_COMPILER "clang++-16")
-			message(STATUS  "clang-16 has been chosen for gcm-zen4 for better performance")
-		elseif (CLANG17)
+			message(WARNING  "Using clang-16, but clang-14 is recommended for gcm-zen4 for better performance")
+		elseif (CLANG17 AND CLANGPP_17)
 			set(CMAKE_C_COMPILER "clang-17")
 			set(CMAKE_CXX_COMPILER "clang++-17")
-			message(STATUS  "clang-17 has been chosen for gcm-zen4 for better performance")
-		elseif (CLANG18)
+			message(WARNING  "Using clang-17, but clang-14 is recommended for gcm-zen4 for better performance")
+		elseif (CLANG18 AND CLANGPP_18)
 			set(CMAKE_C_COMPILER "clang-18")
 			set(CMAKE_CXX_COMPILER "clang++-18")
-			message(STATUS  "clang-18 has been chosen for gcm-zen4 for better performance")
+			message(WARNING  "Using clang-18, but clang-14 is recommended for gcm-zen4 for better performance")
 		else()
-			message(STATUS  "Installing clang compiler (ver >= 14) will help better performance for GCM on zen4 arch over gcc compiler")
+			message(STATUS  "Using clang14 will help better performance for GCM on zen4 arch over gcc")
 	endif()
 	endif(CMAKE_COMPILER_IS_GCC)
 endif(ALCP_ENABLE_DYNAMIC_COMPILER_PICK)
 
 alcp_get_arch_cflags_zen4_clang()
 
-
-
 MESSAGE(STATUS "COMPILE_FLAGS:ZEN4:${ARCH_COMPILE_FLAGS}")
-
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include ../)
 INCLUDE_DIRECTORIES(../)

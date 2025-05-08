@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2025, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -25,7 +25,7 @@
 
 include(TestBigEndian)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.22)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.26)
 
 set(PROJECT_FULL_NAME "AOCL-Cryptography")
 set(PROJECT_NAME "ALCP")
@@ -47,7 +47,7 @@ ELSEIF(WIN32)
 ENDIF(UNIX)
 
 # Set the release version
-set(AOCL_RELEASE_VERSION "5.0.0" CACHE STRING "AOCL RELEASE VERSION")
+set(AOCL_RELEASE_VERSION "5.1.0" CACHE STRING "AOCL RELEASE VERSION")
 
 PROJECT (ALCP
          VERSION ${AOCL_RELEASE_VERSION}
@@ -63,6 +63,11 @@ alcp_check_compiler_version()
 
 # check build environment
 alcp_get_build_environment()
+
+# check for 7zip installation, needed by static library creation on linux
+if(UNIX)
+	check_7zip_installed()
+endif(UNIX)
 
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
@@ -106,7 +111,6 @@ OPTION(ALCP_SANITIZE "COMPILE WITH SANITIZER SUPPORT TO DETECT MEMORY ERRORS" OF
 
 # All the options which are available with ALCP
 # These options can be listed with cmake -LH
-OPTION(ALCP_ENABLE_DOCS "ENABLE DOCUMENTATION" OFF)
 OPTION(ALCP_ENABLE_HTML "ENABLE HTML DOCUMENT GENERATION" OFF)
 IF(ALCP_ENABLE_HTML)
 	OPTION(ALCP_ENABLE_DOXYGEN "ENABLE DOXYGEN DOCUMENTATION GENERATION" ON)
@@ -183,11 +187,15 @@ IF(ALCP_ENABLE_CCM_MULTI_UPDATE)
 	ADD_COMPILE_OPTIONS("-DCCM_MULTI_UPDATE")
 ENDIF(ALCP_ENABLE_CCM_MULTI_UPDATE)
 
-ADD_SUBDIRECTORY(lib)
+# gcm always compute table optimization flag
+OPTION(ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE "ENABLE THIS FOR PERFORMANCE UPLIFT IN APPLICATIONS USING AES-GCM" ON)
 
-IF (ALCP_ENABLE_DOCS)
-	ADD_SUBDIRECTORY(docs)
-ENDIF()
+IF(ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE)
+	message(STATUS "ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE is enabled")
+	ADD_COMPILE_OPTIONS("-DGCM_ALWAYS_COMPUTE")
+ENDIF(ALCP_ENABLE_GCM_ALWAYS_COMPUTE_TABLE)
+
+ADD_SUBDIRECTORY(lib)
 
 IF(ALCP_ENABLE_HTML)
 IF(ALCP_ENABLE_DOXYGEN)
@@ -219,6 +227,11 @@ ENDIF()
 
 # building test bench
 IF (ALCP_ENABLE_BENCH)
+	# bench wont compile without tests enabled!
+	IF (NOT ALCP_ENABLE_TESTS)
+		MESSAGE(FATAL_ERROR "Tests need to be enabled for Benchmarks!(set ALCP_ENABLE_TESTS to ON)")
+	endif()
+	# check if bench dir exists
 	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/bench)
     	MESSAGE(FATAL_ERROR "Bench folder not found!")
     ENDIF()
@@ -296,7 +309,7 @@ ENDIF (ALCP_ENABLE_EXAMPLES)
 FILE(GLOB INSTALL_DOCS_REL_NOTES
 			${CMAKE_CURRENT_SOURCE_DIR}/docs/ReleaseNotes.txt)
 FILE(GLOB INSTALL_DOCS_COMPAT
-			${CMAKE_CURRENT_SOURCE_DIR}/docs/compat/*.pdf)
+			${CMAKE_CURRENT_SOURCE_DIR}/docs/compat/*.md)
 FILE(GLOB INSTALL_DOCS_LICENSE
 			${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
 FILE(GLOB INSTALL_DOCS_README

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,8 +40,7 @@ IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{
-}
+{}
 
 IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
@@ -49,7 +48,8 @@ IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
                                      const Uint8*            key,
                                      const Uint32            key_len,
                                      const Uint8*            tkey,
-                                     const Uint64            block_size)
+                                     const Uint64            block_size,
+                                     alc_cipher_state_t*     pCipherState)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_tkey{ tkey }
@@ -101,16 +101,16 @@ IPPCipherAeadBase::IPPCipherAeadBase(const alc_cipher_mode_t mode,
 IPPCipherAeadBase::~IPPCipherAeadBase()
 {
     if (m_ctx != nullptr) {
-        delete[] (Ipp8u*)m_ctx;
+        delete[](Ipp8u*) m_ctx;
     }
     if (m_ctx_gcm != nullptr) {
-        delete[] (Ipp8u*)m_ctx_gcm;
+        delete[](Ipp8u*) m_ctx_gcm;
     }
     if (m_ctx_ccm != nullptr) {
-        delete[] (Ipp8u*)m_ctx_ccm;
+        delete[](Ipp8u*) m_ctx_ccm;
     }
     if (m_ctx_xts != nullptr) {
-        delete[] (Ipp8u*)m_ctx_xts;
+        delete[](Ipp8u*) m_ctx_xts;
     }
 }
 
@@ -156,7 +156,7 @@ IPPCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
         case ALC_AES_MODE_GCM:
             status = ippsAES_GCMGetSize(&m_ctxSize);
             if (m_ctx_gcm != nullptr) {
-                delete[] (Ipp8u*)m_ctx_gcm;
+                delete[](Ipp8u*) m_ctx_gcm;
             }
             m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
@@ -165,7 +165,7 @@ IPPCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
         case ALC_AES_MODE_CCM:
             status = ippsAES_CCMGetSize(&m_ctxSize);
             if (m_ctx_ccm != nullptr) {
-                delete[] (Ipp8u*)m_ctx_ccm;
+                delete[](Ipp8u*) m_ctx_ccm;
             }
             m_ctx_ccm = (IppsAES_CCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_CCMInit(key, key_len / 8, m_ctx_ccm, m_ctxSize);
@@ -186,7 +186,7 @@ IPPCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
 }
 
 bool
-IPPCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
+IPPCipherAeadBase::alcpGCMModeToFuncCall(alcp_dc_ex_t data, bool enc)
 {
     IppStatus status = ippStsNoErr;
     if (enc) {
@@ -238,7 +238,7 @@ IPPCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
 }
 
 bool
-IPPCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
+IPPCipherAeadBase::alcpCCMModeToFuncCall(alcp_dc_ex_t data, bool enc)
 {
     IppStatus status = ippStsNoErr;
     Ipp8u     Temp   = 0;
@@ -319,7 +319,7 @@ IPPCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc)
 }
 
 bool
-IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc)
+IPPCipherAeadBase::alcpSIVModeToFuncCall(alcp_dc_ex_t data, bool enc)
 {
     Ipp8u* ad_ptr_list[]  = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
     int    ad_size_list[] = { (int)data.m_adl, (int)data.m_inl };
@@ -390,8 +390,8 @@ IPPCipherAeadBase::encrypt()
 bool
 IPPCipherAeadBase::encrypt(alcp_dc_ex_t& data_in)
 {
-    alcp_dca_ex_t data   = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
-    bool          retval = false;
+    alcp_dc_ex_t data   = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
+    bool         retval = false;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             retval = alcpGCMModeToFuncCall(data, true);
@@ -417,8 +417,8 @@ IPPCipherAeadBase::decrypt()
 bool
 IPPCipherAeadBase::decrypt(alcp_dc_ex_t& data_in)
 {
-    alcp_dca_ex_t data   = *reinterpret_cast<alcp_dca_ex_t*>(&data_in);
-    bool          retval = false;
+    alcp_dc_ex_t data   = *reinterpret_cast<alcp_dc_ex_t*>(&data_in);
+    bool         retval = false;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             retval = alcpGCMModeToFuncCall(data, false);

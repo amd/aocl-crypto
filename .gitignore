@@ -40,4 +40,6 @@ cscope.out
 # Generated files
 #------------------------------------#
 include/config.h
+lib/compat/openssl/include/provider/config.h
 docker/.bash_history
+scripts/python/Corpus

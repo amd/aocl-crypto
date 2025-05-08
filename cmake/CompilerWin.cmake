@@ -50,7 +50,9 @@ function(alcp_check_compiler_version)
 endfunction(alcp_check_compiler_version)
 
 # Generic Warnings
-SET (ALCP_WARNINGS /WX)
+# Clang treats variable length arrays (VLAs) as not a part of the standard C++ language.
+# Hence, silence VLAs warnings.
+SET (ALCP_WARNINGS /WX -Wno-vla)
 function(alcp_get_cflags_warnings)
     set(ALCP_CFLAGS_WARNINGS /W4 -Wpedantic -Wno-unused-parameter CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)

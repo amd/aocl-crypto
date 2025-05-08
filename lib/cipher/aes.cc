@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,12 +37,29 @@ Aes::setKey(const Uint8* pKey, const Uint64 keyLen)
     alc_error_t e = ALC_ERROR_NONE;
 
     // keyLen should be checked if its same as keyLen used during create call
-    if (keyLen != m_keyLen_in_bytes_aes * 8) {
+    if (keyLen != m_keyLen_in_bytes_aes * 8ULL) {
         printf("\n setKey failed, keySize invalid");
         return ALC_ERROR_INVALID_SIZE;
     }
 
     Rijndael::initRijndael(pKey, keyLen);
+    getKey();
+    m_isKeySet_aes = 1; // FIXME: use enum instead
+    return e;
+}
+
+alc_error_t
+Aes::setKey(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    // keyLen should be checked if its same as keyLen used during create call
+    if (keyLen != m_keyLen_in_bytes_aes * 8ULL) {
+        printf("\n setKey failed, keySize invalid");
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    Rijndael::initRijndael(pKey, pExpKey, keyLen);
     getKey();
     m_isKeySet_aes = 1; // FIXME: use enum instead
     return e;
@@ -110,9 +127,9 @@ Aes::setKey(const Uint8* pUserKey, Uint64 len)
 #endif
 
 alc_error_t
-Aes::setMode(alc_cipher_mode_t mode)
+Aes::setMode(CipherMode mode)
 {
-    if ((mode <= ALC_AES_MODE_CBC) || (mode >= ALC_AES_MODE_MAX)) {
+    if ((mode <= CipherMode::eAesCBC) || (mode >= CipherMode::eCipherModeMax)) {
         // InvalidMode("aes mode not supported")
         return ALC_ERROR_NOT_SUPPORTED;
     }

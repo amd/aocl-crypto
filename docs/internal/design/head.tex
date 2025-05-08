@@ -1,0 +1,33 @@
+\usepackage{fancyvrb,newverbs}
+\usepackage{titlesec}
+\usepackage[top=2cm, bottom=1.5cm, left=2cm, right=2cm]{geometry}
+
+% change background color for inline code in
+% markdown files. The following code does not work well for
+% long text as the text will exceed the page boundary
+\definecolor{bgcolor}{HTML}{E0E0E0}
+\let\oldtexttt\texttt
+
+\renewcommand{\texttt}[1]{
+\colorbox{bgcolor}{\oldtexttt{#1}}
+}
+
+%% color and other settings for hyperref package
+\hypersetup{
+    bookmarksopen=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=RoyalBlue,
+}
+
+%\maketitle
+%\thispagestyle{empty}
+%\clearpage
+
+\newcommand{\sectionbreak}{\clearpage}
+
+\let\oldtoc\tableofcontents
+\renewcommand{\tableofcontents}{\oldtoc\newpage}
+
+
+

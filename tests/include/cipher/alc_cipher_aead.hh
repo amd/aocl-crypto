@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -94,6 +94,8 @@ class AlcpCipherAeadBase : public CipherAeadBase
 
     const Uint8* m_tkey = nullptr;
 
+    alc_cipher_state_t* m_pState = nullptr;
+
   public:
     AlcpCipherAeadBase() {}
     /**
@@ -111,7 +113,8 @@ class AlcpCipherAeadBase : public CipherAeadBase
                        const Uint8*            key,
                        const Uint32            key_len,
                        const Uint8*            tkey,
-                       const Uint64            block_size);
+                       const Uint64            block_size,
+                       alc_cipher_state_t*     pState);
     /**
      * @brief Construct a new Alcp Base object - Manual initilization needed,
      * run alcpInit
@@ -120,6 +123,18 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param iv
      */
     AlcpCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
+
+    /**
+     * @brief Construct a new Alcp Base object - Manual initilization needed,
+     * run alcpInit
+     *
+     * @param mode
+     * @param iv
+     * @param pState
+     */
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+                       const Uint8*            iv,
+                       alc_cipher_state_t*     pState);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -141,7 +156,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return
      */
     template<bool enc>
-    inline bool alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpGCMModeToFuncCall(alcp_dc_ex_t& aead_data);
 
     /**
      * @brief
@@ -150,7 +165,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return
      */
     template<bool enc>
-    inline bool alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpCCMModeToFuncCall(alcp_dc_ex_t& aead_data);
 
     /**
      * @brief
@@ -159,7 +174,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @return
      */
     template<bool enc>
-    inline bool alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpSIVModeToFuncCall(alcp_dc_ex_t& aead_data);
 
     /**
      * @brief         Initialization/Reinitialization function, created handle
@@ -172,7 +187,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
      */
 
     template<bool enc>
-    inline bool alcpChachaPolyModeToFuncCall(alcp_dca_ex_t& aead_data);
+    inline bool alcpChachaPolyModeToFuncCall(alcp_dc_ex_t& aead_data);
     ~AlcpCipherAeadBase();
 
     bool init(const Uint8* iv,

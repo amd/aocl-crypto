@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -58,8 +58,7 @@ clamp(Uint8 in[16])
 
     Helpful links in understanding Poly1305
             [1] https://loup-vaillant.fr/tutorials/poly1305-design
-            [2] https://en.wikipedia.org/wiki/Poly1305
-            [3] https://www.mdpi.com/2410-387X/6/2/30
+            [2] https://www.mdpi.com/2410-387X/6/2/30
 
     Modulo Trick described in [1] is used to compute multiply and modulo
 
@@ -69,9 +68,9 @@ clamp(Uint8 in[16])
 alc_error_t
 Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
 {
-    alc_error_t err       = ALC_ERROR_NONE;
-    m_finalized = false;
-    Uint8*      p_m_key_8 = reinterpret_cast<Uint8*>(m_key);
+    alc_error_t err  = ALC_ERROR_NONE;
+    m_finalized      = false;
+    Uint8* p_m_key_8 = reinterpret_cast<Uint8*>(m_key);
     // Uint8* m_acc_8 = reinterpret_cast<Uint8*>(m_accumulator);
 
     if (keyLen != 32) {

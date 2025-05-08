@@ -42,12 +42,18 @@ Uint64
 alcp_ec_context_size(const alc_ec_info_p pEcInfo)
 {
     Uint64 size = sizeof(ec::Context) + ec::EcBuilder::getSize(*pEcInfo);
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_DBG, "CtxSize %6ld", size);
+#endif
     return size;
 }
 
 alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pEcInfo->ecCurveId != ALCP_EC_CURVE25519) {
@@ -68,6 +74,9 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo)
 alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
@@ -87,6 +96,9 @@ alc_error_t
 alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
                        const Uint8*          pPrivateKey)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
     ALCP_BAD_PTR_ERR_RET(pEcHandle->context, err);
@@ -105,6 +117,9 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pPublicKey,
                       const Uint8*          pPrivKey)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
     ALCP_BAD_PTR_ERR_RET(pEcHandle->context, err);
@@ -126,6 +141,9 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
                       const Uint8*          pPublicKey,
                       Uint64*               pKeyLength)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
     ALCP_BAD_PTR_ERR_RET(pEcHandle->context, err);
@@ -144,6 +162,9 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
 void
 alcp_ec_finish(const alc_ec_handle_p pEcHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
     /* TODO: fix the argument */
@@ -157,6 +178,9 @@ alcp_ec_finish(const alc_ec_handle_p pEcHandle)
 void
 alcp_ec_reset(const alc_ec_handle_p pEcHandle)
 {
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
     auto ctx    = static_cast<ec::Context*>(pEcHandle->context);
     ctx->status = ctx->reset(ctx->m_ec);
 

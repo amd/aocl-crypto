@@ -27,7 +27,6 @@
  */
 
 #include "alcp/cipher/aes.hh"
-#include "alcp/cipher/aes_ctr.hh"
 #include "alcp/types.hh"
 
 #include "avx512.hh"
@@ -547,55 +546,86 @@ ctrBlk256(const __m512i* p_in_x,
     alcp_storeu_128(reinterpret_cast<__m512i*>(pIv), c1);
 #endif
 }
-
-alc_error_t
-CryptCtr128(const Uint8* p_in_x,
-            Uint8*       p_out_x,
-            Uint64       len,
-            const Uint8* pKey,
-            int          nRounds,
-            Uint8*       pIv)
-{
-
-    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
-    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
-    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
-    ctrBlk128(p_in_512, p_out_512, len, pkey128, pIv, nRounds);
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-CryptCtr192(const Uint8* p_in_x,
-            Uint8*       p_out_x,
-            Uint64       len,
-            const Uint8* pKey,
-            int          nRounds,
-            Uint8*       pIv)
-{
-
-    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
-    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
-    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
-
-    ctrBlk192(p_in_512, p_out_512, len, pkey128, pIv, nRounds);
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-CryptCtr256(const Uint8* p_in_x,
-            Uint8*       p_out_x,
-            Uint64       len,
-            const Uint8* pKey,
-            int          nRounds,
-            Uint8*       pIv)
-{
-
-    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
-    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
-    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
-
-    ctrBlk256(p_in_512, p_out_512, len, pkey128, pIv, nRounds);
-    return ALC_ERROR_NONE;
-}
-
 } // namespace alcp::cipher::vaes512
+
+namespace alcp::cipher {
+
+// primary template
+template<alcp::cipher::CipherKeyLen T, alcp::utils::CpuCipherFeatures arch>
+alc_error_t
+CryptCtr(const Uint8* p_in_x,
+         Uint8*       p_out_x,
+         Uint64       len,
+         const Uint8* pKey,
+         int          nRounds,
+         Uint8*       pIv)
+{
+
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
+    alcp::cipher::vaes512::ctrBlk128(
+        p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
+}
+
+// specialized for vaes512
+template<>
+alc_error_t
+CryptCtr<alcp::cipher::CipherKeyLen::eKey128Bit,
+         alcp::utils::CpuCipherFeatures::eVaes512>(const Uint8* p_in_x,
+                                                   Uint8*       p_out_x,
+                                                   Uint64       len,
+                                                   const Uint8* pKey,
+                                                   int          nRounds,
+                                                   Uint8*       pIv)
+{
+
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
+    alcp::cipher::vaes512::ctrBlk128(
+        p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
+}
+
+template<>
+alc_error_t
+CryptCtr<alcp::cipher::CipherKeyLen::eKey192Bit,
+         alcp::utils::CpuCipherFeatures::eVaes512>(const Uint8* p_in_x,
+                                                   Uint8*       p_out_x,
+                                                   Uint64       len,
+                                                   const Uint8* pKey,
+                                                   int          nRounds,
+                                                   Uint8*       pIv)
+{
+
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
+    alcp::cipher::vaes512::ctrBlk192(
+        p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
+}
+
+template<>
+alc_error_t
+CryptCtr<alcp::cipher::CipherKeyLen::eKey256Bit,
+         alcp::utils::CpuCipherFeatures::eVaes512>(const Uint8* p_in_x,
+                                                   Uint8*       p_out_x,
+                                                   Uint64       len,
+                                                   const Uint8* pKey,
+                                                   int          nRounds,
+                                                   Uint8*       pIv)
+{
+
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
+
+    alcp::cipher::vaes512::ctrBlk256(
+        p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
+}
+
+} // namespace alcp::cipher

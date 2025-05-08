@@ -26,6 +26,7 @@
  *
  */
 #include "rng_base.hh"
+#include <iostream>
 #include <malloc.h>
 namespace alcp::testing {
 
@@ -41,15 +42,21 @@ RngBase::RngBase()
 
     /* Check if RNG mode is supported with RNG info */
     if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
-        printf("Support Failed!\n");
-        throw "RNG not supported";
+        try {
+            throw "RNG not supported";
+        } catch (const char* exc) {
+            std::cerr << exc << std::endl;
+        }
     }
 
     // Assuming this is the first run, allocate and request for a handle.
     m_handle.rh_context = malloc(alcp_rng_context_size(&rng_info));
     if (alcp_rng_request(&rng_info, &m_handle) != ALC_ERROR_NONE) {
-        printf("Request Failed!\n");
-        throw "RNG request failed!";
+        try {
+            throw "RNG request failed!";
+        } catch (const char* exc) {
+            std::cerr << exc << std::endl;
+        }
     }
 
     // Intialize internal PRNG for faster RNG with reproducability
@@ -78,7 +85,11 @@ RngBase::genRandomBytes(std::size_t l)
     }
     ret = std::vector<Uint8>(l, 0);
     if (alcp_rng_gen_random(&m_handle, &(ret[0]), l) == ALC_ERROR_NO_ENTROPY) {
-        throw "rng_base.cc : Bail out! not enough entropy!";
+        try {
+            throw "rng_base.cc : Bail out! not enough entropy!";
+        } catch (const char* exc) {
+            std::cerr << exc << std::endl;
+        }
     }
     return ret;
 }

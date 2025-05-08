@@ -172,6 +172,12 @@ BENCH_SHAKE_256(benchmark::State& state)
 int
 AddBenchmarks()
 {
+    /* check if custom block size is provided by user */
+    if (block_size != 0) {
+        std::cout << "Custom block size selected:" << block_size << std::endl;
+        digest_block_sizes.resize(1);
+        digest_block_sizes[0] = block_size;
+    }
     BENCHMARK(BENCH_SHA2_224)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_256)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_384)->ArgsProduct({ digest_block_sizes });

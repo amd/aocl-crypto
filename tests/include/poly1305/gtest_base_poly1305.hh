@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -170,8 +170,7 @@ Poly_Cross()
             PrintmacTestData(key_full, data_ext, LibStrExt);
 
         /* now check if the macs match */
-        EXPECT_TRUE(
-            ArraysMatch(std::move(MacMainLib), std::move(MacExtLib), macSize));
+        EXPECT_TRUE(ArraysMatch(MacMainLib, MacExtLib, macSize));
     }
     return;
 }
@@ -247,8 +246,8 @@ Poly_Kat()
         std::vector<Uint8> mac_vector(
             std::begin(mac), std::begin(mac) + csv.getVect("MAC").size());
         EXPECT_TRUE(ArraysMatch(
-            std::move(mac_vector), // Actual output
-            csv.getVect("MAC"),    // expected output, from the csv test data
+            mac_vector,         // Actual output
+            csv.getVect("MAC"), // expected output, from the csv test data
             csv,
             LibStr));
     }

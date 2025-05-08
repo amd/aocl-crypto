@@ -217,6 +217,9 @@ OpenSSLGcmCipher<encryptor>::finalize(alc_test_finalize_data_p data)
                                    &len_pt)) {
             std::cout << "Error: EVP_DecryptFinal_ex Failed" << std::endl;
             handleErrors();
+            // Cleanup to prevent memory leaks
+            EVP_CIPHER_CTX_free(m_ctx);
+            m_ctx = nullptr;
             return false;
         }
     }

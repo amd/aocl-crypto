@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,7 +66,8 @@ DebugPrintPretty(std::vector<Uint8>& output)
 #else
 void
 DebugPrintPretty(std::vector<Uint8>& output)
-{}
+{
+}
 #endif
 
 class NullGenerator : public IRng
@@ -333,8 +334,11 @@ class CustomRng : public IRng
         return ALC_ERROR_NONE;
     }
 
-    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
-    void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
+    void setEntropy(std::vector<Uint8> entropy)
+    {
+        m_entropy = std::move(entropy);
+    }
+    void setNonce(std::vector<Uint8> nonce) { m_nonce = std::move(nonce); }
 
     void reset()
     {

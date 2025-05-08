@@ -59,9 +59,8 @@ Key algorithms supported by IPP-CP are as follows.
 - Big Number Integer Arithmetic Functions
 - PRNG/TRNG and Prime Numbers Generation
 
-To read more about IPP-CP click [here](https://github.com/intel/ipp-crypto/blob/develop/README.md)
+To read more about IPP-CP click [here](https://github.com/intel/cryptography-primitives/blob/develop/README.md)
 
-Currently used version of IPP-CP is `ipp-crypto_2021_8` when this document was written.
 
 ## Usage of IPP-Plugin - Brief
 

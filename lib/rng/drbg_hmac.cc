@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -63,15 +63,16 @@ DebugPrint(const std::vector<Uint8>& in,
            std::string               message,
            std::string               file,
            int                       line)
-{}
+{
+}
 #endif
 
 class HmacDrbg::Impl
 {
   private:
-    std::shared_ptr<alcp::digest::IDigest> m_digest;
+    std::shared_ptr<alcp::digest::IDigest> m_digest{};
     std::vector<Uint8>                     m_v = {}, m_key = {};
-    Hmac                                   m_hmac_obj;
+    Hmac                                   m_hmac_obj{};
 
   public:
     /**
@@ -553,7 +554,7 @@ HmacDrbg::Impl::internalReseed(const std::vector<Uint8>& cEntropyInput,
 void
 HmacDrbg::Impl::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    m_digest = digest_obj;
+    m_digest = std::move(digest_obj);
     // Initialize Internal States (Will serve also as reset)
     m_v   = std::vector<Uint8>(m_digest->getHashSize());
     m_key = std::vector<Uint8>(m_digest->getHashSize());
@@ -634,7 +635,7 @@ HmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
 void
 HmacDrbg::setDigest(std::shared_ptr<IDigest> digest_obj)
 {
-    p_impl->setDigest(digest_obj);
+    p_impl->setDigest(std::move(digest_obj));
 }
 
 std::string
@@ -657,7 +658,8 @@ HmacDrbg::getVCopy()
 
 HmacDrbg::HmacDrbg()
     : p_impl{ std::make_unique<Impl>() }
-{}
+{
+}
 
 HmacDrbg::~HmacDrbg() = default;
 } // namespace alcp::rng::drbg

@@ -96,3 +96,11 @@ In order to run the whole fuzz tests you can use run_fuzz_tests.py under the scr
 $ python3 ./scripts/python/run_fuzz_tests.py ./build
 ```
 The individual tests will be under build/tests/Fuzz directory. For example in order to run the digest sha256 fuzz test the following command could be used  `./tests/Fuzz/Digest/test_fuzz_digest_sha2_256`
+
+### Force runtime CPU Architecture
+To force runtime CPU Architecture, use the environment variable ALCP_ENABLE_INSTRUCTIONS before running the test executable.
+Supported options are ZEN1, ZEN2, ZEN3, ZEN4, ZEN5
+
+```sh
+$ ALCP_ENABLE_INSTRUCTIONS=ZEN3 ./tests/cipher/test_gcm_kat
+```
