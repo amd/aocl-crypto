@@ -758,6 +758,12 @@ CipherCrossTest(int               keySize,
     std::unique_ptr<CipherTestingCore> extTC = nullptr;
     RngBase                            rb;
 
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)

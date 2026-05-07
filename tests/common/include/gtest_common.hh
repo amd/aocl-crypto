@@ -40,11 +40,13 @@ using utils::parseBytesToHexStr;
 using utils::printErrors;
 
 // Variables for Argument Parser
-static int  verbose     = 0;
-static bool useipp      = false;
-static bool useossl     = false;
-static bool bbxreplay   = false;
-static bool oa_override = false;
+static int      verbose       = 0;
+static bool     useipp        = false;
+static bool     useossl       = false;
+static bool     bbxreplay     = false;
+static bool     oa_override   = false;
+static bool     seed_set      = false;
+static uint64_t seed_override = 0;
 
 /**
  * @brief Check if 2 binary vectors are equal, print the current line as
@@ -176,11 +178,13 @@ parseTestArgs(int argc, char** argv)
     alcp::bench::args::ParsedArgs parsed;
     alcp::bench::args::strip_custom_args(&argc, argv, parsed);
 
-    useipp      = parsed.use_ipp;
-    useossl     = parsed.use_ossl;
-    oa_override = parsed.override_alcp;
-    bbxreplay   = parsed.replay_blackbox;
-    verbose     = parsed.verbose;
+    useipp        = parsed.use_ipp;
+    useossl       = parsed.use_ossl;
+    oa_override   = parsed.override_alcp;
+    bbxreplay     = parsed.replay_blackbox;
+    verbose       = parsed.verbose;
+    seed_set      = parsed.seed_set;
+    seed_override = parsed.seed;
 
     /* --help is consumed by testing::InitGoogleTest before this function is
      * reached in the normal call flow.  If called before InitGoogleTest (e.g.

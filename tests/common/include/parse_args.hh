@@ -27,6 +27,7 @@
 #pragma once
 
 #include "colors.hh"
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -35,15 +36,17 @@ namespace alcp::bench::args {
 /* Holds every custom flag recognised by the AOCL-Crypto arg parsers. */
 struct ParsedArgs
 {
-    bool use_ipp       = false;
-    bool use_ossl      = false;
-    bool use_alcp      = false;
-    bool override_alcp = false;
-    bool help_requested = false;
-    int  block_size    = 0;
+    bool     use_ipp        = false;
+    bool     use_ossl       = false;
+    bool     use_alcp       = false;
+    bool     override_alcp  = false;
+    bool     help_requested = false;
+    int      block_size     = 0;
     /* test-only flags (bench parsers leave these at defaults) */
-    int  verbose        = 0;
-    bool replay_blackbox = false;
+    int      verbose        = 0;
+    bool     replay_blackbox = false;
+    bool     seed_set       = false;
+    uint64_t seed           = 0;
 };
 
 /* Compacts argv[] in-place, consuming all recognised custom flags and their
@@ -110,6 +113,21 @@ strip_custom_args(int* argc, char** argv, ParsedArgs& out)
         } else if (arg == "--replay-blackbox" || arg == "-r") {
             out.replay_blackbox = true;
             i++;
+        } else if (arg == "--seed" || arg == "-s") {
+            if (i + 1 < *argc) {
+                try {
+                    out.seed     = std::stoull(argv[i + 1], nullptr, 0);
+                    out.seed_set = true;
+                } catch (const std::exception&) {
+                    std::cerr << RED << "Invalid seed value \"" << argv[i + 1]
+                              << "\"" << RESET << std::endl;
+                }
+                i += 2;
+            } else {
+                std::cerr << RED << "No seed value provided" << RESET
+                          << std::endl;
+                i++;
+            }
         } else {
             argv[newArgc++] = argv[i++];
         }
@@ -144,7 +162,9 @@ print_test_help()
               << "  -oa, --override-alcp       Override ALCP with reference\n"
               << "  -b, --blocksize <n>        Custom input block size (bytes)\n"
               << "  -v, --verbose <0|1|2>      Verbosity level (default 0)\n"
-              << "  -r, --replay-blackbox      Replay blackbox with log file\n\n"
+              << "  -r, --replay-blackbox      Replay blackbox with log file\n"
+              << "  -s, --seed <N>             Fix RNG seed (decimal or 0x hex) "
+                 "to reproduce a prior run\n\n"
               << "GTest Options (forwarded):\n";
 }
 
