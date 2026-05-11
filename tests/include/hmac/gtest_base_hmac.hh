@@ -279,6 +279,11 @@ Hmac_Multibuffer_Cross(int HmacSize, alc_digest_mode_t sb_mode)
     }
 
     RngBase                   rb;
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
     const std::vector<Uint64> buffer_counts = { 1,  2,  3,  4,  5,  6,  7,
                                                 8,  9,  10, 11, 12, 13, 14,
                                                 15, 16, 32, 48, 64 };
@@ -296,7 +301,8 @@ Hmac_Multibuffer_Cross(int HmacSize, alc_digest_mode_t sb_mode)
         for (Uint64 in_len = 0; in_len <= 1024; in_len++) {
             for (Uint64 key_len = 1; key_len <= 128; key_len += 16) {
 
-                std::vector<Uint8> key = rb.genRandomBytes(key_len);
+                std::vector<Uint8> key(key_len);
+                rb.genRandomMt19937(key);
                 std::vector<std::vector<Uint8>> msgs(buffers);
                 std::vector<const Uint8*>       src(buffers);
                 std::vector<Uint8*>             expected(buffers);
@@ -305,7 +311,8 @@ Hmac_Multibuffer_Cross(int HmacSize, alc_digest_mode_t sb_mode)
                     if (in_len == 0) {
                         msgs[i] = std::vector<Uint8>{ 0 };
                     } else {
-                        msgs[i] = rb.genRandomBytes(in_len);
+                        msgs[i].resize(in_len);
+                        rb.genRandomMt19937(msgs[i]);
                     }
                     src[i]      = &(msgs[i][0]);
                     expected[i] = (Uint8*)std::malloc(hash_bytes);
@@ -427,12 +434,24 @@ Hmac_Cross(alc_digest_mode_t HmacDigestMode)
         exit(-1);
     }
 
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
     /* generate message key data, use it chunk by chunk in the loop */
-    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP);
-    std::vector<Uint8> key_full = rb.genRandomBytes(KEY_LEN_MAX);
+    std::vector<Uint8> msg_full(MAX_LOOP);
+    rb.genRandomMt19937(msg_full);
+    std::vector<Uint8> key_full(KEY_LEN_MAX);
+    rb.genRandomMt19937(key_full);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
-    auto                               rng = std::default_random_engine{};
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {

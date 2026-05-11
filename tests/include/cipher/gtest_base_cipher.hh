@@ -48,6 +48,7 @@
 #endif
 #include "rng_base.hh"
 #include <algorithm>
+#include <cstring>
 
 using alcp::String;
 
@@ -801,14 +802,25 @@ CipherCrossTest(int               keySize,
     }
 
     /* generate these only once and use it in the loop below, chunk by chunk */
-    std::vector<Uint8> msg_full  = rb.genRandomBytes(MAX_LOOP * size);
-    std::vector<Uint8> key_full  = rb.genRandomBytes(key_size);
-    std::vector<Uint8> iv_full   = rb.genRandomBytes(IVL_MAX);
-    std::vector<Uint8> tkey_full = rb.genRandomBytes(key_size);
+    std::vector<Uint8> msg_full(MAX_LOOP * size);
+    rb.genRandomMt19937(msg_full);
+    std::vector<Uint8> key_full(key_size);
+    rb.genRandomMt19937(key_full);
+    std::vector<Uint8> iv_full(IVL_MAX);
+    rb.genRandomMt19937(iv_full);
+    std::vector<Uint8> tkey_full(key_size);
+    rb.genRandomMt19937(tkey_full);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
 
-    auto rng = std::default_random_engine{};
+    // Seed ShuffleVector engine from the same MT19937 stream so --seed fully
+    // reproduces the run (std::default_random_engine{} has a fixed default seed
+    // that is not user-controllable).
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
@@ -1045,6 +1057,11 @@ CipherAeadCrossTest(int               keySize,
     }
     std::unique_ptr<CipherAeadTestingCore> extTC = nullptr;
     RngBase                                rb;
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
 
     /* Set extTC based on which external testing core user asks*/
     try {
@@ -1085,15 +1102,24 @@ CipherAeadCrossTest(int               keySize,
 
     /* generate these only once and use it in the loop below, chunk by chunk
      */
-    std::vector<Uint8> msg_full  = rb.genRandomBytes(MAX_LOOP * size);
-    std::vector<Uint8> key_full  = rb.genRandomBytes(key_size);
-    std::vector<Uint8> iv_full   = rb.genRandomBytes(IVL_MAX);
-    std::vector<Uint8> add_full  = rb.genRandomBytes(ADL_MAX);
-    std::vector<Uint8> tkey_full = rb.genRandomBytes(key_size);
+    std::vector<Uint8> msg_full(MAX_LOOP * size);
+    rb.genRandomMt19937(msg_full);
+    std::vector<Uint8> key_full(key_size);
+    rb.genRandomMt19937(key_full);
+    std::vector<Uint8> iv_full(IVL_MAX);
+    rb.genRandomMt19937(iv_full);
+    std::vector<Uint8> add_full(ADL_MAX);
+    rb.genRandomMt19937(add_full);
+    std::vector<Uint8> tkey_full(key_size);
+    rb.genRandomMt19937(tkey_full);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
 
-    auto rng = std::default_random_engine{};
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
@@ -1295,6 +1321,11 @@ CipherMultiBufferCrossTest(int               keySize,
 
     // Initialize random number generator
     RngBase rb;
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
 
     /* run for max */
     int inputLenMax = SMALL_MAX_LOOP;
@@ -1303,13 +1334,14 @@ CipherMultiBufferCrossTest(int               keySize,
     // Dynamic allocation better for larger sizes
     for (int i = 1; i < inputLenMax; i++) {
         // Generate input and output vectors for multiple buffers
-        std::vector<std::vector<Uint8>> vec_in(numBuffers,
-                                               rb.genRandomBytes(i));
-        std::vector<std::vector<Uint8>> vec_out(numBuffers,
-                                                rb.genRandomBytes(i));
+        std::vector<Uint8> in_buf(i), out_buf(i);
+        rb.genRandomMt19937(in_buf);
+        rb.genRandomMt19937(out_buf);
+        std::vector<std::vector<Uint8>> vec_in(numBuffers, in_buf);
+        std::vector<std::vector<Uint8>> vec_out(numBuffers, out_buf);
 
         std::vector<Uint8> iv(ivLen);
-        iv = rb.genRandomBytes(ivLen);
+        rb.genRandomMt19937(iv);
 
         std::vector<std::vector<Uint8>> ivs(
             numBuffers, std::vector<Uint8>(iv.data(), iv.data() + ivLen));
@@ -1319,7 +1351,8 @@ CipherMultiBufferCrossTest(int               keySize,
             iv_pointers[i] = ivs[i].data();
         }
 
-        std::vector<Uint8> key_vec = rb.genRandomBytes(keySize / 8);
+        std::vector<Uint8> key_vec(keySize / 8);
+        rb.genRandomMt19937(key_vec);
         alignas(16) Uint8  key[keySize / 8];
         std::copy(key_vec.begin(), key_vec.end(), key);
         alcp::testing::CipherBase* p_cb;

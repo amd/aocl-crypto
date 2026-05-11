@@ -28,6 +28,7 @@
 #pragma once
 
 /* C/C++ Headers */
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <string.h>
@@ -188,11 +189,23 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         exit(-1);
     }
 
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
     /* generate random msg,key value */
-    std::vector<Uint8>                 msg_full = rb.genRandomBytes(MAX_LOOP);
-    std::vector<Uint8>                 key_full = rb.genRandomBytes(KeySize);
+    std::vector<Uint8> msg_full(MAX_LOOP);
+    rb.genRandomMt19937(msg_full);
+    std::vector<Uint8> key_full(KeySize);
+    rb.genRandomMt19937(key_full);
     std::vector<Uint8>::const_iterator pos1, pos2;
-    auto                               rng = std::default_random_engine{};
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         alcp_cmac_data_t data_alc, data_ext;

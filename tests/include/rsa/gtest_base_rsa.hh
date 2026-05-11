@@ -133,7 +133,6 @@ Rsa_KAT(std::string             RsaAlgo,
     AlcpRsaBase arb;
     std::string LibStr = "ALCP";
     RsaBase*    rb;
-    RngBase     rngb;
 
     rb = &arb;
 
@@ -372,6 +371,11 @@ Rsa_Cross(std::string             RsaAlgo,
     int             ret_val_main = 0, ret_val_ext = 0;
     AlcpRsaBase     arb;
     RngBase         rngb;
+    if (seed_set)
+        rngb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rngb.getSeedMt19937()
+              << "  (repro: --seed " << rngb.getSeedMt19937() << ")"
+              << std::endl;
 
     // FIXME: Better use unique pointer here
     RsaBase *rb_main = {}, *rb_ext = {};
@@ -508,9 +512,7 @@ Rsa_Cross(std::string             RsaAlgo,
         }
         std::vector<Uint8> input_data(InputSize);
         /* fill input data with random bytes */
-        rngb.genRandomBytes(input_data.size()); // FIXME: Not doing anything as `genRandomBytes`
-                                                // RETURNS the vector. Fix is to either initialize
-                                                // input randomly or keep it same.
+        rngb.genRandomMt19937(input_data);
 
         /* shuffle input vector after each iterations */
         /* FIXME: Not using CTR DRBG due to a known issue when
@@ -586,7 +588,7 @@ Rsa_Cross(std::string             RsaAlgo,
 
         /* set seed and label for padding mode */
         std::vector<Uint8> seed(rb_main->m_hash_len);
-        rngb.genRandomBytes(seed.size());
+        rngb.genRandomMt19937(seed);
 
         /* FIXME: Not using CTR DRBG due to a known issue when
          * using openssl 3.5.0 */
@@ -607,7 +609,7 @@ Rsa_Cross(std::string             RsaAlgo,
 
         /* label length should vary */
         std::vector<Uint8> label(i * KeySize);
-        rngb.genRandomBytes(label.size());
+        rngb.genRandomMt19937(label);
 
         /* FIXME: Not using CTR DRBG due to a known issue when
          * using openssl 3.5.0 */

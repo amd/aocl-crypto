@@ -28,6 +28,7 @@
 #pragma once
 
 /* C/C++ Headers */
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <string.h>
@@ -94,12 +95,24 @@ Poly_Cross()
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
     }
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
     /* generate message key data, use it chunk by chunk in the loop */
-    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP);
-    std::vector<Uint8> key_full = rb.genRandomBytes(KEY_LEN);
+    std::vector<Uint8> msg_full(MAX_LOOP);
+    rb.genRandomMt19937(msg_full);
+    std::vector<Uint8> key_full(KEY_LEN);
+    rb.genRandomMt19937(key_full);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
-    auto                               rng = std::default_random_engine{};
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         alcp_poly1305_data_t data_main = {}, data_ext = {};
@@ -203,9 +216,21 @@ Poly_Cross_Partial()
 
     const std::vector<int> lengths = { 1, 15, 17, 129, 255, 1025, 15999 };
 
-    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP);
-    std::vector<Uint8> key_full = rb.genRandomBytes(KEY_LEN);
-    auto               rng      = std::default_random_engine{};
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
+    std::vector<Uint8> msg_full(MAX_LOOP);
+    rb.genRandomMt19937(msg_full);
+    std::vector<Uint8> key_full(KEY_LEN);
+    rb.genRandomMt19937(key_full);
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     for (const auto len : lengths) {
         alcp_poly1305_data_t data_main = {}, data_ext = {};
