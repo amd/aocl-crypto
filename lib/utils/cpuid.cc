@@ -544,20 +544,25 @@ CpuId::Impl::computeArchLevelRsa()
     return CpuArchLevel::eReference;
 }
 
-// Poly1305: Reference -> Reference -> AVX512Base + IFMA
-// Uses AVX512 intrinsics, NOT ADX/BMI2.
-// Only eZen4 has optimized kernel, requires AVX512 F+DQ+BW+IFMA.
+// Poly1305: Reference -> AVX2 (radix-26) -> AVX512-IFMA (radix-44).
+// eZen3/eZen run the AVX2 radix-26 kernel; eZen4 runs the AVX-512 IFMA kernel.
 CpuArchLevel
 CpuId::Impl::computeArchLevelPoly1305()
 {
-    // eZen4: AVX512 F+DQ+BW+IFMA
+    // eZen4: AVX512 F+DQ+BW+IFMA radix-44 kernel
     if (cpuHasAvx512(Avx512Flags::AVX512_F)
         && cpuHasAvx512(Avx512Flags::AVX512_DQ)
         && cpuHasAvx512(Avx512Flags::AVX512_BW)
         && cpuHasAvx512(Avx512Flags::AVX512_IFMA)) {
         return CpuArchLevel::eZen4;
     }
-    // eZen/eZen3: reference implementation (only need AVX2 as baseline)
+    // eZen3: AVX2 radix-26 kernel. Gated on VAES (the Zen3 ISA differentiator)
+    // so the -march=znver3 object it dispatches to only runs on Zen3+.
+    if (cpuHasVaes() && cpuHasAvx2()) {
+        return CpuArchLevel::eZen3;
+    }
+    // eZen: pre-Zen3 AVX2 parts. Still routed to the AVX2 kernel by the
+    // dispatch; a portable (-mno-vaes) build for these parts is future work.
     if (cpuHasAvx2()) {
         return CpuArchLevel::eZen;
     }

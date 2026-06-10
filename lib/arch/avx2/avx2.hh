@@ -101,3 +101,20 @@ namespace alcp::cipher { namespace aesni {
     }
 
 }} // namespace alcp::cipher::aesni
+
+namespace alcp::avx2 {
+
+// Generic unaligned 256-bit load/store wrappers shared by AVX2 kernels.
+static inline __m256i
+loadu(const void* ad)
+{
+    return _mm256_loadu_si256(reinterpret_cast<const __m256i*>(ad));
+}
+
+static inline void
+storeu(void* ad, __m256i x)
+{
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(ad), x);
+}
+
+} // namespace alcp::avx2

@@ -129,7 +129,7 @@ hasCapability(CpuCapability caps, CpuCapability check)
  * Feature requirements per algorithm:
  *   - eCipher:   AESNI → VAES → VAES+AVX512
  *   - eRsa:      ADX+BMI2 → ADX+BMI2 → ADX+BMI2+IFMA
- *   - ePoly1305: Reference → Reference → AVX512Base
+ *   - ePoly1305: Reference → AVX2 (radix-26) → AVX512-IFMA (radix-44)
  *   - eX25519:   ADX+BMI2+AVX2 → VAES → VAES
  *   - eSha2_256: SHA-NI based (orthogonal to arch level)
  *   - eSha2_512: AVX2+SSE3 → AVX256 → AVX512
@@ -139,7 +139,7 @@ enum class AlgorithmType
 {
     eCipher,   // AES modes: AESNI → VAES → VAES512
     eRsa,      // ADX+BMI2 → ADX+BMI2 → ADX+BMI2+IFMA
-    ePoly1305, // Reference → Reference → AVX512Base
+    ePoly1305, // Reference → AVX2 (radix-26) → AVX512-IFMA (radix-44)
     eX25519,   // ADX+BMI2+AVX2 → VAES → VAES
     eSha2_256, // SHA-NI based (orthogonal)
     eSha2_512, // AVX2+SSE3 → AVX256 → AVX512
@@ -193,7 +193,7 @@ class ALCP_API_EXPORT CpuId
      * Different algorithms have different CPU feature requirements:
      *   - eCipher:   Requires AESNI/VAES/AVX512
      *   - eRsa:      Requires ADX+BMI2, IFMA for Zen4
-     *   - ePoly1305: Reference or AVX512Base
+     *   - ePoly1305: Reference / AVX2 (radix-26) / AVX512-IFMA (radix-44)
      *   - eX25519:   Requires ADX+BMI2+AVX2, VAES for Zen3+
      *   - eSha2_512: Requires AVX2/AVX256/AVX512
      *   - eSha3:     Requires AVX2/VAES/AVX512

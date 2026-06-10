@@ -65,12 +65,12 @@ poly1305_finish_radix26(const Uint8 digest[],
                         bool&       finalized);
 
 void
-poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32]);
+poly1305_init(Poly1305State44& state, const Uint8 key[32]);
 
 bool
-poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len);
+poly1305_update(Poly1305State44& state, const Uint8* pMsg, Uint64 len);
 
 bool
-poly1305_finalize_radix44(Poly1305State44& state, Uint8* digest, Uint64 len);
+poly1305_finalize(Poly1305State44& state, Uint8* digest, Uint64 len);
 
 } // namespace alcp::mac::poly1305::zen4

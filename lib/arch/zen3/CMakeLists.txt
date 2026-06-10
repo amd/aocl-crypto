@@ -37,6 +37,8 @@ ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 # This flag may improve or decrease performance. But for current implementation in file, it improves performance. 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(Sha2_512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
+	# Pre-RA scheduling cut spills in the register-tight Poly1305 multiply loop.
+	set_source_files_properties(poly1305.cc PROPERTIES COMPILE_FLAGS "-fschedule-insns")
 	set_source_files_properties(x25519.cc PROPERTIES COMPILE_FLAGS "-O2")
 endif()
 
@@ -60,4 +62,3 @@ ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 
 TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen3)
 TARGET_LINK_LIBRARIES(alcp_static PRIVATE arch_zen3)
-
