@@ -126,12 +126,39 @@ BignumToBigNum(const BIGNUM* bn, BigNum& customBN)
     customBN.m_pos = BN_is_negative(bn) ? 1 : 0;
     delete[] bytes;
 }
+// Constant-time: returns all-1s if a == b, all-0s otherwise.
+static inline Uint64
+ConstantTimeMask(Uint64 a, Uint64 b)
+{
+    Uint64 diff = a ^ b;
+    return 0ULL - ((~diff & (diff - 1)) >> 63);
+}
+
+// Zeroes `size` bytes through a volatile pointer so the compiler cannot drop
+// the clear as a dead store. Use to wipe buffers holding secret-derived data.
+static inline void
+SecureClear(void* buff, Uint64 size)
+{
+    if (!buff) {
+        return;
+    }
+    volatile Uint8* p = static_cast<volatile Uint8*>(buff);
+    while (size--) {
+        *p++ = 0;
+    }
+}
+
+// Constant-time: scans all entries to avoid cache-timing leaks.
 static inline void
 GetFromTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
 {
     for (Uint64 i = 0; i < size; i++) {
-        num[i] = t[index];
-        index += limit;
+        Uint64 val = 0;
+        for (Uint64 j = 0; j < limit; j++) {
+            val |= t[j] & ConstantTimeMask(j, index);
+        }
+        num[i] = val;
+        t += limit;
     }
 }
 
