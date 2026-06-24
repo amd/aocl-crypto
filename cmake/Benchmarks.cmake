@@ -37,6 +37,14 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.8.3)
 FetchContent_MakeAvailable(benchmark)
 
+if(WIN32)
+    foreach(_t benchmark benchmark_main)
+        if(TARGET ${_t})
+            target_compile_options(${_t} PRIVATE -w)    
+        endif()
+    endforeach()
+endif()
+
 option(MULTI_INIT_BENCH "Enable Multi-Init Benchmarks" ON)
 if(MULTI_INIT_BENCH)
     add_definitions(-DMULTI_INIT_BENCH)
