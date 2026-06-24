@@ -345,6 +345,15 @@ namespace alcp::digest { namespace zen4 {
         }
     }
 
+#if defined(COMPILER_IS_GCC) && __GNUC__ >= 15
+    // GCC 15 raised the znver5 reassociation width (commit f0ab3de6ec0,
+    // "Zen5 tuning part 4: update reassociation width"). This makes the tree
+    // reassociation pass split the 512-bit integer add chains in this kernel
+    // into more parallel sub-chains than there are vector registers, causing
+    // spills and a SHA256 multibuffer throughput regression on Zen5. Disabling
+    // reassociation for this function restores the original add ordering.
+    __attribute__((optimize("no-tree-reassoc")))
+#endif
     alc_error_t Sha256Dequeue(const Uint8** ppSrcBuf,
                               Uint32        hash[SHA256_HASH_SIZE_WORDS],
                               const Uint64  cNumBuffers,
