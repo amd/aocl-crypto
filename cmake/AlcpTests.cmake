@@ -57,7 +57,7 @@ endmacro()
 #         CONTENTS data/
 #   )
 
-Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+Include(${ALCP_ROOT}/cmake/AlcpTestUtils.cmake)
 
 function(alcp_cc_test testName working_dir)
     if(NOT ALCP_ENABLE_TESTS)
@@ -102,13 +102,13 @@ function(alcp_cc_test testName working_dir)
         endif()
     endif()
 
-    file(GLOB TEST_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+    file(GLOB TEST_COMMON_SRC ${ALCP_ROOT}/tests/common/base/*.cc)
 
     if(${ALCP_MODULE} STREQUAL "Cipher")
         SET(TEST_COMMON_SRC ${TEST_COMMON_SRC}
-                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
-                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
-                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc
+                            ${ALCP_ROOT}/tests/cipher/base/alc_cipher.cc
+                            ${ALCP_ROOT}/tests/cipher/base/alc_cipher_aead.cc
+                            ${ALCP_ROOT}/tests/cipher/base/cipher.cc
                             ${UNIT_TEST_COMMON_SRCS}
         )
     endif()
@@ -130,9 +130,9 @@ function(alcp_cc_test testName working_dir)
         ${${testPrefix}_DEPENDS}
     )
 
-    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
-    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/common/include)
-    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib/include)
+    target_include_directories(${_target_name} PRIVATE ${ALCP_ROOT}/tests/include)
+    target_include_directories(${_target_name} PRIVATE ${ALCP_ROOT}/tests/common/include)
+    target_include_directories(${_target_name} PRIVATE ${ALCP_ROOT}/lib/include)
     target_include_directories(${_target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
 
     add_test(${_target_name}, ${working_dir}/${_target_name})

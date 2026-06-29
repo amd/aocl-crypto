@@ -90,7 +90,7 @@ function(alcp_get_cflags)
         CACHE INTERNAL ""
     )
     # this is to obfuscate the source paths in the binary
-    add_compile_options(-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.)
+    add_compile_options(-fmacro-prefix-map=${ALCP_ROOT}=.)
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)
 endfunction(alcp_get_cflags)
 

@@ -40,7 +40,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(sha2_512_avx512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
 endif()
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
+INCLUDE_DIRECTORIES(${ALCP_ROOT}/lib/include)
 
 ADD_LIBRARY(arch_zen4
 	OBJECT

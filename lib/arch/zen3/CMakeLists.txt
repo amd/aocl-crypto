@@ -42,7 +42,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(x25519.cc PROPERTIES COMPILE_FLAGS "-O2")
 endif()
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
+INCLUDE_DIRECTORIES(${ALCP_ROOT}/lib/include)
 
 ADD_LIBRARY(arch_zen3
 	OBJECT

@@ -70,7 +70,7 @@ ELSE ()
 ENDIF()
 
 INCLUDE_DIRECTORIES(
-	${CMAKE_SOURCE_DIR}/include
+	${ALCP_ROOT}/include
 	)
 
 SET(ALCP_LIB_SOURCES
@@ -153,7 +153,7 @@ IF(UNIX AND ENABLE_AOCL_UTILS AND ALCP_INSTALL_COMBINED_STATIC)
 			TARGET alcp_static POST_BUILD
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			COMMAND /bin/bash 
-			${CMAKE_SOURCE_DIR}/scripts/create_static.sh 
+			${ALCP_ROOT}/scripts/create_static.sh 
 			${AOCL_UTILS_STATIC_LIB}
 			"DEBUG"
 		)
@@ -161,12 +161,38 @@ IF(UNIX AND ENABLE_AOCL_UTILS AND ALCP_INSTALL_COMBINED_STATIC)
 		ADD_CUSTOM_COMMAND(
 			TARGET alcp_static POST_BUILD
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-			COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/scripts/create_static.sh 
+			COMMAND /bin/bash ${ALCP_ROOT}/scripts/create_static.sh 
 			${AOCL_UTILS_STATIC_LIB}
 			""
 		)
 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "debug")
 ENDIF()
+
+# AOCL Build-It-Yourself unified build: contribute crypto's objects to libaocl.
+# The core ALCP sources funnelled into alcp_static (version/common plus every
+# subdirectory's TARGET_SOURCES) are recompiled into a sibling OBJECT library via
+# objectify. The architecture kernels (arch_zen4, arch_zen4_gcm, arch_zen3,
+# arch_zen, arch_ref, arch_avx2) are OBJECT libraries linked PRIVATE into
+# alcp_static; object libraries do not propagate their objects through another
+# object library, so they are registered directly by walking alcp_static's link
+# dependencies. Placed at the end of the file so SOURCES and LINK_LIBRARIES are
+# fully populated by all sub-directories.
+if(AOCL_TB_UNIFIED_BUILD)
+	aocl_tb_objectify(alcp_static)
+	get_target_property(_alcp_links alcp_static LINK_LIBRARIES)
+	set(_alcp_arch_objs "")
+	foreach(_l IN LISTS _alcp_links)
+		if(TARGET ${_l})
+			get_target_property(_lt ${_l} TYPE)
+			if(_lt STREQUAL "OBJECT_LIBRARY")
+				list(APPEND _alcp_arch_objs "$<TARGET_OBJECTS:${_l}>")
+			endif()
+		endif()
+	endforeach()
+	if(_alcp_arch_objs)
+		aocl_tb_add_objects(${_alcp_arch_objs})
+	endif()
+endif()
 
 # Need to build comapt libs after building the libalcp.so
 #${COMPAT_SRCS}

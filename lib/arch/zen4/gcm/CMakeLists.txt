@@ -57,7 +57,7 @@ alcp_get_arch_cflags_zen4_clang()
 
 MESSAGE(STATUS "COMPILE_FLAGS:ZEN4:${ARCH_COMPILE_FLAGS}")
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include ../)
+INCLUDE_DIRECTORIES(${ALCP_ROOT}/lib/include ../)
 INCLUDE_DIRECTORIES(../)
 
 ADD_LIBRARY(arch_zen4_gcm

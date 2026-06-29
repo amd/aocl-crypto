@@ -27,6 +27,17 @@ include(TestBigEndian)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.26)
 
+# --- Target-based (unified AOCL) build support ----------------------------
+# Capture ALCP's own root once. Under add_subdirectory/FetchContent
+# CMAKE_SOURCE_DIR is the parent (aocl) project, so use ALCP_ROOT for all
+# in-tree paths (config.h, include dirs, tests). Cached => visible in nested
+# scopes and unaffected by nested project() calls. Standalone: == CMAKE_SOURCE_DIR.
+# Aux modules (doxygen, FindSphinx, IntegrationTests, AlcpFuzzTests) keep
+# CMAKE_SOURCE_DIR: docs/fuzz/integration are standalone-only, never built in
+# the unified path, so == ALCP_ROOT there.
+SET(ALCP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "AOCL-Crypto source root")
+# --------------------------------------------------------------------------
+
 set(PROJECT_FULL_NAME "AOCL-Cryptography")
 set(PROJECT_NAME "ALCP")
 
@@ -136,7 +147,7 @@ set(AOCL_COMPAT_LIBS "" CACHE STRING "COMPATIBILITY LAYER FOR OPENSSL AND IPP")
 SET(ENABLE_OPENSSL_COMPAT FALSE)
 SET(ENABLE_IPP_COMPAT FALSE)
 IF (AOCL_COMPAT_LIBS)
-	INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpCompat.cmake)
+	INCLUDE(${ALCP_ROOT}/cmake/AlcpCompat.cmake)
 	alcp_check_compat_option()
 endif (AOCL_COMPAT_LIBS)
 
@@ -199,10 +210,10 @@ ADD_SUBDIRECTORY(lib)
 
 IF(ALCP_ENABLE_HTML)
 IF(ALCP_ENABLE_DOXYGEN)
-	include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
+	include(${ALCP_ROOT}/cmake/doxygen.cmake)
 ENDIF(ALCP_ENABLE_DOXYGEN)
 IF(ALCP_ENABLE_SPHINX)
-	include(${CMAKE_SOURCE_DIR}/sphinx/CMakeLists.txt)
+	include(${ALCP_ROOT}/sphinx/CMakeLists.txt)
 ENDIF(ALCP_ENABLE_SPHINX)
 ENDIF(ALCP_ENABLE_HTML)
 
@@ -239,6 +250,11 @@ IF (ALCP_ENABLE_BENCH)
 	MESSAGE(STATUS "Enabling Benchmarks")
 ENDIF()
 
+# In the AOCL Build-It-Yourself unified build alcp_static's objects are folded
+# into the single libaocl and the framework installs only that unified library,
+# so skip ALCP's own shared/static + compat install rules. Without this guard
+# libalcp.so (and the redundant libalcp.a) leak into the unified install lib dir.
+if(NOT AOCL_TB_UNIFIED_BUILD)
 INSTALL(TARGETS alcp)
 
 # install compat libs if option is passed
@@ -248,15 +264,16 @@ ENDIF()
 IF (ENABLE_IPP_COMPAT)
 	INSTALL(TARGETS ipp-compat)
 ENDIF()
+endif()
 
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
+INSTALL(DIRECTORY ${ALCP_ROOT}/include/alcp
         TYPE INCLUDE
 		)
 
 IF(UNIX AND ALCP_INSTALL_COMBINED_STATIC)
 		# FIXME: SUFFIX Debug will be ignored
 		INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.a DESTINATION lib RENAME libalcp.a)
-ELSE()
+ELSEIF(NOT AOCL_TB_UNIFIED_BUILD)
 	INSTALL(TARGETS alcp_static)
 ENDIF(UNIX AND ALCP_INSTALL_COMBINED_STATIC)
 
