@@ -60,6 +60,8 @@
 
  add_openssl()
 
+ alcp_add_sanitize_workaround_flags()
+
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_USE_BUNDLED_GTEST OFF)

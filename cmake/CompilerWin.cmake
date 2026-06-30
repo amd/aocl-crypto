@@ -154,6 +154,11 @@ function(alcp_add_sanitize_flags)
     add_compile_options(${ALCP_OPTIONS_SANITIZE} -fno-sanitize=address /Zi /Od)
 endfunction(alcp_add_sanitize_flags)
 
+# No-op on Windows: the sanitizer workaround it mirrors is clang-21/Linux-only.
+# Defined so the symbol resolves on the MSVC include path where it is still called.
+function(alcp_add_sanitize_workaround_flags)
+endfunction(alcp_add_sanitize_workaround_flags)
+
 #coverage
 function(alcp_add_coverage_flags)
     set(ALCP_CFLAGS_COV

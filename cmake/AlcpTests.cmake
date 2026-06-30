@@ -118,6 +118,13 @@ function(alcp_cc_test testName working_dir)
     endif()
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Per-module unit tests are optimized, sanitizer-instrumented gtest code and
+    # need the same clang-21 ASan workaround applied to the top-level tests/ and
+    # bench/ trees. Apply it here so every test built through this function is
+    # covered regardless of which subtree (e.g. lib/*/tests) it lives in.
+    alcp_add_sanitize_workaround_flags()
+
     add_executable(${_target_name}
         ${${testPrefix}_SOURCES}
         ${TEST_COMMON_SRC}

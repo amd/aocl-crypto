@@ -63,6 +63,8 @@ ENDIF(ENABLE_TESTS_IPP_API)
 
 add_openssl()
 
+alcp_add_sanitize_workaround_flags()
+
 SET(ALCP_INCLUDES
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/lib/include"

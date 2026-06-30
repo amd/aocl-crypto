@@ -309,6 +309,28 @@ function(alcp_add_sanitize_flags)
     add_link_options(${ALCP_OPTIONS_SANITIZE})
 endfunction(alcp_add_sanitize_flags)
 
+# FIXME: workaround for a clang 21.x AddressSanitizer codegen abort. When
+# address+undefined+pointer-subtract instrument the same translation unit at
+# -O2 or higher, clang 21.x aborts in the sanitizer pass with a bad-signature
+# assertion. Dropping pointer-subtract avoids the abort while keeping the rest
+# of the sanitizer set. add_compile_options/add_link_options here apply at the
+# CALLING directory's scope, so this disables pointer-subtract only for the
+# subtree that invokes it (e.g. tests/, bench/) and leaves lib/examples with
+# the full set. Gated to clang [21, 22): it is a no-op on every other compiler
+# and self-releases once a clang >= 22 with the upstream codegen fix is used.
+# The flags are emitted after the inherited top-level -fsanitize=pointer-subtract
+# so last-wins disables it for the calling subtree. The durable fix belongs in
+# the compiler, not here.
+function(alcp_add_sanitize_workaround_flags)
+    if(ALCP_SANITIZE
+       AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21
+       AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 22)
+        add_compile_options(-fno-sanitize=pointer-subtract)
+        add_link_options(-fno-sanitize=pointer-subtract)
+    endif()
+endfunction(alcp_add_sanitize_workaround_flags)
+
 # coverage flags
 function(alcp_add_coverage_flags)
     # coverage flags supported by gcc
