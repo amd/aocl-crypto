@@ -148,6 +148,112 @@ function(alcp_get_arch_cflags_zen3)
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
 endfunction(alcp_get_arch_cflags_zen3)
 
+# The AVX512 tier (arch_zen4) is, by DEFAULT, pinned to the PORTABLE Zen4-era ISA
+# floor (-march=znver3 + explicit AVX512 flags), so the binary is redistributable
+# and runs on all Zen4/5/6 (the hot kernels are CPUID-dispatched at runtime, so
+# this costs no measurable throughput vs a host-native floor).
+#
+# If you want the arch_zen4 tier built for the BUILD HOST's own Zen generation
+# instead (detected via `gcc -march=native`, capped to compiler support), set
+# -DALCP_ARCH_PORTABLE=OFF.
+#
+option(ALCP_ARCH_PORTABLE "Pin the AVX512 (arch_zen4) tier to the PORTABLE Zen4-era ISA floor (-march=znver3 + explicit AVX512 flags). Use for redistributable binaries." ON)
+
+# ALCP_ARCH_MTUNE flag controlling -mtune for the AVX512 (arch_zen4) tier (scheduling
+# only, always ISA-safe). It improves performance in some cases when set to auto.
+# Accepted values:
+#   ""     (empty, default) -> no -mtune applied
+#   auto                    -> latest znver the compiler supports
+#   znverN (e.g. znver5)    -> that specific -mtune target
+set(ALCP_ARCH_MTUNE "" CACHE STRING "-mtune for the AVX512 (arch_zen4) tier.")
+
+function(alcp_detect_host_znver out_var)
+    set(${out_var} "" PARENT_SCOPE)
+    # Resolve the effective `-march=native` generation from the compiler's own
+    # `__znverN__` macro - works for both GCC and Clang/AOCC.
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -march=native -dM -E -x c++ /dev/null
+        OUTPUT_VARIABLE _probe
+        ERROR_QUIET)
+    string(REGEX MATCH "__(znver[0-9]+)__" _m "${_probe}")
+    set(_host "${CMAKE_MATCH_1}")
+    if(NOT _host MATCHES "^znver[0-9]+$")
+        message(STATUS "alcp_detect_host_znver: host is not a znver target ('${_host}'); leaving -march unset")
+        return()
+    endif()
+    # Cap to what the compiler can actually emit (older compiler on newer HW).
+    if(NOT DEFINED COMPILER_SUPPORTS_ZNVER4)
+        CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
+        CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
+        CHECK_CXX_COMPILER_FLAG("-march=znver6" COMPILER_SUPPORTS_ZNVER6)
+    endif()
+    if(_host STREQUAL "znver6" AND NOT COMPILER_SUPPORTS_ZNVER6)
+        set(_host znver5)
+    endif()
+    if(_host STREQUAL "znver5" AND NOT COMPILER_SUPPORTS_ZNVER5)
+        set(_host znver4)
+    endif()
+    set(${out_var} "${_host}" PARENT_SCOPE)
+endfunction(alcp_detect_host_znver)
+
+function(alcp_apply_zen4_host_and_mtune list_var)
+    set(_flags ${${list_var}})
+
+    if(ALCP_ARCH_PORTABLE)
+        message(STATUS "ALCP_ARCH_PORTABLE=ON: arch_zen4 pinned to portable Zen4-era ISA floor (-march=znver3 + AVX512 flags); runs on all Zen4/5/6")
+    else()
+        alcp_detect_host_znver(_host_znver)
+        if(_host_znver)
+            message(WARNING "arch_zen4 ISA floor raised to host generation -march=${_host_znver}.")
+            list(APPEND _flags -march=${_host_znver})
+        else()
+            message(STATUS "arch_zen4: host znver not detected; keeping portable Zen4-era floor")
+        endif()
+    endif()
+
+    # -mtune (scheduling only, ISA-safe) is controlled by ALCP_ARCH_MTUNE.
+    # Defaults to OFF (empty); pass explicitly to opt in:
+    #   ""     (empty, default) -> no -mtune
+    #   auto                    -> latest znver the compiler supports
+    #   znverN (e.g. znver5)    -> that specific -mtune target
+    if(ALCP_ARCH_MTUNE)
+        if(ALCP_ARCH_MTUNE STREQUAL "auto")
+            CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
+            CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
+            CHECK_CXX_COMPILER_FLAG("-march=znver6" COMPILER_SUPPORTS_ZNVER6)
+            set(_latest_tune "")
+            if(COMPILER_SUPPORTS_ZNVER4)
+                message(STATUS "Compiler Supports znver4")
+                set(_latest_tune znver4)
+            endif()
+            if(COMPILER_SUPPORTS_ZNVER5)
+                message(STATUS "Compiler Supports znver5")
+                set(_latest_tune znver5)
+            endif()
+            if(COMPILER_SUPPORTS_ZNVER6)
+                message(STATUS "Compiler Supports znver6")
+                set(_latest_tune znver6)
+            endif()
+        else()
+            # Unsupported znver skipped with a warning instead of hard-failing the compile.
+            string(MAKE_C_IDENTIFIER "ALCP_MTUNE_OK_${ALCP_ARCH_MTUNE}" _mtune_ok)
+            CHECK_CXX_COMPILER_FLAG("-mtune=${ALCP_ARCH_MTUNE}" ${_mtune_ok})
+            if(${_mtune_ok})
+                set(_latest_tune ${ALCP_ARCH_MTUNE})
+            else()
+                message(WARNING "ALCP_ARCH_MTUNE='${ALCP_ARCH_MTUNE}' not supported by this compiler; skipping -mtune.")
+            endif()
+        endif()
+
+        if(_latest_tune)
+            message(WARNING "ALCP_ARCH_MTUNE: applying -mtune=${_latest_tune} to arch_zen4 (scheduling only, ISA-safe); see CPUPL-8571.")
+            list(APPEND _flags -mtune=${_latest_tune})
+        endif()
+    endif()
+
+    set(${list_var} ${_flags} PARENT_SCOPE)
+endfunction(alcp_apply_zen4_host_and_mtune)
+
 # lib/arch/zen4 Compile Flags
 function(alcp_get_arch_cflags_zen4)
     set(ARCH_COMPILE_FLAGS
@@ -156,19 +262,10 @@ function(alcp_get_arch_cflags_zen4)
         -mavx512vpopcntdq -mvpclmulqdq
         CACHE INTERNAL ""
         )
+
+    alcp_apply_zen4_host_and_mtune(ARCH_COMPILE_FLAGS)
+
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
-    # check if compiler supports -march=znver4
-    CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
-    if(COMPILER_SUPPORTS_ZNVER4)
-      message(STATUS "Compiler Supports znver4")
-      set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
-    endif()
-    # check if compiler supports -march=znver5
-    CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
-    if(COMPILER_SUPPORTS_ZNVER5)
-      message(STATUS "Compiler Supports znver5")
-      set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver5 PARENT_SCOPE)
-    endif()
 endfunction(alcp_get_arch_cflags_zen4)
 
 
@@ -180,23 +277,10 @@ function(alcp_get_arch_cflags_zen4_clang)
         -mavx512vpopcntdq -mvpclmulqdq
         CACHE INTERNAL ""
         )
+
+    alcp_apply_zen4_host_and_mtune(ARCH_COMPILE_FLAGS)
+
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
-
-    # check if compiler supports -march=znver4 for AOCC
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
-        if(COMPILER_SUPPORTS_ZNVER4)
-            message(STATUS "Compiler Supports znver4")
-            set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
-        endif()
-        # check if compiler supports -march=znver5
-        CHECK_CXX_COMPILER_FLAG("-march=znver5" COMPILER_SUPPORTS_ZNVER5)
-        if(COMPILER_SUPPORTS_ZNVER5)
-            message(STATUS "Compiler Supports znver5")
-            set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver5 PARENT_SCOPE)
-        endif()
-    endif()
-
 endfunction(alcp_get_arch_cflags_zen4_clang)
 
 # misc options

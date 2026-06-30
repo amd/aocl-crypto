@@ -38,7 +38,13 @@ ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(Sha2_512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
 	# Pre-RA scheduling cut spills in the register-tight Poly1305 multiply loop.
-	set_source_files_properties(poly1305.cc PROPERTIES COMPILE_FLAGS "-fschedule-insns")
+	# On a Zen6 build host, also tune scheduling for znver6 (ISA-safe; Poly1305-only uplift).
+	set(POLY1305_FLAGS "-fschedule-insns")
+	alcp_detect_host_znver(POLY1305_HOST_ZNVER)
+	if(POLY1305_HOST_ZNVER STREQUAL "znver6")
+		string(APPEND POLY1305_FLAGS " -mtune=znver6")
+	endif()
+	set_source_files_properties(poly1305.cc PROPERTIES COMPILE_FLAGS "${POLY1305_FLAGS}")
 	set_source_files_properties(x25519.cc PROPERTIES COMPILE_FLAGS "-O2")
 endif()
 
