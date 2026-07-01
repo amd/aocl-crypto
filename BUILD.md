@@ -8,6 +8,14 @@ The following tools and libraries are required to build AOCL-Cryptography:
 
 - **CMake** 3.26 or later
 - **GCC** 11.3 or later, **or Clang/AOCC** 14.0 or later
+  - Clang and AOCC do not ship their own C++ standard library; they reuse the
+    system GNU toolchain (libstdc++). A Clang/AOCC build therefore also requires
+    a **GNU gcc/g++ toolchain (libstdc++) 11.3 or later** installed and selected
+    by the compiler. On distributions whose default gcc is older (e.g. RHEL 8),
+    install and select a newer one (e.g. enable a `gcc-toolset`). CMake validates
+    the backing toolchain on a best-effort basis, but detection is not guaranteed
+    to be accurate across all compilers and layouts. Ensuring a compatible GNU
+    toolchain is ultimately your responsibility.
 - **OpenSSL** 3.1.3 or later (tested through 3.5.x)
 - **Git** with git-lfs (for KAT test data)
 - **7zip** (`p7zip-full` on Ubuntu) — required for static library creation on Linux

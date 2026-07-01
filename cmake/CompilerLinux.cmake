@@ -40,6 +40,75 @@ function(alcp_get_build_environment)
 endfunction(alcp_get_build_environment)
 
 
+# Clang/AOCC do not ship libstdc++; they borrow a system GNU toolchain whose
+# version -- not Clang's own -- decides whether the C++ standard library is new
+# enough, so this recovers that backing toolchain's full version (X.Y.Z).
+# It can still return "" (let the caller decide, never guess) because how a
+# compiler resolves and names its backing GNU toolchain varies widely across
+# compilers and distros.
+function(alcp_get_clang_gnu_toolchain_version OUT_VAR)
+    set(${OUT_VAR} "" PARENT_SCOPE)
+    separate_arguments(_PROBE_FLAGS NATIVE_COMMAND "${CMAKE_CXX_FLAGS}")
+
+    # Ask the driver which GNU toolchain dir it resolved (honors --gcc-install-dir
+    # / --gcc-toolchain / sysroot); the dir is <prefix>/lib/gcc/<triple>/<ver>.
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} ${_PROBE_FLAGS} -v -E -x c++ -
+        INPUT_FILE /dev/null OUTPUT_QUIET
+        ERROR_VARIABLE _DRIVER_STDERR RESULT_VARIABLE _RC)
+    if(NOT _RC EQUAL 0)
+        return()
+    endif()
+    string(REGEX MATCH "Selected GCC installation:[ \t]*([^\n\r]+)"
+        _MATCHED "${_DRIVER_STDERR}")
+    if(NOT CMAKE_MATCH_1)
+        return()
+    endif()
+    get_filename_component(_SELECTED_DIR "${CMAKE_MATCH_1}" REALPATH)
+
+    # When the dir basename already carries at least major.minor, it names the
+    # full version directly -- use it.
+    get_filename_component(_DIR_BASENAME "${_SELECTED_DIR}" NAME)
+    if(_DIR_BASENAME MATCHES "^[0-9]+\\.[0-9]+")
+        set(${OUT_VAR} "${_DIR_BASENAME}" PARENT_SCOPE)
+        return()
+    endif()
+
+    # Otherwise the basename is major-only, so recover the full version from the
+    # gcc/g++ binary that backs this dir -- the one whose -print-libgcc-file-name
+    # resolves into it. Binary names are globbed to stay distro-generic.
+    get_filename_component(_PREFIX "${_SELECTED_DIR}/../../../.." REALPATH)
+    get_filename_component(_CXX_REAL "${CMAKE_CXX_COMPILER}" REALPATH)
+    file(GLOB _CANDIDATES "${_PREFIX}/bin/*gcc*" "${_PREFIX}/bin/*g++*")
+    foreach(_CAND IN LISTS _CANDIDATES)
+        get_filename_component(_CAND_REAL "${_CAND}" REALPATH)
+        if(_CAND_REAL STREQUAL _CXX_REAL OR _CAND MATCHES "clang")
+            continue()
+        endif()
+        execute_process(
+            COMMAND "${_CAND}" -print-libgcc-file-name
+            OUTPUT_VARIABLE _LIBGCC OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET RESULT_VARIABLE _RC1)
+        if(NOT _RC1 EQUAL 0 OR _LIBGCC STREQUAL "")
+            continue()
+        endif()
+        get_filename_component(_LIBGCC_DIR "${_LIBGCC}" DIRECTORY)
+        get_filename_component(_LIBGCC_DIR "${_LIBGCC_DIR}" REALPATH)
+        if(NOT _LIBGCC_DIR STREQUAL _SELECTED_DIR)
+            continue()
+        endif()
+        execute_process(
+            COMMAND "${_CAND}" -dumpfullversion
+            OUTPUT_VARIABLE _VER OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET RESULT_VARIABLE _RC2)
+        if(_RC2 EQUAL 0 AND _VER MATCHES "^[0-9]+\\.[0-9]+")
+            set(${OUT_VAR} "${_VER}" PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+endfunction(alcp_get_clang_gnu_toolchain_version)
+
+
 # check compiler version
 function(alcp_check_compiler_version)
     include(CheckCXXCompilerFlag)
@@ -65,6 +134,27 @@ function(alcp_check_compiler_version)
         endif()
         if(${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
             message(FATAL_ERROR "Using c++ compiler version ${CMAKE_CXX_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
+        endif()
+        # Hold the borrowed libstdc++ to the same GCC_MIN_REQ as a native gcc
+        # build. It can't always be resolved, so an unknown one warns; a
+        # resolved-but-too-old one is fatal.
+        alcp_get_clang_gnu_toolchain_version(CLANG_GNU_TOOLCHAIN_VERSION)
+        if(CLANG_GNU_TOOLCHAIN_VERSION STREQUAL "")
+            message(WARNING "Could not determine the GNU toolchain "
+                "(libstdc++) backing ${CMAKE_CXX_COMPILER_ID}; skipping the "
+                "backing-toolchain version check. Ensure a GNU gcc/g++ toolchain "
+                "(libstdc++) >= ${GCC_MIN_REQ} is installed and selected by the "
+                "compiler (e.g. enable a gcc-toolset on RHEL); an older one may "
+                "fail to build.")
+        elseif(${CLANG_GNU_TOOLCHAIN_VERSION} VERSION_LESS ${GCC_MIN_REQ})
+            message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} is using GNU toolchain "
+                "(libstdc++) version ${CLANG_GNU_TOOLCHAIN_VERSION}, min. reqd "
+                "version is ${GCC_MIN_REQ}! Install a newer gcc toolchain "
+                "(e.g. enable a gcc-toolset on RHEL) and make it the default "
+                "toolchain for the compiler.")
+        else()
+            message(STATUS "${CMAKE_CXX_COMPILER_ID} selected GNU toolchain "
+                "(libstdc++) version: ${CLANG_GNU_TOOLCHAIN_VERSION}")
         endif()
     endif()
     # check if cc and cxx version mismatch
