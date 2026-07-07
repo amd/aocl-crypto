@@ -134,13 +134,24 @@ ArraysMatch(const std::vector<Uint8>& actual,
     }
     for (size_t i = 0; i < actual.size(); i++) {
         if (expected[i] != actual[i]) {
+            // Bound the dump to a fixed window centred on the first mismatch:
+            // buffers here can be hundreds of MB, so dumping them whole produces
+            // unusably large failure logs. CTX bytes of context each side keeps
+            // the message a small constant size while still showing the
+            // divergence in context.
+            const size_t CTX   = 16;
+            const size_t start = (i >= CTX) ? i - CTX : 0;
+            const size_t end =
+                std::min(actual.size(), i + CTX + 1);
             return ::testing::AssertionFailure()
                    << "Does not match,"
                    << "Size:" << actual.size() << " Failure i:" << i << " ! "
-                   << "Actual "
-                   << parseBytesToHexStr(&(actual[0]), expected.size())
+                   << "Actual[i] 0x" << parseBytesToHexStr(&(actual[i]), 1)
+                   << " Expected[i] 0x" << parseBytesToHexStr(&(expected[i]), 1)
+                   << " window@" << start << " Actual "
+                   << parseBytesToHexStr(&(actual[start]), end - start)
                    << " Expected "
-                   << parseBytesToHexStr(&(expected[0]), expected.size());
+                   << parseBytesToHexStr(&(expected[start]), end - start);
         }
     }
     if (verbose > 0) {
