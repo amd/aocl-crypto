@@ -34,7 +34,13 @@ FUNCTION(EXAMPLE CLASS_NAME)
         "${CMAKE_CURRENT_SOURCE_DIR}/../include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
-    TARGET_LINK_LIBRARIES(${CLASS_NAME} alcp)
+    # Link to whichever ALCP variant is being built; matches the parent
+    # tests/CMakeLists.txt behaviour.
+    IF(ALCP_BUILD_SHARED)
+        TARGET_LINK_LIBRARIES(${CLASS_NAME} alcp)
+    ELSE()
+        TARGET_LINK_LIBRARIES(${CLASS_NAME} alcp_static)
+    ENDIF()
 
 ENDFUNCTION()
 

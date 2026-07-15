@@ -25,18 +25,31 @@
  
 
 ADD_EXAMPLE(cpuid.cc)
-# cpuid example directly uses Au::X86Cpu for microarchitecture detection
+# cpuid example directly uses Au::X86Cpu for microarchitecture detection. The
+# cpuid module is compiled into the main aocl-utils library (au_cpuid is a
+# strict subset of aoclutils), so link the single aoclutils binary here -- the
+# same one alcp links -- instead of a separate au_cpuid dependency. Library
+# file names (AU_*_LIBNAME) are defined once in AoclUtils.cmake and already
+# carry the Debug "-dbg" suffix when needed.
 IF(ENABLE_AOCL_UTILS AND AOCL_UTILS_INSTALL_DIR)
     IF(MSVC)
-        target_link_libraries(cpuid_cpp PRIVATE
-            ${AOCL_UTILS_INSTALL_DIR}/lib/au_cpuid.lib)
-        target_link_libraries(cpuid_cpp-static PRIVATE
-            ${AOCL_UTILS_INSTALL_DIR}/lib/au_cpuid.lib)
+        SET(_AU_UTILS_DYN ${AOCL_UTILS_INSTALL_DIR}/lib/${AU_UTILS_IMPORT_LIBNAME})
+        # Shared ALCP is /MD: link the -static example via the aoclutils DLL
+        # import (CRT-isolated), not the static archive.
+        IF(ALCP_BUILD_SHARED)
+            SET(_AU_UTILS_STA ${AOCL_UTILS_INSTALL_DIR}/lib/${AU_UTILS_IMPORT_LIBNAME})
+        ELSE()
+            SET(_AU_UTILS_STA ${AOCL_UTILS_INSTALL_DIR}/lib/${AU_UTILS_STATIC_WINLIB})
+        ENDIF()
     ELSE()
-        target_link_libraries(cpuid_cpp PRIVATE
-            ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.so)
-        target_link_libraries(cpuid_cpp-static PRIVATE
-            ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libau_cpuid.a)
+        SET(_AU_UTILS_DYN ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${AU_UTILS_SHARED_LIBNAME})
+        SET(_AU_UTILS_STA ${AOCL_UTILS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${AU_UTILS_STATIC_LIBNAME})
+    ENDIF()
+    IF(ALCP_BUILD_SHARED)
+        target_link_libraries(cpuid_cpp PRIVATE ${_AU_UTILS_DYN})
+    ENDIF()
+    IF(ALCP_BUILD_STATIC)
+        target_link_libraries(cpuid_cpp-static PRIVATE ${_AU_UTILS_STA})
     ENDIF()
 ENDIF()
 ADD_EXAMPLE(filecrypt.cc)

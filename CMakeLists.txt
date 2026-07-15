@@ -75,11 +75,6 @@ alcp_check_compiler_version()
 # check build environment
 alcp_get_build_environment()
 
-# check for 7zip installation, needed by static library creation on linux
-if(UNIX)
-	check_7zip_installed()
-endif(UNIX)
-
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_CXX_STANDARD 17)
@@ -105,8 +100,42 @@ SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" 
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
+# Build the shared library (libalcp.so / alcp.dll) and/or the static library
+# (libalcp.a / alcp_static.lib). At least one must be ON; both default to ON.
+OPTION(ALCP_BUILD_SHARED "BUILD THE ALCP SHARED LIBRARY (libalcp.so/alcp.dll)" ON)
+OPTION(ALCP_BUILD_STATIC "BUILD THE ALCP STATIC LIBRARY (libalcp.a/alcp_static.lib)" ON)
+IF(NOT ALCP_BUILD_SHARED AND NOT ALCP_BUILD_STATIC)
+	MESSAGE(FATAL_ERROR "At least one of ALCP_BUILD_SHARED or ALCP_BUILD_STATIC must be ON")
+ENDIF()
+
+# Windows CRT: static-only build uses /MT, otherwise /MD. This is global and
+# baked into every object, so flipping ALCP_BUILD_SHARED in an existing build
+# dir mixes runtimes (LNK2038). Detect the flip and require a clean rebuild.
+IF(WIN32)
+	IF(DEFINED _ALCP_CACHED_BUILD_SHARED
+	   AND NOT _ALCP_CACHED_BUILD_SHARED STREQUAL "${ALCP_BUILD_SHARED}")
+		MESSAGE(FATAL_ERROR
+			"ALCP_BUILD_SHARED changed (was '${_ALCP_CACHED_BUILD_SHARED}', now "
+			"'${ALCP_BUILD_SHARED}') in an existing build directory. On Windows "
+			"this flips the global MSVC runtime between /MD and /MT, which mixes "
+			"runtimes across already-built objects (including fetched gtest/"
+			"benchmark) and causes LNK2038 RuntimeLibrary mismatches. Configure "
+			"a fresh build directory instead of reusing this one.")
+	ENDIF()
+	SET(_ALCP_CACHED_BUILD_SHARED "${ALCP_BUILD_SHARED}"
+		CACHE INTERNAL "Last configured ALCP_BUILD_SHARED, for CRT-flip detection")
+
+	IF(NOT ALCP_BUILD_SHARED)
+		SET(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	ENDIF()
+ENDIF()
+
 # Install Options
 OPTION(ALCP_INSTALL_COMBINED_STATIC "INSTALL ALCP+ALCI COMBINED STATIC LIB" OFF)
+IF(ALCP_INSTALL_COMBINED_STATIC AND NOT ALCP_BUILD_STATIC)
+	MESSAGE(WARNING "ALCP_INSTALL_COMBINED_STATIC requires ALCP_BUILD_STATIC; disabling combined-static install")
+	SET(ALCP_INSTALL_COMBINED_STATIC OFF)
+ENDIF()
 
 IF(NOT DEFINED ENABLE_AOCL_UTILS)
  	MESSAGE(STATUS "Enabling utils as it's needs to be enabled for proper dispatching")
@@ -144,8 +173,8 @@ set(AOCL_UTILS_INSTALL_DIR "" CACHE STRING "AOCL UTILS INSTALLED DIRECTORY")
 set(AOCL_COMPAT_LIBS "" CACHE STRING "COMPATIBILITY LAYER FOR OPENSSL AND IPP")
 
 # for parsing aocl compat libs options
-SET(ENABLE_OPENSSL_COMPAT FALSE)
-SET(ENABLE_IPP_COMPAT FALSE)
+OPTION(ENABLE_OPENSSL_COMPAT "BUILD OPENSSL COMPAT LIBRARY" OFF)
+OPTION(ENABLE_IPP_COMPAT "BUILD IPP COMPAT LIBRARY" OFF)
 IF (AOCL_COMPAT_LIBS)
 	INCLUDE(${ALCP_ROOT}/cmake/AlcpCompat.cmake)
 	alcp_check_compat_option()
@@ -255,13 +284,17 @@ ENDIF()
 # so skip ALCP's own shared/static + compat install rules. Without this guard
 # libalcp.so (and the redundant libalcp.a) leak into the unified install lib dir.
 if(NOT AOCL_TB_UNIFIED_BUILD)
-INSTALL(TARGETS alcp)
+IF(ALCP_BUILD_SHARED)
+	INSTALL(TARGETS alcp)
+ENDIF()
 
-# install compat libs if option is passed
-IF (ENABLE_OPENSSL_COMPAT)
+# install compat libs if option is passed. The compat library is itself
+# a shared plugin built on top of libalcp, so it is only installed when
+# the shared library is being built.
+IF (ENABLE_OPENSSL_COMPAT AND ALCP_BUILD_SHARED)
 	INSTALL(TARGETS openssl-compat)
 ENDIF()
-IF (ENABLE_IPP_COMPAT)
+IF (ENABLE_IPP_COMPAT AND ALCP_BUILD_SHARED)
 	INSTALL(TARGETS ipp-compat)
 ENDIF()
 endif()
@@ -270,12 +303,17 @@ INSTALL(DIRECTORY ${ALCP_ROOT}/include/alcp
         TYPE INCLUDE
 		)
 
-IF(UNIX AND ALCP_INSTALL_COMBINED_STATIC)
-		# FIXME: SUFFIX Debug will be ignored
-		INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.a DESTINATION lib RENAME libalcp.a)
-ELSEIF(NOT AOCL_TB_UNIFIED_BUILD)
-	INSTALL(TARGETS alcp_static)
-ENDIF(UNIX AND ALCP_INSTALL_COMBINED_STATIC)
+IF(ALCP_BUILD_STATIC)
+	IF(ALCP_INSTALL_COMBINED_STATIC)
+		IF(WIN32)
+			INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.lib DESTINATION lib RENAME alcp_static.lib)
+		ELSE()
+			INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.a DESTINATION lib RENAME libalcp.a)
+		ENDIF()
+	ELSEIF(NOT AOCL_TB_UNIFIED_BUILD)
+		INSTALL(TARGETS alcp_static)
+	ENDIF()
+ENDIF()
 
 IF (ALCP_ENABLE_EXAMPLES)
 	# examples which should be part of release package

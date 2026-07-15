@@ -65,7 +65,8 @@ cmake --list-presets
 5. [Enable Tests - To compile test code](#to-build-tests-using-kat-vectors)
 6. [Enable Bench - To compile bench code.](#build-benchmarks)
 7. [Enable Compat - To compare with compat libs.](#enabling-compat-libs)
-8. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
+8. [Select shared and/or static libraries](#selecting-shared-andor-static-libraries)
+9. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
 
 
 #### Steps to find binaries/dll's by setting an environment variable
@@ -95,6 +96,29 @@ $ .\examples\{algorithm_type}\release\*.exe
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
 ```
+
+#### Selecting Shared and/or Static Libraries
+
+By default both the shared (`alcp.dll`) and static (`alcp_static.lib`)
+libraries are built. You can build just one:
+```
+PS> cmake -DALCP_BUILD_SHARED=ON  -DALCP_BUILD_STATIC=OFF -B build   # shared only
+PS> cmake -DALCP_BUILD_SHARED=OFF -DALCP_BUILD_STATIC=ON  -B build   # static only
+```
+- `ALCP_BUILD_SHARED` — build the shared library (default ON)
+- `ALCP_BUILD_STATIC` — build the static library (default ON)
+
+At least one must be ON; setting both OFF is a fatal configure error.
+
+**Windows CRT:** the C runtime is selected globally based on `ALCP_BUILD_SHARED`:
+- `ALCP_BUILD_SHARED=ON` (default) uses the dynamic CRT (`/MD`). Use this with a
+  `BUILD_SHARED_LIBS=ON` aocl-utils install (which ships `libaoclutils.lib`).
+- `ALCP_BUILD_SHARED=OFF` switches the whole project to the static CRT (`/MT`).
+  Use this with a `BUILD_SHARED_LIBS=OFF` (/MT) aocl-utils install (which ships
+  `libaoclutils_static.lib`).
+
+There are no per-target CRT overrides; everything is driven by the single global
+`CMAKE_MSVC_RUNTIME_LIBRARY` so consumers do not hit a RuntimeLibrary mismatch.
 
 
 #### For Debug Build 

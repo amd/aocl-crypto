@@ -44,6 +44,9 @@ FOREACH(testFile IN LISTS TEST_FILES)
 
 ENDFOREACH()
 
-ADD_EXECUTABLE(static_link_test static_link_test.cc)
-TARGET_LINK_LIBRARIES(static_link_test alcp_static)
-
+# static_link_test verifies linking against alcp_static. Only build it when
+# the static library is enabled.
+IF(ALCP_BUILD_STATIC)
+    ADD_EXECUTABLE(static_link_test static_link_test.cc)
+    TARGET_LINK_LIBRARIES(static_link_test alcp_static)
+ENDIF()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -341,7 +341,11 @@ xorOneBlock(const Uint8* pKey,
 // index; the IV itself is not modified. The keylen and ivlen parameters are
 // kept for the existing internal signature; this ChaCha256T path uses the
 // fixed key and IV sizes declared above when constructing each block.
-alc_error_t
+//
+// `inline`: this .inc is #included by both chacha20.cc and the chacha20 unit
+// test, so the definition needs inline linkage to be included in multiple
+// translation units without a duplicate-definition error.
+inline alc_error_t
 ProcessInput(const Uint8 key[],
              Uint64      keylen,
              const Uint8 iv[],

@@ -96,7 +96,11 @@ unset(_LFS_PROBLEM_LIST)
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 
-SET(LIBS ${LIBS} gtest alcp)
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSE()
+    SET(LIBS ${LIBS} gtest alcp_static)
+ENDIF()
 
 # as per discussion: https://discourse.cmake.org/t/target-link-libraries-for-lpthread-ldl-and-lutils/1235/3
 IF(Threads_FOUND AND UNIX)
@@ -222,7 +226,8 @@ FUNCTION(LINK_IF_EXISTS SOURCE DESTINATION LINK_TYPE)
     # Check if the source file exists
     if(EXISTS ${SOURCE})
         # Create a symbolic link if the source file exists
-        FILE(CREATE_LINK ${SOURCE} ${DESTINATION} ${LINK_TYPE})
+        # COPY_ON_ERROR: fall back to copying on Windows when symlink privileges are missing
+        FILE(CREATE_LINK ${SOURCE} ${DESTINATION} ${LINK_TYPE} COPY_ON_ERROR)
     else()
         string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
         if("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")

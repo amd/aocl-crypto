@@ -471,8 +471,9 @@ Digest_Multibuffer_Cross(int HashSize, alc_digest_mode_t sb_mode)
 
 #ifndef USE_OSSL
     printErrors("Exiting, OSSL external lib not available");
-    exit(-1);
-#endif
+    GTEST_SKIP() << "OpenSSL not available for multibuffer cross test";
+    return;
+#else
 
     alc_digest_mode_t mb_mode{};
     switch (sb_mode) {
@@ -590,5 +591,6 @@ Digest_Multibuffer_Cross(int HashSize, alc_digest_mode_t sb_mode)
             }
         }
     }
+#endif // USE_OSSL
 }
 #endif

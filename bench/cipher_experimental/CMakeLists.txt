@@ -1,4 +1,4 @@
- # Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,13 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/alc_*.cc)
-SET(LIBS ${LIBS} benchmark alcp)
+# Link against whichever ALCP library is being built (static-only falls back
+# to alcp_static).
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} benchmark alcp)
+ELSE()
+    SET(LIBS ${LIBS} benchmark alcp_static)
+ENDIF()
 
 SET(EXTRA_SOURCES "")
 

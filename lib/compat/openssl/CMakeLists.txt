@@ -44,6 +44,11 @@ ADD_LIBRARY(openssl-compat
 	${PROVIDER_SRC}
 	)
 
+# Export all symbols on Windows (Linux exports all by default)
+IF(WIN32)
+	SET_TARGET_PROPERTIES(openssl-compat PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+ENDIF(WIN32)
+
 # Include ALCP header files
 TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
 TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE include)
@@ -57,5 +62,3 @@ IF(WIN32)
 		TARGET_COMPILE_OPTIONS(openssl-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
 	ENDIF()
 ENDIF(WIN32)
-
-

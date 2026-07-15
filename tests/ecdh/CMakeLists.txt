@@ -29,7 +29,11 @@ set(ALCP_MODULE_LABEL "ec")
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_ecdh.cc base/ecdh.cc)
-SET(LIBS ${LIBS} gtest alcp)
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSE()
+    SET(LIBS ${LIBS} gtest alcp_static)
+ENDIF()
 
 IF(ENABLE_TESTS_IPP_API)
     # If there is IPP, add IPP source and add IPP liberary
@@ -99,4 +103,3 @@ IF(ALCP_MEMCHECK_VALGRIND)
     # alcp_add_valgrind_check_test("test_ecdh_kat" ${CMAKE_BINARY_DIR}/tests/ecdh/test_ecdh_kat)
     # alcp_add_valgrind_check_test("test_ecdh_cross" ${CMAKE_BINARY_DIR}/tests/ecdh/test_ecdh_cross)
 ENDIF(ALCP_MEMCHECK_VALGRIND)
-

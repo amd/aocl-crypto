@@ -130,10 +130,17 @@ function(alcp_cc_test testName working_dir)
         ${TEST_COMMON_SRC}
     )
 
+    # Link to whichever ALCP variant is being built; matches the parent
+    # tests/CMakeLists.txt behaviour so SHARED=OFF builds do not pull alcp in.
+    IF(ALCP_BUILD_SHARED)
+        SET(_ALCP_TEST_LIB alcp)
+    ELSE()
+        SET(_ALCP_TEST_LIB alcp_static)
+    ENDIF()
     target_link_libraries(${_target_name}
         gtest_main
         gmock_main
-        alcp
+        ${_ALCP_TEST_LIB}
         ${${testPrefix}_DEPENDS}
     )
 

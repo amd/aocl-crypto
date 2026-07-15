@@ -1,4 +1,4 @@
- # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -27,7 +27,13 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/poly1305/base/alc_poly1305.cc ../../tests/poly1305/base/poly1305.cc)
-SET(LIBS ${LIBS} benchmark alcp)
+# Link against whichever ALCP library is being built (static-only falls back
+# to alcp_static).
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} benchmark alcp)
+ELSE()
+    SET(LIBS ${LIBS} benchmark alcp_static)
+ENDIF()
 SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_OPENSSL_API)

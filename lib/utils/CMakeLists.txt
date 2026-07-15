@@ -38,32 +38,23 @@ IF (ALCP_ENABLE_TESTS)
   ADD_SUBDIRECTORY(tests)
 ENDIF()
 
-TARGET_SOURCES(alcp
+ALCP_TARGET_SOURCES(
 	PRIVATE
 		${UTILS_SRCS}
-	)
-
-TARGET_SOURCES(alcp_static
-	PRIVATE
-		${UTILS_SRCS}
-	)
+)
 
 IF(UNIX)
   IF (NOT IS_DIRECTORY ${OPENSSL_INSTALL_DIR})
     MESSAGE(FATAL_ERROR "OpenSSL installation dir not found!, please export OPENSSL_INSTALL_DIR=<your path to openssl installation> and retry")
   ENDIF ()
   IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+    ALCP_TARGET_LINK_LIBRARIES(PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
   ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
+    ALCP_TARGET_LINK_LIBRARIES(PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
   ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
+    ALCP_TARGET_LINK_LIBRARIES(PUBLIC ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
   ELSE()
-    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/x86_64-linux-gnu/libcrypto.so)
-    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/x86_64-linux-gnu/libcrypto.so)
+    ALCP_TARGET_LINK_LIBRARIES(PUBLIC ${OPENSSL_INSTALL_DIR}/x86_64-linux-gnu/libcrypto.so)
   ENDIF()
 ENDIF(UNIX)
 

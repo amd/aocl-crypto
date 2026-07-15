@@ -65,9 +65,6 @@ ensure_packages(){
         echo "Running \"sudo apt install cmake\""
         sudo apt install cmake               # Build system generator
         quit_if_status_not_zero $?
-        echo "Running \"sudo apt install p7zip-full\""
-        sudo apt install p7zip-full          # Re-archive static libs
-        quit_if_status_not_zero $?
         echo "Running \"sudo apt install gcc-12 g++-12\""
         sudo apt install gcc-12 g++-12       # Compiler
         quit_if_status_not_zero $?

@@ -104,7 +104,6 @@ built or running.
     - Git (2.30.2 or later)
     - OpenSSL ( 3.1.3 through 3.5.x )
     - Make ( 4.0 or later )
-    - 7zip ( 15.0 or later )
   - Optional Dependancies
     - Pandoc ( + LaTeX for generating pdf docs)
     - Doxygen
