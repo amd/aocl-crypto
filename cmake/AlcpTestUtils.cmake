@@ -27,6 +27,9 @@
 include(CMakeParseArguments)
 include(GoogleTest)
 
+set(ALCP_TEST_DISCOVERY_TIMEOUT 60 CACHE STRING
+    "Timeout (seconds) for gtest_discover_tests test enumeration")
+
 function(alcp_add_valgrind_check_test test_name test_binary)
     message(STATUS "Generating tests to run using Valgrind Memchecks.. checking for valgrind installation")
     find_program(VALGRIND "valgrind")
@@ -71,24 +74,30 @@ function(alcp_add_integration_tests test_name test_binary)
         endif()
 
         gtest_discover_tests(${test_name} TARGET ${test_binary} TEST_SUFFIX ".${ARG_MODE}" NO_PRETTY_VALUES NO_PRETTY_TYPES
+            DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
             PROPERTIES LABELS "${_label}")
         if(ENABLE_TESTS_IPP_API)
             gtest_discover_tests(${test_name} TARGET ${test_binary} EXTRA_ARGS ${IPP_ARGS} TEST_SUFFIX ".${ARG_MODE}.ipp" NO_PRETTY_VALUES NO_PRETTY_TYPES
+                DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
                 PROPERTIES LABELS "${_label}")
         endif(ENABLE_TESTS_IPP_API)
         if(ENABLE_TESTS_OPENSSL_API)
             gtest_discover_tests(${test_name} TARGET ${test_binary} EXTRA_ARGS ${OPENSSL_ARGS} TEST_SUFFIX ".${ARG_MODE}.openssl" NO_PRETTY_VALUES NO_PRETTY_TYPES
+                DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
                 PROPERTIES LABELS "${_label}")
         endif(ENABLE_TESTS_OPENSSL_API)
     else()
         gtest_discover_tests(${test_name} TARGET ${test_binary} NO_PRETTY_VALUES NO_PRETTY_TYPES
+            DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
             PROPERTIES LABELS "${_label}")
         if(ENABLE_TESTS_IPP_API)
             gtest_discover_tests(${test_name} TARGET ${test_binary} EXTRA_ARGS ${IPP_ARGS} TEST_SUFFIX ".ipp" NO_PRETTY_VALUES NO_PRETTY_TYPES
+                DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
                 PROPERTIES LABELS "${_label}")
         endif(ENABLE_TESTS_IPP_API)
         if(ENABLE_TESTS_OPENSSL_API)
             gtest_discover_tests(${test_name} TARGET ${test_binary} EXTRA_ARGS ${OPENSSL_ARGS} TEST_SUFFIX ".openssl" NO_PRETTY_VALUES NO_PRETTY_TYPES
+                DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
                 PROPERTIES LABELS "${_label}")
         endif(ENABLE_TESTS_OPENSSL_API)
     endif()

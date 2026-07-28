@@ -30,6 +30,9 @@ FetchContent_Declare(gtest
     GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(gtest)
 
+SET(ALCP_TEST_DISCOVERY_TIMEOUT 60 CACHE STRING
+    "Timeout (seconds) for gtest_discover_tests test enumeration")
+
 if(WIN32)
     foreach(_t gtest gtest_main gmock gmock_main)
         if(TARGET ${_t})
@@ -219,6 +222,7 @@ FUNCTION(AES_TEST TYPE MOD)
                                                       ${OPENSSL_LIBS} 
                                                       ${IPP_LIBS})
     gtest_discover_tests(aes_${MOD}_experimental_${TYPE} NO_PRETTY_VALUES NO_PRETTY_TYPES
+        DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
         PROPERTIES LABELS "cipher")
 ENDFUNCTION()
 
