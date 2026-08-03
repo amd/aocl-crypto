@@ -404,7 +404,8 @@ Sha3<digest_len>::processAndSqueeze(Uint8* pBuf, Uint64 size)
         m_processing_state = STATE_SQUEEZE;
         squeezeChunk(pBuf, size);
     } else {
-        utils::CopyBlock(pBuf, (Uint8*)m_state_flat, size);
+        utils::CopyBlock(
+            pBuf, (Uint8*)m_state_flat, std::min(size, m_digest_len));
     }
     return err;
 }
