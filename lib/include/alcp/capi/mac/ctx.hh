@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,22 +32,24 @@ namespace alcp::mac {
 
 struct Context
 {
-    void* m_mac    = nullptr;
-    void* m_digest = nullptr;
+    void* m_mac                                                      = nullptr;
+    void* m_digest                                                   = nullptr;
     alc_error_t (*init)(Context*        ctx,
                         const Uint8*    key,
                         Uint64          size,
-                        alc_mac_info_t* info);
-    alc_error_t (*update)(void* mac, const Uint8* buff, Uint64 size);
-    alc_error_t (*finalize)(void* mac, Uint8* buff, Uint64 size);
-    alc_error_t (*duplicate)(Context* srcCtx, Context* destCtx);
-    void (*finish)(void* mac, void* digest);
-    alc_error_t (*reset)(void* mac);
+                        alc_mac_info_t* info)                        = nullptr;
+    alc_error_t (*update)(void* mac, const Uint8* buff, Uint64 size) = nullptr;
+    alc_error_t (*finalize)(void* mac, Uint8* buff, Uint64 size)     = nullptr;
+    alc_error_t (*duplicate)(Context* srcCtx, Context* destCtx)      = nullptr;
+    void (*finish)(void* mac, void* digest)                          = nullptr;
+    alc_error_t (*reset)(void* mac)                                  = nullptr;
     alc_error_t (*flush)(void*         mac,
                          const Uint8** ppMsgBuf,
                          Uint64        numBuffers,
-                         Uint64        msgLen);
-    alc_error_t (*dequeue)(void* mac, Uint8** ppDstBuf, Uint64 numBuffers);
+                         Uint64        msgLen)                              = nullptr;
+    alc_error_t (*dequeue)(void*   mac,
+                           Uint8** ppDstBuf,
+                           Uint64  numBuffers)                        = nullptr;
 
     ~Context()
     {

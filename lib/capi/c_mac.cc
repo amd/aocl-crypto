@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -102,6 +102,7 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle)
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context);
 
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
+    ALCP_BAD_PTR_ERR_RET(p_ctx->finish);
     p_ctx->finish(p_ctx->m_mac, p_ctx->m_digest);
     p_ctx->~Context();
     // FIXME: This function is always returning no errors
@@ -137,6 +138,7 @@ alcp_mac_init(alc_mac_handle_p pMacHandle,
     ALCP_BAD_PTR_ERR_RET(key);
 
     auto p_ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
+    ALCP_BAD_PTR_ERR_RET(p_ctx->init);
     return p_ctx->init(p_ctx, key, size, info);
 }
 
