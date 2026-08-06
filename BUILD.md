@@ -54,7 +54,8 @@ cmake --list-presets
 9. [Build with dynamic compiler selection ](#to-enable-dynamic-compiler-selection-while-building)
 10. [Build with assembly disabled](#to-disable-assembly-implementation-and-use-intrinsics-kernels)
 11. [Select shared and/or static libraries](#selecting-shared-andor-static-libraries)
-12. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
+12. [Portable vs host-native AVX512 (arch_zen4) tier](#portable-vs-host-native-avx512-arch_zen4-tier)
+13. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
 
 #### Selecting Shared and/or Static Libraries
 
@@ -211,6 +212,43 @@ ALCP_ENABLE_DYNAMIC_COMPILER_PICK is ON by default
 $ cmake -DALCP_DISABLE_ASSEMBLY=ON  ../ 
 ```
 ALCP_DISABLE_ASSEMBLY is OFF by default 
+
+### Portable vs host-native AVX512 (arch_zen4) tier
+
+The AVX512 code path (the `arch_zen4` tier) is, by **default**, pinned to a
+portable Zen4-era ISA floor (`-march=znver3` plus explicit AVX512 flags). The
+resulting binary is **redistributable** and runs on all Zen4/Zen5/Zen6 parts; the
+hot kernels are CPUID-dispatched at runtime, so this floor costs no measurable
+throughput versus a host-native build.
+
+The build host's Zen generation is auto-detected from the compiler's own
+`-march=native` `__znverN__` macro and is
+capped to what the compiler can actually emit (e.g. `znver6` falls back to
+`znver5` on GCC < 16).
+
+```sh
+$ cmake -DALCP_ARCH_PORTABLE=OFF ../   # opt out: build arch_zen4 for the host's own Zen generation
+```
+
+- `ALCP_ARCH_PORTABLE` is **ON by default** (portable floor).
+- With `-DALCP_ARCH_PORTABLE=OFF`, the `arch_zen4` ISA floor is raised to the
+  detected host generation (e.g. `-march=znver5` on a Zen5 host). The resulting
+  binary may **SIGILL on older Zen** and is not redistributable.
+
+#### Scheduling-only tuning (`ALCP_ARCH_MTUNE`)
+
+`ALCP_ARCH_MTUNE` controls `-mtune` for the `arch_zen4` tier. It affects
+instruction scheduling only and is always ISA-safe.
+
+```sh
+$ cmake -DALCP_ARCH_MTUNE=auto   ../   # tune for the latest znver the compiler supports
+$ cmake -DALCP_ARCH_MTUNE=znver5 ../   # tune for a specific znver target
+```
+
+- `""` (empty, the default) — no `-mtune` applied.
+- `auto` — the latest `znver` the compiler supports.
+- `znverN` (e.g. `znver5`) — that specific `-mtune` target. An unsupported name
+  is skipped with a warning instead of failing the build.
 
 ### Disabling/Enabling Optional Features
 These are flags to enable/disable optional features as required.
