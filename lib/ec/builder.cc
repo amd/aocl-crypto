@@ -38,29 +38,52 @@ using Context = alcp::ec::Context;
 
 template<typename ECTYPE>
 static Status
-__ec_setPrivateKey_wrapper(void* pEc, const Uint8* pPrivKey)
+__ec_setPrivateKey_wrapper(void* pEc, const Uint8* pPrivKey, Uint64 privKeyLen)
 {
     auto ap = static_cast<ECTYPE*>(pEc);
-    return ap->setPrivateKey(pPrivKey);
+    return ap->setPrivateKey(pPrivKey, privKeyLen);
 }
 
 template<typename ECTYPE>
 static Status
-__ec_getPublicKey_wrapper(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey)
+__ec_getPublicKey_wrapper(void*        pEc,
+                          Uint8*       pPublicKey,
+                          Uint64       pubKeyLen,
+                          const Uint8* pPrivKey,
+                          Uint64       privKeyLen)
 {
     auto ap = static_cast<ECTYPE*>(pEc);
-    return ap->generatePublicKey(pPublicKey, pPrivKey);
+    return ap->generatePublicKey(pPublicKey, pubKeyLen, pPrivKey, privKeyLen);
 }
 
 template<typename ECTYPE>
 static Status
 __ec_getSecretKey_wrapper(void*        pEc,
                           Uint8*       pSecretKey,
+                          Uint64       secretKeyLen,
                           const Uint8* pPublicKey,
+                          Uint64       pubKeyLen,
                           Uint64*      pKeyLength)
 {
     auto ap = static_cast<ECTYPE*>(pEc);
-    return ap->computeSecretKey(pSecretKey, pPublicKey, pKeyLength);
+    return ap->computeSecretKey(
+        pSecretKey, secretKeyLen, pPublicKey, pubKeyLen, pKeyLength);
+}
+
+template<typename ECTYPE>
+static Uint64
+__ec_getKeySize_wrapper(void* pEc)
+{
+    auto ap = static_cast<ECTYPE*>(pEc);
+    return ap->getKeySize();
+}
+
+template<typename ECTYPE>
+static Uint64
+__ec_getPublicKeySize_wrapper(void* pEc)
+{
+    auto ap = static_cast<ECTYPE*>(pEc);
+    return ap->getPublicKeySize();
 }
 
 template<typename ECTYPE>
@@ -92,11 +115,13 @@ class x25519Builder
         auto algo = new (addr) X25519();
         rCtx.m_ec = static_cast<void*>(algo);
 
-        rCtx.setPrivateKey = __ec_setPrivateKey_wrapper<X25519>;
-        rCtx.getPublicKey  = __ec_getPublicKey_wrapper<X25519>;
-        rCtx.getSecretKey  = __ec_getSecretKey_wrapper<X25519>;
-        rCtx.finish        = __ec_dtor<X25519>;
-        rCtx.reset         = __ec_reset_wrapper<X25519>;
+        rCtx.setPrivateKey    = __ec_setPrivateKey_wrapper<X25519>;
+        rCtx.getPublicKey     = __ec_getPublicKey_wrapper<X25519>;
+        rCtx.getSecretKey     = __ec_getSecretKey_wrapper<X25519>;
+        rCtx.getKeySize       = __ec_getKeySize_wrapper<X25519>;
+        rCtx.getPublicKeySize = __ec_getPublicKeySize_wrapper<X25519>;
+        rCtx.finish           = __ec_dtor<X25519>;
+        rCtx.reset            = __ec_reset_wrapper<X25519>;
         return StatusOk();
     }
 };
@@ -110,11 +135,13 @@ class p256Builder
         auto algo = new (addr) P256(); // FIXME: Placement New is Depriciated
         rCtx.m_ec = static_cast<void*>(algo);
 
-        rCtx.setPrivateKey = __ec_setPrivateKey_wrapper<P256>;
-        rCtx.getPublicKey  = __ec_getPublicKey_wrapper<P256>;
-        rCtx.getSecretKey  = __ec_getSecretKey_wrapper<P256>;
-        rCtx.finish        = __ec_dtor<P256>;
-        rCtx.reset         = __ec_reset_wrapper<P256>;
+        rCtx.setPrivateKey    = __ec_setPrivateKey_wrapper<P256>;
+        rCtx.getPublicKey     = __ec_getPublicKey_wrapper<P256>;
+        rCtx.getSecretKey     = __ec_getSecretKey_wrapper<P256>;
+        rCtx.getKeySize       = __ec_getKeySize_wrapper<P256>;
+        rCtx.getPublicKeySize = __ec_getPublicKeySize_wrapper<P256>;
+        rCtx.finish           = __ec_dtor<P256>;
+        rCtx.reset            = __ec_reset_wrapper<P256>;
         return StatusOk();
     }
 };

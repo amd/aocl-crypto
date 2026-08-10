@@ -41,6 +41,8 @@ using alcp::utils::AlgorithmType;
 using alcp::utils::CpuArchLevel;
 using alcp::utils::CpuId;
 static constexpr Uint32 KeySize = 32;
+// The public key is the u-coordinate alone, the same width as the private key
+static constexpr Uint32 PublicKeySize = KeySize;
 
 X25519::X25519() = default;
 
@@ -50,16 +52,33 @@ X25519::~X25519()
 }
 
 Status
-X25519::setPrivateKey(const Uint8* pPrivKey)
+X25519::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
 {
+    if (privKeyLen != sizeof(m_PrivKey)) {
+        return status::InvalidArgument(
+            "Private key length does not match the curve key size");
+    }
+
     // store private key for secret key generation
-    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, KeySize);
+    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
     return StatusOk();
 }
 
 Status
-X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
+X25519::generatePublicKey(Uint8*       pPublicKey,
+                          Uint64       pubKeyLen,
+                          const Uint8* pPrivKey,
+                          Uint64       privKeyLen)
 {
+    if (privKeyLen != sizeof(m_PrivKey)) {
+        return status::InvalidArgument(
+            "Private key length does not match the curve key size");
+    }
+
+    if (pubKeyLen < KeySize) {
+        return status::InvalidArgument(
+            "Public key buffer is smaller than the curve key size");
+    }
 
     // Check if required instruction sets are available (needs Zen baseline: ADX, AVX2, BMI2)
     static CpuArchLevel archLevel =
@@ -70,7 +89,7 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
     }
 
     // store private key for secret key generation
-    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, KeySize);
+    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
 
     m_PrivKey[0] &= 248;
     m_PrivKey[31] &= 127;
@@ -127,9 +146,15 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 
 Status
 X25519::computeSecretKey(Uint8*       pSecretKey,
+                         Uint64       secretKeyLen,
                          const Uint8* pPublicKey,
+                         Uint64       pubKeyLen,
                          Uint64*      pKeyLength)
 {
+    if (secretKeyLen < KeySize) {
+        return status::InvalidArgument(
+            "Secret key buffer is smaller than the shared secret size");
+    }
 
     // Check if required instruction sets are available (needs Zen baseline: ADX, AVX2, BMI2)
     static CpuArchLevel archLevel =
@@ -139,7 +164,7 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
             "Not supported due to missing instruction set (ADX or BMI2)");
     }
 
-    Status status = validatePublicKey(pPublicKey, KeySize);
+    Status status = validatePublicKey(pPublicKey, pubKeyLen);
     if (!status.ok()) {
         return status;
     }
@@ -188,6 +213,12 @@ Uint64
 X25519::getKeySize()
 {
     return KeySize;
+}
+
+Uint64
+X25519::getPublicKeySize()
+{
+    return PublicKeySize;
 }
 
 } // namespace alcp::ec

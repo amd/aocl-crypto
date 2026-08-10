@@ -82,8 +82,11 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = alcp_ec_get_publickey(
-        m_ec_handle, data.m_Peer_PubKey, data.m_Peer_PvtKey);
+    err = alcp_ec_get_publickey(m_ec_handle,
+                                data.m_Peer_PubKey,
+                                data.m_Peer_PubKeyLen,
+                                data.m_Peer_PvtKey,
+                                data.m_Peer_PvtKeyLen);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_ec_get_publickey peer " << std::endl;
         return false;
@@ -99,26 +102,27 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
         // FIXME: SetPrivKey method missing of X25519 ECC Curve
         std::cout << "Method Not implemented" << std::endl;
     } else {
-        err = alcp_ec_set_privatekey(m_ec_handle, private_key);
+        err = alcp_ec_set_privatekey(m_ec_handle, private_key, len);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_ec_set_privatekey " << std::endl;
-            return err;
+            return false;
         }
     }
     return true;
-    UNREF(len);
 }
 
 bool
 AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                const alcp_ecdh_data_t& data_peer2)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    Uint64      keyLength;
+    alc_error_t err       = ALC_ERROR_NONE;
+    Uint64      keyLength = 0;
 
     err = alcp_ec_get_secretkey(m_ec_handle,
                                 data_peer1.m_Peer_SecretKey,
+                                data_peer1.m_Peer_SecretKeyLen,
                                 data_peer2.m_Peer_PubKey,
+                                data_peer2.m_Peer_PubKeyLen,
                                 &keyLength);
 
     if (alcp_is_error(err)) {

@@ -118,12 +118,109 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(p256Test, SecretKeyGen)
 {
-    m_p256obj->setPrivateKey(&m_peer1_private_key[0]);
+    m_p256obj->setPrivateKey(&m_peer1_private_key[0],
+                             m_peer1_private_key.size());
 
     std::vector<Uint8> pSecret_key(m_p256obj->getKeySize());
-    Uint64             keyLength;
-    m_p256obj->computeSecretKey(
-        &pSecret_key[0], &m_peer2_public_key[0], &keyLength);
+    Uint64             keyLength = 0;
+    EXPECT_EQ(m_p256obj->computeSecretKey(&pSecret_key[0],
+                                          pSecret_key.size(),
+                                          &m_peer2_public_key[0],
+                                          m_peer2_public_key.size(),
+                                          &keyLength),
+              alcp::StatusOk());
 
+    EXPECT_EQ(keyLength, m_p256obj->getKeySize());
     EXPECT_EQ(m_expected_shared_key, pSecret_key);
+}
+
+// Negative length tests: buffers sized to claimed len so guard regression
+// triggers ASan, not just a failed EXPECT.
+TEST_P(p256Test, SetPrivateKeyLengthTest)
+{
+    const Uint64 cKeySize = m_p256obj->getKeySize();
+
+    std::vector<Uint8> key(cKeySize + 1, 0xab);
+
+    EXPECT_NE(m_p256obj->setPrivateKey(&key[0], cKeySize - 1).code(),
+              alcp::ErrorCode::eOk);
+    EXPECT_NE(m_p256obj->setPrivateKey(&key[0], cKeySize + 1).code(),
+              alcp::ErrorCode::eOk);
+    EXPECT_NE(m_p256obj->setPrivateKey(&key[0], 0).code(),
+              alcp::ErrorCode::eOk);
+
+    EXPECT_EQ(m_p256obj->setPrivateKey(&key[0], cKeySize), alcp::StatusOk());
+}
+
+TEST_P(p256Test, ValidatePublicKeyLengthTest)
+{
+    const Uint64 cPubKeySize = m_p256obj->getPublicKeySize();
+
+    EXPECT_EQ(cPubKeySize, 2 * m_p256obj->getKeySize());
+
+    std::vector<Uint8> pub_key(cPubKeySize + 1, 0xab);
+
+    EXPECT_NE(m_p256obj->validatePublicKey(&pub_key[0], cPubKeySize - 1).code(),
+              alcp::ErrorCode::eOk);
+    EXPECT_NE(m_p256obj->validatePublicKey(&pub_key[0], cPubKeySize + 1).code(),
+              alcp::ErrorCode::eOk);
+    EXPECT_NE(m_p256obj->validatePublicKey(&pub_key[0], 0).code(),
+              alcp::ErrorCode::eOk);
+
+    EXPECT_EQ(m_p256obj->validatePublicKey(&pub_key[0], cPubKeySize),
+              alcp::StatusOk());
+}
+
+TEST_P(p256Test, ComputeSecretKeyLengthTest)
+{
+    const Uint64 cKeySize    = m_p256obj->getKeySize();
+    const Uint64 cPubKeySize = m_p256obj->getPublicKeySize();
+
+    m_p256obj->setPrivateKey(&m_peer1_private_key[0],
+                             m_peer1_private_key.size());
+
+    std::vector<Uint8> secret_key(cKeySize + 1);
+    std::vector<Uint8> pub_key(m_peer2_public_key);
+    pub_key.push_back(0xab);
+
+    Uint64 keyLength = 0;
+
+    EXPECT_NE(m_p256obj
+                  ->computeSecretKey(&secret_key[0],
+                                     cKeySize,
+                                     &pub_key[0],
+                                     cPubKeySize - 1,
+                                     &keyLength)
+                  .code(),
+              alcp::ErrorCode::eOk);
+    EXPECT_NE(m_p256obj
+                  ->computeSecretKey(&secret_key[0],
+                                     cKeySize,
+                                     &pub_key[0],
+                                     cPubKeySize + 1,
+                                     &keyLength)
+                  .code(),
+              alcp::ErrorCode::eOk);
+    EXPECT_NE(m_p256obj
+                  ->computeSecretKey(
+                      &secret_key[0], cKeySize, &pub_key[0], 0, &keyLength)
+                  .code(),
+              alcp::ErrorCode::eOk);
+
+    EXPECT_NE(m_p256obj
+                  ->computeSecretKey(&secret_key[0],
+                                     cKeySize - 1,
+                                     &pub_key[0],
+                                     cPubKeySize,
+                                     &keyLength)
+                  .code(),
+              alcp::ErrorCode::eOk);
+
+    EXPECT_EQ(keyLength, 0U);
+
+    EXPECT_EQ(
+        m_p256obj->computeSecretKey(
+            &secret_key[0], cKeySize + 1, &pub_key[0], cPubKeySize, &keyLength),
+        alcp::StatusOk());
+    EXPECT_EQ(keyLength, cKeySize);
 }

@@ -84,14 +84,18 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
     /* Peer 1 */
     Uint8 publicKeyData1[SIZE_KEY_X25519];
 
-    err = alcp_ec_set_privatekey(ps_ec_handle_peer1, peer1_privk_data);
+    err = alcp_ec_set_privatekey(
+        ps_ec_handle_peer1, peer1_privk_data, SIZE_KEY_X25519);
     if (alcp_is_error(err)) {
         printf("\n peer1 private key set failed");
         return err;
     }
 
-    err = alcp_ec_get_publickey(
-        ps_ec_handle_peer1, publicKeyData1, peer1_privk_data);
+    err = alcp_ec_get_publickey(ps_ec_handle_peer1,
+                                publicKeyData1,
+                                SIZE_KEY_X25519,
+                                peer1_privk_data,
+                                SIZE_KEY_X25519);
     if (alcp_is_error(err)) {
         printf("\n peer1 publickey generation failed");
         return err;
@@ -102,14 +106,18 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
     /* Peer 2 */
     Uint8 publicKeyData2[SIZE_KEY_X25519];
 
-    err = alcp_ec_set_privatekey(ps_ec_handle_peer2, peer2_privk_data);
+    err = alcp_ec_set_privatekey(
+        ps_ec_handle_peer2, peer2_privk_data, SIZE_KEY_X25519);
     if (alcp_is_error(err)) {
         printf("\n peer2 private key set failed");
         return err;
     }
 
-    err = alcp_ec_get_publickey(
-        ps_ec_handle_peer2, publicKeyData2, peer2_privk_data);
+    err = alcp_ec_get_publickey(ps_ec_handle_peer2,
+                                publicKeyData2,
+                                SIZE_KEY_X25519,
+                                peer2_privk_data,
+                                SIZE_KEY_X25519);
     if (alcp_is_error(err)) {
         printf("\n peer2 publickey generation failed");
         return err;
@@ -121,8 +129,12 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
     // compute shared secret key of both peers
     Uint8  pSecret_key1[SIZE_KEY_X25519];
     Uint64 keyLength1;
-    err = alcp_ec_get_secretkey(
-        ps_ec_handle_peer1, pSecret_key1, publicKeyData2, &keyLength1);
+    err = alcp_ec_get_secretkey(ps_ec_handle_peer1,
+                                pSecret_key1,
+                                SIZE_KEY_X25519,
+                                publicKeyData2,
+                                SIZE_KEY_X25519,
+                                &keyLength1);
     if (alcp_is_error(err)) {
         printf("\n peer1 secretkey computation failed");
         return err;
@@ -130,8 +142,12 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
 
     Uint8  pSecret_key2[SIZE_KEY_X25519];
     Uint64 keyLength2;
-    err = alcp_ec_get_secretkey(
-        ps_ec_handle_peer2, pSecret_key2, publicKeyData1, &keyLength2);
+    err = alcp_ec_get_secretkey(ps_ec_handle_peer2,
+                                pSecret_key2,
+                                SIZE_KEY_X25519,
+                                publicKeyData1,
+                                SIZE_KEY_X25519,
+                                &keyLength2);
     if (alcp_is_error(err)) {
         printf("\n peer2 secretkey computation failed");
         return err;

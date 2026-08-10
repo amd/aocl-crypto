@@ -89,7 +89,8 @@ p256_demo(alc_ec_handle_t* ps_ec_handle_peer)
 
     // Set the private key
     printf("Setting Private Key for Peer 1\n");
-    err = alcp_ec_set_privatekey(ps_ec_handle_peer, cPeer1PrivkData);
+    err = alcp_ec_set_privatekey(
+        ps_ec_handle_peer, cPeer1PrivkData, PVT_KEY_SIZE);
     if (alcp_is_error(err)) {
         printf("\n peer1 private key set failed");
         return err;
@@ -97,8 +98,12 @@ p256_demo(alc_ec_handle_t* ps_ec_handle_peer)
 
     // Compute the secret key
     printf("Setting Public Key for Peer 2 and generating secret key\n");
-    err = alcp_ec_get_secretkey(
-        ps_ec_handle_peer, p_secret_key1, cPeer2PublicData, &key_length);
+    err = alcp_ec_get_secretkey(ps_ec_handle_peer,
+                                p_secret_key1,
+                                SCRT_KEY_SIZE,
+                                cPeer2PublicData,
+                                PUB_KEY_SIZE,
+                                &key_length);
     if (alcp_is_error(err)) {
         printf("\n peer1 secretkey computation failed");
         return err;

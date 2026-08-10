@@ -94,7 +94,8 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
 
 alc_error_t
 alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
-                       const Uint8*          pPrivateKey)
+                       const Uint8*          pPrivateKey,
+                       Uint64                privKeyLen)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
@@ -105,8 +106,14 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
     ALCP_BAD_PTR_ERR_RET(pPrivateKey);
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_ec);
+    ALCP_BAD_PTR_ERR_RET(ctx->getKeySize);
 
-    ctx->status = ctx->setPrivateKey(ctx->m_ec, pPrivateKey);
+    if (privKeyLen != ctx->getKeySize(ctx->m_ec)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    ctx->status = ctx->setPrivateKey(ctx->m_ec, pPrivateKey, privKeyLen);
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
@@ -114,7 +121,9 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
 alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pPublicKey,
-                      const Uint8*          pPrivKey)
+                      Uint64                pubKeyLen,
+                      const Uint8*          pPrivKey,
+                      Uint64                privKeyLen)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
@@ -126,8 +135,18 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
     ALCP_BAD_PTR_ERR_RET(pPrivKey);
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_ec);
+    ALCP_BAD_PTR_ERR_RET(ctx->getKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->getPublicKeySize);
 
-    ctx->status = ctx->getPublicKey(ctx->m_ec, pPublicKey, pPrivKey);
+    // Validate sizes before dispatch; do not move below backend call.
+    if (privKeyLen != ctx->getKeySize(ctx->m_ec)
+        || pubKeyLen < ctx->getPublicKeySize(ctx->m_ec)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    ctx->status = ctx->getPublicKey(
+        ctx->m_ec, pPublicKey, pubKeyLen, pPrivKey, privKeyLen);
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
@@ -135,7 +154,9 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
 alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pSecretKey,
+                      Uint64                secretKeyLen,
                       const Uint8*          pPublicKey,
+                      Uint64                pubKeyLen,
                       Uint64*               pKeyLength)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
@@ -147,12 +168,22 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
     ALCP_BAD_PTR_ERR_RET(pSecretKey);
     ALCP_BAD_PTR_ERR_RET(pPublicKey);
     ALCP_BAD_PTR_ERR_RET(pKeyLength);
+    *pKeyLength = 0;
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_ec);
+    ALCP_BAD_PTR_ERR_RET(ctx->getKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->getPublicKeySize);
 
-    ctx->status =
-        ctx->getSecretKey(ctx->m_ec, pSecretKey, pPublicKey, pKeyLength);
-    /* FIXME: this should be corrected */
+    // Validate sizes before dispatch; do not move below backend call.
+    if (pubKeyLen != ctx->getPublicKeySize(ctx->m_ec)
+        || secretKeyLen < ctx->getKeySize(ctx->m_ec)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    ctx->status = ctx->getSecretKey(
+        ctx->m_ec, pSecretKey, secretKeyLen, pPublicKey, pubKeyLen, pKeyLength);
+
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 

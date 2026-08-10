@@ -36,15 +36,22 @@
 
 using alcp::utils::CopyBytes;
 static constexpr Uint32 KeySize = 32;
+// PublicKeySize: uncompressed SEC1 point (X||Y); caller buffer has no 0x04 prefix.
+static constexpr Uint32 PublicKeySize = KeySize * 2;
 namespace alcp::ec {
 Status
-P256::setPrivateKey(const Uint8* pPrivKey)
+P256::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
 {
+    if (privKeyLen != sizeof(m_PrivKey)) {
+        return status::InvalidArgument(
+            "Private key length does not match the curve key size");
+    }
+
     Status          s                = StatusOk();
     OSSL_PARAM_BLD* p_param_bld_priv = {};
     OSSL_PARAM*     p_params         = {};
     EVP_PKEY_CTX*   p_ctx_priv       = {};
-    // FIXME: Possibility of Read Beyond allocated
+
     CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
 
     BIGNUM* p_priv = BN_bin2bn(m_PrivKey, sizeof(m_PrivKey), NULL);
@@ -74,7 +81,10 @@ P256::setPrivateKey(const Uint8* pPrivKey)
 }
 
 Status
-P256::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
+P256::generatePublicKey(Uint8*       pPublicKey,
+                        Uint64       pubKeyLen,
+                        const Uint8* pPrivKey,
+                        Uint64       privKeyLen)
 {
     // To be implemented
     Status s = StatusOk();
@@ -85,18 +95,29 @@ P256::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 
 Status
 P256::computeSecretKey(Uint8*       pSecretKey,
+                       Uint64       secretKeyLen,
                        const Uint8* pPublicKey,
+                       Uint64       pubKeyLen,
                        Uint64*      pKeyLength)
 {
-    Status             s               = StatusOk();
+    if (secretKeyLen < KeySize) {
+        return status::InvalidArgument(
+            "Secret key buffer is smaller than the shared secret size");
+    }
+
+    Status s = validatePublicKey(pPublicKey, pubKeyLen);
+    if (!s.ok()) {
+        return s;
+    }
+
     OSSL_PARAM_BLD*    p_param_bld_pub = {};
     OSSL_PARAM*        p_params        = {};
     EVP_PKEY_CTX*      p_ctx_pub       = {};
-    std::vector<Uint8> pub_key(32 * 2 + 1); // 2 Points x and y of 32 bytes each
+    std::vector<Uint8> pub_key(1 + PublicKeySize);
     EVP_PKEY_CTX*      p_key_derivation_ctx = {};
 
     pub_key.at(0) = 0x04; // 0x04 is UNCOMPRESSED_POINT format
-    CopyBytes(&pub_key.at(1), pPublicKey, pub_key.size() - 1);
+    CopyBytes(&pub_key.at(1), pPublicKey, PublicKeySize);
 
     p_param_bld_pub = OSSL_PARAM_BLD_new();
     if (p_param_bld_pub != NULL
@@ -139,18 +160,26 @@ P256::computeSecretKey(Uint8*       pSecretKey,
         s.update(status::InternalError("Key Derivation Set Peer failed!"));
     }
 
-    // Get the length of the secret key by passing secret key buffer as NULL
-    if (EVP_PKEY_derive(p_key_derivation_ctx, NULL, pKeyLength) <= 0) {
-        ERR_print_errors_fp(stderr);
-        s.update(status::InternalError(
-            "Key Derivation Secret Key Size Query failed!"));
-    }
-
-    // Allocate secret key buffer and derive it.
-    // secret_key = OPENSSL_malloc(sec_key_len);
-    if (EVP_PKEY_derive(p_key_derivation_ctx, pSecretKey, pKeyLength) <= 0) {
-        ERR_print_errors_fp(stderr);
-        s.update(status::InternalError("Key Derivation Failed!"));
+    // Skip derive if setup failed — m_pPeerKey may be stale from a prior call.
+    if (s.ok()) {
+        // Query size into a local; caller's pKeyLength is written only on success.
+        Uint64 derive_len = 0;
+        if (EVP_PKEY_derive(p_key_derivation_ctx, NULL, &derive_len) <= 0) {
+            ERR_print_errors_fp(stderr);
+            s.update(status::InternalError(
+                "Key Derivation Secret Key Size Query failed!"));
+        } else if (derive_len > secretKeyLen) {
+            s.update(status::InvalidArgument(
+                "Secret key buffer is smaller than the derived secret"));
+        } else if (EVP_PKEY_derive(
+                       p_key_derivation_ctx, pSecretKey, &derive_len)
+                   <= 0) {
+            // OpenSSL rejects derive when len exceeds the output it will produce.
+            ERR_print_errors_fp(stderr);
+            s.update(status::InternalError("Key Derivation Failed!"));
+        } else {
+            *pKeyLength = derive_len;
+        }
     }
 
     EVP_PKEY_CTX_free(p_key_derivation_ctx);
@@ -160,17 +189,26 @@ P256::computeSecretKey(Uint8*       pSecretKey,
 Status
 P256::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 {
-    // To be implemented
-    Status s = StatusOk();
-    s.update(
-        status::NotImplemented("This functionality is yet to be implemented!"));
-    return s;
+    // Length only. The point itself is validated by OpenSSL when the peer key
+    // is built from it; this curve has no independent on-curve test.
+    if (pKeyLength != PublicKeySize) {
+        return status::InvalidArgument(
+            "Public key length does not match the curve public key size");
+    }
+
+    return StatusOk();
 }
 
 Uint64
 P256::getKeySize()
 {
     return KeySize;
+}
+
+Uint64
+P256::getPublicKeySize()
+{
+    return PublicKeySize;
 }
 
 void

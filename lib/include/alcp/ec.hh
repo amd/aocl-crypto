@@ -108,13 +108,17 @@ class IEc
     IEc() {}
 
   public:
-    virtual Status setPrivateKey(const Uint8* pPrivKey) = 0;
+    virtual Status setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen) = 0;
 
     virtual Status generatePublicKey(Uint8*       pPublicKey,
-                                     const Uint8* pPrivKey) = 0;
+                                     Uint64       pubKeyLen,
+                                     const Uint8* pPrivKey,
+                                     Uint64       privKeyLen) = 0;
 
     virtual Status computeSecretKey(Uint8*       pSecretKey,
+                                    Uint64       secretKeyLen,
                                     const Uint8* pPublicKey,
+                                    Uint64       pubKeyLen,
                                     Uint64*      pKeyLength) = 0;
 
     virtual Status validatePublicKey(const Uint8* pPublicKey,
@@ -123,9 +127,16 @@ class IEc
     virtual void reset() = 0;
 
     /**
-     * @return The key size in bytes
+     * @return The private key size in bytes, which is also the size of the
+     * shared secret produced by computeSecretKey
      */
     virtual Uint64 getKeySize() = 0;
+
+    /**
+     * @return The public key size in bytes, which is not the private key size
+     * on every curve
+     */
+    virtual Uint64 getPublicKeySize() = 0;
 
   protected:
     virtual ~IEc() {}

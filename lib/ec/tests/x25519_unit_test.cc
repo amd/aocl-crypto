@@ -127,22 +127,34 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
 
     /* Peer 1 */
     const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
-    m_px25519obj1->generatePublicKey(m_publicKeyData1, pPrivKey_input_data1);
+    m_px25519obj1->generatePublicKey(m_publicKeyData1,
+                                     sizeof(m_publicKeyData1),
+                                     pPrivKey_input_data1,
+                                     m_peer1_private_key.size());
 
     /* Peer 2 */
     const Uint8* pPrivKey_input_data2 = &(m_peer2_private_key.at(0));
-    m_px25519obj2->generatePublicKey(m_publicKeyData2, pPrivKey_input_data2);
+    m_px25519obj2->generatePublicKey(m_publicKeyData2,
+                                     sizeof(m_publicKeyData2),
+                                     pPrivKey_input_data2,
+                                     m_peer2_private_key.size());
 
     // compute shared secret key of both peers
     Uint8* pSecret_key1 = new Uint8[MAX_SIZE_KEY_DATA];
     Uint64 keyLength1;
-    m_px25519obj1->computeSecretKey(
-        pSecret_key1, m_publicKeyData2, &keyLength1);
+    m_px25519obj1->computeSecretKey(pSecret_key1,
+                                    MAX_SIZE_KEY_DATA,
+                                    m_publicKeyData2,
+                                    sizeof(m_publicKeyData2),
+                                    &keyLength1);
 
     Uint8* pSecret_key2 = new Uint8[MAX_SIZE_KEY_DATA];
     Uint64 keyLength2;
-    m_px25519obj2->computeSecretKey(
-        pSecret_key2, m_publicKeyData1, &keyLength2);
+    m_px25519obj2->computeSecretKey(pSecret_key2,
+                                    MAX_SIZE_KEY_DATA,
+                                    m_publicKeyData1,
+                                    sizeof(m_publicKeyData1),
+                                    &keyLength2);
 
     ret = memcmp(pSecret_key1, pSecret_key2, keyLength1);
     EXPECT_EQ(ret, 0U);
@@ -163,7 +175,9 @@ TEST_P(x25519Test, PerformanceTest)
     for (int k = 0; k < 100000000; k++) {
         ALCP_CRYPT_TIMER_START
         m_px25519obj1->generatePublicKey(m_publicKeyData1,
-                                         pPrivKey_input_data1);
+                                         sizeof(m_publicKeyData1),
+                                         pPrivKey_input_data1,
+                                         m_peer1_private_key.size());
 
         ALCP_CRYPT_GET_TIME(0, "key generation time")
         if (totalTimeElapsed > 1) {
@@ -179,8 +193,11 @@ TEST_P(x25519Test, PerformanceTest)
         ALCP_CRYPT_TIMER_START
 
         Uint64 keyLength;
-        m_px25519obj1->computeSecretKey(
-            pSecret_key, m_publicKeyData1, &keyLength);
+        m_px25519obj1->computeSecretKey(pSecret_key,
+                                        MAX_SIZE_KEY_DATA,
+                                        m_publicKeyData1,
+                                        sizeof(m_publicKeyData1),
+                                        &keyLength);
         ALCP_CRYPT_GET_TIME(0, "key generation time")
 
         if (totalTimeElapsed > 1) {
@@ -201,10 +218,127 @@ TEST_P(x25519Test, ValidatePublicKeyTest)
 {
     const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
 
-    m_px25519obj1->generatePublicKey(m_publicKeyData1, pPrivKey_input_data1);
+    m_px25519obj1->generatePublicKey(m_publicKeyData1,
+                                     sizeof(m_publicKeyData1),
+                                     pPrivKey_input_data1,
+                                     m_peer1_private_key.size());
     EXPECT_EQ(
         m_px25519obj1->validatePublicKey(m_publicKeyData1, MAX_SIZE_KEY_DATA),
         StatusOk());
+}
+
+// Negative length tests: buffers sized to claimed len so guard regression
+// triggers ASan, not just a failed EXPECT.
+TEST_P(x25519Test, SetPrivateKeyLengthTest)
+{
+    const Uint64 cKeySize = m_px25519obj1->getKeySize();
+
+    std::vector<Uint8> key(cKeySize + 1, 0xab);
+
+    EXPECT_NE(m_px25519obj1->setPrivateKey(&key[0], cKeySize - 1).code(),
+              ErrorCode::eOk);
+    EXPECT_NE(m_px25519obj1->setPrivateKey(&key[0], cKeySize + 1).code(),
+              ErrorCode::eOk);
+    EXPECT_NE(m_px25519obj1->setPrivateKey(&key[0], 0).code(), ErrorCode::eOk);
+
+    EXPECT_EQ(m_px25519obj1->setPrivateKey(&key[0], cKeySize), StatusOk());
+}
+
+TEST_P(x25519Test, GeneratePublicKeyLengthTest)
+{
+    const Uint64 cKeySize = m_px25519obj1->getKeySize();
+
+    std::vector<Uint8> priv_key(cKeySize + 1, 0xab);
+    std::vector<Uint8> pub_key(cKeySize + 1);
+
+    EXPECT_NE(m_px25519obj1
+                  ->generatePublicKey(
+                      &pub_key[0], cKeySize, &priv_key[0], cKeySize - 1)
+                  .code(),
+              ErrorCode::eOk);
+    EXPECT_NE(m_px25519obj1
+                  ->generatePublicKey(
+                      &pub_key[0], cKeySize, &priv_key[0], cKeySize + 1)
+                  .code(),
+              ErrorCode::eOk);
+    EXPECT_NE(
+        m_px25519obj1->generatePublicKey(&pub_key[0], cKeySize, &priv_key[0], 0)
+            .code(),
+        ErrorCode::eOk);
+
+    EXPECT_NE(m_px25519obj1
+                  ->generatePublicKey(
+                      &pub_key[0], cKeySize - 1, &priv_key[0], cKeySize)
+                  .code(),
+              ErrorCode::eOk);
+    EXPECT_EQ(m_px25519obj1->generatePublicKey(
+                  &pub_key[0], cKeySize, &priv_key[0], cKeySize),
+              StatusOk());
+    EXPECT_EQ(m_px25519obj1->generatePublicKey(
+                  &pub_key[0], cKeySize + 1, &priv_key[0], cKeySize),
+              StatusOk());
+}
+
+TEST_P(x25519Test, ComputeSecretKeyLengthTest)
+{
+    const Uint64 cKeySize    = m_px25519obj1->getKeySize();
+    const Uint64 cPubKeySize = m_px25519obj1->getPublicKeySize();
+
+    m_px25519obj1->generatePublicKey(m_publicKeyData1,
+                                     sizeof(m_publicKeyData1),
+                                     &(m_peer1_private_key.at(0)),
+                                     m_peer1_private_key.size());
+    m_px25519obj2->generatePublicKey(m_publicKeyData2,
+                                     sizeof(m_publicKeyData2),
+                                     &(m_peer2_private_key.at(0)),
+                                     m_peer2_private_key.size());
+
+    std::vector<Uint8> secret_key(cKeySize + 1);
+    std::vector<Uint8> pub_key(m_publicKeyData2,
+                               m_publicKeyData2 + sizeof(m_publicKeyData2));
+    pub_key.reserve(sizeof(m_publicKeyData2) + 1);
+    pub_key.push_back(0xab);
+
+    Uint64 keyLength = 0;
+
+    EXPECT_NE(m_px25519obj1
+                  ->computeSecretKey(&secret_key[0],
+                                     cKeySize,
+                                     &pub_key[0],
+                                     cPubKeySize - 1,
+                                     &keyLength)
+                  .code(),
+              ErrorCode::eOk);
+    EXPECT_NE(m_px25519obj1
+                  ->computeSecretKey(&secret_key[0],
+                                     cKeySize,
+                                     &pub_key[0],
+                                     cPubKeySize + 1,
+                                     &keyLength)
+                  .code(),
+              ErrorCode::eOk);
+    EXPECT_NE(m_px25519obj1
+                  ->computeSecretKey(
+                      &secret_key[0], cKeySize, &pub_key[0], 0, &keyLength)
+                  .code(),
+              ErrorCode::eOk);
+
+    EXPECT_NE(m_px25519obj1
+                  ->computeSecretKey(&secret_key[0],
+                                     cKeySize - 1,
+                                     &pub_key[0],
+                                     cPubKeySize,
+                                     &keyLength)
+                  .code(),
+              ErrorCode::eOk);
+
+    EXPECT_EQ(keyLength, 0U);
+
+    EXPECT_EQ(
+        m_px25519obj1->computeSecretKey(
+            &secret_key[0], cKeySize + 1, &pub_key[0], cPubKeySize, &keyLength),
+        StatusOk());
+    EXPECT_EQ(keyLength, cKeySize);
 }
 
 TEST_P(x25519Test, InvalidPublicKeyTest)

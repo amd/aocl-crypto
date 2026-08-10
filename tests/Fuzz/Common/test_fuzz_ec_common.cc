@@ -41,23 +41,31 @@ TestEcLifecycle(alc_ec_handle_p handle_peer1,
                 Uint64          key_size)
 {
     Uint64 secret_key_len_peer1, secret_key_len_peer2;
-    if (alcp_is_error(
-            alcp_ec_set_privatekey(handle_peer1, &fuzz_pvtkey_data_peer1[0]))
-        || alcp_is_error(
-            alcp_ec_set_privatekey(handle_peer2, &fuzz_pvtkey_data_peer2[0]))
+    if (alcp_is_error(alcp_ec_set_privatekey(
+            handle_peer1, &fuzz_pvtkey_data_peer1[0], key_size))
+        || alcp_is_error(alcp_ec_set_privatekey(
+            handle_peer2, &fuzz_pvtkey_data_peer2[0], key_size))
         || alcp_is_error(alcp_ec_get_publickey(handle_peer1,
                                                &fuzz_pubkey_data_peer1[0],
-                                               &fuzz_pvtkey_data_peer1[0]))
+                                               key_size,
+                                               &fuzz_pvtkey_data_peer1[0],
+                                               key_size))
         || alcp_is_error(alcp_ec_get_publickey(handle_peer2,
                                                &fuzz_pubkey_data_peer2[0],
-                                               &fuzz_pvtkey_data_peer2[0]))
+                                               key_size,
+                                               &fuzz_pvtkey_data_peer2[0],
+                                               key_size))
         || alcp_is_error(alcp_ec_get_secretkey(handle_peer1,
                                                secret_key_peer1,
+                                               key_size,
                                                &fuzz_pubkey_data_peer2[0],
+                                               key_size,
                                                &secret_key_len_peer1))
         || alcp_is_error(alcp_ec_get_secretkey(handle_peer2,
                                                secret_key_peer2,
+                                               key_size,
                                                &fuzz_pubkey_data_peer1[0],
+                                               key_size,
                                                &secret_key_len_peer2))) {
         std::cout << "EC Neg lifecycle Test FAIL!" << std::endl;
         return false;
@@ -91,11 +99,10 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
     std::vector<Uint8> fuzz_pvtkey_data_peer2 =
         stream.ConsumeBytes<Uint8>(key_size);
 
-    // FIXME: Should be removed once EC APIs start taking key size as input
     /*
-     * Ensure the key sizes are correct as the EC API always expects key_size to
-     * be 32. The FuzzedDataProvider::ConsumeBytes may return a vector of
-     * incorrect size if the buffer is too small.
+     * Every call below declares key_size as the size of these buffers, so they
+     * have to really be that long. FuzzedDataProvider::ConsumeBytes returns a
+     * shorter vector when the fuzz input runs out.
      */
     if (fuzz_pubkey_data_peer1.size() != key_size
         || fuzz_pvtkey_data_peer1.size() != key_size
@@ -141,7 +148,8 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
         }
     } else {
         /* set keys for peer1 */
-        err = alcp_ec_set_privatekey(handle_peer1, &fuzz_pvtkey_data_peer1[0]);
+        err = alcp_ec_set_privatekey(
+            handle_peer1, &fuzz_pvtkey_data_peer1[0], key_size);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_ec_set_privatekey for peer1" << std::endl;
             goto dealloc_exit;
@@ -149,14 +157,17 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
 
         err = alcp_ec_get_publickey(handle_peer1,
                                     &fuzz_pubkey_data_peer1[0],
-                                    &fuzz_pvtkey_data_peer1[0]);
+                                    key_size,
+                                    &fuzz_pvtkey_data_peer1[0],
+                                    key_size);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_ec_get_publickey for peer1" << std::endl;
             goto dealloc_exit;
         }
 
         /* Peer 2*/
-        err = alcp_ec_set_privatekey(handle_peer2, &fuzz_pvtkey_data_peer2[0]);
+        err = alcp_ec_set_privatekey(
+            handle_peer2, &fuzz_pvtkey_data_peer2[0], key_size);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_ec_set_privatekey for peer2" << std::endl;
             goto dealloc_exit;
@@ -164,7 +175,9 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
 
         err = alcp_ec_get_publickey(handle_peer2,
                                     &fuzz_pubkey_data_peer2[0],
-                                    &fuzz_pvtkey_data_peer2[0]);
+                                    key_size,
+                                    &fuzz_pvtkey_data_peer2[0],
+                                    key_size);
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_ec_get_publickey for peer2" << std::endl;
             goto dealloc_exit;
@@ -173,7 +186,9 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
         /* compute secret key */
         err = alcp_ec_get_secretkey(handle_peer1,
                                     secret_key_peer1,
+                                    key_size,
                                     &fuzz_pubkey_data_peer2[0],
+                                    key_size,
                                     &key_len_peer1);
         if (alcp_is_error(err)) {
             std::cout << "peer1 secretkey computation failed" << std::endl;
@@ -182,7 +197,9 @@ ALCP_Fuzz_Ec_x25519(const Uint8* buf, size_t len, bool TestNegLifecycle)
 
         err = alcp_ec_get_secretkey(handle_peer2,
                                     secret_key_peer2,
+                                    key_size,
                                     &fuzz_pubkey_data_peer1[0],
+                                    key_size,
                                     &key_len_peer2);
         if (alcp_is_error(err)) {
             std::cout << "peer2 secretkey computation failed" << std::endl;
