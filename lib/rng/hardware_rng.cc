@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,9 @@
 
 #include "hardware_rng.hh"
 #include "alcp/base.hh"
+#include "alcp/utils/copy.hh"
 
+#include <algorithm>
 #include <immintrin.h>
 
 namespace alcp::rng {
@@ -106,26 +108,28 @@ HardwareRng::readRandom(Uint8* buf, size_t length)
 alc_error_t
 HardwareRng::randomize(Uint8 output[], size_t length)
 {
-    const int   stride     = 2;
-    size_t      new_length = length / stride;
-    alc_error_t err        = ALC_ERROR_NONE;
-    Uint16*     ptr        = reinterpret_cast<Uint16*>(&output[0]);
+    constexpr size_t cWordSize = sizeof(Uint16);
 
-    while (new_length--) {
+    size_t remaining = length;
+    Uint8* p_output  = output;
 
-        bool is_success = false;
+    while (remaining) {
+        Uint16 word = 0;
 
-        is_success = read_rdrand<Uint16>(ptr);
-        if (!is_success) {
-            // No Entropy
+        if (!read_rdrand<Uint16>(&word)) {
             return ALC_ERROR_NO_ENTROPY;
         }
 
-        ptr++;
+        // output may be arbitrarily aligned, so the word is copied out
+        // byte-wise rather than stored through a Uint16 pointer.
+        const size_t bytes = std::min(remaining, cWordSize);
+        utils::CopyBytes(p_output, &word, bytes);
+
+        p_output += bytes;
+        remaining -= bytes;
     }
 
-    /* TODO: check if length is odd */
-    return err;
+    return ALC_ERROR_NONE;
 }
 
 bool
