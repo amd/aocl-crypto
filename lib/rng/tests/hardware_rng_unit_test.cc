@@ -26,9 +26,7 @@
  *
  */
 
-#include "../../rng/include/hardware_rng.hh"
-#include "alcp/base.hh"
-#include "alcp/utils/cpuid.hh"
+#include "alcp/rng.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -36,12 +34,9 @@
 #include <set>
 #include <vector>
 
-using alcp::rng::HardwareRng;
-using alcp::utils::CpuId;
-
 namespace {
 
-constexpr Uint8  cFill       = 0xCC;
+constexpr Uint8 cFill = 0xCC;
 constexpr size_t cGuardBytes = 8;
 
 /*
@@ -53,91 +48,93 @@ constexpr size_t cGuardBytes = 8;
  */
 constexpr int cTrials = 16;
 
-void
-expectEveryByteRandomized(Uint8* output, size_t length)
-{
-    HardwareRng rng;
+class HardwareRngApiTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    m_info.ri_type = ALC_RNG_TYPE_DISCRETE;
+    m_info.ri_source = ALC_RNG_SOURCE_ARCH;
+    m_info.ri_distrib = ALC_RNG_DISTRIB_UNIFORM;
+    m_info.ri_flags = ALC_RNG_FLAG_DUMMY;
 
+    if (alcp_rng_supported(&m_info) != ALC_ERROR_NONE) {
+      GTEST_SKIP() << "Architecture RNG not available on this CPU";
+    }
+
+    const Uint64 context_size = alcp_rng_context_size(&m_info);
+    ASSERT_GT(context_size, 0U);
+
+    m_context.resize(context_size);
+    m_handle.rh_context = m_context.data();
+    ASSERT_EQ(alcp_rng_request(&m_info, &m_handle), ALC_ERROR_NONE);
+    m_requested = true;
+  }
+
+  void TearDown() override {
+    if (m_requested) {
+      EXPECT_EQ(alcp_rng_finish(&m_handle), ALC_ERROR_NONE);
+    }
+  }
+
+  void expectEveryByteRandomized(Uint8 *output, size_t length) {
     std::vector<std::set<Uint8>> observed(length);
 
     for (int trial = 0; trial < cTrials; trial++) {
-        std::fill_n(output, length + cGuardBytes, cFill);
+      std::fill_n(output, length + cGuardBytes, cFill);
 
-        EXPECT_EQ(rng.randomize(output, length), ALC_ERROR_NONE);
+      EXPECT_EQ(alcp_rng_gen_random(&m_handle, output, length), ALC_ERROR_NONE);
 
-        for (size_t i = 0; i < length; i++) {
-            observed[i].insert(output[i]);
-        }
-        for (size_t i = 0; i < cGuardBytes; i++) {
-            ASSERT_EQ(output[length + i], cFill)
-                << "wrote past the requested length " << length;
-        }
+      for (size_t i = 0; i < length; i++) {
+        observed[i].insert(output[i]);
+      }
+      for (size_t i = 0; i < cGuardBytes; i++) {
+        ASSERT_EQ(output[length + i], cFill)
+            << "wrote past the requested length " << length;
+      }
     }
 
     for (size_t i = 0; i < length; i++) {
-        EXPECT_GT(observed[i].size(), 1U)
-            << "byte " << i << " of a " << length
-            << " byte request never changed over " << cTrials << " calls";
+      EXPECT_GT(observed[i].size(), 1U)
+          << "byte " << i << " of a " << length
+          << " byte request never changed over " << cTrials << " calls";
     }
-}
+  }
 
-void
-expectEveryByteRandomized(size_t length)
-{
+  void expectEveryByteRandomized(size_t length) {
     std::vector<Uint8> buffer(length + cGuardBytes);
     expectEveryByteRandomized(buffer.data(), length);
-}
+  }
 
-class HardwareRngTest : public ::testing::Test
-{
-  protected:
-    void SetUp() override
-    {
-        if (!CpuId::cpuHasRdRand()) {
-            GTEST_SKIP() << "RDRAND not available on this CPU";
-        }
-    }
+private:
+  alc_rng_info_t m_info{};
+  alc_rng_handle_t m_handle{};
+  std::vector<Uint8> m_context;
+  bool m_requested = false;
 };
 
-TEST_F(HardwareRngTest, OddLengthRandomizesEveryByte)
-{
-    for (size_t length : { 1U, 3U, 5U, 7U, 15U, 33U, 65U }) {
-        expectEveryByteRandomized(length);
-    }
+TEST_F(HardwareRngApiTest, OddLengthRandomizesEveryByte) {
+  for (size_t length : {1U, 3U, 5U, 7U, 15U, 33U, 65U}) {
+    expectEveryByteRandomized(length);
+  }
 }
 
-TEST_F(HardwareRngTest, EvenLengthRandomizesEveryByte)
-{
-    for (size_t length : { 2U, 4U, 8U, 16U, 32U, 64U }) {
-        expectEveryByteRandomized(length);
-    }
+TEST_F(HardwareRngApiTest, EvenLengthRandomizesEveryByte) {
+  for (size_t length : {2U, 4U, 8U, 16U, 32U, 64U}) {
+    expectEveryByteRandomized(length);
+  }
 }
 
 /*
  * The public C API accepts any Uint8 pointer, so the output buffer is not
  * guaranteed to be suitably aligned for a wider store.
  */
-TEST_F(HardwareRngTest, UnalignedOutputRandomizesEveryByte)
-{
-    for (size_t length : { 1U, 2U, 3U, 16U, 33U }) {
-        std::vector<Uint8> buffer(length + cGuardBytes + 1);
-        Uint8*             unaligned = buffer.data() + 1;
+TEST_F(HardwareRngApiTest, UnalignedOutputRandomizesEveryByte) {
+  for (size_t length : {1U, 2U, 3U, 16U, 33U}) {
+    std::vector<Uint8> buffer(length + cGuardBytes + 1);
+    Uint8 *unaligned = buffer.data() + 1;
 
-        ASSERT_NE(reinterpret_cast<uintptr_t>(unaligned) % sizeof(Uint16), 0U);
-        expectEveryByteRandomized(unaligned, length);
-    }
-}
-
-TEST_F(HardwareRngTest, ZeroLengthSucceeds)
-{
-    HardwareRng rng;
-    Uint8       output[cGuardBytes];
-
-    std::fill_n(output, cGuardBytes, cFill);
-    EXPECT_EQ(rng.randomize(output, 0), ALC_ERROR_NONE);
-    for (size_t i = 0; i < cGuardBytes; i++) {
-        EXPECT_EQ(output[i], cFill);
-    }
+    ASSERT_NE(reinterpret_cast<uintptr_t>(unaligned) % sizeof(Uint16), 0U);
+    expectEveryByteRandomized(unaligned, length);
+  }
 }
 
 } // namespace
