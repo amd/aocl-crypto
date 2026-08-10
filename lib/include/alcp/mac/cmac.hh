@@ -78,7 +78,8 @@ class Cmac final : public IMac
      * @brief Call Finalize to copy the digest
      *
      * @param pMsgBuf   cmac buffer
-     * @param size      Size of the cmac in bytes
+     * @param size      Size of the cmac in bytes, from 1 up to the AES block
+     *                  size
      */
     ALCP_API_EXPORT alc_error_t finalize(Uint8* pMsgBuf, Uint64 size) override;
 

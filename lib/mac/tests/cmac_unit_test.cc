@@ -277,16 +277,48 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
     ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
+TEST(CMACRobustnessTest, CMAC_callFinalizeWithInvalidBuffer)
+{
+    Uint8 key[16]{};
+    Uint8 mac[16]{};
+    Cmac  cmac2;
+
+    ASSERT_EQ(cmac2.init(key, sizeof(key)), ALC_ERROR_NONE);
+
+    EXPECT_EQ(cmac2.finalize(nullptr, sizeof(mac)), ALC_ERROR_INVALID_ARG);
+    EXPECT_EQ(cmac2.finalize(nullptr, 0), ALC_ERROR_INVALID_ARG);
+    EXPECT_EQ(cmac2.finalize(mac, 0), ALC_ERROR_INVALID_ARG);
+
+    /* A rejected call must not consume the finalized state */
+    EXPECT_EQ(cmac2.finalize(mac, sizeof(mac)), ALC_ERROR_NONE);
+}
+
+TEST(CMACRobustnessTest, CMAC_callFinalizeWithOutOfRangeSize)
+{
+    Uint8 key[16]{};
+    Uint8 mac[512]{};
+    Cmac  cmac2;
+
+    ASSERT_EQ(cmac2.init(key, sizeof(key)), ALC_ERROR_NONE);
+
+    EXPECT_EQ(cmac2.finalize(mac, 256), ALC_ERROR_INVALID_ARG);
+    EXPECT_EQ(cmac2.finalize(mac, 0x80000001), ALC_ERROR_INVALID_ARG);
+
+    /* A rejected call must not consume the finalized state */
+    EXPECT_EQ(cmac2.finalize(mac, 16), ALC_ERROR_NONE);
+}
+
 TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 {
     Uint8 key[16]{};
+    Uint8 mac[16]{};
     Cmac  cmac2;
 
     alc_error_t err = ALC_ERROR_NONE;
     cmac2.init(key, sizeof(key));
     ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    err = cmac2.finalize(nullptr, 0);
+    err = cmac2.finalize(mac, sizeof(mac));
     ASSERT_TRUE(err == ALC_ERROR_NONE);
     err = cmac2.update(nullptr, 0);
     ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
@@ -295,6 +327,7 @@ TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
 TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
 {
     Uint8 key[16]{};
+    Uint8 mac[16]{};
     Cmac  cmac2;
 
     /* FIXME: Usage of Status is not done properly in the library. Status and
@@ -305,10 +338,10 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
     err             = cmac2.init(key, sizeof(key));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
-    err = cmac2.finalize(nullptr, 0);
+    err = cmac2.finalize(mac, sizeof(mac));
     ASSERT_TRUE(err == ALC_ERROR_NONE);
 
-    err = cmac2.finalize(nullptr, 0);
+    err = cmac2.finalize(mac, sizeof(mac));
     ASSERT_EQ(err, ALC_ERROR_BAD_STATE);
 }
 
