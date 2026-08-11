@@ -67,6 +67,12 @@ class PatternTests(unittest.TestCase):
 
 
 class DynamicSymbolTests(unittest.TestCase):
+    def test_non_mangled_compiler_helper_keeps_raw_name(self):
+        self.assertEqual(
+            checker.demangle(["__cxa_call_terminate"]),
+            {"__cxa_call_terminate": "__cxa_call_terminate"},
+        )
+
     @mock.patch.object(subprocess, "check_output")
     def test_parser_keeps_weak_and_data_symbols(self, check_output):
         check_output.return_value = "\n".join(
@@ -174,6 +180,28 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(
             checker.validate(Path("plugin.so"), self.manifest, None, False, False),
+            [],
+        )
+
+    @mock.patch.object(
+        checker,
+        "demangle",
+        return_value={"__cxa_call_terminate": "__cxa_call_terminate"},
+    )
+    @mock.patch.object(
+        checker,
+        "dynamic_symbols",
+        return_value=["required_export", "__cxa_call_terminate"],
+    )
+    def test_exact_raw_compiler_helper_can_be_allowed(self, _symbols, _demangle):
+        self.manifest.write_text("required_export\n")
+        cpp_manifest = self.root / "cpp.txt"
+        cpp_manifest.write_text("allow __cxa_call_terminate\n")
+
+        self.assertEqual(
+            checker.validate(
+                Path("plugin.so"), self.manifest, cpp_manifest, False, False
+            ),
             [],
         )
 

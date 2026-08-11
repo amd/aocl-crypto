@@ -57,6 +57,7 @@ def dynamic_symbols(library: Path) -> list[str]:
 
 
 def demangle(symbols: list[str]) -> dict[str, str]:
+    names = {symbol: symbol for symbol in symbols}
     candidates = [
         (symbol, symbol)
         for symbol in symbols
@@ -69,14 +70,17 @@ def demangle(symbols: list[str]) -> dict[str, str]:
         if symbol.startswith(f"{asan_prefix}_Z")
     )
     if not candidates:
-        return {}
+        return names
     output = subprocess.check_output(
         ["c++filt", *(candidate for _, candidate in candidates)], text=True
     ).splitlines()
-    return {
-        original: demangled
-        for (original, _), demangled in zip(candidates, output)
-    }
+    names.update(
+        {
+            original: demangled
+            for (original, _), demangled in zip(candidates, output)
+        }
+    )
+    return names
 
 
 ABI_PREFIXES = (
