@@ -29,7 +29,10 @@
 #pragma once
 
 #ifdef WIN32
-#define IPP_COMPAT_EXPORT __declspec(dllexport)
+// Windows exports are defined by ipp_compat_exports.def. Intel IPP headers
+// declare these functions first without dllexport, so adding it at the
+// definition is rejected by clang-cl as an attribute redeclaration.
+#define IPP_COMPAT_EXPORT
 #elif defined(__GNUC__) || defined(__clang__)
 #define IPP_COMPAT_EXPORT __attribute__((visibility("default")))
 #else

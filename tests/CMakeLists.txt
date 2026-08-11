@@ -27,15 +27,9 @@
 include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
 
-# Tests link against whichever ALCP library is being built. When hidden
-# visibility is enabled on the shared library, also link alcp_static so test
-# helpers that use internal C++ symbols (e.g. CpuId) resolve at link time.
-# Export/dl_load tests still exercise libalcp.so via dlopen.
-IF(ALCP_BUILD_SHARED AND NOT ALCP_HIDDEN_VISIBILITY)
-    SET(LIBS ${LIBS} gtest alcp)
-ELSEIF(ALCP_BUILD_STATIC)
-    SET(LIBS ${LIBS} gtest alcp_static)
-ELSEIF(ALCP_BUILD_SHARED)
+# Integration tests link the same ALCP variant as applications. Skip gates use
+# exported alcp::utils::CpuId methods documented in lib/include/alcp/utils/cpuid.hh.
+IF(ALCP_BUILD_SHARED)
     SET(LIBS ${LIBS} gtest alcp)
 ELSE()
     SET(LIBS ${LIBS} gtest alcp_static)

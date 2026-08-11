@@ -5,7 +5,13 @@ set -euo pipefail
 
 SRC_DIR="${1:?usage: extract_ipp_export_symbols.sh <lib/compat/ipp>}"
 
-python3 - "$SRC_DIR" <<'PY'
+PYTHON="$(command -v python3 || command -v python || true)"
+if [[ -z "${PYTHON}" ]]; then
+    echo "python3 or python required for IPP export manifest generation" >&2
+    exit 1
+fi
+
+"${PYTHON}" - "$SRC_DIR" <<'PY'
 import re
 import sys
 from pathlib import Path

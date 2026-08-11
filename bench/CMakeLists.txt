@@ -23,9 +23,6 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
- # Link against whichever ALCP library is being built. When only the static
- # library is enabled, link to alcp_static so the benchmarks keep working
- # without modification.
  IF(ALCP_BUILD_SHARED)
      SET(LIBS ${LIBS} benchmark alcp)
  ELSE()

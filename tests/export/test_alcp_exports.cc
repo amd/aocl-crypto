@@ -48,19 +48,31 @@ openAlcpLibrary()
 }
 
 std::vector<std::string>
-loadExpectedSymbols()
+loadManifest(const char* path)
 {
-    std::ifstream in(ALCP_EXPORT_SYMBOLS_MANIFEST);
-    EXPECT_TRUE(in.good()) << "Cannot read manifest: "
-                           << ALCP_EXPORT_SYMBOLS_MANIFEST;
+    std::ifstream in(path);
+    EXPECT_TRUE(in.good()) << "Cannot read manifest: " << path;
     std::vector<std::string> symbols;
     std::string              line;
     while (std::getline(in, line)) {
-        if (!line.empty()) {
-            symbols.push_back(line);
+        if (line.empty() || line[0] == '#') {
+            continue;
         }
+        symbols.push_back(line);
     }
     return symbols;
+}
+
+std::vector<std::string>
+loadExpectedSymbols()
+{
+    return loadManifest(ALCP_EXPORT_SYMBOLS_MANIFEST);
+}
+
+std::vector<std::string>
+loadCppExportExceptions()
+{
+    return loadManifest(ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST);
 }
 
 std::string
@@ -79,6 +91,24 @@ runCommand(const std::string& cmd)
     return output;
 }
 
+bool
+isAllowedCppExport(const std::string& line,
+                   const std::vector<std::string>& allowed)
+{
+    if (line.find("_Z") == std::string::npos) {
+        return false;
+    }
+    if (line.find("CpuId") == std::string::npos) {
+        return false;
+    }
+    for (const auto& pattern : allowed) {
+        if (line.find(pattern) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace
 
 TEST(AlcpExports, AllDocumentedSymbolsAreExported)
@@ -91,16 +121,36 @@ TEST(AlcpExports, AllDocumentedSymbolsAreExported)
 
     for (const auto& sym : symbols) {
         dlerror();
-        void* addr = dlsym(handle, sym.c_str());
-        const char* err = dlerror();
+        void*       addr = dlsym(handle, sym.c_str());
+        const char* err  = dlerror();
         EXPECT_NE(addr, nullptr) << sym << ": " << (err ? err : "unknown");
     }
 
     dlclose(handle);
 }
 
+TEST(AlcpExports, DocumentedCppSymbolsAreExported)
+{
+    const auto allowed = loadCppExportExceptions();
+    ASSERT_FALSE(allowed.empty());
+
+    const std::string nm_cmd = std::string("nm -D --defined-only \"") +
+                               ALCP_LIB_OUTPUT_FILE_NAME_STRING + "\" 2>/dev/null";
+    const std::string nm_out = runCommand(nm_cmd);
+    ASSERT_FALSE(nm_out.empty()) << "nm produced no output";
+
+    for (const auto& pattern : allowed) {
+        EXPECT_NE(nm_out.find(pattern), std::string::npos)
+            << "missing documented C++ export: " << pattern;
+        EXPECT_NE(nm_out.find("CpuId"), std::string::npos)
+            << "CpuId export missing for: " << pattern;
+    }
+}
+
 TEST(AlcpExports, NoInternalSymbolsLeaked)
 {
+    const auto allowed = loadCppExportExceptions();
+
     const std::string nm_cmd = std::string("nm -D --defined-only \"") +
                                ALCP_LIB_OUTPUT_FILE_NAME_STRING + "\" 2>/dev/null";
     const std::string nm_out = runCommand(nm_cmd);
@@ -112,8 +162,11 @@ TEST(AlcpExports, NoInternalSymbolsLeaked)
         if (line.find(" T ") == std::string::npos) {
             continue;
         }
-        EXPECT_EQ(line.find("_Z"), std::string::npos)
-            << "mangled C++ symbol exported: " << line;
+        if (line.find("_Z") != std::string::npos) {
+            EXPECT_TRUE(isAllowedCppExport(line, allowed))
+                << "unexpected mangled C++ symbol exported: " << line;
+            continue;
+        }
         EXPECT_EQ(line.find("EncryptCbc"), std::string::npos)
             << "internal arch symbol exported: " << line;
         EXPECT_EQ(line.find("TweakBlockCalculate"), std::string::npos)

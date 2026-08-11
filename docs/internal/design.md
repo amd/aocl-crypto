@@ -179,6 +179,18 @@ Library will be provided as a static archive (libalcp.a on Linux and
 alcp.lib on Windows) as well as a dynamic version (libalcp.so on
 Linux and alcp.dll on Windows)
 
+When `ALCP_HIDDEN_VISIBILITY` is enabled (default on Unix), only documented
+`alcp_*` C symbols marked `ALCP_API_EXPORT` in `include/alcp/*.h` are
+exported from the shared library. Export regression tests under
+`tests/export/` enforce that surface.
+
+**Documented exception:** `lib/include/alcp/utils/cpuid.hh` exports
+`alcp::utils::CpuId::cpuIsAmd()`, `cpuHasAesni()`, and `cpuHasAvx512()` from
+libalcp.so because in-tree integration tests and benchmarks use them for skip
+gates. That coupling is a penalty for incorrect test design—new tests should
+gate on documented algorithm support checks or environment configuration instead
+of dispatch internals. Do not add further CpuId exports without the same scrutiny.
+
 For build system we have opted for industry standard CMake (version >=3.18.4),
 and for testing 'Gtest' (Google Test) framework is used.
 

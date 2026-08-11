@@ -33,22 +33,38 @@ add_custom_command(
             > "${ALCP_EXPORT_SYMBOLS_MANIFEST}"
     DEPENDS "${CMAKE_SOURCE_DIR}/scripts/extract_alcp_export_symbols.sh"
             "${CMAKE_SOURCE_DIR}/include/alcp/cipher.h"
+            "${CMAKE_SOURCE_DIR}/lib/include/alcp/utils/cpuid.hh"
     COMMENT "Generating ALCP export symbol manifest"
 )
 
+set(ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST
+    "${CMAKE_CURRENT_BINARY_DIR}/alcp_export_cpp_exceptions.txt")
+
+add_custom_command(
+    OUTPUT "${ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST}"
+    COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/alcp_export_cpp_exceptions.txt"
+            "${ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/alcp_export_cpp_exceptions.txt"
+    COMMENT "Copying ALCP C++ export exception manifest"
+)
+
 add_custom_target(alcp_export_symbols_manifest
-    DEPENDS "${ALCP_EXPORT_SYMBOLS_MANIFEST}")
+    DEPENDS "${ALCP_EXPORT_SYMBOLS_MANIFEST}"
+            "${ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST}")
 
 set(IPP_COMPAT_SYMBOLS_MANIFEST
     "${CMAKE_CURRENT_BINARY_DIR}/ipp_compat_symbols.txt")
+set(IPP_COMPAT_SYMBOLS_SOURCE
+    "${CMAKE_SOURCE_DIR}/lib/compat/ipp/ipp_compat_symbols.txt")
 
 add_custom_command(
     OUTPUT "${IPP_COMPAT_SYMBOLS_MANIFEST}"
-    COMMAND "${CMAKE_SOURCE_DIR}/scripts/extract_ipp_export_symbols.sh"
-            "${CMAKE_SOURCE_DIR}/lib/compat/ipp"
-            > "${IPP_COMPAT_SYMBOLS_MANIFEST}"
-    DEPENDS "${CMAKE_SOURCE_DIR}/scripts/extract_ipp_export_symbols.sh"
-    COMMENT "Generating IPP compat export symbol manifest"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${IPP_COMPAT_SYMBOLS_SOURCE}"
+            "${IPP_COMPAT_SYMBOLS_MANIFEST}"
+    DEPENDS "${IPP_COMPAT_SYMBOLS_SOURCE}"
+    COMMENT "Copying IPP compat export symbol manifest"
 )
 
 add_custom_target(ipp_export_symbols_manifest
@@ -65,7 +81,8 @@ target_include_directories(test_alcp_exports PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../include")
 
 target_compile_definitions(test_alcp_exports PRIVATE
-    ALCP_EXPORT_SYMBOLS_MANIFEST="${ALCP_EXPORT_SYMBOLS_MANIFEST}")
+    ALCP_EXPORT_SYMBOLS_MANIFEST="${ALCP_EXPORT_SYMBOLS_MANIFEST}"
+    ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST="${CMAKE_CURRENT_SOURCE_DIR}/alcp_export_cpp_exceptions.txt")
 
 target_compile_options(test_alcp_exports PUBLIC ${ALCP_WARNINGS})
 target_link_libraries(test_alcp_exports ${LIBS_EXPORT})
@@ -112,7 +129,7 @@ ENDIF()
 
 add_test(
     NAME check_shared_exports
-    COMMAND "${CMAKE_SOURCE_DIR}/scripts/check_shared_exports.sh"
+    COMMAND "${CMAKE_SOURCE_DIR}/scripts/run_check_shared_exports.sh"
             "${CMAKE_BINARY_DIR}"
 )
 set_tests_properties(check_shared_exports PROPERTIES LABELS "export-alcp export-compat unit")

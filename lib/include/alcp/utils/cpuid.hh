@@ -179,6 +179,15 @@ EUarchValToString(int val)
     return "Zen" + std::to_string(val - 1);
 }
 
+/**
+ * @note Export exception
+ * cpuHasAvx512(), cpuHasAesni(), and cpuIsAmd() are exported from libalcp.so
+ * only because in-tree integration tests and benchmarks use them for skip
+ * gates. That is incorrect test design: prefer documented support checks
+ * (for example alcp_ec_supported()) instead of dispatch internals. Each
+ * additional export widens the stable ABI and is a penalty for tests that
+ * should not reach into CpuId.
+ */
 class CpuId
 {
   public:
@@ -242,11 +251,11 @@ class CpuId
     static bool cpuHasAvx512ifma();
     static bool cpuHasAvx512vl();
     static bool cpuHasAvx512VP2Intersect();
-    static bool cpuHasAvx512(Avx512Flags flag);
+    static ALCP_API_EXPORT bool cpuHasAvx512(Avx512Flags flag);
 
     // VAES/AESNI
     static bool cpuHasVaes();
-    static bool cpuHasAesni();
+    static ALCP_API_EXPORT bool cpuHasAesni();
 
     // SHA
     static bool cpuHasShani();
@@ -276,7 +285,7 @@ class CpuId
     /**
      * @brief Returns true if the CPU vendor is AMD
      */
-    static bool cpuIsAmd();
+    static ALCP_API_EXPORT bool cpuIsAmd();
 
   private:
     class Impl;

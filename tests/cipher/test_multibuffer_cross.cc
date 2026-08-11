@@ -32,13 +32,13 @@
 
 #include <gtest/gtest.h>
 
+#include "alcp/alcp.h"
 #include "alcp/cipher.hh"
 #include "alcp/types.hh"
 #include "alcp/utils/cpuid.hh"
 #ifndef _WIN32
 #include "alcp/cipher/cipher_wrapper.hh"
 #endif
-#include "alcp/alcp.h"
 #include "gtest_common.hh"
 #include "rng_base.hh"
 #include <cstring>

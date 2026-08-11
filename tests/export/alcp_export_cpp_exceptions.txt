@@ -1,0 +1,4 @@
+# Documented C++ export exceptions for libalcp.so (substring match on nm symbol)
+cpuIsAmd
+cpuHasAesni
+cpuHasAvx512
