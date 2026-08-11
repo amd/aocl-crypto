@@ -26,8 +26,6 @@
  *
  */
 
-#include "config.h"
-
 #include <cstdlib>
 #include <dlfcn.h>
 #include <fstream>
@@ -40,7 +38,7 @@ namespace {
 void*
 openAlcpLibrary()
 {
-    void* handle = dlopen(ALCP_LIB_OUTPUT_FILE_NAME_STRING, RTLD_LAZY);
+    void* handle = dlopen(ALCP_EXPORT_LIBRARY, RTLD_LAZY);
     if (handle == nullptr) {
         ADD_FAILURE() << "dlopen failed: " << dlerror();
     }
@@ -96,7 +94,7 @@ TEST(AlcpExports, NoInternalSymbolsLeaked)
 #else
     const std::string command =
         std::string("\"") + ALCP_EXPORT_CHECKER + "\" --library \"" +
-        ALCP_LIB_OUTPUT_FILE_NAME_STRING + "\" --c-manifest \"" +
+        ALCP_EXPORT_LIBRARY + "\" --c-manifest \"" +
         ALCP_EXPORT_SYMBOLS_MANIFEST + "\" --cpp-manifest \"" +
         ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST + "\"";
     EXPECT_EQ(std::system(command.c_str()), 0);

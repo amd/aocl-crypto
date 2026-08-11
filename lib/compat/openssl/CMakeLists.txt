@@ -45,7 +45,7 @@ ADD_LIBRARY(openssl-compat
 	)
 
 # Include ALCP header files
-TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
+TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${ALCP_ROOT}/include)
 TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE include)
 
 # Link to ALCP shared object file
@@ -57,3 +57,12 @@ IF(WIN32)
 		TARGET_COMPILE_OPTIONS(openssl-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
 	ENDIF()
 ENDIF(WIN32)
+
+IF(UNIX AND NOT APPLE AND ALCP_HIDDEN_VISIBILITY)
+	SET(OPENSSL_COMPAT_EXPORT_MAP
+		"${CMAKE_CURRENT_SOURCE_DIR}/openssl_compat_exports.map")
+	TARGET_LINK_OPTIONS(openssl-compat PRIVATE
+		"-Wl,--version-script=${OPENSSL_COMPAT_EXPORT_MAP}")
+	SET_TARGET_PROPERTIES(openssl-compat PROPERTIES
+		LINK_DEPENDS "${OPENSSL_COMPAT_EXPORT_MAP}")
+ENDIF()

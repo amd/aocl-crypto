@@ -69,6 +69,7 @@ loadExpectedSymbols()
     return symbols;
 }
 
+#if ALCP_HIDDEN_VISIBILITY_ENABLED
 std::string
 runCommand(const std::string& cmd)
 {
@@ -84,6 +85,7 @@ runCommand(const std::string& cmd)
     pclose(pipe);
     return output;
 }
+#endif
 
 } // namespace
 
@@ -107,6 +109,9 @@ TEST(IppCompatExports, AllIppSymbolsAreExported)
 
 TEST(IppCompatExports, NoUnexpectedSymbolsLeaked)
 {
+#if !ALCP_HIDDEN_VISIBILITY_ENABLED
+    GTEST_SKIP() << "hidden visibility disabled";
+#else
     const auto expected = loadExpectedSymbols();
     ASSERT_FALSE(expected.empty());
 
@@ -118,15 +123,17 @@ TEST(IppCompatExports, NoUnexpectedSymbolsLeaked)
     std::istringstream stream(nm_out);
     std::string        line;
     while (std::getline(stream, line)) {
-        if (line.find(" T ") == std::string::npos) {
-            continue;
+        std::istringstream fields(line);
+        std::string        field;
+        std::string        sym;
+        while (fields >> field) {
+            sym = field;
         }
-        const auto sym_pos = line.rfind(' ');
-        ASSERT_NE(sym_pos, std::string::npos);
-        const std::string sym = line.substr(sym_pos + 1);
+        ASSERT_FALSE(sym.empty()) << line;
         EXPECT_NE(std::find(expected.begin(), expected.end(), sym), expected.end())
             << "unexpected IPP compatibility export: " << line;
     }
+#endif
 }
 
 int

@@ -5,6 +5,13 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
+
+
+MINIMUM_PYTHON = (3, 9)
+if sys.version_info < MINIMUM_PYTHON:
+    print("Python 3.9 or newer required", file=sys.stderr)
+    sys.exit(1)
 
 
 def load_symbols(path: Path) -> list[str]:
@@ -42,8 +49,8 @@ def dynamic_symbols(library: Path) -> list[str]:
     symbols = []
     for line in output.splitlines():
         fields = line.split()
-        if len(fields) >= 3:
-            symbols.append(fields[2])
+        if len(fields) >= 2:
+            symbols.append(fields[-1])
     if not symbols:
         raise ValueError(f"no defined dynamic symbols found: {library}")
     return symbols
@@ -72,13 +79,45 @@ def demangle(symbols: list[str]) -> dict[str, str]:
     }
 
 
+ABI_PREFIXES = (
+    "guard variable for ",
+    "non-virtual thunk to ",
+    "virtual thunk to ",
+    "covariant return thunk to ",
+    "typeinfo for ",
+    "typeinfo name for ",
+    "vtable for ",
+    "VTT for ",
+)
+
+
 def symbol_views(symbol: str) -> list[str]:
+    """Return only ABI-structured or return-type-stripped symbol owners."""
     views = [symbol]
-    for namespace in ("alcp::", "std::"):
-        position = symbol.find(namespace)
-        while position >= 0:
-            views.append(symbol[position:])
-            position = symbol.find(namespace, position + len(namespace))
+    for prefix in ABI_PREFIXES:
+        if symbol.startswith(prefix):
+            views.append(symbol[len(prefix) :])
+
+    # c++filt includes return types for some template instantiations. A return
+    # type ends at the last whitespace outside template brackets before the
+    # function argument list. This parses structure instead of slicing at an
+    # embedded namespace in another owner's template or argument.
+    for candidate in tuple(views):
+        template_depth = 0
+        boundary = -1
+        for index, character in enumerate(candidate):
+            if character == "<":
+                template_depth += 1
+            elif character == ">" and template_depth:
+                template_depth -= 1
+            elif character == "(" and template_depth == 0:
+                break
+            elif character.isspace() and template_depth == 0:
+                boundary = index
+        if boundary >= 0:
+            owner = candidate[boundary + 1 :].lstrip()
+            if owner.startswith(("alcp::", "std::")):
+                views.append(owner)
     return views
 
 
@@ -94,12 +133,12 @@ def matches(pattern: str, symbol: str) -> bool:
 def validate(
     library: Path,
     c_manifest: Path,
-    cpp_manifest: Path,
+    cpp_manifest: Optional[Path],
     allow_unlisted: bool,
     cpp_exports_disabled: bool,
 ) -> list[str]:
     expected_c = set(load_symbols(c_manifest))
-    cpp_patterns = load_cpp_patterns(cpp_manifest)
+    cpp_patterns = load_cpp_patterns(cpp_manifest) if cpp_manifest else []
     exported = dynamic_symbols(library)
     exported_set = set(exported)
     demangled = demangle(exported)
@@ -134,8 +173,19 @@ def validate(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--library", required=True, type=Path)
-    parser.add_argument("--c-manifest", required=True, type=Path)
-    parser.add_argument("--cpp-manifest", required=True, type=Path)
+    parser.add_argument(
+        "--manifest",
+        "--c-manifest",
+        dest="c_manifest",
+        required=True,
+        type=Path,
+        help="plain manifest of exact required export names",
+    )
+    parser.add_argument(
+        "--cpp-manifest",
+        type=Path,
+        help="optional manifest of required/allowed demangled C++ patterns",
+    )
     parser.add_argument(
         "--allow-unlisted",
         action="store_true",

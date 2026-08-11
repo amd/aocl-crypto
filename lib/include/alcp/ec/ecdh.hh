@@ -91,7 +91,8 @@ class X25519 : public Ec
      *
      * @return Status Error code
      */
-    ALCP_INTERNAL_CPP_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
+    ALCP_INTERNAL_CPP_EXPORT Status setPrivateKey(const Uint8* pPrivKey,
+                                                  Uint64       privKeyLen) override;
 
     /**
      * @brief Function generates x25519 public key using input privateKey
@@ -107,7 +108,10 @@ class X25519 : public Ec
      * @return Status Error code
      */
     ALCP_INTERNAL_CPP_EXPORT Status
-    generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey) override;
+    generatePublicKey(Uint8*       pPublicKey,
+                      Uint64       pubKeyLen,
+                      const Uint8* pPrivKey,
+                      Uint64       privKeyLen) override;
 
     /**
      * @brief Function computes x25519 secret key with publicKey from remotePeer
@@ -125,7 +129,9 @@ class X25519 : public Ec
      */
     ALCP_INTERNAL_CPP_EXPORT Status
     computeSecretKey(Uint8*       pSecretKey,
+                     Uint64       secretKeyLen,
                      const Uint8* pPublicKey,
+                     Uint64       pubKeyLen,
                      Uint64*      pKeyLength) override;
 
     /**
@@ -177,7 +183,7 @@ class ALCP_INTERNAL_CPP_EXPORT P256 : public Ec
      *
      * @return Status Error code
      */
-    Status setPrivateKey(const Uint8* pPrivKey) override;
+    Status setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen) override;
 
     /**
      * @brief Function generates p256 public key using input privateKey
@@ -212,6 +218,7 @@ class ALCP_INTERNAL_CPP_EXPORT P256 : public Ec
      * @return Status Error code
      */
     Status computeSecretKey(Uint8*       pSecretKey,
+                            Uint64       secretKeyLen,
                             const Uint8* pPublicKey,
                             Uint64       pubKeyLen,
                             Uint64*      pKeyLength) override;

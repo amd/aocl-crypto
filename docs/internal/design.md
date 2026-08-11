@@ -94,7 +94,7 @@ AOCL Cryptography and to enable existing software stacks to easily migrate.
 All are version checked, and time to time libraries are updated and upgraded so
 that all versions need not be maintained.
 
-## Assumptions and Dependencies (TODO: TBD)
+## Assumptions and Dependencies
 AOCL Cryptography assumes following libraries/tools available on system where it is
 built or running.
 
@@ -109,14 +109,14 @@ built or running.
     - Doxygen
     - Sphinx
 
-## General Constraints (TODO: TBD)
+## General Constraints
 The library will contain all the listed algorithms eventually.
 
 OpenSSL compatibility library needs to be co-developed along with AOCL Cryptography,
 as the requirement for drop-in replacement is crucial for AOCL Cryptography to
 succeed.
 
-# Architectural Strategies (TODO: TBD)
+# Architectural Strategies
 ## Programming Details
 The AOCL Cryptography library provides C99 like API described in detail in
 [API](#api-design). Though the internal structures are implemented using C++
@@ -179,20 +179,351 @@ Library will be provided as a static archive (libalcp.a on Linux and
 alcp.lib on Windows) as well as a dynamic version (libalcp.so on
 Linux and alcp.dll on Windows)
 
-When `ALCP_HIDDEN_VISIBILITY` is enabled (default on Unix), only documented
-`alcp_*` C symbols marked `ALCP_API_EXPORT` in `include/alcp/*.h` are
-exported from the shared library, together with temporary C++ exceptions listed
-in `tests/export/alcp_export_cpp_exceptions.txt` when tests, examples, or
-benchmarks are enabled. Production builds with those three features disabled
-export only the public C API. Export regression tests under `tests/export/`
-enforce that surface.
+### Shared-library symbol visibility
 
-**Documented exception:** `lib/include/alcp/utils/cpuid.hh` exports
-specific `alcp::utils::CpuId` methods from libalcp.so because in-tree tests,
-benchmarks, and the cpuid example consume them through the shared library.
-Methods are marked individually so `CpuId::Impl`, `pImpl`, and unused methods
-remain hidden. New tests should use documented algorithm support checks instead
-of widening this temporary C++ ABI.
+#### Decision and comparison with `amd-main`
+
+`amd-main` relies on the compiler and linker defaults on Linux. Consequently,
+the dynamic symbol tables of `libalcp.so`, `libipp-compat.so`, and
+`libopenssl-compat.so` include public entry points and implementation symbols.
+There is no machine-checked definition of the intended export surface.
+
+This design makes hidden visibility the Linux default through
+`ALCP_HIDDEN_VISIBILITY=ON`. It changes symbol publication, not cryptographic
+behavior. A production Linux build exports the public C interface from
+`libalcp.so`, the IPP compatibility interface from `libipp-compat.so`, and the
+OpenSSL provider entry point from `libopenssl-compat.so`. Development builds
+may additionally export a bounded, temporary C++ surface needed by bundled
+consumers. The temporary surface is an implementation accommodation, not a
+supported AOCL Cryptography interface.
+
+The current public-header-derived C manifest contains 95 `alcp_*` functions.
+That count was verified for this change and records the reviewed baseline; the
+authoritative definition remains the annotated public headers, so an approved
+API addition or removal may change the count. The IPP compatibility contract is
+an exact, reviewed list of 73 functions. The OpenSSL compatibility contract is
+exactly `OSSL_provider_init`.
+
+#### Goals
+
+  - Make accidental ELF exports fail automated checks.
+  - Keep every documented public C API loadable from `libalcp.so`.
+  - Preserve the existing default developer build and bundled tests, examples,
+    and benchmarks while they still link to internal C++ APIs.
+  - Provide C-only production builds when bundled consumers are disabled.
+  - Give the IPP and OpenSSL compatibility DSOs explicit entry-point contracts.
+  - Keep Linux and Windows export mechanisms explicit and independently
+    maintainable.
+  - Preserve source and runtime behavior relative to `amd-main`, except for the
+    intentional export-surface reduction and the compatibility fixes listed
+    below.
+
+#### Non-goals
+
+  - No public C++ API or ABI is created. Mangled names, class layouts, RTTI,
+    vtables, templates, and exception details may change without notice.
+  - No external consumer may depend on the temporary C++ exceptions.
+  - Hidden visibility does not replace API versioning or an ABI compatibility
+    policy for the public C interface.
+  - This feature does not alter algorithm selection, cryptographic operations,
+    outputs, test vectors, or performance dispatch.
+  - Static archives are not filtered; visibility controls dynamic symbol
+    publication by shared libraries.
+  - macOS is not supported by this feature. Darwin behavior is neither an export
+    contract nor a tested approximation of the Linux policy.
+
+#### Invariants
+
+  1. Every public C declaration intended for dynamic use carries
+     `ALCP_API_EXPORT`.
+  2. With Linux hidden visibility enabled, an unannotated definition is not a
+     public dynamic symbol.
+  3. A production build, defined as `ALCP_ENABLE_TESTS=OFF`,
+     `ALCP_ENABLE_EXAMPLES=OFF`, and `ALCP_ENABLE_BENCH=OFF`, exports no C++ API
+     from `libalcp.so`.
+  4. A bundled-consumer build may export only C++ names represented by
+     `tests/export/alcp_export_cpp_exceptions.txt`.
+  5. Temporary C++ exports exist solely to preserve in-tree consumers. They have
+     no API or ABI guarantee and must not be advertised in installed/public API
+     documentation or consumed as public interfaces.
+  6. Hidden Linux `libipp-compat.so` exports exactly the 73 names in
+     `lib/compat/ipp/ipp_compat_symbols.txt`.
+  7. Hidden Linux `libopenssl-compat.so` exports exactly
+     `OSSL_provider_init`.
+  8. Disabling hidden visibility restores broad dynamic publication for all
+     built DSOs. In that mode, checks require contracted symbols to exist but do
+     not reject additional symbols.
+  9. Windows exports remain explicit and do not depend on
+     `ALCP_HIDDEN_VISIBILITY`.
+  10. A change to an export contract and its declaration, definition, manifest,
+      and tests is one atomic change.
+
+#### Configuration matrix
+
+Linux, `ALCP_HIDDEN_VISIBILITY=ON`, with any of tests, examples, or benchmarks
+enabled:
+
+  - `libalcp.so` exports the public C manifest plus required temporary C++
+    exceptions.
+  - The normal development default is in this category because
+    `ALCP_ENABLE_EXAMPLES=ON` by default.
+  - `ALCP_ENABLE_TESTS` and `ALCP_ENABLE_BENCH` default to `OFF`, but enabling
+    either also enables the temporary C++ export accommodation.
+  - Compatibility DSOs, when selected, retain their exact contracts: 73 IPP
+    functions and `OSSL_provider_init`.
+
+Linux, `ALCP_HIDDEN_VISIBILITY=ON`, with tests, examples, and benchmarks all
+disabled:
+
+  - This is the production configuration.
+  - `libalcp.so` exports only the public C interface.
+  - No temporary C++ exception is enabled or accepted.
+  - The ELF version script provides a final allowlist of `alcp_*`; compiler
+    annotations still determine which of those names are visible.
+
+Linux, `ALCP_HIDDEN_VISIBILITY=OFF`:
+
+  - Compiler-default broad visibility is retained for `libalcp.so` and all
+    selected compatibility DSOs, matching the publication style of `amd-main`.
+  - Contracted symbols are still required. Extra symbols are allowed.
+  - This setting is an escape hatch for migration and diagnosis, not the release
+    configuration.
+
+Static-only Linux builds:
+
+  - Dynamic-export policy does not apply.
+  - Tests use the static archive and do not require temporary shared-library C++
+    exports.
+  - Shared-export tests are not registered.
+
+Windows:
+
+  - `ALCP_HIDDEN_VISIBILITY` has no defined effect; it is a Linux-only option.
+  - `ALCP_API_EXPORT` maps public C and enabled temporary C++ declarations to
+    `__declspec(dllexport)`.
+  - The OpenSSL provider uses its explicit OpenSSL export annotation; automatic
+    `WINDOWS_EXPORT_ALL_SYMBOLS` is rejected.
+  - IPP headers cannot safely be redeclared with `dllexport` under clang-cl, so
+    CMake generates an exact `.def` file from the 73-name IPP manifest.
+  - Windows therefore uses explicit declaration exports or an exact `.def`
+    allowlist, never ELF visibility flags or the Linux version script.
+
+macOS:
+
+  - Unsupported by this feature.
+  - No claim is made about Mach-O export completeness, strictness, or checker
+    behavior. Support requires a separate design and platform-specific tests.
+
+#### Manifests as policy
+
+The public C manifest is generated from top-level `include/alcp/*.h` declarations
+where `ALCP_API_EXPORT` is followed by an `alcp_*` function name. This makes
+public declarations the source of truth and detects a declaration that lacks a
+loadable definition. The extractor intentionally does not infer exports from
+object files or accept arbitrary prefixes.
+
+`tests/export/alcp_export_cpp_exceptions.txt` is the temporary C++ policy. A
+`required` entry must match at least one demangled export. An `allow` entry
+permits compiler-generated support such as RTTI, vtables, or selected standard
+library template artifacts but does not require it. Entries are exact demangled
+names unless terminated by `*`, which means an anchored fully qualified prefix.
+Free substring matching is not accepted.
+
+`lib/compat/ipp/ipp_compat_symbols.txt` is hand-reviewed and authoritative for
+the IPP compatibility DSO. The same 73-name file drives Linux validation and
+Windows `.def` generation, preventing platform lists from drifting.
+
+The OpenSSL provider has one externally loadable function,
+`OSSL_provider_init`. Its singleton contract is kept directly in the annotated
+definition and export test rather than in a one-line manifest.
+
+#### Compiler and linker defense in depth
+
+On supported Linux builds with hidden visibility enabled, CMake selects hidden
+C and C++ visibility and hides inline definitions. `ALCP_API_EXPORT`,
+`IPP_COMPAT_EXPORT`, and the provider annotation selectively restore default
+visibility. `ALCP_INTERNAL_CPP_EXPORT` and explicit-template annotations restore
+visibility only when bundled consumers require the temporary C++ surface.
+
+Production `libalcp.so` also links with `lib/alcp_exports.map`. The map publishes
+`alcp_*` and localizes everything else. This second boundary protects against a
+missed hidden compile flag or an accidentally default-visible internal symbol.
+The map is not used while temporary C++ exports are enabled because it would
+discard those required names. In both configurations, annotations remain the
+first and most precise boundary.
+
+This is intentionally redundant: annotations express ownership at declarations,
+compiler defaults suppress accidental publication, the production linker map
+provides a final C-only boundary, and binary checks validate the result.
+
+#### Checker flow
+
+Linux export checks are registered for shared builds with tests enabled. They
+use target file paths for the built DSOs rather than guessing names or examining
+the static archive. Windows uses `LoadLibrary` and `GetProcAddress` checks for
+the explicit public manifests; ELF `nm`, `dlopen`, and `dlsym` checks are Linux
+specific.
+
+For `libalcp.so`, the checker:
+
+  1. Regenerates the public C manifest from the source headers.
+  2. Reads the C++ exception manifest.
+  3. obtains defined dynamic symbols with `nm -D --defined-only`.
+  4. Demangles C++ names with `c++filt`, including supported AddressSanitizer
+     symbol wrappers.
+  5. Reports every missing public C symbol.
+  6. In bundled-consumer mode, reports a missing required C++ pattern and every
+     export outside the C and C++ policies.
+  7. In production mode, disables all C++ exceptions and reports every non-C
+     export.
+  8. With hidden visibility disabled, permits unlisted names and performs only
+     required-symbol checks.
+
+The GTest layer independently opens the DSO with `dlopen` and resolves each
+required public C name with `dlsym`. Compatibility tests resolve all 73 IPP
+names and `OSSL_provider_init`; hidden builds reject every unexpected defined
+dynamic symbol, including weak functions and exported data. CTest labels separate
+`export-alcp` and `export-compat` checks while retaining the common `unit` label.
+
+Enabling the parent test suite itself enables temporary C++ exports, so it
+cannot prove the production contract using its own `libalcp.so`. Production
+validation therefore configures a separate child build with tests, examples,
+and benchmarks disabled, builds only the shared library, regenerates the C
+manifest, and runs the checker with all C++ exports disabled.
+
+Failure is closed, not silent: an empty or missing manifest, unreadable DSO,
+missing tool, `dlopen` failure, missing required symbol, unexpected strict-mode
+symbol, malformed C++ pattern, or failed subprocess causes a nonzero test.
+
+#### Concurrency and superproject use
+
+Generated CMake manifests live in the current ALCP binary subtree. The shell
+checker creates a uniquely named temporary C manifest with `mktemp` and removes
+only that file on exit, so concurrent checks do not overwrite a shared
+fixed-name manifest. Parallel configurations must still use separate CMake
+binary directories, as required for normal CMake operation.
+
+`config.h` is also generated under `ALCP_BINARY_DIR/include`, never into the
+source checkout. Targets prefer that binary include directory. Therefore one
+configuration cannot overwrite another configuration's library path, compiler,
+or feature macros.
+
+CMake passes the checker explicit source root, manifest directory, target file
+paths, compatibility enablement, hidden-visibility state, and temporary-C++
+state. The checker does not inspect a process-wide current directory, search
+for a convenient DSO, or infer policy from a possibly stale cache. This makes a
+failure identify the artifact and configuration that CMake actually built.
+
+For superproject and `add_subdirectory` use, `ALCP_ROOT` identifies this source
+checkout while `ALCP_BINARY_DIR` and target file generator expressions
+identify this ALCP build. Export-manifest dependencies cover all public headers,
+and generated files remain inside the corresponding binary subtree. A
+configure probe verifies that the export-test graph can be created with AOCL
+Cryptography below an enclosing project. Two configurations must not share one
+binary directory; separate sub-builds may execute their checkers concurrently.
+
+#### Maintenance procedure
+
+Adding or removing a public C function requires updating its public declaration
+with `ALCP_API_EXPORT`, its definition, API review material, and tests. The
+generated manifest changes automatically. Reviewers must inspect the generated
+delta and treat an unexpected count change as a policy change, not as snapshot
+churn.
+
+Adding an IPP compatibility function requires its implementation,
+`IPP_COMPAT_EXPORT` on Linux, an entry in the 73-name manifest, and compatibility
+tests. Because 73 is the exact approved contract, changing that count requires
+explicit compatibility review.
+
+No new C++ exception should be added merely to make a link succeed. First
+migrate the consumer to the public C API or link an internal-only test to the
+static archive. If neither is currently practical, add the narrowest exact
+`required` pattern, annotate only the necessary declaration or instantiation,
+document the bundled consumer, and add a removal path. Wildcards over a class or
+namespace require specific justification.
+
+`alcp::utils::CpuId` is a documented temporary exception because bundled tests,
+benchmarks, and the cpuid example query selected methods through `libalcp.so`.
+Only named methods are annotated; `CpuId::Impl`, `pImpl`, and unused methods
+remain hidden. New consumers must use documented algorithm-support checks
+instead of expanding this exception.
+
+An export failure is fixed at its source. Missing public C symbols require a
+declaration/definition correction. Unexpected symbols require removing or
+narrowing an annotation, changing consumer linkage, or updating an explicitly
+approved contract. Disabling the checker, broadening a wildcard, or turning
+hidden visibility off is not a production fix.
+
+#### Compatibility and migration
+
+Existing Linux binaries that use the documented C API continue to resolve the
+same entry points. Existing binaries or source builds that directly use
+previously leaked C++ or internal C symbols were relying on unsupported
+behavior; they must migrate to the public C API. `ALCP_HIDDEN_VISIBILITY=OFF`
+provides a temporary broad-visibility migration mode, but does not convert those
+symbols into supported interfaces.
+
+Bundled tests, examples, and benchmarks retain `amd-main` linkage behavior while
+temporary C++ exports are enabled. The intended migration is to public C APIs or
+static internal linkage, followed by removal of the relevant exception.
+Production builds opt out immediately by disabling all three bundled-consumer
+options.
+
+Windows consumers continue to use explicitly exported declarations. The IPP
+`.def` list and removal of OpenSSL automatic export-all behavior make accidental
+Windows publication a build-policy violation rather than an implicit contract.
+
+#### Required behavior deltas from `amd-main`
+
+The visibility work contains three reviewed non-algorithmic source changes:
+
+  - `alcp_rng_init` already existed in the public header but had no implementation.
+    It is now a validated compatibility no-op: null handle or null context is
+    rejected; a valid requested RNG context returns `ALC_ERROR_NONE` without
+    changing state.
+  - Digest examples now format hexadecimal output with bounded `snprintf` calls
+    and explicit destination sizes instead of advancing an unbounded `sprintf`
+    pointer.
+  - Supporting declaration/include and linkage corrections make the stricter
+    builds compile and link.
+
+There are zero cryptographic algorithm changes. Cipher, digest, MAC, RNG, DRBG,
+RSA, and elliptic-curve computation semantics remain those of `amd-main`.
+
+#### Decisions and rejected alternatives
+
+Selected: hidden-by-default Linux builds, declaration annotations, a production
+linker map, explicit manifests, and binary validation. This gives local
+ownership plus an independently checked final artifact.
+
+Rejected: relying only on compiler hidden visibility. One missed flag or
+default-visible annotation could leak a symbol without detection.
+
+Rejected: relying only on an `alcp_*` linker wildcard. It cannot prove that each
+documented function is present, and it does not define compatibility or
+temporary C++ surfaces.
+
+Rejected: maintaining a second hand-written list of the public C API. It would
+duplicate public headers and drift. The generated 95-name baseline is reviewed,
+but annotations remain authoritative.
+
+Rejected: exporting all C++ internals for developer convenience. That would
+preserve accidental dependencies and imply an ABI that the project cannot
+guarantee.
+
+Rejected: linking every bundled consumer statically in this change. It would
+stop tests and examples from exercising `libalcp.so` as they do on `amd-main`
+and would hide dynamic-link regressions.
+
+Rejected: applying the production version script while temporary C++ consumers
+are enabled. Its C-only wildcard would make those consumers fail to link.
+
+Rejected: automatic Windows export-all. It publishes implementation details and
+makes the ABI depend on compiler object discovery. Explicit `dllexport` and the
+IPP `.def` contract are deterministic.
+
+Rejected: claiming macOS support from generic Unix CMake conditions. Mach-O
+needs its own export-list mechanism, artifact inspection, and CI evidence.
 
 For build system we have opted for industry standard CMake (version >=3.18.4),
 and for testing 'Gtest' (Google Test) framework is used.

@@ -23,91 +23,64 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#include <dlfcn.h>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <sstream>
 #include <string>
 #include <vector>
-
-#ifndef OPENSSL_COMPAT_LIB_PATH
-#error "OPENSSL_COMPAT_LIB_PATH must be defined"
-#endif
+#include <windows.h>
 
 namespace {
 
-void*
-openCompatLibrary()
+std::vector<std::string>
+loadManifest(const char* path)
 {
-    void* handle = dlopen(OPENSSL_COMPAT_LIB_PATH, RTLD_LAZY);
-    if (handle == nullptr) {
-        ADD_FAILURE() << "dlopen failed: " << dlerror();
+    std::ifstream            input(path);
+    std::vector<std::string> symbols;
+    std::string              line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line[0] != '#') {
+            symbols.push_back(line);
+        }
     }
-    return handle;
+    return symbols;
 }
 
-#if ALCP_HIDDEN_VISIBILITY_ENABLED
-std::string
-runCommand(const std::string& cmd)
+void
+expectExports(const char* library_path, const std::vector<std::string>& symbols)
 {
-    std::string output;
-    FILE*       pipe = popen(cmd.c_str(), "r");
-    if (pipe == nullptr) {
-        return output;
+    HMODULE library = LoadLibraryA(library_path);
+    ASSERT_NE(library, nullptr) << library_path << ": " << GetLastError();
+    ASSERT_FALSE(symbols.empty());
+    for (const auto& symbol : symbols) {
+        EXPECT_NE(GetProcAddress(library, symbol.c_str()), nullptr) << symbol;
     }
-    char buffer[512];
-    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-        output += buffer;
-    }
-    pclose(pipe);
-    return output;
+    FreeLibrary(library);
 }
-#endif
 
 } // namespace
 
-TEST(OpensslCompatExports, ProviderEntryIsExported)
+TEST(WindowsExports, AlcpPublicApiIsExported)
 {
-    void* handle = openCompatLibrary();
-    ASSERT_NE(handle, nullptr);
-
-    dlerror();
-    void* addr = dlsym(handle, "OSSL_provider_init");
-    const char* err = dlerror();
-    EXPECT_NE(addr, nullptr) << (err ? err : "unknown");
-
-    dlclose(handle);
+    expectExports(ALCP_EXPORT_LIBRARY,
+                  loadManifest(ALCP_EXPORT_SYMBOLS_MANIFEST));
 }
 
-TEST(OpensslCompatExports, NoInternalProviderSymbolsLeaked)
+#ifdef OPENSSL_COMPAT_LIB_PATH
+TEST(WindowsExports, OpenSslProviderEntryIsExported)
 {
-#if !ALCP_HIDDEN_VISIBILITY_ENABLED
-    GTEST_SKIP() << "hidden visibility disabled";
-#else
-    const std::string nm_cmd =
-        std::string("nm -D --defined-only \"") + OPENSSL_COMPAT_LIB_PATH +
-        "\" 2>/dev/null";
-    const std::string nm_out = runCommand(nm_cmd);
-    ASSERT_FALSE(nm_out.empty());
-
-    std::istringstream stream(nm_out);
-    std::string        line;
-    while (std::getline(stream, line)) {
-        std::istringstream fields(line);
-        std::string        field;
-        std::string        symbol;
-        while (fields >> field) {
-            symbol = field;
-        }
-        ASSERT_FALSE(symbol.empty()) << line;
-        EXPECT_EQ(symbol, "OSSL_provider_init")
-            << "unexpected provider export: " << line;
-    }
+    expectExports(OPENSSL_COMPAT_LIB_PATH, { "OSSL_provider_init" });
+}
 #endif
+
+#ifdef IPP_COMPAT_LIB_PATH
+TEST(WindowsExports, IppManifestIsExported)
+{
+    expectExports(IPP_COMPAT_LIB_PATH,
+                  loadManifest(IPP_COMPAT_SYMBOLS_MANIFEST));
 }
+#endif
 
 int
 main(int argc, char** argv)

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# Verify libalcp.so export surface (manifests regenerated from source at test time).
+# Forward CMake-resolved export-check inputs without inspecting its cache.
 set -euo pipefail
 
-BUILD_DIR="${1:?usage: run_check_shared_exports.sh <build-dir>}"
-exec "$(dirname "$0")/check_shared_exports.sh" "${BUILD_DIR}"
+if [[ "$#" -ne 9 ]]; then
+    echo "usage: run_check_shared_exports.sh <source-root> <manifest-dir> <alcp-library> <openssl-enabled> <openssl-library> <ipp-enabled> <ipp-library> <hidden-enabled> <cpp-exports-enabled>" >&2
+    exit 2
+fi
+
+exec "$(dirname "$0")/check_shared_exports.sh" "$@"

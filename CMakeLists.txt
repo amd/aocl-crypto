@@ -81,9 +81,9 @@ SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_C_STANDARD_REQUIRED TRUE)
 SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-OPTION(ALCP_HIDDEN_VISIBILITY "Hide non-exported symbols in shared libs" ON)
+OPTION(ALCP_HIDDEN_VISIBILITY "Hide non-exported symbols in Linux shared libs" ON)
 
-IF(UNIX AND NOT WIN32 AND ALCP_HIDDEN_VISIBILITY)
+IF(UNIX AND NOT APPLE AND NOT WIN32 AND ALCP_HIDDEN_VISIBILITY)
   SET(CMAKE_CXX_VISIBILITY_PRESET hidden)
   SET(CMAKE_C_VISIBILITY_PRESET hidden)
   SET(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
@@ -228,6 +228,9 @@ ENDIF()
 
 # Generate Configuration config.h
 GEN_CONF()
+# Prefer this configuration's generated header over any stale source-tree
+# artifact left by older builds.
+INCLUDE_DIRECTORIES(BEFORE "${ALCP_BINARY_DIR}/include")
 
 # Directory scoped, so every subdirectory inherits it, and listed ahead of the
 # source tree so a generated header left over in an older checkout is ignored.

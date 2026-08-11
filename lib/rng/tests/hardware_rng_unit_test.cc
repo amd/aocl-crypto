@@ -104,12 +104,51 @@ protected:
     expectEveryByteRandomized(buffer.data(), length);
   }
 
-private:
   alc_rng_info_t m_info{};
   alc_rng_handle_t m_handle{};
   std::vector<Uint8> m_context;
   bool m_requested = false;
 };
+
+TEST(RngInitApiTest, NullHandleReturnsBadPointer) {
+  EXPECT_EQ(alcp_rng_init(nullptr), ALC_ERROR_INVALID_DATA);
+}
+
+TEST(RngInitApiTest, NullRequestedContextReturnsBadPointer) {
+  alc_rng_handle_t handle{};
+  EXPECT_EQ(alcp_rng_init(&handle), ALC_ERROR_INVALID_DATA);
+}
+
+TEST(RngInitApiTest, RequestedSoftwareHandleRemainsUsableAfterInit) {
+  alc_rng_info_t info{};
+  info.ri_type = ALC_RNG_TYPE_DISCRETE;
+  info.ri_source = ALC_RNG_SOURCE_OS;
+  info.ri_distrib = ALC_RNG_DISTRIB_UNIFORM;
+
+  const Uint64 context_size = alcp_rng_context_size(&info);
+  ASSERT_GT(context_size, 0U);
+  std::vector<Uint8> context(context_size);
+  alc_rng_handle_t handle{};
+  handle.rh_context = context.data();
+
+  ASSERT_EQ(alcp_rng_request(&info, &handle), ALC_ERROR_NONE);
+  ASSERT_EQ(alcp_rng_init(&handle), ALC_ERROR_NONE);
+
+  Uint8 output{};
+  EXPECT_EQ(alcp_rng_gen_random(&handle, &output, sizeof(output)),
+            ALC_ERROR_NONE);
+  EXPECT_EQ(alcp_rng_finish(&handle), ALC_ERROR_NONE);
+}
+
+TEST_F(HardwareRngApiTest, RequestedHandleRemainsUsableAfterInit) {
+  ASSERT_EQ(alcp_rng_init(&m_handle), ALC_ERROR_NONE);
+
+  Uint8 output{};
+  EXPECT_EQ(alcp_rng_gen_random(&m_handle, &output, sizeof(output)),
+            ALC_ERROR_NONE);
+  ASSERT_EQ(alcp_rng_finish(&m_handle), ALC_ERROR_NONE);
+  m_requested = false;
+}
 
 TEST_F(HardwareRngApiTest, OddLengthRandomizesEveryByte) {
   for (size_t length : {1U, 3U, 5U, 7U, 15U, 33U, 65U}) {

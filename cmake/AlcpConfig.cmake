@@ -93,6 +93,7 @@ FUNCTION(GEN_CONF)
     # never the parent's build root under a unified build. Any generated header
     # shared between build directories lets configuring one of them silently
     # change what another builds.
+    FILE(MAKE_DIRECTORY "${ALCP_BINARY_DIR}/include")
     IF(ALCP_BUILD_OS_LINUX)
         configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_BINARY_DIR}/include/config.h UNIX)
     ENDIF(ALCP_BUILD_OS_LINUX)
