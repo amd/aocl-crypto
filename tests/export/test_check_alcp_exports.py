@@ -265,6 +265,52 @@ class ValidationTests(unittest.TestCase):
     @mock.patch.object(
         checker,
         "demangle",
+        return_value={"_ZSt4swapIh": "_ZSt4swapIh"},
+    )
+    @mock.patch.object(
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "_ZSt4swapIh": "T"},
+    )
+    def test_undemangled_aocc_std_helper_can_be_allowed(
+        self, _symbols, _demangle
+    ):
+        self.manifest.write_text("required_export\n")
+        cpp_manifest = self.root / "cpp.txt"
+        cpp_manifest.write_text("allow _ZSt*\n")
+
+        self.assertEqual(
+            checker.validate(
+                Path("plugin.so"), self.manifest, cpp_manifest, False, False
+            ),
+            [],
+        )
+
+    @mock.patch.object(
+        checker,
+        "demangle",
+        return_value={"_ZN9__gnu_cxxeq": "__gnu_cxx::operator==()"},
+    )
+    @mock.patch.object(
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "_ZN9__gnu_cxxeq": "T"},
+    )
+    def test_strong_aocc_gnu_helper_can_be_allowed(self, _symbols, _demangle):
+        self.manifest.write_text("required_export\n")
+        cpp_manifest = self.root / "cpp.txt"
+        cpp_manifest.write_text("allow __gnu_cxx::*\n")
+
+        self.assertEqual(
+            checker.validate(
+                Path("plugin.so"), self.manifest, cpp_manifest, False, False
+            ),
+            [],
+        )
+
+    @mock.patch.object(
+        checker,
+        "demangle",
         return_value={"_ZN7foreignE": "foreign::alcp::Required::method()"},
     )
     @mock.patch.object(

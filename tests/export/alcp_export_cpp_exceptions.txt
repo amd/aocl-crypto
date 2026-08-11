@@ -143,7 +143,10 @@ allow vtable for alcp::cipher::iMultibuffer
 
 # Compiler-generated helpers tied to exported template classes.
 allow __cxa_call_terminate
-allow-weak __gnu_cxx::*
+# AOCC emits some standard-library helpers as strong symbols and GNU c++filt
+# cannot decode all of its newer std:: function-template manglings.
+allow __gnu_cxx::*
+allow _ZSt*
 allow-weak std::*
 allow std::_Hashtable<unsigned short, std::*
 allow std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<std::pair<unsigned short const,*
