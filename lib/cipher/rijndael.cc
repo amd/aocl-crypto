@@ -336,20 +336,6 @@ Rijndael::setKey(const Uint8* key, int len)
     expandKeys(key);
 }
 
-void
-Rijndael::setKey(const Uint8* key, Uint8* pExpKey, int len)
-{
-    m_block_size      = BitsToBlockSize(len);
-    const Params& prm = ParamsMap.at(m_block_size);
-    m_nrounds         = prm.Nr;
-    m_key_size        = len / utils::BitsPerByte;
-
-    /* Encryption and Decryption keys */
-    m_enc_key = pExpKey;
-    m_dec_key = pExpKey + (8 * 8);
-    expandKeys(key);
-}
-
 /*
  * FIPS-197 Section 5.1 Psuedo-code for Encryption
  *
@@ -651,12 +637,6 @@ void
 Rijndael::initRijndael(const Uint8* pKey, const Uint64 keyLen)
 {
     setKey(pKey, static_cast<int>(keyLen));
-}
-
-void
-Rijndael::initRijndael(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen)
-{
-    setKey(pKey, pExpKey, static_cast<int>(keyLen));
 }
 
 Rijndael::Rijndael()

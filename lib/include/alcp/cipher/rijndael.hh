@@ -103,7 +103,6 @@ class ALCP_API_EXPORT Rijndael
     };
 
     void initRijndael(const Uint8* pKey, const Uint64 keyLen);
-    void initRijndael(const Uint8* pKey, Uint8* pExpKey, const Uint64 keyLen);
     void setEncryptKey(const Uint8* pEncKey, Uint64 len);
     void setDecryptKey(const Uint8* pDecKey, Uint64 len);
 
@@ -140,7 +139,6 @@ class ALCP_API_EXPORT Rijndael
     }
 
   public:
-    void setKey(const Uint8* key, Uint8* pExpKey, int len);
     void setRounds(int rounds) { m_nrounds = rounds; }
 
   private:
