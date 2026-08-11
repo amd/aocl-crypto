@@ -3,7 +3,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
- * met_rmf:
+ * met:
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -27,9 +27,10 @@
  *
  */
 #include "mac/ipp_mac_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsHMACGetSize_rmf(int* pSize)
+IPP_COMPAT_EXPORT ippsHMACGetSize_rmf(int* pSize)
 {
     printMsg("ippsHMACGetSize_rmf: ENTRY");
 
@@ -97,7 +98,7 @@ createHmacInfo(const IppsHashMethod* pMethod)
 }
 
 IppStatus
-ippsHMACInit_rmf(const Ipp8u*          pKey,
+IPP_COMPAT_EXPORT ippsHMACInit_rmf(const Ipp8u*          pKey,
                  int                   keyLen,
                  IppsHMACState_rmf*    pCtx,
                  const IppsHashMethod* pMethod)
@@ -115,7 +116,7 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
 }
 
 IppStatus
-ippsHMACPack_rmf(const IppsHMACState_rmf* pCtx, Ipp8u* pBuffer, int bufSize)
+IPP_COMPAT_EXPORT ippsHMACPack_rmf(const IppsHMACState_rmf* pCtx, Ipp8u* pBuffer, int bufSize)
 {
     printMsg("ippsHMACPack_rmf_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context
@@ -123,7 +124,7 @@ ippsHMACPack_rmf(const IppsHMACState_rmf* pCtx, Ipp8u* pBuffer, int bufSize)
     return ippStsNoErr;
 }
 IppStatus
-ippsHMACUnpack_rmf(const Ipp8u* pBuffer, IppsHMACState_rmf* pCtx)
+IPP_COMPAT_EXPORT ippsHMACUnpack_rmf(const Ipp8u* pBuffer, IppsHMACState_rmf* pCtx)
 {
     printMsg("ippsHMACUnpack_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context
@@ -131,7 +132,7 @@ ippsHMACUnpack_rmf(const Ipp8u* pBuffer, IppsHMACState_rmf* pCtx)
     return ippStsNoErr;
 }
 IppStatus
-ippsHMACDuplicate_rmf(const IppsHMACState_rmf* pSrcCtx,
+IPP_COMPAT_EXPORT ippsHMACDuplicate_rmf(const IppsHMACState_rmf* pSrcCtx,
                       IppsHMACState_rmf*       pDstCtx)
 {
     printMsg("ippsHMACDuplicate_rmf: ENTRY");
@@ -141,7 +142,7 @@ ippsHMACDuplicate_rmf(const IppsHMACState_rmf* pSrcCtx,
 }
 
 IppStatus
-ippsHMACUpdate_rmf(const Ipp8u* pSrc, int len, IppsHMACState_rmf* pCtx)
+IPP_COMPAT_EXPORT ippsHMACUpdate_rmf(const Ipp8u* pSrc, int len, IppsHMACState_rmf* pCtx)
 {
     printMsg("ippsHMACUpdate_rmf: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
@@ -150,7 +151,7 @@ ippsHMACUpdate_rmf(const Ipp8u* pSrc, int len, IppsHMACState_rmf* pCtx)
     return status;
 }
 IppStatus
-ippsHMACFinal_rmf(Ipp8u* pMD, int mdLen, IppsHMACState_rmf* pCtx)
+IPP_COMPAT_EXPORT ippsHMACFinal_rmf(Ipp8u* pMD, int mdLen, IppsHMACState_rmf* pCtx)
 {
     printMsg("ippsHMACFinal_rmf: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
@@ -159,7 +160,7 @@ ippsHMACFinal_rmf(Ipp8u* pMD, int mdLen, IppsHMACState_rmf* pCtx)
     return status;
 }
 IppStatus
-ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
+IPP_COMPAT_EXPORT ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
 {
     printMsg("ippsHMACGetTag_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context. Hence will need to
@@ -171,7 +172,7 @@ ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
 
 #if 0
 IppStatus
-ippsHMACMessage_rmf(const Ipp8u*          pMsg,
+IPP_COMPAT_EXPORT ippsHMACMessage_rmf(const Ipp8u*          pMsg,
                     int                   msgLen,
                     const Ipp8u*          pKey,
                     int                   keyLen,

@@ -27,9 +27,10 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAES_XTSEncrypt(const Ipp8u*           pSrc,
+IPP_COMPAT_EXPORT ippsAES_XTSEncrypt(const Ipp8u*           pSrc,
                    Ipp8u*                 pDst,
                    int                    bitSizeLen,
                    const IppsAES_XTSSpec* pCtx,
@@ -50,7 +51,7 @@ ippsAES_XTSEncrypt(const Ipp8u*           pSrc,
 }
 
 IppStatus
-ippsAES_XTSDecrypt(const Ipp8u*           pSrc,
+IPP_COMPAT_EXPORT ippsAES_XTSDecrypt(const Ipp8u*           pSrc,
                    Ipp8u*                 pDst,
                    int                    bitSizeLen,
                    const IppsAES_XTSSpec* pCtx,
@@ -115,7 +116,7 @@ alcp_finalizeXTSDirect(alc_cipher_handle_t& handle)
 }
 
 IppStatus
-ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
+IPP_COMPAT_EXPORT ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
                          Ipp8u*       pDst,
                          int          encBitSize,
                          int          aesBlkNo,
@@ -146,7 +147,7 @@ ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
 }
 
 IppStatus
-ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
+IPP_COMPAT_EXPORT ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
                          Ipp8u*       pDst,
                          int          encBitSize,
                          int          aesBlkNo,

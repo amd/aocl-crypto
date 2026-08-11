@@ -130,12 +130,15 @@ function(alcp_cc_test testName working_dir)
         ${TEST_COMMON_SRC}
     )
 
-    # Link to whichever ALCP variant is being built; matches the parent
-    # tests/CMakeLists.txt behaviour so SHARED=OFF builds do not pull alcp in.
-    IF(ALCP_BUILD_SHARED)
+    # Internal module unit tests call hidden C++ symbols; link the static
+    # archive so they resolve at link time. Integration tests under tests/
+    # link the shared library and exercise the public C API only.
+    IF(TARGET alcp_static)
+        SET(_ALCP_TEST_LIB alcp_static)
+    ELSEIF(TARGET alcp)
         SET(_ALCP_TEST_LIB alcp)
     ELSE()
-        SET(_ALCP_TEST_LIB alcp_static)
+        message(FATAL_ERROR "No ALCP library target available for ${testName}")
     ENDIF()
     target_link_libraries(${_target_name}
         gtest_main

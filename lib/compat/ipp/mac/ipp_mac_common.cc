@@ -27,6 +27,7 @@
  */
 
 #include "mac/ipp_mac_common.hh"
+#include "common/export.hh"
 
 IppStatus
 alcp_MacInit(alc_mac_type_t   macType,

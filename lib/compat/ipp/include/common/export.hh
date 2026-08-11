@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,49 +26,12 @@
  *
  */
 
-#include "sha2/ipp_sha2_common.hh"
-#include "common/export.hh"
+#pragma once
 
-IppStatus
-IPP_COMPAT_EXPORT ippsHashUpdate(const Ipp8u* pSrc, int len, IppsHashState* pState)
-{
-    printMsg("Hash Update");
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts     = alcp_DigestUpdate(pSrc, len, context);
-    printMsg("Hash Update End");
-    return sts;
-}
-
-IppStatus
-IPP_COMPAT_EXPORT ippsHashUpdate_rmf(const Ipp8u* pSrc, int len, IppsHashState_rmf* pState)
-{
-    printMsg("Hash Update RMF");
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts     = alcp_DigestUpdate(pSrc, len, context);
-    printMsg("Hash Update RMF End");
-    return sts;
-}
-
-IppStatus
-IPP_COMPAT_EXPORT ippsHashFinal(Ipp8u* pMD, IppsHashState* pState)
-{
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts;
-
-    printMsg("Hash Final");
-    sts = alcp_DigestFinal(pMD, context);
-    printMsg("Hash Final End");
-    return sts;
-}
-
-IppStatus
-IPP_COMPAT_EXPORT ippsHashFinal_rmf(Ipp8u* pMD, IppsHashState_rmf* pState)
-{
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts;
-
-    printMsg("Hash Final RMF");
-    sts = alcp_DigestFinal(pMD, context);
-    printMsg("Hash Final RMF End");
-    return sts;
-}
+#ifdef WIN32
+#define IPP_COMPAT_EXPORT __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+#define IPP_COMPAT_EXPORT __attribute__((visibility("default")))
+#else
+#define IPP_COMPAT_EXPORT
+#endif

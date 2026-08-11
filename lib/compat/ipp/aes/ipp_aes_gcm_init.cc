@@ -27,9 +27,10 @@
  */
 
 #include "aes/ipp_aes_init_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAES_GCMGetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsAES_GCMGetSize(int* pSize)
 {
     printMsg("GCM GetSize");
     // Size of the context is the wrapper context size with alcp context size
@@ -39,7 +40,7 @@ ippsAES_GCMGetSize(int* pSize)
 }
 
 IppStatus
-ippsAES_GCMInit(const Ipp8u*      pKey,
+IPP_COMPAT_EXPORT ippsAES_GCMInit(const Ipp8u*      pKey,
                 int               keyLen,
                 IppsAES_GCMState* pState,
                 int               ctxSize)

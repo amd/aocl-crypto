@@ -26,9 +26,10 @@
  *
  */
 #include "mac/ipp_mac_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAES_CMACGetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsAES_CMACGetSize(int* pSize)
 {
     printMsg("ippsAES_CMACGetSize:  ENTRY");
 
@@ -39,7 +40,7 @@ ippsAES_CMACGetSize(int* pSize)
 }
 
 IppStatus
-ippsAES_CMACInit(const Ipp8u*       pKey,
+IPP_COMPAT_EXPORT ippsAES_CMACInit(const Ipp8u*       pKey,
                  int                keyLen,
                  IppsAES_CMACState* pState,
                  int                ctxSize)
@@ -56,7 +57,7 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
     return status;
 }
 IppStatus
-ippsAES_CMACUpdate(const Ipp8u* pSrc, int len, IppsAES_CMACState* pState)
+IPP_COMPAT_EXPORT ippsAES_CMACUpdate(const Ipp8u* pSrc, int len, IppsAES_CMACState* pState)
 {
     printMsg("ippsAES_CMACUpdate: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
@@ -65,7 +66,7 @@ ippsAES_CMACUpdate(const Ipp8u* pSrc, int len, IppsAES_CMACState* pState)
     return status;
 }
 IppStatus
-ippsAES_CMACFinal(Ipp8u* pMD, int mdLen, IppsAES_CMACState* pState)
+IPP_COMPAT_EXPORT ippsAES_CMACFinal(Ipp8u* pMD, int mdLen, IppsAES_CMACState* pState)
 {
     printMsg("ippsAES_CMACFinal: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
@@ -74,7 +75,7 @@ ippsAES_CMACFinal(Ipp8u* pMD, int mdLen, IppsAES_CMACState* pState)
     return status;
 }
 IppStatus
-ippsAES_CMACGetTag(Ipp8u* pMD, int mdLen, const IppsAES_CMACState* pState)
+IPP_COMPAT_EXPORT ippsAES_CMACGetTag(Ipp8u* pMD, int mdLen, const IppsAES_CMACState* pState)
 {
     // FIXME: CMAC Get Tag. Duplicate context and restore context. Write
     // Testcase to test it.

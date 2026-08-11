@@ -43,7 +43,7 @@ struct RsaPublicKey
     Uint64 size            = 0;
 };
 
-class ALCP_API_EXPORT Rsa
+class Rsa
 {
   public:
     Rsa() = default;

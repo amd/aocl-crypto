@@ -79,7 +79,7 @@ struct PrecomputedPoint
 class X25519 : public Ec
 {
   public:
-    ALCP_API_EXPORT X25519();
+    X25519();
     ~X25519();
 
     /**
@@ -91,8 +91,7 @@ class X25519 : public Ec
      *
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status setPrivateKey(const Uint8* pPrivKey,
-                                         Uint64       privKeyLen) override;
+    Status setPrivateKey(const Uint8* pPrivKey) override;
 
     /**
      * @brief Function generates x25519 public key using input privateKey
@@ -107,10 +106,8 @@ class X25519 : public Ec
      * key size of the curve
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status generatePublicKey(Uint8*       pPublicKey,
-                                             Uint64       pubKeyLen,
-                                             const Uint8* pPrivKey,
-                                             Uint64       privKeyLen) override;
+    Status generatePublicKey(Uint8*       pPublicKey,
+                                             const Uint8* pPrivKey) override;
 
     /**
      * @brief Function computes x25519 secret key with publicKey from remotePeer
@@ -126,8 +123,7 @@ class X25519 : public Ec
      * secret produced is returned
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status computeSecretKey(Uint8*       pSecretKey,
-                                            Uint64       secretKeyLen,
+    Status computeSecretKey(Uint8*       pSecretKey,
                                             const Uint8* pPublicKey,
                                             Uint64       pubKeyLen,
                                             Uint64*      pKeyLength) override;
@@ -166,7 +162,7 @@ class X25519 : public Ec
 // x2519 apis
 
 // NIST curves
-class ALCP_API_EXPORT P256 : public Ec
+class P256 : public Ec
 {
   public:
     P256() = default;

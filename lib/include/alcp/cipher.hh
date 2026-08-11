@@ -69,7 +69,7 @@ namespace alcp { namespace cipher {
 
 
     // Base cipher interface
-    class ALCP_API_EXPORT iCipher
+    class iCipher
     {
 
       public:
@@ -110,7 +110,7 @@ namespace alcp { namespace cipher {
      * @note This interface is inherited only by cipher classes that support it.
      *       Use dynamic_cast<iMultibuffer*> to check support at runtime.
      */
-    class ALCP_API_EXPORT iMultibuffer
+    class iMultibuffer
     {
       public:
         virtual ~iMultibuffer() = default;
@@ -153,7 +153,7 @@ namespace alcp { namespace cipher {
     };
 
     // Segmented cipher interface (supports block-level operations)
-    class ALCP_API_EXPORT iCipherSegment : public iCipher
+    class iCipherSegment : public iCipher
     {
       public:
         virtual ~iCipherSegment() = default;
@@ -170,7 +170,7 @@ namespace alcp { namespace cipher {
     };
 
     // AEAD cipher interface (includes authentication methods)
-    class ALCP_API_EXPORT iCipherAead : public iCipher
+    class iCipherAead : public iCipher
     {
       public:
         virtual ~iCipherAead() = default;
@@ -183,7 +183,7 @@ namespace alcp { namespace cipher {
 
     // CCM-specific interface for plaintext length requirement
     // CCM mode requires knowing the plaintext length before encryption
-    class ALCP_API_EXPORT iCipherCcm : public iCipherAead
+    class iCipherCcm : public iCipherAead
     {
       public:
         virtual ~iCipherCcm() = default;
@@ -201,7 +201,7 @@ namespace alcp { namespace cipher {
      * @param pCipherState Optional external cipher state (for GCM)
      * @return Pointer to created AEAD cipher, or nullptr on error
      */
-    ALCP_API_EXPORT iCipherAead* createCipherAead(
+    iCipherAead* createCipherAead(
         CipherMode          mode,
         CipherKeyLen        keyLen,
         alc_cipher_state_t* pCipherState = nullptr);
@@ -212,7 +212,7 @@ namespace alcp { namespace cipher {
      * @param keyLen Key length (128, 192, or 256 bits)
      * @return Pointer to created cipher, or nullptr on error
      */
-    ALCP_API_EXPORT iCipher* createCipher(CipherMode   mode,
+    iCipher* createCipher(CipherMode   mode,
                                           CipherKeyLen keyLen);
 
     /**
@@ -223,7 +223,7 @@ namespace alcp { namespace cipher {
      * 
      * @note Use encryptSegment()/decryptSegment() for block-level operations.
      */
-    ALCP_API_EXPORT iCipherSegment* createCipherSeg(CipherMode   mode,
+    iCipherSegment* createCipherSeg(CipherMode   mode,
                                                     CipherKeyLen keyLen);
 
 }} // namespace alcp::cipher

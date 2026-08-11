@@ -48,6 +48,8 @@
  */
 #ifdef WIN32
 #define ALCP_API_EXPORT __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+#define ALCP_API_EXPORT __attribute__((visibility("default")))
 #else
 #define ALCP_API_EXPORT
 #endif

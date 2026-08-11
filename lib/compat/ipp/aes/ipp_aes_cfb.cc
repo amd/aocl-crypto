@@ -27,10 +27,11 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 // CFB Mode
 IppStatus
-ippsAESDecryptCFB(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESDecryptCFB(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   int                cfbBlkSize,
@@ -43,7 +44,7 @@ ippsAESDecryptCFB(const Ipp8u*       pSrc,
 }
 
 IppStatus
-ippsAESEncryptCFB(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESEncryptCFB(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   int                cfbBlkSize,

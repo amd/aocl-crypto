@@ -37,7 +37,7 @@
 #include <memory>
 
 namespace alcp::mac {
-class ALCP_API_EXPORT Hmac final : public IMac
+class Hmac final : public IMac
 {
   private:
     // Input Block Length or B of the digest used by HMAC
@@ -110,7 +110,7 @@ class ALCP_API_EXPORT Hmac final : public IMac
 };
 
 namespace avx2 {
-    ALCP_API_EXPORT void get_k0_xor_opad(Uint32 m_input_block_length,
+    void get_k0_xor_opad(Uint32 m_input_block_length,
                                          Uint8* m_pK0,
                                          Uint8* m_pK0_xor_ipad,
                                          Uint8* m_pK0_xor_opad);

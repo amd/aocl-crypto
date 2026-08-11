@@ -35,7 +35,7 @@
 
 namespace alcp {
 
-class ALCP_API_EXPORT BigNum final
+class BigNum final
 {
 
   public:

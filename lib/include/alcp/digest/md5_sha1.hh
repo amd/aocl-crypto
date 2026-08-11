@@ -33,7 +33,7 @@
 #include "alcp/digest/sha1.hh"
 #include <openssl/evp.h>
 namespace alcp::digest {
-class ALCP_API_EXPORT Md5_Sha1 final : public IDigest
+class Md5_Sha1 final : public IDigest
 {
 
   private:

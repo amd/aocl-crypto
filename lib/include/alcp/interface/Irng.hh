@@ -33,7 +33,7 @@
 
 namespace alcp {
 
-class ALCP_API_EXPORT IRng
+class IRng
 {
   public:
     /**

@@ -32,9 +32,9 @@
 #include "alcp/error.h"
 
 namespace alcp::utils {
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 memlock(const void* mem, Uint64 size);
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 memunlock(const void* mem, Uint64 size);
 
 /* Zeroes size bytes of buff, and the compiler may not elide it. */

@@ -27,9 +27,10 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAES_GCMStart(const Ipp8u*      pIV,
+IPP_COMPAT_EXPORT ippsAES_GCMStart(const Ipp8u*      pIV,
                  int               ivLen,
                  const Ipp8u*      pAAD,
                  int               aadLen,
@@ -64,7 +65,7 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
 }
 
 IppStatus
-ippsAES_GCMEncrypt(const Ipp8u*      pSrc,
+IPP_COMPAT_EXPORT ippsAES_GCMEncrypt(const Ipp8u*      pSrc,
                    Ipp8u*            pDst,
                    int               len,
                    IppsAES_GCMState* pState)
@@ -92,7 +93,7 @@ ippsAES_GCMEncrypt(const Ipp8u*      pSrc,
 }
 
 IppStatus
-ippsAES_GCMDecrypt(const Ipp8u*      pSrc,
+IPP_COMPAT_EXPORT ippsAES_GCMDecrypt(const Ipp8u*      pSrc,
                    Ipp8u*            pDst,
                    int               len,
                    IppsAES_GCMState* pState)
@@ -119,7 +120,7 @@ ippsAES_GCMDecrypt(const Ipp8u*      pSrc,
 }
 
 IppStatus
-ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
+IPP_COMPAT_EXPORT ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
 {
     printMsg("GCMGetTag Start");
     alc_error_t err;
@@ -144,7 +145,7 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
 }
 
 IppStatus
-ippsAES_GCMReset(IppsAES_GCMState* pState)
+IPP_COMPAT_EXPORT ippsAES_GCMReset(IppsAES_GCMState* pState)
 {
     ((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt = false;
     // FIXME: Add a reset API for cipher

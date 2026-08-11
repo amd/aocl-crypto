@@ -38,7 +38,7 @@ namespace alcp ::rng {
  * RNG provided by the operating system
  *
  */
-class ALCP_API_EXPORT SystemRng : public IRng
+class SystemRng : public IRng
 {
   public:
     SystemRng();

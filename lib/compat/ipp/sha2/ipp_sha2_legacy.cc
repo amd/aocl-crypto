@@ -27,9 +27,12 @@
  */
 
 #include "sha2/ipp_sha2_common.hh"
+#include "common/export.hh"
+
+extern "C" {
 
 IppStatus
-ippsSHA224Update(const Ipp8u* pSrc, int len, IppsSHA224State* pState)
+IPP_COMPAT_EXPORT ippsSHA224Update(const Ipp8u* pSrc, int len, IppsSHA224State* pState)
 {
     printMsg("SHA224 Update");
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
@@ -39,7 +42,7 @@ ippsSHA224Update(const Ipp8u* pSrc, int len, IppsSHA224State* pState)
 }
 
 IppStatus
-ippsSHA256Update(const Ipp8u* pSrc, int len, IppsSHA256State* pState)
+IPP_COMPAT_EXPORT ippsSHA256Update(const Ipp8u* pSrc, int len, IppsSHA256State* pState)
 {
     printMsg("SHA256 Update");
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
@@ -49,7 +52,7 @@ ippsSHA256Update(const Ipp8u* pSrc, int len, IppsSHA256State* pState)
 }
 
 IppStatus
-ippsSHA384Update(const Ipp8u* pSrc, int len, IppsSHA384State* pState)
+IPP_COMPAT_EXPORT ippsSHA384Update(const Ipp8u* pSrc, int len, IppsSHA384State* pState)
 {
     printMsg("SHA384 Update");
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
@@ -59,7 +62,7 @@ ippsSHA384Update(const Ipp8u* pSrc, int len, IppsSHA384State* pState)
 }
 
 IppStatus
-ippsSHA512Update(const Ipp8u* pSrc, int len, IppsSHA512State* pState)
+IPP_COMPAT_EXPORT ippsSHA512Update(const Ipp8u* pSrc, int len, IppsSHA512State* pState)
 {
     printMsg("SHA512 Update");
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
@@ -69,7 +72,7 @@ ippsSHA512Update(const Ipp8u* pSrc, int len, IppsSHA512State* pState)
 }
 
 IppStatus
-ippsSHA224Final(Ipp8u* pMD, IppsSHA224State* pState)
+IPP_COMPAT_EXPORT ippsSHA224Final(Ipp8u* pMD, IppsSHA224State* pState)
 {
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
     IppStatus         sts;
@@ -81,7 +84,7 @@ ippsSHA224Final(Ipp8u* pMD, IppsSHA224State* pState)
 }
 
 IppStatus
-ippsSHA256Final(Ipp8u* pMD, IppsSHA256State* pState)
+IPP_COMPAT_EXPORT ippsSHA256Final(Ipp8u* pMD, IppsSHA256State* pState)
 {
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
     IppStatus         sts;
@@ -93,7 +96,7 @@ ippsSHA256Final(Ipp8u* pMD, IppsSHA256State* pState)
 }
 
 IppStatus
-ippsSHA384Final(Ipp8u* pMD, IppsSHA384State* pState)
+IPP_COMPAT_EXPORT ippsSHA384Final(Ipp8u* pMD, IppsSHA384State* pState)
 {
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
     IppStatus         sts;
@@ -105,7 +108,7 @@ ippsSHA384Final(Ipp8u* pMD, IppsSHA384State* pState)
 }
 
 IppStatus
-ippsSHA512Final(Ipp8u* pMD, IppsSHA512State* pState)
+IPP_COMPAT_EXPORT ippsSHA512Final(Ipp8u* pMD, IppsSHA512State* pState)
 {
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
     IppStatus         sts;
@@ -115,3 +118,5 @@ ippsSHA512Final(Ipp8u* pMD, IppsSHA512State* pState)
     printMsg("SHA512 Final End");
     return sts;
 }
+
+} // extern "C"

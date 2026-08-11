@@ -27,6 +27,7 @@
  */
 
 #include "common/context.hh"
+#include "common/export.hh"
 #include "common/error.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>
@@ -36,8 +37,10 @@
 #include <stdint.h>
 #include <string.h>
 
+extern "C" {
+
 IppStatus
-ippsSHA224GetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsSHA224GetSize(int* pSize)
 {
     printMsg("GetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
@@ -46,7 +49,7 @@ ippsSHA224GetSize(int* pSize)
 }
 
 IppStatus
-ippsSHA256GetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsSHA256GetSize(int* pSize)
 {
     printMsg("GetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
@@ -55,7 +58,7 @@ ippsSHA256GetSize(int* pSize)
 }
 
 IppStatus
-ippsSHA384GetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsSHA384GetSize(int* pSize)
 {
     printMsg("GetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
@@ -64,7 +67,7 @@ ippsSHA384GetSize(int* pSize)
 }
 
 IppStatus
-ippsSHA512GetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsSHA512GetSize(int* pSize)
 {
     printMsg("GetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
@@ -73,7 +76,7 @@ ippsSHA512GetSize(int* pSize)
 }
 
 IppStatus
-ippsHashGetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsHashGetSize(int* pSize)
 {
     printMsg("HashGetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
@@ -82,7 +85,7 @@ ippsHashGetSize(int* pSize)
 }
 
 IppStatus
-ippsHashGetSize_rmf(int* pSize)
+IPP_COMPAT_EXPORT ippsHashGetSize_rmf(int* pSize)
 {
     printMsg("HashGetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx) + alcp_digest_context_size();
@@ -121,7 +124,7 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
 }
 
 IppStatus
-ippsSHA224Init(IppsSHA256State* pState)
+IPP_COMPAT_EXPORT ippsSHA224Init(IppsSHA256State* pState)
 {
     printMsg("SHA2-224");
     return alcp_SHA2Init(
@@ -129,7 +132,7 @@ ippsSHA224Init(IppsSHA256State* pState)
 }
 
 IppStatus
-ippsSHA256Init(IppsSHA256State* pState)
+IPP_COMPAT_EXPORT ippsSHA256Init(IppsSHA256State* pState)
 {
     printMsg("SHA2-256");
     return alcp_SHA2Init(
@@ -137,7 +140,7 @@ ippsSHA256Init(IppsSHA256State* pState)
 }
 
 IppStatus
-ippsSHA384Init(IppsSHA384State* pState)
+IPP_COMPAT_EXPORT ippsSHA384Init(IppsSHA384State* pState)
 {
     printMsg("SHA2-384");
     return alcp_SHA2Init(
@@ -145,7 +148,7 @@ ippsSHA384Init(IppsSHA384State* pState)
 }
 
 IppStatus
-ippsSHA512Init(IppsSHA512State* pState)
+IPP_COMPAT_EXPORT ippsSHA512Init(IppsSHA512State* pState)
 {
     printMsg("SHA2-512");
     return alcp_SHA2Init(
@@ -153,7 +156,7 @@ ippsSHA512Init(IppsSHA512State* pState)
 }
 
 IppStatus
-ippsHashInit(IppsHashState* pState, IppHashAlgId hashAlg)
+IPP_COMPAT_EXPORT ippsHashInit(IppsHashState* pState, IppHashAlgId hashAlg)
 {
     switch (hashAlg) {
         case ippHashAlg_SHA224:
@@ -179,7 +182,7 @@ ippsHashInit(IppsHashState* pState, IppHashAlgId hashAlg)
 }
 
 IppStatus
-ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
+IPP_COMPAT_EXPORT ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
 {
     ipp_wrp_sha2_ctx*      context    = (ipp_wrp_sha2_ctx*)pState;
     ipp_sha2_rmf_algo_ctx* method_ctx = (ipp_sha2_rmf_algo_ctx*)pMethod;
@@ -208,3 +211,5 @@ ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
     }
     return ippStsNoErr;
 }
+
+} // extern "C"

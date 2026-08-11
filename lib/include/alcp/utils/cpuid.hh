@@ -179,7 +179,7 @@ EUarchValToString(int val)
     return "Zen" + std::to_string(val - 1);
 }
 
-class ALCP_API_EXPORT CpuId
+class CpuId
 {
   public:
     CpuId() {}

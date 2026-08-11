@@ -59,7 +59,7 @@ using utils::CpuArchLevel;
  * - arch: CPU architecture level (eZen4 or eReference)
  */
 template<CpuArchLevel arch>
-class ALCP_API_EXPORT ChaChPolyT
+class ChaChPolyT
     : public ChaCha256T<arch>
     , public alcp::mac::poly1305::Poly1305<arch>
     , public iCipherAead

@@ -27,11 +27,12 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 // OFB Mode
 
 IppStatus
-ippsAESDecryptOFB(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESDecryptOFB(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   int                ofbBlkSize,
@@ -44,7 +45,7 @@ ippsAESDecryptOFB(const Ipp8u*       pSrc,
 }
 
 IppStatus
-ippsAESEncryptOFB(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESEncryptOFB(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   int                ofbBlkSize,

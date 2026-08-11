@@ -27,10 +27,11 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 // CBC Mode
 IppStatus
-ippsAESDecryptCBC(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESDecryptCBC(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   const IppsAESSpec* pCtx,
@@ -42,7 +43,7 @@ ippsAESDecryptCBC(const Ipp8u*       pSrc,
 }
 
 IppStatus
-ippsAESEncryptCBC(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESEncryptCBC(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   const IppsAESSpec* pCtx,

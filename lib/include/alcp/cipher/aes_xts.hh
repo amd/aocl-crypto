@@ -56,7 +56,7 @@ typedef struct _alc_cipher_xts_data
  * Uses composition for state, key (with Rijndael), and IV management.
  * KeyManager inherits from Rijndael and handles key expansion internally.
  */
-class ALCP_API_EXPORT Xts
+class Xts
 {
   protected:
     // Composed components

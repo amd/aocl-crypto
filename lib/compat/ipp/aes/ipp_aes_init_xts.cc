@@ -27,9 +27,10 @@
  */
 
 #include "aes/ipp_aes_init_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAES_XTSGetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsAES_XTSGetSize(int* pSize)
 {
     printMsg("XTS GetSize");
     *pSize = sizeof(ipp_wrp_aes_xts_ctx);
@@ -38,7 +39,7 @@ ippsAES_XTSGetSize(int* pSize)
 }
 
 IppStatus
-ippsAES_XTSInit(const Ipp8u*     pKey,
+IPP_COMPAT_EXPORT ippsAES_XTSInit(const Ipp8u*     pKey,
                 int              keyLen,
                 int              duBitsize,
                 IppsAES_XTSSpec* pCtx,

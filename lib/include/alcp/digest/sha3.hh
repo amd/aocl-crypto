@@ -82,7 +82,7 @@ enum ShakeState
 };
 
 template<alc_digest_len_t digest_len>
-class ALCP_API_EXPORT Sha3 : public IDigest
+class Sha3 : public IDigest
 {
     static_assert(ALC_DIGEST_LEN_224 == digest_len
                   || ALC_DIGEST_LEN_256 == digest_len

@@ -365,7 +365,7 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
                              bool                   check,
                              const Uint8*           pText,
@@ -396,7 +396,7 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
                               const Uint8*           pText,
                               Uint64                 textSize,
@@ -420,7 +420,7 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                   const Uint8*           pHash,
                                   Uint64                 hashSize,
@@ -449,7 +449,7 @@ alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pHash,
                                    Uint64                 hashSize,
@@ -473,7 +473,7 @@ alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                   bool                   check,
                                   const Uint8*           pText,
@@ -497,7 +497,7 @@ alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pText,
                                    Uint64                 textSize,
@@ -521,7 +521,7 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                        const Uint8*           pText,
                                        Uint64                 textSize,
@@ -543,7 +543,7 @@ alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
         ctx->m_rsa, pText, textSize, pSignedText);
     return err;
 }
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                      const Uint8*           pText,
                                      Uint64                 encSize,
@@ -568,7 +568,7 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                         const Uint8*           pText,
                                         Uint64                 textSize,
@@ -590,7 +590,7 @@ alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
         ctx->m_rsa, pText, textSize, pSignedBuff, signedBuffSize);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                     const Uint8*           pText,
                                     Uint64                 textSize,

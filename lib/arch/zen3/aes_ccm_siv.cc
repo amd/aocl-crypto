@@ -30,7 +30,7 @@
 #include "immintrin.h"
 
 namespace alcp::cipher::zen3 {
-ALCP_API_EXPORT void
+void
 xor_a_b(const Uint8 a[], const Uint8 b[], Uint8 c[], size_t len)
 {
     for (size_t j = 0; j < len; j++) {

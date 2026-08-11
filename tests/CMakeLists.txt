@@ -27,10 +27,15 @@
 include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
 
-# Tests link against whichever ALCP library is being built. When only the
-# static library is enabled, link to alcp_static so all the existing test
-# CMakeLists that consume ${LIBS} keep working without modification.
-IF(ALCP_BUILD_SHARED)
+# Tests link against whichever ALCP library is being built. When hidden
+# visibility is enabled on the shared library, also link alcp_static so test
+# helpers that use internal C++ symbols (e.g. CpuId) resolve at link time.
+# Export/dl_load tests still exercise libalcp.so via dlopen.
+IF(ALCP_BUILD_SHARED AND NOT ALCP_HIDDEN_VISIBILITY)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSEIF(ALCP_BUILD_STATIC)
+    SET(LIBS ${LIBS} gtest alcp_static)
+ELSEIF(ALCP_BUILD_SHARED)
     SET(LIBS ${LIBS} gtest alcp)
 ELSE()
     SET(LIBS ${LIBS} gtest alcp_static)
@@ -103,4 +108,5 @@ endif(ALCP_ENABLE_FUZZ_TESTS)
 # shared library is being built.
 IF(UNIX AND ALCP_BUILD_SHARED)
    ADD_SUBDIRECTORY(dl_load)
+   ADD_SUBDIRECTORY(export)
 ENDIF()

@@ -37,10 +37,10 @@ struct aes_siv_add_proc_elm_t
 
 namespace alcp::cipher::avx2 {
 
-ALCP_API_EXPORT void
+void
 dbl(Uint8 data[]);
 
-ALCP_API_EXPORT void
+void
 processAad(Uint8                            cmacTemp[],
            std::vector<std::vector<Uint8>>& m_additionalDataProcessed,
            Uint64                           m_additionalDataProcessedSize);

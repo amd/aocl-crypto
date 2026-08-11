@@ -27,11 +27,12 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 // FIXME: Code Duplication CCM and GCM can use common path
 
 IppStatus
-ippsAES_CCMStart(const Ipp8u*      pIV,
+IPP_COMPAT_EXPORT ippsAES_CCMStart(const Ipp8u*      pIV,
                  int               ivLen,
                  const Ipp8u*      pAAD,
                  int               aadLen,
@@ -98,7 +99,7 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
 }
 
 IppStatus
-ippsAES_CCMEncrypt(const Ipp8u*      pSrc,
+IPP_COMPAT_EXPORT ippsAES_CCMEncrypt(const Ipp8u*      pSrc,
                    Ipp8u*            pDst,
                    int               len,
                    IppsAES_CCMState* pState)
@@ -124,7 +125,7 @@ ippsAES_CCMEncrypt(const Ipp8u*      pSrc,
 }
 
 IppStatus
-ippsAES_CCMDecrypt(const Ipp8u*      pSrc,
+IPP_COMPAT_EXPORT ippsAES_CCMDecrypt(const Ipp8u*      pSrc,
                    Ipp8u*            pDst,
                    int               len,
                    IppsAES_CCMState* pState)
@@ -149,7 +150,7 @@ ippsAES_CCMDecrypt(const Ipp8u*      pSrc,
 }
 
 IppStatus
-ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
+IPP_COMPAT_EXPORT ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
 {
     printMsg("CCMGetTag Start");
     alc_error_t      err;
@@ -182,7 +183,7 @@ ippsAES_CCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_CCMState* pState)
 }
 
 IppStatus
-ippsAES_CCMMessageLen(Ipp64u msgLen, IppsAES_CCMState* pState)
+IPP_COMPAT_EXPORT ippsAES_CCMMessageLen(Ipp64u msgLen, IppsAES_CCMState* pState)
 {
     auto ctx = (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState));
     printMsg("CCM MessageLen");
@@ -192,7 +193,7 @@ ippsAES_CCMMessageLen(Ipp64u msgLen, IppsAES_CCMState* pState)
 }
 
 IppStatus
-ippsAES_CCMTagLen(int tagLen, IppsAES_CCMState* pState)
+IPP_COMPAT_EXPORT ippsAES_CCMTagLen(int tagLen, IppsAES_CCMState* pState)
 {
     auto ctx     = (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState));
     ctx->tag_len = (size_t)tagLen;

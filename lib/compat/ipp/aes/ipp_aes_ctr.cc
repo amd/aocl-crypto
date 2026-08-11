@@ -27,11 +27,12 @@
  */
 
 #include "aes/ipp_aes_common.hh"
+#include "common/export.hh"
 
 // CTR Mode
 
 IppStatus
-ippsAESDecryptCTR(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESDecryptCTR(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   const IppsAESSpec* pCtx,
@@ -51,7 +52,7 @@ ippsAESDecryptCTR(const Ipp8u*       pSrc,
 }
 
 IppStatus
-ippsAESEncryptCTR(const Ipp8u*       pSrc,
+IPP_COMPAT_EXPORT ippsAESEncryptCTR(const Ipp8u*       pSrc,
                   Ipp8u*             pDst,
                   int                len,
                   const IppsAESSpec* pCtx,

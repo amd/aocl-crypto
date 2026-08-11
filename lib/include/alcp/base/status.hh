@@ -182,7 +182,7 @@ class Status final
         // FIXME m_message has to be set somehow
     }
 
-    friend ALCP_API_EXPORT Status StatusOk();
+    friend Status StatusOk();
 
     String makeMessage(const StringView& module_error,
                        const StringView& details)
@@ -250,14 +250,14 @@ ALCP_DEFS_NO_DISCARD bool IsUnknown(const Status& status);
  * Handy creators that return Status
  */
 namespace status {
-    ALCP_API_EXPORT Status Aborted(StringView msg);
-    ALCP_API_EXPORT Status AlreadyExists(StringView msg);
-    ALCP_API_EXPORT Status InternalError(StringView msg);
-    ALCP_API_EXPORT Status InvalidArgument(StringView msg);
-    ALCP_API_EXPORT Status NotFound(StringView msg);
-    ALCP_API_EXPORT Status NotAvailable(StringView msg);
-    ALCP_API_EXPORT Status NotImplemented(StringView msg);
-    ALCP_API_EXPORT Status Unknown(StringView msg);
+    Status Aborted(StringView msg);
+    Status AlreadyExists(StringView msg);
+    Status InternalError(StringView msg);
+    Status InvalidArgument(StringView msg);
+    Status NotFound(StringView msg);
+    Status NotAvailable(StringView msg);
+    Status NotImplemented(StringView msg);
+    Status Unknown(StringView msg);
 } // namespace status
 
 } // namespace alcp::base

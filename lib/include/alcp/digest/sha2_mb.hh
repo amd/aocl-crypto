@@ -41,22 +41,22 @@ class Sha2MB final : public IDigest
                   || ALC_DIGEST_LEN_256 == digest_len);
 
   public:
-    ALCP_API_EXPORT Sha2MB()  = default;
-    ALCP_API_EXPORT ~Sha2MB() = default;
+    Sha2MB()  = default;
+    ~Sha2MB() = default;
 
   public:
     // IDigest interface implementation
-    ALCP_API_EXPORT void        init(void) override;
-    ALCP_API_EXPORT alc_error_t update(const Uint8* pBuf, Uint64 size) override;
-    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+    void        init(void) override;
+    alc_error_t update(const Uint8* pBuf, Uint64 size) override;
+    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
 
     // Multibuffer-specific methods
-    ALCP_API_EXPORT void        set_blocks(Uint64 blocks);
-    ALCP_API_EXPORT void        set_state(const Uint32 state[8]);
-    ALCP_API_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
+    void        set_blocks(Uint64 blocks);
+    void        set_state(const Uint32 state[8]);
+    alc_error_t flush(const Uint8** ppMsgBuf,
                                       const Uint64  numBuffers,
                                       const Uint64  msgLen);
-    ALCP_API_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
+    alc_error_t dequeue(Uint8**      ppDstBuf,
                                         const Uint64 numBuffers,
                                         const Uint64 digestLen);
 

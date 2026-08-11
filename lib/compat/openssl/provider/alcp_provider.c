@@ -247,6 +247,9 @@ static const OSSL_DISPATCH ALC_dispatch_table[] = {
 #define OSSL_provider_init alcp_prov_init
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((visibility("default")))
+#endif
 OPENSSL_EXPORT
 int
 OSSL_provider_init(const OSSL_CORE_HANDLE* handle,

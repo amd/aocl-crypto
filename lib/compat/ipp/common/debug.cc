@@ -26,6 +26,7 @@
  *
  */
 #include "common/debug.hh"
+#include "common/export.hh"
 #include <alcp/types.h>
 #include <iostream>
 #include <sstream>

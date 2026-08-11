@@ -109,9 +109,9 @@ class RsaError final : public ErrorBase
 };
 
 namespace status {
-    ALCP_API_EXPORT Status Unavailable(StringView msg);
-    ALCP_API_EXPORT Status NotPermitted(StringView msg);
-    ALCP_API_EXPORT Status Generic(StringView msg);
+    Status Unavailable(StringView msg);
+    Status NotPermitted(StringView msg);
+    Status Generic(StringView msg);
 } // namespace status
 
 } // namespace alcp::rsa

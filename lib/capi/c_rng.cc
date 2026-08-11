@@ -30,6 +30,7 @@
 
 #include "alcp/capi/defs.hh"
 #include "alcp/capi/rng/builder.hh"
+#include "alcp/rng.h"
 #include "alcp/rng.hh"
 #include "alcp/utils/cpuid.hh"
 
@@ -134,6 +135,17 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
             break;
     }
     return error;
+}
+
+alc_error_t
+alcp_rng_init(alc_rng_handle_p pRngHandle)
+{
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
+    ALCP_BAD_PTR_ERR_RET(pRngHandle);
+    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context);
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t
