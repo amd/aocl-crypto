@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -752,6 +752,51 @@ TEST(RsaTest, DecryptOaepPadding)
                                           text_full_2048,
                                           text_size);
     ASSERT_EQ(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, DecryptOaepPaddingSizeMismatch)
+{
+    std::unique_ptr<digest::IDigest> digest_ptr;
+
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    Rsa rsa_obj;
+    rsa_obj.setDigest(digest);
+    rsa_obj.setMgf(digest);
+
+    alc_error_t err = rsa_obj.setPrivateKey(DP_EXP,
+                                            DQ_EXP,
+                                            P_Modulus,
+                                            Q_Modulus,
+                                            Q_ModulusINV,
+                                            Modulus,
+                                            sizeof(P_Modulus));
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
+    Uint8       enc_text[sizeof(Modulus) + 1]{};
+    Uint8       text_full[sizeof(Modulus)]{};
+    Uint64      text_size = 0;
+
+    // ciphertext larger than the key size
+    err = rsa_obj.decryptPrivateOaep(
+        enc_text, sizeof(enc_text), Label, sizeof(Label), text_full, text_size);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+
+    // ciphertext smaller than the key size
+    err = rsa_obj.decryptPrivateOaep(enc_text,
+                                     sizeof(Modulus) - 1,
+                                     Label,
+                                     sizeof(Label),
+                                     text_full,
+                                     text_size);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+
+    // zero length ciphertext
+    err = rsa_obj.decryptPrivateOaep(
+        enc_text, 0, Label, sizeof(Label), text_full, text_size);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
 }
 
 TEST(RsaTest, PssSanity)

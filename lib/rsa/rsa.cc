@@ -414,16 +414,23 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     // auto mod_text   = std::make_unique<Uint8[]>(encSize);
     auto p_mod_text = mod_text;
 
+    if (encSize != m_key_size) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+
     if (m_key_size < 2 * m_hash_len + 2) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
-    decryptPrivate(pEncText, encSize, mod_text);
+    alc_error_t err = decryptPrivate(pEncText, encSize, mod_text);
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
 
     // decode oaep padding
     Uint8  seed[Sha512Size];       // max seed size is hashlen of sha512
     Uint8  hash_label[Sha512Size]; // max hashlen is of sha512
-    Uint64 db_len = encSize - 1 - m_hash_len;
+    Uint64 db_len = m_key_size - 1 - m_hash_len;
 
     auto db   = std::make_unique<Uint8[]>(db_len * 2);
     auto p_db = db.get();
@@ -475,7 +482,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     /* On failure report length 0 (not (Uint32)-1, which widens to a misleading
      * 4 GB value in this Uint64 out-param). Matches decryptPrivatePkcsv15. */
     textSize = SelectU64(success, static_cast<Uint64>(text_len), Uint64(0));
-    mont::SecureClear(p_mod_text, encSize);
+    mont::SecureClear(p_mod_text, m_key_size);
     mont::SecureClear(p_db, db_len * 2);
     return SelectU64(success, ALC_ERROR_NONE, ALC_ERROR_GENERIC);
 }
