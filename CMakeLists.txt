@@ -217,6 +217,12 @@ ENDIF()
 # Generate Configuration config.h
 GEN_CONF()
 
+# Directory scoped, so every subdirectory inherits it, and listed ahead of the
+# source tree so a generated header left over in an older checkout is ignored.
+# ALCP_BINARY_DIR, not CMAKE_BINARY_DIR: the latter is the parent's build root
+# under a unified build, and is shared with every sibling component.
+INCLUDE_DIRECTORIES(${ALCP_BINARY_DIR}/include)
+
 IF (NOT DEFINED BUILD_SHARED_LIBS)
 	SET (BUILD_SHARED_LIBS ON)
 ENDIF()

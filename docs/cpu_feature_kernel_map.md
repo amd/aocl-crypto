@@ -280,6 +280,8 @@ The following flow applies to `AlgorithmType::eDefault` (backward compatible mod
 
 Force a specific architecture level at runtime. This can only **downgrade** the kernel level — setting a higher level on hardware that doesn't support it has no effect (the actual kernel level is still determined by ISA feature detection).
 
+This override is a test and benchmark facility. It is compiled in only when the project is configured with `ALCP_ENABLE_TESTS=ON`. Release and RTE packages do not read the variable at all and silently ignore it, always dispatching on the detected hardware.
+
 ```bash
 # Force max Zen4 kernels (disables VP2INTERSECT)
 export AOCL_ENABLE_INSTRUCTION=ZEN4
@@ -295,7 +297,7 @@ export AOCL_ENABLE_INSTRUCTION=ZEN4
 | `ZEN4` | Disables VP2INTERSECT — forces max eZen4 kernel level |
 | `ZEN5` | No features disabled — native CPU detection is used (no-op) |
 
-> **Note:** Passing an invalid value will cause the process to exit with an error.
+> **Note:** In builds where the override is compiled in, passing an invalid value will cause the process to exit with an error.
 
 ---
 

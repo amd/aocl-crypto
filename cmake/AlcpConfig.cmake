@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -22,6 +22,8 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
+INCLUDE(CheckCXXSymbolExists)
 
 FUNCTION(GEN_CONF)
     # Set ALCP Release Version String
@@ -47,6 +49,17 @@ FUNCTION(GEN_CONF)
 
     # Keeping Command line variable same.
     SET(ALCP_ENABLE_AOCL_UTILS ${ENABLE_AOCL_UTILS})
+
+    # The AOCL_ENABLE_INSTRUCTION override exists to exercise kernels that the
+    # host CPU would not otherwise select, so it is built only where the tests
+    # and benchmarks that use it are built. Derived rather than cached, so that
+    # a reconfigure that changes ALCP_ENABLE_TESTS always recomputes it.
+    SET(ALCP_ENABLE_INSTRUCTION_OVERRIDE ${ALCP_ENABLE_TESTS})
+
+    # secure_getenv() is a GNU extension: absent on Windows and on musl before
+    # 1.1.24. Probing for it rather than assuming keeps those platforms building;
+    # they fall back to getenv(), which is what the code did previously.
+    CHECK_CXX_SYMBOL_EXISTS(secure_getenv stdlib.h ALCP_HAVE_SECURE_GETENV)
 
     IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         SET(COMPILER_IS_CLANG ON)
@@ -76,11 +89,15 @@ FUNCTION(GEN_CONF)
 
     # CONFIGURE A HEADER FILE TO PASS SOME OF THE CMAKE SETTINGS
     # TO THE SOURCE CODE
+    # Written into ALCP's own build directory - never the source tree, and
+    # never the parent's build root under a unified build. Any generated header
+    # shared between build directories lets configuring one of them silently
+    # change what another builds.
     IF(ALCP_BUILD_OS_LINUX)
-        configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_ROOT}/include/config.h UNIX)
+        configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_BINARY_DIR}/include/config.h UNIX)
     ENDIF(ALCP_BUILD_OS_LINUX)
     IF(ALCP_BUILD_OS_WINDOWS)
-        configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_ROOT}/include/config.h WIN32)
+        configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_BINARY_DIR}/include/config.h WIN32)
     ENDIF(ALCP_BUILD_OS_WINDOWS)
 
 ENDFUNCTION()
