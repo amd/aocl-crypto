@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -221,7 +221,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     // verify signature
     err = alcp_rsa_publickey_verify_pss(
-        ps_rsa_handle, text, text_size, pSignedBuff);
+        ps_rsa_handle, text, text_size, pSignedBuff, size);
 
     if (alcp_is_error(err)) {
         printf("\n Verification process failed");

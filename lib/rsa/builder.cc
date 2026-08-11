@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -112,12 +112,13 @@ alc_error_t
 __rsa_pssVerifyBufWithPub_wrapper(void*        pRsaHandle,
                                   const Uint8* pText,
                                   Uint64       textSize,
-                                  const Uint8* pSignedBuff)
+                                  const Uint8* pSignedBuff,
+                                  Uint64       signedBuffSize)
 
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicPss(pText, textSize, pSignedBuff);
+    return ap->verifyPublicPss(pText, textSize, pSignedBuff, signedBuffSize);
 }
 
 alc_error_t
@@ -138,12 +139,14 @@ alc_error_t
 __rsa_pssVerifyBufWithPub_wrapper_without_hash(void*        pRsaHandle,
                                                const Uint8* pHash,
                                                Uint64       hashSize,
-                                               const Uint8* pSignedBuff)
+                                               const Uint8* pSignedBuff,
+                                               Uint64       signedBuffSize)
 
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicHashPss(pHash, hashSize, pSignedBuff);
+    return ap->verifyPublicHashPss(
+        pHash, hashSize, pSignedBuff, signedBuffSize);
 }
 
 alc_error_t
@@ -163,23 +166,27 @@ alc_error_t
 __rsa_pkcsv15VerifyBufWithPub_wrapper(void*        pRsaHandle,
                                       const Uint8* pText,
                                       Uint64       textSize,
-                                      const Uint8* pSignedBuff)
+                                      const Uint8* pSignedBuff,
+                                      Uint64       signedBuffSize)
 
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicPkcsv15(pText, textSize, pSignedBuff);
+    return ap->verifyPublicPkcsv15(
+        pText, textSize, pSignedBuff, signedBuffSize);
 }
 
 alc_error_t
 __rsa_pkcsv15DecyptBufWithPriv_wrapper(void*        pRsaHandle,
                                        const Uint8* encryptedText,
+                                       Uint64       encSize,
                                        Uint8*       decrypText,
                                        Uint64*      textSize)
 
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->decryptPrivatePkcsv15(encryptedText, decrypText, textSize);
+    return ap->decryptPrivatePkcsv15(
+        encryptedText, encSize, decrypText, textSize);
 }
 
 alc_error_t
@@ -209,10 +216,12 @@ alc_error_t
 __rsa_pkcsv15VerifyBufWithPubWithoutHash_wrapper(void*        pRsaHandle,
                                                  const Uint8* pText,
                                                  Uint64       textSize,
-                                                 const Uint8* signedText)
+                                                 const Uint8* signedText,
+                                                 Uint64       signedTextSize)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicHashPkcsv15(pText, textSize, signedText);
+    return ap->verifyPublicHashPkcsv15(
+        pText, textSize, signedText, signedTextSize);
 }
 
 static Uint64

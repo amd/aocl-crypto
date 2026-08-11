@@ -570,12 +570,15 @@ alcp_prov_rsa_verify(void*                vprsactx,
                 Uint8* hash_with_info = malloc(size + tbslen);
                 memcpy(hash_with_info, DigestInfo[index], size);
                 memcpy(hash_with_info + size, tbs, tbslen);
-                err = alcp_rsa_publickey_verify_hash_pkcs1v15(
-                    &prsactx->handle, hash_with_info, tbslen + size, sig);
+                err = alcp_rsa_publickey_verify_hash_pkcs1v15(&prsactx->handle,
+                                                              hash_with_info,
+                                                              tbslen + size,
+                                                              sig,
+                                                              siglen);
                 free(hash_with_info);
             } else {
                 err = alcp_rsa_publickey_verify_hash_pkcs1v15(
-                    &prsactx->handle, tbs, tbslen, sig);
+                    &prsactx->handle, tbs, tbslen, sig, siglen);
             }
             if (err != ALC_ERROR_NONE) {
                 ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
@@ -593,7 +596,7 @@ alcp_prov_rsa_verify(void*                vprsactx,
                 return 0;
             }
             err = alcp_rsa_publickey_verify_hash_pss(
-                &prsactx->handle, tbs, tbslen, sig);
+                &prsactx->handle, tbs, tbslen, sig, siglen);
 
             if (err != ALC_ERROR_NONE) {
                 ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);

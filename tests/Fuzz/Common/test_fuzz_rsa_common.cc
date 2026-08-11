@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -197,30 +197,31 @@ TestRsaVerifyLifecycle_0(alc_rsa_handle_p handle,
                          Uint64           InputSize,
                          Uint8*           Salt,
                          Uint64           SaltSize,
-                         Uint8*           SignatureOutput)
+                         Uint8*           SignatureOutput,
+                         Uint64           SignatureSize)
 {
     if (PaddingMode == ALCP_TEST_RSA_PADDING_PSS) {
         alcp_rsa_privatekey_sign_pss(
             handle, true, Input, InputSize, Salt, SaltSize, SignatureOutput);
         alcp_rsa_publickey_verify_pss(
-            handle, Input, InputSize, SignatureOutput);
+            handle, Input, InputSize, SignatureOutput, SignatureSize);
     } else if (PaddingMode == ALCP_TEST_RSA_PADDING_PKCS) {
         alcp_rsa_privatekey_sign_pkcs1v15(
             handle, true, Input, InputSize, SignatureOutput);
         alcp_rsa_publickey_verify_pkcs1v15(
-            handle, Input, InputSize, SignatureOutput);
+            handle, Input, InputSize, SignatureOutput, SignatureSize);
     }
     alcp_rsa_finish(handle);
     if (PaddingMode == ALCP_TEST_RSA_PADDING_PSS) {
         alcp_rsa_privatekey_sign_pss(
             handle, true, Input, InputSize, Salt, SaltSize, SignatureOutput);
         alcp_rsa_publickey_verify_pss(
-            handle, Input, InputSize, SignatureOutput);
+            handle, Input, InputSize, SignatureOutput, SignatureSize);
     } else if (PaddingMode == ALCP_TEST_RSA_PADDING_PKCS) {
         alcp_rsa_privatekey_sign_pkcs1v15(
             handle, true, Input, InputSize, SignatureOutput);
         alcp_rsa_publickey_verify_pkcs1v15(
-            handle, Input, InputSize, SignatureOutput);
+            handle, Input, InputSize, SignatureOutput, SignatureSize);
     }
     return;
 }
@@ -469,7 +470,8 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
                                      fuzz_input.size(),
                                      &fuzz_salt[0],
                                      fuzz_salt.size(),
-                                     &signature_output[0]);
+                                     &signature_output[0],
+                                     signature_output.size());
         }
     } else {
         if (PaddingMode == ALCP_TEST_RSA_PADDING_PSS) {
@@ -487,7 +489,8 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
             err = alcp_rsa_publickey_verify_pss(handle,
                                                 &fuzz_input[0],
                                                 fuzz_input.size(),
-                                                &signature_output[0]);
+                                                &signature_output[0],
+                                                signature_output.size());
             if (alcp_is_error(err)) {
                 std::cout << "Error: alcp_rsa_publickey_verify_pss"
                           << std::endl;
@@ -507,7 +510,8 @@ ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,
             err = alcp_rsa_publickey_verify_pkcs1v15(handle,
                                                      &fuzz_input[0],
                                                      fuzz_input.size(),
-                                                     &signature_output[0]);
+                                                     &signature_output[0],
+                                                     signature_output.size());
             if (alcp_is_error(err)) {
                 std::cout << "Error: alcp_rsa_publickey_verify_pkcs1v15"
                           << std::endl;
@@ -796,8 +800,11 @@ ALCP_Fuzz_Rsa_EncryptDecrypt_PKCS(const Uint8* buf, size_t len, int EncDec)
             std::cout << "alcp_rsa_set_bignum_private_key failed" << std::endl;
             goto dealloc_exit;
         }
-        err = alcp_rsa_privatekey_decrypt_pkcs1v15(
-            handle_encrypt, &encrypted_text[0], dec_text, &dec_text_size);
+        err = alcp_rsa_privatekey_decrypt_pkcs1v15(handle_encrypt,
+                                                   &encrypted_text[0],
+                                                   size_modulus,
+                                                   dec_text,
+                                                   &dec_text_size);
         if (alcp_is_error(err)) {
             std::cout << "alcp_rsa_privatekey_decrypt_pkcs1v15 failed"
                       << std::endl;
@@ -924,7 +931,8 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
             alcp_rsa_publickey_verify_hash_pkcs1v15(handle,
                                                     &HashWithInfo[0],
                                                     digest_info_size + HashSize,
-                                                    &Signature[0]);
+                                                    &Signature[0],
+                                                    Signature.size());
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_publickey_verify_hash_pkcs1v15"
                       << std::endl;
@@ -953,7 +961,7 @@ ALCP_Fuzz_Rsa_DigestSign(const Uint8* buf, size_t len, int PaddingMode)
             goto dealloc_exit;
         }
         err = alcp_rsa_publickey_verify_hash_pss(
-            handle, &Hash[0], HashSize, &Signature[0]);
+            handle, &Hash[0], HashSize, &Signature[0], Signature.size());
         if (alcp_is_error(err)) {
             std::cout << "Error: alcp_rsa_publickey_verify_hash_pss"
                       << std::endl;

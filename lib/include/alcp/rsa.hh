@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -154,12 +154,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in] pText       - pointer to input text
      * @param [in] textSize    - size of input text
      * @param [in] pSignedBuff - pointer to signed text
+     * @param [in] signedBuffSize - size of pSignedBuff, exactly the key size
      *
      * @return alc_error_t Error code
      */
     alc_error_t verifyPublicPss(const Uint8* pText,
                                 Uint64       textSize,
-                                const Uint8* pSignedBuff);
+                                const Uint8* pSignedBuff,
+                                Uint64       signedBuffSize);
 
     /**
      * @brief Function signs the hash with pss padding
@@ -184,12 +186,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in] pHash       - pointer to hash
      * @param [in] hashSize    - size of hash
      * @param [in] pSignedBuff - pointer to signed text
+     * @param [in] signedBuffSize - size of pSignedBuff, exactly the key size
      *
      * @return alc_error_t Error code
      */
     alc_error_t verifyPublicHashPss(const Uint8* pHash,
                                     Uint64       hashSize,
-                                    const Uint8* pSignedBuff);
+                                    const Uint8* pSignedBuff,
+                                    Uint64       signedBuffSize);
 
     /**
      * @brief Function signs the buffer with pkcsv15 padding
@@ -213,12 +217,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in] pText       - pointer to input text
      * @param [in] textSize    - size of input text
      * @param [in] pSignedBuff - pointer to signed text
+     * @param [in] signedBuffSize - size of pSignedBuff, exactly the key size
      *
      * @return alc_error_t Error code
      */
     alc_error_t verifyPublicPkcsv15(const Uint8* pText,
                                     Uint64       textSize,
-                                    const Uint8* pSignedBuff);
+                                    const Uint8* pSignedBuff,
+                                    Uint64       signedBuffSize);
 
     /**
      * @brief Function signs the buffer with pkcsv15 padding
@@ -239,12 +245,14 @@ class ALCP_API_EXPORT Rsa
      * @param [in] pHash       - pointer to hash + digestInfo
      * @param [in] hashSize    - size of hash
      * @param [in] pSignedBuff - pointer to signed text
+     * @param [in] signedBuffSize - size of pSignedBuff, exactly the key size
      *
      * @return alc_error_t Error code
      */
     alc_error_t verifyPublicHashPkcsv15(const Uint8* pHash,
                                         Uint64       hashSize,
-                                        const Uint8* pSignedBuff);
+                                        const Uint8* pSignedBuff,
+                                        Uint64       signedBuffSize);
 
     /**
      * @brief Function encrypt the buffer using pkcsv15 padding
@@ -265,12 +273,14 @@ class ALCP_API_EXPORT Rsa
      * @brief Function decrypt the buffer with pkcs padding
      *
      * @param [in]  pEncText    pointer to encrypted text
+     * @param [in]  encSize     size of pEncText, exactly the key size
      * @param [out] pText       pointer to decrypted text
      * @param [out] textSize    text size
      *
      * @return alc_error_t Error code
      */
     alc_error_t decryptPrivatePkcsv15(const Uint8* pEncText,
+                                      Uint64       encSize,
                                       Uint8*       pText,
                                       Uint64*      textSize);
     /**

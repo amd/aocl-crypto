@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -118,8 +118,11 @@ ALCP_Fuzz_Rsa_SignVerify(int PaddingMode, const Uint8* buf, size_t len)
             goto dealloc;
         }
 
-        err = alcp_rsa_publickey_verify_pss(
-            &handle, &fuzz_input[0], size_input, &signature_output[0]);
+        err = alcp_rsa_publickey_verify_pss(&handle,
+                                            &fuzz_input[0],
+                                            size_input,
+                                            &signature_output[0],
+                                            signature_output.size());
         if (alcp_is_error(err)) {
             printf("Error: alcp_rsa_publickey_verify_pss\n");
             goto dealloc;
@@ -131,8 +134,11 @@ ALCP_Fuzz_Rsa_SignVerify(int PaddingMode, const Uint8* buf, size_t len)
             printf("Error: alcp_rsa_privatekey_sign_pkcs1v15\n");
             goto dealloc;
         }
-        err = alcp_rsa_publickey_verify_pkcs1v15(
-            &handle, &fuzz_input[0], size_input, &signature_output[0]);
+        err = alcp_rsa_publickey_verify_pkcs1v15(&handle,
+                                                 &fuzz_input[0],
+                                                 size_input,
+                                                 &signature_output[0],
+                                                 signature_output.size());
         if (alcp_is_error(err)) {
             printf("Error: alcp_rsa_publickey_verify_pkcs1v15\n");
             goto dealloc;

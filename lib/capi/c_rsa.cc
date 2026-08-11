@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -400,7 +400,8 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
                               const Uint8*           pText,
                               Uint64                 textSize,
-                              const Uint8*           pSignedBuff)
+                              const Uint8*           pSignedBuff,
+                              Uint64                 signedBuffSize)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "TextSize %6ld", textSize);
@@ -414,7 +415,8 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa);
 
-    err = ctx->verifyPublicPssFn(ctx->m_rsa, pText, textSize, pSignedBuff);
+    err = ctx->verifyPublicPssFn(
+        ctx->m_rsa, pText, textSize, pSignedBuff, signedBuffSize);
     return err;
 }
 
@@ -451,7 +453,8 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pHash,
                                    Uint64                 hashSize,
-                                   const Uint8*           pSignedBuff)
+                                   const Uint8*           pSignedBuff,
+                                   Uint64                 signedBuffSize)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "HashSize %6ld", hashSize);
@@ -466,7 +469,7 @@ alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa);
 
     err = ctx->verifyPublicPssWithoutHashFn(
-        ctx->m_rsa, pHash, hashSize, pSignedBuff);
+        ctx->m_rsa, pHash, hashSize, pSignedBuff, signedBuffSize);
     return err;
 }
 
@@ -498,7 +501,8 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pText,
                                    Uint64                 textSize,
-                                   const Uint8*           pSignedBuff)
+                                   const Uint8*           pSignedBuff,
+                                   Uint64                 signedBuffSize)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "TextSize %6ld", textSize);
@@ -512,7 +516,8 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa);
 
-    err = ctx->verifyPublicPkcsv15Fn(ctx->m_rsa, pText, textSize, pSignedBuff);
+    err = ctx->verifyPublicPkcsv15Fn(
+        ctx->m_rsa, pText, textSize, pSignedBuff, signedBuffSize);
     return err;
 }
 
@@ -541,6 +546,7 @@ alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                      const Uint8*           pText,
+                                     Uint64                 encSize,
                                      Uint8*                 pDecryptText,
                                      Uint64*                textSize)
 {
@@ -552,12 +558,13 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context);
     ALCP_BAD_PTR_ERR_RET(pText);
     ALCP_BAD_PTR_ERR_RET(pDecryptText);
+    ALCP_BAD_PTR_ERR_RET(textSize);
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa);
 
-    err =
-        ctx->decryptPrivatePkcsv15Fn(ctx->m_rsa, pText, pDecryptText, textSize);
+    err = ctx->decryptPrivatePkcsv15Fn(
+        ctx->m_rsa, pText, encSize, pDecryptText, textSize);
     return err;
 }
 
@@ -565,7 +572,8 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                         const Uint8*           pText,
                                         Uint64                 textSize,
-                                        const Uint8*           pSignedBuff)
+                                        const Uint8*           pSignedBuff,
+                                        Uint64                 signedBuffSize)
 {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "TextSize %6ld", textSize);
@@ -579,7 +587,7 @@ alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(ctx->m_rsa);
 
     return ctx->verifyPublicPkcsv15WithoutHashFn(
-        ctx->m_rsa, pText, textSize, pSignedBuff);
+        ctx->m_rsa, pText, textSize, pSignedBuff, signedBuffSize);
 }
 
 ALCP_API_EXPORT alc_error_t

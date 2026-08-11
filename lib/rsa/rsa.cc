@@ -210,7 +210,7 @@ alc_error_t
 Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 {
     // For non padded output
-    if (textSize != m_pub_key.m_size * 8) {
+    if (m_pub_key.m_size == 0 || textSize != m_pub_key.m_size * 8) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
@@ -219,7 +219,7 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
     }
 
     alignas(64) Uint64 bignum_text[2048 / 64];
-    ConvertToBigNum(pText, bignum_text, m_key_size);
+    ConvertToBigNum(pText, bignum_text, textSize);
 
     auto mod_bignum = m_pub_key.m_mod;
 
@@ -232,7 +232,7 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 
     switch (archLevel) {
         case CpuArchLevel::eZen4:
-            if (m_key_size == 2048 / 8) {
+            if (textSize == 2048 / 8) {
                 zen4::archEncryptPublic<KEY_SIZE_2048>(
                     pEncText, bignum_text, m_pub_key, m_context_pub);
             } else {
@@ -241,7 +241,7 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
             }
             return ALC_ERROR_NONE;
         case CpuArchLevel::eZen3:
-            if (m_key_size == 2048 / 8) {
+            if (textSize == 2048 / 8) {
                 zen3::archEncryptPublic<KEY_SIZE_2048>(
                     pEncText, bignum_text, m_pub_key, m_context_pub);
             } else {
@@ -250,7 +250,7 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
             }
             return ALC_ERROR_NONE;
         case CpuArchLevel::eZen:
-            if (m_key_size == 2048 / 8) {
+            if (textSize == 2048 / 8) {
                 zen::archEncryptPublic<KEY_SIZE_2048>(
                     pEncText, bignum_text, m_pub_key, m_context_pub);
             } else {
@@ -267,7 +267,7 @@ alc_error_t
 Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 {
     // For non padded output
-    if (encSize != m_priv_key.m_size * 2 * 8) {
+    if (m_priv_key.m_size == 0 || encSize != m_priv_key.m_size * 2 * 8) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
@@ -276,7 +276,7 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
     }
 
     Uint64 bignum_text[2048 / 64];
-    ConvertToBigNum(pEncText, bignum_text, m_priv_key.m_size * 2 * 8);
+    ConvertToBigNum(pEncText, bignum_text, encSize);
 
     auto mod_bignum = m_priv_key.m_mod;
 
@@ -289,7 +289,7 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 
     switch (archLevel) {
         case CpuArchLevel::eZen4:
-            if (m_key_size == 2048 / 8) {
+            if (encSize == 2048 / 8) {
                 zen4::archDecryptPrivate<KEY_SIZE_2048>(
                     pText, bignum_text, m_priv_key, m_context_p, m_context_q);
             } else {
@@ -298,7 +298,7 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
             }
             return ALC_ERROR_NONE;
         case CpuArchLevel::eZen3:
-            if (m_key_size == 2048 / 8) {
+            if (encSize == 2048 / 8) {
                 zen3::archDecryptPrivate<KEY_SIZE_2048>(
                     pText, bignum_text, m_priv_key, m_context_p, m_context_q);
             } else {
@@ -307,7 +307,7 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
             }
             return ALC_ERROR_NONE;
         case CpuArchLevel::eZen:
-            if (m_key_size == 2048 / 8) {
+            if (encSize == 2048 / 8) {
                 zen::archDecryptPrivate<KEY_SIZE_2048>(
                     pText, bignum_text, m_priv_key, m_context_p, m_context_q);
             } else {
@@ -582,7 +582,8 @@ Rsa::signPrivateHashPss(const Uint8* pHash,
 {
     // Add Pss encoding
     if (!pHash || (saltSize > 0 && !salt) || !pSignedBuff
-        || (m_key_size < hashSize + saltSize + 2)) {
+        || hashSize != m_hash_len
+        || (m_key_size < m_hash_len + saltSize + 2)) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
@@ -641,7 +642,8 @@ Rsa::signPrivateHashPss(const Uint8* pHash,
 alc_error_t
 Rsa::verifyPublicPss(const Uint8* pText,
                      Uint64       textSize,
-                     const Uint8* pSignedBuff)
+                     const Uint8* pSignedBuff,
+                     Uint64       signedBuffSize)
 {
     if (!pText || !pSignedBuff) {
         return ALC_ERROR_NOT_PERMITTED;
@@ -658,12 +660,12 @@ Rsa::verifyPublicPss(const Uint8* pText,
 
     alignas(64) Uint8 mod_text[2048 / 8 + 6];
 
-    alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
+    alc_error_t err = encryptPublic(pSignedBuff, signedBuffSize, mod_text);
     if (err != ALC_ERROR_NONE) {
         return err;
     }
 
-    Uint8 success = IsZero(0xbc ^ mod_text[m_key_size - 1]);
+    Uint8 success = IsZero(0xbc ^ mod_text[signedBuffSize - 1]);
 
     alignas(64) Uint8 hash[64]{};
 
@@ -671,7 +673,7 @@ Rsa::verifyPublicPss(const Uint8* pText,
     m_digest->update(pText, textSize);
     m_digest->finalize(hash, m_hash_len);
 
-    Uint64 db_len      = m_key_size - m_hash_len - 1;
+    Uint64 db_len      = signedBuffSize - m_hash_len - 1;
     auto   masked_db   = std::make_unique<Uint8[]>(db_len);
     auto   p_masked_db = masked_db.get();
     auto   db_mask     = std::make_unique<Uint8[]>(db_len);
@@ -718,13 +720,18 @@ Rsa::verifyPublicPss(const Uint8* pText,
 alc_error_t
 Rsa::verifyPublicHashPss(const Uint8* pHash,
                          Uint64       hashSize,
-                         const Uint8* pSignedBuff)
+                         const Uint8* pSignedBuff,
+                         Uint64       signedBuffSize)
 {
     if (!pHash || !pSignedBuff) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
     if (!m_digest) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+
+    if (hashSize != m_hash_len) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
@@ -735,16 +742,16 @@ Rsa::verifyPublicHashPss(const Uint8* pHash,
 
     alignas(64) Uint8 mod_text[2048 / 8 + 6];
 
-    alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
+    alc_error_t err = encryptPublic(pSignedBuff, signedBuffSize, mod_text);
     if (err != ALC_ERROR_NONE) {
         return err;
     }
 
-    Uint8 success = IsZero(0xbc ^ mod_text[m_key_size - 1]);
+    Uint8 success = IsZero(0xbc ^ mod_text[signedBuffSize - 1]);
 
     alignas(64) Uint8 hash[64]{};
 
-    Uint64 db_len      = m_key_size - m_hash_len - 1;
+    Uint64 db_len      = signedBuffSize - m_hash_len - 1;
     auto   masked_db   = std::make_unique<Uint8[]>(db_len);
     auto   p_masked_db = masked_db.get();
     auto   db_mask     = std::make_unique<Uint8[]>(db_len);
@@ -871,15 +878,21 @@ Rsa::signPrivateHashPkcsv15(const Uint8* pHash,
 
 alc_error_t
 Rsa::decryptPrivatePkcsv15(const Uint8* pEncryptedText,
+                           Uint64       encSize,
                            Uint8*       pText,
                            Uint64*      textSize)
 {
-    if (!pText || !pEncryptedText) {
+    if (!pText || !pEncryptedText || !textSize) {
         return ALC_ERROR_NOT_PERMITTED;
     }
     alignas(64) Uint8 message[2 * 2048 / 8]{};
 
-    decryptPrivate(pEncryptedText, m_key_size, message);
+    /* decryptPrivate holds the ciphertext-length check for this entry point,
+     * so its result decides whether the padding removal below runs at all. */
+    alc_error_t err = decryptPrivate(pEncryptedText, encSize, message);
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
     // Encoded message :- 0x00 || 0x02 || PS || 0x00 || M
 
     Uint8 success = IsZero(message[0]);
@@ -887,7 +900,7 @@ Rsa::decryptPrivatePkcsv15(const Uint8* pEncryptedText,
 
     Uint32 sep_index = 0;
     Uint8  found_sep = 0;
-    for (Uint32 i = 2; i < m_key_size; i++) {
+    for (Uint32 i = 2; i < encSize; i++) {
         Uint8 is_zero = IsZero(message[i]);
         sep_index     = SelectU32(~found_sep & is_zero, i, sep_index);
         found_sep |= is_zero;
@@ -897,9 +910,9 @@ Rsa::decryptPrivatePkcsv15(const Uint8* pEncryptedText,
     success &= IsLessU32(9, sep_index);
 
     Uint32 msg_start = sep_index + 1;
-    Uint32 msg_len   = m_key_size - msg_start;
+    Uint32 msg_len   = encSize - msg_start;
 
-    Uint32 max_msg_len = m_key_size - 11;
+    Uint32 max_msg_len = encSize - 11;
     for (Uint32 i = 0; i < max_msg_len; i++) {
         Uint8 mask = success & IsLessU32(i, msg_len);
         pText[i]   = Select(mask, message[msg_start + i], pText[i]);
@@ -913,7 +926,8 @@ Rsa::decryptPrivatePkcsv15(const Uint8* pEncryptedText,
 alc_error_t
 Rsa::verifyPublicPkcsv15(const Uint8* pText,
                          Uint64       textSize,
-                         const Uint8* pSignedBuff)
+                         const Uint8* pSignedBuff,
+                         Uint64       signedBuffSize)
 {
     alignas(64) Uint8 mod_text[2048 / 8], hash[64], message[2048 / 8]{};
 
@@ -930,7 +944,7 @@ Rsa::verifyPublicPkcsv15(const Uint8* pText,
         m_mgf_hash_len = m_hash_len;
     }
 
-    alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
+    alc_error_t err = encryptPublic(pSignedBuff, signedBuffSize, mod_text);
     if (err != ALC_ERROR_NONE) {
         return err;
     }
@@ -941,7 +955,7 @@ Rsa::verifyPublicPkcsv15(const Uint8* pText,
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]     = 0x01;
-    Uint64 pad_len = m_key_size - 3 - m_digest_info_size - m_hash_len;
+    Uint64 pad_len = signedBuffSize - 3 - m_digest_info_size - m_hash_len;
     utils::PadBytes(message + 2, 0xff, pad_len);
     utils::CopyBytes(message + 3 + pad_len,
                      DigestInfo[m_digest_info_index],
@@ -953,7 +967,7 @@ Rsa::verifyPublicPkcsv15(const Uint8* pText,
     Uint64* num1 = reinterpret_cast<Uint64*>(message);
     Uint64* num2 = reinterpret_cast<Uint64*>(mod_text);
     Uint64  res  = 0;
-    for (Uint64 i = 0; i < m_key_size / 8; i++) {
+    for (Uint64 i = 0; i < signedBuffSize / 8; i++) {
         res += (*(num1 + i) ^ *(num2 + i));
     }
 
@@ -963,29 +977,30 @@ Rsa::verifyPublicPkcsv15(const Uint8* pText,
 alc_error_t
 Rsa::verifyPublicHashPkcsv15(const Uint8* pHash,
                              Uint64       hashSize,
-                             const Uint8* pSignedBuff)
+                             const Uint8* pSignedBuff,
+                             Uint64       signedBuffSize)
 {
     alignas(64) Uint8 mod_text[2048 / 8], message[2048 / 8]{};
 
-    if (!pHash || !pSignedBuff || hashSize > m_key_size - 11) {
+    if (!pHash || !pSignedBuff || hashSize > signedBuffSize - 11) {
         return ALC_ERROR_GENERIC;
     }
 
-    alc_error_t err = encryptPublic(pSignedBuff, m_key_size, mod_text);
+    alc_error_t err = encryptPublic(pSignedBuff, signedBuffSize, mod_text);
     if (err != ALC_ERROR_NONE) {
         return err;
     }
 
     // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
     message[1]    = 0x01;
-    Int64 pad_len = m_key_size - 3 - hashSize;
+    Int64 pad_len = signedBuffSize - 3 - hashSize;
     utils::PadBytes(message + 2, 0xff, pad_len);
     utils::CopyBytes(message + 3 + pad_len, pHash, hashSize);
 
     Uint64* num1 = reinterpret_cast<Uint64*>(message);
     Uint64* num2 = reinterpret_cast<Uint64*>(mod_text);
     Uint64  res  = 0;
-    for (Uint64 i = 0; i < m_key_size / 8; i++) {
+    for (Uint64 i = 0; i < signedBuffSize / 8; i++) {
         res += (*(num1 + i) ^ *(num2 + i));
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -204,7 +204,7 @@ Rsa_Pkcs_Encrypt_Decrypt(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
 
     Uint64 dec_text_size = 0;
     err                  = alcp_rsa_privatekey_decrypt_pkcs1v15(
-        ps_rsa_handle, enc_text, dec_text, &dec_text_size);
+        ps_rsa_handle, enc_text, key_size, dec_text, &dec_text_size);
 
     if (alcp_is_error(err)) {
         printf("\n private key pkcs decryption failed");
@@ -263,8 +263,11 @@ Rsa_Pkcs_Hash_Sign_Verify(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
     ALCP_PRINT_TEXT(sign_text, key_size, "sign_text")
     printf("\n");
 
-    err = alcp_rsa_publickey_verify_hash_pkcs1v15(
-        ps_rsa_handle, hash_with_info, digest_info_size + hash_size, sign_text);
+    err = alcp_rsa_publickey_verify_hash_pkcs1v15(ps_rsa_handle,
+                                                  hash_with_info,
+                                                  digest_info_size + hash_size,
+                                                  sign_text,
+                                                  key_size);
     if (err != ALC_ERROR_NONE) {
         printf("\n pkcs verify error on hash \n");
         goto free_buff;
@@ -328,7 +331,7 @@ Rsa_Pss_Hash_Sign_Verify(alc_rsa_handle_t* ps_rsa_handle, Uint64 key_size)
     printf("\n");
 
     err = alcp_rsa_publickey_verify_hash_pss(
-        ps_rsa_handle, hash, hash_size, sign_text);
+        ps_rsa_handle, hash, hash_size, sign_text, key_size);
     if (err != ALC_ERROR_NONE) {
         printf("\n psss verify error on hash \n");
         return 0;
