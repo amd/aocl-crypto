@@ -25,10 +25,6 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_FUZZ_TARGET(test_fuzz_ctr_drbg.cc)
-ADD_FUZZ_TARGET(test_fuzz_hmac_drbg.cc)
 ADD_FUZZ_TARGET(test_fuzz_rng.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_ctr_drbg_lifecycle.cc)
-ADD_FUZZ_TARGET(test_fuzz_hmac_drbg_lifecycle.cc)
 ADD_FUZZ_TARGET(test_fuzz_rng_lifecycle.cc)

@@ -450,55 +450,6 @@ Rsa_Cross(std::string             RsaAlgo,
         exit(-1);
     }
 
-/* use ctr-drbg to randomize the input buffer */
-/* FIXME: Not using CTR DRBG due to a known issue when using openssl 3.5.0 */
-#if 0
-    drbg_info.di_algoinfo.ctr_drbg.di_keysize              = 128;
-    drbg_info.di_algoinfo.ctr_drbg.use_derivation_function = true;
-    drbg_info.di_type                                      = ALC_DRBG_CTR;
-    drbg_info.max_entropy_len = drbg_info.max_nonce_len = 16;
-    drbg_info.di_rng_sourceinfo.custom_rng              = false;
-    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_distrib =
-        ALC_RNG_DISTRIB_UNIFORM;
-    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source =
-        ALC_RNG_SOURCE_ARCH;
-    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_type =
-        ALC_RNG_TYPE_DISCRETE;
-
-    err = alcp_drbg_supported(&drbg_info);
-    if (alcp_is_error(err)) {
-        std::cout << "Hardware Rng support failed. Falling Back to System Rng " << std::endl;
-
-        // Fall back to OS RNG if hardware rng rdrand instruction is not
-        // supported.
-        drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source =
-            ALC_RNG_SOURCE_OS;
-        err = alcp_drbg_supported(&drbg_info);
-        if (alcp_is_error(err)) {
-            std::cout << "Error: alcp_drbg_supported: " << err << std::endl;
-            FAIL();
-        }
-    }
-
-    handle.ch_context = malloc(alcp_drbg_context_size(&drbg_info));
-    if (handle.ch_context == nullptr) {
-        std::cout << "Error: alcp_drbg_supported: " << std::endl;
-        FAIL();
-    }
-    err = alcp_drbg_request(&handle, &drbg_info);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_drbg_request: " << err << std::endl;
-        FAIL();
-    }
-    const int cSecurityStrength = 100;
-    err = alcp_drbg_initialize(&handle, cSecurityStrength, NULL, 0);
-    if (alcp_is_error(err)) {
-        std::cout << "Error: alcp_drbg_initialize: " << err << std::endl;
-        FAIL();
-    }
-#endif
-#endif
-
     int InputSize = 0;
     for (int i = loop_start; i < InputSize_Max; i++) {
         /* For non-padded mode, input len will always be KeySize
@@ -514,22 +465,6 @@ Rsa_Cross(std::string             RsaAlgo,
         /* fill input data with random bytes */
         rngb.genRandomMt19937(input_data);
 
-        /* shuffle input vector after each iterations */
-        /* FIXME: Not using CTR DRBG due to a known issue when
-         * using openssl 3.5.0 */
-#if 0
-        err = alcp_drbg_randomize(&handle,
-                                  &(input_data[0]),
-                                  input_data.size(),
-                                  cSecurityStrength,
-                                  NULL,
-                                  0);
-        if (alcp_is_error(err)) {
-            std::cout << "Error: alcp_drbg_randomize on input data: " << err
-                      << std::endl;
-            FAIL();
-        }
-#endif
         /* set test data for each lib */
         std::vector<Uint8> encrypted_data_main(KeySize);
         std::vector<Uint8> decrypted_data_main(KeySize);
@@ -590,38 +525,12 @@ Rsa_Cross(std::string             RsaAlgo,
         std::vector<Uint8> seed(rb_main->m_hash_len);
         rngb.genRandomMt19937(seed);
 
-        /* FIXME: Not using CTR DRBG due to a known issue when
-         * using openssl 3.5.0 */
-#if 0
-        if (padding_mode == 1) {
-            /* shuffle seed data after each iterations */
-            err = alcp_drbg_randomize(
-                &handle, &(seed[0]), seed.size(), cSecurityStrength, NULL, 0);
-            if (alcp_is_error(err)) {
-                std::cout << "Error: alcp_drbg_randomize seed data: " << err
-                          << std::endl;
-                FAIL();
-            }
-        }
-#endif
-
         data_main.m_pseed = data_ext.m_pseed = getPtr(seed);
 
         /* label length should vary */
         std::vector<Uint8> label(i * KeySize);
         rngb.genRandomMt19937(label);
 
-        /* FIXME: Not using CTR DRBG due to a known issue when
-         * using openssl 3.5.0 */
-#if 0
-        err = alcp_drbg_randomize(
-            &handle, &(label[0]), label.size(), cSecurityStrength, NULL, 0);
-        if (alcp_is_error(err)) {
-            std::cout << "Error: alcp_drbg_randomize label data: " << err
-                      << std::endl;
-            FAIL();
-        }
-#endif
         data_main.m_label = data_ext.m_label = getPtr(label);
         data_main.m_label_size = data_ext.m_label_size = label.size();
 
@@ -794,16 +703,7 @@ Rsa_Cross(std::string             RsaAlgo,
         }
     }
 
-    /* FIXME: Not using CTR DRBG due to a known issue when using
-     * openssl 3.5.0
-     */
-#if 0
-    alcp_drbg_finish(&handle);
-    if (handle.ch_context) {
-        free(handle.ch_context);
-        handle.ch_context = nullptr;
-    }
-#endif
-
     return;
 }
+
+#endif

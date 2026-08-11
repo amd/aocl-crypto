@@ -27,7 +27,6 @@
  */
 #include "alcp/rsa.hh"
 #include "alcp/digest.hh"
-#include "alcp/rng/drbg.hh"
 #include "alcp/rsa/rsa_internal.hh"
 #include "alcp/rsa/rsa_reference.hh"
 #include "alcp/rsa/rsa_zen.hh"

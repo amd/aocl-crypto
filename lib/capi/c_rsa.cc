@@ -37,7 +37,6 @@
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
-#include "alcp/rng/drbg_hmac.hh"
 #include "alcp/rsa.h"
 
 using namespace alcp;

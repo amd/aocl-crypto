@@ -49,8 +49,6 @@
 
 #include "rng.h"
 
-#include "drbg.h"
-
 #include "ecdh.h"
 
 #include "version.h"

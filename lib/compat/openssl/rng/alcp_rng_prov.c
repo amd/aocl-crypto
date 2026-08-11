@@ -32,14 +32,14 @@
 static const char CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
 
 void
-ALCP_prov_rng_freectx(void* vdrbg)
+ALCP_prov_rng_freectx(void* vrng)
 {
     ENTER();
-    alc_prov_rng_ctx_p context = vdrbg;
+    alc_prov_rng_ctx_p context = vrng;
     if (context->init_flag) {
-        ALCP_prov_rng_uninstantiate(vdrbg);
+        ALCP_prov_rng_uninstantiate(vrng);
     }
-    OPENSSL_free(vdrbg);
+    OPENSSL_free(vrng);
     EXIT();
 }
 
@@ -109,7 +109,7 @@ ALCP_prov_rng_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 }
 
 int
-ALCP_prov_rng_instantiate(void*                vdrbg,
+ALCP_prov_rng_instantiate(void*                vrng,
                           unsigned int         strength,
                           int                  prediction_resistance,
                           const unsigned char* pstr,
@@ -119,7 +119,7 @@ ALCP_prov_rng_instantiate(void*                vdrbg,
     ENTER();
 
     // Setup what we want from ALCP
-    alc_prov_rng_ctx_p context      = vdrbg;
+    alc_prov_rng_ctx_p context      = vrng;
     context->pc_rng_info.ri_distrib = ALC_RNG_DISTRIB_UNIFORM;
     context->pc_rng_info.ri_source  = ALC_RNG_SOURCE_ARCH; // Use SEC RNG
     context->pc_rng_info.ri_type    = ALC_RNG_TYPE_DISCRETE;
@@ -148,10 +148,10 @@ ALCP_prov_rng_instantiate(void*                vdrbg,
 }
 
 int
-ALCP_prov_rng_uninstantiate(void* drbg)
+ALCP_prov_rng_uninstantiate(void* vrng)
 {
     ENTER();
-    alc_prov_rng_ctx_p context = drbg;
+    alc_prov_rng_ctx_p context = vrng;
     alcp_rng_finish(&(context->handle)); // Tear down ALCP session
 
     context->init_flag = false;
@@ -163,7 +163,7 @@ ALCP_prov_rng_uninstantiate(void* drbg)
 }
 
 int
-ALCP_prov_rng_generate(void*                vdrbg,
+ALCP_prov_rng_generate(void*                vrng,
                        unsigned char*       out,
                        size_t               outlen,
                        unsigned int         strength,
@@ -173,7 +173,7 @@ ALCP_prov_rng_generate(void*                vdrbg,
 {
     ENTER();
     memset(out, 0, outlen);
-    alc_prov_rng_ctx_p context = vdrbg;
+    alc_prov_rng_ctx_p context = vrng;
     if (alcp_is_error(alcp_rng_gen_random(&(context->handle), out, outlen))) {
         return 0; // Error
     }
@@ -205,9 +205,6 @@ ALCP_prov_rng_unlock(void* vctx)
 CREATE_RNG_DISPATCHERS();
 
 const OSSL_ALGORITHM ALC_prov_rng[] = {
-    { ALCP_PROV_NAMES_CTR_DRBG, CIPHER_DEF_PROP, rng_functions },
-    { ALCP_PROV_NAMES_HASH_DRBG, CIPHER_DEF_PROP, rng_functions },
-    { ALCP_PROV_NAMES_HMAC_DRBG, CIPHER_DEF_PROP, rng_functions },
     { ALCP_PROV_NAMES_TEST_RAND, CIPHER_DEF_PROP, rng_functions },
     { NULL, NULL, NULL },
 };

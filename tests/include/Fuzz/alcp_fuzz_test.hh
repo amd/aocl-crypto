@@ -188,11 +188,6 @@ ALCP_Fuzz_Mac(alc_mac_type_t     mac_type,
               size_t            len,
               bool              TestNegLifeCycle);
 int
-ALCP_Fuzz_Drbg(_alc_drbg_type DrbgType,
-               const Uint8*   buf,
-               size_t         len,
-               bool           TestNeglifecycle);
-int
 ALCP_Fuzz_Rng(const Uint8* buf, size_t len, bool TestNeglifecycle);
 int
 ALCP_Fuzz_Rsa_SignVerify(int          PaddingMode,

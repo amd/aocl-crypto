@@ -179,7 +179,6 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     ALCP_PRINT_TEXT(text, size, "text")
 
     printf("\n");
-    // todo call hmac drbg / ctr drbg to generate seed
     // for now the seed is random at buffer allocation
 
     // Encrypt text
