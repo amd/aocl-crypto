@@ -44,7 +44,7 @@ class PatternTests(unittest.TestCase):
             )
         )
 
-    def test_abi_prefixes_and_simple_return_types_preserve_owner(self):
+    def test_abi_prefixes_and_return_types_preserve_owner(self):
         self.assertTrue(
             checker.matches(
                 "alcp::cipher::Cipher::*",
@@ -62,6 +62,13 @@ class PatternTests(unittest.TestCase):
                 "std::_Hashtable<unsigned short,*",
                 "std::pair<int, bool> "
                 "std::_Hashtable<unsigned short, int>::insert(int)",
+            )
+        )
+        self.assertTrue(
+            checker.matches(
+                "__gnu_cxx::*",
+                "decltype ((left.base())-(right.base())) "
+                "__gnu_cxx::operator-(left, right)",
             )
         )
 
@@ -289,14 +296,21 @@ class ValidationTests(unittest.TestCase):
     @mock.patch.object(
         checker,
         "demangle",
-        return_value={"_ZN9__gnu_cxxeq": "__gnu_cxx::operator==()"},
+        return_value={
+            "_ZN9__gnu_cxxeq": (
+                "bool __gnu_cxx::operator==<unsigned char const*, "
+                "std::vector<unsigned char> >()"
+            )
+        },
     )
     @mock.patch.object(
         checker,
         "dynamic_symbols",
         return_value={"required_export": "T", "_ZN9__gnu_cxxeq": "T"},
     )
-    def test_strong_aocc_gnu_helper_can_be_allowed(self, _symbols, _demangle):
+    def test_strong_aocc_gnu_helper_with_return_type_can_be_allowed(
+        self, _symbols, _demangle
+    ):
         self.manifest.write_text("required_export\n")
         cpp_manifest = self.root / "cpp.txt"
         cpp_manifest.write_text("allow __gnu_cxx::*\n")

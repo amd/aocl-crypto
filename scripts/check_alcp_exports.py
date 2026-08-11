@@ -109,23 +109,38 @@ def symbol_views(symbol: str) -> list[str]:
 
     # c++filt includes return types for some template instantiations. A return
     # type ends at the last whitespace outside template brackets before the
-    # function argument list. This parses structure instead of slicing at an
-    # embedded namespace in another owner's template or argument.
+    # final top-level parenthesized group (the function argument list). Track
+    # earlier groups because return types such as decltype(...) contain their
+    # own parentheses.
     for candidate in tuple(views):
         template_depth = 0
+        parenthesis_depth = 0
         boundary = -1
+        owner_boundary = -1
         for index, character in enumerate(candidate):
             if character == "<":
                 template_depth += 1
             elif character == ">" and template_depth:
                 template_depth -= 1
             elif character == "(" and template_depth == 0:
-                break
-            elif character.isspace() and template_depth == 0:
+                if parenthesis_depth == 0:
+                    owner_boundary = boundary
+                parenthesis_depth += 1
+            elif (
+                character == ")"
+                and template_depth == 0
+                and parenthesis_depth
+            ):
+                parenthesis_depth -= 1
+            elif (
+                character.isspace()
+                and template_depth == 0
+                and parenthesis_depth == 0
+            ):
                 boundary = index
-        if boundary >= 0:
-            owner = candidate[boundary + 1 :].lstrip()
-            if owner.startswith(("alcp::", "std::")):
+        if owner_boundary >= 0:
+            owner = candidate[owner_boundary + 1 :].lstrip()
+            if owner.startswith(("alcp::", "__gnu_cxx::", "std::")):
                 views.append(owner)
     return views
 
