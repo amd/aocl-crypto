@@ -50,11 +50,26 @@ def dynamic_symbols(library: Path) -> list[str]:
 
 
 def demangle(symbols: list[str]) -> dict[str, str]:
-    mangled = [symbol for symbol in symbols if symbol.startswith("_Z")]
-    if not mangled:
+    candidates = [
+        (symbol, symbol)
+        for symbol in symbols
+        if symbol.startswith("_Z")
+    ]
+    asan_prefix = "__odr_asan_gen_"
+    candidates.extend(
+        (symbol, symbol[len(asan_prefix) :])
+        for symbol in symbols
+        if symbol.startswith(f"{asan_prefix}_Z")
+    )
+    if not candidates:
         return {}
-    output = subprocess.check_output(["c++filt", *mangled], text=True).splitlines()
-    return dict(zip(mangled, output))
+    output = subprocess.check_output(
+        ["c++filt", *(candidate for _, candidate in candidates)], text=True
+    ).splitlines()
+    return {
+        original: demangled
+        for (original, _), demangled in zip(candidates, output)
+    }
 
 
 def symbol_views(symbol: str) -> list[str]:

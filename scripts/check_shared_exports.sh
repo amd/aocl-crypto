@@ -3,8 +3,7 @@
 set -euo pipefail
 
 BUILD_DIR="${1:?usage: check_shared_exports.sh <build-dir>}"
-MANIFEST="${BUILD_DIR}/tests/export/alcp_export_symbols.txt"
-CPP_EXCEPTIONS="${BUILD_DIR}/tests/export/alcp_export_cpp_exceptions.txt"
+MANIFEST_DIR="${BUILD_DIR}/tests/export"
 CACHE="${BUILD_DIR}/CMakeCache.txt"
 
 resolve_source_dir() {
@@ -60,7 +59,9 @@ if [[ -z "${SOURCE_DIR}" ]]; then
     exit 1
 fi
 
-mkdir -p "$(dirname "${MANIFEST}")"
+mkdir -p "${MANIFEST_DIR}"
+MANIFEST="$(mktemp "${MANIFEST_DIR}/alcp_export_symbols.XXXXXX.txt")"
+trap 'rm -f "${MANIFEST}"' EXIT
 "${SOURCE_DIR}/scripts/extract_alcp_export_symbols.sh" \
     "${SOURCE_DIR}/include/alcp" > "${MANIFEST}"
 
@@ -101,10 +102,7 @@ fi
 if cache_bool_on ENABLE_IPP_COMPAT \
    && [[ -f "${BUILD_DIR}/libipp-compat.so" ]]; then
     IPP_SO="${BUILD_DIR}/libipp-compat.so"
-    IPP_MANIFEST="${BUILD_DIR}/tests/export/ipp_compat_symbols.txt"
-    mkdir -p "$(dirname "${IPP_MANIFEST}")"
-    cp "${SOURCE_DIR}/lib/compat/ipp/ipp_compat_symbols.txt" \
-        "${IPP_MANIFEST}"
+    IPP_MANIFEST="${SOURCE_DIR}/lib/compat/ipp/ipp_compat_symbols.txt"
     if [[ ! -s "${IPP_MANIFEST}" ]]; then
         echo "empty IPP export manifest: ${IPP_MANIFEST}" >&2
         missing=1

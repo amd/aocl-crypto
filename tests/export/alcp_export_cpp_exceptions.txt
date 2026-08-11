@@ -133,9 +133,19 @@ required alcp::utils::CpuId::hasCapability(*
 required alcp::utils::memlock(*
 required alcp::utils::memunlock(*
 
+# Compiler-generated vtables for exported abstract interfaces.
+allow vtable for alcp::IRng
+allow vtable for alcp::cipher::iCipher
+allow vtable for alcp::cipher::iCipherAead
+allow vtable for alcp::cipher::iCipherCcm
+allow vtable for alcp::cipher::iCipherSegment
+allow vtable for alcp::cipher::iMultibuffer
+
 # Compiler-generated helpers tied to exported template classes.
 allow std::_Hashtable<unsigned short, std::*
 allow std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<std::pair<unsigned short const,*
+allow std::__detail::_Insert_base<unsigned short, std::*
+allow std::__detail::__to_chars_10_impl<unsigned int>*
 allow std::_Mutex_base<(__gnu_cxx::*
 allow std::_Sp_counted_base<(__gnu_cxx::*
 allow std::_Sp_counted_deleter<char*, alcp::BigNum::Impl::_OpenSSLDeleter,*
@@ -143,6 +153,12 @@ allow std::_Sp_counted_ptr_inplace<alcp::digest::Sha2_512<*
 allow std::_Sp_counted_ptr_inplace<alcp::digest::Sha3<*
 allow std::_Sp_counted_ptr_inplace<alcp::rng::SystemRng*
 allow std::_Sp_make_shared_tag*
+allow std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct<*
+allow std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::__resize_and_overwrite<*
+allow std::__mismatch<*
+allow std::__str_concat<*
+allow std::bitset<8ul>::_M_copy_to_string<*
+allow std::operator+<char, std::char_traits<char>, std::allocator<char> >(*
 allow std::vector<alcp::utils::CpuArchLevel, std::*
 allow std::vector<std::vector<unsigned char, std::*
 allow std::vector<unsigned char, std::*
