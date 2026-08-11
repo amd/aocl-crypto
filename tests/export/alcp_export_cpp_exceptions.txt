@@ -143,6 +143,8 @@ allow vtable for alcp::cipher::iMultibuffer
 
 # Compiler-generated helpers tied to exported template classes.
 allow __cxa_call_terminate
+allow-weak __gnu_cxx::*
+allow-weak std::*
 allow std::_Hashtable<unsigned short, std::*
 allow std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<std::pair<unsigned short const,*
 allow std::__detail::_Insert_base<unsigned short, std::*

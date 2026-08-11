@@ -25,32 +25,37 @@ def load_symbols(path: Path) -> list[str]:
     return symbols
 
 
-def load_cpp_patterns(path: Path) -> list[tuple[bool, str]]:
-    patterns: list[tuple[bool, str]] = []
+def load_cpp_patterns(path: Path) -> list[tuple[str, str]]:
+    patterns: list[tuple[str, str]] = []
     for line in path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
         kind, separator, pattern = line.partition(" ")
-        if not separator or kind not in {"required", "allow"} or not pattern:
+        if (
+            not separator
+            or kind not in {"required", "allow", "allow-weak"}
+            or not pattern
+        ):
             raise ValueError(
-                f"{path}: expected 'required <pattern>' or 'allow <pattern>': {line}"
+                f"{path}: expected 'required <pattern>', 'allow <pattern>', "
+                f"or 'allow-weak <pattern>': {line}"
             )
-        patterns.append((kind == "required", pattern))
+        patterns.append((kind, pattern))
     if not patterns:
         raise ValueError(f"empty C++ export manifest: {path}")
     return patterns
 
 
-def dynamic_symbols(library: Path) -> list[str]:
+def dynamic_symbols(library: Path) -> dict[str, str]:
     output = subprocess.check_output(
         ["nm", "-D", "--defined-only", str(library)], text=True
     )
-    symbols = []
+    symbols = {}
     for line in output.splitlines():
         fields = line.split()
         if len(fields) >= 2:
-            symbols.append(fields[-1])
+            symbols[fields[-1]] = fields[-2]
     if not symbols:
         raise ValueError(f"no defined dynamic symbols found: {library}")
     return symbols
@@ -152,8 +157,8 @@ def validate(
         errors.append(f"missing C export: {symbol}")
 
     if not cpp_exports_disabled:
-        for required, pattern in cpp_patterns:
-            if required and not any(
+        for kind, pattern in cpp_patterns:
+            if kind == "required" and not any(
                 matches(pattern, name) for name in demangled.values()
             ):
                 errors.append(f"missing required C++ export: {pattern}")
@@ -161,12 +166,14 @@ def validate(
     if allow_unlisted:
         return errors
 
-    for symbol in exported:
+    for symbol, symbol_type in exported.items():
         if symbol in expected_c:
             continue
         name = demangled.get(symbol)
         if not cpp_exports_disabled and name is not None and any(
-            matches(pattern, name) for _, pattern in cpp_patterns
+            matches(pattern, name)
+            and (kind != "allow-weak" or symbol_type in {"W", "V"})
+            for kind, pattern in cpp_patterns
         ):
             continue
         errors.append(f"unexpected export: {symbol}" + (f" ({name})" if name else ""))

@@ -89,13 +89,13 @@ class DynamicSymbolTests(unittest.TestCase):
 
         self.assertEqual(
             symbols,
-            [
-                "text_export",
-                "weak_export",
-                "data_export",
-                "weak_object_export",
-                "absolute_export",
-            ],
+            {
+                "text_export": "T",
+                "weak_export": "W",
+                "data_export": "D",
+                "weak_object_export": "V",
+                "absolute_export": "A",
+            },
         )
         check_output.assert_called_once_with(
             ["nm", "-D", "--defined-only", "plugin.so"], text=True
@@ -147,7 +147,9 @@ class ValidationTests(unittest.TestCase):
 
     @mock.patch.object(checker, "demangle", return_value={})
     @mock.patch.object(
-        checker, "dynamic_symbols", return_value=["required_export", "unexpected_export"]
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "unexpected_export": "T"},
     )
     def test_reports_required_missing_and_unexpected(self, _symbols, _demangle):
         errors = checker.validate(
@@ -164,7 +166,9 @@ class ValidationTests(unittest.TestCase):
 
     @mock.patch.object(checker, "demangle", return_value={})
     @mock.patch.object(
-        checker, "dynamic_symbols", return_value=["required_export", "unexpected_export"]
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "unexpected_export": "T"},
     )
     def test_allow_unlisted_still_checks_required_exports(self, _symbols, _demangle):
         errors = checker.validate(
@@ -174,7 +178,9 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(errors, ["missing C export: missing_export"])
 
     @mock.patch.object(checker, "demangle", return_value={})
-    @mock.patch.object(checker, "dynamic_symbols", return_value=["required_export"])
+    @mock.patch.object(
+        checker, "dynamic_symbols", return_value={"required_export": "T"}
+    )
     def test_plain_manifest_needs_no_cpp_manifest(self, _symbols, _demangle):
         self.manifest.write_text("required_export\n")
 
@@ -191,7 +197,7 @@ class ValidationTests(unittest.TestCase):
     @mock.patch.object(
         checker,
         "dynamic_symbols",
-        return_value=["required_export", "__cxa_call_terminate"],
+        return_value={"required_export": "T", "__cxa_call_terminate": "T"},
     )
     def test_exact_raw_compiler_helper_can_be_allowed(self, _symbols, _demangle):
         self.manifest.write_text("required_export\n")
@@ -208,10 +214,63 @@ class ValidationTests(unittest.TestCase):
     @mock.patch.object(
         checker,
         "demangle",
+        return_value={
+            "_ZSt4copy": "std::copy<unsigned char*>(unsigned char*, unsigned char*)"
+        },
+    )
+    @mock.patch.object(
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "_ZSt4copy": "W"},
+    )
+    def test_weak_standard_library_support_can_be_allowed(
+        self, _symbols, _demangle
+    ):
+        self.manifest.write_text("required_export\n")
+        cpp_manifest = self.root / "cpp.txt"
+        cpp_manifest.write_text("allow-weak std::*\n")
+
+        self.assertEqual(
+            checker.validate(
+                Path("plugin.so"), self.manifest, cpp_manifest, False, False
+            ),
+            [],
+        )
+
+    @mock.patch.object(
+        checker,
+        "demangle",
+        return_value={"_ZSt4copy": "std::copy<unsigned char*>(unsigned char*)"},
+    )
+    @mock.patch.object(
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "_ZSt4copy": "T"},
+    )
+    def test_strong_standard_library_export_is_still_rejected(
+        self, _symbols, _demangle
+    ):
+        self.manifest.write_text("required_export\n")
+        cpp_manifest = self.root / "cpp.txt"
+        cpp_manifest.write_text("allow-weak std::*\n")
+
+        self.assertEqual(
+            checker.validate(
+                Path("plugin.so"), self.manifest, cpp_manifest, False, False
+            ),
+            ["unexpected export: _ZSt4copy "
+             "(std::copy<unsigned char*>(unsigned char*))"],
+        )
+
+    @mock.patch.object(
+        checker,
+        "demangle",
         return_value={"_ZN7foreignE": "foreign::alcp::Required::method()"},
     )
     @mock.patch.object(
-        checker, "dynamic_symbols", return_value=["required_export", "_ZN7foreignE"]
+        checker,
+        "dynamic_symbols",
+        return_value={"required_export": "T", "_ZN7foreignE": "T"},
     )
     def test_reports_missing_required_cpp_and_foreign_export(
         self, _symbols, _demangle
