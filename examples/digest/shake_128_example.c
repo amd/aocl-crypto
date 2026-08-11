@@ -100,11 +100,11 @@ out:
 }
 
 static void
-hash_to_string(char* string, const Uint8* hash, Uint64 digest_size)
+hash_to_string(char* string, size_t string_size, const Uint8* hash, Uint64 digest_size)
 {
     size_t i;
-    for (i = 0; i < digest_size; i++) {
-        string += sprintf(string, "%02x", hash[i]);
+    for (i = 0; i < (size_t)digest_size; i++) {
+        snprintf(string + (i * 2), string_size - (i * 2), "%02x", hash[i]);
     }
 }
 
@@ -299,7 +299,7 @@ main(void)
         }
 
         // check if the outputs are matching
-        hash_to_string(output_string, sample_output, hash_size);
+        hash_to_string(output_string, (size_t)hash_size * 2 + 1, sample_output, hash_size);
         printf("Input : %s\n", sample_input);
         printf("Input chunks : %10" PRId64 "\n", num_chunks);
         printf("output size : %u\n", hash_size);
