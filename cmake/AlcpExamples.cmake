@@ -45,12 +45,9 @@ FUNCTION(ADD_EXAMPLE EXAMPLE_SOURCE)
     IF(ALCP_BUILD_SHARED)
         add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE})
         target_compile_options(${EXAMPLE_TARGET} PUBLIC ${ALCP_WARNINGS})
-        # C++ examples use internal C++ APIs hidden from libalcp.so.
-        IF(EXAMPLE_SOURCE MATCHES "\\.cc$" AND TARGET alcp_static)
-            target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp_static Threads::Threads)
-        ELSE()
-            target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
-        ENDIF()
+        # Preserve amd-main behavior. C++ examples currently require temporary
+        # C++ ABI exports; remove them after migrating examples to the public C API.
+        target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
     ENDIF()
 
     # Static Example -- only built when the static lib is built.

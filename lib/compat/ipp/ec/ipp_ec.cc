@@ -42,8 +42,8 @@
 #define ECC_X25519_KEY_SIZE 32
 
 mbx_status
-mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
-                          const int8u* const pa_private_key[NUM_MB])
+IPP_COMPAT_EXPORT mbx_x25519_public_key_mb8(
+    int8u* const pa_public_key[NUM_MB], const int8u* const pa_private_key[NUM_MB])
 {
     printMsg("mbx_x25519_public_key_mb8");
     alc_ec_handle_t handle[NUM_MB];
@@ -93,9 +93,10 @@ mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
 }
 
 mbx_status
-mbx_x25519_mb8(int8u* const       pa_shared_key[NUM_MB],
-               const int8u* const pa_private_key[NUM_MB],
-               const int8u* const pa_public_key[NUM_MB])
+IPP_COMPAT_EXPORT mbx_x25519_mb8(
+    int8u* const       pa_shared_key[NUM_MB],
+    const int8u* const pa_private_key[NUM_MB],
+    const int8u* const pa_public_key[NUM_MB])
 {
     printMsg("mbx_x25519_mb8");
     Uint64 length;

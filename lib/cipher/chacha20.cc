@@ -104,6 +104,7 @@ ChaCha20::setIv(const Uint8 iv[], Uint64 ivlen)
 // Template specializations for ChaCha256T encrypt/decrypt
 
 template<>
+ALCP_EXPLICIT_TEMPLATE_EXPORT
 alc_error_t
 ChaCha256T<CpuArchLevel::eZen4>::encrypt(const Uint8* pInput,
                                                   Uint8*       pOutput,
@@ -157,6 +158,7 @@ ChaCha256T<CpuArchLevel::eZen4>::encrypt(const Uint8* pInput,
 }
 
 template<>
+ALCP_EXPLICIT_TEMPLATE_EXPORT
 alc_error_t
 ChaCha256T<CpuArchLevel::eZen4>::decrypt(const Uint8* pInput,
                                                   Uint8*       pOutput,
@@ -168,6 +170,7 @@ ChaCha256T<CpuArchLevel::eZen4>::decrypt(const Uint8* pInput,
 }
 
 template<>
+ALCP_EXPLICIT_TEMPLATE_EXPORT
 alc_error_t
 ChaCha256T<CpuArchLevel::eZen>::encrypt(const Uint8* pInput,
                                                   Uint8*       pOutput,
@@ -221,6 +224,7 @@ ChaCha256T<CpuArchLevel::eZen>::encrypt(const Uint8* pInput,
 }
 
 template<>
+ALCP_EXPLICIT_TEMPLATE_EXPORT
 alc_error_t
 ChaCha256T<CpuArchLevel::eZen>::decrypt(const Uint8* pInput,
                                                   Uint8*       pOutput,
@@ -232,6 +236,7 @@ ChaCha256T<CpuArchLevel::eZen>::decrypt(const Uint8* pInput,
 }
 
 template<>
+ALCP_EXPLICIT_TEMPLATE_EXPORT
 alc_error_t
 ChaCha256T<CpuArchLevel::eReference>::encrypt(const Uint8* pInput,
                                                     Uint8*       pOutput,
@@ -285,6 +290,7 @@ ChaCha256T<CpuArchLevel::eReference>::encrypt(const Uint8* pInput,
 }
 
 template<>
+ALCP_EXPLICIT_TEMPLATE_EXPORT
 alc_error_t
 ChaCha256T<CpuArchLevel::eReference>::decrypt(const Uint8* pInput,
                                                     Uint8*       pOutput,

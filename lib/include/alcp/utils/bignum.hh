@@ -35,7 +35,7 @@
 
 namespace alcp {
 
-class BigNum final
+class ALCP_INTERNAL_CPP_EXPORT BigNum final
 {
 
   public:

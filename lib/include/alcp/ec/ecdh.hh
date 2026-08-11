@@ -79,7 +79,7 @@ struct PrecomputedPoint
 class X25519 : public Ec
 {
   public:
-    X25519();
+    ALCP_INTERNAL_CPP_EXPORT X25519();
     ~X25519();
 
     /**
@@ -91,7 +91,7 @@ class X25519 : public Ec
      *
      * @return Status Error code
      */
-    Status setPrivateKey(const Uint8* pPrivKey) override;
+    ALCP_INTERNAL_CPP_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
 
     /**
      * @brief Function generates x25519 public key using input privateKey
@@ -106,8 +106,8 @@ class X25519 : public Ec
      * key size of the curve
      * @return Status Error code
      */
-    Status generatePublicKey(Uint8*       pPublicKey,
-                                             const Uint8* pPrivKey) override;
+    ALCP_INTERNAL_CPP_EXPORT Status
+    generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey) override;
 
     /**
      * @brief Function computes x25519 secret key with publicKey from remotePeer
@@ -123,10 +123,10 @@ class X25519 : public Ec
      * secret produced is returned
      * @return Status Error code
      */
-    Status computeSecretKey(Uint8*       pSecretKey,
-                                            const Uint8* pPublicKey,
-                                            Uint64       pubKeyLen,
-                                            Uint64*      pKeyLength) override;
+    ALCP_INTERNAL_CPP_EXPORT Status
+    computeSecretKey(Uint8*       pSecretKey,
+                     const Uint8* pPublicKey,
+                     Uint64*      pKeyLength) override;
 
     /**
      * @brief Function validates public key from remote peer
@@ -162,7 +162,7 @@ class X25519 : public Ec
 // x2519 apis
 
 // NIST curves
-class P256 : public Ec
+class ALCP_INTERNAL_CPP_EXPORT P256 : public Ec
 {
   public:
     P256() = default;
@@ -177,7 +177,7 @@ class P256 : public Ec
      *
      * @return Status Error code
      */
-    Status setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen) override;
+    Status setPrivateKey(const Uint8* pPrivKey) override;
 
     /**
      * @brief Function generates p256 public key using input privateKey
@@ -212,7 +212,6 @@ class P256 : public Ec
      * @return Status Error code
      */
     Status computeSecretKey(Uint8*       pSecretKey,
-                            Uint64       secretKeyLen,
                             const Uint8* pPublicKey,
                             Uint64       pubKeyLen,
                             Uint64*      pKeyLength) override;

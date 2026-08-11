@@ -26,6 +26,7 @@
  *
  */
 
+#include <algorithm>
 #include <dlfcn.h>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -104,8 +105,11 @@ TEST(IppCompatExports, AllIppSymbolsAreExported)
     dlclose(handle);
 }
 
-TEST(IppCompatExports, NoNonIppSymbolsLeaked)
+TEST(IppCompatExports, NoUnexpectedSymbolsLeaked)
 {
+    const auto expected = loadExpectedSymbols();
+    ASSERT_FALSE(expected.empty());
+
     const std::string nm_cmd = std::string("nm -D --defined-only \"") +
                                IPP_COMPAT_LIB_PATH + "\" 2>/dev/null";
     const std::string nm_out = runCommand(nm_cmd);
@@ -120,8 +124,8 @@ TEST(IppCompatExports, NoNonIppSymbolsLeaked)
         const auto sym_pos = line.rfind(' ');
         ASSERT_NE(sym_pos, std::string::npos);
         const std::string sym = line.substr(sym_pos + 1);
-        EXPECT_EQ(sym.compare(0, 4, "ipps"), 0)
-            << "non-ipps symbol exported: " << line;
+        EXPECT_NE(std::find(expected.begin(), expected.end(), sym), expected.end())
+            << "unexpected IPP compatibility export: " << line;
     }
 }
 

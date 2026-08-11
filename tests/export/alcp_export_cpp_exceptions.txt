@@ -1,4 +1,148 @@
-# Documented C++ export exceptions for libalcp.so (substring match on nm symbol)
-cpuIsAmd
-cpuHasAesni
-cpuHasAvx512
+# Temporary C++ exports required because in-tree tests and examples link
+# libalcp.so directly. Each entry is an exact demangled name or an anchored
+# prefix ending in '*'. "required" entries must match; "allow" entries only
+# permit compiler-generated support symbols when present.
+
+required alcp::BigNum::*
+allow typeinfo name for alcp::BigNum::Impl::_OpenSSLDeleter
+
+required alcp::base::ErrorBase::*
+allow typeinfo for alcp::base::ErrorBase
+allow typeinfo name for alcp::base::ErrorBase
+allow vtable for alcp::base::ErrorBase
+required alcp::base::StatusOk()*
+required alcp::base::status::*
+
+required alcp::cipher::createCipher(*
+required alcp::cipher::createCipherAead(*
+required alcp::cipher::createCipherSeg(*
+required alcp::cipher::Xts::*
+allow typeinfo for alcp::cipher::Xts
+allow typeinfo name for alcp::cipher::Xts
+allow vtable for alcp::cipher::Xts
+required alcp::cipher::ChaCha20::*
+allow typeinfo for alcp::cipher::ChaCha20
+allow typeinfo name for alcp::cipher::ChaCha20
+allow vtable for alcp::cipher::ChaCha20
+required alcp::cipher::ChaCha256T<*
+allow typeinfo for alcp::cipher::ChaCha256T<*
+allow typeinfo name for alcp::cipher::ChaCha256T<*
+allow vtable for alcp::cipher::ChaCha256T<*
+required alcp::cipher::ChaChPolyT<*
+allow typeinfo for alcp::cipher::ChaChPolyT<*
+allow typeinfo name for alcp::cipher::ChaChPolyT<*
+allow vtable for alcp::cipher::ChaChPolyT<*
+required alcp::cipher::Rijndael::*
+allow typeinfo for alcp::cipher::iCipher
+allow typeinfo name for alcp::cipher::iCipher
+allow typeinfo for alcp::cipher::iCipherAead
+allow typeinfo name for alcp::cipher::iCipherAead
+allow typeinfo for alcp::cipher::iCipherCcm
+allow typeinfo name for alcp::cipher::iCipherCcm
+allow typeinfo for alcp::cipher::iCipherSegment
+allow typeinfo name for alcp::cipher::iCipherSegment
+allow typeinfo for alcp::cipher::iMultibuffer
+allow typeinfo name for alcp::cipher::iMultibuffer
+
+required alcp::digest::Md5::*
+allow typeinfo for alcp::digest::Md5
+allow typeinfo name for alcp::digest::Md5
+allow vtable for alcp::digest::Md5
+required alcp::digest::Md5_Sha1::*
+allow typeinfo for alcp::digest::Md5_Sha1
+allow typeinfo name for alcp::digest::Md5_Sha1
+allow vtable for alcp::digest::Md5_Sha1
+required alcp::digest::Sha1::*
+allow typeinfo for alcp::digest::Sha1
+allow typeinfo name for alcp::digest::Sha1
+allow vtable for alcp::digest::Sha1
+required alcp::digest::Sha2<*
+required alcp::digest::Sha2MB<*
+required alcp::digest::Sha2_512<*
+allow typeinfo for alcp::digest::Sha2_512<*
+allow typeinfo name for alcp::digest::Sha2_512<*
+allow vtable for alcp::digest::Sha2_512<*
+required alcp::digest::Sha3<*
+allow typeinfo for alcp::digest::Sha3<*
+allow typeinfo name for alcp::digest::Sha3<*
+allow vtable for alcp::digest::Sha3<*
+
+required alcp::ec::X25519::*
+required alcp::ec::P256::*
+allow typeinfo for alcp::ec::P256
+allow typeinfo name for alcp::ec::P256
+allow vtable for alcp::ec::P256
+
+required alcp::mac::Cmac::*
+required alcp::mac::Hmac::*
+allow typeinfo for alcp::mac::Hmac
+allow typeinfo name for alcp::mac::Hmac
+allow vtable for alcp::mac::Hmac
+required alcp::mac::HmacMB::*
+required alcp::mac::poly1305::Poly1305<*
+allow typeinfo for alcp::mac::poly1305::Poly1305<*
+allow typeinfo name for alcp::mac::poly1305::Poly1305<*
+allow vtable for alcp::mac::poly1305::Poly1305<*
+
+required alcp::rng::Drbg::*
+allow typeinfo for alcp::rng::Drbg
+allow typeinfo name for alcp::rng::Drbg
+allow vtable for alcp::rng::Drbg
+required alcp::rng::SystemRng::*
+allow typeinfo for alcp::rng::SystemRng
+allow typeinfo name for alcp::rng::SystemRng
+allow vtable for alcp::rng::SystemRng
+required alcp::rng::drbg::CtrDrbg::*
+allow alcp::rng::drbg::CtrDrbg::Impl::*
+allow typeinfo for alcp::rng::drbg::CtrDrbg
+allow typeinfo name for alcp::rng::drbg::CtrDrbg
+allow vtable for alcp::rng::drbg::CtrDrbg
+required alcp::rng::drbg::HmacDrbg::*
+allow alcp::rng::drbg::HmacDrbg::Impl::*
+allow typeinfo for alcp::rng::drbg::HmacDrbg
+allow typeinfo name for alcp::rng::drbg::HmacDrbg
+allow vtable for alcp::rng::drbg::HmacDrbg
+allow typeinfo for alcp::IRng
+allow typeinfo name for alcp::IRng
+
+required alcp::rsa::Rsa::*
+required alcp::rsa::status::*
+
+required alcp::utils::CpuId::cpuHasAesni()
+required alcp::utils::CpuId::cpuHasAvx2()
+required alcp::utils::CpuId::cpuHasAdx()
+required alcp::utils::CpuId::cpuHasBmi2()
+required alcp::utils::CpuId::cpuHasRdRand()
+required alcp::utils::CpuId::cpuHasRdSeed()
+required alcp::utils::CpuId::cpuHasShani()
+required alcp::utils::CpuId::cpuHasVaes()
+required alcp::utils::CpuId::cpuHasAvx512(*
+required alcp::utils::CpuId::cpuHasAvx512Base()
+required alcp::utils::CpuId::cpuHasAvx512VL()
+required alcp::utils::CpuId::cpuHasAvx512VP2Intersect()
+required alcp::utils::CpuId::cpuHasAvx512bw()
+required alcp::utils::CpuId::cpuHasAvx512dq()
+required alcp::utils::CpuId::cpuHasAvx512f()
+required alcp::utils::CpuId::cpuHasAvx512ifma()
+required alcp::utils::CpuId::cpuHasAvx512vl()
+required alcp::utils::CpuId::cpuIsAmd()
+required alcp::utils::CpuId::getArchLevel(*
+required alcp::utils::CpuId::getCachedArchLevel(*
+required alcp::utils::CpuId::getSupportedArchLevels()
+required alcp::utils::CpuId::hasCapability(*
+required alcp::utils::memlock(*
+required alcp::utils::memunlock(*
+
+# Compiler-generated helpers tied to exported template classes.
+allow std::_Hashtable<unsigned short, std::*
+allow std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<std::pair<unsigned short const,*
+allow std::_Mutex_base<(__gnu_cxx::*
+allow std::_Sp_counted_base<(__gnu_cxx::*
+allow std::_Sp_counted_deleter<char*, alcp::BigNum::Impl::_OpenSSLDeleter,*
+allow std::_Sp_counted_ptr_inplace<alcp::digest::Sha2_512<*
+allow std::_Sp_counted_ptr_inplace<alcp::digest::Sha3<*
+allow std::_Sp_counted_ptr_inplace<alcp::rng::SystemRng*
+allow std::_Sp_make_shared_tag*
+allow std::vector<alcp::utils::CpuArchLevel, std::*
+allow std::vector<std::vector<unsigned char, std::*
+allow std::vector<unsigned char, std::*

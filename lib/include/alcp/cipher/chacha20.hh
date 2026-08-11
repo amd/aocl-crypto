@@ -46,7 +46,7 @@ static constexpr Uint32 Chacha20Constants[4] = {
  *
  * Uses StateManager, KeyManager, and IvManager components for state tracking.
  */
-class ChaCha20
+class ALCP_INTERNAL_CPP_EXPORT ChaCha20
 {
   protected:
     // Composed components
@@ -94,7 +94,7 @@ class ChaCha20
  * - arch: CPU architecture features (eVaes512 or eReference)
  */
 template<CpuArchLevel arch>
-class ChaCha256T
+class ALCP_INTERNAL_CPP_EXPORT ChaCha256T
     : public ChaCha20
     , public iCipher
 {

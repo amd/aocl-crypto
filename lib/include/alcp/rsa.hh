@@ -43,7 +43,7 @@ struct RsaPublicKey
     Uint64 size            = 0;
 };
 
-class Rsa
+class ALCP_INTERNAL_CPP_EXPORT Rsa
 {
   public:
     Rsa() = default;

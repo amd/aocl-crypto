@@ -37,18 +37,17 @@ namespace alcp::mac {
 class HmacMB final
 {
   public:
-    HmacMB()  = default;
-    ~HmacMB() = default;
+    ALCP_INTERNAL_CPP_EXPORT HmacMB()  = default;
+    ALCP_INTERNAL_CPP_EXPORT ~HmacMB() = default;
 
   public:
-    alc_error_t init(const Uint8*      pKey,
-                                     Uint64            keyLen,
-                                     alc_digest_mode_t digest_mode);
-    alc_error_t flush(const Uint8** ppMsgBuf,
-                                      const Uint64  numBuffers,
-                                      const Uint64  msgLen);
-    alc_error_t dequeue(Uint8**      ppDstBuf,
-                                        const Uint64 numBuffers);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t init(
+        const Uint8* pKey, Uint64 keyLen, alc_digest_mode_t digest_mode);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
+                                               const Uint64  numBuffers,
+                                               const Uint64  msgLen);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
+                                                 const Uint64 numBuffers);
 
   private:
     template<typename DIGEST_TYPE>

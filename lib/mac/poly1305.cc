@@ -226,9 +226,10 @@ Poly1305<archLevel>::finalize(Uint8 digest[], Uint64 digestLen)
     return err;
 }
 
-template class Poly1305<CpuArchLevel::eZen4>;
-template class Poly1305<CpuArchLevel::eZen3>;
-template class Poly1305<CpuArchLevel::eZen>;
-template class Poly1305<CpuArchLevel::eReference>;
-template class Poly1305<CpuArchLevel::eDynamic>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Poly1305<CpuArchLevel::eZen4>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Poly1305<CpuArchLevel::eZen3>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Poly1305<CpuArchLevel::eZen>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT
+    Poly1305<CpuArchLevel::eReference>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Poly1305<CpuArchLevel::eDynamic>;
 } // namespace alcp::mac::poly1305

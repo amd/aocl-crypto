@@ -71,41 +71,22 @@ fi
 CPP_EXCEPTIONS="${SOURCE_DIR}/tests/export/alcp_export_cpp_exceptions.txt"
 
 missing=0
-alcp_nm_out="$(nm -D "${ALCP_SO}" 2>/dev/null || true)"
-alcp_symbol_names="$(awk '{print $3}' <<< "${alcp_nm_out}")"
-while IFS= read -r sym; do
-    [[ -z "${sym}" ]] && continue
-    if ! grep -Fxq "${sym}" <<< "${alcp_symbol_names}"; then
-        echo "missing export: ${sym}" >&2
-        missing=1
-    fi
-done < "${MANIFEST}"
-
-mapfile -t cpp_patterns < <(grep -v '^[[:space:]]*#' "${CPP_EXCEPTIONS}" | grep -v '^[[:space:]]*$' || true)
-for pattern in "${cpp_patterns[@]}"; do
-    if ! grep -q "CpuId.*${pattern}" <<< "${alcp_nm_out}"; then
-        echo "missing documented C++ export: ${pattern} (rebuild libalcp.so)" >&2
-        missing=1
-    fi
-done
-
-while IFS= read -r line; do
-    [[ "${line}" != *" T "* ]] && continue
-    [[ "${line}" != *"_Z"* ]] && continue
-    allowed=0
-    if [[ "${line}" == *"CpuId"* ]]; then
-        for pattern in "${cpp_patterns[@]}"; do
-            if [[ "${line}" == *"${pattern}"* ]]; then
-                allowed=1
-                break
-            fi
-        done
-    fi
-    if [[ "${allowed}" -eq 0 ]]; then
-        echo "unexpected mangled C++ symbol exported: ${line}" >&2
-        missing=1
-    fi
-done <<< "${alcp_nm_out}"
+checker_args=(
+    --library "${ALCP_SO}"
+    --c-manifest "${MANIFEST}"
+    --cpp-manifest "${CPP_EXCEPTIONS}"
+)
+if ! cache_bool_on ALCP_HIDDEN_VISIBILITY; then
+    checker_args+=(--allow-unlisted)
+fi
+if ! cache_bool_on ALCP_ENABLE_TESTS \
+   && ! cache_bool_on ALCP_ENABLE_EXAMPLES \
+   && ! cache_bool_on ALCP_ENABLE_BENCH; then
+    checker_args+=(--cpp-exports-disabled)
+fi
+if ! "${SOURCE_DIR}/scripts/check_alcp_exports.py" "${checker_args[@]}"; then
+    missing=1
+fi
 
 if cache_bool_on ENABLE_OPENSSL_COMPAT \
    && [[ -f "${BUILD_DIR}/libopenssl-compat.so" ]]; then
@@ -124,6 +105,10 @@ if cache_bool_on ENABLE_IPP_COMPAT \
     mkdir -p "$(dirname "${IPP_MANIFEST}")"
     cp "${SOURCE_DIR}/lib/compat/ipp/ipp_compat_symbols.txt" \
         "${IPP_MANIFEST}"
+    if [[ ! -s "${IPP_MANIFEST}" ]]; then
+        echo "empty IPP export manifest: ${IPP_MANIFEST}" >&2
+        missing=1
+    fi
     ipp_nm_out="$(nm -D "${IPP_SO}" 2>/dev/null || true)"
     ipp_symbol_names="$(awk '{print $3}' <<< "${ipp_nm_out}")"
     while IFS= read -r sym; do

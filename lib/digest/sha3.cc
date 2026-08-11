@@ -468,11 +468,13 @@ Sha3<digest_len>::shakeSqueeze(Uint8* pBuf, Uint64 size)
     }
 }
 
-template class Sha3<ALC_DIGEST_LEN_224>;
-template class Sha3<ALC_DIGEST_LEN_256>;
-template class Sha3<ALC_DIGEST_LEN_384>;
-template class Sha3<ALC_DIGEST_LEN_512>;
-template class Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_128>;
-template class Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_256>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha3<ALC_DIGEST_LEN_224>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha3<ALC_DIGEST_LEN_256>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha3<ALC_DIGEST_LEN_384>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha3<ALC_DIGEST_LEN_512>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT
+    Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_128>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT
+    Sha3<ALC_DIGEST_LEN_CUSTOM_SHAKE_256>;
 
 } // namespace alcp::digest

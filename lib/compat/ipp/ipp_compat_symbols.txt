@@ -69,3 +69,5 @@ ippsSHA512Final
 ippsSHA512GetSize
 ippsSHA512Init
 ippsSHA512Update
+mbx_x25519_mb8
+mbx_x25519_public_key_mb8

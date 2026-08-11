@@ -37,7 +37,7 @@
 namespace alcp::mac::poly1305 {
 using utils::CpuArchLevel;
 template<utils::CpuArchLevel archLevel = CpuArchLevel::eDynamic>
-class Poly1305 : public IMac
+class ALCP_INTERNAL_CPP_EXPORT Poly1305 : public IMac
 {
   private:
     std::unique_ptr<reference::Poly1305Ref> poly1305_impl;

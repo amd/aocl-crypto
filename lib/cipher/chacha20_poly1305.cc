@@ -438,7 +438,8 @@ ChaChPolyT<arch>::setTagLength(Uint64 tagLength)
 }
 
 // Explicit template instantiations
-template class ChaChPolyT<CpuArchLevel::eZen4>;
-template class ChaChPolyT<CpuArchLevel::eReference>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT ChaChPolyT<CpuArchLevel::eZen4>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT
+    ChaChPolyT<CpuArchLevel::eReference>;
 
 } // namespace alcp::cipher

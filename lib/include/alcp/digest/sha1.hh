@@ -30,7 +30,7 @@
 #include "alcp/digest.hh"
 #include <openssl/evp.h>
 namespace alcp::digest {
-class Sha1 final : public IDigest
+class ALCP_INTERNAL_CPP_EXPORT Sha1 final : public IDigest
 {
 
   private:

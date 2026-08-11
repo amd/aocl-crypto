@@ -92,7 +92,7 @@ ShaRound(Uint64  a,
 }
 
 template<alc_digest_len_t digest_len>
-class Sha2_512 final : public IDigest
+class ALCP_INTERNAL_CPP_EXPORT Sha2_512 final : public IDigest
 {
     static_assert(ALC_DIGEST_LEN_224 == digest_len
                   || ALC_DIGEST_LEN_256 == digest_len

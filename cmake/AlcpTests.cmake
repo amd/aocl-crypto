@@ -130,15 +130,14 @@ function(alcp_cc_test testName working_dir)
         ${TEST_COMMON_SRC}
     )
 
-    # Internal module unit tests call hidden C++ symbols; link the static
-    # archive so they resolve at link time. Integration tests under tests/
-    # link the shared library and exercise the public C API only.
-    IF(TARGET alcp_static)
-        SET(_ALCP_TEST_LIB alcp_static)
-    ELSEIF(TARGET alcp)
+    # Preserve amd-main behavior: exercise the shared library when available.
+    # These tests currently call C++ APIs directly, requiring temporary C++ ABI
+    # exports. Remove those exports after migrating the test framework to the
+    # public C API; static-only builds continue to use the static archive.
+    IF(ALCP_BUILD_SHARED)
         SET(_ALCP_TEST_LIB alcp)
     ELSE()
-        message(FATAL_ERROR "No ALCP library target available for ${testName}")
+        SET(_ALCP_TEST_LIB alcp_static)
     ENDIF()
     target_link_libraries(${_target_name}
         gtest_main

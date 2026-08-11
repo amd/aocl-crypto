@@ -30,7 +30,7 @@
 #include "alcp/digest.hh"
 #include <openssl/evp.h>
 namespace alcp::digest {
-class Md5 final : public IDigest
+class ALCP_INTERNAL_CPP_EXPORT Md5 final : public IDigest
 {
 
   private:

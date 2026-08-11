@@ -56,7 +56,7 @@ struct Params
     Uint32 Nr;
 };
 
-class Rijndael
+class ALCP_INTERNAL_CPP_EXPORT Rijndael
 {
 
   public:

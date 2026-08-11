@@ -41,24 +41,26 @@ class Sha2MB final : public IDigest
                   || ALC_DIGEST_LEN_256 == digest_len);
 
   public:
-    Sha2MB()  = default;
-    ~Sha2MB() = default;
+    ALCP_INTERNAL_CPP_EXPORT Sha2MB()  = default;
+    ALCP_INTERNAL_CPP_EXPORT ~Sha2MB() = default;
 
   public:
     // IDigest interface implementation
-    void        init(void) override;
-    alc_error_t update(const Uint8* pBuf, Uint64 size) override;
-    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+    ALCP_INTERNAL_CPP_EXPORT void init(void) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t update(const Uint8* pBuf,
+                                                Uint64       size) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t finalize(Uint8* pBuf,
+                                                  Uint64 size) override;
 
     // Multibuffer-specific methods
-    void        set_blocks(Uint64 blocks);
-    void        set_state(const Uint32 state[8]);
-    alc_error_t flush(const Uint8** ppMsgBuf,
-                                      const Uint64  numBuffers,
-                                      const Uint64  msgLen);
-    alc_error_t dequeue(Uint8**      ppDstBuf,
-                                        const Uint64 numBuffers,
-                                        const Uint64 digestLen);
+    ALCP_INTERNAL_CPP_EXPORT void set_blocks(Uint64 blocks);
+    ALCP_INTERNAL_CPP_EXPORT void set_state(const Uint32 state[8]);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
+                                               const Uint64  numBuffers,
+                                               const Uint64  msgLen);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
+                                                 const Uint64 numBuffers,
+                                                 const Uint64 digestLen);
 
   private:
     alignas(64) Uint32 m_hash[8]{};

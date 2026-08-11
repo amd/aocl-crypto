@@ -181,15 +181,18 @@ Linux and alcp.dll on Windows)
 
 When `ALCP_HIDDEN_VISIBILITY` is enabled (default on Unix), only documented
 `alcp_*` C symbols marked `ALCP_API_EXPORT` in `include/alcp/*.h` are
-exported from the shared library. Export regression tests under
-`tests/export/` enforce that surface.
+exported from the shared library, together with temporary C++ exceptions listed
+in `tests/export/alcp_export_cpp_exceptions.txt` when tests, examples, or
+benchmarks are enabled. Production builds with those three features disabled
+export only the public C API. Export regression tests under `tests/export/`
+enforce that surface.
 
 **Documented exception:** `lib/include/alcp/utils/cpuid.hh` exports
-`alcp::utils::CpuId::cpuIsAmd()`, `cpuHasAesni()`, and `cpuHasAvx512()` from
-libalcp.so because in-tree integration tests and benchmarks use them for skip
-gates. That coupling is a penalty for incorrect test design—new tests should
-gate on documented algorithm support checks or environment configuration instead
-of dispatch internals. Do not add further CpuId exports without the same scrutiny.
+specific `alcp::utils::CpuId` methods from libalcp.so because in-tree tests,
+benchmarks, and the cpuid example consume them through the shared library.
+Methods are marked individually so `CpuId::Impl`, `pImpl`, and unused methods
+remain hidden. New tests should use documented algorithm support checks instead
+of widening this temporary C++ ABI.
 
 For build system we have opted for industry standard CMake (version >=3.18.4),
 and for testing 'Gtest' (Google Test) framework is used.

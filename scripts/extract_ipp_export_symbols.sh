@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Extract ipps* symbols marked IPP_COMPAT_EXPORT in ipp-compat .cc sources.
+# Extract symbols marked IPP_COMPAT_EXPORT in ipp-compat .cc sources.
 # Skips #if 0 blocks so disabled stubs are not listed.
 set -euo pipefail
 
@@ -31,7 +31,9 @@ for path in sorted(src.rglob("*.cc")):
             continue
         if if0_depth:
             continue
-        match = re.search(r"IPP_COMPAT_EXPORT\s+(ipps[A-Za-z0-9_]+)", line)
+        match = re.search(
+            r"IPP_COMPAT_EXPORT\s+([A-Za-z_][A-Za-z0-9_]*)", line
+        )
         if match:
             symbols.add(match.group(1))
 

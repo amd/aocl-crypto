@@ -48,14 +48,14 @@ namespace alcp::mac {
 class Cmac final : public IMac
 {
   public:
-    Cmac();
-    ~Cmac();
-    Cmac(const Cmac& cmac);
+    ALCP_INTERNAL_CPP_EXPORT Cmac();
+    ALCP_INTERNAL_CPP_EXPORT ~Cmac();
+    ALCP_INTERNAL_CPP_EXPORT Cmac(const Cmac& cmac);
     
     /**
      * @brief Reset CMAC. After resetting update can be called with the same key
      */
-    alc_error_t reset() override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t reset() override;
 
     /**
      * @brief Update CMAC with plaintext Message
@@ -63,7 +63,7 @@ class Cmac final : public IMac
      * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    alc_error_t update(const Uint8* pMsgBuf,
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t update(const Uint8* pMsgBuf,
                                        Uint64       size) override;
 
     /**
@@ -72,7 +72,7 @@ class Cmac final : public IMac
      * @param pKey   Key bytes
      * @param keyLen Key length in bytes (16, 24, or 32)
      */
-    alc_error_t init(const Uint8* pKey, Uint64 keyLen);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t init(const Uint8* pKey, Uint64 keyLen);
     
     /**
      * @brief Call Finalize to copy the digest
@@ -81,7 +81,8 @@ class Cmac final : public IMac
      * @param size      Size of the cmac in bytes, from 1 up to the AES block
      *                  size
      */
-    alc_error_t finalize(Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t finalize(Uint8* pMsgBuf,
+                                                  Uint64 size) override;
 
   private:
     void getSubkeys();
@@ -106,25 +107,25 @@ class Cmac final : public IMac
 namespace avx2 {
 
     void get_subkeys(Uint8*       k1,
-                                     Uint8*       k2,
-                                     const Uint8* encrypt_keys,
-                                     const Uint32 cNRounds);
+                     Uint8*       k2,
+                     const Uint8* encrypt_keys,
+                     const Uint32 cNRounds);
 
     void update(const Uint8* pPlaintext,
-                                Uint8*       pBuffer,
-                                const Uint8* pEncryptKeys,
-                                Uint8*       pEnc,
-                                Uint32       rounds,
-                                const Uint32 cNBlocks);
+                Uint8*       pBuffer,
+                const Uint8* pEncryptKeys,
+                Uint8*       pEnc,
+                Uint32       rounds,
+                const Uint32 cNBlocks);
 
     void finalize(Uint8*       pBuff,
-                                  Uint32       buff_offset,
-                                  const Uint32 cBlockSize,
-                                  const Uint8* pSubKey1,
-                                  const Uint8* pSubKey2,
-                                  const Uint32 cRounds,
-                                  Uint8*       pEnc,
-                                  const Uint8* pEncryptKeys);
+                  Uint32       buff_offset,
+                  const Uint32 cBlockSize,
+                  const Uint8* pSubKey1,
+                  const Uint8* pSubKey2,
+                  const Uint32 cRounds,
+                  Uint8*       pEnc,
+                  const Uint8* pEncryptKeys);
 
 } // namespace avx2
 } // namespace alcp::mac

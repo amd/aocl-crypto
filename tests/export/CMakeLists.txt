@@ -73,7 +73,7 @@ add_custom_target(ipp_export_symbols_manifest
 set(LIBS_EXPORT gtest ${CMAKE_DL_LIBS})
 
 add_executable(test_alcp_exports test_alcp_exports.cc)
-add_dependencies(test_alcp_exports alcp_export_symbols_manifest)
+add_dependencies(test_alcp_exports alcp alcp_export_symbols_manifest)
 
 target_include_directories(test_alcp_exports PRIVATE
     "${CMAKE_SOURCE_DIR}/include"
@@ -82,7 +82,9 @@ target_include_directories(test_alcp_exports PRIVATE
 
 target_compile_definitions(test_alcp_exports PRIVATE
     ALCP_EXPORT_SYMBOLS_MANIFEST="${ALCP_EXPORT_SYMBOLS_MANIFEST}"
-    ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST="${CMAKE_CURRENT_SOURCE_DIR}/alcp_export_cpp_exceptions.txt")
+    ALCP_EXPORT_CPP_EXCEPTIONS_MANIFEST="${CMAKE_CURRENT_SOURCE_DIR}/alcp_export_cpp_exceptions.txt"
+    ALCP_EXPORT_CHECKER="${CMAKE_SOURCE_DIR}/scripts/check_alcp_exports.py"
+    ALCP_HIDDEN_VISIBILITY_ENABLED=$<BOOL:${ALCP_HIDDEN_VISIBILITY}>)
 
 target_compile_options(test_alcp_exports PUBLIC ${ALCP_WARNINGS})
 target_link_libraries(test_alcp_exports ${LIBS_EXPORT})

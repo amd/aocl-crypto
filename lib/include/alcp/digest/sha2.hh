@@ -54,9 +54,9 @@ class Sha2 final : public IDigest
         cHashSizeWords  = cHashSizeBits / cWordSizeBits;
 
   public:
-    Sha2();
-    Sha2(const Sha2& src);
-    virtual ~Sha2() = default;
+    ALCP_INTERNAL_CPP_EXPORT Sha2();
+    ALCP_INTERNAL_CPP_EXPORT Sha2(const Sha2& src);
+    virtual ALCP_INTERNAL_CPP_EXPORT ~Sha2() = default;
 
   public:
     /**
@@ -67,7 +67,7 @@ class Sha2 final : public IDigest
      *
      * \return nothing
      */
-    void init(void) override;
+    ALCP_INTERNAL_CPP_EXPORT void init(void) override;
     /**
      * \brief   Updates hash for given buffer
      *
@@ -79,8 +79,8 @@ class Sha2 final : public IDigest
      *
      * \param    size    should be valid size > 0
      */
-    alc_error_t update(const Uint8* pMsgBuf,
-                                       Uint64       size) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t update(const Uint8* pMsgBuf,
+                                                Uint64       size) override;
 
     /**
      * \brief    Call for fetching final digest
@@ -91,7 +91,8 @@ class Sha2 final : public IDigest
      * \param    size    Destination buffer size in bytes, should be big
      *                   enough to hold the digest
      */
-    alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t finalize(Uint8* pBuf,
+                                                  Uint64 size) override;
 
     /**
      * \brief    Get the current hash state
@@ -99,7 +100,8 @@ class Sha2 final : public IDigest
      * \param    state    Array to copy the hash state to (must be at least 8
      * Uint32s)
      */
-    void get_state(Uint32 state[cHashSizeWords]) const;
+    ALCP_INTERNAL_CPP_EXPORT void
+    get_state(Uint32 state[cHashSizeWords]) const;
 
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
