@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,10 @@
  *
  */
 #pragma once
+#include <cstddef>
+
 #include "alcp/base.hh"
+#include "alcp/utils/memory.hh"
 
 namespace alcp::ec {
 
@@ -64,14 +67,9 @@ class Context
 
     ~Context()
     {
-        m_ec             = nullptr;
-        setPrivateKey    = nullptr;
-        getPublicKey     = nullptr;
-        getSecretKey     = nullptr;
-        getKeySize       = nullptr;
-        getPublicKeySize = nullptr;
-        finish           = nullptr;
-        reset            = nullptr;
+        /* SecureClear: a plain clear here is a dead store at the end of the
+         * object's lifetime, and status is destroyed after this body runs */
+        utils::SecureClear(this, offsetof(Context, status));
     }
 };
 

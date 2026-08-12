@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,5 +66,15 @@ memunlock(const void* mem, Uint64 size)
 #else
     return ALC_ERROR_NONE; // Needs to be implemented
 #endif
+}
+
+void
+SecureClear(void* buff, Uint64 size)
+{
+    /* volatile so that the writes are never dead stores to the compiler */
+    volatile Uint8* p = static_cast<volatile Uint8*>(buff);
+    while (size--) {
+        *p++ = 0;
+    }
 }
 } // namespace alcp::utils
