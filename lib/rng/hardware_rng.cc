@@ -105,6 +105,11 @@ HardwareRng::readRandom(Uint8* buf, size_t length)
     return randomize(buf, length);
 }
 
+// AMD and Intel both document ten retries as enough to ride out transient
+// exhaustion of the on-chip entropy buffer. A failure that survives ten
+// attempts means the generator is broken or not passed through, not busy.
+static constexpr int RdRandRetryCount = 10;
+
 alc_error_t
 HardwareRng::randomize(Uint8 output[], size_t length)
 {
@@ -116,7 +121,12 @@ HardwareRng::randomize(Uint8 output[], size_t length)
     while (remaining) {
         Uint16 word = 0;
 
-        if (!read_rdrand<Uint16>(&word)) {
+        bool is_success = false;
+        for (int i = 0; i < RdRandRetryCount && !is_success; i++) {
+            is_success = read_rdrand<Uint16>(&word);
+        }
+        if (!is_success) {
+            // No Entropy
             return ALC_ERROR_NO_ENTROPY;
         }
 
