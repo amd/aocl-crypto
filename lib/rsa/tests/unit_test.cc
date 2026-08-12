@@ -28,6 +28,7 @@
 
 #include <gtest/gtest.h>
 #include <string.h>
+#include <vector>
 
 #include "alcp/base.hh"
 #include "alcp/digest/sha2.hh"
@@ -1034,6 +1035,93 @@ TEST(RsaTest, BigNumApiNegativeTest)
 
     err = rsa_obj_2048.setPublicKeyAsBigNum(&exp, &mod);
     ASSERT_NE(err, ALC_ERROR_NONE);
+
+    constexpr Uint64 cPrimeWords   = 2048 / (2 * 64);
+    constexpr Uint64 cModulusWords = 2048 / 64;
+    Uint64           prime[cPrimeWords]{};
+    Uint64           modulus[cModulusWords]{};
+
+    dp = dq = p = q = qinv = { prime, cPrimeWords };
+    mod                     = { modulus, cModulusWords };
+
+    BigNum* private_components[] = { &dq, &p, &q, &qinv };
+    for (BigNum* component : private_components) {
+        component->size = cPrimeWords + 1;
+        EXPECT_NE(rsa_obj_2048.setPrivateKeyAsBigNum(
+                      &dp, &dq, &p, &q, &qinv, &mod),
+                  ALC_ERROR_NONE);
+        component->size = cPrimeWords;
+    }
+
+    mod.size = cModulusWords + 1;
+    EXPECT_NE(rsa_obj_2048.setPrivateKeyAsBigNum(
+                  &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+
+    mod.size = cModulusWords;
+    qinv.num = nullptr;
+    EXPECT_NE(rsa_obj_2048.setPrivateKeyAsBigNum(
+                  &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, BigNumApiRejectsOversizedPrivateKeyAtCapi)
+{
+    constexpr Uint64 cPrimeWords   = 2048 / (2 * 64);
+    constexpr Uint64 cModulusWords = 2048 / 64;
+    Uint64           prime[cPrimeWords]{};
+    Uint64           modulus[cModulusWords]{};
+
+    BigNum dp   = { prime, cPrimeWords };
+    BigNum dq   = { prime, cPrimeWords };
+    BigNum p    = { prime, cPrimeWords };
+    BigNum q    = { prime, 0x1000 };
+    BigNum qinv = { prime, cPrimeWords };
+    BigNum mod  = { modulus, cModulusWords };
+
+    std::vector<Uint8> context(alcp_rsa_context_size());
+    alc_rsa_handle_t   handle{ context.data() };
+
+    ASSERT_EQ(alcp_rsa_request(&handle), ALC_ERROR_NONE);
+    EXPECT_NE(alcp_rsa_set_bignum_private_key(
+                  &handle, &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+
+    q.size  = cPrimeWords;
+    dq.size = 4096;
+    EXPECT_NE(alcp_rsa_set_bignum_private_key(
+                  &handle, &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+    alcp_rsa_finish(&handle);
+}
+
+TEST(RsaTest, BigNumPrivateKeyAccepts1024BitComponents)
+{
+    Rsa rsa_obj;
+
+    Uint64 dp_num[sizeof(DP_EXP) / 8];
+    Uint64 dq_num[sizeof(DQ_EXP) / 8];
+    Uint64 p_num[sizeof(P_Modulus) / 8];
+    Uint64 q_num[sizeof(Q_Modulus) / 8];
+    Uint64 qinv_num[sizeof(Q_ModulusINV) / 8];
+    Uint64 mod_num[sizeof(Modulus) / 8];
+
+    convert_to_bignum(DP_EXP, dp_num, sizeof(DP_EXP));
+    convert_to_bignum(DQ_EXP, dq_num, sizeof(DQ_EXP));
+    convert_to_bignum(P_Modulus, p_num, sizeof(P_Modulus));
+    convert_to_bignum(Q_Modulus, q_num, sizeof(Q_Modulus));
+    convert_to_bignum(Q_ModulusINV, qinv_num, sizeof(Q_ModulusINV));
+    convert_to_bignum(Modulus, mod_num, sizeof(Modulus));
+
+    BigNum dp   = { dp_num, sizeof(dp_num) / 8 };
+    BigNum dq   = { dq_num, sizeof(dq_num) / 8 };
+    BigNum p    = { p_num, sizeof(p_num) / 8 };
+    BigNum q    = { q_num, sizeof(q_num) / 8 };
+    BigNum qinv = { qinv_num, sizeof(qinv_num) / 8 };
+    BigNum mod  = { mod_num, sizeof(mod_num) / 8 };
+
+    EXPECT_EQ(rsa_obj.setPrivateKeyAsBigNum(&dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
 }
 
 TEST(RsaTest, Pkcsv15NegativeTest)
