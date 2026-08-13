@@ -25,8 +25,6 @@
 
 ADD_EXAMPLE(aes-cfb.c)
 ADD_EXAMPLE(aes-gcm.c)
-ADD_EXAMPLE(aes-gcm.cc)
-ADD_EXAMPLE(aes-cfb.cc)
 ADD_EXAMPLE(aes-xts.c)
 ADD_EXAMPLE(aes-ccm.c)
 ADD_EXAMPLE(aes-siv.c)
