@@ -84,24 +84,10 @@ allow typeinfo for alcp::mac::poly1305::Poly1305<*
 allow typeinfo name for alcp::mac::poly1305::Poly1305<*
 allow vtable for alcp::mac::poly1305::Poly1305<*
 
-required alcp::rng::Drbg::*
-allow typeinfo for alcp::rng::Drbg
-allow typeinfo name for alcp::rng::Drbg
-allow vtable for alcp::rng::Drbg
 required alcp::rng::SystemRng::*
 allow typeinfo for alcp::rng::SystemRng
 allow typeinfo name for alcp::rng::SystemRng
 allow vtable for alcp::rng::SystemRng
-required alcp::rng::drbg::CtrDrbg::*
-allow alcp::rng::drbg::CtrDrbg::Impl::*
-allow typeinfo for alcp::rng::drbg::CtrDrbg
-allow typeinfo name for alcp::rng::drbg::CtrDrbg
-allow vtable for alcp::rng::drbg::CtrDrbg
-required alcp::rng::drbg::HmacDrbg::*
-allow alcp::rng::drbg::HmacDrbg::Impl::*
-allow typeinfo for alcp::rng::drbg::HmacDrbg
-allow typeinfo name for alcp::rng::drbg::HmacDrbg
-allow vtable for alcp::rng::drbg::HmacDrbg
 allow typeinfo for alcp::IRng
 allow typeinfo name for alcp::IRng
 
