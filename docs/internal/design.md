@@ -181,9 +181,9 @@ Linux and alcp.dll on Windows)
 
 ### Shared-library symbol visibility
 
-#### Decision and comparison with `amd-main`
+#### Decision
 
-`amd-main` relies on the compiler and linker defaults on Linux. Consequently,
+Prior Linux builds rely on the compiler and linker defaults. Consequently,
 the dynamic symbol tables of `libalcp.so`, `libipp-compat.so`, and
 `libopenssl-compat.so` include public entry points and implementation symbols.
 There is no machine-checked definition of the intended export surface.
@@ -214,9 +214,8 @@ exactly `OSSL_provider_init`.
   - Give the IPP and OpenSSL compatibility DSOs explicit entry-point contracts.
   - Keep Linux and Windows export mechanisms explicit and independently
     maintainable.
-  - Preserve source and runtime behavior relative to `amd-main`, except for the
-    intentional export-surface reduction and the compatibility fixes listed
-    below.
+  - Preserve source and runtime behavior, except for the intentional
+    export-surface reduction and the compatibility fixes listed below.
 
 #### Non-goals
 
@@ -284,7 +283,7 @@ disabled:
 Linux, `ALCP_HIDDEN_VISIBILITY=OFF`:
 
   - Compiler-default broad visibility is retained for `libalcp.so` and all
-    selected compatibility DSOs, matching the publication style of `amd-main`.
+    selected compatibility DSOs, matching the prior publication style.
   - Contracted symbols are still required. Extra symbols are allowed.
   - This setting is an escape hatch for migration and diagnosis, not the release
     configuration.
@@ -463,7 +462,7 @@ behavior; they must migrate to the public C API. `ALCP_HIDDEN_VISIBILITY=OFF`
 provides a temporary broad-visibility migration mode, but does not convert those
 symbols into supported interfaces.
 
-Bundled tests, examples, and benchmarks retain `amd-main` linkage behavior while
+Bundled tests, examples, and benchmarks retain existing linkage behavior while
 temporary C++ exports are enabled. The intended migration is to public C APIs or
 static internal linkage, followed by removal of the relevant exception.
 Production builds opt out immediately by disabling all three bundled-consumer
@@ -473,7 +472,7 @@ Windows consumers continue to use explicitly exported declarations. The IPP
 `.def` list and removal of OpenSSL automatic export-all behavior make accidental
 Windows publication a build-policy violation rather than an implicit contract.
 
-#### Required behavior deltas from `amd-main`
+#### Required supporting behavior changes
 
 The visibility work contains three reviewed non-algorithmic source changes:
 
@@ -488,7 +487,7 @@ The visibility work contains three reviewed non-algorithmic source changes:
     builds compile and link.
 
 There are zero cryptographic algorithm changes. Cipher, digest, MAC, RNG, DRBG,
-RSA, and elliptic-curve computation semantics remain those of `amd-main`.
+RSA, and elliptic-curve computation semantics remain unchanged.
 
 #### Decisions and rejected alternatives
 
@@ -512,8 +511,8 @@ preserve accidental dependencies and imply an ABI that the project cannot
 guarantee.
 
 Rejected: linking every bundled consumer statically in this change. It would
-stop tests and examples from exercising `libalcp.so` as they do on `amd-main`
-and would hide dynamic-link regressions.
+stop tests and examples from exercising `libalcp.so` and would hide
+dynamic-link regressions.
 
 Rejected: applying the production version script while temporary C++ consumers
 are enabled. Its C-only wildcard would make those consumers fail to link.
