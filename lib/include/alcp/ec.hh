@@ -149,6 +149,18 @@ class Ec : public IEc
     // FIXME needs to modified after NIST curves implementation.
     AlcpEcPoint m_data;
 
+    /* Every curve derives the shared secret from the private key it is
+     * holding, so the same rule applies to all of them: a curve sets this
+     * once a key is installed and reset() clears it again. */
+    bool m_isPrivateKeySet = false;
+
+    Status checkPrivateKeyIsSet() const
+    {
+        return m_isPrivateKeySet
+                   ? StatusOk()
+                   : status::InvalidArgument("Private key has not been set");
+    }
+
   protected:
     Ec()          = default;
     virtual ~Ec() = default;

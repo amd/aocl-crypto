@@ -33,8 +33,10 @@
 
 #include "alcp/ec/ecdh.hh"
 #include "alcp/utils/copy.hh"
+#include "alcp/utils/memory.hh"
 
 using alcp::utils::CopyBytes;
+using alcp::utils::SecureClear;
 static constexpr Uint32 KeySize = 32;
 // PublicKeySize: uncompressed SEC1 point (X||Y); caller buffer has no 0x04 prefix.
 static constexpr Uint32 PublicKeySize = KeySize * 2;
@@ -77,6 +79,10 @@ P256::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
     BN_free(p_priv);
     OSSL_PARAM_BLD_free(p_param_bld_priv);
     EVP_PKEY_CTX_free(p_ctx_priv);
+
+    /* a failed call has already overwritten the stored key, so whatever was
+     * set before it is not usable either */
+    m_isPrivateKeySet = s.ok();
     return s;
 }
 
@@ -100,12 +106,17 @@ P256::computeSecretKey(Uint8*       pSecretKey,
                        Uint64       pubKeyLen,
                        Uint64*      pKeyLength)
 {
+    Status s = checkPrivateKeyIsSet();
+    if (!s.ok()) {
+        return s;
+    }
+
     if (secretKeyLen < KeySize) {
         return status::InvalidArgument(
             "Secret key buffer is smaller than the shared secret size");
     }
 
-    Status s = validatePublicKey(pPublicKey, pubKeyLen);
+    s = validatePublicKey(pPublicKey, pubKeyLen);
     if (!s.ok()) {
         return s;
     }
@@ -214,16 +225,22 @@ P256::getPublicKeySize()
 void
 P256::reset()
 {
+    SecureClear(m_PrivKey, sizeof(m_PrivKey));
+
+    /* nulled as well as freed, so that resetting twice - or destroying an
+     * object that has already been reset - does not free the same handle
+     * twice */
+    EVP_PKEY_free(m_pSelfKey);
+    m_pSelfKey = nullptr;
+    EVP_PKEY_free(m_pPeerKey);
+    m_pPeerKey = nullptr;
+
+    m_isPrivateKeySet = false;
 }
 
 P256::~P256()
 {
-    if (m_pSelfKey != nullptr) {
-        EVP_PKEY_free(m_pSelfKey);
-    }
-    if (m_pPeerKey != nullptr) {
-        EVP_PKEY_free(m_pPeerKey);
-    }
+    reset();
 }
 
 } // namespace alcp::ec

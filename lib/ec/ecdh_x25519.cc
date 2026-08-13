@@ -32,6 +32,7 @@
 #include "alcp/utils/compare.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
+#include "alcp/utils/memory.hh"
 #include "config.h"
 #include <string.h>
 
@@ -61,6 +62,7 @@ X25519::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
 
     // store private key for secret key generation
     alcp::utils::CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
+    m_isPrivateKeySet = true;
     return StatusOk();
 }
 
@@ -88,8 +90,10 @@ X25519::generatePublicKey(Uint8*       pPublicKey,
             "Not supported due to missing instruction set (ADX or BMI2)");
     }
 
-    // store private key for secret key generation
+    // store private key for secret key generation; this path installs it too,
+    // so a secret can be derived afterwards without a separate setPrivateKey
     alcp::utils::CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
+    m_isPrivateKeySet = true;
 
     m_PrivKey[0] &= 248;
     m_PrivKey[31] &= 127;
@@ -151,6 +155,11 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
                          Uint64       pubKeyLen,
                          Uint64*      pKeyLength)
 {
+    Status status = checkPrivateKeyIsSet();
+    if (!status.ok()) {
+        return status;
+    }
+
     if (secretKeyLen < KeySize) {
         return status::InvalidArgument(
             "Secret key buffer is smaller than the shared secret size");
@@ -164,7 +173,7 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
             "Not supported due to missing instruction set (ADX or BMI2)");
     }
 
-    Status status = validatePublicKey(pPublicKey, pubKeyLen);
+    status = validatePublicKey(pPublicKey, pubKeyLen);
     if (!status.ok()) {
         return status;
     }
@@ -205,8 +214,8 @@ X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 void
 X25519::reset()
 {
-    // clear private key with zeros
-    alcp::utils::PadBytes(m_PrivKey, 0, KeySize);
+    alcp::utils::SecureClear(m_PrivKey, sizeof(m_PrivKey));
+    m_isPrivateKeySet = false;
 }
 
 Uint64

@@ -27,6 +27,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <iostream>
 #include <string.h>
 
@@ -223,4 +224,119 @@ TEST_P(p256Test, ComputeSecretKeyLengthTest)
             &secret_key[0], cKeySize + 1, &pub_key[0], cPubKeySize, &keyLength),
         alcp::StatusOk());
     EXPECT_EQ(keyLength, cKeySize);
+}
+
+TEST_P(p256Test, SecretKeyRefusedWithoutPrivateKey)
+{
+    std::vector<Uint8> secret_key(m_p256obj->getKeySize(), 0xa5);
+    const auto         untouched_secret = secret_key;
+    Uint64             keyLength = 0;
+
+    EXPECT_EQ(m_p256obj
+                  ->computeSecretKey(&secret_key[0],
+                                     secret_key.size(),
+                                     &m_peer2_public_key[0],
+                                     m_peer2_public_key.size(),
+                                     &keyLength)
+                  .code(),
+              alcp::ErrorCode::eInvalidArgument);
+    EXPECT_EQ(keyLength, 0U);
+    EXPECT_EQ(secret_key, untouched_secret);
+}
+
+TEST_P(p256Test, SecretKeyRefusedAfterReset)
+{
+    ASSERT_EQ(m_p256obj->setPrivateKey(&m_peer1_private_key[0],
+                                       m_peer1_private_key.size()),
+              alcp::StatusOk());
+
+    const auto* object_begin = reinterpret_cast<const Uint8*>(m_p256obj);
+    const auto* object_end   = object_begin + sizeof(*m_p256obj);
+    const auto* key_pos      = std::search(object_begin,
+                                      object_end,
+                                      m_peer1_private_key.begin(),
+                                      m_peer1_private_key.end());
+    ASSERT_NE(key_pos, object_end);
+    const size_t key_offset = static_cast<size_t>(key_pos - object_begin);
+
+    m_p256obj->reset();
+
+    EXPECT_TRUE(std::all_of(object_begin + key_offset,
+                            object_begin + key_offset
+                                + m_peer1_private_key.size(),
+                            [](Uint8 byte) { return byte == 0; }));
+
+    std::vector<Uint8> secret_key(m_p256obj->getKeySize(), 0xa5);
+    const auto         untouched_secret = secret_key;
+    Uint64             keyLength = 0;
+
+    EXPECT_EQ(m_p256obj
+                  ->computeSecretKey(&secret_key[0],
+                                     secret_key.size(),
+                                     &m_peer2_public_key[0],
+                                     m_peer2_public_key.size(),
+                                     &keyLength)
+                  .code(),
+              alcp::ErrorCode::eInvalidArgument);
+    EXPECT_EQ(keyLength, 0U);
+    EXPECT_EQ(secret_key, untouched_secret);
+}
+
+TEST_P(p256Test, ResetAllowsDifferentPrivateKey)
+{
+    ASSERT_EQ(m_p256obj->setPrivateKey(&m_peer1_private_key[0],
+                                       m_peer1_private_key.size()),
+              alcp::StatusOk());
+
+    std::vector<Uint8> first_secret(m_p256obj->getKeySize());
+    Uint64             first_length = 0;
+    ASSERT_EQ(m_p256obj->computeSecretKey(&first_secret[0],
+                                          first_secret.size(),
+                                          &m_peer2_public_key[0],
+                                          m_peer2_public_key.size(),
+                                          &first_length),
+              alcp::StatusOk());
+
+    m_p256obj->reset();
+
+    std::vector<Uint8> second_private_key = m_peer1_private_key;
+    second_private_key.back() ^= 1;
+    ASSERT_EQ(m_p256obj->setPrivateKey(&second_private_key[0],
+                                       second_private_key.size()),
+              alcp::StatusOk());
+
+    std::vector<Uint8> second_secret(m_p256obj->getKeySize());
+    Uint64             second_length = 0;
+    ASSERT_EQ(m_p256obj->computeSecretKey(&second_secret[0],
+                                          second_secret.size(),
+                                          &m_peer2_public_key[0],
+                                          m_peer2_public_key.size(),
+                                          &second_length),
+              alcp::StatusOk());
+
+    EXPECT_EQ(first_length, m_p256obj->getKeySize());
+    EXPECT_EQ(second_length, m_p256obj->getKeySize());
+    EXPECT_NE(second_secret, first_secret);
+}
+
+TEST_P(p256Test, RepeatedResetIsSafe)
+{
+    ASSERT_EQ(m_p256obj->setPrivateKey(&m_peer1_private_key[0],
+                                       m_peer1_private_key.size()),
+              alcp::StatusOk());
+
+    std::vector<Uint8> secret_key(m_p256obj->getKeySize());
+    Uint64             keyLength = 0;
+    ASSERT_EQ(m_p256obj->computeSecretKey(&secret_key[0],
+                                          secret_key.size(),
+                                          &m_peer2_public_key[0],
+                                          m_peer2_public_key.size(),
+                                          &keyLength),
+              alcp::StatusOk());
+
+    /* both key handles are live at this point, and TearDown resets the object
+     * once more, so releasing a handle twice would abort here */
+    m_p256obj->reset();
+    m_p256obj->reset();
+    SUCCEED();
 }
