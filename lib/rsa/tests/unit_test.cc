@@ -27,6 +27,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
@@ -881,6 +882,81 @@ TEST(RsaTest, PssSanity)
     err = rsa_obj_2048.signPrivatePss(
         true, text, 2048 / 8, nullptr, 0, signed_buff);
     ASSERT_EQ(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, PssSaltSizeBoundsAtCapi)
+{
+    constexpr Uint64 KeySize = sizeof(Modulus_2048);
+    constexpr Uint64 HashLen = 32; // digest configured below
+    /* longest salt the PSS encoding admits for this key and digest */
+    constexpr Uint64 MaxSaltSize = KeySize - HashLen - 2;
+
+    std::vector<Uint8> context(alcp_rsa_context_size());
+    alc_rsa_handle_t   handle{ context.data() };
+    ASSERT_EQ(alcp_rsa_request(&handle), ALC_ERROR_NONE);
+
+    ASSERT_EQ(alcp_rsa_set_publickey(
+                  &handle, PublicKeyExponent, Modulus_2048, KeySize),
+              ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_set_privatekey(&handle,
+                                      DP_EXP_2048,
+                                      DQ_EXP_2048,
+                                      P_Modulus_2048,
+                                      Q_Modulus_2048,
+                                      Q_ModulusINV_2048,
+                                      Modulus_2048,
+                                      sizeof(P_Modulus_2048)),
+              ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_digest(&handle, ALC_SHA2_256), ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_mgf(&handle, ALC_SHA2_256), ALC_ERROR_NONE);
+
+    const std::vector<Uint8> text(KeySize, 0x31);
+    const std::vector<Uint8> hash(HashLen, 0x5a);
+    const std::vector<Uint8> salt(MaxSaltSize, 0x2c);
+    std::vector<Uint8>       signed_buff(KeySize);
+
+    /*
+     * The salt pointer stays valid at every size below, so the declared length
+     * is the only thing that can produce a rejection. The first two exceed the
+     * capacity only once hLen + sLen + 2 is computed without wrapping.
+     */
+    for (const Uint64 salt_size :
+         { UINT64_MAX - 33, UINT64_MAX, MaxSaltSize + 1 }) {
+        EXPECT_EQ(alcp_rsa_privatekey_sign_pss(&handle,
+                                               true,
+                                               text.data(),
+                                               text.size(),
+                                               salt.data(),
+                                               salt_size,
+                                               signed_buff.data()),
+                  ALC_ERROR_NOT_PERMITTED);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pss(&handle,
+                                                    hash.data(),
+                                                    hash.size(),
+                                                    salt.data(),
+                                                    salt_size,
+                                                    signed_buff.data()),
+                  ALC_ERROR_NOT_PERMITTED);
+    }
+
+    // the longest admissible salt must still sign
+    EXPECT_EQ(alcp_rsa_privatekey_sign_pss(&handle,
+                                           true,
+                                           text.data(),
+                                           text.size(),
+                                           salt.data(),
+                                           MaxSaltSize,
+                                           signed_buff.data()),
+              ALC_ERROR_NONE);
+    EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pss(&handle,
+                                                hash.data(),
+                                                hash.size(),
+                                                salt.data(),
+                                                MaxSaltSize,
+                                                signed_buff.data()),
+              ALC_ERROR_NONE);
+
+    alcp_rsa_finish(&handle);
 }
 
 TEST(RsaTest, PssSignatureVerification)

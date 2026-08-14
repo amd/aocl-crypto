@@ -334,12 +334,15 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pText       - pointer to input text
  * @param [in]  textSize    - size of input text
  * @param [in]  pSalt       - pointer to salt
- * @param [in]  saltSize    - size of salt
+ * @param [in]  saltSize    - size of salt. Must not exceed
+ *                            (keySize - hashLen - 2) bytes; a larger value
+ *                            is rejected.
  * @param [out] pSignedBuff - pointer to signed text. The caller must provide
  *                            room for the modulus size in bytes, which is
  *                            what this call writes.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if saltSize
+ * exceeds (keySize - hashLen - 2).
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
@@ -542,12 +545,15 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pHash       - pointer to input hash
  * @param [in]  hashSize    - size of hash
  * @param [in]  pSalt       - pointer to salt
- * @param [in]  saltSize    - size of salt
+ * @param [in]  saltSize    - size of salt. Must not exceed
+ *                            (keySize - hashLen - 2) bytes; a larger value
+ *                            is rejected.
  * @param [out] pSignedBuff - pointer to signed text. The caller must provide
  *                            room for the modulus size in bytes, which is
  *                            what this call writes.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if saltSize
+ * exceeds (keySize - hashLen - 2).
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,

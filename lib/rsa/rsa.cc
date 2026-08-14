@@ -496,6 +496,16 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     return SelectU64(success, ALC_ERROR_NONE, ALC_ERROR_GENERIC);
 }
 
+// RFC 8017 bounds the PSS salt by emLen >= hLen + sLen + 2. Evaluated in that
+// form the sum overflows for a large caller-supplied salt size and admits the
+// very inputs the bound exists to reject, so saltSize is kept alone on one side
+// of the comparison; the first clause is what makes the subtraction safe.
+static inline bool
+HasRoomForPssSalt(Uint64 keySize, Uint64 hashLen, Uint64 saltSize)
+{
+    return keySize >= hashLen + 2 && saltSize <= keySize - hashLen - 2;
+}
+
 alc_error_t
 Rsa::signPrivatePss(bool         check,
                     const Uint8* pText,
@@ -507,7 +517,7 @@ Rsa::signPrivatePss(bool         check,
 
     // Add Pss encoding
     if (!pText || (saltSize > 0 && !salt) || !pSignedBuff
-        || (m_key_size < m_hash_len + saltSize + 2)) {
+        || !HasRoomForPssSalt(m_key_size, m_hash_len, saltSize)) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
@@ -593,7 +603,7 @@ Rsa::signPrivateHashPss(const Uint8* pHash,
     // Add Pss encoding
     if (!pHash || (saltSize > 0 && !salt) || !pSignedBuff
         || hashSize != m_hash_len
-        || (m_key_size < m_hash_len + saltSize + 2)) {
+        || !HasRoomForPssSalt(m_key_size, m_hash_len, saltSize)) {
         return ALC_ERROR_NOT_PERMITTED;
     }
 
