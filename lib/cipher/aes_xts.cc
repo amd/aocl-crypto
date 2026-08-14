@@ -64,8 +64,14 @@ Xts::init(const Uint8* pKey,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    // Validate and set key -- let KeyManager reject null/bad length
+    // Validate and set key
     if (keyLen != 0 || pKey != nullptr) {
+        // XTS supports only 128-bit and 256-bit keys. Reject anything else
+        // here so the tweak-key pointer arithmetic below stays in bounds.
+        if (keyLen != 128 && keyLen != 256) {
+            return ALC_ERROR_INVALID_SIZE;
+        }
+
         err = m_keyManager.setKey(pKey, keyLen);
         if (err != ALC_ERROR_NONE) {
             return err;

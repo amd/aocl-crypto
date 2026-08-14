@@ -1942,6 +1942,45 @@ TEST(XTS_Negative, MaxKeyLengthBoundary)
     delete xts;
 }
 
+TEST(XTS_Negative, KeyLengthTruncation)
+{
+    std::vector<Uint8> key(64, 0x42);
+    std::vector<Uint8> iv(16, 0x01);
+    std::vector<Uint8> context(alcp_cipher_context_size());
+
+    alc_cipher_handle_t handle{};
+    handle.ch_context = context.data();
+
+    ASSERT_EQ(alcp_cipher_request(ALC_AES_MODE_XTS, 256, &handle),
+              ALC_ERROR_NONE);
+
+    constexpr Uint64 cTruncatingKeyLen = 0x800000100ULL;
+    alc_error_t err = alcp_cipher_init(
+        &handle, key.data(), cTruncatingKeyLen, iv.data(), iv.size());
+    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+
+    alcp_cipher_finish(&handle);
+}
+
+TEST(XTS_Negative, NonByteAlignedKeyLength)
+{
+    std::vector<Uint8> key(32, 0x42);
+    std::vector<Uint8> iv(16, 0x01);
+    std::vector<Uint8> context(alcp_cipher_context_size());
+
+    alc_cipher_handle_t handle{};
+    handle.ch_context = context.data();
+
+    ASSERT_EQ(alcp_cipher_request(ALC_AES_MODE_XTS, 128, &handle),
+              ALC_ERROR_NONE);
+
+    alc_error_t err =
+        alcp_cipher_init(&handle, key.data(), 129, iv.data(), iv.size());
+    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+
+    alcp_cipher_finish(&handle);
+}
+
 // Test reuse after error
 TEST(XTS_Negative, ReuseAfterError)
 {
