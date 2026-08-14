@@ -80,7 +80,7 @@ class X25519 : public Ec
 {
   public:
     ALCP_INTERNAL_CPP_EXPORT X25519();
-    ~X25519();
+    ALCP_INTERNAL_CPP_EXPORT ~X25519();
 
     /**
      * @brief Function sets the privateKey
@@ -141,8 +141,8 @@ class X25519 : public Ec
      * @param  pKeyLength  size in bytes of pPublicKey
      * @return Status Error code
      */
-    virtual Status validatePublicKey(const Uint8* pPublicKey,
-                                     Uint64       pKeyLength) override;
+    ALCP_INTERNAL_CPP_EXPORT Status
+    validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength) override;
     /**
      * @brief Function resets the internal state
      *
