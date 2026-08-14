@@ -44,6 +44,10 @@ namespace alcp::ec {
 Status
 P256::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
 {
+    // Every install attempt invalidates the previous key, regardless of where
+    // validation or construction fails.
+    reset();
+
     if (privKeyLen != sizeof(m_PrivKey)) {
         return status::InvalidArgument(
             "Private key length does not match the curve key size");
@@ -80,9 +84,12 @@ P256::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
     OSSL_PARAM_BLD_free(p_param_bld_priv);
     EVP_PKEY_CTX_free(p_ctx_priv);
 
-    /* a failed call has already overwritten the stored key, so whatever was
-     * set before it is not usable either */
-    m_isPrivateKeySet = s.ok();
+    if (!s.ok()) {
+        reset();
+        return s;
+    }
+
+    m_isPrivateKeySet = true;
     return s;
 }
 
