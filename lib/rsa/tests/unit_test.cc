@@ -1131,6 +1131,52 @@ TEST(RsaTest, BigNumPrivateKeyAccepts1024BitComponents)
               ALC_ERROR_NONE);
 }
 
+TEST(RsaTest, BigNumApiRejectsOversizedPublicKeyAtCapi)
+{
+    constexpr Uint64 cModulusWords = 2048 / 64;
+
+    Uint64 Modulus_BigNum[sizeof(Modulus_2048) / 8];
+    convert_to_bignum(Modulus_2048, Modulus_BigNum, sizeof(Modulus_2048));
+    BigNum modulus = { Modulus_BigNum, sizeof(Modulus_2048) / 8 };
+
+    // one qword larger than the destination, and backed by real storage, so
+    // that dropping the bound writes out of bounds instead of reading it
+    Uint64 exponent_buffer[cModulusWords + 1]{};
+    exponent_buffer[0] = PublicKeyExponent;
+
+    std::vector<Uint8> context(alcp_rsa_context_size());
+    alc_rsa_handle_t   handle{ context.data() };
+    ASSERT_EQ(alcp_rsa_request(&handle), ALC_ERROR_NONE);
+
+    // exponent one qword beyond the destination capacity
+    BigNum exponent = { exponent_buffer, cModulusWords + 1 };
+    EXPECT_NE(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // exponent exactly at the destination capacity, zero padded above word 0
+    exponent.size = cModulusWords;
+    EXPECT_EQ(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // single qword exponent
+    exponent.size = 1;
+    EXPECT_EQ(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // zero size alongside a non null buffer
+    exponent.size = 0;
+    EXPECT_NE(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // a size whose byte count overflows the signed int length taken by the
+    // copy helper, so a bound applied after the scaling would be bypassed
+    exponent.size = 1ULL << 28;
+    EXPECT_NE(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    alcp_rsa_finish(&handle);
+}
+
 TEST(RsaTest, Pkcsv15NegativeTest)
 {
     Rsa         rsa_obj_2048;

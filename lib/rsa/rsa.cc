@@ -100,6 +100,16 @@ Reset(void* buff, Uint64 size)
     }
 }
 
+// Callers must check the size as it is supplied, before scaling it into the
+// byte length handed to the copy helpers: those take the length as a signed
+// int, so an oversized size can truncate to a negative length, which copies
+// without limit rather than copying nothing.
+static inline bool
+IsBigNumSizeInRange(Uint64 size, Uint64 capacity)
+{
+    return size != 0 && size <= capacity;
+}
+
 Rsa::Rsa(const Rsa& rsa)
 {
     m_priv_key          = rsa.m_priv_key;
@@ -1111,6 +1121,10 @@ Rsa::setPublicKeyAsBigNum(const BigNum* exponent, const BigNum* pModulus)
     }
 
     if (!(pModulus->size == 128 / 8 || pModulus->size == 256 / 8)) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+
+    if (!IsBigNumSizeInRange(exponent->size, KEY_SIZE_LONG_INT)) {
         return ALC_ERROR_NOT_PERMITTED;
     }
     // ToDo: check if the key can be stored as shared pointer
