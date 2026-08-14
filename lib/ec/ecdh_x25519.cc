@@ -45,6 +45,17 @@ static constexpr Uint32 KeySize = 32;
 // The public key is the u-coordinate alone, the same width as the private key
 static constexpr Uint32 PublicKeySize = KeySize;
 
+namespace {
+
+    void ClampPrivateKey(Uint8 (&privKey)[KeySize])
+    {
+        privKey[0] &= 248;
+        privKey[KeySize - 1] &= 127;
+        privKey[KeySize - 1] |= 64;
+    }
+
+} // namespace
+
 X25519::X25519() = default;
 
 X25519::~X25519()
@@ -62,6 +73,7 @@ X25519::setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen)
 
     // store private key for secret key generation
     alcp::utils::CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
+    ClampPrivateKey(m_PrivKey);
     m_isPrivateKeySet = true;
     return StatusOk();
 }
@@ -90,14 +102,10 @@ X25519::generatePublicKey(Uint8*       pPublicKey,
             "Not supported due to missing instruction set (ADX or BMI2)");
     }
 
-    // store private key for secret key generation; this path installs it too,
-    // so a secret can be derived afterwards without a separate setPrivateKey
+    // store private key for secret key generation
     alcp::utils::CopyBytes(m_PrivKey, pPrivKey, sizeof(m_PrivKey));
+    ClampPrivateKey(m_PrivKey);
     m_isPrivateKeySet = true;
-
-    m_PrivKey[0] &= 248;
-    m_PrivKey[31] &= 127;
-    m_PrivKey[31] |= 64;
 
     Int8 priv_key_radix32[52];
 
@@ -155,6 +163,13 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
                          Uint64       pubKeyLen,
                          Uint64*      pKeyLength)
 {
+    if (pKeyLength == nullptr) {
+        return status::InvalidArgument(
+            "Shared secret length pointer must not be null");
+    }
+
+    *pKeyLength = 0;
+
     Status status = checkPrivateKeyIsSet();
     if (!status.ok()) {
         return status;
@@ -178,17 +193,27 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
         return status;
     }
 
+    Uint8 peer_u[PublicKeySize];
+    alcp::utils::CopyBytes(peer_u, pPublicKey, PublicKeySize);
+    peer_u[PublicKeySize - 1] &= 127;
+
     switch (archLevel) {
         case CpuArchLevel::eZen3:
         case CpuArchLevel::eZen4:
-            zen3::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+            zen3::alcpScalarMulX25519(pSecretKey, m_PrivKey, peer_u);
             break;
         case CpuArchLevel::eZen:
-            avx2::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+            avx2::alcpScalarMulX25519(pSecretKey, m_PrivKey, peer_u);
             break;
         default:
-            zen::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+            zen::alcpScalarMulX25519(pSecretKey, m_PrivKey, peer_u);
             break;
+    }
+
+    static constexpr Uint8 cAllZero[KeySize] = {};
+    if (alcp::utils::CompareConstTime(cAllZero, pSecretKey, KeySize)) {
+        return status::InvalidArgument(
+            "Peer public key produced an all-zero shared secret");
     }
 
     *pKeyLength = KeySize;

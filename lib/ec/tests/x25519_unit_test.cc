@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string.h>
+#include <string>
 
 #include "alcp/base.hh"
 #include "alcp/ec/ecdh.hh"
@@ -458,6 +459,100 @@ TEST_P(x25519Test, InvalidPublicKeyTest)
     const Uint8 all_zero[MAX_SIZE_KEY_DATA] = { 0 };
     status = m_px25519obj1->validatePublicKey(all_zero, MAX_SIZE_KEY_DATA);
     EXPECT_NE(status.code(), ErrorCode::eOk);
+}
+
+std::vector<Uint8>
+FromHex(const std::string& hex)
+{
+    std::vector<Uint8> bytes(hex.size() / 2);
+    for (size_t i = 0; i < bytes.size(); i++) {
+        bytes[i] =
+            static_cast<Uint8>(std::stoul(hex.substr(2 * i, 2), nullptr, 16));
+    }
+    return bytes;
+}
+
+const auto cAlicePrivate = FromHex(
+    "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a");
+const auto cAlicePublic = FromHex(
+    "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a");
+const auto cBobPublic = FromHex(
+    "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f");
+const auto cSharedSecret = FromHex(
+    "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
+
+TEST(x25519RfcTest, Rfc7748Vector)
+{
+    X25519             x25519;
+    std::vector<Uint8> public_key(MAX_SIZE_KEY_DATA);
+
+    ASSERT_EQ(x25519.generatePublicKey(&public_key[0],
+                                       public_key.size(),
+                                       &cAlicePrivate[0],
+                                       cAlicePrivate.size()),
+              StatusOk());
+    EXPECT_EQ(public_key, cAlicePublic);
+
+    ASSERT_EQ(
+        x25519.setPrivateKey(&cAlicePrivate[0], cAlicePrivate.size()),
+        StatusOk());
+
+    std::vector<Uint8> secret(MAX_SIZE_KEY_DATA);
+    Uint64             secret_len = 0;
+    ASSERT_EQ(x25519.computeSecretKey(&secret[0],
+                                      secret.size(),
+                                      &cBobPublic[0],
+                                      cBobPublic.size(),
+                                      &secret_len),
+              StatusOk());
+    EXPECT_EQ(secret_len, MAX_SIZE_KEY_DATA);
+    EXPECT_EQ(secret, cSharedSecret);
+}
+
+TEST(x25519RfcTest, IgnoresPeerHighBitWithoutMutatingInput)
+{
+    X25519 x25519;
+    ASSERT_EQ(
+        x25519.setPrivateKey(&cAlicePrivate[0], cAlicePrivate.size()),
+        StatusOk());
+
+    std::vector<Uint8> peer = cBobPublic;
+    peer.back() |= 0x80;
+    const auto peer_before = peer;
+
+    std::vector<Uint8> secret(MAX_SIZE_KEY_DATA);
+    Uint64             secret_len = 0;
+    ASSERT_EQ(x25519.computeSecretKey(&secret[0],
+                                      secret.size(),
+                                      &peer[0],
+                                      peer.size(),
+                                      &secret_len),
+              StatusOk());
+    EXPECT_EQ(secret, cSharedSecret);
+    EXPECT_EQ(peer, peer_before);
+}
+
+TEST(x25519RfcTest, RejectsAllZeroSharedSecret)
+{
+    X25519 x25519;
+    ASSERT_EQ(
+        x25519.setPrivateKey(&cAlicePrivate[0], cAlicePrivate.size()),
+        StatusOk());
+
+    std::vector<Uint8> order_one_peer(MAX_SIZE_KEY_DATA, 0);
+    order_one_peer[0] = 1;
+    std::vector<Uint8> secret(MAX_SIZE_KEY_DATA);
+    Uint64             secret_len = MAX_SIZE_KEY_DATA;
+
+    EXPECT_NE(x25519
+                  .computeSecretKey(&secret[0],
+                                    secret.size(),
+                                    &order_one_peer[0],
+                                    order_one_peer.size(),
+                                    &secret_len)
+                  .code(),
+              ErrorCode::eOk);
+    EXPECT_EQ(secret_len, 0U);
 }
 
 } // namespace
