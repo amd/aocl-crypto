@@ -28,6 +28,9 @@
 #pragma once
 
 #include "alcp/base.hh"
+#include "alcp/error.h"
+
+#include <new>
 
 #define LOG_INFO (1)
 #define LOG_DBG  (2)
@@ -101,6 +104,31 @@
     if (ALCP_UNLIKELY(0 == len)) {                                             \
         return ALC_ERROR_INVALID_SIZE;                                         \
     }
+
+/*
+ * A C++ exception crossing an extern "C" boundary is undefined behaviour, so
+ * every entry point ends in one of these handlers.
+ */
+namespace alcp {
+/* Call only from a catch handler; classifies the in-flight exception. */
+inline alc_error_t
+currentExceptionToError()
+{
+    try {
+        throw;
+    } catch (const std::bad_alloc&) {
+        return ALC_ERROR_NO_MEMORY;
+    } catch (...) {
+        return ALC_ERROR_GENERIC;
+    }
+}
+} // namespace alcp
+
+#define ALCP_CATCH_ERR_RET                                                     \
+    catch (...) { return alcp::currentExceptionToError(); }
+
+#define ALCP_CATCH_IGNORE                                                      \
+    catch (...) {}
 
 /* FIXME, use this in future */
 #define ALCP_GENERIC_ERR_CHECK(param)                                          \

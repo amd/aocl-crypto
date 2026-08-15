@@ -1873,4 +1873,149 @@ TEST(RsaKeyStateTest, UnconfiguredKeysRejectZeroLengthOperations)
               ALC_ERROR_NOT_PERMITTED);
 }
 
+/*
+ * Digest lifetime and OAEP defaults. These go through the C API because that is
+ * where the digest is owned: it hands the Rsa object a digest it deletes on the
+ * next add_digest, so the sequences below used to reach a freed one.
+ */
+
+constexpr Uint64 Sha256Len   = 32;
+constexpr Uint8  OaepLabel[] = { 'h', 'e', 'l', 'l', 'o' };
+
+/* a digest the C API does not implement, so add_digest refuses the mode */
+constexpr alc_digest_mode_t UnsupportedMode = ALC_SHA3_256;
+
+// A handle whose context lives for as long as the test needs it.
+class CapiSession
+{
+  public:
+    CapiSession()
+        : m_context(alcp_rsa_context_size())
+    {
+        m_handle.context = static_cast<alc_rsa_context_p>(m_context.data());
+    }
+
+    ~CapiSession() { alcp_rsa_finish(&m_handle); }
+
+    alc_rsa_handle_p get() { return &m_handle; }
+
+    alc_error_t withKeys()
+    {
+        alc_error_t err = alcp_rsa_request(&m_handle);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+        err = alcp_rsa_set_publickey(
+            &m_handle, PublicKeyExponent, Modulus, sizeof(Modulus));
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+        return alcp_rsa_set_privatekey(&m_handle,
+                                       DP_EXP,
+                                       DQ_EXP,
+                                       P_Modulus,
+                                       Q_Modulus,
+                                       Q_ModulusINV,
+                                       Modulus,
+                                       sizeof(P_Modulus));
+    }
+
+  private:
+    std::vector<Uint8> m_context;
+    alc_rsa_handle_t   m_handle{};
+};
+
+// Signs and verifies one message, which is what exercises the digest and the
+// mask generation function the session currently holds.
+static alc_error_t
+sign_and_verify_pss(CapiSession& session)
+{
+    Uint8       text[] = { 'm', 'e', 's', 's', 'a', 'g', 'e' };
+    Uint8       salt[Sha256Len]{ 0x01 };
+    Uint8       signature[sizeof(Modulus)]{};
+    alc_error_t err = alcp_rsa_privatekey_sign_pss(
+        session.get(), true, text, sizeof(text), salt, sizeof(salt), signature);
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
+    return alcp_rsa_publickey_verify_pss(
+        session.get(), text, sizeof(text), signature, sizeof(signature));
+}
+
+// A refused mode used to free the digest in place before finding out, leaving
+// the Rsa object holding the freed one.
+TEST(RsaDigestTest, ARefusedModeLeavesTheDigestInPlace)
+{
+    CapiSession session;
+    ASSERT_EQ(session.withKeys(), ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_digest(session.get(), ALC_SHA2_256), ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_mgf(session.get(), ALC_SHA2_256), ALC_ERROR_NONE);
+
+    EXPECT_EQ(alcp_rsa_add_digest(session.get(), UnsupportedMode),
+              ALC_ERROR_NOT_SUPPORTED);
+    EXPECT_EQ(alcp_rsa_add_mgf(session.get(), UnsupportedMode),
+              ALC_ERROR_NOT_SUPPORTED);
+
+    EXPECT_EQ(sign_and_verify_pss(session), ALC_ERROR_NONE);
+}
+
+// PSS defaults the mask generation function to the digest, so replacing the
+// digest used to leave that alias holding the freed one.
+TEST(RsaDigestTest, ReplacingTheDigestLeavesNoStaleMaskGenerator)
+{
+    CapiSession session;
+    ASSERT_EQ(session.withKeys(), ALC_ERROR_NONE);
+
+    // no add_mgf, so the first signature aliases the mask generator
+    ASSERT_EQ(alcp_rsa_add_digest(session.get(), ALC_SHA2_512), ALC_ERROR_NONE);
+    ASSERT_EQ(sign_and_verify_pss(session), ALC_ERROR_NONE);
+
+    ASSERT_EQ(alcp_rsa_add_digest(session.get(), ALC_SHA2_256), ALC_ERROR_NONE);
+    EXPECT_EQ(sign_and_verify_pss(session), ALC_ERROR_NONE);
+}
+
+// Encrypt has always installed SHA-256 when no digest was added, while decrypt
+// did not, so the two directions disagreed. Separate sessions are what shows
+// it: a session that encrypted first has the default installed already, which
+// hid the missing one on the decrypt side.
+TEST(RsaOaepTest, RoundTripsBetweenSessionsWithoutAddDigest)
+{
+    constexpr Uint64 KeySize  = sizeof(Modulus);
+    constexpr Uint64 TextSize = KeySize - 2 * Sha256Len - 2;
+
+    CapiSession sender;
+    ASSERT_EQ(sender.withKeys(), ALC_ERROR_NONE);
+
+    CapiSession receiver;
+    ASSERT_EQ(receiver.withKeys(), ALC_ERROR_NONE);
+
+    Uint8 text[TextSize];
+    Uint8 seed[Sha256Len];
+    Uint8 enc_text[KeySize];
+    Uint8 dec_text[KeySize]{};
+    memset(text, 0x31, sizeof(text));
+    memset(seed, 0x01, sizeof(seed));
+
+    ASSERT_EQ(alcp_rsa_publickey_encrypt_oaep(sender.get(),
+                                              text,
+                                              sizeof(text),
+                                              OaepLabel,
+                                              sizeof(OaepLabel),
+                                              seed,
+                                              enc_text),
+              ALC_ERROR_NONE);
+
+    Uint64 dec_size = sizeof(dec_text);
+    ASSERT_EQ(alcp_rsa_privatekey_decrypt_oaep(receiver.get(),
+                                               enc_text,
+                                               KeySize,
+                                               OaepLabel,
+                                               sizeof(OaepLabel),
+                                               dec_text,
+                                               &dec_size),
+              ALC_ERROR_NONE);
+    EXPECT_EQ(dec_size, sizeof(text));
+    EXPECT_EQ(memcmp(dec_text, text, sizeof(text)), 0);
+}
+
 } // namespace

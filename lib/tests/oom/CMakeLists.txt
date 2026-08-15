@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -22,13 +22,15 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
+
 INCLUDE(${ALCP_ROOT}/cmake/AlcpTests.cmake)
 
-# Enforcing File Name
-SET(TEST_FILES 
-  status_test.cc
-  dispatch_test.cc
+# One executable per API, so a module can be probed on its own.
+SET(TEST_FILES
+  digest_oom_unit_test.cc
+  mac_oom_unit_test.cc
+  ec_oom_unit_test.cc
+  rsa_oom_unit_test.cc
   )
 
 ALCP_MODULE("base")
@@ -36,28 +38,10 @@ ALCP_MODULE("base")
 FOREACH(testFile IN LISTS TEST_FILES)
     GET_FILENAME_COMPONENT(currentTestName ${testFile} NAME_WLE)
     GET_FILENAME_COMPONENT(currentTestFile ${testFile} NAME)
-    alcp_cc_test(${currentTestName} ${CMAKE_BINARY_DIR}/lib/tests/
-             DIRECTORY tests/
+    alcp_cc_test(${currentTestName} ${CMAKE_BINARY_DIR}/lib/tests/oom/
+             DIRECTORY tests/oom/
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}
     )
 
 ENDFOREACH()
-
-# The tests under oom replace the global operator new, which every memory tool
-# takes over: the sanitizer reports the malloc the replacement hands out as an
-# alloc-dealloc mismatch and aborts before any test runs, and Valgrind
-# redirects operator new in every object, so the replacement is never reached
-# and no allocation can be failed. On Windows a replacement in the executable
-# does not interpose for a DLL that links its own runtime, and std::aligned_alloc
-# is absent from the Microsoft C++ library.
-IF(NOT ALCP_SANITIZE AND NOT ALCP_MEMCHECK_VALGRIND AND UNIX AND NOT APPLE)
-    ADD_SUBDIRECTORY(oom)
-ENDIF()
-
-# static_link_test verifies linking against alcp_static. Only build it when
-# the static library is enabled.
-IF(ALCP_BUILD_STATIC)
-    ADD_EXECUTABLE(static_link_test static_link_test.cc)
-    TARGET_LINK_LIBRARIES(static_link_test alcp_static)
-ENDIF()

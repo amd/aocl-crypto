@@ -50,7 +50,7 @@ alcp_mac_context_size(void)
 
 alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -61,10 +61,11 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, alc_mac_type_t mi_type)
     new (p_ctx) mac::Context;
     return mac::MacBuilder::build(mi_type, p_ctx);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "MacSize %6ld", size);
 #endif
@@ -76,10 +77,11 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
 
     return p_ctx->update(p_ctx->m_mac, buff, size);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "MacSize %6ld", size);
 #endif
@@ -91,10 +93,11 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
 
     return p_ctx->finalize(p_ctx->m_mac, buff, size);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -108,10 +111,11 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle)
     // FIXME: This function is always returning no errors
     return ALC_ERROR_NONE;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -123,13 +127,14 @@ alcp_mac_reset(alc_mac_handle_p pMacHandle)
 
     return p_ctx->reset(p_ctx->m_mac);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_init(alc_mac_handle_p pMacHandle,
               const Uint8*     key,
               Uint64           size,
               alc_mac_info_t*  info)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "KeySize %6ld", size);
 #endif
@@ -141,11 +146,12 @@ alcp_mac_init(alc_mac_handle_p pMacHandle,
     ALCP_BAD_PTR_ERR_RET(p_ctx->init);
     return p_ctx->init(p_ctx, key, size, info);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
                       const alc_mac_handle_p pDestHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -162,13 +168,14 @@ alcp_mac_context_copy(const alc_mac_handle_p pSrcHandle,
 
     return mac::MacBuilder::BuildWithCopy(src_ctx, dest_ctx);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_flush(alc_mac_handle_p pMacHandle,
                const Uint8**    ppMsgBuf,
                Uint64           numBuffers,
                Uint64           msgLen)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "NumBuffers %6ld, MsgLen %6ld", numBuffers, msgLen);
 #endif
@@ -185,12 +192,13 @@ alcp_mac_flush(alc_mac_handle_p pMacHandle,
 
     return p_ctx->flush(p_ctx->m_mac, ppMsgBuf, numBuffers, msgLen);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_mac_dequeue(alc_mac_handle_p pMacHandle,
                  Uint8**          ppDstBuf,
                  Uint64           numBuffers)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "NumBuffers %6ld", numBuffers);
 #endif
@@ -207,5 +215,6 @@ alcp_mac_dequeue(alc_mac_handle_p pMacHandle,
 
     return p_ctx->dequeue(p_ctx->m_mac, ppDstBuf, numBuffers);
 }
+ALCP_CATCH_ERR_RET
 
 EXTERN_C_END

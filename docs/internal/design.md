@@ -684,6 +684,24 @@ typedef enum _alc_error_generic
 } alc_error_generic_t;
 ```
 
+### Exceptions and the C ABI
+The library is written in C++ but is consumed through a C ABI, and an exception
+unwinding out of an `extern "C"` function is undefined behaviour. The digest,
+MAC, RNG, EC and RSA entry points do not propagate one: each entry point that
+can allocate is a function try block ending in `ALCP_CATCH_ERR_RET`, or
+`ALCP_CATCH_IGNORE` where the return type carries no error. Both are defined in
+`alcp/capi/defs.hh`, which is the only place this policy lives. The cipher entry
+points are not guarded yet and must be brought under the same rule.
+
+Because of that, a guarded entry point may return `ALC_ERROR_NO_MEMORY` when an
+allocation fails, and `ALC_ERROR_GENERIC` for any other exception. A caller that
+sees either one has a context that is still valid and still owns whatever it
+owned before: the operation simply did not happen. The caller may retry it, use
+the context as it was, or release it with the matching `alcp_*_finish`. The one
+exception is `alcp_*_request` itself: a context it failed to build holds no
+algorithm object, and the matching `alcp_*_finish` on it is safe but has
+nothing to release.
+
 ## Dispatcher
 The dynamic dispatcher will populate each kind of algorithm with best suitable
 implementation for the architecture(on which it is currently running). During

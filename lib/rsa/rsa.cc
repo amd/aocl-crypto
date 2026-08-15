@@ -36,6 +36,7 @@
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
 #include "config.h"
+#include <stdexcept>
 
 using alcp::utils::AlgorithmType;
 using alcp::utils::CpuArchLevel;
@@ -127,6 +128,13 @@ Rsa::Rsa(const Rsa& rsa)
 void
 Rsa::setDigest(digest::IDigest* digest)
 {
+    // the mask generation defaults to the digest, so drop an alias of the one
+    // being replaced; the padding code aliases the new digest when it needs to
+    if (m_mgf == m_digest) {
+        m_mgf          = nullptr;
+        m_mgf_hash_len = 0;
+    }
+
     if (digest) {
         m_digest   = digest;
         m_hash_len = digest->getHashSize();

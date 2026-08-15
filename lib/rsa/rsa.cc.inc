@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -270,33 +270,39 @@ struct MontCompute
             bigNumRes.m_num, bigNumTmp.m_num, bigNumRes.m_size * 8);
     }
 
+    /* Returning early here would leave the Montgomery converter zero and the
+     * key silently wrong, so failure is reported the way computeMontConverter
+     * already reports it: by throwing. A null result is OpenSSL failing to
+     * allocate; a failed operation is anything else, so the two are thrown
+     * apart for the C API to report as NO_MEMORY and GENERIC. */
     static inline void computeZen4MontConverter(BigNum& res, const BigNum inp)
     {
-        BIGNUM* bn = BN_new();
+        auto freeBn  = [](BIGNUM* p) { BN_free(p); };
+        auto freeCtx = [](BN_CTX* p) { BN_CTX_free(p); };
 
-        if (bn == NULL) {
-            return;
+        std::unique_ptr<BIGNUM, decltype(freeBn)> bn{ BN_new(), freeBn };
+        if (bn == nullptr) {
+            throw std::bad_alloc{};
         }
-
         // Set bn to 2^4096
-        if (!BN_set_bit(bn, res.m_size * 2 * 8 * 8)) {
-            BN_free(bn);
-            return;
+        if (!BN_set_bit(bn.get(), res.m_size * 2 * 8 * 8)) {
+            throw std::runtime_error("BN_set_bit");
         }
 
-        BIGNUM* bn_mod = BigNumToBignum(inp);
+        std::unique_ptr<BIGNUM, decltype(freeBn)>  bn_mod{ BigNumToBignum(inp),
+                                                          freeBn };
+        std::unique_ptr<BN_CTX, decltype(freeCtx)> ctx{ BN_CTX_new(), freeCtx };
+        if (bn_mod == nullptr || ctx == nullptr) {
+            throw std::bad_alloc{};
+        }
 
         // Perform BN_mod operation
-        BN_CTX* ctx = BN_CTX_new();
-        if (!BN_mod(bn, bn, bn_mod, ctx)) {
-            return;
+        if (!BN_mod(bn.get(), bn.get(), bn_mod.get(), ctx.get())) {
+            throw std::runtime_error("BN_mod");
         }
 
         // Convert the result back to custom BigNum
-        BignumToBigNum(bn, res);
-        BN_free(bn);
-        BN_free(bn_mod);
-        BN_CTX_free(ctx);
+        BignumToBigNum(bn.get(), res);
     }
     static inline Uint8 SubBigNum(Uint64*       res,
                                   const Uint64* first,

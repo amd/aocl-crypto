@@ -220,6 +220,14 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
  *                                   must provide room for the modulus size in
  *                                   bytes, which is what this call writes.
 
+ * @note   The digest and the mask generation function default independently:
+ *         each one falls back to SHA-256 only if its own setter was not
+ *         called. Calling @ref alcp_rsa_add_digest alone therefore leaves the
+ *         mask generation function on SHA-256 rather than following the
+ *         digest, so call @ref alcp_rsa_add_mgf as well whenever the two must
+ *         agree. @ref alcp_rsa_privatekey_decrypt_oaep applies the same
+ *         defaults, so a ciphertext produced here decrypts there.
+ *
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t
@@ -310,6 +318,11 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
  *                           when the message is shorter: it is neither the
  *                           length of the message you expect nor the key size.
  * @param [out] textSize   - pointer to size of decrypted text
+ *
+ * @note   SHA-256 is used for both the digest and the mask generation function
+ *         when neither @ref alcp_rsa_add_digest nor @ref alcp_rsa_add_mgf was
+ *         called, matching @ref alcp_rsa_publickey_encrypt_oaep.
+ *
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t

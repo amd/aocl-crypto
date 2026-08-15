@@ -50,7 +50,7 @@ alcp_ec_context_size(const alc_ec_info_p pEcInfo)
 
 alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -71,10 +71,11 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo)
 
     return err;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -98,12 +99,13 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
 
     return err;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
                        const Uint8*          pPrivateKey,
                        Uint64                privKeyLen)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -125,6 +127,7 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
@@ -132,7 +135,7 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
                       Uint64                pubKeyLen,
                       const Uint8*          pPrivKey,
                       Uint64                privKeyLen)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -159,6 +162,7 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
@@ -167,7 +171,7 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
                       const Uint8*          pPublicKey,
                       Uint64                pubKeyLen,
                       Uint64*               pKeyLength)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -196,10 +200,11 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
+ALCP_CATCH_ERR_RET
 
 void
 alcp_ec_finish(const alc_ec_handle_p pEcHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -226,10 +231,11 @@ alcp_ec_finish(const alc_ec_handle_p pEcHandle)
 
     // FIXME: Return error code if status is not ok
 }
+ALCP_CATCH_IGNORE
 
 void
 alcp_ec_reset(const alc_ec_handle_p pEcHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -247,5 +253,6 @@ alcp_ec_reset(const alc_ec_handle_p pEcHandle)
 
     // FIXME: Return error code if status is not ok
 }
+ALCP_CATCH_IGNORE
 
 EXTERN_C_END

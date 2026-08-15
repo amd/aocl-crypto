@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,7 +49,7 @@ alcp_digest_context_size()
 
 alc_error_t
 alcp_digest_request(alc_digest_mode_t mode, alc_digest_handle_p pDigestHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO, "Mode: %d", mode);
 #endif
@@ -62,13 +62,14 @@ alcp_digest_request(alc_digest_mode_t mode, alc_digest_handle_p pDigestHandle)
 
     return digest::DigestBuilder::Build(mode, *ctx);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_digest_flush(const alc_digest_handle_p pDigestHandle,
                   const Uint8**             ppMsgBuf,
                   const Uint64              numBuffers,
                   const Uint64              msgLen)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(
         LOG_INFO, "numBuffers %6ld, msgLen %6ld", numBuffers, msgLen);
@@ -91,13 +92,14 @@ alcp_digest_flush(const alc_digest_handle_p pDigestHandle,
     err = ctx->flush(ctx->m_digest, ppMsgBuf, numBuffers, msgLen);
     return err;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_digest_dequeue(const alc_digest_handle_p pDigestHandle,
                     Uint8**                   ppDstBuf,
                     const Uint64              numBuffers,
                     const Uint64              digestLen)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(
         LOG_INFO, "numBuffers %6ld, digestLen %6ld", numBuffers, digestLen);
@@ -120,10 +122,11 @@ alcp_digest_dequeue(const alc_digest_handle_p pDigestHandle,
     err = ctx->dequeue(ctx->m_digest, ppDstBuf, numBuffers, digestLen);
     return err;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_digest_init(alc_digest_handle_p pDigestHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -135,12 +138,13 @@ alcp_digest_init(alc_digest_handle_p pDigestHandle)
 
     return ctx->init(ctx->m_digest);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_digest_update(const alc_digest_handle_p pDigestHandle,
                    const Uint8*              pMsgBuf,
                    Uint64                    size)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "DigestSize %6ld", size);
 #endif
@@ -154,12 +158,13 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 
     return ctx->update(ctx->m_digest, pMsgBuf, size);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
                      Uint8*                    buf,
                      Uint64                    size)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "DigestSize %6ld", size);
 #endif
@@ -172,10 +177,11 @@ alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
     ALCP_BAD_PTR_ERR_RET(ctx->m_digest);
     return ctx->finalize(ctx->m_digest, buf, size);
 }
+ALCP_CATCH_ERR_RET
 
 void
 alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -188,13 +194,13 @@ alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
         ctx->~Context();
     }
 }
+ALCP_CATCH_IGNORE
 
 alc_error_t
 alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
                           Uint8*                    pBuff,
                           Uint64                    size)
-
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "DigestSize %6ld", size);
 #endif
@@ -217,10 +223,11 @@ alcp_digest_shake_squeeze(const alc_digest_handle_p pDigestHandle,
 
     return ctx->shakeSqueeze(ctx->m_digest, pBuff, size);
 }
+ALCP_CATCH_ERR_RET
 alc_error_t
 alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
                          const alc_digest_handle_p pDestHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -241,5 +248,6 @@ alcp_digest_context_copy(const alc_digest_handle_p pSrcHandle,
 
     return err;
 }
+ALCP_CATCH_ERR_RET
 
 EXTERN_C_END
