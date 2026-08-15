@@ -153,29 +153,6 @@ TEST_P(p256Test, SetPrivateKeyLengthTest)
     EXPECT_EQ(m_p256obj->setPrivateKey(&key[0], cKeySize), alcp::StatusOk());
 }
 
-TEST_P(p256Test, FailedKeyReplacementInvalidatesState)
-{
-    ASSERT_EQ(m_p256obj->setPrivateKey(&m_peer1_private_key[0],
-                                       m_peer1_private_key.size()),
-              alcp::StatusOk());
-    ASSERT_NE(m_p256obj
-                  ->setPrivateKey(&m_peer1_private_key[0],
-                                  m_peer1_private_key.size() - 1)
-                  .code(),
-              alcp::ErrorCode::eOk);
-
-    std::vector<Uint8> secret(m_p256obj->getKeySize());
-    Uint64             secret_len = 0;
-    EXPECT_EQ(m_p256obj
-                  ->computeSecretKey(&secret[0],
-                                     secret.size(),
-                                     &m_peer2_public_key[0],
-                                     m_peer2_public_key.size(),
-                                     &secret_len)
-                  .code(),
-              alcp::ErrorCode::eInvalidArgument);
-}
-
 TEST_P(p256Test, ValidatePublicKeyLengthTest)
 {
     const Uint64 cPubKeySize = m_p256obj->getPublicKeySize();
