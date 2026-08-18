@@ -31,7 +31,7 @@ Chacha20 - Stream Cipher algorithms
 Chacha20-Poly1305 AEAD
 
 ```
--   Click to know about more about [AOCL Cipher API](group__cipher.html)
+-   Click to know more about [AOCL Cipher API](group__cipher.html)
 
 ### Digest
 
@@ -106,7 +106,6 @@ RSA
 RNG
 
     - Generate random number
-    - Seed random number generator with random data
 
 ```
 

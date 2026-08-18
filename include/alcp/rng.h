@@ -236,19 +236,6 @@ ALCP_API_EXPORT alc_error_t
 alcp_rng_init(alc_rng_handle_p pRngHandle);
 
 /**
- * @brief   Seed a PRNG (or other RNG if supported)
- *
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rng_request and @ref alcp_rng_init
- * if hardware RNG requires it. This API is called to reset data so should
- * be called after @ref alcp_rng_request and before @ref alcp_rng_finish</b>
- * @endparblock
- *
- * @param [in]  pRngHandle     Pointer to user allocated handle
- * @param [in]  seed           Pointer to seed
- * @param [in]  size           Length of seed in bytes
- *
- * @return   ALC_ERROR_NONE on success.
  * @brief   Complete a session
  * @parblock <br> &nbsp;
  * <b>This API is called to free resources so should be called to free the
