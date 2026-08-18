@@ -442,7 +442,8 @@ document the bundled consumer, and add a removal path. Wildcards over a class or
 namespace require specific justification.
 
 `alcp::utils::CpuId` is a documented temporary exception because bundled tests,
-benchmarks, and the cpuid example query selected methods through `libalcp.so`.
+benchmarks, and the `tests/misc/cpuid` diagnostic query selected methods through
+`libalcp.so`.
 Only named methods are annotated; `CpuId::Impl`, `pImpl`, and unused methods
 remain hidden. New consumers must use documented algorithm-support checks
 instead of expanding this exception.
@@ -462,11 +463,12 @@ behavior; they must migrate to the public C API. `ALCP_HIDDEN_VISIBILITY=OFF`
 provides a temporary broad-visibility migration mode, but does not convert those
 symbols into supported interfaces.
 
-Bundled tests, examples, and benchmarks retain existing linkage behavior while
-temporary C++ exports are enabled. The intended migration is to public C APIs or
-static internal linkage, followed by removal of the relevant exception.
-Production builds opt out immediately by disabling all three bundled-consumer
-options.
+Bundled tests and benchmarks link internal C++ symbols through `libalcp.so` while
+temporary C++ exports are enabled. Bundled examples use only the public C API
+and do not participate in that exception. The intended migration is to public
+C APIs or static internal linkage, followed by removal of the relevant
+exception. Production builds opt out by disabling tests and benchmarks; examples
+can be built without enabling temporary C++ exports.
 
 Windows consumers continue to use explicitly exported declarations. The IPP
 `.def` list and removal of OpenSSL automatic export-all behavior make accidental

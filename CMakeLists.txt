@@ -195,7 +195,9 @@ IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
 endif()
 
 SET(ALCP_INTERNAL_CPP_EXPORTS_ENABLED OFF)
-IF(ALCP_ENABLE_TESTS OR ALCP_ENABLE_EXAMPLES OR ALCP_ENABLE_BENCH)
+# Examples are not listed here: they use only the public C API. Tests and
+# benchmarks still link the internal C++ interfaces directly.
+IF(ALCP_ENABLE_TESTS OR ALCP_ENABLE_BENCH)
 	SET(ALCP_INTERNAL_CPP_EXPORTS_ENABLED ON)
 ENDIF()
 

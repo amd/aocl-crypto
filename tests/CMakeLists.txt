@@ -96,6 +96,7 @@ ADD_SUBDIRECTORY(poly1305)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(rsa)
 ADD_SUBDIRECTORY(cipher_experimental)
+ADD_SUBDIRECTORY(misc)
 
 # FUZZ Testing is enabled only for Clang
 if(ALCP_ENABLE_FUZZ_TESTS)

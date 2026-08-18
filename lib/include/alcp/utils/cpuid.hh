@@ -182,8 +182,8 @@ EUarchValToString(int val)
 /**
  * @note Export exception
  * Methods marked ALCP_INTERNAL_CPP_EXPORT are temporary exports required by in-tree
- * shared-library tests, benchmarks, and the cpuid example. Prefer documented
- * support checks in new code. Per-method annotations keep CpuId::Impl and
+ * shared-library tests, benchmarks, and the tests/misc/cpuid diagnostic. Prefer
+ * documented support checks in new code. Per-method annotations keep CpuId::Impl and
  * unused methods out of the shared ABI.
  */
 class CpuId

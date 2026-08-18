@@ -1,5 +1,6 @@
-# Temporary C++ exports required because in-tree tests and examples link
-# libalcp.so directly. Each entry is an exact demangled name or an anchored
+# Temporary C++ exports required because in-tree tests and benchmarks link
+# libalcp.so directly. Bundled examples use only the public C API. Each entry is
+# an exact demangled name or an anchored
 # prefix ending in '*'. "required" entries must match; "allow" entries only
 # permit compiler-generated support symbols when present.
 
