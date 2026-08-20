@@ -210,7 +210,7 @@ alc_error_t inline DecryptCbc(const Uint8* pCipherText,
     __m512i cblock1, cblock2, cblock3, cblock4;
     __m512i iv1, iv2, iv3, iv4;
 
-    sKeys keys;
+    sKeys keys{};
     alcp_load_key_zmm(reinterpret_cast<const __m128i*>(pKey), keys);
 
     // Initialize iv1 with IV

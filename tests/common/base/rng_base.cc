@@ -64,7 +64,7 @@ RngBase::RngBase()
     std::copy(&seed_v[0],
               &seed_v[0] + seed_v.size(),
               reinterpret_cast<Uint8*>(&m_seed_));
-    mt_rand_ = std::mt19937(m_seed_); // Initialize with a random seed
+    mt_rand_ = std::mt19937_64(m_seed_); // Initialize with a random seed
 }
 
 RngBase::~RngBase()
@@ -100,20 +100,19 @@ void
 RngBase::genRandomMt19937(std::vector<Uint8>& buffer)
 {
     {
-        size_t iter = buffer.size() / 4;
+        size_t iter = buffer.size() / 8;
         for (size_t i = 0; i < iter; i++) {
-            Uint32 r   = mt_rand_();
+            Uint64 r   = mt_rand_();
             Uint8* r_8 = reinterpret_cast<Uint8*>(&r);
-            std::copy(r_8, r_8 + 4, (&buffer[0]) + (i * 4));
+            std::copy(r_8, r_8 + 8, (&buffer[0]) + (i * 8));
         }
     }
     {
-        int rem = buffer.size() % 4;
+        int rem = buffer.size() % 8;
         if (rem) {
-            Uint32 r   = mt_rand_();
+            Uint64 r   = mt_rand_();
             Uint8* r_8 = reinterpret_cast<Uint8*>(&r);
-            std::copy(
-                r_8, r_8 + rem, ((&buffer[0]) + (buffer.size() - 1) - rem));
+            std::copy(r_8, r_8 + rem, (&buffer[0]) + (buffer.size() - rem));
         }
     }
 }
@@ -122,7 +121,7 @@ void
 RngBase::setSeedMt19937(Uint64 seed)
 {
     m_seed_  = seed;
-    mt_rand_ = std::mt19937(m_seed_); // Initialize with the random seed
+    mt_rand_ = std::mt19937_64(m_seed_); // Initialize with the random seed
 }
 
 Uint64

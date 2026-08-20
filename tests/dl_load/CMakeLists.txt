@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -24,9 +24,10 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 
-# link to -lgtest -alcp -dl for dynamic loading
-SET(LIBS ${LIBS} gtest alcp)
-SET(LIBS_DL ${LIBS} dl)
+# This test loads libalcp.so at runtime via dlopen, so it must not also link
+# alcp as a load-time dependency. Link only the test framework and the dynamic
+# loader; do not inherit the shared LIBS list, which carries alcp.
+SET(LIBS_DL gtest ${CMAKE_DL_LIBS})
 
 ADD_EXECUTABLE(test_dynamic_load test_dynamic_load.cc)
 
@@ -39,4 +40,5 @@ TARGET_INCLUDE_DIRECTORIES(test_dynamic_load PRIVATE
 TARGET_COMPILE_OPTIONS(test_dynamic_load PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(test_dynamic_load ${LIBS_DL})
 
-gtest_add_tests(TARGET test_dynamic_load)
+gtest_add_tests(TARGET test_dynamic_load TEST_LIST _dl_tests)
+set_tests_properties(${_dl_tests} PROPERTIES LABELS "unit")

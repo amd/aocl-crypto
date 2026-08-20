@@ -28,6 +28,10 @@
 
 #include "alcp/utils/cpuid.hh"
 #include <iostream>
+#include <string>
+#ifdef ALCP_ENABLE_AOCL_UTILS
+#include <Au/Cpuid/X86Cpu.hh>
+#endif
 
 using alcp::utils::Avx512Flags;
 using alcp::utils::CpuId;
@@ -117,11 +121,15 @@ checkVendorAndMicroarch()
     printBoolMsg("AMD", CpuId::cpuIsAmd());
 
     std::cout << "======MICRO-ARCHITECTURE (AMD)=======" << std::endl;
-    printBoolMsg("ZEN1", CpuId::cpuIsZen1());
-    printBoolMsg("ZEN2", CpuId::cpuIsZen2());
-    printBoolMsg("ZEN3", CpuId::cpuIsZen3());
-    printBoolMsg("ZEN4", CpuId::cpuIsZen4());
-    printBoolMsg("ZEN5", CpuId::cpuIsZen5());
+#ifdef ALCP_ENABLE_AOCL_UTILS
+    Au::X86Cpu cpu(0);
+    for (int i = 1; i <= static_cast<int>(Au::EUarch::Max); i++) {
+        Au::EUarch uarch = static_cast<Au::EUarch>(i);
+        printBoolMsg(alcp::utils::EUarchValToString(i), cpu.isUarch(uarch));
+    }
+#else
+    std::cout << "\t(AOCL-Utils unavailable at compile time)" << std::endl;
+#endif
 
     std::cout << "======ISA FEATURE GROUPS=======" << std::endl;
     printBoolMsg("BASELINE (ADX+AVX2+BMI2)",

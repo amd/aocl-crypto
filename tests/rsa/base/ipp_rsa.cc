@@ -219,6 +219,11 @@ IPPRsaBase::SetPrivateKeyBigNum(const alcp_rsa_data_t& data)
     if (m_scratchBuffer_Pvt) {
         delete[] (Ipp8u*)m_scratchBuffer_Pvt;
     }
+    /* ippsRSASign_PSS_rmf / ippsRSASign_PKCS1v15_rmf use both private and
+     * public keys internally.  IPP requires the scratch buffer to be at least
+     * max(GetBufferSizePrivateKey, GetBufferSizePublicKey). */
+    m_buffSize = (m_buffSizePublic > m_buffSizePrivate) ? m_buffSizePublic
+                                                        : m_buffSizePrivate;
     m_scratchBuffer_Pvt = new Ipp8u[m_buffSize];
 
     return true;

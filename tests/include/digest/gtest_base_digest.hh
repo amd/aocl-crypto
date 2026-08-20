@@ -31,6 +31,7 @@
 #define __GTEST_BASE_HH 2
 
 /* C/C++ Headers */
+#include <cstring>
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -373,10 +374,21 @@ Digest_Cross(int HashSize, alc_digest_mode_t mode, bool ctx_copy)
         exit(-1);
     }
 
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
     /* generate test data vector, and use it chunk by chunk in the loop */
-    std::vector<Uint8>                 msg_full = rb.genRandomBytes(MAX_LOOP);
+    std::vector<Uint8> msg_full(MAX_LOOP);
+    rb.genRandomMt19937(msg_full);
     std::vector<Uint8>::const_iterator pos1, pos2;
-    auto                               rng = std::default_random_engine{};
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         alcp_digest_data_t data_alc, data_ext;
@@ -459,8 +471,9 @@ Digest_Multibuffer_Cross(int HashSize, alc_digest_mode_t sb_mode)
 
 #ifndef USE_OSSL
     printErrors("Exiting, OSSL external lib not available");
-    exit(-1);
-#endif
+    GTEST_SKIP() << "OpenSSL not available for multibuffer cross test";
+    return;
+#else
 
     alc_digest_mode_t mb_mode{};
     switch (sb_mode) {
@@ -480,6 +493,11 @@ Digest_Multibuffer_Cross(int HashSize, alc_digest_mode_t sb_mode)
     }
 
     RngBase                   rb;
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
     OpenSSLDigestBase         odb(sb_mode);
     const std::vector<Uint64> buffer_counts = { 1,  2,  3,  4,  5,  6,  7,
                                                 8,  9,  10, 11, 12, 13, 14,
@@ -498,7 +516,8 @@ Digest_Multibuffer_Cross(int HashSize, alc_digest_mode_t sb_mode)
                 if (in_len == 0) {
                     msgs[i] = std::vector<Uint8>{ 0 };
                 } else {
-                    msgs[i] = rb.genRandomBytes(in_len);
+                    msgs[i].resize(in_len);
+                    rb.genRandomMt19937(msgs[i]);
                 }
                 src[i]      = &(msgs[i][0]);
                 expected[i] = (Uint8*)std::malloc(hash_bytes);
@@ -572,5 +591,6 @@ Digest_Multibuffer_Cross(int HashSize, alc_digest_mode_t sb_mode)
             }
         }
     }
+#endif // USE_OSSL
 }
 #endif

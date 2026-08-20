@@ -1910,7 +1910,7 @@ TEST(XTS_Negative, ZeroLengthInput)
 {
     std::vector<Uint8> key(32, 0x42);
     std::vector<Uint8> iv(16, 0x01);
-    Uint8 dummy;
+    Uint8 dummy = 0;
 
     auto xts = createCipher(CipherMode::eAesXTS, CipherKeyLen::eKey128Bit);
     ASSERT_NE(xts, nullptr);

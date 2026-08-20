@@ -40,22 +40,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(sha2_512_avx512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
 endif()
 
-# FIXME: GCC 15 introduced a throughput regression in SHA256 multibuffer on Zen5.
-#
-# The regression is caused by GCC commit f0ab3de6ec0e3540f2e57f3f5628005f0a4e3fa5
-# ("Zen5 tuning part 4: update reassociation width") which increased znver5
-# reassociation widths from {4,4,3,6} to {6,6,4,6}. This causes register pressure
-# and spills in the AVX512 integer-heavy SHA256 multibuffer kernel.
-#
-# Workaround: Override -mtune to znver4 to use pre-regression reassociation widths.
-# This workaround is applied strictly for GCC 15. Future GCC versions must be
-# tested and this condition must be adjusted accordingly.
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "16")
-	set_source_files_properties(sha256_mb_avx512.cc PROPERTIES COMPILE_FLAGS "-mtune=znver4")
-	MESSAGE(WARNING "GCC 15 workaround: adding -mtune=znver4 to sha256_mb_avx512.cc due to reassociation width regression")
-endif()
-
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
+INCLUDE_DIRECTORIES(${ALCP_ROOT}/lib/include)
 
 ADD_LIBRARY(arch_zen4
 	OBJECT
@@ -75,5 +60,4 @@ IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 	TARGET_COMPILE_DEFINITIONS(arch_zen4 PRIVATE "AES_MULTI_UPDATE")	
 ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 
-TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen4)
-TARGET_LINK_LIBRARIES(alcp_static PRIVATE arch_zen4)
+ALCP_TARGET_LINK_LIBRARIES(PRIVATE arch_zen4)

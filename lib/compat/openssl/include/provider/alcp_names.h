@@ -116,6 +116,10 @@
 #define ALCP_PROV_NAMES_TEST_RAND "TEST-RAND"
 #define ALCP_PROV_NAMES_SEED_SRC  "SEED-SRC"
 
+// ChaCha20-Poly1305
+#define ALCP_PROV_NAMES_CHACHA20_POLY1305                                      \
+    "ChaCha20-Poly1305:chacha20-poly1305"
+
 // MAC
 #define ALCP_PROV_NAMES_HMAC     "HMAC"
 #define ALCP_PROV_NAMES_CMAC     "CMAC"

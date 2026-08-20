@@ -25,11 +25,16 @@
 
 
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+set(ALCP_MODULE_LABEL "rsa")
 
  # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_rsa.cc)
-SET(LIBS ${LIBS} gtest alcp)
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSE()
+    SET(LIBS ${LIBS} gtest alcp_static)
+ENDIF()
 
 IF(ENABLE_TESTS_IPP_API)
     # If there is IPP, add IPP source and add IPP liberary

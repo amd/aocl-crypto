@@ -29,59 +29,10 @@
 #pragma once
 
 #include <alcp/base.hh>
+#include <alcp/mac/poly1305_common.hh>
 #include <algorithm>
 
 namespace alcp::mac::poly1305 {
-#if POLY1305_RADIX_26
-struct Poly1305State26
-{
-  private:
-    static const Uint32 cHornorFactor    = 5;
-    static const Uint32 m_cKeySize_bytes = 32;
-    static const Uint32 m_cMsgSize_bytes = 16;
-    static const Uint32 cLimbsAligned    = 8; // To create aligned memory
-    static const Uint32 cLimbs           = 5;
-
-  public:
-    // FIXME: Allocation might be overkill, need to revisit
-    alignas(64) Uint64 r[cLimbsAligned * cHornorFactor];
-    alignas(64) Uint64 s[cLimbsAligned * cHornorFactor];
-    alignas(64) Uint64 a[cLimbsAligned];
-    alignas(64) Uint64 key[m_cKeySize_bytes / sizeof(Uint64)] = {};
-    alignas(64) Uint8 msg_buffer[m_cMsgSize_bytes];
-    Uint64 msg_buffer_len;
-    bool   finalized;
-
-    void reset()
-    {
-        std::fill(a, a + cLimbsAligned, 0);
-        std::fill(msg_buffer, msg_buffer + m_cMsgSize_bytes, 0);
-        msg_buffer_len = 0;
-        finalized      = false;
-    }
-
-    Poly1305State26()
-    {
-        std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
-        std::fill(&r[0], &r[0] + (cLimbsAligned * cHornorFactor), 0);
-        std::fill(&s[0], &s[0] + (cLimbsAligned * cHornorFactor), 0);
-        std::fill(a, a + cLimbsAligned, 0);
-        std::fill(msg_buffer, msg_buffer + m_cMsgSize_bytes, 0);
-        msg_buffer_len = 0;
-        finalized      = false;
-    }
-
-    ~Poly1305State26()
-    {
-        std::fill(key, key + (m_cKeySize_bytes / sizeof(Uint64)), 0);
-        std::fill(&r[0], &r[0] + (cLimbsAligned * cHornorFactor), 0);
-        std::fill(&s[0], &s[0] + (cLimbsAligned * cHornorFactor), 0);
-        msg_buffer_len = 0;
-        finalized      = false;
-        reset();
-    }
-}; // namespace alcp::mac::poly1305
-#endif
 
 struct Poly1305State44
 {
@@ -129,4 +80,104 @@ struct Poly1305State44
         reset();
     }
 }; // namespace alcp::mac::poly1305
+
+struct alignas(64) Poly1305State26x4
+{
+    static constexpr Uint32 cKeySize_bytes = 32;
+    static constexpr Uint32 cMsgSize_bytes = 16;
+
+    alignas(32) Uint64 r1_pack[5][4];
+    alignas(32) Uint64 r1_s[4][4];
+
+    alignas(32) Uint64 r4_pack[5][4];
+    alignas(32) Uint64 r4_s[4][4];
+
+    // r^8 power tables (and 5*r variants) for the dual x8 stream loop, packed
+    // for aligned vector loads.
+    alignas(32) Uint64 r8_pack[5][4];
+    alignas(32) Uint64 r8_s[4][4];
+
+    alignas(32) Uint64 rp_pack[5][4];
+    alignas(32) Uint64 rp_s[4][4];
+
+    // Stream-A fold powers [r^8, r^7, r^6, r^5] (and 5*r variants) for merging
+    // the two x8 streams back to one accumulator.
+    alignas(32) Uint64 r8p_pack[5][4];
+    alignas(32) Uint64 r8p_s[4][4];
+
+    alignas(32) Uint64 acc[5][4];
+
+    alignas(32) Uint64 acc_scalar[5];
+
+    Uint32 s_key[4];
+
+    alignas(16) Uint8 msg_buffer[cMsgSize_bytes];
+    Uint64            msg_buffer_len;
+
+    bool finalized;
+    // True when the SIMD accumulator (acc) is live; false means acc_scalar is
+    // authoritative.
+    bool fold;
+    bool powers_computed;
+    bool powers8_computed;
+
+    /*
+     * keep_powers defaults to true: a same-key reset (init/update/finalize/
+     * reset reuse) keeps the key-derived r-power tables. init() passes false
+     * because a new key invalidates them.
+     */
+    void reset(bool keep_powers = true)
+    {
+        // acc[][] is left untouched: fold=false guarantees it is overwritten
+        // before any read, and zeroing it here cost ~44% on small messages.
+        acc_scalar[0]   = 0;
+        acc_scalar[1]   = 0;
+        acc_scalar[2]   = 0;
+        acc_scalar[3]   = 0;
+        acc_scalar[4]   = 0;
+        msg_buffer_len  = 0;
+        finalized       = false;
+        fold            = false;
+        if (!keep_powers) {
+            powers_computed  = false;
+            powers8_computed = false;
+        }
+    }
+
+    Poly1305State26x4()
+    {
+        std::fill_n(&r1_pack[0][0], 5 * 4, 0);
+        std::fill_n(&r1_s[0][0], 4 * 4, 0);
+        std::fill_n(&r4_pack[0][0], 5 * 4, 0);
+        std::fill_n(&r4_s[0][0], 4 * 4, 0);
+        std::fill_n(&r8_pack[0][0], 5 * 4, 0);
+        std::fill_n(&r8_s[0][0], 4 * 4, 0);
+        std::fill_n(&rp_pack[0][0], 5 * 4, 0);
+        std::fill_n(&rp_s[0][0], 4 * 4, 0);
+        std::fill_n(&r8p_pack[0][0], 5 * 4, 0);
+        std::fill_n(&r8p_s[0][0], 4 * 4, 0);
+        std::fill_n(s_key, 4, 0);
+        reset(false);
+    }
+
+    ~Poly1305State26x4()
+    {
+        // Non-elidable wipe of all key-derived material (a plain std::fill
+        // would be a droppable dead store).
+        poly1305_secure_clear(r1_pack, sizeof(r1_pack));
+        poly1305_secure_clear(r1_s, sizeof(r1_s));
+        poly1305_secure_clear(r4_pack, sizeof(r4_pack));
+        poly1305_secure_clear(r4_s, sizeof(r4_s));
+        poly1305_secure_clear(r8_pack, sizeof(r8_pack));
+        poly1305_secure_clear(r8_s, sizeof(r8_s));
+        poly1305_secure_clear(rp_pack, sizeof(rp_pack));
+        poly1305_secure_clear(rp_s, sizeof(rp_s));
+        poly1305_secure_clear(r8p_pack, sizeof(r8p_pack));
+        poly1305_secure_clear(r8p_s, sizeof(r8p_s));
+        poly1305_secure_clear(acc, sizeof(acc));
+        poly1305_secure_clear(acc_scalar, sizeof(acc_scalar));
+        poly1305_secure_clear(s_key, sizeof(s_key));
+    }
+};
+
 } // namespace alcp::mac::poly1305

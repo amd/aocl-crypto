@@ -52,6 +52,8 @@ AlcpEcdhBase::init(const alc_ec_info_t& info)
         m_ec_handle->context = malloc(size);
     } else if (m_ec_handle->context == nullptr) {
         m_ec_handle->context = malloc(size);
+    } else {
+        alcp_ec_finish(m_ec_handle);
     }
 
     err = alcp_ec_request(&dinfo, m_ec_handle);
@@ -122,17 +124,6 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_ec_get_secretkey " << std::endl;
         return false;
-    }
-
-    if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
-        alcp_ec_finish(m_ec_handle);
-        if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_ec_finish " << std::endl;
-            return false;
-        }
-        free(m_ec_handle->context);
-        delete m_ec_handle;
-        m_ec_handle = nullptr;
     }
 
     return true;

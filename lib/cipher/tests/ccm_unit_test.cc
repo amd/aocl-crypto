@@ -458,7 +458,7 @@ TEST_P(CCM_KAT, Encrypt)
         EXPECT_EQ(out_ciphertext, m_ciphertext);
     } else {
         // Call encrypt update with a valid memory if no plaintext
-        Uint8  a;
+        Uint8  a = 0;
         Uint64 outlen = 0;
         err           = pCcmObj->encrypt(&a, &a, 0, &outlen);
     }
@@ -514,7 +514,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
             EXPECT_EQ(out_ciphertext, m_ciphertext);
         } else {
             // Call encrypt update with a valid memory if no plaintext
-            Uint8  a;
+            Uint8  a = 0;
             Uint64 outlen = 0;
             err           = pCcmObj->encrypt(&a, &a, 0, &outlen);
         }
@@ -566,7 +566,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
             EXPECT_EQ(out_ciphertext, m_ciphertext);
         } else {
             // Call encrypt update with a valid memory if no plaintext
-            Uint8  a;
+            Uint8  a = 0;
             Uint64 outlen = 0;
             err           = pCcmObj->encrypt(&a, &a, 0, &outlen);
         }
@@ -623,7 +623,7 @@ TEST_P(CCM_KAT, Decrypt)
         EXPECT_EQ(out_plaintext, m_plaintext);
     } else {
         // Call decrypt update with a valid memory if no plaintext
-        Uint8  a;
+        Uint8  a = 0;
         Uint64 outlen = 0;
         err           = pCcmObj->decrypt(&a, &a, 0, &outlen);
     }
@@ -680,7 +680,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
             EXPECT_EQ(out_plaintext, m_plaintext);
         } else {
             // Call decrypt update with a valid memory if no plaintext
-            Uint8  a;
+            Uint8  a = 0;
             Uint64 outlen = 0;
             err           = pCcmObj->decrypt(&a, &a, 0, &outlen);
         }
@@ -733,7 +733,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
             EXPECT_EQ(out_plaintext, m_plaintext);
         } else {
             // Call decrypt update with a valid memory if no plaintext
-            Uint8  a;
+            Uint8  a = 0;
             Uint64 outlen = 0;
             err           = pCcmObj->decrypt(&a, &a, 0, &outlen);
         }

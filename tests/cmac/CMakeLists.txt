@@ -24,6 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+set(ALCP_MODULE_LABEL "mac")
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
@@ -71,10 +72,12 @@ TEST_DATA_LINK(CMAC_AES_128)
 TEST_DATA_LINK(CMAC_AES_192)
 TEST_DATA_LINK(CMAC_AES_256)
 
-gtest_add_tests(TARGET test_cmac_kat)
+gtest_add_tests(TARGET test_cmac_kat TEST_LIST _cmac_kat_tests)
+set_tests_properties(${_cmac_kat_tests} PROPERTIES LABELS "mac")
 
 IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_cmac_cross)
+    gtest_add_tests(TARGET test_cmac_cross TEST_LIST _cmac_cross_tests)
+    set_tests_properties(${_cmac_cross_tests} PROPERTIES LABELS "mac")
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 alcp_add_integration_tests("test_cmac_kat" test_cmac_kat)

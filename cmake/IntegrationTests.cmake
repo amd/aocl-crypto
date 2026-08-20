@@ -29,6 +29,18 @@ FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(gtest)
+
+SET(ALCP_TEST_DISCOVERY_TIMEOUT 60 CACHE STRING
+    "Timeout (seconds) for gtest_discover_tests test enumeration")
+
+if(WIN32)
+    foreach(_t gtest gtest_main gmock gmock_main)
+        if(TARGET ${_t})
+            target_compile_options(${_t} PRIVATE -w)
+        endif()
+    endforeach()
+endif()
+
 find_package(Threads)
 
 # KAT test data files are tracked by git-lfs.  Detect files that are absent
@@ -87,7 +99,11 @@ unset(_LFS_PROBLEM_LIST)
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 
-SET(LIBS ${LIBS} gtest alcp)
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSE()
+    SET(LIBS ${LIBS} gtest alcp_static)
+ENDIF()
 
 # as per discussion: https://discourse.cmake.org/t/target-link-libraries-for-lpthread-ldl-and-lutils/1235/3
 IF(Threads_FOUND AND UNIX)
@@ -205,16 +221,17 @@ FUNCTION(AES_TEST TYPE MOD)
     TARGET_LINK_LIBRARIES(aes_${MOD}_experimental_${TYPE} ${LIBS} 
                                                       ${OPENSSL_LIBS} 
                                                       ${IPP_LIBS})
-    gtest_add_tests(TARGET aes_${MOD}_experimental_${TYPE}
-        TEST_SUFFIX .${MOD})
-    gtest_discover_tests(aes_${MOD}_experimental_${TYPE} NO_PRETTY_VALUES NO_PRETTY_TYPES)
+    gtest_discover_tests(aes_${MOD}_experimental_${TYPE} NO_PRETTY_VALUES NO_PRETTY_TYPES
+        DISCOVERY_TIMEOUT ${ALCP_TEST_DISCOVERY_TIMEOUT}
+        PROPERTIES LABELS "cipher")
 ENDFUNCTION()
 
 FUNCTION(LINK_IF_EXISTS SOURCE DESTINATION LINK_TYPE)
     # Check if the source file exists
     if(EXISTS ${SOURCE})
         # Create a symbolic link if the source file exists
-        FILE(CREATE_LINK ${SOURCE} ${DESTINATION} ${LINK_TYPE})
+        # COPY_ON_ERROR: fall back to copying on Windows when symlink privileges are missing
+        FILE(CREATE_LINK ${SOURCE} ${DESTINATION} ${LINK_TYPE} COPY_ON_ERROR)
     else()
         string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
         if("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")

@@ -39,7 +39,9 @@
 #include "alcp/cipher/cipher_wrapper.hh"
 #endif
 #include "alcp/alcp.h"
+#include "gtest_common.hh"
 #include "rng_base.hh"
+#include <cstring>
 #include <exception>
 #include <iostream>
 
@@ -73,14 +75,22 @@ class AESMultibufferTest
     alcp::testing::RngBase rng;
     std::vector<Uint8>     key;
 
-    void SetUp() override {}
+    void SetUp() override
+    {
+        if (seed_set)
+            rng.setSeedMt19937(seed_override);
+        std::cout << "[ SEED     ] " << rng.getSeedMt19937()
+                  << "  (repro: --seed " << rng.getSeedMt19937() << ")"
+                  << std::endl;
+    }
 
     void TearDown() override {}
 
     // Helper method to generate unique IV for each buffer
     std::vector<Uint8> generateIV(int buffer_index)
     {
-        std::vector<Uint8> iv = rng.genRandomBytes(16);
+        std::vector<Uint8> iv(16);
+        rng.genRandomMt19937(iv);
         // Modify IV slightly for each buffer to make them unique
         iv[15] = static_cast<Uint8>((iv[15] + buffer_index) % 256);
         return iv;
@@ -89,27 +99,8 @@ class AESMultibufferTest
     // Helper method to generate unique plaintext for each buffer
     std::vector<Uint8> generatePlaintext(int buffer_index, int size)
     {
-        std::vector<Uint8> plaintext = rng.genRandomBytes(size);
-
-        if (size <= 16) {
-            // For small sizes, use base plaintext and resize
-            for (int i = 0; i < size; ++i) {
-                plaintext[i] = rng.genRandomBytes(1)[0];
-            }
-        } else {
-            // For larger sizes, create patterns
-            if (buffer_index % 2 == 0) {
-                // Pattern 1: repeating sequence starting from 0x10
-                for (int i = 0; i < size; ++i) {
-                    plaintext[i] = rng.genRandomBytes(1)[0];
-                }
-            } else {
-                // Pattern 2: different repeating sequence starting from 0x20
-                for (int i = 0; i < size; ++i) {
-                    plaintext[i] = rng.genRandomBytes(1)[0];
-                }
-            }
-        }
+        std::vector<Uint8> plaintext(size);
+        rng.genRandomMt19937(plaintext);
 
         // Modify first byte slightly for each buffer to make them unique
         if (buffer_index > 0 && size > 0) {
@@ -198,15 +189,14 @@ class AESMultibufferTest
     // Helper method to generate random key based on cipher type
     std::vector<Uint8> generateKey(const std::string& cipher_type)
     {
-        if (cipher_type.find("128") != std::string::npos) {
-            return rng.genRandomBytes(16);
-        } else if (cipher_type.find("192") != std::string::npos) {
-            return rng.genRandomBytes(24);
-        } else if (cipher_type.find("256") != std::string::npos) {
-            return rng.genRandomBytes(32);
-        } else {
-            return rng.genRandomBytes(16); // Default to 128-bit key
-        }
+        int                len = 16;
+        if (cipher_type.find("192") != std::string::npos)
+            len = 24;
+        else if (cipher_type.find("256") != std::string::npos)
+            len = 32;
+        std::vector<Uint8> k(len);
+        rng.genRandomMt19937(k);
+        return k;
     }
 };
 
@@ -442,6 +432,7 @@ int
 main(int argc, char** argv)
 {
     try {
+        parseTestArgs(argc, argv);
         ::testing::InitGoogleTest(&argc, argv);
         return RUN_ALL_TESTS();
 

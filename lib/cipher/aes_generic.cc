@@ -107,6 +107,13 @@ AesGenericCiphersT<mode, keyLenBits, arch>::init(const Uint8* pKey,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+#ifdef AES_MULTI_UPDATE
+    // Re-init resets streaming state: any partial block from a previous
+    // call must be discarded so the next operation cannot overflow the
+    // caller-supplied output buffer.
+    m_partialBuffer.clear();
+#endif
+
     // Validate and set IV -- let IvManager reject null/bad length
     if (pIv != nullptr) {
         err = m_ivManager.setIv(pIv, static_cast<Uint32>(ivLen));

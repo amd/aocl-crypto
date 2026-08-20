@@ -70,13 +70,7 @@ class CpuId::Impl
     bool cpuid_disable_vaes               = false;
     bool cpuid_disable_avx512_vpintersect = false;
 
-    /* cached CPU architecture detection results */
-    bool        zen1_flag          = false;
-    bool        zen2_flag          = false;
-    bool        zen3_flag          = false;
-    bool        zen4_flag          = false;
-    bool        zen5_flag          = false;
-    const char* actual_cpu_arch    = "Unknown";
+    std::string actual_cpu_arch    = "Unknown";
     bool        cpu_detection_done = false;
 
     bool get_alcp_enabled_instr();
@@ -110,13 +104,6 @@ class CpuId::Impl
     bool cpuHasRdSeed();
     bool cpuHasAdx();
     bool cpuHasBmi2();
-
-    // Zen microarchitecture detection
-    bool cpuIsZen1();
-    bool cpuIsZen2();
-    bool cpuIsZen3();
-    bool cpuIsZen4();
-    bool cpuIsZen5();
 
     // Vendor detection
     bool cpuIsAmd();
@@ -188,7 +175,7 @@ CpuId::Impl::Impl()
             stderr,
             "Detected CPU=%s, Kernel levels: Cipher=%s, RSA=%s, Poly1305=%s, "
             "X25519=%s, SHA256=%s, SHA512=%s, SHA3=%s\n",
-            actual_cpu_arch,
+            actual_cpu_arch.c_str(),
             CpuArchLevelToString(computeArchLevelCipher()),
             CpuArchLevelToString(computeArchLevelRsa()),
             CpuArchLevelToString(computeArchLevelPoly1305()),
@@ -268,11 +255,8 @@ CpuId::Impl::get_alcp_enabled_instr()
 /**
  * @brief Detects and caches the CPU architecture once during initialization
  *
- * Identifies the CPU vendor (AMD / Intel / other) and, for AMD parts,
- * determines the specific Zen micro-architecture.  Intel and other
- * vendors are reported as "Unknown" because the library does not yet
- * map Intel micro-architectures to named levels; ISA-based dispatch
- * (computeArchLevel*) still works correctly for any x86-64 CPU.
+ * Uses AOCL-Utils getUarch() for accurate model-number-based detection.
+ * The result is used only for debug logging (AOCL_ENABLE_INSTRUCTION).
  */
 void
 CpuId::Impl::detect_cpu_architecture()
@@ -283,31 +267,12 @@ CpuId::Impl::detect_cpu_architecture()
 
 #ifdef ALCP_ENABLE_AOCL_UTILS
     if (Impl::m_cpu->isAMD()) {
-        zen1_flag = Impl::m_cpu->isUarch(EUarch::Zen);
-        zen2_flag = Impl::m_cpu->isUarch(EUarch::Zen2);
-        zen3_flag = Impl::m_cpu->isUarch(EUarch::Zen3);
-        zen4_flag = Impl::m_cpu->isUarch(EUarch::Zen4);
-        zen5_flag = Impl::m_cpu->isUarch(EUarch::Zen5);
-
-        if (zen5_flag)
-            actual_cpu_arch = "ZEN5";
-        else if (zen4_flag)
-            actual_cpu_arch = "ZEN4";
-        else if (zen3_flag)
-            actual_cpu_arch = "ZEN3";
-        else if (zen2_flag)
-            actual_cpu_arch = "ZEN2";
-        else if (zen1_flag)
-            actual_cpu_arch = "ZEN1";
-        else
-            actual_cpu_arch = "Unknown AMD";
+        int uarch_val   = static_cast<int>(Impl::m_cpu->getUarch());
+        actual_cpu_arch = EUarchValToString(uarch_val);
     } else {
         actual_cpu_arch = "Unknown";
     }
 #else
-    // Without AOCL-Utils we cannot identify the vendor or micro-arch.
-    // Default to Zen2 ISA level so basic AVX2 paths are selected.
-    zen2_flag       = true;
     actual_cpu_arch = "Unknown";
 #endif
 
@@ -524,36 +489,6 @@ CpuId::Impl::cpuHasBmi2()
 }
 
 bool
-CpuId::Impl::cpuIsZen1()
-{
-    return zen1_flag;
-}
-
-bool
-CpuId::Impl::cpuIsZen2()
-{
-    return zen2_flag;
-}
-
-bool
-CpuId::Impl::cpuIsZen3()
-{
-    return zen3_flag;
-}
-
-bool
-CpuId::Impl::cpuIsZen4()
-{
-    return zen4_flag;
-}
-
-bool
-CpuId::Impl::cpuIsZen5()
-{
-    return zen5_flag;
-}
-
-bool
 CpuId::Impl::cpuIsAmd()
 {
 #ifdef ALCP_ENABLE_AOCL_UTILS
@@ -609,20 +544,25 @@ CpuId::Impl::computeArchLevelRsa()
     return CpuArchLevel::eReference;
 }
 
-// Poly1305: Reference -> Reference -> AVX512Base + IFMA
-// Uses AVX512 intrinsics, NOT ADX/BMI2.
-// Only eZen4 has optimized kernel, requires AVX512 F+DQ+BW+IFMA.
+// Poly1305: Reference -> AVX2 (radix-26) -> AVX512-IFMA (radix-44).
+// eZen3/eZen run the AVX2 radix-26 kernel; eZen4 runs the AVX-512 IFMA kernel.
 CpuArchLevel
 CpuId::Impl::computeArchLevelPoly1305()
 {
-    // eZen4: AVX512 F+DQ+BW+IFMA
+    // eZen4: AVX512 F+DQ+BW+IFMA radix-44 kernel
     if (cpuHasAvx512(Avx512Flags::AVX512_F)
         && cpuHasAvx512(Avx512Flags::AVX512_DQ)
         && cpuHasAvx512(Avx512Flags::AVX512_BW)
         && cpuHasAvx512(Avx512Flags::AVX512_IFMA)) {
         return CpuArchLevel::eZen4;
     }
-    // eZen/eZen3: reference implementation (only need AVX2 as baseline)
+    // eZen3: AVX2 radix-26 kernel. Gated on VAES (the Zen3 ISA differentiator)
+    // so the -march=znver3 object it dispatches to only runs on Zen3+.
+    if (cpuHasVaes() && cpuHasAvx2()) {
+        return CpuArchLevel::eZen3;
+    }
+    // eZen: pre-Zen3 AVX2 parts. Still routed to the AVX2 kernel by the
+    // dispatch; a portable (-mno-vaes) build for these parts is future work.
     if (cpuHasAvx2()) {
         return CpuArchLevel::eZen;
     }
@@ -865,36 +805,6 @@ bool
 CpuId::cpuHasRdSeed()
 {
     return pImpl.get()->cpuHasRdSeed();
-}
-
-bool
-CpuId::cpuIsZen1()
-{
-    return pImpl.get()->cpuIsZen1();
-}
-
-bool
-CpuId::cpuIsZen2()
-{
-    return pImpl.get()->cpuIsZen2();
-}
-
-bool
-CpuId::cpuIsZen3()
-{
-    return pImpl.get()->cpuIsZen3();
-}
-
-bool
-CpuId::cpuIsZen4()
-{
-    return pImpl.get()->cpuIsZen4();
-}
-
-bool
-CpuId::cpuIsZen5()
-{
-    return pImpl.get()->cpuIsZen5();
 }
 
 bool

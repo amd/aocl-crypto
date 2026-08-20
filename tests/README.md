@@ -89,22 +89,47 @@ For using OpenSSL just specify `-o` command line argument.
 Datasets (eg: cipher) are located in directory `alcp-crypto/tests/cipher/test_data/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid from deleting that line.
 
 ### Fuzz Tests
-To enable fuzz tests set the compiler to clang 
 
-```sh
-$ export CXX=clang++
-```
+Fuzz tests require Clang (libFuzzer is not supported with GCC):
+
 ```sh
 $ export CC=clang
+$ export CXX=clang++
 ```
 
-Then build crypto library by appending the flag ALCP_ENABLE_FUZZ_TESTS=ON
+Build with fuzz tests enabled:
 
-In order to run the whole fuzz tests you can use run_fuzz_tests.py under the scripts directory.
 ```sh
-$ python3 ./scripts/python/run_fuzz_tests.py ./build
+$ cmake -B build -DALCP_ENABLE_FUZZ_TESTS=ON [other flags...]
+$ cmake --build build
 ```
-The individual tests will be under build/tests/Fuzz directory. For example in order to run the digest sha256 fuzz test the following command could be used  `./tests/Fuzz/Digest/test_fuzz_digest_sha2_256`
+
+Fuzz tests are automatically registered with CTest under the `fuzz` label and
+are excluded from a plain `ctest` run. Crash artifacts are written to
+`build/fuzz_corpus/`.
+
+Run all fuzz tests in parallel:
+
+```sh
+$ ctest --test-dir build -L fuzz -j$(nproc)
+```
+
+Default libFuzzer flags are `-rss_limit_mb=32768 -detect_leaks=0 -max_total_time=30`.
+Override individual flags at run time via `ALCP_CTEST_FUZZ_ARGS`:
+
+```sh
+# Run with a longer time budget
+$ ALCP_CTEST_FUZZ_ARGS="-max_total_time=120" ctest --test-dir build -L fuzz -j$(nproc)
+
+# Combine overrides
+$ ALCP_CTEST_FUZZ_ARGS="-max_total_time=120 -rss_limit_mb=65536" ctest --test-dir build -L fuzz -j$(nproc)
+```
+
+To run an individual target:
+
+```sh
+$ ./build/tests/Fuzz/Digest/test_fuzz_digest_sha2_256
+```
 
 ### Force runtime CPU Architecture
 To force a specific CPU architecture level at runtime, use the environment variable `AOCL_ENABLE_INSTRUCTION` before running the executable.

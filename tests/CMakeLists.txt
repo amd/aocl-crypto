@@ -27,7 +27,14 @@
 include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
 
-SET(LIBS ${LIBS} gtest alcp)
+# Tests link against whichever ALCP library is being built. When only the
+# static library is enabled, link to alcp_static so all the existing test
+# CMakeLists that consume ${LIBS} keep working without modification.
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSE()
+    SET(LIBS ${LIBS} gtest alcp_static)
+ENDIF()
 
  SET(EXTRA_INCLUDES "")
 
@@ -63,6 +70,8 @@ ENDIF(ENABLE_TESTS_IPP_API)
 
 add_openssl()
 
+alcp_add_sanitize_workaround_flags()
+
 SET(ALCP_INCLUDES
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/lib/include"
@@ -90,6 +99,8 @@ if(ALCP_ENABLE_FUZZ_TESTS)
     endif()
 endif(ALCP_ENABLE_FUZZ_TESTS)
 
-IF(UNIX)
+# dl_load test dlopen()s libalcp.so at runtime so it only runs when the
+# shared library is being built.
+IF(UNIX AND ALCP_BUILD_SHARED)
    ADD_SUBDIRECTORY(dl_load)
-ENDIF(UNIX)
+ENDIF()

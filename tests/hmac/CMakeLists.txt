@@ -24,6 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+set(ALCP_MODULE_LABEL "mac")
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)

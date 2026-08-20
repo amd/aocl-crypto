@@ -33,6 +33,7 @@
 #include <immintrin.h>
 #include <tuple>
 
+#include "alcp/mac/poly1305_common.hh"
 #include "alcp/mac/poly1305_zen4.hh"
 #include "alcp/utils/copy.hh"
 
@@ -84,28 +85,8 @@ radix44(Uint8 msg[], Uint64 output[3])
         // Right shift output by extra bits
         output[i] >>= 4 * i;
         // Mask output by 44 bits
-        output[i] &= 0xfffffffffff;
+        output[i] &= Radix44::mask_low_limb;
         msg_input_ptr += 5;
-    }
-}
-
-/**
- * @brief Clamp R value to Poly1305 spec
- *
- * @param in - 128bit value as 8x16 array
- */
-void
-clamp(Uint8 in[16])
-{
-    constexpr std::array<std::tuple<int, int>, 7> cIndex = {
-        std::tuple<int, int>({ 3, 15 }),  std::tuple<int, int>({ 7, 15 }),
-        std::tuple<int, int>({ 11, 15 }), std::tuple<int, int>({ 15, 15 }),
-        std::tuple<int, int>({ 4, 252 }), std::tuple<int, int>({ 8, 252 }),
-        std::tuple<int, int>({ 12, 252 })
-    };
-
-    for (const auto& i : cIndex) {
-        in[std::get<0>(i)] &= std::get<1>(i);
     }
 }
 
@@ -157,7 +138,7 @@ poly1305_multiplyx2_radix44(Uint64 a[3], Uint64 r[3], Uint64 s[2])
     t_reg1_hi = _mm512_sllv_epi64(t_reg1_hi, idx);
     t_reg1_hi = _mm512_or_epi64(t_reg1_hi, regtemp);
     idx       = _mm512_setr_epi64(
-        0xfffffffffff, 0xfffffffffff, 0x3ffffffffff, 0, 0, 0, 0, 0);
+        Radix44::mask_low_limb, Radix44::mask_low_limb, Radix44::mask_last_limb, 0, 0, 0, 0, 0);
     t_reg1_lo = _mm512_and_epi64(t_reg1_lo, idx);
     idx       = _mm512_setr_epi64(6, 0, 1, 2, 6, 6, 6, 6);
     regtemp   = _mm512_permutexvar_epi64(idx, t_reg1_hi);
@@ -241,7 +222,7 @@ loadx1_message_radix44(const Uint8* p_msg,
     m0 = _mm512_unpacklo_epi64(m0, m0);
     // Radix first value calculation
     // Truncate to 44 bits
-    __m512i lo_masked = _mm512_and_epi64(m0, _mm512_set1_epi64(0xfffffffffff));
+    __m512i lo_masked = _mm512_and_epi64(m0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Radix second value calculation
     // Take out 44 bits which has been consumed by 1st part of radix
     __m512i lo_shifted = _mm512_srlv_epi64(m0, _mm512_set1_epi64(44));
@@ -251,13 +232,13 @@ loadx1_message_radix44(const Uint8* p_msg,
     // Or lo_shifted and hi_shifted and save it to lo_or
     __m512i lo_or = _mm512_or_epi64(lo_shifted, hi_shifted);
     // Truncate to 44 bits
-    lo_or = _mm512_and_epi64(lo_or, _mm512_set1_epi64(0xfffffffffff));
+    lo_or = _mm512_and_epi64(lo_or, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
     // of radix
     __m512i hi_shifted_40 = _mm512_srlv_epi64(m1, _mm512_set1_epi64(24));
     // Truncate to 42 bits
     hi_shifted_40 =
-        _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(0x3ffffffffff));
+        _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(Radix44::mask_last_limb));
 
     hi_shifted_40 =
         _mm512_or_epi64(hi_shifted_40, _mm512_set1_epi64(1ULL << 40));
@@ -281,7 +262,7 @@ loadx1_message_radix44_nopad(const Uint8* p_msg,
     m0 = _mm512_unpacklo_epi64(m0, m0);
     // Radix first value calculation
     // Truncate to 44 bits
-    __m512i lo_masked = _mm512_and_epi64(m0, _mm512_set1_epi64(0xfffffffffff));
+    __m512i lo_masked = _mm512_and_epi64(m0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Radix second value calculation
     // Take out 44 bits which has been consumed by 1st part of radix
     __m512i lo_shifted = _mm512_srlv_epi64(m0, _mm512_set1_epi64(44));
@@ -291,13 +272,13 @@ loadx1_message_radix44_nopad(const Uint8* p_msg,
     // Or lo_shifted and hi_shifted and save it to lo_or
     __m512i lo_or = _mm512_or_epi64(lo_shifted, hi_shifted);
     // Truncate to 44 bits
-    lo_or = _mm512_and_epi64(lo_or, _mm512_set1_epi64(0xfffffffffff));
+    lo_or = _mm512_and_epi64(lo_or, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
     // of radix
     __m512i hi_shifted_40 = _mm512_srlv_epi64(m1, _mm512_set1_epi64(24));
     // Truncate to 42 bits
     hi_shifted_40 =
-        _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(0x3ffffffffff));
+        _mm512_and_epi64(hi_shifted_40, _mm512_set1_epi64(Radix44::mask_last_limb));
 
     m0 = lo_masked;
     m1 = lo_or;
@@ -397,7 +378,7 @@ poly1305_mult_scalar_radix44(Uint64& a0,
 
     a2 = d2_lo & mask42;
     c  = (d2_lo >> 42) | (d2_hi << 22);
-    a0 += c * 5;
+    a0 += c * Radix44::wrap_factor;
 
     c = a0 >> 44;
     a0 &= mask44;
@@ -407,7 +388,7 @@ poly1305_mult_scalar_radix44(Uint64& a0,
     a2 += c;
     c = a2 >> 42;
     a2 &= mask42;
-    a0 += c * 5;
+    a0 += c * Radix44::wrap_factor;
     c = a0 >> 44;
     a0 &= mask44;
     a1 += c;
@@ -430,7 +411,7 @@ loadx8_message_radix44(const Uint8* p_msg,
 
     // Radix first value calculation
     // Truncate to 44 bits
-    m0 = _mm512_and_epi64(temp0, _mm512_set1_epi64(0xfffffffffff));
+    m0 = _mm512_and_epi64(temp0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Radix second value calculation
     // Take out 44 bits which has been consumed by 1st part of radix
     temp2 = _mm512_srlv_epi64(temp0, _mm512_set1_epi64(44));
@@ -440,12 +421,12 @@ loadx8_message_radix44(const Uint8* p_msg,
     // Or temp2 and temp3 to create radix second value
     temp2 = _mm512_or_epi64(temp2, temp3);
     // Truncate to 44 bits
-    m1 = _mm512_and_epi64(temp2, _mm512_set1_epi64(0xfffffffffff));
+    m1 = _mm512_and_epi64(temp2, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
     // of radix
     temp3 = _mm512_srlv_epi64(temp1, _mm512_set1_epi64(24));
     // Truncate to 44 bits
-    m2 = _mm512_and_epi64(temp3, _mm512_set1_epi64(0xfffffffffff));
+    m2 = _mm512_and_epi64(temp3, _mm512_set1_epi64(Radix44::mask_low_limb));
     m2 = _mm512_or_epi64(m2, _mm512_set1_epi64(1ULL << 40));
 
     return 512;
@@ -469,7 +450,7 @@ loadx7_message_radix44(const Uint8* p_msg,
 
     // Radix first value calculation
     // Truncate to 44 bits
-    m0 = _mm512_and_epi64(temp0, _mm512_set1_epi64(0xfffffffffff));
+    m0 = _mm512_and_epi64(temp0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Radix second value calculation
     // Take out 44 bits which has been consumed by 1st part of radix
     temp2 = _mm512_srlv_epi64(temp0, _mm512_set1_epi64(44));
@@ -479,12 +460,12 @@ loadx7_message_radix44(const Uint8* p_msg,
     // Or temp2 and temp3 to create radix second value
     temp2 = _mm512_or_epi64(temp2, temp3);
     // Truncate to 44 bits
-    m1 = _mm512_and_epi64(temp2, _mm512_set1_epi64(0xfffffffffff));
+    m1 = _mm512_and_epi64(temp2, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Shift hi by 24 bits to the right, 24 bits has been consumed by 2nd part
     // of radix
     temp3 = _mm512_srlv_epi64(temp1, _mm512_set1_epi64(24));
     // Truncate to 44 bits
-    m2 = _mm512_and_epi64(temp3, _mm512_set1_epi64(0xfffffffffff));
+    m2 = _mm512_and_epi64(temp3, _mm512_set1_epi64(Radix44::mask_low_limb));
     m2 = _mm512_or_epi64(m2,
                          _mm512_setr_epi64(0,
                                            1ULL << 40,
@@ -556,17 +537,17 @@ poly1305_multx8_radix44(__m512i& a0,
 
     // Bit Adjust
     extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
-    d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(0xfffffffffff));
+    d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(Radix44::mask_low_limb));
     d0h   = _mm512_sllv_epi64(d0h, _mm512_set1_epi64(8));
     d0h   = _mm512_add_epi64(d0h, extra);
 
     extra = _mm512_srlv_epi64(d1l, _mm512_set1_epi64(44));
-    d1l   = _mm512_and_epi64(d1l, _mm512_set1_epi64(0xfffffffffff));
+    d1l   = _mm512_and_epi64(d1l, _mm512_set1_epi64(Radix44::mask_low_limb));
     d1h   = _mm512_sllv_epi64(d1h, _mm512_set1_epi64(8));
     d1h   = _mm512_add_epi64(d1h, extra);
 
     extra = _mm512_srlv_epi64(d2l, _mm512_set1_epi64(42));
-    d2l   = _mm512_and_epi64(d2l, _mm512_set1_epi64(0x3ffffffffff));
+    d2l   = _mm512_and_epi64(d2l, _mm512_set1_epi64(Radix44::mask_last_limb));
     d2h   = _mm512_sllv_epi64(d2h, _mm512_set1_epi64(10));
     d2h   = _mm512_add_epi64(d2h, extra);
 
@@ -584,13 +565,13 @@ poly1305_multx8_radix44(__m512i& a0,
 
     // Propagrate carry
     extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
-    d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(0xfffffffffff));
+    d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(Radix44::mask_low_limb));
     d1l   = _mm512_add_epi64(d1l, extra);
     extra = _mm512_srlv_epi64(d1l, _mm512_set1_epi64(44));
-    d1l   = _mm512_and_epi64(d1l, _mm512_set1_epi64(0xfffffffffff));
+    d1l   = _mm512_and_epi64(d1l, _mm512_set1_epi64(Radix44::mask_low_limb));
     d2l   = _mm512_add_epi64(d2l, extra);
     extra = _mm512_srlv_epi64(d2l, _mm512_set1_epi64(42));
-    d2l   = _mm512_and_epi64(d2l, _mm512_set1_epi64(0x3ffffffffff));
+    d2l   = _mm512_and_epi64(d2l, _mm512_set1_epi64(Radix44::mask_last_limb));
     d0h   = _mm512_sllv_epi64(extra, _mm512_set1_epi64(2));
     extra = _mm512_add_epi64(extra, d0h);
     d0l   = _mm512_add_epi64(d0l, extra);
@@ -598,7 +579,7 @@ poly1305_multx8_radix44(__m512i& a0,
 // FIXME: Make sure this is not needed
 #if 0
     // extra = _mm512_srlv_epi64(d0l, _mm512_set1_epi64(44));
-    // d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(0xfffffffffff));
+    // d0l   = _mm512_and_epi64(d0l, _mm512_set1_epi64(Radix44::mask_low_limb));
     // d1l   = _mm512_add_epi64(d1l, extra);
 #endif
 
@@ -747,32 +728,32 @@ poly1305_blocksx8_final(__m512i& a0,
     // Optimization: Use 64 bit math to calculate a0, a1, a2 than using 512 bit
     // math. Carry propagation with modulo Right shift a0 by 44 bits
     __m512i carry = _mm512_srlv_epi64(a0, _mm512_set1_epi64(44));
-    // Mask 0xfffffffffff (44 bits) to a0
-    a0 = _mm512_and_epi64(a0, _mm512_set1_epi64(0xfffffffffff));
+    // Mask Radix44::mask_low_limb (44 bits) to a0
+    a0 = _mm512_and_epi64(a0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Add carry to a1
     a1 = _mm512_add_epi64(a1, carry);
     // Right shift a1 by 44 bits
     carry = _mm512_srlv_epi64(a1, _mm512_set1_epi64(44));
-    // Mask 0xfffffffffff (44 bits) to a1
-    a1 = _mm512_and_epi64(a1, _mm512_set1_epi64(0xfffffffffff));
+    // Mask Radix44::mask_low_limb (44 bits) to a1
+    a1 = _mm512_and_epi64(a1, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Add carry to a2
     a2 = _mm512_add_epi64(a2, carry);
     // Right shift a2 by 42 bits
     carry = _mm512_srlv_epi64(a2, _mm512_set1_epi64(42));
-    // Mask 0x3ffffffffff (42 bits) to a2
-    a2 = _mm512_and_epi64(a2, _mm512_set1_epi64(0x3ffffffffff));
+    // Mask Radix44::mask_last_limb (42 bits) to a2
+    a2 = _mm512_and_epi64(a2, _mm512_set1_epi64(Radix44::mask_last_limb));
     // Add carry to a0
     a0 = _mm512_add_epi64(a0, _mm512_mullo_epi64(carry, _mm512_set1_epi64(5)));
     // Right shift a0 by 44 bits
     carry = _mm512_srlv_epi64(a0, _mm512_set1_epi64(44));
-    // Mask 0xfffffffffff (44 bits) to a0
-    a0 = _mm512_and_epi64(a0, _mm512_set1_epi64(0xfffffffffff));
+    // Mask Radix44::mask_low_limb (44 bits) to a0
+    a0 = _mm512_and_epi64(a0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Add carry to a1
     a1 = _mm512_add_epi64(a1, carry);
 }
 
 void
-poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32])
+poly1305_init(Poly1305State44& state, const Uint8 key[32])
 {
     Uint8 r[16];
     Uint8 s[16];
@@ -780,7 +761,7 @@ poly1305_init_radix44(Poly1305State44& state, const Uint8 key[32])
     utils::SecureCopy<Uint8>(r, 16, key, 16);
     utils::SecureCopy<Uint8>(s, 16, key + 16, 16);
 
-    clamp(r);
+    poly1305_clamp_r(r);
 
     radix44(r, state.r);
     radix44(s, state.s);
@@ -1120,27 +1101,27 @@ poly1305_blocksx8_to_blocksx1(Poly1305State44& state) // len is useless here
     // Optimization: Use 64 bit math to calculate a0, a1, a2 than using 512 bit
     // math. Carry propagation with modulo Right shift a0 by 44 bits
     __m512i carry = _mm512_srlv_epi64(reg_acc0, _mm512_set1_epi64(44));
-    // Mask 0xfffffffffff (44 bits) to a0
-    reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(0xfffffffffff));
+    // Mask Radix44::mask_low_limb (44 bits) to a0
+    reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Add carry to a1
     reg_acc1 = _mm512_add_epi64(reg_acc1, carry);
     // Right shift reg_acc1 by 44 bits
     carry = _mm512_srlv_epi64(reg_acc1, _mm512_set1_epi64(44));
-    // Mask 0xfffffffffff (44 bits) to reg_acc1
-    reg_acc1 = _mm512_and_epi64(reg_acc1, _mm512_set1_epi64(0xfffffffffff));
+    // Mask Radix44::mask_low_limb (44 bits) to reg_acc1
+    reg_acc1 = _mm512_and_epi64(reg_acc1, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Add carry to a2
     reg_acc2 = _mm512_add_epi64(reg_acc2, carry);
     // Right shift reg_acc2 by 42 bits
     carry = _mm512_srlv_epi64(reg_acc2, _mm512_set1_epi64(42));
-    // Mask 0x3ffffffffff (42 bits) to reg_acc2
-    reg_acc2 = _mm512_and_epi64(reg_acc2, _mm512_set1_epi64(0x3ffffffffff));
+    // Mask Radix44::mask_last_limb (42 bits) to reg_acc2
+    reg_acc2 = _mm512_and_epi64(reg_acc2, _mm512_set1_epi64(Radix44::mask_last_limb));
     // Add carry to reg_acc0
     reg_acc0 = _mm512_add_epi64(
         reg_acc0, _mm512_mullo_epi64(carry, _mm512_set1_epi64(5)));
     // Right shift reg_acc0 by 44 bits
     carry = _mm512_srlv_epi64(reg_acc0, _mm512_set1_epi64(44));
-    // Mask 0xfffffffffff (44 bits) to reg_acc0
-    reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(0xfffffffffff));
+    // Mask Radix44::mask_low_limb (44 bits) to reg_acc0
+    reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(Radix44::mask_low_limb));
     // Add carry to reg_acc1
     reg_acc1 = _mm512_add_epi64(reg_acc1, carry);
 
@@ -1226,10 +1207,7 @@ poly1305_partial_blocks(Poly1305State44& state)
     }
 
     // Padding
-    p_msg[state.msg_buffer_len] = 0x01;
-    for (int i = state.msg_buffer_len + 1; i < 16; i++) {
-        p_msg[i] = 0x00;
-    }
+    poly1305_pad_partial_block(p_msg, state.msg_buffer_len);
 
     Uint64 m0, m1, m2;
     load_message_scalar_radix44_nopad(p_msg, m0, m1, m2);
@@ -1268,7 +1246,7 @@ poly1305_partial_blocks(Poly1305State44& state)
 }
 
 bool
-poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
+poly1305_update(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
 {
     if (state.finalized == true) {
         return false;
@@ -1307,7 +1285,7 @@ poly1305_update_radix44(Poly1305State44& state, const Uint8* pMsg, Uint64 len)
 }
 
 bool
-poly1305_finalize_radix44(Poly1305State44& state,
+poly1305_finalize(Poly1305State44& state,
                           Uint8*           digest,
                           Uint64           digest_len)
 {
@@ -1344,15 +1322,15 @@ poly1305_finalize_radix44(Poly1305State44& state,
         __m512i carry = _mm512_srli_epi64(reg_acc0, 44);
         // a1 = a1 + carry
         reg_acc1 = _mm512_add_epi64(reg_acc1, carry);
-        // a0 = a0 & 0xfffffffffff
-        reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(0xfffffffffff));
+        // a0 = a0 & Radix44::mask_low_limb
+        reg_acc0 = _mm512_and_epi64(reg_acc0, _mm512_set1_epi64(Radix44::mask_low_limb));
 
         // carry = reg_acc1>>44
         carry = _mm512_srli_epi64(reg_acc1, 44);
         // a2 = a2 + carry
         reg_acc2 = _mm512_add_epi64(reg_acc2, carry);
-        // reg_acc1 = reg_acc1 & 0xfffffffffff
-        reg_acc1 = _mm512_and_epi64(reg_acc1, _mm512_set1_epi64(0xfffffffffff));
+        // reg_acc1 = reg_acc1 & Radix44::mask_low_limb
+        reg_acc1 = _mm512_and_epi64(reg_acc1, _mm512_set1_epi64(Radix44::mask_low_limb));
 
         _mm512_store_epi64(state.acc0, reg_acc0);
         _mm512_store_epi64(state.acc1, reg_acc1);

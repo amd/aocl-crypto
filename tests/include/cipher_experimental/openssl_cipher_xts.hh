@@ -51,7 +51,13 @@ class OpenSSLXtsCipher : public ITestCipher
 
     bool finalize(alc_test_finalize_data_p data) override;
 
-    ~OpenSSLXtsCipher() = default;
+    ~OpenSSLXtsCipher()
+    {
+        if (m_ctx != nullptr) {
+            EVP_CIPHER_CTX_free(m_ctx);
+            m_ctx = nullptr;
+        }
+    }
 };
 
 } // namespace alcp::testing::cipher::xts

@@ -64,7 +64,7 @@ DecryptCfbKernel(const Uint8* pSrc,
     __m512i b1, b2, b3, b4;
     //__m512i _a1;
 
-    sKeys keys;
+    sKeys keys{};
     alcp_load_key_zmm(pkey128, keys);
 
     Int32 isIvUsed = 0;
@@ -198,7 +198,6 @@ DecryptCfbKernel(const Uint8* pSrc,
     }
 
     if (res) {
-        // FIXME: To be merged into
         b1             = alcp_loadu_128((const __m512i*)pIv);
         auto p_out_128 = reinterpret_cast<__m128i*>(pOut_512);
 

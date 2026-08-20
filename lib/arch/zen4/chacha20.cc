@@ -367,12 +367,21 @@ ProcessChacha20ParallelBlocks16(Uint64&       blocks,
 
     const __m512i inc_512 = _mm512_setr_epi32(
         16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
-    s_prev[12] = _mm512_add_epi32(
-        s_prev[12],
-        _mm512_setr_epi32(
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
-    // s_prev[16] values will never change inside the loop except for
-    // s_prev[12] which is used to save the counter value
+    const __m512i one_512 = _mm512_set1_epi32(1);
+    {
+        // Spread lane counters {ctr, ctr+1, ..., ctr+15} across s_prev[12].
+        // Detect per-lane 32-bit wrap and carry into s_prev[13] (nonce word 0)
+        // for wrapped lanes so that the effective block counter is 64-bit,
+        // matching OpenSSL's EVP_chacha20 behavior.
+        __m512i ctr_base = s_prev[12];
+        s_prev[12]       = _mm512_add_epi32(
+            s_prev[12],
+            _mm512_setr_epi32(
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+        __mmask16 wrap = _mm512_cmplt_epu32_mask(s_prev[12], ctr_base);
+        if (wrap)
+            s_prev[13] = _mm512_mask_add_epi32(s_prev[13], wrap, s_prev[13], one_512);
+    }
     // clang-format on
     while (blocks >= 16) {
         // Restoring the registers to last Round State
@@ -475,7 +484,13 @@ ProcessChacha20ParallelBlocks16(Uint64&       blocks,
         XorKeyStoreCombinedNew(p_in_512, s[2], s[5], s[7], s[4], p_out_512);
         pInputText += 1024;
         pOutputText += 1024;
-        s_prev[12] = _mm512_add_epi32(s_prev[12], inc_512);
+        {
+            __m512i prev12 = s_prev[12];
+            s_prev[12]     = _mm512_add_epi32(s_prev[12], inc_512);
+            __mmask16 wrap = _mm512_cmplt_epu32_mask(s_prev[12], prev12);
+            if (wrap)
+                s_prev[13] = _mm512_mask_add_epi32(s_prev[13], wrap, s_prev[13], one_512);
+        }
         blocks -= 16;
     }
 }

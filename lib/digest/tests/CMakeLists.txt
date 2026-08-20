@@ -23,7 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
+Include(${ALCP_ROOT}/cmake/AlcpTests.cmake)
 
 set(TEST_FILES 
   md5_sha1_unit_test.cc sha1_unit_test.cc sha256_unit_test.cc    sha3_256_unit_test.cc  sha3_512_unit_test.cc  sha3_shake_unit_test.cc

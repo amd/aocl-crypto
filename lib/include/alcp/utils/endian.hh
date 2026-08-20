@@ -31,6 +31,8 @@
 #include "alcp/types.hh"
 #include "config.h"
 
+#include <cstring>
+
 namespace alcp::utils {
 
 template<typename T>
@@ -122,5 +124,28 @@ ToLittleEndian(T value)
 }
 
 #endif
+
+// Load a little-endian value of type T from an unaligned byte pointer. Uses
+// memcpy so the load is well-defined for any alignment, then converts to host
+// byte order. On a little-endian host with T=Uint32 this collapses to a single
+// 32-bit load at -O2 and above.
+template<typename T>
+inline T
+LoadLittleEndian(const Uint8* pSrc)
+{
+    T value;
+    std::memcpy(&value, pSrc, sizeof(T));
+    return ToLittleEndian(value);
+}
+
+// Store a value of type T as little-endian bytes to an unaligned byte pointer.
+// Mirrors LoadLittleEndian: convert to little-endian first, then memcpy out.
+template<typename T>
+inline void
+StoreLittleEndian(Uint8* pDst, T value)
+{
+    const T leValue = ToLittleEndian(value);
+    std::memcpy(pDst, &leValue, sizeof(T));
+}
 
 } // namespace alcp::utils

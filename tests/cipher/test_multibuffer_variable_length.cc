@@ -46,7 +46,9 @@
 #include "alcp/types.hh"
 #include "alcp/utils/cpuid.hh"
 
+#include "gtest_common.hh"
 #include "rng_base.hh"
+#include <cstring>
 #include <exception>
 #include <iostream>
 
@@ -58,13 +60,22 @@ class VariableLengthMultibufferTest : public ::testing::Test
   protected:
     alcp::testing::RngBase rng;
 
-    void SetUp() override {}
+    void SetUp() override
+    {
+        if (seed_set)
+            rng.setSeedMt19937(seed_override);
+        std::cout << "[ SEED     ] " << rng.getSeedMt19937()
+                  << "  (repro: --seed " << rng.getSeedMt19937() << ")"
+                  << std::endl;
+    }
     void TearDown() override {}
 
     // Helper: Generate random data
     std::vector<Uint8> generateRandom(size_t size)
     {
-        return rng.genRandomBytes(size);
+        std::vector<Uint8> v(size);
+        rng.genRandomMt19937(v);
+        return v;
     }
 
     // Helper: Single-buffer reference encryption using standard API
@@ -571,18 +582,17 @@ int
 main(int argc, char** argv)
 {
     try {
+        parseTestArgs(argc, argv);
         ::testing::InitGoogleTest(&argc, argv);
 
         // Skip if running with IPP (-i) or OpenSSL (-o) flags
         // This test only validates ALCP's variable-length multi-buffer
         // implementation
-        for (int i = 1; i < argc; i++) {
-            if (std::string(argv[i]) == "-i" || std::string(argv[i]) == "-o") {
-                std::cout
-                    << "Skipping: This test only validates ALCP implementation"
-                    << std::endl;
-                return 0;
-            }
+        if (useipp || useossl) {
+            std::cout
+                << "Skipping: This test only validates ALCP implementation"
+                << std::endl;
+            return 0;
         }
 
         return RUN_ALL_TESTS();

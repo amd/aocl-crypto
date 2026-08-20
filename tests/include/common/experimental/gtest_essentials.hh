@@ -38,7 +38,9 @@
 
 namespace alcp::testing::utils {
 
-inline int block_size = 0;
+inline int      block_size     = 0;
+inline bool     seed_set       = false;
+inline uint64_t seed_override  = 0;
 
 enum class ParamType
 {
@@ -88,6 +90,9 @@ parseTestArgs(int* argc, char** argv)
     if (parsed.help_requested) {
         alcp::bench::args::print_test_help();
     }
+
+    seed_set      = parsed.seed_set;
+    seed_override = parsed.seed;
 
     return argsMap;
 }

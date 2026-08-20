@@ -125,6 +125,10 @@ AlcpGcmCipher<encryptor>::finalize(alc_test_finalize_data_p data)
         return false;
     }*/
     alcp_cipher_aead_finish(&m_handle);
+    if (m_handle.ch_context) {
+        free(m_handle.ch_context);
+        m_handle.ch_context = nullptr;
+    }
     return true;
 };
 

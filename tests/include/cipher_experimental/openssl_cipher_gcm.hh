@@ -51,7 +51,13 @@ class OpenSSLGcmCipher : public ITestCipher
 
     bool finalize(alc_test_finalize_data_p data) override;
 
-    ~OpenSSLGcmCipher() = default;
+    ~OpenSSLGcmCipher()
+    {
+        if (m_ctx != nullptr) {
+            EVP_CIPHER_CTX_free(m_ctx);
+            m_ctx = nullptr;
+        }
+    }
 };
 
 } // namespace alcp::testing::cipher::gcm

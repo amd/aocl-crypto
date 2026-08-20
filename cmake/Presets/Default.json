@@ -5,7 +5,8 @@
         "Generators/Make.json",
         "Generators/Ninja.json",
         "x64-linux-gcc.json",
-        "x64-linux-llvm.json"
+        "x64-linux-llvm.json",
+        "Provider.json"
     ],
     "configurePresets": [
         {
@@ -90,7 +91,8 @@
             "displayName": "Production Config with GCC-Release with ninja",
             "inherits": [
                 "ninja",
-                "base-config-rte"
+                "base-config-rte",
+                "x64-linux-gcc-release"
             ]
         },
         {
@@ -109,6 +111,12 @@
                 "ninja",
                 "base-config-rte"
             ]
+        },
+        {
+            "name": "prov-none-gcc",
+            "displayName": "Provider: all algorithms OFF — pass -D to enable (GCC release, ninja)",
+            "description": "Starts with every provider algorithm disabled. Add -DALCP_COMPAT_ENABLE_OPENSSL_<ALGO>=ON for each algorithm you want. Example: cmake --preset prov-none-gcc -DALCP_COMPAT_ENABLE_OPENSSL_CIPHER_GCM=ON -DALCP_COMPAT_ENABLE_OPENSSL_RSA=ON",
+            "inherits": ["provider-all-off", "prod-release-gcc-ninja"]
         }
     ],
     "buildPresets": [
@@ -207,6 +215,12 @@
                 "build-release"
             ],
             "configurePreset": "prod-release-clang-ninja"
+        },
+        {
+            "name": "prov-none-gcc",
+            "displayName": "Provider: all algorithms OFF",
+            "configurePreset": "prov-none-gcc",
+            "inherits": "build-release"
         }
     ]
 }

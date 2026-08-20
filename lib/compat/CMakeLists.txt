@@ -27,13 +27,14 @@ FILE(GLOB COMPAT_SRCS "*.cc")
 
 SET(COMPAT_SRCS ${COMPAT_SRCS} PARENT_SCOPE)
 
-IF (ENABLE_OPENSSL_COMPAT)
+# Compat libraries are shared plugins that link against the alcp shared
+# library, so they are only buildable when ALCP_BUILD_SHARED is ON.
+IF (ENABLE_OPENSSL_COMPAT AND ALCP_BUILD_SHARED)
     # Adding openssl-compat as a seperate library
     ADD_SUBDIRECTORY(openssl)
-ENDIF (ENABLE_OPENSSL_COMPAT)
+ENDIF ()
 
-IF (ENABLE_IPP_COMPAT)
+IF (ENABLE_IPP_COMPAT AND ALCP_BUILD_SHARED)
 	# Adding ipp-compat as a seperate library
 	ADD_SUBDIRECTORY(ipp)
-ENDIF (ENABLE_IPP_COMPAT)
-
+ENDIF ()

@@ -32,23 +32,9 @@
 
 #include "alcp/error.h"
 #include "alcp/mac/poly1305-ref.hh"
+#include "alcp/mac/poly1305_common.hh"
 
 namespace alcp::mac::poly1305::reference {
-
-void
-clamp(Uint8 in[16])
-{
-    constexpr std::array<std::tuple<int, int>, 7> cIndex = {
-        std::tuple<int, int>({ 3, 15 }),  std::tuple<int, int>({ 7, 15 }),
-        std::tuple<int, int>({ 11, 15 }), std::tuple<int, int>({ 15, 15 }),
-        std::tuple<int, int>({ 4, 252 }), std::tuple<int, int>({ 8, 252 }),
-        std::tuple<int, int>({ 12, 252 })
-    };
-
-    for (const auto& i : cIndex) {
-        in[std::get<0>(i)] &= std::get<1>(i);
-    }
-}
 
 /*
     Class Poly1305Ref Functions
@@ -85,7 +71,7 @@ Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
     std::copy(key + 16, key + 32, p_m_key_8 + 16);
 
     // r = clamp(r)
-    clamp(p_m_key_8); // Clamp to polynomial
+    poly1305_clamp_r(p_m_key_8); // Clamp to polynomial
 
     // a = 0
     std::fill(m_accumulator, m_accumulator + 5, 0);
@@ -100,7 +86,7 @@ Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
             Uint8* p_r_8 = reinterpret_cast<Uint8*>(&m_r[i]);
             std::copy(p_key_8, p_key_8 + 4, p_r_8);
             m_r[i] = m_r[i] >> (2 * i);
-            m_r[i] &= 0x3ffffff;
+            m_r[i] &= Radix26::mask_low_limb;
             p_key_8 += 3;
         }
     }
@@ -133,7 +119,7 @@ poly1305_block(const Uint8 pMsg[],
             std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
             msg_temp[i] = (msg_temp[i] >> (2 * i));
             if (i != 4)
-                msg_temp[i] &= 0x3ffffff;
+                msg_temp[i] &= Radix26::mask_low_limb;
             else {
                 msg_temp[i] |= cPadding;
             }
@@ -156,22 +142,22 @@ poly1305_block(const Uint8 pMsg[],
 
         // Carry Propagation
         carry          = (unsigned long)(d[0] >> 26);
-        accumulator[0] = (unsigned long)d[0] & 0x3ffffff;
+        accumulator[0] = (unsigned long)d[0] & Radix26::mask_low_limb;
         d[1] += carry;
         carry          = (unsigned long)(d[1] >> 26);
-        accumulator[1] = (unsigned long)d[1] & 0x3ffffff;
+        accumulator[1] = (unsigned long)d[1] & Radix26::mask_low_limb;
         d[2] += carry;
         carry          = (unsigned long)(d[2] >> 26);
-        accumulator[2] = (unsigned long)d[2] & 0x3ffffff;
+        accumulator[2] = (unsigned long)d[2] & Radix26::mask_low_limb;
         d[3] += carry;
         carry          = (unsigned long)(d[3] >> 26);
-        accumulator[3] = (unsigned long)d[3] & 0x3ffffff;
+        accumulator[3] = (unsigned long)d[3] & Radix26::mask_low_limb;
         d[4] += carry;
         carry          = (unsigned long)(d[4] >> 26);
-        accumulator[4] = (unsigned long)d[4] & 0x3ffffff;
-        accumulator[0] += carry * 5;
+        accumulator[4] = (unsigned long)d[4] & Radix26::mask_low_limb;
+        accumulator[0] += carry * Radix26::wrap_factor;
         carry          = (accumulator[0] >> 26);
-        accumulator[0] = accumulator[0] & 0x3ffffff;
+        accumulator[0] = accumulator[0] & Radix26::mask_low_limb;
         accumulator[1] += carry;
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
@@ -242,10 +228,8 @@ Poly1305Ref::finish(Uint8 digest[], Uint64 len)
     }
 
     if (m_msg_buffer_len) {
-        m_msg_buffer[m_msg_buffer_len] = 0x01;
-        std::fill(m_msg_buffer + m_msg_buffer_len + 1, m_msg_buffer + 16, 0);
+        poly1305_pad_partial_block(m_msg_buffer, m_msg_buffer_len);
         poly1305_block(m_msg_buffer, m_msg_buffer_len, m_accumulator, m_r, m_s);
-        // update(m_msg_buffer, m_msg_buffer_len);
     }
 
     Uint64        acc[5]  = {};
@@ -260,37 +244,37 @@ Poly1305Ref::finish(Uint8 digest[], Uint64 len)
 
     // Propagate carry from 1 to finish carry propation of addition
     carry  = acc[1] >> 26;
-    acc[1] = acc[1] & 0x3ffffff;
+    acc[1] = acc[1] & Radix26::mask_low_limb;
     acc[2] += carry;
     carry  = acc[2] >> 26;
-    acc[2] = acc[2] & 0x3ffffff;
+    acc[2] = acc[2] & Radix26::mask_low_limb;
     acc[3] += carry;
     carry  = acc[3] >> 26;
-    acc[3] = acc[3] & 0x3ffffff;
+    acc[3] = acc[3] & Radix26::mask_low_limb;
     acc[4] += carry;
     carry  = acc[4] >> 26;
-    acc[4] = acc[4] & 0x3ffffff;
-    acc[0] += carry * 5;
+    acc[4] = acc[4] & Radix26::mask_low_limb;
+    acc[0] += carry * Radix26::wrap_factor;
     carry  = acc[0] >> 26;
-    acc[0] = acc[0] & 0x3ffffff;
+    acc[0] = acc[0] & Radix26::mask_low_limb;
     acc[1] += carry;
 
     // acc -= (1<<130 -5) -> acc = acc - 1<<130 + 5
     // (1<<130-5) + 5 => (1<<130)
     temp[0] = acc[0] + 5;
     carry   = temp[0] >> 26;
-    temp[0] &= 0x3ffffff;
+    temp[0] &= Radix26::mask_low_limb;
     temp[1] = acc[1] + carry;
     carry   = temp[1] >> 26;
-    temp[1] &= 0x3ffffff;
+    temp[1] &= Radix26::mask_low_limb;
     temp[2] = acc[2] + carry;
     carry   = temp[2] >> 26;
-    temp[2] &= 0x3ffffff;
+    temp[2] &= Radix26::mask_low_limb;
     temp[3] = acc[3] + carry;
     carry   = temp[3] >> 26;
-    temp[3] &= 0x3ffffff;
+    temp[3] &= Radix26::mask_low_limb;
     // acc-(1<<130)
-    temp[4] = acc[4] + carry - (1UL << 26);
+    temp[4] = acc[4] + carry - (Radix26::mask_low_limb + 1);
 
     if ((temp[4] >> 63) == 0) {
         for (int i = 0; i < 5; i++) {

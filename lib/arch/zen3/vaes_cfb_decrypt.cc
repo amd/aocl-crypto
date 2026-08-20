@@ -156,6 +156,7 @@ alc_error_t inline DecryptCfbKernel(
 
     /* process single block of 128-bit */
     __m128i* p_ct128 = reinterpret_cast<__m128i*>(p_ct256);
+    __m128i* p_pt128 = reinterpret_cast<__m128i*>(p_pt256);
     if (blocks) {
         Uint64* p_iv64  = (Uint64*)p_ct128;
         __m256i mask_lo = _mm256_set_epi64x(0,
@@ -171,25 +172,28 @@ alc_error_t inline DecryptCfbKernel(
 
         iv256 = blk0;
         blk0  = _mm256_xor_si256(tmpblk, y0);
-        _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);
+        _mm256_maskstore_epi64((long long*)p_pt128, mask_lo, blk0);
 
         p_ct128 += 1;
+        p_pt128 += 1;
         blocks--;
     }
 
     if (res) {
         __m256i blk0 = _mm256_setzero_si256();
 
-        Uint64* p_iv64 = (Uint64*)(p_ct128 - 1);
-        std::copy((Uint8*)p_iv64, ((Uint8*)p_iv64) + 16, (Uint8*)&iv256);
+        if (len >= Rijndael::cBlockSize) {
+            Uint64* p_iv64 = (Uint64*)(p_ct128 - 1);
+            std::copy(
+                (Uint8*)p_iv64, ((Uint8*)p_iv64) + 16, (Uint8*)&iv256);
+        }
         std::copy((Uint8*)p_ct128, ((Uint8*)p_ct128) + res, (Uint8*)&blk0);
 
-        // __m256i tmpblk = _mm256_permute2x128_si256(blk0, blk0, 1);
         AesEnc_1x256(&iv256, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, iv256);
 
-        std::copy((Uint8*)&blk0, ((Uint8*)&blk0) + res, (Uint8*)p_pt256);
+        std::copy((Uint8*)&blk0, ((Uint8*)&blk0) + res, (Uint8*)p_pt128);
     }
 
 #ifdef AES_MULTI_UPDATE

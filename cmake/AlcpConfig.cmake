@@ -77,10 +77,10 @@ FUNCTION(GEN_CONF)
     # CONFIGURE A HEADER FILE TO PASS SOME OF THE CMAKE SETTINGS
     # TO THE SOURCE CODE
     IF(ALCP_BUILD_OS_LINUX)
-        configure_file(${CMAKE_SOURCE_DIR}/include/alcp/config.h.in ${CMAKE_SOURCE_DIR}/include/config.h UNIX)
+        configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_ROOT}/include/config.h UNIX)
     ENDIF(ALCP_BUILD_OS_LINUX)
     IF(ALCP_BUILD_OS_WINDOWS)
-        configure_file(${CMAKE_SOURCE_DIR}/include/alcp/config.h.in ${CMAKE_SOURCE_DIR}/include/config.h WIN32)
+        configure_file(${ALCP_ROOT}/include/alcp/config.h.in ${ALCP_ROOT}/include/config.h WIN32)
     ENDIF(ALCP_BUILD_OS_WINDOWS)
 
 ENDFUNCTION()

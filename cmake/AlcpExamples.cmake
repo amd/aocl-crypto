@@ -40,12 +40,17 @@ FUNCTION(ADD_EXAMPLE EXAMPLE_SOURCE)
         set(EXAMPLE_TARGET "${EXAMPLE_SOURCE}")
     endif()
 
-    add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE})
+    # Dynamic example -- only built when the shared lib is built. Skipping
+    # avoids dragging the SHARED alcp target into the build.
+    IF(ALCP_BUILD_SHARED)
+        add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE})
+        target_compile_options(${EXAMPLE_TARGET} PUBLIC ${ALCP_WARNINGS})
+        target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
+    ENDIF()
 
-    target_compile_options(${EXAMPLE_TARGET} PUBLIC ${ALCP_WARNINGS})
-    target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
-
-    # Static Example
-    add_executable(${EXAMPLE_TARGET}-static ${EXAMPLE_SOURCE})
-    target_link_libraries(${EXAMPLE_TARGET}-static PRIVATE alcp_static Threads::Threads)
+    # Static Example -- only built when the static lib is built.
+    IF(ALCP_BUILD_STATIC)
+        add_executable(${EXAMPLE_TARGET}-static ${EXAMPLE_SOURCE})
+        target_link_libraries(${EXAMPLE_TARGET}-static PRIVATE alcp_static Threads::Threads)
+    ENDIF()
 ENDFUNCTION()

@@ -57,7 +57,7 @@ endmacro()
 #         CONTENTS data/
 #   )
 
-Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+Include(${ALCP_ROOT}/cmake/AlcpTestUtils.cmake)
 
 function(alcp_cc_test testName working_dir)
     if(NOT ALCP_ENABLE_TESTS)
@@ -102,13 +102,13 @@ function(alcp_cc_test testName working_dir)
         endif()
     endif()
 
-    file(GLOB TEST_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+    file(GLOB TEST_COMMON_SRC ${ALCP_ROOT}/tests/common/base/*.cc)
 
     if(${ALCP_MODULE} STREQUAL "Cipher")
         SET(TEST_COMMON_SRC ${TEST_COMMON_SRC}
-                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
-                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
-                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc
+                            ${ALCP_ROOT}/tests/cipher/base/alc_cipher.cc
+                            ${ALCP_ROOT}/tests/cipher/base/alc_cipher_aead.cc
+                            ${ALCP_ROOT}/tests/cipher/base/cipher.cc
                             ${UNIT_TEST_COMMON_SRCS}
         )
     endif()
@@ -118,21 +118,35 @@ function(alcp_cc_test testName working_dir)
     endif()
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Per-module unit tests are optimized, sanitizer-instrumented gtest code and
+    # need the same clang-21 ASan workaround applied to the top-level tests/ and
+    # bench/ trees. Apply it here so every test built through this function is
+    # covered regardless of which subtree (e.g. lib/*/tests) it lives in.
+    alcp_add_sanitize_workaround_flags()
+
     add_executable(${_target_name}
         ${${testPrefix}_SOURCES}
         ${TEST_COMMON_SRC}
     )
 
+    # Link to whichever ALCP variant is being built; matches the parent
+    # tests/CMakeLists.txt behaviour so SHARED=OFF builds do not pull alcp in.
+    IF(ALCP_BUILD_SHARED)
+        SET(_ALCP_TEST_LIB alcp)
+    ELSE()
+        SET(_ALCP_TEST_LIB alcp_static)
+    ENDIF()
     target_link_libraries(${_target_name}
         gtest_main
         gmock_main
-        alcp
+        ${_ALCP_TEST_LIB}
         ${${testPrefix}_DEPENDS}
     )
 
-    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
-    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/common/include)
-    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib/include)
+    target_include_directories(${_target_name} PRIVATE ${ALCP_ROOT}/tests/include)
+    target_include_directories(${_target_name} PRIVATE ${ALCP_ROOT}/tests/common/include)
+    target_include_directories(${_target_name} PRIVATE ${ALCP_ROOT}/lib/include)
     target_include_directories(${_target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
 
     add_test(${_target_name}, ${working_dir}/${_target_name})

@@ -703,6 +703,22 @@ OpenSSLRsaBase::DigestSign(const alcp_rsa_data_t& data)
 {
     size_t sig_len = 0;
 
+    if (EVP_DigestSignInit(
+            m_SignCtx, &m_SigningKeyCtx, m_md_type, nullptr, m_pkey_pvt)
+        != 1) {
+        std::cout << __func__ << ":" << "EVP_DigestSignInit returned: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
+    /* Re-apply padding settings after EVP_DigestSignInit (it creates a fresh
+     * key context via &m_SigningKeyCtx, overwriting any prior padding
+     * config). */
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        EVP_PKEY_CTX_set_rsa_padding(m_SigningKeyCtx, RSA_PKCS1_PSS_PADDING);
+        EVP_PKEY_CTX_set_rsa_pss_saltlen(m_SigningKeyCtx, data.m_salt_len);
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        EVP_PKEY_CTX_set_rsa_padding(m_SigningKeyCtx, RSA_PKCS1_PADDING);
+    }
     if (EVP_DigestSignUpdate(m_SignCtx, data.m_msg, data.m_msg_len) != 1) {
         std::cout << __func__ << ":" << "EVP_DigestSignUpdate returned: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
@@ -723,8 +739,25 @@ OpenSSLRsaBase::DigestSign(const alcp_rsa_data_t& data)
 bool
 OpenSSLRsaBase::DigestVerify(const alcp_rsa_data_t& data)
 {
-    size_t sig_len = m_hash_len * 8;
-    /* update padding mode*/
+    /* sig_len = RSA key size in bytes (not hash len) */
+    size_t sig_len = static_cast<size_t>(data.m_key_len);
+
+    if (EVP_DigestVerifyInit(
+            m_VerifyCtx, &m_VerifyKeyCtx, m_md_type, NULL, m_pkey_pub)
+        != 1) {
+        std::cout << __func__ << ":" << "EVP_DigestVerifyInit returned: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
+    /* Re-apply padding settings after EVP_DigestVerifyInit (it creates a
+     * fresh key context via &m_VerifyKeyCtx, overwriting any prior padding
+     * config). */
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        EVP_PKEY_CTX_set_rsa_padding(m_VerifyKeyCtx, RSA_PKCS1_PSS_PADDING);
+        EVP_PKEY_CTX_set_rsa_pss_saltlen(m_VerifyKeyCtx, data.m_salt_len);
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        EVP_PKEY_CTX_set_rsa_padding(m_VerifyKeyCtx, RSA_PKCS1_PADDING);
+    }
     if (EVP_DigestVerifyUpdate(m_VerifyCtx, data.m_msg, data.m_msg_len) != 1) {
         std::cout << __func__ << ":"
                   << "Error: EVP_DigestVerifyUpdate returned:"

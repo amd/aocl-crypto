@@ -23,7 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
+Include(${ALCP_ROOT}/cmake/AlcpTests.cmake)
 
 # Bump up C++ standard
 SET(CMAKE_CXX_STANDARD 17)

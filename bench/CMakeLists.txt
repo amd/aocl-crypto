@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,7 +23,14 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
- SET(LIBS ${LIBS} benchmark alcp)
+ # Link against whichever ALCP library is being built. When only the static
+ # library is enabled, link to alcp_static so the benchmarks keep working
+ # without modification.
+ IF(ALCP_BUILD_SHARED)
+     SET(LIBS ${LIBS} benchmark alcp)
+ ELSE()
+     SET(LIBS ${LIBS} benchmark alcp_static)
+ ENDIF()
  SET(EXTRA_INCLUDES "")
 
  IF(ENABLE_TESTS_IPP_API)
@@ -60,6 +67,8 @@
 
  add_openssl()
 
+ alcp_add_sanitize_workaround_flags()
+
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_USE_BUNDLED_GTEST OFF)
@@ -71,4 +80,3 @@ ADD_SUBDIRECTORY(cmac)
 ADD_SUBDIRECTORY(poly1305)
 ADD_SUBDIRECTORY(ecdh)
 ADD_SUBDIRECTORY(rsa)
-

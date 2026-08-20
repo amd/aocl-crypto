@@ -48,7 +48,13 @@ class IppGcmCipher : public ITestCipher
 
     bool finalize(alc_test_finalize_data_p data) override;
 
-    ~IppGcmCipher() = default;
+    ~IppGcmCipher()
+    {
+        if (m_ctx_gcm != nullptr) {
+            delete[] (Ipp8u*)m_ctx_gcm;
+            m_ctx_gcm = nullptr;
+        }
+    }
 };
 
 } // namespace alcp::testing::cipher::gcm

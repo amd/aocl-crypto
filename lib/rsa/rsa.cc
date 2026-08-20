@@ -64,15 +64,33 @@ IsEqual(const Uint8* first, const Uint8* second, Uint16 len)
 }
 
 static inline Uint8
-IsLess(Uint8 first, Uint8 second)
+IsLessU32(Uint32 first, Uint32 second)
 {
-    return 0 - (static_cast<Uint8>(first - second) >> 7);
+    return 0 - static_cast<Uint8>((static_cast<Uint64>(first) - second) >> 63);
 }
 
 static inline Uint8
 Select(Uint8 mask, Uint8 first, Uint8 second)
 {
     return (mask & first) | (~mask & second);
+}
+
+// `mask` must be canonical (0x00 or 0xFF) — it is sign-extended to a full-width
+// all-zeros/all-ones mask. All callers derive it from IsZero/IsLessU32, which
+// produce exactly 0x00/0xFF, combined only with &, |, ~ (invariant preserved).
+static inline Uint32
+SelectU32(Uint8 mask, Uint32 first, Uint32 second)
+{
+    Uint32 m = static_cast<Uint32>(static_cast<Int8>(mask));
+    return (m & first) | (~m & second);
+}
+
+// `mask` must be canonical (0x00 or 0xFF); see SelectU32.
+static inline Uint64
+SelectU64(Uint8 mask, Uint64 first, Uint64 second)
+{
+    Uint64 m = static_cast<Uint64>(static_cast<Int8>(mask));
+    return (m & first) | (~m & second);
 }
 
 static inline void
@@ -439,7 +457,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     for (Uint32 i = m_hash_len; i < db_len; i++) {
         Uint8 is_one  = IsZero(p_db[i] ^ 1);
         Uint8 is_zero = IsZero(p_db[i]);
-        one_index     = Select(~found_one & is_one, i, one_index);
+        one_index     = SelectU32(~found_one & is_one, i, one_index);
         found_one |= is_one;
         success &= (found_one | is_zero);
     }
@@ -450,14 +468,16 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
 
     Uint64 max_msg_len = db_len - m_hash_len - 1;
     for (Uint32 i = 0; i < max_msg_len; i++) {
-        Uint8 mask = success & IsLess(i, text_len);
+        Uint8 mask = success & IsLessU32(i, text_len);
         pText[i]   = Select(mask, p_db[text_index + i], pText[i]);
     }
 
-    textSize = Select(success, text_len, -1);
-    memset(p_mod_text, 0, encSize);
-    memset(p_db, 0, db_len * 2);
-    return Select(success, ALC_ERROR_NONE, ALC_ERROR_GENERIC);
+    /* On failure report length 0 (not (Uint32)-1, which widens to a misleading
+     * 4 GB value in this Uint64 out-param). Matches decryptPrivatePkcsv15. */
+    textSize = SelectU64(success, static_cast<Uint64>(text_len), Uint64(0));
+    mont::SecureClear(p_mod_text, encSize);
+    mont::SecureClear(p_db, db_len * 2);
+    return SelectU64(success, ALC_ERROR_NONE, ALC_ERROR_GENERIC);
 }
 
 alc_error_t
@@ -851,28 +871,37 @@ Rsa::decryptPrivatePkcsv15(const Uint8* pEncryptedText,
     if (!pText || !pEncryptedText) {
         return ALC_ERROR_NOT_PERMITTED;
     }
-    alignas(64) Uint8 message[2048 / 8]{};
+    alignas(64) Uint8 message[2 * 2048 / 8]{};
 
     decryptPrivate(pEncryptedText, m_key_size, message);
     // Encoded message :- 0x00 || 0x02 || PS || 0x00 || M
 
-    Uint8 error_flag = 0;
-    error_flag |= ((message[0] != 0) | (message[1] != 2));
+    Uint8 success = IsZero(message[0]);
+    success &= IsZero(message[1] ^ 0x02);
 
-    Uint64 i = 2;
-    while (i < m_key_size && message[i]) {
-        ++i;
+    Uint32 sep_index = 0;
+    Uint8  found_sep = 0;
+    for (Uint32 i = 2; i < m_key_size; i++) {
+        Uint8 is_zero = IsZero(message[i]);
+        sep_index     = SelectU32(~found_sep & is_zero, i, sep_index);
+        found_sep |= is_zero;
+    }
+    success &= found_sep;
+
+    success &= IsLessU32(9, sep_index);
+
+    Uint32 msg_start = sep_index + 1;
+    Uint32 msg_len   = m_key_size - msg_start;
+
+    Uint32 max_msg_len = m_key_size - 11;
+    for (Uint32 i = 0; i < max_msg_len; i++) {
+        Uint8 mask = success & IsLessU32(i, msg_len);
+        pText[i]   = Select(mask, message[msg_start + i], pText[i]);
     }
 
-    Uint64 pad_len = i - 2;
-
-    error_flag |= ((pad_len < 8) | (pad_len + 3 > m_key_size));
-    error_flag |= (message[i] != 0);
-
-    *textSize = ((m_key_size >= 3 + pad_len) ? m_key_size - 3 - pad_len : 0);
-
-    utils::CopyBytes(pText, message + 3 + pad_len, *textSize);
-    return Select(error_flag, ALC_ERROR_GENERIC, ALC_ERROR_NONE);
+    *textSize = SelectU64(success, static_cast<Uint64>(msg_len), Uint64(0));
+    mont::SecureClear(message, sizeof(message));
+    return SelectU64(success, ALC_ERROR_NONE, ALC_ERROR_GENERIC);
 }
 
 alc_error_t

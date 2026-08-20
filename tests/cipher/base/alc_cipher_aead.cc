@@ -402,7 +402,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dc_ex_t& aead_data)
                                            aead_data.m_inl,
                                            &outlen);
         } else {
-            Uint8  a;
+            Uint8  a = 0;
             Uint64 outlen = 0;
             err = alcp_cipher_aead_encrypt(m_handle, &a, &a, 0, &outlen);
         }
@@ -428,7 +428,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dc_ex_t& aead_data)
                                            aead_data.m_inl,
                                            &outlen);
         } else {
-            Uint8  a;
+            Uint8  a = 0;
             Uint64 outlen = 0;
             err = alcp_cipher_aead_decrypt(m_handle, &a, &a, 0, &outlen);
         }

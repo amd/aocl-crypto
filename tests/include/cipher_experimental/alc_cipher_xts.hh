@@ -47,7 +47,14 @@ class AlcpXtsCipher : public ITestCipher
 
     bool finalize(alc_test_finalize_data_p data) override;
 
-    ~AlcpXtsCipher() = default;
+    ~AlcpXtsCipher() override
+    {
+        if (m_handle.ch_context) {
+            alcp_cipher_segment_finish(&m_handle);
+            free(m_handle.ch_context);
+            m_handle.ch_context = nullptr;
+        }
+    }
 };
 
 } // namespace alcp::testing::cipher::xts

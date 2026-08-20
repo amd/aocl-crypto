@@ -77,6 +77,11 @@ CipherAeadBench(benchmark::State& state,
         std::free);
 #endif
 
+    if (!vec_in_arr || !vec_out_arr) {
+        state.SkipWithError("BENCH_ALLOC_FAILURE");
+        return -1;
+    }
+
     alignas(16) Uint8              tag_buffer[16]         = {};
     alignas(16) Uint8              key[MAX_KEY_SIZE / 8]  = {};
     alignas(16) Uint8              iv[16]                 = {};
@@ -832,7 +837,7 @@ static void
 BENCH_AES_DECRYPT_SIV_256(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
-        CipherAeadBench(state, state.range(0), ENCRYPT, ALC_AES_MODE_SIV, 256));
+        CipherAeadBench(state, state.range(0), DECRYPT, ALC_AES_MODE_SIV, 256));
 }
 // END 256 bit keysize
 

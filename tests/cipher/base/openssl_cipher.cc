@@ -220,6 +220,10 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
             handleErrors();
             return false;
         }
+        if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_enc, 0)) {
+            handleErrors();
+            return false;
+        }
     }
     // Create context for decryption and initalize
     EVP_CIPHER_CTX_free(m_ctx_dec);
@@ -232,7 +236,7 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 
     /* for non AES types */
     if (isNonAESCipherType(m_mode)) {
-        if (1 != EVP_CipherInit_ex(m_ctx_dec, m_cipher, NULL, m_key, m_iv, 1)) {
+        if (1 != EVP_CipherInit_ex(m_ctx_dec, m_cipher, NULL, m_key, m_iv, 0)) {
             handleErrors();
             return false;
         }

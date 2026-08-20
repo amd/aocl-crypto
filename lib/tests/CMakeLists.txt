@@ -23,7 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
+INCLUDE(${ALCP_ROOT}/cmake/AlcpTests.cmake)
 
 # Enforcing File Name
 SET(TEST_FILES 
@@ -44,6 +44,9 @@ FOREACH(testFile IN LISTS TEST_FILES)
 
 ENDFOREACH()
 
-ADD_EXECUTABLE(static_link_test static_link_test.cc)
-TARGET_LINK_LIBRARIES(static_link_test alcp_static)
-
+# static_link_test verifies linking against alcp_static. Only build it when
+# the static library is enabled.
+IF(ALCP_BUILD_STATIC)
+    ADD_EXECUTABLE(static_link_test static_link_test.cc)
+    TARGET_LINK_LIBRARIES(static_link_test alcp_static)
+ENDIF()

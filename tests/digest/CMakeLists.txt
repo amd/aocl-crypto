@@ -24,11 +24,16 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+set(ALCP_MODULE_LABEL "digest")
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/digest/base/alc_digest.cc ../../tests/digest/base/digest.cc)
-SET(LIBS ${LIBS} gtest alcp)
+IF(ALCP_BUILD_SHARED)
+    SET(LIBS ${LIBS} gtest alcp)
+ELSE()
+    SET(LIBS ${LIBS} gtest alcp_static)
+ENDIF()
 
 IF(ENABLE_TESTS_IPP_API)
     # If there is IPP, add IPP source and add IPP liberary

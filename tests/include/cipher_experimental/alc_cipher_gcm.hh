@@ -51,6 +51,7 @@ class AlcpGcmCipher : public ITestCipher
     ~AlcpGcmCipher() override
     {
         if (m_handle.ch_context) {
+            alcp_cipher_aead_finish(&m_handle);
             free(m_handle.ch_context);
             m_handle.ch_context = nullptr;
         }

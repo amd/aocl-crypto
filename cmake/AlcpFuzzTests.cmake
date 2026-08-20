@@ -35,6 +35,9 @@ SET(ALC_FUZZER_INCLUDES "${CMAKE_SOURCE_DIR}/tests/Fuzz/include"
 # common sources
 file(GLOB ALCP_FUZZ_SRC_COMMON ${CMAKE_SOURCE_DIR}/tests/Fuzz/Common/*.cc)
 
+set(ALCP_FUZZ_CORPUS_DIR "${CMAKE_BINARY_DIR}/fuzz_corpus"
+    CACHE PATH "Directory where libFuzzer writes crash artifacts")
+
 FUNCTION(ADD_FUZZ_TARGET FUZZ_TARGET_SRC)
     # create executable from source file
     string(REPLACE ".cc" "" FUZZ_TARGET ${FUZZ_TARGET_SRC})
@@ -44,4 +47,30 @@ FUNCTION(ADD_FUZZ_TARGET FUZZ_TARGET_SRC)
     TARGET_COMPILE_OPTIONS(${FUZZ_TARGET} PUBLIC ${ALCP_FUZZ_CFLAGS} ${ALCP_FUZZ_WARNINGS})
     TARGET_LINK_OPTIONS(${FUZZ_TARGET} PUBLIC ${ALCP_FUZZ_LINK_FLAGS})
     TARGET_LINK_LIBRARIES(${FUZZ_TARGET} ${LIBS})
+
+    # Corpus dir must exist before the test runs; create it at configure time.
+    file(MAKE_DIRECTORY "${ALCP_FUZZ_CORPUS_DIR}")
+
+    # Default libFuzzer flags. Individual flags can be overridden at ctest
+    # run time as:
+    #   ALCP_CTEST_FUZZ_ARGS="-max_total_time=120" ctest -L fuzz -j$(nproc)
+    # libFuzzer uses last-occurrence-wins for duplicate flags, so any flag in
+    # ALCP_CTEST_FUZZ_ARGS silently overrides the corresponding default below.
+    # Note: -exact_artifact_path is intentionally not overridable this way.
+    add_test(
+        NAME    fuzz/${FUZZ_TARGET}
+        COMMAND sh -c
+                "$<TARGET_FILE:${FUZZ_TARGET}> \
+                 -rss_limit_mb=32768 \
+                 -detect_leaks=0 \
+                 -max_total_time=30 \
+                 -exact_artifact_path=${ALCP_FUZZ_CORPUS_DIR}/${FUZZ_TARGET} \
+                 \${ALCP_CTEST_FUZZ_ARGS}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    # TIMEOUT is for hung processes only; -max_total_time is the
+    # real run-duration control. Set high enough not to interfere with
+    # overridden ALCP_CTEST_FUZZ_ARGS values.
+    set_tests_properties(fuzz/${FUZZ_TARGET} PROPERTIES
+        LABELS  "fuzz"
+        TIMEOUT 3600)
 ENDFUNCTION()

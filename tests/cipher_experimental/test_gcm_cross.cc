@@ -370,6 +370,12 @@ main(int argc, char** argv)
         std::shared_ptr<alcp::testing::RngBase> rng =
             std::make_shared<alcp::testing::RngBase>();
 
+        if (alcp::testing::utils::seed_set)
+            rng->setSeedMt19937(alcp::testing::utils::seed_override);
+        std::cout << "[ SEED     ] " << rng->getSeedMt19937()
+                  << "  (repro: --seed " << rng->getSeedMt19937() << ")"
+                  << std::endl;
+
         assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
         assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
         assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);

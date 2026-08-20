@@ -501,8 +501,10 @@ TEST_F(SimulatedArchTest, AllAlgorithmsRespectSimulation)
     // Basic invariants that should always hold
     // X25519 can be eZen4 (AVX512 radix51bit) or eZen3/eZen (radix64bit with ADX/BMI2)
 
-    // Poly1305 is either eZen4 (AVX512) or at most eZen (reference)
+    // Poly1305 is eZen4 (AVX512-IFMA), eZen3 (Zen3 AVX2 kernel), or at most
+    // eZen (plain AVX2 / reference).
     EXPECT_TRUE(poly1305 == CpuArchLevel::eZen4
+                || poly1305 == CpuArchLevel::eZen3
                 || poly1305 <= CpuArchLevel::eZen);
 
     // SHA256 is either eZen (SHA-NI) or eReference

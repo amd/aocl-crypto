@@ -8,9 +8,16 @@ The following tools and libraries are required to build AOCL-Cryptography:
 
 - **CMake** 3.26 or later
 - **GCC** 11.3 or later, **or Clang/AOCC** 14.0 or later
+  - Clang and AOCC do not ship their own C++ standard library; they reuse the
+    system GNU toolchain (libstdc++). A Clang/AOCC build therefore also requires
+    a **GNU gcc/g++ toolchain (libstdc++) 11.3 or later** installed and selected
+    by the compiler. On distributions whose default gcc is older (e.g. RHEL 8),
+    install and select a newer one (e.g. enable a `gcc-toolset`). CMake validates
+    the backing toolchain on a best-effort basis, but detection is not guaranteed
+    to be accurate across all compilers and layouts. Ensuring a compatible GNU
+    toolchain is ultimately your responsibility.
 - **OpenSSL** 3.1.3 or later (tested through 3.5.x)
 - **Git** with git-lfs (for KAT test data)
-- **7zip** (`p7zip-full` on Ubuntu) — required for static library creation on Linux
 - **Make** or **Ninja** build system
 - **AOCL-Utils** (recommended, for CPU feature-based dispatch)
 
@@ -46,7 +53,36 @@ cmake --list-presets
 8. [Build Doxygen and Sphinx docs](#to-enable-both-doxygen-and-sphinx)
 9. [Build with dynamic compiler selection ](#to-enable-dynamic-compiler-selection-while-building)
 10. [Build with assembly disabled](#to-disable-assembly-implementation-and-use-intrinsics-kernels)
-11. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
+11. [Select shared and/or static libraries](#selecting-shared-andor-static-libraries)
+12. [Disabling/Enabling Optional Features](#disablingenabling-optional-features)
+
+#### Selecting Shared and/or Static Libraries
+
+By default both the shared (`libalcp.so` / `alcp.dll`) and static
+(`libalcp.a` / `alcp_static.lib`) libraries are built. You can build just one:
+
+```sh
+$ cmake -DALCP_BUILD_SHARED=ON  -DALCP_BUILD_STATIC=OFF ../   # shared only
+$ cmake -DALCP_BUILD_SHARED=OFF -DALCP_BUILD_STATIC=ON  ../   # static only
+```
+
+- `ALCP_BUILD_SHARED` — build the shared library (default ON)
+- `ALCP_BUILD_STATIC` — build the static library (default ON)
+
+At least one must be ON; setting both OFF is a fatal configure error.
+
+On Windows, static-only builds (`ALCP_BUILD_SHARED=OFF`) switch the whole
+project to the static CRT (`/MT`); shared builds use the dynamic CRT (`/MD`).
+This has no effect on Linux.
+
+What gets built for each combination:
+
+| SHARED | STATIC | `libalcp.so` | `libalcp.a` | openssl-compat | dynamic examples | static examples |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| ON  | ON  | yes | yes | yes | yes | yes |
+| ON  | OFF | yes | no  | yes | yes | no  |
+| OFF | ON  | no  | yes | no  | no  | yes |
+| OFF | OFF | fatal configure error | | | | |
 
 #### Enable Examples
 

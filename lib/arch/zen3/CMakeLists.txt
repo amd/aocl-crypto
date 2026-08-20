@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2026, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2021-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -37,10 +37,18 @@ ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 # This flag may improve or decrease performance. But for current implementation in file, it improves performance. 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(Sha2_512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
+	# Pre-RA scheduling cut spills in the register-tight Poly1305 multiply loop.
+	# On a Zen6 build host, also tune scheduling for znver6 (ISA-safe; Poly1305-only uplift).
+	set(POLY1305_FLAGS "-fschedule-insns")
+	alcp_detect_host_znver(POLY1305_HOST_ZNVER)
+	if(POLY1305_HOST_ZNVER STREQUAL "znver6")
+		string(APPEND POLY1305_FLAGS " -mtune=znver6")
+	endif()
+	set_source_files_properties(poly1305.cc PROPERTIES COMPILE_FLAGS "${POLY1305_FLAGS}")
 	set_source_files_properties(x25519.cc PROPERTIES COMPILE_FLAGS "-O2")
 endif()
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
+INCLUDE_DIRECTORIES(${ALCP_ROOT}/lib/include)
 
 ADD_LIBRARY(arch_zen3
 	OBJECT
@@ -56,8 +64,4 @@ IF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 	TARGET_COMPILE_DEFINITIONS(arch_zen3 PRIVATE "AES_MULTI_UPDATE")	
 ENDIF(ALCP_ENABLE_CIPHER_MULTI_UPDATE)
 
-
-
-TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen3)
-TARGET_LINK_LIBRARIES(alcp_static PRIVATE arch_zen3)
-
+ALCP_TARGET_LINK_LIBRARIES(PRIVATE arch_zen3)

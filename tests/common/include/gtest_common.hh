@@ -40,11 +40,13 @@ using utils::parseBytesToHexStr;
 using utils::printErrors;
 
 // Variables for Argument Parser
-static int  verbose     = 0;
-static bool useipp      = false;
-static bool useossl     = false;
-static bool bbxreplay   = false;
-static bool oa_override = false;
+static int      verbose       = 0;
+static bool     useipp        = false;
+static bool     useossl       = false;
+static bool     bbxreplay     = false;
+static bool     oa_override   = false;
+static bool     seed_set      = false;
+static uint64_t seed_override = 0;
 
 /**
  * @brief Check if 2 binary vectors are equal, print the current line as
@@ -132,13 +134,24 @@ ArraysMatch(const std::vector<Uint8>& actual,
     }
     for (size_t i = 0; i < actual.size(); i++) {
         if (expected[i] != actual[i]) {
+            // Bound the dump to a fixed window centred on the first mismatch:
+            // buffers here can be hundreds of MB, so dumping them whole produces
+            // unusably large failure logs. CTX bytes of context each side keeps
+            // the message a small constant size while still showing the
+            // divergence in context.
+            const size_t CTX   = 16;
+            const size_t start = (i >= CTX) ? i - CTX : 0;
+            const size_t end =
+                std::min(actual.size(), i + CTX + 1);
             return ::testing::AssertionFailure()
                    << "Does not match,"
                    << "Size:" << actual.size() << " Failure i:" << i << " ! "
-                   << "Actual "
-                   << parseBytesToHexStr(&(actual[0]), expected.size())
+                   << "Actual[i] 0x" << parseBytesToHexStr(&(actual[i]), 1)
+                   << " Expected[i] 0x" << parseBytesToHexStr(&(expected[i]), 1)
+                   << " window@" << start << " Actual "
+                   << parseBytesToHexStr(&(actual[start]), end - start)
                    << " Expected "
-                   << parseBytesToHexStr(&(expected[0]), expected.size());
+                   << parseBytesToHexStr(&(expected[start]), end - start);
         }
     }
     if (verbose > 0) {
@@ -176,11 +189,13 @@ parseTestArgs(int argc, char** argv)
     alcp::bench::args::ParsedArgs parsed;
     alcp::bench::args::strip_custom_args(&argc, argv, parsed);
 
-    useipp      = parsed.use_ipp;
-    useossl     = parsed.use_ossl;
-    oa_override = parsed.override_alcp;
-    bbxreplay   = parsed.replay_blackbox;
-    verbose     = parsed.verbose;
+    useipp        = parsed.use_ipp;
+    useossl       = parsed.use_ossl;
+    oa_override   = parsed.override_alcp;
+    bbxreplay     = parsed.replay_blackbox;
+    verbose       = parsed.verbose;
+    seed_set      = parsed.seed_set;
+    seed_override = parsed.seed;
 
     /* --help is consumed by testing::InitGoogleTest before this function is
      * reached in the normal call flow.  If called before InitGoogleTest (e.g.

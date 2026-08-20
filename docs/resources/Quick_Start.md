@@ -20,7 +20,6 @@ sudo apt install git                 # To clone github repositories
 sudo apt install libssl-dev          # For openssl
 sudo apt install make                # Build system
 sudo apt install cmake               # Build system generator
-sudo apt install p7zip-full          # Re-archive static libs
 sudo apt install gcc-13 g++-13       # Compiler
 sudo apt install git-lfs             # For KAT test data managed by git-lfs
 ```
@@ -175,9 +174,6 @@ ensure_packages(){
         quit_if_status_not_zero $?
         echo "Running \"sudo apt install cmake\""
         sudo apt install cmake               # Build system generator
-        quit_if_status_not_zero $?
-        echo "Running \"sudo apt install p7zip-full\""
-        sudo apt install p7zip-full          # Re-archive static libs
         quit_if_status_not_zero $?
         echo "Running \"sudo apt install gcc-13 g++-13\""
         sudo apt install gcc-13 g++-13       # Compiler

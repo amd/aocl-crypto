@@ -37,6 +37,7 @@
 #include "ecdh/ecdh.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
+#include <cstring>
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -385,12 +386,24 @@ ecdh_Cross(alc_ec_info_t info)
         exit(-1);
     }
 
+    if (seed_set)
+        rb.setSeedMt19937(seed_override);
+    std::cout << "[ SEED     ] " << rb.getSeedMt19937()
+              << "  (repro: --seed " << rb.getSeedMt19937() << ")"
+              << std::endl;
+
     /* generate random bytes, use it in the loop */
-    std::vector<Uint8> peer1_pvtkey_full = rb.genRandomBytes(KeySize + 1);
-    std::vector<Uint8> peer2_pvtkey_full = rb.genRandomBytes(KeySize + 1);
+    std::vector<Uint8> peer1_pvtkey_full(KeySize + 1);
+    rb.genRandomMt19937(peer1_pvtkey_full);
+    std::vector<Uint8> peer2_pvtkey_full(KeySize + 1);
+    rb.genRandomMt19937(peer2_pvtkey_full);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
-    auto                               rng = std::default_random_engine{};
+    std::vector<Uint8> rng_seed_bytes(4);
+    rb.genRandomMt19937(rng_seed_bytes);
+    uint32_t rng_seed_val;
+    std::memcpy(&rng_seed_val, rng_seed_bytes.data(), 4);
+    auto rng = std::default_random_engine{ rng_seed_val };
 
     /* FIX this loop */
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {

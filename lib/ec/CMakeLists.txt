@@ -26,15 +26,10 @@
 
 FILE(GLOB EC_SRCS "*.cc")
 
-TARGET_SOURCES(alcp
+ALCP_TARGET_SOURCES(
 	PRIVATE
 		${EC_SRCS}
-	)
-
-TARGET_SOURCES(alcp_static
-	PRIVATE
-		${EC_SRCS}
-	)
+)
 
 # FIXME: due to a known failure from valgrind, disabling this unit tests with valgrind
 if(NOT ALCP_MEMCHECK_VALGRIND)

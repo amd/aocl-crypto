@@ -75,11 +75,9 @@ BenchCipherExperimental(benchmark::State&            state,
     }
 
     // Cleanup
-    no_err &= iTestCipher->finalize(&dataFinalize);
-    // FIXME: 'finalize' does not need to be benched after multi-decrypt
-    // operations on a single encrypted buffer.
-    //  It errors out due to tag mismatches in case of openssl.Add error check
-    //  for finalize().
+    if constexpr (encryptor) {
+        no_err &= iTestCipher->finalize(&dataFinalize);
+    }
 
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * cBlockSize, benchmark::Counter::kIsRate);
@@ -126,16 +124,16 @@ BenchGcmCipherExperimental(benchmark::State&            state,
     dataFinalize.verified       = false;
 
     if constexpr (encryptor == false) { // Decrypt
-        // Create a vaid data for decryption (mainly tag and ct)
-        iTestCipher = std::make_unique<AlcpGcmCipher<true>>();
+        // Create valid ciphertext + tag for decryption using ALCP encrypt.
+        auto encCipher = std::make_unique<AlcpGcmCipher<true>>();
         bool no_err = true;
-        no_err &= iTestCipher->init(&dataInit);
+        no_err &= encCipher->init(&dataInit);
         if (no_err == false) {
             state.SkipWithError("MicroBench: Initialization failed for decrypt "
                                 "ct,tag generation using encrypt");
             return -1;
         }
-        no_err &= iTestCipher->update(&dataUpdate);
+        no_err &= encCipher->update(&dataUpdate);
         if (no_err == false) {
             state.SkipWithError("MicroBench: Update failed for decrypt "
                                 "ct,tag generation using encrypt");
@@ -144,16 +142,12 @@ BenchGcmCipherExperimental(benchmark::State&            state,
         // After encrypting, to decrypt output becomes input
         dataUpdate.m_input  = output_text;
         dataUpdate.m_output = input_text;
-        no_err &= iTestCipher->finalize(&dataFinalize);
+        no_err &= encCipher->finalize(&dataFinalize);
         if (no_err == false) {
             state.SkipWithError("MicroBench: Finalize failed for decrypt "
                                 "ct,tag generation using encrypt");
             return -1;
         }
-    }
-// if the operation is encrypt we can reuse the same cipher object but for decrypt we need to create a new cipher object
-    if constexpr (encryptor == false) {
-        iTestCipher = std::make_unique<AlcpGcmCipher<false>>();
     }
     return BenchCipherExperimental<encryptor>(state,
                                               cBlockSize,
@@ -352,7 +346,6 @@ BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
 }
 
 using alcp::testing::cipher::CipherFactory;
-using alcp::testing::cipher::LibrarySelect;
 using alcp::testing::utils::printErrors;
 int
 main(int argc, char** argv)

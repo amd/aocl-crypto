@@ -61,17 +61,56 @@ using utils::CpuArchLevel;
 template<CpuArchLevel arch>
 class ALCP_API_EXPORT ChaChPolyT
     : public ChaCha256T<arch>
-    , public alcp::mac::poly1305::Poly1305<CpuArchLevel::eDynamic>
+    , public alcp::mac::poly1305::Poly1305<arch>
     , public iCipherAead
 {
   protected:
-    Uint8                             m_poly1305_key[32]{};
     static constexpr Uint8            m_zero_padding[16]{};
+    static constexpr Uint32           cChaChaBlockSize = CHACHA20_BLOCK_SIZE;
+    static constexpr Uint32           cKsBatchBytes = 4 * cChaChaBlockSize;
     len_input_processed               m_len_input_processed{};
     len_aad_processed                 m_len_aad_processed{};
+    // Keystream cache state:
+    //
+    // The cache serves two call patterns:
+    //
+    // 1. Single-shot or first short update:
+    //    Generate only the number of 64-byte ChaCha20 blocks needed for
+    //    this update. This avoids producing a full 256-byte batch when
+    //    the caller may immediately finalize and discard the unused
+    //    keystream.
+    //
+    // 2. Multi-update streaming:
+    //    Once an operation has already produced message keystream, refill
+    //    the cache with one full 4-block kernel batch. Later short updates
+    //    can then drain the cached bytes without re-entering the ChaCha20
+    //    kernel.
+    //
+    // Because those two paths can fill different amounts of the same buffer,
+    // the cache tracks both:
+    //
+    //   m_keystreamValid:  number of bytes in m_keystreamBuffer that contain
+    //                      real, usable ChaCha20 keystream.
+    //   m_keystreamOffset: index of the next unread byte inside that valid
+    //                      range.
+    //
+    // The currently cached bytes are:
+    //   m_keystreamBuffer[m_keystreamOffset ... m_keystreamValid)
+    alignas(64) Uint8                 m_keystreamBuffer[cKsBatchBytes]{};
+    Uint32                            m_keystreamOffset = 0;
+    Uint32                            m_keystreamValid  = 0;
+    Uint32                            m_chacha20Counter = 1;
+    bool                              m_aadPadded       = false;
 
     alc_error_t setIvInternal(const Uint8* iv, Uint64 ivLen);
-    alc_error_t setKeyInternal(const Uint8* key, Uint64 keylen);
+    alc_error_t initPoly1305Key();
+    alc_error_t padAadToBlockBoundary();
+    void        setChaChaCounter(Uint32 counter);
+    template<bool isDecrypt>
+    alc_error_t cryptAndAuth(const Uint8* inputBuffer,
+                             Uint8*       outputBuffer,
+                             Uint64       bufferLength,
+                             Uint64*      outlen);
 
   public:
     ChaChPolyT() = default;

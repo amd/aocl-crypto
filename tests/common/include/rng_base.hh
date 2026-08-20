@@ -35,7 +35,7 @@ class RngBase
 {
   private:
     alc_rng_handle_t m_handle{ nullptr };
-    std::mt19937     mt_rand_;
+    std::mt19937_64  mt_rand_;
     Uint64           m_seed_;
 
   public:

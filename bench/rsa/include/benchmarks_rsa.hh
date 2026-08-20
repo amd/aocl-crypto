@@ -183,38 +183,21 @@ Rsa_Bench(benchmark::State&       state,
         }
     }
 
-    /* benchmark sign verify */
+    /* benchmark sign verify — use DigestSign/DigestVerify for all providers */
     else if (opt == RSA_BENCH_SIGN) {
         for (auto _ : state) {
-            if (useossl == true) {
-                if (!rb->Sign(data)) {
-                    state.SkipWithError("Error in RSA Sign");
-                }
-            } else {
-                if (!rb->DigestSign(data)) {
-                    state.SkipWithError("Error in RSA Digest Sign");
-                }
+            if (!rb->DigestSign(data)) {
+                state.SkipWithError("Error in RSA DigestSign");
             }
         }
     } else if (opt == RSA_BENCH_VERIFY) {
-        if (useossl == true) {
-            if (!rb->Sign(data)) {
-                state.SkipWithError("Error in RSA Sign");
-            }
-        } else {
-            if (!rb->DigestSign(data)) {
-                state.SkipWithError("Error in RSA Digest Sign");
-            }
+        /* sign once to produce a valid signature for verification */
+        if (!rb->DigestSign(data)) {
+            state.SkipWithError("Error in RSA DigestSign (pre-verify)");
         }
         for (auto _ : state) {
-            if (useossl == true) {
-                if (!rb->Verify(data)) {
-                    state.SkipWithError("Error in RSA verify");
-                }
-            } else {
-                if (!rb->DigestVerify(data)) {
-                    state.SkipWithError("Error in RSA verify");
-                }
+            if (!rb->DigestVerify(data)) {
+                state.SkipWithError("Error in RSA DigestVerify");
             }
         }
     } else {

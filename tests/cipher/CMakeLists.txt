@@ -29,6 +29,7 @@ if (POLICY CMP0079) # Visibility
 endif(POLICY CMP0079)
 
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+set(ALCP_MODULE_LABEL "cipher")
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)

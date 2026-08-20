@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -37,4 +37,61 @@ FUNCTION (INVERTBOOLEAN VARNAME VARVALUE)
   ELSE()
     SET(${VARNAME} ON PARENT_SCOPE)
   ENDIF()
+ENDFUNCTION()
+
+# ---------------------------------------------------------------------------
+# Helpers that forward a cmake command to both alcp (shared) and alcp_static
+# (static) library targets, silently skipping whichever does not exist. This
+# avoids repeating IF(TARGET alcp) / IF(TARGET alcp_static) guards in every
+# sub-CMakeLists that contributes sources, link libraries, etc.
+#
+#   ALCP_TARGET_SOURCES(PRIVATE src1.cc src2.cc)
+#   ALCP_TARGET_LINK_LIBRARIES(PRIVATE some_lib)
+#   ALCP_TARGET_INCLUDE_DIRECTORIES(PRIVATE ${dir})
+#   ALCP_TARGET_COMPILE_OPTIONS(PRIVATE -Wall)
+#   ALCP_TARGET_COMPILE_DEFINITIONS(PRIVATE SOME_DEFINE)
+# ---------------------------------------------------------------------------
+FUNCTION(ALCP_TARGET_SOURCES)
+    IF(TARGET alcp)
+        TARGET_SOURCES(alcp ${ARGN})
+    ENDIF()
+    IF(TARGET alcp_static)
+        TARGET_SOURCES(alcp_static ${ARGN})
+    ENDIF()
+ENDFUNCTION()
+
+FUNCTION(ALCP_TARGET_LINK_LIBRARIES)
+    IF(TARGET alcp)
+        TARGET_LINK_LIBRARIES(alcp ${ARGN})
+    ENDIF()
+    IF(TARGET alcp_static)
+        TARGET_LINK_LIBRARIES(alcp_static ${ARGN})
+    ENDIF()
+ENDFUNCTION()
+
+FUNCTION(ALCP_TARGET_INCLUDE_DIRECTORIES)
+    IF(TARGET alcp)
+        TARGET_INCLUDE_DIRECTORIES(alcp ${ARGN})
+    ENDIF()
+    IF(TARGET alcp_static)
+        TARGET_INCLUDE_DIRECTORIES(alcp_static ${ARGN})
+    ENDIF()
+ENDFUNCTION()
+
+FUNCTION(ALCP_TARGET_COMPILE_OPTIONS)
+    IF(TARGET alcp)
+        TARGET_COMPILE_OPTIONS(alcp ${ARGN})
+    ENDIF()
+    IF(TARGET alcp_static)
+        TARGET_COMPILE_OPTIONS(alcp_static ${ARGN})
+    ENDIF()
+ENDFUNCTION()
+
+FUNCTION(ALCP_TARGET_COMPILE_DEFINITIONS)
+    IF(TARGET alcp)
+        TARGET_COMPILE_DEFINITIONS(alcp ${ARGN})
+    ENDIF()
+    IF(TARGET alcp_static)
+        TARGET_COMPILE_DEFINITIONS(alcp_static ${ARGN})
+    ENDIF()
 ENDFUNCTION()

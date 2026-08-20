@@ -1,0 +1,29 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "provider-all-off",
+            "hidden": true,
+            "displayName": "OpenSSL provider: all algorithms OFF",
+            "description": "Sets every ALCP OpenSSL provider sub-flag to OFF. Inherit this and pass -D flags to enable only what you need.",
+            "cacheVariables": {
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CBC":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_OFB":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CFB":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CTR":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_XTS":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_GCM":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CCM":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_SIV":               "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CHACHA20_POLY1305": "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA2":              "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHA3":              "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_DIGEST_SHAKE":             "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_MAC_HMAC":                 "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_MAC_CMAC":                 "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_MAC_POLY1305":             "OFF",
+                "ALCP_COMPAT_ENABLE_OPENSSL_RSA":                      "OFF"
+            }
+        }
+    ]
+}

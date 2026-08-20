@@ -1366,7 +1366,7 @@ TEST(CMACSIV_Negative, ZeroLengthInput)
     std::vector<Uint8> key(32, 0x42);
     std::vector<Uint8> aad(16, 0x24);
     std::vector<Uint8> tag(16);
-    Uint8 dummy;
+    Uint8 dummy = 0;
 
     auto siv = createCipherAead(CipherMode::eAesSIV, CipherKeyLen::eKey128Bit);
     ASSERT_NE(siv, nullptr);

@@ -187,6 +187,10 @@ EncryptCbc(const Uint8** pPlainText,
         case 14:
             alcp_load_key_zmm_14rounds(pkey128, keys);
             break;
+        default:
+            // nRounds is guaranteed to be 10/12/14 by the guard above; this
+            // proves to the compiler that `keys` is always initialized.
+            __builtin_unreachable();
     }
     if (blocks == 1) {
         switch(num_buffers)

@@ -1047,6 +1047,13 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
       CIPHER_DEF_PROP,
       ALCP_prov_aes256ccm_functions },
 #endif
+
+#ifdef ALCP_COMPAT_ENABLE_OPENSSL_CIPHER_CHACHA20_POLY1305
+    // ChaCha20-Poly1305
+    { ALCP_PROV_NAMES_CHACHA20_POLY1305,
+      CIPHER_DEF_PROP,
+      ALCP_prov_chacha20poly1305_functions },
+#endif
     // Terminate OpenSSL Algorithm list with Null Pointer.
     { NULL, NULL, NULL },
 };

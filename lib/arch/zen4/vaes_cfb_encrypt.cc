@@ -172,7 +172,7 @@ EncryptCfb(const Uint8** pPlainText,
     __m128i**         p_out_128   = p_out_128_storage.get();
     __m128i*          current_ivs = current_ivs_storage.get();
     auto              pkey128     = reinterpret_cast<const __m128i*>(pKey);
-    alignas(64) sKeys keys;
+    alignas(64) sKeys keys{};
 
     for (int i = 0; i < num_buffers; i++) {
         p_in_128[i]  = reinterpret_cast<const __m128i*>(pPlainText[i]);

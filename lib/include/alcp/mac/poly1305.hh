@@ -30,10 +30,9 @@
 #include "alcp/base.hh"
 #include "alcp/mac/mac.hh"
 #include "alcp/mac/poly1305-ref.hh"
+#include "alcp/mac/poly1305_avx2.hh"
 #include "alcp/mac/poly1305_state.hh"
 #include "alcp/utils/cpuid.hh"
-
-#define POLY1305_RADIX_26 false
 
 namespace alcp::mac::poly1305 {
 using utils::CpuArchLevel;
@@ -43,6 +42,7 @@ class ALCP_API_EXPORT Poly1305 : public IMac
   private:
     std::unique_ptr<reference::Poly1305Ref> poly1305_impl;
     Poly1305State44                         state;
+    Poly1305State26x4                       state_avx2;
 
   public:
     /**

@@ -123,6 +123,24 @@ ChaCha256T<CpuArchLevel::eZen4>::encrypt(const Uint8* pInput,
     }
     *outlen = 0;
 
+    // A single complete ChaCha20 block does not need the setup used by the
+    // architecture kernel below, which is structured for general multi-block
+    // and tail processing. The scalar helper builds the one keystream block
+    // from the current key/IV counter and immediately XORs it with the input;
+    // it does not retain or cache any unused keystream between calls.
+    if (len == cMBlockSize) {
+        err = xorOneBlock(getKey(), getIv(), pInput, pOutput);
+        if (err == ALC_ERROR_NONE) {
+            // Publish produced bytes only after a successful XOR so callers do
+            // not advance stream-cipher state when an error is reported.
+            *outlen = len;
+        }
+        return err;
+    }
+
+    // General path: any input length other than exactly one block is handled
+    // by the architecture kernel, which encrypts whole blocks in parallel and
+    // reduces a possible sub-block tail in a single pass.
     Uint64 blocks   = len / cMBlockSize;
     int    remBytes = len - (blocks * cMBlockSize);
     err             = zen4::ProcessInput(getKey(),
@@ -169,6 +187,24 @@ ChaCha256T<CpuArchLevel::eZen>::encrypt(const Uint8* pInput,
     }
     *outlen = 0;
 
+    // A single complete ChaCha20 block does not need the setup used by the
+    // architecture kernel below, which is structured for general multi-block
+    // and tail processing. The scalar helper builds the one keystream block
+    // from the current key/IV counter and immediately XORs it with the input;
+    // it does not retain or cache any unused keystream between calls.
+    if (len == cMBlockSize) {
+        err = xorOneBlock(getKey(), getIv(), pInput, pOutput);
+        if (err == ALC_ERROR_NONE) {
+            // Publish produced bytes only after a successful XOR so callers do
+            // not advance stream-cipher state when an error is reported.
+            *outlen = len;
+        }
+        return err;
+    }
+
+    // General path: any input length other than exactly one block is handled
+    // by the architecture kernel, which encrypts whole blocks in parallel and
+    // reduces a possible sub-block tail in a single pass.
     Uint64 blocks   = len / cMBlockSize;
     int    remBytes = len - (blocks * cMBlockSize);
     err             = avx2::ProcessInput(getKey(),
@@ -215,6 +251,22 @@ ChaCha256T<CpuArchLevel::eReference>::encrypt(const Uint8* pInput,
     }
     *outlen = 0;
 
+    // Keep exact-block behavior centralized in the same scalar helper used by
+    // the architecture specializations. The generic ProcessInput path below
+    // remains responsible for multi-block and partial-block requests.
+    if (len == cMBlockSize) {
+        err = xorOneBlock(getKey(), getIv(), pInput, pOutput);
+        if (err == ALC_ERROR_NONE) {
+            // Publish produced bytes only after a successful XOR so callers do
+            // not advance stream-cipher state when an error is reported.
+            *outlen = len;
+        }
+        return err;
+    }
+
+    // General path: any input length other than exactly one block falls back
+    // to the scalar ProcessInput, which iterates blocks and handles a possible
+    // sub-block tail using the same per-block helper as the fast path above.
     Uint64 blocks   = len / cMBlockSize;
     int    remBytes = len - (blocks * cMBlockSize);
     err             = ProcessInput(getKey(),
