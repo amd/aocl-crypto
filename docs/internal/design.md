@@ -526,7 +526,7 @@ IPP `.def` contract are deterministic.
 Rejected: claiming macOS support from generic Unix CMake conditions. Mach-O
 needs its own export-list mechanism, artifact inspection, and CI evidence.
 
-For build system we have opted for industry standard CMake (version >=3.18.4),
+For build system we have opted for industry standard CMake (version >=3.26),
 and for testing 'Gtest' (Google Test) framework is used.
 
 This library depends on libaoclutils (A CPU Identification Library), version >= 1.0
