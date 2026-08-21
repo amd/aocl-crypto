@@ -59,7 +59,8 @@ AlcpEcdhBase::init(const alc_ec_info_t& info)
     err = alcp_ec_request(&dinfo, m_ec_handle);
     if (alcp_is_error(err)) {
         /*FIXME: get a peerID to indicate which peer*/
-        std::cout << "Error in alcp_ec_request:Peer1 " << std::endl;
+        std::cout << "Error in alcp_ec_request:Peer1, err = " << err
+                  << std::endl;
         return false;
     }
     return true;
@@ -88,7 +89,8 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
                                 data.m_Peer_PvtKey,
                                 data.m_Peer_PvtKeyLen);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_publickey peer " << std::endl;
+        std::cout << "Error in alcp_ec_get_publickey peer, err = " << err
+                  << std::endl;
         return false;
     }
     return true;
@@ -104,7 +106,8 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
     } else {
         err = alcp_ec_set_privatekey(m_ec_handle, private_key, len);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_ec_set_privatekey " << std::endl;
+            std::cout << "Error in alcp_ec_set_privatekey, err = " << err
+                      << std::endl;
             return false;
         }
     }
@@ -126,7 +129,8 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                 &keyLength);
 
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_secretkey " << std::endl;
+        std::cout << "Error in alcp_ec_get_secretkey, err = " << err
+                  << std::endl;
         return false;
     }
 

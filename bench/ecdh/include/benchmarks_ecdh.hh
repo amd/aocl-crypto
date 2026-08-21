@@ -93,7 +93,7 @@ ecdh_Bench(benchmark::State& state, alc_ec_info_t info, ecdh_bench_opt opt)
     if (useipp == true) {
         // skip bench if IPP and non-avx512 architecture
         if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
-            state.SkipWithError(
+            state.SkipWithMessage(
                 "IPP Ecdh multi-buffer implementations arent supported "
                 "on non-avx512 supported arch,"
                 "skipping benchmarks!");
@@ -109,16 +109,18 @@ ecdh_Bench(benchmark::State& state, alc_ec_info_t info, ecdh_bench_opt opt)
     std::vector<Uint8> Peer2PvtKey = rb.genRandomBytes(KeySize);
 
     /* now load this pvtkey pair into both alc, ext data */
-    data_peer1.m_Peer_PvtKey    = &(Peer1PvtKey[0]);
-    data_peer2.m_Peer_PvtKey    = &(Peer2PvtKey[0]);
-    data_peer1.m_Peer_PvtKeyLen = KeySize;
-    data_peer2.m_Peer_PvtKeyLen = KeySize;
-    data_peer1.m_Peer_PubKey    = &(Peer1PubKey[0]);
-    data_peer2.m_Peer_PubKey    = &(Peer2PubKey[0]);
-    data_peer1.m_Peer_PubKeyLen = KeySize;
-    data_peer2.m_Peer_PubKeyLen = KeySize;
-    data_peer1.m_Peer_SecretKey = &(Peer1SharedSecretKey[0]);
-    data_peer2.m_Peer_SecretKey = &(Peer2SharedSecretKey[0]);
+    data_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
+    data_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
+    data_peer1.m_Peer_PvtKeyLen    = KeySize;
+    data_peer2.m_Peer_PvtKeyLen    = KeySize;
+    data_peer1.m_Peer_PubKey       = &(Peer1PubKey[0]);
+    data_peer2.m_Peer_PubKey       = &(Peer2PubKey[0]);
+    data_peer1.m_Peer_PubKeyLen    = KeySize;
+    data_peer2.m_Peer_PubKeyLen    = KeySize;
+    data_peer1.m_Peer_SecretKey    = &(Peer1SharedSecretKey[0]);
+    data_peer2.m_Peer_SecretKey    = &(Peer2SharedSecretKey[0]);
+    data_peer1.m_Peer_SecretKeyLen = KeySize;
+    data_peer2.m_Peer_SecretKeyLen = KeySize;
 
     /* init wont be benchmarked */
     if (!Eb_peer1->init(info)) {
