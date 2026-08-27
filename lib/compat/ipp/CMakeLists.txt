@@ -25,7 +25,10 @@
  
 # Added aocl-compat as a seperate liberary
 FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" "sha2/*.cc" "common/*.cc" "ec/*.cc" "mac/*.cc")
-ADD_LIBRARY(ipp-compat 
+
+# Runtime-loaded IPP-CP compat plugin: must always be a DLL, so force SHARED
+# even in a static (BUILD_SHARED_LIBS=OFF) build.
+ADD_LIBRARY(ipp-compat SHARED
 	${IPP_SRCS}
 	)
 

@@ -40,7 +40,9 @@ ADD_SUBDIRECTORY(provider)
 
 # MESSAGE(STATUS "PROVIDER_SOURCES:${PROVIDER_SRC}")
 
-ADD_LIBRARY(openssl-compat 
+# Runtime-loaded OpenSSL provider plugin: must always be a DLL, so force SHARED
+# even in a static (BUILD_SHARED_LIBS=OFF) build.
+ADD_LIBRARY(openssl-compat SHARED
 	${PROVIDER_SRC}
 	)
 

@@ -32,7 +32,7 @@ file(GLOB TEST_FILES "*_unit_test.cc")
 
 alcp_module("Rng")
 
-IF(WIN32)
+IF(WIN32 AND BUILD_SHARED_LIBS)
     add_compile_definitions(GTEST_LINKED_AS_SHARED_LIBRARY=1)
 ENDIF()
 
