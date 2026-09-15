@@ -10,3 +10,6 @@ COMPLIANCE
 
 CONTACT
 - AOCL-Cryptography is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/toolchain-technical-support.html
+
+HELP
+- AOCL-Crypto Help
