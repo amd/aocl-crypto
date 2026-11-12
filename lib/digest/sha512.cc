@@ -371,8 +371,8 @@ Sha2_512<digest_len>::finalize(Uint8* pBuf, Uint64 size)
         return ALC_ERROR_INVALID_ARG;
     }
 }
-template class Sha2_512<ALC_DIGEST_LEN_224>;
-template class Sha2_512<ALC_DIGEST_LEN_256>;
-template class Sha2_512<ALC_DIGEST_LEN_384>;
-template class Sha2_512<ALC_DIGEST_LEN_512>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha2_512<ALC_DIGEST_LEN_224>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha2_512<ALC_DIGEST_LEN_256>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha2_512<ALC_DIGEST_LEN_384>;
+template class ALCP_EXPLICIT_TEMPLATE_EXPORT Sha2_512<ALC_DIGEST_LEN_512>;
 } // namespace alcp::digest

@@ -489,7 +489,7 @@ alcp_prov_rsa_decrypt(void*                vprsactx,
             outlen);
     } else if (RSA_PKCS1_PADDING == prsactx->ossl_rsa_ctx->pad_mode) {
         err = alcp_rsa_privatekey_decrypt_pkcs1v15(
-            &prsactx->handle, in, out, outlen);
+            &prsactx->handle, in, inlen, out, outlen);
     } else if (prsactx->ossl_rsa_ctx->pad_mode == RSA_NO_PADDING) {
         err = alcp_rsa_privatekey_decrypt(
             &prsactx->handle, ALCP_RSA_PADDING_NONE, in, inlen, out);

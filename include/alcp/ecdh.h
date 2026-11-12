@@ -47,11 +47,15 @@ EXTERN_C_BEGIN
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [in] pPrivKey - pointer to Input privateKey
+ * @param [in] privKeyLen - size in bytes of the buffer pointed to by pPrivKey.
+ * It must be exactly the private key size of the curve in use, otherwise the
+ * key is rejected and ALC_ERROR_INVALID_SIZE is returned.
  * @return   ALC_ERROR_NONE on success.
  */
-// TODO: keylength parameter should be added to the function signature
 ALCP_API_EXPORT alc_error_t
-alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
+alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
+                       const Uint8*          pPrivKey,
+                       Uint64                privKeyLen);
 
 /**
  * @brief Generate a public key from the input private key
@@ -62,14 +66,26 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [out] pPublicKey - Pointer to output public key generated
+ * @param [in] pubKeyLen - capacity in bytes of the buffer pointed to by
+ * pPublicKey. It must be at least the public key size of the curve in use;
+ * a smaller buffer is rejected and ALC_ERROR_INVALID_SIZE is returned. A
+ * larger buffer is accepted, since the call writes exactly the public key
+ * size and leaves the remainder untouched.
  * @param [in] pPrivKey - pointer to Input privateKey used for generating
  * publicKey
+ * @param [in] privKeyLen - size in bytes of the buffer pointed to by pPrivKey.
+ * Unlike pubKeyLen it must be exactly the private key size of the curve in
+ * use, because any other length means the caller and the library disagree
+ * about which key is being used; a mismatch is rejected and
+ * ALC_ERROR_INVALID_SIZE is returned.
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pPublicKey,
-                      const Uint8*          pPrivKey);
+                      Uint64                pubKeyLen,
+                      const Uint8*          pPrivKey,
+                      Uint64                privKeyLen);
 
 /**
  * @brief Compute the shared secret using the peer public key and local private key
@@ -79,15 +95,28 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
  * @endparblock
  * @param [in] pEcHandle - Handler of the Context for the session
  * @param [out] pSecretKey - pointer to output secretKey
+ * @param [in] secretKeyLen - capacity in bytes of the buffer pointed to by
+ * pSecretKey. It must be at least the shared secret size of the curve in use;
+ * a smaller buffer is rejected and ALC_ERROR_INVALID_SIZE is returned. A
+ * larger buffer is accepted, since the call writes exactly the shared secret
+ * size and leaves the remainder untouched.
  * @param [in] pPublicKey - pointer to the peer's public key used for computing
  * the shared secret
- * @param [in,out] pKeyLength - pointer to keyLength
+ * @param [in] pubKeyLen - size in bytes of the buffer pointed to by pPublicKey.
+ * Unlike secretKeyLen it must be exactly the public key size of the curve in
+ * use, because a peer point of any other length is malformed rather than
+ * merely short; a mismatch is rejected and ALC_ERROR_INVALID_SIZE is returned.
+ * @param [out] pKeyLength - pointer to keyLength. The call writes the size in
+ * bytes of the secret it produced; the caller's incoming value is not read and
+ * does not bound the buffer pointed to by pSecretKey.
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pSecretKey,
+                      Uint64                secretKeyLen,
                       const Uint8*          pPublicKey,
+                      Uint64                pubKeyLen,
                       Uint64*               pKeyLength);
 
 /**

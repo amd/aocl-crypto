@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,8 @@
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
 #include "alcp/rsa.hh"
+
+#include <memory>
 
 namespace alcp::rsa {
 
@@ -112,12 +114,13 @@ alc_error_t
 __rsa_pssVerifyBufWithPub_wrapper(void*        pRsaHandle,
                                   const Uint8* pText,
                                   Uint64       textSize,
-                                  const Uint8* pSignedBuff)
+                                  const Uint8* pSignedBuff,
+                                  Uint64       signedBuffSize)
 
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicPss(pText, textSize, pSignedBuff);
+    return ap->verifyPublicPss(pText, textSize, pSignedBuff, signedBuffSize);
 }
 
 alc_error_t
@@ -138,12 +141,14 @@ alc_error_t
 __rsa_pssVerifyBufWithPub_wrapper_without_hash(void*        pRsaHandle,
                                                const Uint8* pHash,
                                                Uint64       hashSize,
-                                               const Uint8* pSignedBuff)
+                                               const Uint8* pSignedBuff,
+                                               Uint64       signedBuffSize)
 
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicHashPss(pHash, hashSize, pSignedBuff);
+    return ap->verifyPublicHashPss(
+        pHash, hashSize, pSignedBuff, signedBuffSize);
 }
 
 alc_error_t
@@ -163,23 +168,27 @@ alc_error_t
 __rsa_pkcsv15VerifyBufWithPub_wrapper(void*        pRsaHandle,
                                       const Uint8* pText,
                                       Uint64       textSize,
-                                      const Uint8* pSignedBuff)
+                                      const Uint8* pSignedBuff,
+                                      Uint64       signedBuffSize)
 
 {
 
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicPkcsv15(pText, textSize, pSignedBuff);
+    return ap->verifyPublicPkcsv15(
+        pText, textSize, pSignedBuff, signedBuffSize);
 }
 
 alc_error_t
 __rsa_pkcsv15DecyptBufWithPriv_wrapper(void*        pRsaHandle,
                                        const Uint8* encryptedText,
+                                       Uint64       encSize,
                                        Uint8*       decrypText,
                                        Uint64*      textSize)
 
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->decryptPrivatePkcsv15(encryptedText, decrypText, textSize);
+    return ap->decryptPrivatePkcsv15(
+        encryptedText, encSize, decrypText, textSize);
 }
 
 alc_error_t
@@ -209,10 +218,12 @@ alc_error_t
 __rsa_pkcsv15VerifyBufWithPubWithoutHash_wrapper(void*        pRsaHandle,
                                                  const Uint8* pText,
                                                  Uint64       textSize,
-                                                 const Uint8* signedText)
+                                                 const Uint8* signedText,
+                                                 Uint64       signedTextSize)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->verifyPublicHashPkcsv15(pText, textSize, signedText);
+    return ap->verifyPublicHashPkcsv15(
+        pText, textSize, signedText, signedTextSize);
 }
 
 static Uint64
@@ -376,19 +387,28 @@ __build_with_copy_rsa(Context* srcCtx, Context* destCtx)
 
     memcpy(destCtx, srcCtx, sizeof(Context));
 
-    auto rsa_algo  = new Rsa(*reinterpret_cast<Rsa*>(srcCtx->m_rsa));
-    destCtx->m_rsa = static_cast<void*>(rsa_algo);
+    /* the copy above aliases the source's heap objects; drop them before
+     * anything can fail, or a failed copy hands the caller a context that
+     * frees the source's objects a second time */
+    destCtx->m_rsa    = nullptr;
+    destCtx->m_digest = nullptr;
+    destCtx->m_mgf    = nullptr;
 
-    IDigest* src_digest  = static_cast<digest::IDigest*>(srcCtx->m_digest);
-    IDigest* dest_digest = copy_digest(src_digest);
+    /* held until every copy has succeeded, so a failure part way through
+     * leaves nothing allocated */
+    auto rsa_algo =
+        std::make_unique<Rsa>(*reinterpret_cast<Rsa*>(srcCtx->m_rsa));
+    auto dest_digest = std::unique_ptr<IDigest>(
+        copy_digest(static_cast<IDigest*>(srcCtx->m_digest)));
+    auto dest_mgf = std::unique_ptr<IDigest>(
+        copy_digest(static_cast<IDigest*>(srcCtx->m_mgf)));
 
-    rsa_algo->setDigest(dest_digest);
-    destCtx->m_digest = dest_digest;
+    rsa_algo->setDigest(dest_digest.get());
+    rsa_algo->setMgf(dest_mgf.get());
 
-    src_digest  = static_cast<digest::IDigest*>(srcCtx->m_mgf);
-    dest_digest = copy_digest(src_digest);
-    rsa_algo->setMgf(dest_digest);
-    destCtx->m_mgf = dest_digest;
+    destCtx->m_digest = dest_digest.release();
+    destCtx->m_mgf    = dest_mgf.release();
+    destCtx->m_rsa    = static_cast<void*>(rsa_algo.release());
     return ALC_ERROR_NONE;
 }
 

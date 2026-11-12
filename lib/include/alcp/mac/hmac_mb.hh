@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2025-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,18 +37,17 @@ namespace alcp::mac {
 class HmacMB final
 {
   public:
-    ALCP_API_EXPORT HmacMB()  = default;
-    ALCP_API_EXPORT ~HmacMB() = default;
+    ALCP_INTERNAL_CPP_EXPORT HmacMB()  = default;
+    ALCP_INTERNAL_CPP_EXPORT ~HmacMB() = default;
 
   public:
-    ALCP_API_EXPORT alc_error_t init(const Uint8*      pKey,
-                                     Uint64            keyLen,
-                                     alc_digest_mode_t digest_mode);
-    ALCP_API_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
-                                      const Uint64  numBuffers,
-                                      const Uint64  msgLen);
-    ALCP_API_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
-                                        const Uint64 numBuffers);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t init(
+        const Uint8* pKey, Uint64 keyLen, alc_digest_mode_t digest_mode);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
+                                               const Uint64  numBuffers,
+                                               const Uint64  msgLen);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
+                                                 const Uint64 numBuffers);
 
   private:
     template<typename DIGEST_TYPE>

@@ -26,12 +26,12 @@
  *
  */
 
+#include "alcp/alcp.h"
 #include "alcp/utils/cpuid.hh"
 #include "ecdh/alc_ecdh.hh"
 #include "ecdh/ecdh.hh"
 #include "ecdh/gtest_base_ecdh.hh"
 #include "string.h"
-#include <alcp/alcp.h>
 #include <exception>
 #include <iostream>
 

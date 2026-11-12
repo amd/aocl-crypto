@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -108,13 +108,17 @@ class IEc
     IEc() {}
 
   public:
-    virtual Status setPrivateKey(const Uint8* pPrivKey) = 0;
+    virtual Status setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen) = 0;
 
     virtual Status generatePublicKey(Uint8*       pPublicKey,
-                                     const Uint8* pPrivKey) = 0;
+                                     Uint64       pubKeyLen,
+                                     const Uint8* pPrivKey,
+                                     Uint64       privKeyLen) = 0;
 
     virtual Status computeSecretKey(Uint8*       pSecretKey,
+                                    Uint64       secretKeyLen,
                                     const Uint8* pPublicKey,
+                                    Uint64       pubKeyLen,
                                     Uint64*      pKeyLength) = 0;
 
     virtual Status validatePublicKey(const Uint8* pPublicKey,
@@ -123,9 +127,16 @@ class IEc
     virtual void reset() = 0;
 
     /**
-     * @return The key size in bytes
+     * @return The private key size in bytes, which is also the size of the
+     * shared secret produced by computeSecretKey
      */
     virtual Uint64 getKeySize() = 0;
+
+    /**
+     * @return The public key size in bytes, which is not the private key size
+     * on every curve
+     */
+    virtual Uint64 getPublicKeySize() = 0;
 
   protected:
     virtual ~IEc() {}
@@ -137,6 +148,18 @@ class Ec : public IEc
     Uint64 m_secretkey_len_bytes;
     // FIXME needs to modified after NIST curves implementation.
     AlcpEcPoint m_data;
+
+    /* Every curve derives the shared secret from the private key it is
+     * holding, so the same rule applies to all of them: a curve sets this
+     * once a key is installed and reset() clears it again. */
+    bool m_isPrivateKeySet = false;
+
+    Status checkPrivateKeyIsSet() const
+    {
+        return m_isPrivateKeySet
+                   ? StatusOk()
+                   : status::InvalidArgument("Private key has not been set");
+    }
 
   protected:
     Ec()          = default;

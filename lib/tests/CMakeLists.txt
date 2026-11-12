@@ -44,6 +44,17 @@ FOREACH(testFile IN LISTS TEST_FILES)
 
 ENDFOREACH()
 
+# The tests under oom replace the global operator new, which every memory tool
+# takes over: the sanitizer reports the malloc the replacement hands out as an
+# alloc-dealloc mismatch and aborts before any test runs, and Valgrind
+# redirects operator new in every object, so the replacement is never reached
+# and no allocation can be failed. On Windows a replacement in the executable
+# does not interpose for a DLL that links its own runtime, and std::aligned_alloc
+# is absent from the Microsoft C++ library.
+IF(NOT ALCP_SANITIZE AND NOT ALCP_MEMCHECK_VALGRIND AND UNIX AND NOT APPLE)
+    ADD_SUBDIRECTORY(oom)
+ENDIF()
+
 # static_link_test verifies linking against alcp_static. Only build it when
 # the static library is enabled.
 IF(ALCP_BUILD_STATIC)

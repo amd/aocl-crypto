@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,9 +27,10 @@
  */
 
 #include "aes/ipp_aes_init_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAES_CCMGetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsAES_CCMGetSize(int* pSize)
 {
     printMsg("CCM GetSize");
     *pSize = sizeof(ipp_wrp_aes_aead_ctx);
@@ -38,7 +39,7 @@ ippsAES_CCMGetSize(int* pSize)
 }
 
 IppStatus
-ippsAES_CCMInit(const Ipp8u*      pKey,
+IPP_COMPAT_EXPORT ippsAES_CCMInit(const Ipp8u*      pKey,
                 int               keyLen,
                 IppsAES_CCMState* pState,
                 int               ctxSize)

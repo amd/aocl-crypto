@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,12 @@
 #include "alcp/error.h"
 
 namespace alcp::utils {
-ALCP_API_EXPORT alc_error_t
+ALCP_INTERNAL_CPP_EXPORT alc_error_t
 memlock(const void* mem, Uint64 size);
-ALCP_API_EXPORT alc_error_t
+ALCP_INTERNAL_CPP_EXPORT alc_error_t
 memunlock(const void* mem, Uint64 size);
+
+/* Zeroes size bytes of buff, and the compiler may not elide it. */
+void
+SecureClear(void* buff, Uint64 size);
 } // namespace alcp::utils

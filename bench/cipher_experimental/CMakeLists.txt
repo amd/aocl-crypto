@@ -28,8 +28,6 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/alc_*.cc)
-# Link against whichever ALCP library is being built (static-only falls back
-# to alcp_static).
 IF(ALCP_BUILD_SHARED)
     SET(LIBS ${LIBS} benchmark alcp)
 ELSE()

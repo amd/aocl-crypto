@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,6 +33,10 @@
 
 // CPU Identification
 #cmakedefine ALCP_ENABLE_AOCL_UTILS
+
+// Runtime CPU instruction-set override, for tests and benchmarks only
+#cmakedefine ALCP_ENABLE_INSTRUCTION_OVERRIDE
+#cmakedefine ALCP_HAVE_SECURE_GETENV
 
 // ALCP Release Version
 #cmakedefine AOCL_RELEASE_VERSION "@AOCL_RELEASE_VERSION@"

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,8 +48,24 @@
  */
 #ifdef WIN32
 #define ALCP_API_EXPORT __declspec(dllexport)
+#elif defined(__clang__)
+#define ALCP_API_EXPORT __attribute__((visibility("default")))
+#elif defined(__GNUC__)
+#define ALCP_API_EXPORT __attribute__((visibility("default")))
 #else
 #define ALCP_API_EXPORT
+#endif
+
+#ifdef ALCP_INTERNAL_CPP_EXPORTS_ENABLED
+#define ALCP_INTERNAL_CPP_EXPORT ALCP_API_EXPORT
+#if defined(__clang__) && !defined(WIN32)
+#define ALCP_EXPLICIT_TEMPLATE_EXPORT __attribute__((visibility("default")))
+#else
+#define ALCP_EXPLICIT_TEMPLATE_EXPORT
+#endif
+#else
+#define ALCP_INTERNAL_CPP_EXPORT
+#define ALCP_EXPLICIT_TEMPLATE_EXPORT
 #endif
 
 #define UNREF(x) (void)(x)

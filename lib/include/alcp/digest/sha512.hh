@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -92,7 +92,7 @@ ShaRound(Uint64  a,
 }
 
 template<alc_digest_len_t digest_len>
-class ALCP_API_EXPORT Sha2_512 final : public IDigest
+class ALCP_INTERNAL_CPP_EXPORT Sha2_512 final : public IDigest
 {
     static_assert(ALC_DIGEST_LEN_224 == digest_len
                   || ALC_DIGEST_LEN_256 == digest_len

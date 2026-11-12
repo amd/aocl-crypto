@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,6 +26,7 @@
  */
 
 #include "common/context.hh"
+#include "common/export.hh"
 #include "common/error.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>

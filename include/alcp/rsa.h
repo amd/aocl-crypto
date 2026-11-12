@@ -184,7 +184,9 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * @param [in]  pRsaHandle         - Handler of the Context for the session
  * @param [in]  pText              - pointer to raw bytes
  * @param [in]  textSize           - size of raw bytes
- * @param [out] pEncText           - pointer to encrypted bytes
+ * @param [out] pEncText           - pointer to encrypted bytes. The caller
+ *                                   must provide room for the modulus size in
+ *                                   bytes, which is what this call writes.
 
  * @note   This API has the following limitations
  *         - textSize should be equal to the modulus/private_key size in bytes
@@ -210,9 +212,22 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  textSize           - size of raw bytes
  * @param [in]  label              - pointer to label
  * @param [in]  labelSize          - size of label
- * @param [in]  pSeed              - random seed of size hashLen (digest size set via @ref alcp_rsa_add_digest)
- * @param [out] pEncText           - pointer to encrypted bytes
+ * @param [in]  pSeed              - random seed. The caller must provide
+ *                                   exactly hashLen bytes, where hashLen is
+ *                                   the digest size set via @ref
+ *                                   alcp_rsa_add_digest.
+ * @param [out] pEncText           - pointer to encrypted bytes. The caller
+ *                                   must provide room for the modulus size in
+ *                                   bytes, which is what this call writes.
 
+ * @note   The digest and the mask generation function default independently:
+ *         each one falls back to SHA-256 only if its own setter was not
+ *         called. Calling @ref alcp_rsa_add_digest alone therefore leaves the
+ *         mask generation function on SHA-256 rather than following the
+ *         digest, so call @ref alcp_rsa_add_mgf as well whenever the two must
+ *         agree. @ref alcp_rsa_privatekey_decrypt_oaep applies the same
+ *         defaults, so a ciphertext produced here decrypts there.
+ *
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t
@@ -271,7 +286,9 @@ alcp_rsa_add_mgf(const alc_rsa_handle_p pRsaHandle, alc_digest_mode_t mode);
  * @param [in]  pad        - padding scheme to be used for RSA decryption
  * @param [in]  pEncText   - pointer to encrypted bytes
  * @param [in]  encSize    - size of encrypted bytes
- * @param [out] pText      - pointer to decrypted bytes
+ * @param [out] pText      - pointer to decrypted bytes. The caller must
+ *                           provide room for the modulus size in bytes, which
+ *                           is what this call writes.
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t
@@ -294,8 +311,18 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  encSize    - size of encrypted bytes
  * @param [in]  label      - pointer to label
  * @param [in]  labelSize  - sizeof label
- * @param [out] pText      - pointer to decrypted text
+ * @param [out] pText      - pointer to decrypted text. The caller must provide
+ *                           room for (keySize - 2 * hashLen - 2) bytes, the
+ *                           longest message OAEP can recover for the key and
+ *                           digest in use. This is the required capacity even
+ *                           when the message is shorter: it is neither the
+ *                           length of the message you expect nor the key size.
  * @param [out] textSize   - pointer to size of decrypted text
+ *
+ * @note   SHA-256 is used for both the digest and the mask generation function
+ *         when neither @ref alcp_rsa_add_digest nor @ref alcp_rsa_add_mgf was
+ *         called, matching @ref alcp_rsa_publickey_encrypt_oaep.
+ *
  * @return   ALC_ERROR_NONE on success.
  */
 ALCP_API_EXPORT alc_error_t
@@ -320,10 +347,15 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pText       - pointer to input text
  * @param [in]  textSize    - size of input text
  * @param [in]  pSalt       - pointer to salt
- * @param [in]  saltSize    - size of salt
- * @param [out] pSignedBuff - pointer to signed text
+ * @param [in]  saltSize    - size of salt. Must not exceed
+ *                            (keySize - hashLen - 2) bytes; a larger value
+ *                            is rejected.
+ * @param [out] pSignedBuff - pointer to signed text. The caller must provide
+ *                            room for the modulus size in bytes, which is
+ *                            what this call writes.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if saltSize
+ * exceeds (keySize - hashLen - 2).
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
@@ -346,14 +378,18 @@ alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in] pText       - pointer to input text
  * @param [in] textSize    - size of input text
  * @param [in] pSignedBuff - pointer to signed text
+ * @param [in] signedBuffSize - size of pSignedBuff. Must equal the modulus
+ *                           size in bytes; any other length is rejected.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if
+ * signedBuffSize is not the modulus size.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
                               const Uint8*           pText,
                               Uint64                 textSize,
-                              const Uint8*           pSignedBuff);
+                              const Uint8*           pSignedBuff,
+                              Uint64                 signedBuffSize);
 
 /**
  * @brief Function signs text using private key and PKCS1-v1_5 padding
@@ -367,7 +403,9 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  check       - Verify the signed message to prevent fault attack
  * @param [in]  pText       - pointer to input text
  * @param [in]  textSize    - size of input text
- * @param [out] pSignedBuff - pointer to signed text
+ * @param [out] pSignedBuff - pointer to signed text. The caller must provide
+ *                            room for the modulus size in bytes, which is
+ *                            what this call writes.
  *
  * @return   ALC_ERROR_NONE on success.
  */
@@ -390,14 +428,18 @@ alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in] pText       - pointer to input text
  * @param [in] textSize    - size of input text
  * @param [in] pSignedBuff - pointer to signed text
+ * @param [in] signedBuffSize - size of pSignedBuff. Must equal the modulus
+ *                           size in bytes; any other length is rejected.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if
+ * signedBuffSize is not the modulus size.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pText,
                                    Uint64                 textSize,
-                                   const Uint8*           pSignedBuff);
+                                   const Uint8*           pSignedBuff,
+                                   Uint64                 signedBuffSize);
 
 /**
  * @brief Function signs hash using private key and PKCS1-v1_5 padding
@@ -410,7 +452,9 @@ alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pRsaHandle  - Handler of the Context for the session
  * @param [in]  pText       - pointer to input hash
  * @param [in]  textSize    - size of input hash
- * @param [out] pSignedText - pointer to signed text
+ * @param [out] pSignedText - pointer to signed text. The caller must provide
+ *                            room for the modulus size in bytes, which is
+ *                            what this call writes.
  *
  * @return   ALC_ERROR_NONE on success.
  */
@@ -432,14 +476,18 @@ alcp_rsa_privatekey_sign_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in] pText       - pointer to input hash
  * @param [in] textSize    - size of input hash
  * @param [in] pSignedBuff - pointer to signed text
+ * @param [in] signedBuffSize - size of pSignedBuff. Must equal the modulus
+ *                           size in bytes; any other length is rejected.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if
+ * signedBuffSize is not the modulus size.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                         const Uint8*           pText,
                                         Uint64                 textSize,
-                                        const Uint8*           pSignedBuff);
+                                        const Uint8*           pSignedBuff,
+                                        Uint64                 signedBuffSize);
 
 /**
  * @brief Function encrypts text using public key and PKCS padding
@@ -451,8 +499,14 @@ alcp_rsa_publickey_verify_hash_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pRsaHandle         - Handler of the Context for the session
  * @param [in]  pText              - pointer to raw bytes
  * @param [in]  textSize           - size of raw bytes
- * @param [out] pEncryptText       - pointer to encrypted bytes
- * @param [in]  randomPad          - pointer to random non-zero padding bytes of length (keySize - textSize - 3) as per PKCS1-v1_5
+ * @param [out] pEncryptText       - pointer to encrypted bytes. The caller
+ *                                   must provide room for the modulus size in
+ *                                   bytes, which is what this call writes.
+ * @param [in]  randomPad          - pointer to random non-zero padding bytes
+ *                                   as per PKCS1-v1_5. The caller must provide
+ *                                   exactly (keySize - textSize - 3) bytes,
+ *                                   the gap the message leaves in the encoded
+ *                                   block.
  *
  * @return   ALC_ERROR_NONE on success.
  */
@@ -473,13 +527,22 @@ alcp_rsa_publickey_encrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  *
  * @param [in]  pRsaHandle - Handler of the Context for the session
  * @param [in]  pText   - pointer to encrypted bytes
- * @param [out] pDecryptText      - pointer to decrypted text
+ * @param [in]  encSize    - size of pText. Must equal the modulus size in
+ *                           bytes; any other length is rejected.
+ * @param [out] pDecryptText      - pointer to decrypted text. The caller must
+ *                           provide room for (keySize - 11) bytes, the longest
+ *                           message PKCS1-v1_5 can recover for this key. This
+ *                           is the required capacity even when the message is
+ *                           shorter: it is neither the length of the message
+ *                           you expect nor the key size.
  * @param [out] textSize   - pointer to size of decrypted text
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if encSize is
+ * not the modulus size.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
                                      const Uint8*           pText,
+                                     Uint64                 encSize,
                                      Uint8*                 pDecryptText,
                                      Uint64*                textSize);
 
@@ -495,10 +558,15 @@ alcp_rsa_privatekey_decrypt_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  pHash       - pointer to input hash
  * @param [in]  hashSize    - size of hash
  * @param [in]  pSalt       - pointer to salt
- * @param [in]  saltSize    - size of salt
- * @param [out] pSignedBuff - pointer to signed text
+ * @param [in]  saltSize    - size of salt. Must not exceed
+ *                            (keySize - hashLen - 2) bytes; a larger value
+ *                            is rejected.
+ * @param [out] pSignedBuff - pointer to signed text. The caller must provide
+ *                            room for the modulus size in bytes, which is
+ *                            what this call writes.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if saltSize
+ * exceeds (keySize - hashLen - 2).
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
@@ -520,14 +588,18 @@ alcp_rsa_privatekey_sign_hash_pss(const alc_rsa_handle_p pRsaHandle,
  * @param [in] pHash       - pointer to input hash
  * @param [in] hashSize    - size of input hash
  * @param [in] pSignedBuff - pointer to signed text
+ * @param [in] signedBuffSize - size of pSignedBuff. Must equal the modulus
+ *                           size in bytes; any other length is rejected.
  *
- * @return   ALC_ERROR_NONE on success.
+ * @return   ALC_ERROR_NONE on success, ALC_ERROR_NOT_PERMITTED if
+ * signedBuffSize is not the modulus size.
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_verify_hash_pss(const alc_rsa_handle_p pRsaHandle,
                                    const Uint8*           pHash,
                                    Uint64                 hashSize,
-                                   const Uint8*           pSignedBuff);
+                                   const Uint8*           pSignedBuff,
+                                   Uint64                 signedBuffSize);
 
 /**
  * @brief Function sets the public key inside the handle

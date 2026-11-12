@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 #include <memory>
 
 namespace alcp::mac {
-class ALCP_API_EXPORT Hmac final : public IMac
+class ALCP_INTERNAL_CPP_EXPORT Hmac final : public IMac
 {
   private:
     // Input Block Length or B of the digest used by HMAC
@@ -110,9 +110,10 @@ class ALCP_API_EXPORT Hmac final : public IMac
 };
 
 namespace avx2 {
-    ALCP_API_EXPORT void get_k0_xor_opad(Uint32 m_input_block_length,
-                                         Uint8* m_pK0,
-                                         Uint8* m_pK0_xor_ipad,
-                                         Uint8* m_pK0_xor_opad);
+    ALCP_INTERNAL_CPP_EXPORT void
+    get_k0_xor_opad(Uint32 m_input_block_length,
+                    Uint8* m_pK0,
+                    Uint8* m_pK0_xor_ipad,
+                    Uint8* m_pK0_xor_opad);
 } // namespace avx2
 } // namespace alcp::mac

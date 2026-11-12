@@ -84,6 +84,5 @@ EC key generation routines for the following schemes:
 
 
 - Generate random number
-- Seed random number generator with random data
 
 

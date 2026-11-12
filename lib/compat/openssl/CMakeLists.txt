@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -40,17 +40,14 @@ ADD_SUBDIRECTORY(provider)
 
 # MESSAGE(STATUS "PROVIDER_SOURCES:${PROVIDER_SRC}")
 
-ADD_LIBRARY(openssl-compat 
+# Runtime-loaded OpenSSL provider plugin: must always be a DLL, so force SHARED
+# even in a static (BUILD_SHARED_LIBS=OFF) build.
+ADD_LIBRARY(openssl-compat SHARED
 	${PROVIDER_SRC}
 	)
 
-# Export all symbols on Windows (Linux exports all by default)
-IF(WIN32)
-	SET_TARGET_PROPERTIES(openssl-compat PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-ENDIF(WIN32)
-
 # Include ALCP header files
-TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
+TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${ALCP_ROOT}/include)
 TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE include)
 
 # Link to ALCP shared object file
@@ -62,3 +59,12 @@ IF(WIN32)
 		TARGET_COMPILE_OPTIONS(openssl-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
 	ENDIF()
 ENDIF(WIN32)
+
+IF(UNIX AND NOT APPLE AND ALCP_HIDDEN_VISIBILITY)
+	SET(OPENSSL_COMPAT_EXPORT_MAP
+		"${CMAKE_CURRENT_SOURCE_DIR}/openssl_compat_exports.map")
+	TARGET_LINK_OPTIONS(openssl-compat PRIVATE
+		"-Wl,--version-script=${OPENSSL_COMPAT_EXPORT_MAP}")
+	SET_TARGET_PROPERTIES(openssl-compat PROPERTIES
+		LINK_DEPENDS "${OPENSSL_COMPAT_EXPORT_MAP}")
+ENDIF()

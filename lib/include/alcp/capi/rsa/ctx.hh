@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -77,7 +77,8 @@ class Context
     alc_error_t (*verifyPublicPssFn)(void*        pRsaHandle,
                                      const Uint8* pText,
                                      Uint64       textSize,
-                                     const Uint8* pSignedBuff);
+                                     const Uint8* pSignedBuff,
+                                     Uint64       signedBuffSize);
 
     alc_error_t (*signPrivatePkcsv15Fn)(void*        pRsaHandle,
                                         bool         check,
@@ -88,7 +89,8 @@ class Context
     alc_error_t (*verifyPublicPkcsv15Fn)(void*        pRsaHandle,
                                          const Uint8* pText,
                                          Uint64       textSize,
-                                         const Uint8* pSignedBuff);
+                                         const Uint8* pSignedBuff,
+                                         Uint64       signedBuffSize);
 
     alc_error_t (*signPrivatePkcsv15WithoutHashFn)(void*        pRsaHandle,
                                                    const Uint8* pText,
@@ -98,7 +100,8 @@ class Context
     alc_error_t (*verifyPublicPkcsv15WithoutHashFn)(void*        pRsaHandle,
                                                     const Uint8* pText,
                                                     Uint64       textSize,
-                                                    const Uint8* psignedText);
+                                                    const Uint8* psignedText,
+                                                    Uint64 signedTextSize);
 
     alc_error_t (*signPrivatePssWithoutHashFn)(void*        pRsaHandle,
                                                const Uint8* pHash,
@@ -110,7 +113,8 @@ class Context
     alc_error_t (*verifyPublicPssWithoutHashFn)(void*        pRsaHandle,
                                                 const Uint8* pHash,
                                                 Uint64       hashSize,
-                                                const Uint8* pSignedBuff);
+                                                const Uint8* pSignedBuff,
+                                                Uint64       signedBuffSize);
 
     alc_error_t (*encryptPublicPkcsv15Fn)(void*        pRsaHandle,
                                           const Uint8* pText,
@@ -120,6 +124,7 @@ class Context
 
     alc_error_t (*decryptPrivatePkcsv15Fn)(void*        pRsaHandle,
                                            const Uint8* encryptedText,
+                                           Uint64       encSize,
                                            Uint8*       decrypText,
                                            Uint64*      textSize);
 

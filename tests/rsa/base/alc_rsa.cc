@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -371,6 +371,7 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         err = alcp_rsa_privatekey_decrypt_pkcs1v15(m_rsa_handle,
                                                    data.m_encrypted_data,
+                                                   data.m_key_len,
                                                    data.m_decrypted_data,
                                                    &text_size);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
@@ -512,15 +513,19 @@ AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
                                                       m_pkcs_hash_with_info,
                                                       m_digest_info_size
                                                           + m_hash_len,
-                                                      data.m_signature);
+                                                      data.m_signature,
+                                                      m_key_len);
         if (alcp_is_error(err)) {
             std::cout << "Error code in alcp_rsa_publickey_verify_hash_pkcs1v15"
                       << err << std::endl;
             return false;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        err = alcp_rsa_publickey_verify_hash_pss(
-            m_rsa_handle, data.m_digest, m_hash_len, data.m_signature);
+        err = alcp_rsa_publickey_verify_hash_pss(m_rsa_handle,
+                                                 data.m_digest,
+                                                 m_hash_len,
+                                                 data.m_signature,
+                                                 m_key_len);
         if (alcp_is_error(err)) {
             std::cout << "Error code in alcp_rsa_publickey_verify_hash_pss"
                       << err << std::endl;
@@ -576,11 +581,17 @@ AlcpRsaBase::DigestVerify(const alcp_rsa_data_t& data)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        err = alcp_rsa_publickey_verify_pss(
-            m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
+        err = alcp_rsa_publickey_verify_pss(m_rsa_handle,
+                                            data.m_msg,
+                                            data.m_msg_len,
+                                            data.m_signature,
+                                            m_key_len);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-        err = alcp_rsa_publickey_verify_pkcs1v15(
-            m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
+        err = alcp_rsa_publickey_verify_pkcs1v15(m_rsa_handle,
+                                                 data.m_msg,
+                                                 data.m_msg_len,
+                                                 data.m_signature,
+                                                 m_key_len);
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;
         return false;

@@ -179,7 +179,14 @@ EUarchValToString(int val)
     return "Zen" + std::to_string(val - 1);
 }
 
-class ALCP_API_EXPORT CpuId
+/**
+ * @note Export exception
+ * Methods marked ALCP_INTERNAL_CPP_EXPORT are temporary exports required by in-tree
+ * shared-library tests, benchmarks, and the tests/misc/cpuid diagnostic. Prefer
+ * documented support checks in new code. Per-method annotations keep CpuId::Impl and
+ * unused methods out of the shared ABI.
+ */
+class CpuId
 {
   public:
     CpuId() {}
@@ -199,7 +206,7 @@ class ALCP_API_EXPORT CpuId
      *   - eSha3:     Requires AVX2/VAES/AVX512
      *   - eDefault:  Uses original blanket check (backward compatible)
      */
-    static CpuArchLevel getArchLevel(
+    static ALCP_INTERNAL_CPP_EXPORT CpuArchLevel getArchLevel(
         AlgorithmType algo = AlgorithmType::eDefault);
 
     /**
@@ -207,7 +214,7 @@ class ALCP_API_EXPORT CpuId
      * @param algo The algorithm type to get architecture level for
      * @return CpuArchLevel enum value (cached per algorithm type)
      */
-    static CpuArchLevel getCachedArchLevel(
+    static ALCP_INTERNAL_CPP_EXPORT CpuArchLevel getCachedArchLevel(
         AlgorithmType algo = AlgorithmType::eDefault);
 
     /**
@@ -227,56 +234,57 @@ class ALCP_API_EXPORT CpuId
      * @param cap The capability to check
      * @return true if the capability is available
      */
-    static bool hasCapability(CpuCapability cap);
+    static ALCP_INTERNAL_CPP_EXPORT bool hasCapability(CpuCapability cap);
 
     /**
      * @brief Get vector of all supported architecture levels (for testing)
      * @return Vector of CpuArchLevel from highest to lowest supported
      */
-    static std::vector<CpuArchLevel> getSupportedArchLevels();
+    static ALCP_INTERNAL_CPP_EXPORT std::vector<CpuArchLevel>
+    getSupportedArchLevels();
 
     // AVX512 flags
-    static bool cpuHasAvx512f();
-    static bool cpuHasAvx512dq();
-    static bool cpuHasAvx512bw();
-    static bool cpuHasAvx512ifma();
-    static bool cpuHasAvx512vl();
-    static bool cpuHasAvx512VP2Intersect();
-    static bool cpuHasAvx512(Avx512Flags flag);
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512f();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512dq();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512bw();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512ifma();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512vl();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512VP2Intersect();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512(Avx512Flags flag);
 
     // VAES/AESNI
-    static bool cpuHasVaes();
-    static bool cpuHasAesni();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasVaes();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAesni();
 
     // SHA
-    static bool cpuHasShani();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasShani();
 
     // General SIMD
-    static bool cpuHasAvx2();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx2();
     static bool cpuHasSse3();
 
     // RNG
-    static bool cpuHasRdRand();
-    static bool cpuHasRdSeed();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasRdRand();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasRdSeed();
 
     // Integer operations
-    static bool cpuHasAdx();
-    static bool cpuHasBmi2();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAdx();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasBmi2();
 
     /**
      * @brief Returns true if CPU has AVX512 base features (F, DQ, BW)
      */
-    static bool cpuHasAvx512Base();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512Base();
 
     /**
      * @brief Returns true if CPU has AVX512 VL features (F, VL, BW)
      */
-    static bool cpuHasAvx512VL();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuHasAvx512VL();
 
     /**
      * @brief Returns true if the CPU vendor is AMD
      */
-    static bool cpuIsAmd();
+    static ALCP_INTERNAL_CPP_EXPORT bool cpuIsAmd();
 
   private:
     class Impl;

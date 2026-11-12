@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
  */
 
 #include "mac/ipp_mac_common.hh"
+#include "common/export.hh"
 
 IppStatus
 alcp_MacInit(alc_mac_type_t   macType,

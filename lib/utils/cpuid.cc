@@ -29,7 +29,11 @@
 #include "alcp/utils/cpuid.hh"
 #include <alcp/base.hh>
 #include <array>
+#include <cstdlib>
 #include <mutex>
+// secure_getenv() is declared by <stdlib.h>, not by <cstdlib>, which is only
+// required to populate namespace std.
+#include <stdlib.h>
 #ifdef __linux__
 #include <sched.h>
 #include <unistd.h>
@@ -186,6 +190,27 @@ CpuId::Impl::Impl()
     }
 }
 
+#ifdef ALCP_ENABLE_INSTRUCTION_OVERRIDE
+namespace {
+    constexpr const char* cInstructionOverrideEnvVar =
+        "AOCL_ENABLE_INSTRUCTION";
+
+    /*
+     * secure_getenv() yields nothing in set-user-ID, set-group-ID and
+     * capability-bearing processes, where the environment belongs to a less
+     * privileged caller. Platforms that do not offer it keep the plain lookup.
+     */
+    const char* read_instruction_override()
+    {
+#ifdef ALCP_HAVE_SECURE_GETENV
+        return secure_getenv(cInstructionOverrideEnvVar);
+#else
+        return std::getenv(cInstructionOverrideEnvVar);
+#endif
+    }
+} // namespace
+#endif
+
 /**
  * @brief Reads the environment variable `AOCL_ENABLE_INSTRUCTION` to determine
  * the enabled CPU instructions.
@@ -199,11 +224,16 @@ CpuId::Impl::Impl()
  * Note: Setting a higher level on a lower CPU has no effect - the actual
  * kernel level is determined by ISA feature detection, not this env var.
  * This env var can only DOWNGRADE.
+ *
+ * The override is a test and benchmark facility. It is compiled in only when
+ * ALCP_ENABLE_INSTRUCTION_OVERRIDE is defined; otherwise the variable is never
+ * read and dispatch always follows the detected hardware.
  */
 bool
 CpuId::Impl::get_alcp_enabled_instr()
 {
-    const char* AOCL_Enable_Inst = std::getenv("AOCL_ENABLE_INSTRUCTION");
+#ifdef ALCP_ENABLE_INSTRUCTION_OVERRIDE
+    const char* AOCL_Enable_Inst = read_instruction_override();
 
     if (AOCL_Enable_Inst == NULL) {
         AlcpEnableInstructionSet = true;
@@ -250,6 +280,9 @@ CpuId::Impl::get_alcp_enabled_instr()
     }
     AlcpEnableInstructionSet = true;
     return true;
+#else
+    return false;
+#endif
 }
 
 /**

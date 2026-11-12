@@ -104,5 +104,10 @@ openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
 openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
 -evp aes-256-gcm
 ```
+#### ChaCha20-Poly1305
+```bash
+openssl speed -provider-path /path/to/alcp/lib -provider libopenssl-compat \
+-evp chacha20-poly1305
+```
 
 

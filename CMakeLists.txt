@@ -58,7 +58,7 @@ ELSEIF(WIN32)
 ENDIF(UNIX)
 
 # Set the release version
-set(AOCL_RELEASE_VERSION "5.3.2" CACHE STRING "AOCL RELEASE VERSION")
+set(AOCL_RELEASE_VERSION "6.0.0" CACHE STRING "AOCL RELEASE VERSION")
 
 PROJECT (ALCP
          VERSION ${AOCL_RELEASE_VERSION}
@@ -81,6 +81,13 @@ SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_C_STANDARD_REQUIRED TRUE)
 SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+OPTION(ALCP_HIDDEN_VISIBILITY "Hide non-exported symbols in Linux shared libs" ON)
+
+IF(UNIX AND NOT APPLE AND NOT WIN32 AND ALCP_HIDDEN_VISIBILITY)
+  SET(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  SET(CMAKE_C_VISIBILITY_PRESET hidden)
+  SET(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+ENDIF()
 
 IF("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	message(STATUS "CMAKE_BUILD_TYPE set to Release by default.")
@@ -187,6 +194,13 @@ IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
 	MESSAGE(STATUS "Disabling bench")
 endif()
 
+SET(ALCP_INTERNAL_CPP_EXPORTS_ENABLED OFF)
+# Examples are not listed here: they use only the public C API. Tests and
+# benchmarks still link the internal C++ interfaces directly.
+IF(ALCP_ENABLE_TESTS OR ALCP_ENABLE_BENCH)
+	SET(ALCP_INTERNAL_CPP_EXPORTS_ENABLED ON)
+ENDIF()
+
 # set proj version
 set(PROJECT_VERSION ${AOCL_RELEASE_VERSION})
 
@@ -216,6 +230,15 @@ ENDIF()
 
 # Generate Configuration config.h
 GEN_CONF()
+# Prefer this configuration's generated header over any stale source-tree
+# artifact left by older builds.
+INCLUDE_DIRECTORIES(BEFORE "${ALCP_BINARY_DIR}/include")
+
+# Directory scoped, so every subdirectory inherits it, and listed ahead of the
+# source tree so a generated header left over in an older checkout is ignored.
+# ALCP_BINARY_DIR, not CMAKE_BINARY_DIR: the latter is the parent's build root
+# under a unified build, and is shared with every sibling component.
+INCLUDE_DIRECTORIES(${ALCP_BINARY_DIR}/include)
 
 IF (NOT DEFINED BUILD_SHARED_LIBS)
 	SET (BUILD_SHARED_LIBS ON)

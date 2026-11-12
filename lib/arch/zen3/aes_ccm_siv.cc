@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,7 +30,7 @@
 #include "immintrin.h"
 
 namespace alcp::cipher::zen3 {
-ALCP_API_EXPORT void
+void
 xor_a_b(const Uint8 a[], const Uint8 b[], Uint8 c[], size_t len)
 {
     for (size_t j = 0; j < len; j++) {

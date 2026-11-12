@@ -17,6 +17,49 @@ AOCL Cryptography is a library consisting of basic cryptographic functions optim
 
 ---
 
+## [6.0.0] - 2026
+
+### Added
+
+- **OpenSSL Provider**: ChaCha20-Poly1305 support, enabled by default.
+- **Build**: Independent `ALCP_BUILD_SHARED` and `ALCP_BUILD_STATIC` options to select shared, static, or both library targets.
+- **MAC**: Poly1305 AVX2 implementation for supported architectures.
+- **CPU support**: Added Zen 6 detection and compiler support with graceful fallback when `znver6` is unavailable.
+
+### Changed
+
+- **Performance**:
+  - ChaCha20: Added a scalar single-block fast path and optimized ChaCha20-Poly1305 keystream batching.
+  - RSA: Improved private-key decryption performance.
+  - CBC: Removed redundant initialization in the Zen 4 encrypt path.
+  - Digest: Avoided the SHA-256 multi-buffer throughput regression with GCC 15 and later.
+- **Build**: CMake support was expanded for unified object-library builds, host Zen detection, and current GCC/Clang/AOCC toolchains.
+- **Build**: Shared-library exports were narrowed to the documented `alcp_*` C ABI; internal C++ symbols are no longer exported. This is a breaking change for consumers linking against ALCP C++ internals.
+
+### Fixed
+
+- **Cipher**: Fixed CFB residual-data decryption on Zen 3, multi-buffer reinitialization state, ChaCha20 counter carry on Zen 4, ChaCha20-Poly1305 multi-update and IV reinitialization, in-place AEAD decryption, and truncated XTS key handling.
+- **CMAC/MAC**: Validated output sizes and function pointers before use.
+- **RSA**: Validated OAEP ciphertext, private-key component, caller buffer, public exponent, and PSS salt sizes.
+- **Elliptic Curve**: Validated ECDH key buffers and lifecycle, null-checked C API dispatch pointers, and enforced RFC 7748 X25519 semantics.
+- **RNG**: Retried RDRAND before reporting entropy failure and ensured hardware RNG requests fill every requested byte.
+- **C API**: Prevented C++ exceptions from escaping Digest, MAC, RNG, EC, and RSA entry points.
+- **RNG**: Exported `alcp_rng_init`, which was declared in `rng.h` but missing from the shared-library export table.
+- **Build and compatibility**: Added C23 compatibility for GCC 15 and fixed static-only build regressions.
+
+### Removed
+
+- **RNG**: Removed the DRBG feature and its public `alcp_drbg_*` API and test paths. This is a breaking change for consumers using those entry points.
+- **Examples**: Removed the C++ cipher samples; the examples directory is now C-only and builds against the public C API.
+
+### Known Limitations
+
+- AES ciphers, RSA, and EC algorithms are not supported on pre-AVX2 architectures.
+- RSA provider dispatch requires the runtime OpenSSL version to match the version used to compile the compatibility binary.
+- Consumers linking against ALCP C++ internals must migrate to the documented C ABI because those internal symbols are no longer exported.
+
+---
+
 ## [5.3.0] - 2026
 
 ### Added

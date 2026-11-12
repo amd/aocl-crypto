@@ -27,8 +27,6 @@
  */
 
 #include "../../rng/include/system_rng.hh"
-#include "alcp/digest/sha2.hh"
-#include "alcp/rng/drbg_hmac.hh"
 #include "alcp/utils/bignum.hh"
 #include "alcp/utils/bits.hh"
 #include <algorithm>
@@ -36,7 +34,6 @@
 #include <climits>
 #include <cmath>
 #include <iomanip>
-#include <iostream>
 #include <limits>
 #include <vector>
 
@@ -48,9 +45,8 @@ class BigNum::Impl
   public:
     Impl();
     ~Impl() {};
-    void                       operator=(const BigNum& rhs);
-    void                       operator=(const BigNum::Impl& rhs);
-    static rng::drbg::HmacDrbg m_drbg;
+    void operator=(const BigNum& rhs);
+    void operator=(const BigNum::Impl& rhs);
 
   public:
     BigNum minus(BigNum const& self);
@@ -124,24 +120,7 @@ class BigNum::Impl
     int    privateRandomRange(const BigNum* range);
     void   invert();
     BigNum __div(const BigNum& b, BigNum& rem);
-    static void init()
-    {
-        static bool isDrbg = false;
-        if (isDrbg)
-            return;
-        vector<Uint8>                   data;
-        std::shared_ptr<digest::Sha256> digest256 =
-            std::make_shared<digest::Sha256>();
-        m_drbg.setDigest(digest256);
-        m_drbg.setRng(std::make_shared<alcp::rng::SystemRng>());
-
-        if (!m_drbg.initialize(256, data).ok())
-            std::cout << "Error While init od drbg for bignum";
-        isDrbg = true;
-    };
 };
-
-rng::drbg::HmacDrbg BigNum::Impl::m_drbg;
 
 bool
 compare_ge(const vector<Uint64>& a, const vector<Uint64>& b)
@@ -209,7 +188,6 @@ ceil_64(int bits)
 BigNum::Impl::Impl()
     : m_is_negative{ false }
 {
-    init();
 }
 
 void
@@ -257,10 +235,10 @@ BigNum::Impl::randomGenerate(int bits, int top, int bottom)
     int            extra_bits = (bits - 1) % 64;
     vector<Uint64> data(max_bytes, 0);
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    if (!m_drbg.randomize(p_data_8, max_bytes * 8).ok()) {
+    rng::SystemRng systemRng;
+    if (systemRng.randomize(p_data_8, max_bytes * 8) != ALC_ERROR_NONE) {
         return ALC_ERROR_BAD_STATE;
     }
-    m_drbg.reseed();
     unsigned long long mask = leftShiftMinusOne(1ULL, extra_bits);
     m_data                  = data;
     m_data[0] |= bottom;
@@ -284,11 +262,9 @@ BigNum::Impl::randomGenerate(int          bits,
                              int          bottom,
                              unsigned int strength)
 {
-    if (bits == 0 && (top == -1 || bottom))
-        return ALC_ERROR_INVALID_SIZE;
-    vector<Uint8> personalizeString;
-    if (!m_drbg.initialize(strength, personalizeString).ok())
-        return ALC_ERROR_BAD_STATE;
+    /* The operating system entropy source exposes no configurable security
+     * strength, so the request cannot be honoured or refused meaningfully. */
+    (void)strength;
     return randomGenerate(bits, top, bottom);
 }
 
@@ -300,10 +276,10 @@ BigNum::Impl::randomRange(const BigNum* range)
     int            extra_bits = (bits - 1) % 64;
     vector<Uint64> data(max_bytes, 0);
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    if (!m_drbg.randomize(p_data_8, max_bytes * 8).ok()) {
+    rng::SystemRng systemRng;
+    if (systemRng.randomize(p_data_8, max_bytes * 8) != ALC_ERROR_NONE) {
         return ALC_ERROR_BAD_STATE;
     }
-    m_drbg.reseed();
     long long mask = leftShiftMinusOne(1ULL, extra_bits);
     m_data         = data;
     m_data.back() &= mask;
@@ -316,10 +292,9 @@ BigNum::Impl::randomRange(const BigNum* range)
 int
 BigNum::Impl::randomRange(const BigNum* range, unsigned int strength)
 {
-
-    vector<Uint8> personalizeString;
-    if (!m_drbg.initialize(strength, personalizeString).ok())
-        return ALC_ERROR_BAD_STATE;
+    /* The operating system entropy source exposes no configurable security
+     * strength, so the request cannot be honoured or refused meaningfully. */
+    (void)strength;
     return randomRange(range);
 }
 

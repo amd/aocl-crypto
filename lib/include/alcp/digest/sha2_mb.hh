@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2025-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,24 +41,26 @@ class Sha2MB final : public IDigest
                   || ALC_DIGEST_LEN_256 == digest_len);
 
   public:
-    ALCP_API_EXPORT Sha2MB()  = default;
-    ALCP_API_EXPORT ~Sha2MB() = default;
+    ALCP_INTERNAL_CPP_EXPORT Sha2MB()  = default;
+    ALCP_INTERNAL_CPP_EXPORT ~Sha2MB() = default;
 
   public:
     // IDigest interface implementation
-    ALCP_API_EXPORT void        init(void) override;
-    ALCP_API_EXPORT alc_error_t update(const Uint8* pBuf, Uint64 size) override;
-    ALCP_API_EXPORT alc_error_t finalize(Uint8* pBuf, Uint64 size) override;
+    ALCP_INTERNAL_CPP_EXPORT void init(void) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t update(const Uint8* pBuf,
+                                                Uint64       size) override;
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t finalize(Uint8* pBuf,
+                                                  Uint64 size) override;
 
     // Multibuffer-specific methods
-    ALCP_API_EXPORT void        set_blocks(Uint64 blocks);
-    ALCP_API_EXPORT void        set_state(const Uint32 state[8]);
-    ALCP_API_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
-                                      const Uint64  numBuffers,
-                                      const Uint64  msgLen);
-    ALCP_API_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
-                                        const Uint64 numBuffers,
-                                        const Uint64 digestLen);
+    ALCP_INTERNAL_CPP_EXPORT void set_blocks(Uint64 blocks);
+    ALCP_INTERNAL_CPP_EXPORT void set_state(const Uint32 state[8]);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t flush(const Uint8** ppMsgBuf,
+                                               const Uint64  numBuffers,
+                                               const Uint64  msgLen);
+    ALCP_INTERNAL_CPP_EXPORT alc_error_t dequeue(Uint8**      ppDstBuf,
+                                                 const Uint64 numBuffers,
+                                                 const Uint64 digestLen);
 
   private:
     alignas(64) Uint32 m_hash[8]{};

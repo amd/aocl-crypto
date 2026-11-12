@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,13 +28,4 @@
 
 #pragma once
 
-/**
- * dllexport helps to explicitly export symbols on Windows.
- * Therefore, any new API's must first be declared with ALCP_API_EXPORT to load
- * on Windows.
- */
-#ifdef WIN32
-#define ALCP_API_EXPORT __declspec(dllexport)
-#else
-#define ALCP_API_EXPORT
-#endif
+#include "alcp/macros.h"

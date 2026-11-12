@@ -226,7 +226,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 EncryptCbc(const Uint8* pSrc,    // ptr to ciphertext
            Uint8*       pDest,   // ptr to plaintext
            Uint64       len,     // message length in bytes

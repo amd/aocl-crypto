@@ -457,7 +457,7 @@ namespace alcp::cipher { namespace aesni {
         _mm_set_epi64x(0x0000000401504454, 0x4105551550555040),  // α^(2^15) = α^32768
     };
 
-    ALCP_API_EXPORT void TweakBlockCalculate(Uint8* pTweakBlock, Uint64 inc)
+    void TweakBlockCalculate(Uint8* pTweakBlock, Uint64 inc)
     {
         if (inc == 0) return;
 
@@ -497,7 +497,7 @@ namespace alcp::cipher { namespace aesni {
         _mm_store_si128(pTweakBlock128, tweak);
     }
 
-    ALCP_API_EXPORT void InitializeTweakBlock(const Uint8  pIv[],
+    void InitializeTweakBlock(const Uint8  pIv[],
                                               Uint8        pTweak[],
                                               const Uint8* pTweakKey,
                                               int          nRounds)

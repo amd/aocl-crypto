@@ -1,4 +1,4 @@
- # Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@ file(GLOB TEST_FILES "*_unit_test.cc")
 
 alcp_module("Rng")
 
-IF(WIN32)
+IF(WIN32 AND BUILD_SHARED_LIBS)
     add_compile_definitions(GTEST_LINKED_AS_SHARED_LIBRARY=1)
 ENDIF()
 

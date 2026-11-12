@@ -31,7 +31,9 @@
  * architectures
  *
  * These tests verify the correct architecture level is returned when
- * AOCL_ENABLE_INSTRUCTION environment variable is set.
+ * AOCL_ENABLE_INSTRUCTION environment variable is set. The library honours
+ * that variable only in builds configured with ALCP_ENABLE_TESTS=ON, so these
+ * tests describe the behaviour of such a build and skip in any other.
  *
  * To run with specific simulated architecture:
  *   AOCL_ENABLE_INSTRUCTION=ZEN  ./base_dispatch_test
@@ -88,6 +90,15 @@ class SimulatedArchTest : public ::testing::Test
   protected:
     void SetUp() override
     {
+        // Belt and braces: the override and this suite are both driven by
+        // ALCP_ENABLE_TESTS, so they cannot diverge today. Should they ever be
+        // separated, skip rather than assert a downgrade the library will not
+        // perform.
+#ifndef ALCP_ENABLE_INSTRUCTION_OVERRIDE
+        GTEST_SKIP() << "Skipping dispatch tests: the AOCL_ENABLE_INSTRUCTION "
+                        "override is not compiled into this build";
+#endif
+
         // Skip all dispatch tests when running under valgrind
         // Valgrind emulates CPUID and doesn't report advanced CPU features correctly,
         // causing all tests to see eReference level instead of actual hardware capabilities

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,10 +50,11 @@ alcp_ec_context_size(const alc_ec_info_p pEcInfo)
 
 alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
+    ALCP_BAD_PTR_ERR_RET(pEcInfo);
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pEcInfo->ecCurveId != ALCP_EC_CURVE25519) {
@@ -70,10 +71,11 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo)
 
     return err;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -88,14 +90,22 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
     new (ctx) ec::Context;
 
     ctx->status = ec::EcBuilder::Build(*pEcInfo, *ctx);
+    if (!ctx->status.ok()) {
+        /* the dispatch table was never installed, so nothing else can destroy
+         * this context later */
+        ctx->~Context();
+        return ALC_ERROR_GENERIC;
+    }
 
-    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
+    return err;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
-                       const Uint8*          pPrivateKey)
-{
+                       const Uint8*          pPrivateKey,
+                       Uint64                privKeyLen)
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -105,17 +115,27 @@ alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
     ALCP_BAD_PTR_ERR_RET(pPrivateKey);
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_ec);
+    ALCP_BAD_PTR_ERR_RET(ctx->getKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->setPrivateKey);
 
-    ctx->status = ctx->setPrivateKey(ctx->m_ec, pPrivateKey);
+    if (privKeyLen != ctx->getKeySize(ctx->m_ec)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    ctx->status = ctx->setPrivateKey(ctx->m_ec, pPrivateKey, privKeyLen);
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pPublicKey,
-                      const Uint8*          pPrivKey)
-{
+                      Uint64                pubKeyLen,
+                      const Uint8*          pPrivKey,
+                      Uint64                privKeyLen)
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -126,18 +146,32 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
     ALCP_BAD_PTR_ERR_RET(pPrivKey);
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_ec);
+    ALCP_BAD_PTR_ERR_RET(ctx->getKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->getPublicKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->getPublicKey);
 
-    ctx->status = ctx->getPublicKey(ctx->m_ec, pPublicKey, pPrivKey);
+    // Validate sizes before dispatch; do not move below backend call.
+    if (privKeyLen != ctx->getKeySize(ctx->m_ec)
+        || pubKeyLen < ctx->getPublicKeySize(ctx->m_ec)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    ctx->status = ctx->getPublicKey(
+        ctx->m_ec, pPublicKey, pubKeyLen, pPrivKey, privKeyLen);
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pSecretKey,
+                      Uint64                secretKeyLen,
                       const Uint8*          pPublicKey,
+                      Uint64                pubKeyLen,
                       Uint64*               pKeyLength)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -147,41 +181,78 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
     ALCP_BAD_PTR_ERR_RET(pSecretKey);
     ALCP_BAD_PTR_ERR_RET(pPublicKey);
     ALCP_BAD_PTR_ERR_RET(pKeyLength);
+    *pKeyLength = 0;
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ALCP_BAD_PTR_ERR_RET(ctx->m_ec);
+    ALCP_BAD_PTR_ERR_RET(ctx->getKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->getPublicKeySize);
+    ALCP_BAD_PTR_ERR_RET(ctx->getSecretKey);
 
-    ctx->status =
-        ctx->getSecretKey(ctx->m_ec, pSecretKey, pPublicKey, pKeyLength);
-    /* FIXME: this should be corrected */
+    // Validate sizes before dispatch; do not move below backend call.
+    if (pubKeyLen != ctx->getPublicKeySize(ctx->m_ec)
+        || secretKeyLen < ctx->getKeySize(ctx->m_ec)) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    ctx->status = ctx->getSecretKey(
+        ctx->m_ec, pSecretKey, secretKeyLen, pPublicKey, pubKeyLen, pKeyLength);
+
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
+ALCP_CATCH_ERR_RET
 
 void
 alcp_ec_finish(const alc_ec_handle_p pEcHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
+    if (pEcHandle == nullptr || pEcHandle->context == nullptr) {
+        return;
+    }
+
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    /* TODO: fix the argument */
-    ctx->status = ctx->finish(ctx->m_ec);
+    /* the destructor nulls the dispatch table, so a second finish must be a
+     * no-op rather than a call through a null pointer */
+    if (ctx->finish == nullptr) {
+        return;
+    }
 
+    if (ctx->m_ec != nullptr) {
+        /* TODO: fix the argument */
+        ctx->status = ctx->finish(ctx->m_ec);
+    }
+
+    /* tear the context down whenever the table is live, so that a context
+     * without a backend still releases the status message */
     ctx->~Context();
 
     // FIXME: Return error code if status is not ok
 }
+ALCP_CATCH_IGNORE
 
 void
 alcp_ec_reset(const alc_ec_handle_p pEcHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
-    auto ctx    = static_cast<ec::Context*>(pEcHandle->context);
+    if (pEcHandle == nullptr || pEcHandle->context == nullptr) {
+        return;
+    }
+
+    auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+
+    if (ctx->m_ec == nullptr || ctx->reset == nullptr) {
+        return;
+    }
+
     ctx->status = ctx->reset(ctx->m_ec);
 
     // FIXME: Return error code if status is not ok
 }
+ALCP_CATCH_IGNORE
 
 EXTERN_C_END

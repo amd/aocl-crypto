@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,13 +27,17 @@
  */
 
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 #include "alcp/base.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest/sha512.hh"
 #include "alcp/error.h"
+#include "alcp/rsa.h"
 #include "alcp/rsa.hh"
 #include "alcp/types.hh"
 
@@ -754,6 +758,51 @@ TEST(RsaTest, DecryptOaepPadding)
     ASSERT_EQ(err, ALC_ERROR_NONE);
 }
 
+TEST(RsaTest, DecryptOaepPaddingSizeMismatch)
+{
+    std::unique_ptr<digest::IDigest> digest_ptr;
+
+    digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    Rsa rsa_obj;
+    rsa_obj.setDigest(digest);
+    rsa_obj.setMgf(digest);
+
+    alc_error_t err = rsa_obj.setPrivateKey(DP_EXP,
+                                            DQ_EXP,
+                                            P_Modulus,
+                                            Q_Modulus,
+                                            Q_ModulusINV,
+                                            Modulus,
+                                            sizeof(P_Modulus));
+    ASSERT_EQ(err, ALC_ERROR_NONE);
+
+    const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
+    Uint8       enc_text[sizeof(Modulus) + 1]{};
+    Uint8       text_full[sizeof(Modulus)]{};
+    Uint64      text_size = 0;
+
+    // ciphertext larger than the key size
+    err = rsa_obj.decryptPrivateOaep(
+        enc_text, sizeof(enc_text), Label, sizeof(Label), text_full, text_size);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+
+    // ciphertext smaller than the key size
+    err = rsa_obj.decryptPrivateOaep(enc_text,
+                                     sizeof(Modulus) - 1,
+                                     Label,
+                                     sizeof(Label),
+                                     text_full,
+                                     text_size);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+
+    // zero length ciphertext
+    err = rsa_obj.decryptPrivateOaep(
+        enc_text, 0, Label, sizeof(Label), text_full, text_size);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+}
+
 TEST(RsaTest, PssSanity)
 {
     Rsa    rsa_obj_2048;
@@ -762,25 +811,26 @@ TEST(RsaTest, PssSanity)
     Uint8  salt[20]{};
     Uint64 salt_size = 20;
     Uint8  signed_buff[2048]{};
+    Uint64 key_size = 2048 / 8;
 
     // null text should fail
     alc_error_t err = rsa_obj_2048.signPrivatePss(
         true, nullptr, text_size, salt, salt_size, signed_buff);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPss(nullptr, 0, signed_buff);
+    err = rsa_obj_2048.verifyPublicPss(nullptr, 0, signed_buff, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     // null signed buff should fail
     err = rsa_obj_2048.signPrivatePss(true, text, text_size, salt, 20, nullptr);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPss(text, text_size, nullptr);
+    err = rsa_obj_2048.verifyPublicPss(text, text_size, nullptr, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     // not setting the hash should fail
     err = rsa_obj_2048.signPrivatePss(
         true, text, 2048 / 8, salt, 20, signed_buff);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
+    err = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
@@ -793,7 +843,7 @@ TEST(RsaTest, PssSanity)
     err = rsa_obj_2048.signPrivatePss(
         true, text, 2048 / 8, salt, 20, signed_buff);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
+    err = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     err = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
@@ -820,7 +870,7 @@ TEST(RsaTest, PssSanity)
     err = rsa_obj_2048.signPrivatePss(
         true, text, 2048 / 8, salt, 20, signed_buff);
     ASSERT_EQ(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
+    err = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff, key_size);
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
     // null salt should fail if the size says otherwise
@@ -832,6 +882,81 @@ TEST(RsaTest, PssSanity)
     err = rsa_obj_2048.signPrivatePss(
         true, text, 2048 / 8, nullptr, 0, signed_buff);
     ASSERT_EQ(err, ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, PssSaltSizeBoundsAtCapi)
+{
+    constexpr Uint64 KeySize = sizeof(Modulus_2048);
+    constexpr Uint64 HashLen = 32; // digest configured below
+    /* longest salt the PSS encoding admits for this key and digest */
+    constexpr Uint64 MaxSaltSize = KeySize - HashLen - 2;
+
+    std::vector<Uint8> context(alcp_rsa_context_size());
+    alc_rsa_handle_t   handle{ context.data() };
+    ASSERT_EQ(alcp_rsa_request(&handle), ALC_ERROR_NONE);
+
+    ASSERT_EQ(alcp_rsa_set_publickey(
+                  &handle, PublicKeyExponent, Modulus_2048, KeySize),
+              ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_set_privatekey(&handle,
+                                      DP_EXP_2048,
+                                      DQ_EXP_2048,
+                                      P_Modulus_2048,
+                                      Q_Modulus_2048,
+                                      Q_ModulusINV_2048,
+                                      Modulus_2048,
+                                      sizeof(P_Modulus_2048)),
+              ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_digest(&handle, ALC_SHA2_256), ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_mgf(&handle, ALC_SHA2_256), ALC_ERROR_NONE);
+
+    const std::vector<Uint8> text(KeySize, 0x31);
+    const std::vector<Uint8> hash(HashLen, 0x5a);
+    const std::vector<Uint8> salt(MaxSaltSize, 0x2c);
+    std::vector<Uint8>       signed_buff(KeySize);
+
+    /*
+     * The salt pointer stays valid at every size below, so the declared length
+     * is the only thing that can produce a rejection. The first two exceed the
+     * capacity only once hLen + sLen + 2 is computed without wrapping.
+     */
+    for (const Uint64 salt_size :
+         { UINT64_MAX - 33, UINT64_MAX, MaxSaltSize + 1 }) {
+        EXPECT_EQ(alcp_rsa_privatekey_sign_pss(&handle,
+                                               true,
+                                               text.data(),
+                                               text.size(),
+                                               salt.data(),
+                                               salt_size,
+                                               signed_buff.data()),
+                  ALC_ERROR_NOT_PERMITTED);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pss(&handle,
+                                                    hash.data(),
+                                                    hash.size(),
+                                                    salt.data(),
+                                                    salt_size,
+                                                    signed_buff.data()),
+                  ALC_ERROR_NOT_PERMITTED);
+    }
+
+    // the longest admissible salt must still sign
+    EXPECT_EQ(alcp_rsa_privatekey_sign_pss(&handle,
+                                           true,
+                                           text.data(),
+                                           text.size(),
+                                           salt.data(),
+                                           MaxSaltSize,
+                                           signed_buff.data()),
+              ALC_ERROR_NONE);
+    EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pss(&handle,
+                                                hash.data(),
+                                                hash.size(),
+                                                salt.data(),
+                                                MaxSaltSize,
+                                                signed_buff.data()),
+              ALC_ERROR_NONE);
+
+    alcp_rsa_finish(&handle);
 }
 
 TEST(RsaTest, PssSignatureVerification)
@@ -868,7 +993,7 @@ TEST(RsaTest, PssSignatureVerification)
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
     err = rsa_obj_2048.verifyPublicPss(
-        text_2048, text_size_2048, signed_text_2048);
+        text_2048, text_size_2048, signed_text_2048, sizeof(signed_text_2048));
     ASSERT_EQ(err, ALC_ERROR_NONE);
 }
 
@@ -878,24 +1003,26 @@ TEST(RsaTest, Pkcsv15Sanity)
     Uint8  text[2048 / 8];
     Uint64 text_size = 2048 / 8;
     Uint8  signed_buff[2048];
+    Uint64 key_size = 2048 / 8;
 
     // null text should fail
     alc_error_t err =
         rsa_obj_2048.signPrivatePkcsv15(true, nullptr, text_size, signed_buff);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPkcsv15(nullptr, 0, signed_buff);
+    err = rsa_obj_2048.verifyPublicPkcsv15(nullptr, 0, signed_buff, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     // null signed buff should fail
     err = rsa_obj_2048.signPrivatePkcsv15(true, text, text_size, nullptr);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, nullptr);
+    err = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, nullptr, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     // not setting the hash should fail
     err = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
+    err = rsa_obj_2048.verifyPublicPkcsv15(
+        text, text_size, signed_buff, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     digest::IDigest* digest = fetch_digest(ALC_SHA2_256);
@@ -907,7 +1034,8 @@ TEST(RsaTest, Pkcsv15Sanity)
     // not setting the public key / private key should fail
     err = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
+    err = rsa_obj_2048.verifyPublicPkcsv15(
+        text, text_size, signed_buff, key_size);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     err = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
@@ -931,7 +1059,8 @@ TEST(RsaTest, Pkcsv15Sanity)
 
     err = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
     ASSERT_EQ(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
+    err = rsa_obj_2048.verifyPublicPkcsv15(
+        text, text_size, signed_buff, key_size);
     ASSERT_EQ(err, ALC_ERROR_NONE);
 }
 
@@ -967,7 +1096,7 @@ TEST(RsaTest, Pkcsv15SignatureVerification)
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
     err = rsa_obj_2048.verifyPublicPkcsv15(
-        text_2048, text_size_2048, signed_text_2048);
+        text_2048, text_size_2048, signed_text_2048, sizeof(signed_text_2048));
     ASSERT_EQ(err, ALC_ERROR_NONE);
 }
 
@@ -989,6 +1118,139 @@ TEST(RsaTest, BigNumApiNegativeTest)
 
     err = rsa_obj_2048.setPublicKeyAsBigNum(&exp, &mod);
     ASSERT_NE(err, ALC_ERROR_NONE);
+
+    constexpr Uint64 cPrimeWords   = 2048 / (2 * 64);
+    constexpr Uint64 cModulusWords = 2048 / 64;
+    Uint64           prime[cPrimeWords]{};
+    Uint64           modulus[cModulusWords]{};
+
+    dp = dq = p = q = qinv = { prime, cPrimeWords };
+    mod                     = { modulus, cModulusWords };
+
+    BigNum* private_components[] = { &dq, &p, &q, &qinv };
+    for (BigNum* component : private_components) {
+        component->size = cPrimeWords + 1;
+        EXPECT_NE(rsa_obj_2048.setPrivateKeyAsBigNum(
+                      &dp, &dq, &p, &q, &qinv, &mod),
+                  ALC_ERROR_NONE);
+        component->size = cPrimeWords;
+    }
+
+    mod.size = cModulusWords + 1;
+    EXPECT_NE(rsa_obj_2048.setPrivateKeyAsBigNum(
+                  &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+
+    mod.size = cModulusWords;
+    qinv.num = nullptr;
+    EXPECT_NE(rsa_obj_2048.setPrivateKeyAsBigNum(
+                  &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, BigNumApiRejectsOversizedPrivateKeyAtCapi)
+{
+    constexpr Uint64 cPrimeWords   = 2048 / (2 * 64);
+    constexpr Uint64 cModulusWords = 2048 / 64;
+    Uint64           prime[cPrimeWords]{};
+    Uint64           modulus[cModulusWords]{};
+
+    BigNum dp   = { prime, cPrimeWords };
+    BigNum dq   = { prime, cPrimeWords };
+    BigNum p    = { prime, cPrimeWords };
+    BigNum q    = { prime, 0x1000 };
+    BigNum qinv = { prime, cPrimeWords };
+    BigNum mod  = { modulus, cModulusWords };
+
+    std::vector<Uint8> context(alcp_rsa_context_size());
+    alc_rsa_handle_t   handle{ context.data() };
+
+    ASSERT_EQ(alcp_rsa_request(&handle), ALC_ERROR_NONE);
+    EXPECT_NE(alcp_rsa_set_bignum_private_key(
+                  &handle, &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+
+    q.size  = cPrimeWords;
+    dq.size = 4096;
+    EXPECT_NE(alcp_rsa_set_bignum_private_key(
+                  &handle, &dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+    alcp_rsa_finish(&handle);
+}
+
+TEST(RsaTest, BigNumPrivateKeyAccepts1024BitComponents)
+{
+    Rsa rsa_obj;
+
+    Uint64 dp_num[sizeof(DP_EXP) / 8];
+    Uint64 dq_num[sizeof(DQ_EXP) / 8];
+    Uint64 p_num[sizeof(P_Modulus) / 8];
+    Uint64 q_num[sizeof(Q_Modulus) / 8];
+    Uint64 qinv_num[sizeof(Q_ModulusINV) / 8];
+    Uint64 mod_num[sizeof(Modulus) / 8];
+
+    convert_to_bignum(DP_EXP, dp_num, sizeof(DP_EXP));
+    convert_to_bignum(DQ_EXP, dq_num, sizeof(DQ_EXP));
+    convert_to_bignum(P_Modulus, p_num, sizeof(P_Modulus));
+    convert_to_bignum(Q_Modulus, q_num, sizeof(Q_Modulus));
+    convert_to_bignum(Q_ModulusINV, qinv_num, sizeof(Q_ModulusINV));
+    convert_to_bignum(Modulus, mod_num, sizeof(Modulus));
+
+    BigNum dp   = { dp_num, sizeof(dp_num) / 8 };
+    BigNum dq   = { dq_num, sizeof(dq_num) / 8 };
+    BigNum p    = { p_num, sizeof(p_num) / 8 };
+    BigNum q    = { q_num, sizeof(q_num) / 8 };
+    BigNum qinv = { qinv_num, sizeof(qinv_num) / 8 };
+    BigNum mod  = { mod_num, sizeof(mod_num) / 8 };
+
+    EXPECT_EQ(rsa_obj.setPrivateKeyAsBigNum(&dp, &dq, &p, &q, &qinv, &mod),
+              ALC_ERROR_NONE);
+}
+
+TEST(RsaTest, BigNumApiRejectsOversizedPublicKeyAtCapi)
+{
+    constexpr Uint64 cModulusWords = 2048 / 64;
+
+    Uint64 Modulus_BigNum[sizeof(Modulus_2048) / 8];
+    convert_to_bignum(Modulus_2048, Modulus_BigNum, sizeof(Modulus_2048));
+    BigNum modulus = { Modulus_BigNum, sizeof(Modulus_2048) / 8 };
+
+    // one qword larger than the destination, and backed by real storage, so
+    // that dropping the bound writes out of bounds instead of reading it
+    Uint64 exponent_buffer[cModulusWords + 1]{};
+    exponent_buffer[0] = PublicKeyExponent;
+
+    std::vector<Uint8> context(alcp_rsa_context_size());
+    alc_rsa_handle_t   handle{ context.data() };
+    ASSERT_EQ(alcp_rsa_request(&handle), ALC_ERROR_NONE);
+
+    // exponent one qword beyond the destination capacity
+    BigNum exponent = { exponent_buffer, cModulusWords + 1 };
+    EXPECT_NE(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // exponent exactly at the destination capacity, zero padded above word 0
+    exponent.size = cModulusWords;
+    EXPECT_EQ(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // single qword exponent
+    exponent.size = 1;
+    EXPECT_EQ(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // zero size alongside a non null buffer
+    exponent.size = 0;
+    EXPECT_NE(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    // a size whose byte count overflows the signed int length taken by the
+    // copy helper, so a bound applied after the scaling would be bypassed
+    exponent.size = 1ULL << 28;
+    EXPECT_NE(alcp_rsa_set_bignum_public_key(&handle, &exponent, &modulus),
+              ALC_ERROR_NONE);
+
+    alcp_rsa_finish(&handle);
 }
 
 TEST(RsaTest, Pkcsv15NegativeTest)
@@ -997,12 +1259,12 @@ TEST(RsaTest, Pkcsv15NegativeTest)
     alc_error_t err =
         rsa_obj_2048.encryptPublicPkcsv15(nullptr, 0, nullptr, nullptr);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.decryptPrivatePkcsv15(nullptr, nullptr, nullptr);
+    err = rsa_obj_2048.decryptPrivatePkcsv15(nullptr, 0, nullptr, nullptr);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
     err = rsa_obj_2048.signPrivateHashPkcsv15(nullptr, 0, nullptr);
     ASSERT_NE(err, ALC_ERROR_NONE);
-    err = rsa_obj_2048.verifyPublicHashPkcsv15(nullptr, 0, nullptr);
+    err = rsa_obj_2048.verifyPublicHashPkcsv15(nullptr, 0, nullptr, 0);
     ASSERT_NE(err, ALC_ERROR_NONE);
 }
 
@@ -1013,7 +1275,7 @@ TEST(RsaTest, PssHashNegativeTest)
         rsa_obj_2048.signPrivateHashPss(nullptr, 0, nullptr, 0, nullptr);
     ASSERT_NE(err, ALC_ERROR_NONE);
 
-    err = rsa_obj_2048.verifyPublicHashPss(nullptr, 0, nullptr);
+    err = rsa_obj_2048.verifyPublicHashPss(nullptr, 0, nullptr, 0);
     ASSERT_NE(err, ALC_ERROR_NONE);
 }
 
@@ -1079,7 +1341,7 @@ TEST(RsaTest, Pkcsv15EncryptDecrypt)
     Uint64 dec_text_size = 0;
 
     err = rsa_obj_2048.decryptPrivatePkcsv15(
-        enc_text.get(), dec_text.get(), &dec_text_size);
+        enc_text.get(), key_size, dec_text.get(), &dec_text_size);
 
     ASSERT_EQ(err, ALC_ERROR_NONE);
     ASSERT_EQ(memcmp(dec_text.get(), text.get(), dec_text_size), 0);
@@ -1147,8 +1409,10 @@ TEST(RsaTest, Pkcsv15HashSignVerify)
 
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
-    err = rsa_obj_2048.verifyPublicHashPkcsv15(
-        hash_with_info_ptr, digest_info_size + hash_size, sign_text.get());
+    err = rsa_obj_2048.verifyPublicHashPkcsv15(hash_with_info_ptr,
+                                               digest_info_size + hash_size,
+                                               sign_text.get(),
+                                               key_size);
 
     ASSERT_EQ(err, ALC_ERROR_NONE);
 }
@@ -1216,9 +1480,542 @@ TEST(RsaTest, PssHashSignVerify)
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
     err = rsa_obj_2048.verifyPublicHashPss(
-        hash.get(), hash_size, sign_text.get());
+        hash.get(), hash_size, sign_text.get(), key_size);
 
     ASSERT_EQ(err, ALC_ERROR_NONE);
+}
+
+// Verify/decrypt entry points must reject lengths other than the modulus size.
+// Assert both one-byte short and one-byte long cases.
+class RsaLengthTest : public ::testing::Test
+{
+  protected:
+    static constexpr Uint64 KeySize = sizeof(Modulus_2048);
+    static constexpr Uint64 HashLen = 32; // digest configured in SetUp
+
+    /* longest message PKCS1-v1_5 and OAEP can recover for this key */
+    static constexpr Uint64 Pkcsv15MaxMessage = KeySize - 11;
+    static constexpr Uint64 OaepMaxMessage    = KeySize - 2 * HashLen - 2;
+
+    static constexpr Uint64 MessageLen   = 48;
+    static constexpr Uint64 PlaintextLen = 47;
+
+    void SetUp() override
+    {
+        m_handle.context = malloc(alcp_rsa_context_size());
+        ASSERT_NE(m_handle.context, nullptr);
+        ASSERT_EQ(alcp_rsa_request(&m_handle), ALC_ERROR_NONE);
+        ASSERT_EQ(alcp_rsa_set_publickey(
+                      &m_handle, PublicKeyExponent, Modulus_2048, KeySize),
+                  ALC_ERROR_NONE);
+        ASSERT_EQ(alcp_rsa_set_privatekey(&m_handle,
+                                          DP_EXP_2048,
+                                          DQ_EXP_2048,
+                                          P_Modulus_2048,
+                                          Q_Modulus_2048,
+                                          Q_ModulusINV_2048,
+                                          Modulus_2048,
+                                          sizeof(P_Modulus_2048)),
+                  ALC_ERROR_NONE);
+        ASSERT_EQ(alcp_rsa_add_digest(&m_handle, ALC_SHA2_256), ALC_ERROR_NONE);
+        ASSERT_EQ(alcp_rsa_add_mgf(&m_handle, ALC_SHA2_256), ALC_ERROR_NONE);
+        ASSERT_EQ(alcp_rsa_get_key_size(&m_handle), KeySize);
+    }
+
+    void TearDown() override
+    {
+        alcp_rsa_finish(&m_handle);
+        free(m_handle.context);
+    }
+
+    /*
+     * Each call under test is given a buffer allocated to exactly the length
+     * it declares, so a check that fails to reject really does run off the end
+     * and is caught by a sanitizer rather than passing quietly.
+     */
+    static std::vector<Uint8> Resized(const std::vector<Uint8>& source,
+                                      Uint64                    length)
+    {
+        std::vector<Uint8> buffer(length, 0);
+        memcpy(buffer.data(),
+               source.data(),
+               length < source.size() ? length : source.size());
+        return buffer;
+    }
+
+    /*
+     * ALC_ERROR_NOT_PERMITTED is shared with the null-pointer and key-state
+     * rejections, so the fixture supplies a valid handle, a configured digest
+     * and non-null buffers to every call: on these paths the length is the
+     * only thing left that can produce it.
+     */
+    template<typename Call>
+    static void ExpectExactLength(Uint64 required, Call&& call)
+    {
+        EXPECT_EQ(call(required - 1), ALC_ERROR_NOT_PERMITTED);
+        EXPECT_EQ(call(required + 1), ALC_ERROR_NOT_PERMITTED);
+    }
+
+    std::vector<Uint8> DigestInfoPrefixedHash() const
+    {
+        const Int32 index    = alcp_rsa_get_digest_info_index(ALC_SHA2_256);
+        const Int32 infoSize = alcp_rsa_get_digest_info_size(ALC_SHA2_256);
+
+        std::vector<Uint8> hash(infoSize + m_hash.size());
+        memcpy(hash.data(), DigestInfo[index], infoSize);
+        memcpy(hash.data() + infoSize, m_hash.data(), m_hash.size());
+        return hash;
+    }
+
+    std::vector<Uint8> PssSignature()
+    {
+        std::vector<Uint8> signature(KeySize);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_pss(&m_handle,
+                                               true,
+                                               m_message.data(),
+                                               m_message.size(),
+                                               m_salt.data(),
+                                               m_salt.size(),
+                                               signature.data()),
+                  ALC_ERROR_NONE);
+        return signature;
+    }
+
+    std::vector<Uint8> Pkcsv15Signature()
+    {
+        std::vector<Uint8> signature(KeySize);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_pkcs1v15(&m_handle,
+                                                    true,
+                                                    m_message.data(),
+                                                    m_message.size(),
+                                                    signature.data()),
+                  ALC_ERROR_NONE);
+        return signature;
+    }
+
+    std::vector<Uint8> HashPssSignature()
+    {
+        std::vector<Uint8> signature(KeySize);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pss(&m_handle,
+                                                    m_hash.data(),
+                                                    m_hash.size(),
+                                                    m_salt.data(),
+                                                    m_salt.size(),
+                                                    signature.data()),
+                  ALC_ERROR_NONE);
+        return signature;
+    }
+
+    std::vector<Uint8> HashPkcsv15Signature(const std::vector<Uint8>& hash)
+    {
+        std::vector<Uint8> signature(KeySize);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pkcs1v15(
+                      &m_handle, hash.data(), hash.size(), signature.data()),
+                  ALC_ERROR_NONE);
+        return signature;
+    }
+
+    std::vector<Uint8> Pkcsv15Ciphertext()
+    {
+        std::vector<Uint8> ciphertext(KeySize);
+        EXPECT_EQ(alcp_rsa_publickey_encrypt_pkcs1v15(&m_handle,
+                                                      m_plaintext.data(),
+                                                      m_plaintext.size(),
+                                                      ciphertext.data(),
+                                                      m_random_pad.data()),
+                  ALC_ERROR_NONE);
+        return ciphertext;
+    }
+
+    std::vector<Uint8> OaepCiphertext()
+    {
+        std::vector<Uint8> ciphertext(KeySize);
+        EXPECT_EQ(alcp_rsa_publickey_encrypt_oaep(&m_handle,
+                                                  m_plaintext.data(),
+                                                  m_plaintext.size(),
+                                                  m_label.data(),
+                                                  m_label.size(),
+                                                  m_seed.data(),
+                                                  ciphertext.data()),
+                  ALC_ERROR_NONE);
+        return ciphertext;
+    }
+
+    void ExpectRecoveredPlaintext(const std::vector<Uint8>& recovered,
+                                  Uint64                    recoveredLength)
+    {
+        EXPECT_EQ(recoveredLength, m_plaintext.size());
+        EXPECT_EQ(
+            memcmp(recovered.data(), m_plaintext.data(), m_plaintext.size()),
+            0);
+    }
+
+    alc_rsa_handle_t m_handle{};
+
+    const std::vector<Uint8> m_message = std::vector<Uint8>(MessageLen, 0x31);
+    const std::vector<Uint8> m_plaintext =
+        std::vector<Uint8>(PlaintextLen, 0x31);
+    const std::vector<Uint8> m_random_pad =
+        std::vector<Uint8>(KeySize - 3 - PlaintextLen, 0x31);
+    const std::vector<Uint8> m_hash  = std::vector<Uint8>(HashLen, 0x5a);
+    const std::vector<Uint8> m_seed  = std::vector<Uint8>(HashLen, 0x01);
+    const std::vector<Uint8> m_salt  = std::vector<Uint8>(20, 0x2c);
+    const std::vector<Uint8> m_label = std::vector<Uint8>(5, 0x68);
+};
+
+TEST_F(RsaLengthTest, VerifyPssRequiresExactSignatureLength)
+{
+    const std::vector<Uint8> signature = PssSignature();
+
+    auto verify = [&](Uint64 length) {
+        const std::vector<Uint8> buffer = Resized(signature, length);
+        return alcp_rsa_publickey_verify_pss(&m_handle,
+                                             m_message.data(),
+                                             m_message.size(),
+                                             buffer.data(),
+                                             length);
+    };
+
+    ExpectExactLength(KeySize, verify);
+    EXPECT_EQ(verify(KeySize), ALC_ERROR_NONE);
+}
+
+TEST_F(RsaLengthTest, VerifyPkcsv15RequiresExactSignatureLength)
+{
+    const std::vector<Uint8> signature = Pkcsv15Signature();
+
+    auto verify = [&](Uint64 length) {
+        const std::vector<Uint8> buffer = Resized(signature, length);
+        return alcp_rsa_publickey_verify_pkcs1v15(&m_handle,
+                                                  m_message.data(),
+                                                  m_message.size(),
+                                                  buffer.data(),
+                                                  length);
+    };
+
+    ExpectExactLength(KeySize, verify);
+    EXPECT_EQ(verify(KeySize), ALC_ERROR_NONE);
+}
+
+TEST_F(RsaLengthTest, VerifyHashPssRequiresExactSignatureLength)
+{
+    const std::vector<Uint8> signature = HashPssSignature();
+
+    auto verify = [&](Uint64 length) {
+        const std::vector<Uint8> buffer = Resized(signature, length);
+        return alcp_rsa_publickey_verify_hash_pss(
+            &m_handle, m_hash.data(), m_hash.size(), buffer.data(), length);
+    };
+
+    ExpectExactLength(KeySize, verify);
+    EXPECT_EQ(verify(KeySize), ALC_ERROR_NONE);
+}
+
+TEST_F(RsaLengthTest, HashPssRequiresExactHashLength)
+{
+    const std::vector<Uint8> signature = HashPssSignature();
+
+    for (const Uint64 length : { HashLen - 1, HashLen + 1 }) {
+        const std::vector<Uint8> hash = Resized(m_hash, length);
+        EXPECT_EQ(alcp_rsa_publickey_verify_hash_pss(&m_handle,
+                                                     hash.data(),
+                                                     length,
+                                                     signature.data(),
+                                                     signature.size()),
+                  ALC_ERROR_NOT_PERMITTED);
+
+        std::vector<Uint8> output(KeySize);
+        EXPECT_EQ(alcp_rsa_privatekey_sign_hash_pss(&m_handle,
+                                                    hash.data(),
+                                                    length,
+                                                    m_salt.data(),
+                                                    m_salt.size(),
+                                                    output.data()),
+                  ALC_ERROR_NOT_PERMITTED);
+    }
+}
+
+TEST_F(RsaLengthTest, VerifyHashPkcsv15RequiresExactSignatureLength)
+{
+    const std::vector<Uint8> hash      = DigestInfoPrefixedHash();
+    const std::vector<Uint8> signature = HashPkcsv15Signature(hash);
+
+    auto verify = [&](Uint64 length) {
+        const std::vector<Uint8> buffer = Resized(signature, length);
+        return alcp_rsa_publickey_verify_hash_pkcs1v15(
+            &m_handle, hash.data(), hash.size(), buffer.data(), length);
+    };
+
+    ExpectExactLength(KeySize, verify);
+    EXPECT_EQ(verify(KeySize), ALC_ERROR_NONE);
+}
+
+TEST_F(RsaLengthTest, DecryptPkcsv15RequiresExactCiphertextLength)
+{
+    const std::vector<Uint8> ciphertext = Pkcsv15Ciphertext();
+
+    std::vector<Uint8> recovered(Pkcsv15MaxMessage);
+    Uint64             recoveredLength = 0;
+
+    auto decrypt = [&](Uint64 length) {
+        const std::vector<Uint8> buffer = Resized(ciphertext, length);
+        return alcp_rsa_privatekey_decrypt_pkcs1v15(&m_handle,
+                                                    buffer.data(),
+                                                    length,
+                                                    recovered.data(),
+                                                    &recoveredLength);
+    };
+
+    ExpectExactLength(KeySize, decrypt);
+
+    ASSERT_EQ(decrypt(KeySize), ALC_ERROR_NONE);
+    ExpectRecoveredPlaintext(recovered, recoveredLength);
+}
+
+TEST_F(RsaLengthTest, DecryptPkcsv15RejectsNullTextSize)
+{
+    const std::vector<Uint8> ciphertext = Pkcsv15Ciphertext();
+    std::vector<Uint8>       recovered(Pkcsv15MaxMessage);
+
+    EXPECT_NE(alcp_rsa_privatekey_decrypt_pkcs1v15(&m_handle,
+                                                   ciphertext.data(),
+                                                   ciphertext.size(),
+                                                   recovered.data(),
+                                                   nullptr),
+              ALC_ERROR_NONE);
+}
+
+TEST_F(RsaLengthTest, DecryptOaepReportsWrongCiphertextLength)
+{
+    const std::vector<Uint8> ciphertext = OaepCiphertext();
+
+    std::vector<Uint8> recovered(OaepMaxMessage);
+    Uint64             recoveredLength = 0;
+
+    auto decrypt = [&](Uint64 length) {
+        const std::vector<Uint8> buffer = Resized(ciphertext, length);
+        return alcp_rsa_privatekey_decrypt_oaep(&m_handle,
+                                                buffer.data(),
+                                                length,
+                                                m_label.data(),
+                                                m_label.size(),
+                                                recovered.data(),
+                                                &recoveredLength);
+    };
+
+    ExpectExactLength(KeySize, decrypt);
+
+    ASSERT_EQ(decrypt(KeySize), ALC_ERROR_NONE);
+    ExpectRecoveredPlaintext(recovered, recoveredLength);
+}
+
+TEST(RsaKeyStateTest, VerifyUsesValidatedPublicInputSize)
+{
+    Rsa rsa;
+
+    digest::IDigest*                 digest = fetch_digest(ALC_SHA2_256);
+    std::unique_ptr<digest::IDigest> digest_ptr(digest);
+    rsa.setDigest(digest);
+
+    ASSERT_EQ(rsa.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus)),
+              ALC_ERROR_NONE);
+    ASSERT_EQ(rsa.setPrivateKey(DP_EXP_2048,
+                               DQ_EXP_2048,
+                               P_Modulus_2048,
+                               Q_Modulus_2048,
+                               Q_ModulusINV_2048,
+                               Modulus_2048,
+                               sizeof(P_Modulus_2048)),
+              ALC_ERROR_NONE);
+
+    std::vector<Uint8> message(1, 0x31);
+    std::vector<Uint8> signature(sizeof(Modulus), 0);
+    EXPECT_EQ(rsa.verifyPublicPkcsv15(
+                  message.data(), message.size(), signature.data(), signature.size()),
+              ALC_ERROR_GENERIC);
+}
+
+TEST(RsaKeyStateTest, DecryptUsesValidatedPrivateInputSize)
+{
+    Rsa rsa;
+
+    ASSERT_EQ(rsa.setPrivateKey(DP_EXP_2048,
+                               DQ_EXP_2048,
+                               P_Modulus_2048,
+                               Q_Modulus_2048,
+                               Q_ModulusINV_2048,
+                               Modulus_2048,
+                               sizeof(P_Modulus_2048)),
+              ALC_ERROR_NONE);
+    ASSERT_EQ(rsa.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus)),
+              ALC_ERROR_NONE);
+
+    std::vector<Uint8> ciphertext(sizeof(Modulus_2048), 0);
+    std::vector<Uint8> plaintext(sizeof(Modulus_2048) - 11, 0);
+    Uint64             plaintextSize = 0;
+    EXPECT_EQ(rsa.decryptPrivatePkcsv15(ciphertext.data(),
+                                        ciphertext.size(),
+                                        plaintext.data(),
+                                        &plaintextSize),
+              ALC_ERROR_GENERIC);
+    EXPECT_EQ(plaintextSize, 0);
+}
+
+TEST(RsaKeyStateTest, UnconfiguredKeysRejectZeroLengthOperations)
+{
+    Rsa                rsa;
+    std::vector<Uint8> input(1, 0);
+    std::vector<Uint8> output(2048 / 8, 0);
+
+    EXPECT_EQ(rsa.encryptPublic(input.data(), 0, output.data()),
+              ALC_ERROR_NOT_PERMITTED);
+    EXPECT_EQ(rsa.decryptPrivate(input.data(), 0, output.data()),
+              ALC_ERROR_NOT_PERMITTED);
+}
+
+/*
+ * Digest lifetime and OAEP defaults. These go through the C API because that is
+ * where the digest is owned: it hands the Rsa object a digest it deletes on the
+ * next add_digest, so the sequences below used to reach a freed one.
+ */
+
+constexpr Uint64 Sha256Len   = 32;
+constexpr Uint8  OaepLabel[] = { 'h', 'e', 'l', 'l', 'o' };
+
+/* a digest the C API does not implement, so add_digest refuses the mode */
+constexpr alc_digest_mode_t UnsupportedMode = ALC_SHA3_256;
+
+// A handle whose context lives for as long as the test needs it.
+class CapiSession
+{
+  public:
+    CapiSession()
+        : m_context(alcp_rsa_context_size())
+    {
+        m_handle.context = static_cast<alc_rsa_context_p>(m_context.data());
+    }
+
+    ~CapiSession() { alcp_rsa_finish(&m_handle); }
+
+    alc_rsa_handle_p get() { return &m_handle; }
+
+    alc_error_t withKeys()
+    {
+        alc_error_t err = alcp_rsa_request(&m_handle);
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+        err = alcp_rsa_set_publickey(
+            &m_handle, PublicKeyExponent, Modulus, sizeof(Modulus));
+        if (err != ALC_ERROR_NONE) {
+            return err;
+        }
+        return alcp_rsa_set_privatekey(&m_handle,
+                                       DP_EXP,
+                                       DQ_EXP,
+                                       P_Modulus,
+                                       Q_Modulus,
+                                       Q_ModulusINV,
+                                       Modulus,
+                                       sizeof(P_Modulus));
+    }
+
+  private:
+    std::vector<Uint8> m_context;
+    alc_rsa_handle_t   m_handle{};
+};
+
+// Signs and verifies one message, which is what exercises the digest and the
+// mask generation function the session currently holds.
+static alc_error_t
+sign_and_verify_pss(CapiSession& session)
+{
+    Uint8       text[] = { 'm', 'e', 's', 's', 'a', 'g', 'e' };
+    Uint8       salt[Sha256Len]{ 0x01 };
+    Uint8       signature[sizeof(Modulus)]{};
+    alc_error_t err = alcp_rsa_privatekey_sign_pss(
+        session.get(), true, text, sizeof(text), salt, sizeof(salt), signature);
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
+    return alcp_rsa_publickey_verify_pss(
+        session.get(), text, sizeof(text), signature, sizeof(signature));
+}
+
+// A refused mode used to free the digest in place before finding out, leaving
+// the Rsa object holding the freed one.
+TEST(RsaDigestTest, ARefusedModeLeavesTheDigestInPlace)
+{
+    CapiSession session;
+    ASSERT_EQ(session.withKeys(), ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_digest(session.get(), ALC_SHA2_256), ALC_ERROR_NONE);
+    ASSERT_EQ(alcp_rsa_add_mgf(session.get(), ALC_SHA2_256), ALC_ERROR_NONE);
+
+    EXPECT_EQ(alcp_rsa_add_digest(session.get(), UnsupportedMode),
+              ALC_ERROR_NOT_SUPPORTED);
+    EXPECT_EQ(alcp_rsa_add_mgf(session.get(), UnsupportedMode),
+              ALC_ERROR_NOT_SUPPORTED);
+
+    EXPECT_EQ(sign_and_verify_pss(session), ALC_ERROR_NONE);
+}
+
+// PSS defaults the mask generation function to the digest, so replacing the
+// digest used to leave that alias holding the freed one.
+TEST(RsaDigestTest, ReplacingTheDigestLeavesNoStaleMaskGenerator)
+{
+    CapiSession session;
+    ASSERT_EQ(session.withKeys(), ALC_ERROR_NONE);
+
+    // no add_mgf, so the first signature aliases the mask generator
+    ASSERT_EQ(alcp_rsa_add_digest(session.get(), ALC_SHA2_512), ALC_ERROR_NONE);
+    ASSERT_EQ(sign_and_verify_pss(session), ALC_ERROR_NONE);
+
+    ASSERT_EQ(alcp_rsa_add_digest(session.get(), ALC_SHA2_256), ALC_ERROR_NONE);
+    EXPECT_EQ(sign_and_verify_pss(session), ALC_ERROR_NONE);
+}
+
+// Encrypt has always installed SHA-256 when no digest was added, while decrypt
+// did not, so the two directions disagreed. Separate sessions are what shows
+// it: a session that encrypted first has the default installed already, which
+// hid the missing one on the decrypt side.
+TEST(RsaOaepTest, RoundTripsBetweenSessionsWithoutAddDigest)
+{
+    constexpr Uint64 KeySize  = sizeof(Modulus);
+    constexpr Uint64 TextSize = KeySize - 2 * Sha256Len - 2;
+
+    CapiSession sender;
+    ASSERT_EQ(sender.withKeys(), ALC_ERROR_NONE);
+
+    CapiSession receiver;
+    ASSERT_EQ(receiver.withKeys(), ALC_ERROR_NONE);
+
+    Uint8 text[TextSize];
+    Uint8 seed[Sha256Len];
+    Uint8 enc_text[KeySize];
+    Uint8 dec_text[KeySize]{};
+    memset(text, 0x31, sizeof(text));
+    memset(seed, 0x01, sizeof(seed));
+
+    ASSERT_EQ(alcp_rsa_publickey_encrypt_oaep(sender.get(),
+                                              text,
+                                              sizeof(text),
+                                              OaepLabel,
+                                              sizeof(OaepLabel),
+                                              seed,
+                                              enc_text),
+              ALC_ERROR_NONE);
+
+    Uint64 dec_size = sizeof(dec_text);
+    ASSERT_EQ(alcp_rsa_privatekey_decrypt_oaep(receiver.get(),
+                                               enc_text,
+                                               KeySize,
+                                               OaepLabel,
+                                               sizeof(OaepLabel),
+                                               dec_text,
+                                               &dec_size),
+              ALC_ERROR_NONE);
+    EXPECT_EQ(dec_size, sizeof(text));
+    EXPECT_EQ(memcmp(dec_text, text, sizeof(text)), 0);
 }
 
 } // namespace

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -182,7 +182,7 @@ class Status final
         // FIXME m_message has to be set somehow
     }
 
-    friend ALCP_API_EXPORT Status StatusOk();
+    friend ALCP_INTERNAL_CPP_EXPORT Status StatusOk();
 
     String makeMessage(const StringView& module_error,
                        const StringView& details)
@@ -250,14 +250,14 @@ ALCP_DEFS_NO_DISCARD bool IsUnknown(const Status& status);
  * Handy creators that return Status
  */
 namespace status {
-    ALCP_API_EXPORT Status Aborted(StringView msg);
-    ALCP_API_EXPORT Status AlreadyExists(StringView msg);
-    ALCP_API_EXPORT Status InternalError(StringView msg);
-    ALCP_API_EXPORT Status InvalidArgument(StringView msg);
-    ALCP_API_EXPORT Status NotFound(StringView msg);
-    ALCP_API_EXPORT Status NotAvailable(StringView msg);
-    ALCP_API_EXPORT Status NotImplemented(StringView msg);
-    ALCP_API_EXPORT Status Unknown(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status Aborted(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status AlreadyExists(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status InternalError(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status InvalidArgument(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status NotFound(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status NotAvailable(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status NotImplemented(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status Unknown(StringView msg);
 } // namespace status
 
 } // namespace alcp::base

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 
 #include "alcp/capi/defs.hh"
 #include "alcp/capi/rng/builder.hh"
+#include "alcp/rng.h"
 #include "alcp/rng.hh"
 #include "alcp/utils/cpuid.hh"
 
@@ -56,7 +57,7 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 
 alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -94,10 +95,11 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 
     return error;
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -135,13 +137,25 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
     }
     return error;
 }
+ALCP_CATCH_ERR_RET
+
+alc_error_t
+alcp_rng_init(alc_rng_handle_p pRngHandle)
+{
+#ifdef ALCP_ENABLE_DEBUG_LOGGING
+    ALCP_DEBUG_LOG(LOG_INFO);
+#endif
+    ALCP_BAD_PTR_ERR_RET(pRngHandle);
+    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context);
+    return ALC_ERROR_NONE;
+}
 
 alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
                     Uint8*           buf, /* RNG output buffer */
                     Uint64           size /* output buffer size */
 )
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_DBG, "OutputBuff size %6ld", size);
 #endif
@@ -160,10 +174,11 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
     ALCP_BAD_PTR_ERR_RET(ctx->read_random);
     return ctx->read_random(ctx->m_rng, buf, size);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_rng_reseed(alc_rng_handle_p pRngHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -174,10 +189,11 @@ alcp_rng_reseed(alc_rng_handle_p pRngHandle)
     ALCP_BAD_PTR_ERR_RET(ctx->reseed);
     return ctx->reseed(ctx->m_rng);
 }
+ALCP_CATCH_ERR_RET
 
 alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle)
-{
+try {
 #ifdef ALCP_ENABLE_DEBUG_LOGGING
     ALCP_DEBUG_LOG(LOG_INFO);
 #endif
@@ -192,5 +208,6 @@ alcp_rng_finish(alc_rng_handle_p pRngHandle)
 
     return ALC_ERROR_NONE;
 }
+ALCP_CATCH_ERR_RET
 
 EXTERN_C_END

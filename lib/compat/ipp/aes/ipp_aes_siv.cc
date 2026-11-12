@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,10 +26,11 @@
  *
  */
 #include "aes/ipp_aes_init_common.hh"
+#include "common/export.hh"
 #include <memory>
 
 IppStatus
-ippsAES_SIVEncrypt(const Ipp8u* pSrc,
+IPP_COMPAT_EXPORT ippsAES_SIVEncrypt(const Ipp8u* pSrc,
                    Ipp8u*       pDst,
                    int          len,
                    Ipp8u*       pSIV,
@@ -105,7 +106,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
 }
 
 IppStatus
-ippsAES_SIVDecrypt(const Ipp8u* pSrc,
+IPP_COMPAT_EXPORT ippsAES_SIVDecrypt(const Ipp8u* pSrc,
                    Ipp8u*       pDst,
                    int          len,
                    int*         pAuthPassed,
@@ -178,7 +179,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
 }
 
 IppStatus
-ippsAES_S2V_CMAC(const Ipp8u* pKey,
+IPP_COMPAT_EXPORT ippsAES_S2V_CMAC(const Ipp8u* pKey,
                  int          keyLen,
                  const Ipp8u* AD[],
                  const int    ADlen[],

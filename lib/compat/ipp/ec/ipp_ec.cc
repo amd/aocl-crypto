@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
  */
 
 #include "common/context.hh"
+#include "common/export.hh"
 #include "common/error.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>
@@ -41,8 +42,8 @@
 #define ECC_X25519_KEY_SIZE 32
 
 mbx_status
-mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
-                          const int8u* const pa_private_key[NUM_MB])
+IPP_COMPAT_EXPORT mbx_x25519_public_key_mb8(
+    int8u* const pa_public_key[NUM_MB], const int8u* const pa_private_key[NUM_MB])
 {
     printMsg("mbx_x25519_public_key_mb8");
     alc_ec_handle_t handle[NUM_MB];
@@ -74,7 +75,9 @@ mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
         err =
             alcp_ec_get_publickey(&handle[i],
                                   static_cast<Uint8*>(pa_public_key[i]),
-                                  static_cast<const Uint8*>(pa_private_key[i]));
+                                  ECC_X25519_KEY_SIZE,
+                                  static_cast<const Uint8*>(pa_private_key[i]),
+                                  ECC_X25519_KEY_SIZE);
         if (alcp_is_error(err)) {
             printErr("Error occurred while getting publickey");
         }
@@ -90,9 +93,10 @@ mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
 }
 
 mbx_status
-mbx_x25519_mb8(int8u* const       pa_shared_key[NUM_MB],
-               const int8u* const pa_private_key[NUM_MB],
-               const int8u* const pa_public_key[NUM_MB])
+IPP_COMPAT_EXPORT mbx_x25519_mb8(
+    int8u* const       pa_shared_key[NUM_MB],
+    const int8u* const pa_private_key[NUM_MB],
+    const int8u* const pa_public_key[NUM_MB])
 {
     printMsg("mbx_x25519_mb8");
     Uint64 length;
@@ -126,11 +130,15 @@ mbx_x25519_mb8(int8u* const       pa_shared_key[NUM_MB],
 
         alcp_ec_get_publickey(&handle[i],
                               static_cast<Uint8*>(pa_shared_key[i]),
-                              static_cast<const Uint8*>(pa_private_key[i]));
+                              ECC_X25519_KEY_SIZE,
+                              static_cast<const Uint8*>(pa_private_key[i]),
+                              ECC_X25519_KEY_SIZE);
 
         err = alcp_ec_get_secretkey(&handle[i],
                                     static_cast<Uint8*>(pa_shared_key[i]),
+                                    ECC_X25519_KEY_SIZE,
                                     static_cast<const Uint8*>(pa_public_key[i]),
+                                    ECC_X25519_KEY_SIZE,
                                     &length);
         if (alcp_is_error(err)) {
             printErr("Error in getting EC secretkey");

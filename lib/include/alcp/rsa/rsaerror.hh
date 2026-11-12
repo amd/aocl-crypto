@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -109,9 +109,9 @@ class RsaError final : public ErrorBase
 };
 
 namespace status {
-    ALCP_API_EXPORT Status Unavailable(StringView msg);
-    ALCP_API_EXPORT Status NotPermitted(StringView msg);
-    ALCP_API_EXPORT Status Generic(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status Unavailable(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status NotPermitted(StringView msg);
+    ALCP_INTERNAL_CPP_EXPORT Status Generic(StringView msg);
 } // namespace status
 
 } // namespace alcp::rsa

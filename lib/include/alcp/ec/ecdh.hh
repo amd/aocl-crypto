@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -79,53 +79,70 @@ struct PrecomputedPoint
 class X25519 : public Ec
 {
   public:
-    ALCP_API_EXPORT X25519();
-    ~X25519();
+    ALCP_INTERNAL_CPP_EXPORT X25519();
+    ALCP_INTERNAL_CPP_EXPORT ~X25519();
 
     /**
      * @brief Function sets the privateKey
      *
      * @param  pPrivKey    pointer to Input privateKey
+     * @param  privKeyLen  size in bytes of pPrivKey, which must be exactly the
+     * key size of the curve
      *
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
+    ALCP_INTERNAL_CPP_EXPORT Status setPrivateKey(const Uint8* pPrivKey,
+                                                  Uint64       privKeyLen) override;
 
     /**
      * @brief Function generates x25519 public key using input privateKey
      * generated public key is shared with the peer.
      *
      * @param  pPublicKey  pointer to Output Publickey generated
+     * @param  pubKeyLen   capacity in bytes of pPublicKey, which must be at
+     * least the public key size of the curve
      * @param  pPrivKey    pointer to Input privateKey used for generating
      * publicKey
+     * @param  privKeyLen  size in bytes of pPrivKey, which must be exactly the
+     * key size of the curve
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status generatePublicKey(Uint8*       pPublicKey,
-                                             const Uint8* pPrivKey) override;
+    ALCP_INTERNAL_CPP_EXPORT Status
+    generatePublicKey(Uint8*       pPublicKey,
+                      Uint64       pubKeyLen,
+                      const Uint8* pPrivKey,
+                      Uint64       privKeyLen) override;
 
     /**
      * @brief Function computes x25519 secret key with publicKey from remotePeer
      * and local privatekey.
      *
      * @param  pSecretKey  pointer to output secretKey
-     * @param  pPublicKey  pointer to Input privateKey used for generating
-     * publicKey
-     * @param  pKeyLength  pointer to keyLength
+     * @param  secretKeyLen  capacity in bytes of pSecretKey, which must be at
+     * least the shared secret size of the curve
+     * @param  pPublicKey  pointer to the peer's public key
+     * @param  pubKeyLen   size in bytes of pPublicKey, which must be exactly
+     * the public key size of the curve
+     * @param  pKeyLength  pointer through which the size in bytes of the
+     * secret produced is returned
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status computeSecretKey(Uint8*       pSecretKey,
-                                            const Uint8* pPublicKey,
-                                            Uint64*      pKeyLength) override;
+    ALCP_INTERNAL_CPP_EXPORT Status
+    computeSecretKey(Uint8*       pSecretKey,
+                     Uint64       secretKeyLen,
+                     const Uint8* pPublicKey,
+                     Uint64       pubKeyLen,
+                     Uint64*      pKeyLength) override;
 
     /**
      * @brief Function validates public key from remote peer
      *
      * @param  pPublicKey  pointer to public key publicKey
-     * @param  pKeyLength  pointer to keyLength
+     * @param  pKeyLength  size in bytes of pPublicKey
      * @return Status Error code
      */
-    virtual Status validatePublicKey(const Uint8* pPublicKey,
-                                     Uint64       pKeyLength) override;
+    ALCP_INTERNAL_CPP_EXPORT Status
+    validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength) override;
     /**
      * @brief Function resets the internal state
      *
@@ -134,10 +151,16 @@ class X25519 : public Ec
     void reset() override;
 
     /**
-     * @brief  Returns the key size in bytes
+     * @brief  Returns the private key size in bytes
      * @return key size
      */
     Uint64 getKeySize() override;
+
+    /**
+     * @brief  Returns the public key size in bytes
+     * @return public key size
+     */
+    Uint64 getPublicKeySize() override;
 
   private:
     Uint8 m_PrivKey[32] = {};
@@ -145,7 +168,7 @@ class X25519 : public Ec
 // x2519 apis
 
 // NIST curves
-class ALCP_API_EXPORT P256 : public Ec
+class ALCP_INTERNAL_CPP_EXPORT P256 : public Ec
 {
   public:
     P256() = default;
@@ -155,41 +178,56 @@ class ALCP_API_EXPORT P256 : public Ec
      * @brief Function sets the privateKey
      *
      * @param  pPrivKey    pointer to Input privateKey
+     * @param  privKeyLen  size in bytes of pPrivKey, which must be exactly the
+     * key size of the curve
      *
      * @return Status Error code
      */
-    Status setPrivateKey(const Uint8* pPrivKey) override;
+    Status setPrivateKey(const Uint8* pPrivKey, Uint64 privKeyLen) override;
 
     /**
      * @brief Function generates p256 public key using input privateKey
      * generated public key is shared with the peer.
      *
      * @param  pPublicKey  pointer to Output Publickey generated
+     * @param  pubKeyLen   capacity in bytes of pPublicKey, which must be at
+     * least the public key size of the curve
      * @param  pPrivKey    pointer to Input privateKey used for generating
      * publicKey
+     * @param  privKeyLen  size in bytes of pPrivKey, which must be exactly the
+     * key size of the curve
      * @return Status Error code
      */
-    Status generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey) override;
+    Status generatePublicKey(Uint8*       pPublicKey,
+                             Uint64       pubKeyLen,
+                             const Uint8* pPrivKey,
+                             Uint64       privKeyLen) override;
 
     /**
      * @brief Function computes p256 secret key with publicKey from remotePeer
      * and local privatekey.
      *
      * @param  pSecretKey  pointer to output secretKey
-     * @param  pPublicKey  pointer to Input privateKey used for generating
-     * publicKey
-     * @param  pKeyLength  pointer to keyLength
+     * @param  secretKeyLen  capacity in bytes of pSecretKey, which must be at
+     * least the shared secret size of the curve
+     * @param  pPublicKey  pointer to the peer's public key
+     * @param  pubKeyLen   size in bytes of pPublicKey, which must be exactly
+     * the public key size of the curve
+     * @param  pKeyLength  pointer through which the size in bytes of the
+     * secret produced is returned
      * @return Status Error code
      */
     Status computeSecretKey(Uint8*       pSecretKey,
+                            Uint64       secretKeyLen,
                             const Uint8* pPublicKey,
+                            Uint64       pubKeyLen,
                             Uint64*      pKeyLength) override;
 
     /**
      * @brief Function validates public key from remote peer
      *
      * @param  pPublicKey  pointer to public key publicKey
-     * @param  pKeyLength  pointer to keyLength
+     * @param  pKeyLength  size in bytes of pPublicKey
      * @return Status Error code
      */
     virtual Status validatePublicKey(const Uint8* pPublicKey,
@@ -202,10 +240,16 @@ class ALCP_API_EXPORT P256 : public Ec
     void reset() override;
 
     /**
-     * @brief  Returns the key size in bytes
+     * @brief  Returns the private key size in bytes
      * @return key size
      */
     Uint64 getKeySize() override;
+
+    /**
+     * @brief  Returns the public key size in bytes
+     * @return public key size
+     */
+    Uint64 getPublicKeySize() override;
 
   private:
     Uint8 m_PrivKey[32] = {};

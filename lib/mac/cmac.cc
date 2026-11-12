@@ -195,6 +195,11 @@ Cmac::finalize(Uint8* pMsgBuf, Uint64 size)
         return err;
     }
 
+    /* NIST SP 800-38B expects a positive MAC length, capped at block size */
+    if (pMsgBuf == nullptr || size == 0 || size > cAESBlockSize) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+
     static bool has_avx2_aesni =
         CpuId::getCachedArchLevel(AlgorithmType::eCipher)
         >= CpuArchLevel::eZen;

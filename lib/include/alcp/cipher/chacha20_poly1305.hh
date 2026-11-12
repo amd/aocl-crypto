@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2026, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,7 +59,7 @@ using utils::CpuArchLevel;
  * - arch: CPU architecture level (eZen4 or eReference)
  */
 template<CpuArchLevel arch>
-class ALCP_API_EXPORT ChaChPolyT
+class ALCP_INTERNAL_CPP_EXPORT ChaChPolyT
     : public ChaCha256T<arch>
     , public alcp::mac::poly1305::Poly1305<arch>
     , public iCipherAead

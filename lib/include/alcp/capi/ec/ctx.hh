@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,10 @@
  *
  */
 #pragma once
+#include <cstddef>
+
 #include "alcp/base.hh"
+#include "alcp/utils/memory.hh"
 
 namespace alcp::ec {
 
@@ -35,16 +38,26 @@ class Context
   public:
     void* m_ec = nullptr;
 
-    Status (*setPrivateKey)(void* pEc, const Uint8* pPrivKey) = nullptr;
+    Status (*setPrivateKey)(void*        pEc,
+                            const Uint8* pPrivKey,
+                            Uint64       privKeyLen) = nullptr;
 
     Status (*getPublicKey)(void*        pEc,
                            Uint8*       pPublicKey,
-                           const Uint8* pPrivKey) = nullptr;
+                           Uint64       pubKeyLen,
+                           const Uint8* pPrivKey,
+                           Uint64       privKeyLen) = nullptr;
 
     Status (*getSecretKey)(void*        pEc,
                            Uint8*       pSecretKey,
+                           Uint64       secretKeyLen,
                            const Uint8* pPublicKey,
+                           Uint64       pubKeyLen,
                            Uint64*      pKeyLength) = nullptr;
+
+    Uint64 (*getKeySize)(void* pEc) = nullptr;
+
+    Uint64 (*getPublicKeySize)(void* pEc) = nullptr;
 
     Status (*finish)(void*) = nullptr;
 
@@ -54,12 +67,9 @@ class Context
 
     ~Context()
     {
-        m_ec          = nullptr;
-        setPrivateKey = nullptr;
-        getPublicKey  = nullptr;
-        getSecretKey  = nullptr;
-        finish        = nullptr;
-        reset         = nullptr;
+        /* SecureClear: a plain clear here is a dead store at the end of the
+         * object's lifetime, and status is destroyed after this body runs */
+        utils::SecureClear(this, offsetof(Context, status));
     }
 };
 

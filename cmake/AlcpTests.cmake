@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -130,8 +130,10 @@ function(alcp_cc_test testName working_dir)
         ${TEST_COMMON_SRC}
     )
 
-    # Link to whichever ALCP variant is being built; matches the parent
-    # tests/CMakeLists.txt behaviour so SHARED=OFF builds do not pull alcp in.
+    # Preserve amd-main behavior: exercise the shared library when available.
+    # These tests currently call C++ APIs directly, requiring temporary C++ ABI
+    # exports. Remove those exports after migrating the test framework to the
+    # public C API; static-only builds continue to use the static archive.
     IF(ALCP_BUILD_SHARED)
         SET(_ALCP_TEST_LIB alcp)
     ELSE()

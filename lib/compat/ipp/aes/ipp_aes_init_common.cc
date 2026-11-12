@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,9 +27,10 @@
  */
 
 #include "aes/ipp_aes_init_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsAESGetSize(int* pSize)
+IPP_COMPAT_EXPORT ippsAESGetSize(int* pSize)
 {
     printMsg("GetSize");
     *pSize = sizeof(ipp_wrp_aes_ctx);
@@ -38,7 +39,7 @@ ippsAESGetSize(int* pSize)
 }
 
 IppStatus
-ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
+IPP_COMPAT_EXPORT ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
 {
     printMsg("Init");
     std::stringstream ss;

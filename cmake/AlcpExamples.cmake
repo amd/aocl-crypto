@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2026, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -45,6 +45,7 @@ FUNCTION(ADD_EXAMPLE EXAMPLE_SOURCE)
     IF(ALCP_BUILD_SHARED)
         add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE})
         target_compile_options(${EXAMPLE_TARGET} PUBLIC ${ALCP_WARNINGS})
+        # Examples use only the public C API; no temporary C++ ABI exports needed.
         target_link_libraries(${EXAMPLE_TARGET} PRIVATE alcp)
     ENDIF()
 

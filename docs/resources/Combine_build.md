@@ -39,7 +39,8 @@ cmake --list-presets
 8. [Build Doxygen and Sphinx docs](#doxygen)
 9. [Build with dynamic compiler selection ](#dyncompile)
 10. [Build with assembly disabled](#assembly)
-11. [Disabling/Enabling Optional Features](#optional)
+11. [Select shared and/or static libraries](#shared-static)
+12. [Disabling/Enabling Optional Features](#optional)
 
 
 #### Enable Examples {#example}
@@ -160,6 +161,26 @@ $ cmake -DALCP_DISABLE_ASSEMBLY=ON  ../
 ```
 ALCP_DISABLE_ASSEMBLY is OFF by default 
 
+### Selecting Shared and/or Static Libraries {#shared-static}
+
+By default both the shared (`libalcp.so`) and static (`libalcp.a`) libraries are
+built. You can build just one:
+
+```sh
+$ cmake -DALCP_BUILD_SHARED=ON  -DALCP_BUILD_STATIC=OFF ../   # shared only
+$ cmake -DALCP_BUILD_SHARED=OFF -DALCP_BUILD_STATIC=ON  ../   # static only
+```
+
+- `ALCP_BUILD_SHARED` — build the shared library (default ON)
+- `ALCP_BUILD_STATIC` — build the static library (default ON)
+
+At least one must be ON; setting both OFF is a fatal configure error.
+
+Note: the OpenSSL and IPP compat providers are shared plugins that link against
+`libalcp.so`, so a static-only build (`ALCP_BUILD_SHARED=OFF`) skips them even
+when `ENABLE_OPENSSL_COMPAT=ON` is requested. See the build matrix in `BUILD.md`
+for what each combination produces.
+
 ### Disabling/Enabling Optional Features {#optional}
 These are flags to enable/disable optional features as required.
 
@@ -240,7 +261,8 @@ cmake --list-presets
 5. [Enable Tests - To compile test code](#win-tests)
 6. [Enable Bench - To compile bench code.](#win-bench)
 7. [Enable Compat - To compare with compat libs.](#win-compat)
-8. [Disabling/Enabling Optional Features](#win-optional)
+8. [Select shared and/or static libraries](#win-shared-static)
+9. [Disabling/Enabling Optional Features](#win-optional)
 
 
 #### Steps to find binaries/dll's by setting an environment variable
@@ -337,6 +359,23 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
 $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
+
+### Selecting Shared and/or Static Libraries {#win-shared-static}
+
+By default both the shared (`alcp.dll`) and static (`alcp_static.lib`) libraries
+are built. You can build just one:
+```
+PS> cmake -DALCP_BUILD_SHARED=ON  -DALCP_BUILD_STATIC=OFF -B build-shared   # shared only
+PS> cmake -DALCP_BUILD_SHARED=OFF -DALCP_BUILD_STATIC=ON  -B build-static   # static only
+```
+- `ALCP_BUILD_SHARED` — build the shared library (default ON)
+- `ALCP_BUILD_STATIC` — build the static library (default ON)
+
+At least one must be ON; setting both OFF is a fatal configure error.
+
+**Windows CRT:** the C runtime is selected globally based on `ALCP_BUILD_SHARED`:
+- `ALCP_BUILD_SHARED=ON` (default) uses the dynamic CRT (`/MD`).
+- `ALCP_BUILD_SHARED=OFF` switches the whole project to the static CRT (`/MT`).
 
 ### Disabling/Enabling Optional Features {#win-optional}
 These are flags to enable/disable optional features as required.

@@ -24,12 +24,11 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 
-include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
-Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+include(${ALCP_ROOT}/cmake/IntegrationTests.cmake)
+Include(${ALCP_ROOT}/cmake/AlcpTestUtils.cmake)
 
-# Tests link against whichever ALCP library is being built. When only the
-# static library is enabled, link to alcp_static so all the existing test
-# CMakeLists that consume ${LIBS} keep working without modification.
+# Integration tests link the same ALCP variant as applications. Skip gates use
+# exported alcp::utils::CpuId methods documented in lib/include/alcp/utils/cpuid.hh.
 IF(ALCP_BUILD_SHARED)
     SET(LIBS ${LIBS} gtest alcp)
 ELSE()
@@ -44,7 +43,7 @@ ADD_COMPILE_OPTIONS("-DUSE_IPP")
 IF(IPP_INSTALL_DIR)
     MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
 ELSE(IPP_INSTALL_DIR)
-    SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
+    SET(IPP_INSTALL_DIR "${ALCP_ROOT}/external")
     MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
 ENDIF(IPP_INSTALL_DIR)
 
@@ -73,12 +72,20 @@ add_openssl()
 alcp_add_sanitize_workaround_flags()
 
 SET(ALCP_INCLUDES
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/lib/include"
+    "${ALCP_ROOT}/include"
+    "${ALCP_ROOT}/lib/include"
+    "${ALCP_BINARY_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/common/include"
     ${EXTRA_INCLUDES}
 )
+
+IF(ALCP_EXPORT_TESTS_ONLY)
+    IF(ALCP_BUILD_SHARED)
+        ADD_SUBDIRECTORY(export)
+    ENDIF()
+    RETURN()
+ENDIF()
 
 ADD_SUBDIRECTORY(cipher)
 ADD_SUBDIRECTORY(digest)
@@ -89,6 +96,7 @@ ADD_SUBDIRECTORY(poly1305)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(rsa)
 ADD_SUBDIRECTORY(cipher_experimental)
+ADD_SUBDIRECTORY(misc)
 
 # FUZZ Testing is enabled only for Clang
 if(ALCP_ENABLE_FUZZ_TESTS)
@@ -103,4 +111,8 @@ endif(ALCP_ENABLE_FUZZ_TESTS)
 # shared library is being built.
 IF(UNIX AND ALCP_BUILD_SHARED)
    ADD_SUBDIRECTORY(dl_load)
+ENDIF()
+
+IF(ALCP_BUILD_SHARED)
+   ADD_SUBDIRECTORY(export)
 ENDIF()

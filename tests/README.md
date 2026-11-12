@@ -135,8 +135,10 @@ $ ./build/tests/Fuzz/Digest/test_fuzz_digest_sha2_256
 To force a specific CPU architecture level at runtime, use the environment variable `AOCL_ENABLE_INSTRUCTION` before running the executable.
 Supported values: `ZEN`, `ZEN1`, `ZEN2`, `ZEN3`, `ZEN4`, `ZEN5` (ZEN and ZEN1 are equivalent).
 
+> **Availability:** This override is a test and benchmark facility. It is compiled in only when the project is configured with `ALCP_ENABLE_TESTS=ON`, which every build carrying these test binaries is. Release and RTE packages do not read the variable at all and silently ignore it.
+
 > **Note:** This can only **downgrade** the kernel level — setting a higher level on lower hardware has no effect.
-> An invalid value will cause the process to exit with an error.
+> In builds where the override is compiled in, an invalid value will cause the process to exit with an error.
 > For detailed per-algorithm dispatch behavior, see [CPU Feature Kernel Map](../docs/cpu_feature_kernel_map.md).
 
 ```sh

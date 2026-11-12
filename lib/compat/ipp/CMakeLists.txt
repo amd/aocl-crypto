@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2025, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -25,7 +25,10 @@
  
 # Added aocl-compat as a seperate liberary
 FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" "sha2/*.cc" "common/*.cc" "ec/*.cc" "mac/*.cc")
-ADD_LIBRARY(ipp-compat 
+
+# Runtime-loaded IPP-CP compat plugin: must always be a DLL, so force SHARED
+# even in a static (BUILD_SHARED_LIBS=OFF) build.
+ADD_LIBRARY(ipp-compat SHARED
 	${IPP_SRCS}
 	)
 
@@ -35,7 +38,7 @@ TARGET_LINK_LIBRARIES(ipp-compat PUBLIC alcp)
 TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE include)
 
 # Include ALCP header files
-TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
+TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${ALCP_ROOT}/include)
 
 # Include IPPCP files
 IF(IPP_INSTALL_DIR)
@@ -48,6 +51,36 @@ if(CMAKE_COMPILER_IS_GCC)
     MESSAGE(STATUS "Due to a known issue with gcc, enforcing -Wno-maybe-uninitialized on compilation of ipp compat library")
 endif()
 
+SET(IPP_COMPAT_SYMBOLS_FILE
+	"${CMAKE_CURRENT_SOURCE_DIR}/ipp_compat_symbols.txt")
+SET_PROPERTY(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+	"${IPP_COMPAT_SYMBOLS_FILE}")
+FILE(STRINGS "${IPP_COMPAT_SYMBOLS_FILE}" IPP_COMPAT_SYMBOLS)
+
 IF(WIN32)
+	SET(IPP_COMPAT_DEF_FILE
+		"${CMAKE_CURRENT_BINARY_DIR}/ipp_compat_exports.def")
+
+	FILE(WRITE "${IPP_COMPAT_DEF_FILE}" "EXPORTS\n")
+	FOREACH(IPP_COMPAT_SYMBOL IN LISTS IPP_COMPAT_SYMBOLS)
+		FILE(APPEND "${IPP_COMPAT_DEF_FILE}" "    ${IPP_COMPAT_SYMBOL}\n")
+	ENDFOREACH()
+	TARGET_SOURCES(ipp-compat PRIVATE "${IPP_COMPAT_DEF_FILE}")
+
 	TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
 ENDIF(WIN32)
+
+IF(UNIX AND NOT APPLE AND ALCP_HIDDEN_VISIBILITY)
+	SET(IPP_COMPAT_EXPORT_MAP
+		"${CMAKE_CURRENT_BINARY_DIR}/ipp_compat_exports.map")
+	FILE(WRITE "${IPP_COMPAT_EXPORT_MAP}" "{\n    global:\n")
+	FOREACH(IPP_COMPAT_SYMBOL IN LISTS IPP_COMPAT_SYMBOLS)
+		FILE(APPEND "${IPP_COMPAT_EXPORT_MAP}"
+			"        ${IPP_COMPAT_SYMBOL};\n")
+	ENDFOREACH()
+	FILE(APPEND "${IPP_COMPAT_EXPORT_MAP}" "    local:\n        *;\n};\n")
+	TARGET_LINK_OPTIONS(ipp-compat PRIVATE
+		"-Wl,--version-script=${IPP_COMPAT_EXPORT_MAP}")
+	SET_TARGET_PROPERTIES(ipp-compat PROPERTIES
+		LINK_DEPENDS "${IPP_COMPAT_EXPORT_MAP}")
+ENDIF()

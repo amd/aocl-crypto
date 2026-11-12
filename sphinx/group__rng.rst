@@ -25,8 +25,6 @@ Functions
    :project: crypto
 .. doxygenfunction:: alcp_rng_init
    :project: crypto
-.. doxygenfunction:: alcp_rng_seed
-   :project: crypto
 .. doxygenfunction:: alcp_rng_finish
    :project: crypto
 

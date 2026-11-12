@@ -27,8 +27,6 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/Benchmarks.cmake)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/poly1305/base/alc_poly1305.cc ../../tests/poly1305/base/poly1305.cc)
-# Link against whichever ALCP library is being built (static-only falls back
-# to alcp_static).
 IF(ALCP_BUILD_SHARED)
     SET(LIBS ${LIBS} benchmark alcp)
 ELSE()

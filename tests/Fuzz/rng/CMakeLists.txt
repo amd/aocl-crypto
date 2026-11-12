@@ -1,4 +1,4 @@
-# Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2024-2026, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -25,10 +25,6 @@
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpFuzzTests.cmake)
 
-ADD_FUZZ_TARGET(test_fuzz_ctr_drbg.cc)
-ADD_FUZZ_TARGET(test_fuzz_hmac_drbg.cc)
 ADD_FUZZ_TARGET(test_fuzz_rng.cc)
 
-ADD_FUZZ_TARGET(test_fuzz_ctr_drbg_lifecycle.cc)
-ADD_FUZZ_TARGET(test_fuzz_hmac_drbg_lifecycle.cc)
 ADD_FUZZ_TARGET(test_fuzz_rng_lifecycle.cc)

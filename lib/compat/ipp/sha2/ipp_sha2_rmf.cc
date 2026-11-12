@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2026, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,9 +27,10 @@
  */
 
 #include "sha2/ipp_sha2_common.hh"
+#include "common/export.hh"
 
 IppStatus
-ippsHashUpdate(const Ipp8u* pSrc, int len, IppsHashState* pState)
+IPP_COMPAT_EXPORT ippsHashUpdate(const Ipp8u* pSrc, int len, IppsHashState* pState)
 {
     printMsg("Hash Update");
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
@@ -39,7 +40,7 @@ ippsHashUpdate(const Ipp8u* pSrc, int len, IppsHashState* pState)
 }
 
 IppStatus
-ippsHashUpdate_rmf(const Ipp8u* pSrc, int len, IppsHashState_rmf* pState)
+IPP_COMPAT_EXPORT ippsHashUpdate_rmf(const Ipp8u* pSrc, int len, IppsHashState_rmf* pState)
 {
     printMsg("Hash Update RMF");
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
@@ -49,7 +50,7 @@ ippsHashUpdate_rmf(const Ipp8u* pSrc, int len, IppsHashState_rmf* pState)
 }
 
 IppStatus
-ippsHashFinal(Ipp8u* pMD, IppsHashState* pState)
+IPP_COMPAT_EXPORT ippsHashFinal(Ipp8u* pMD, IppsHashState* pState)
 {
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
     IppStatus         sts;
@@ -61,7 +62,7 @@ ippsHashFinal(Ipp8u* pMD, IppsHashState* pState)
 }
 
 IppStatus
-ippsHashFinal_rmf(Ipp8u* pMD, IppsHashState_rmf* pState)
+IPP_COMPAT_EXPORT ippsHashFinal_rmf(Ipp8u* pMD, IppsHashState_rmf* pState)
 {
     ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
     IppStatus         sts;
